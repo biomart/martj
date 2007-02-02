@@ -49,6 +49,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.SingleValue;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.controller.JDBCSchema;
@@ -792,20 +793,68 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 			}
 
-			// Write out expression columns.
-			for (final Iterator x = dsMods.getExpressionColumns().entrySet()
+			// Write out concat relations.
+			for (final Iterator x = schemaMods.getConcatRelations().entrySet()
 					.iterator(); x.hasNext();) {
 				final Map.Entry entry = (Map.Entry) x.next();
 				for (final Iterator y = ((Map) entry.getValue()).entrySet()
 						.iterator(); y.hasNext();) {
 					final Map.Entry entry2 = (Map.Entry) y.next();
-					final ExpressionColumnDefinition expcol = (ExpressionColumnDefinition) entry2
-							.getValue();
+					for (final Iterator z = ((Map) entry2.getValue())
+							.entrySet().iterator(); z.hasNext();) {
+						final Map.Entry entry3 = (Map.Entry) z.next();
+						this.openElement("concatRelation", xmlWriter);
+						this.writeAttribute("tableKey",
+								(String) entry.getKey(), xmlWriter);
+						this.writeAttribute("relationId",
+								(String) this.reverseMappedObjects.get(entry2
+										.getKey()), xmlWriter);
+						this.writeAttribute("index", "" + entry3.getKey(),
+								xmlWriter);
+						final ConcatRelationDefinition restrict = (ConcatRelationDefinition) entry3
+								.getValue();
+						final StringBuffer cols = new StringBuffer();
+						final StringBuffer names = new StringBuffer();
+						for (final Iterator a = restrict.getAliases()
+								.entrySet().iterator(); a.hasNext();) {
+							Map.Entry entry4 = (Map.Entry) a.next();
+							cols.append((String) this.reverseMappedObjects
+									.get(entry4.getKey()));
+							names.append((String) entry4.getValue());
+							if (z.hasNext()) {
+								cols.append(',');
+								names.append(',');
+							}
+						}
+						this.writeAttribute("colKey", restrict.getColKey(),
+								xmlWriter);
+						this.writeAttribute("aliasColumnIds", cols.toString(),
+								xmlWriter);
+						this.writeAttribute("aliasNames", names.toString(),
+								xmlWriter);
+						this.writeAttribute("expression", restrict
+								.getExpression(), xmlWriter);
+						this.writeAttribute("rowSep", restrict.getRowSep(),
+								xmlWriter);
+						this.closeElement("concatRelation", xmlWriter);
+					}
+				}
+			}
+
+			// Write out expression columns.
+			for (final Iterator x = dsMods.getExpressionColumns().entrySet()
+					.iterator(); x.hasNext();) {
+				final Map.Entry entry = (Map.Entry) x.next();
+				for (final Iterator y = ((Collection) entry.getValue())
+						.iterator(); y.hasNext();) {
+					final ExpressionColumnDefinition expcol = (ExpressionColumnDefinition) y
+							.next();
 					this.openElement("expressionColumn", xmlWriter);
 					this.writeAttribute("tableKey", (String) entry.getKey(),
 							xmlWriter);
-					this.writeAttribute("colKey", (String) entry2.getKey(),
-							xmlWriter);
+					this
+							.writeAttribute("colKey", expcol.getColKey(),
+									xmlWriter);
 					final StringBuffer cols = new StringBuffer();
 					final StringBuffer names = new StringBuffer();
 					for (final Iterator z = expcol.getAliases().entrySet()
@@ -1584,31 +1633,62 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// FIXME: Reinstate.
-		/*
-		 * // Concat Relation (inside dataset). else if
-		 * ("concatRelation".equals(eName)) { // What dataset does it belong to?
-		 * Throw a wobbly if none. if (this.objectStack.empty() ||
-		 * !(this.objectStack.peek() instanceof DataSet)) throw new
-		 * SAXException(Resources .get("concatRelationOutsideDataSet")); final
-		 * DataSet w = (DataSet) this.objectStack.peek();
-		 * 
-		 * try { // Look up the relation. final Relation rel = (Relation)
-		 * this.mappedObjects .get(attributes.get("relationId")); // Work out
-		 * what concat-only type to use. final String recordSep = (String)
-		 * attributes .get("recordSeparator"); final String columnSep = (String)
-		 * attributes .get("columnSeparator"); // Get the concatted columns.
-		 * final List concatColumns = new ArrayList(); final String[]
-		 * concatColumnIds = ((String) attributes
-		 * .get("concatColumnIds")).split(","); for (int i = 0; i <
-		 * concatColumnIds.length; i++) concatColumns.add(this.mappedObjects
-		 * .get(concatColumnIds[i])); // Flag it as concat-only.
-		 * DataSetConcatRelationType crType = new DataSetConcatRelationType(
-		 * columnSep, recordSep, concatColumns); w.flagConcatOnlyRelation(rel,
-		 * crType); element = rel; } catch (final Exception e) { if (e
-		 * instanceof SAXException) throw (SAXException) e; else throw new
-		 * SAXException(e); } }
-		 */
+		// Concat Relation (inside dataset).
+		else if ("concatRelation".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("concatRelationOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the restriction.
+				final Relation rel = (Relation) this.mappedObjects
+						.get(attributes.get("relationId"));
+				final String tableKey = (String) attributes.get("tableKey");
+				final int index = Integer.parseInt((String) attributes
+						.get("index"));
+
+				// Get the aliases to use for the first table.
+				final Map aliases = new HashMap();
+				final String[] aliasColumnIds = ((String) attributes
+						.get("aliasColumnIds")).split(",");
+				final String[] aliasNames = ((String) attributes
+						.get("aliasNames")).split(",");
+				for (int i = 0; i < aliasColumnIds.length; i++) {
+					final Column wrapped = (Column) this.mappedObjects
+							.get(aliasColumnIds[i]);
+					if (wrapped != null)
+						aliases.put(wrapped, aliasNames[i]);
+				}
+				// Get the expression to use.
+				final String expr = (String) attributes.get("expression");
+				final String rowSep = (String) attributes.get("rowSep");
+				final String colKey = (String) attributes.get("colKey");
+
+				// Flag it as restricted
+				if (expr != null && rel != null && tableKey != null
+						&& !aliases.isEmpty() && rowSep != null
+						&& colKey != null) {
+					final ConcatRelationDefinition restrict = new ConcatRelationDefinition(
+							expr, aliases, rowSep, colKey);
+					final Map restMap = w.getSchemaModifications()
+							.getConcatRelations();
+					if (!restMap.containsKey(tableKey))
+						restMap.put(tableKey, new HashMap());
+					if (!((Map) restMap.get(tableKey)).containsKey(rel))
+						((Map) restMap.get(tableKey)).put(rel, new HashMap());
+					((Map) ((Map) restMap.get(tableKey)).get(rel)).put(
+							new Integer(index), restrict);
+				}
+			} catch (final Exception e) {
+				if (e instanceof SAXException)
+					throw (SAXException) e;
+				else
+					throw new SAXException(e);
+			}
+		}
 
 		// Restricted Table (inside dataset).
 		else if ("restrictedTable".equals(eName)) {
@@ -1644,7 +1724,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String expr = (String) attributes.get("expression");
 
 				// Flag it as restricted
-				if (expr != null && !aliases.isEmpty() && tableKey != null) {
+				if (expr != null && !aliases.isEmpty() && tableKey != null
+						&& tbl != null) {
 					final RestrictedTableDefinition restrict = new RestrictedTableDefinition(
 							expr, aliases);
 					final Map restMap = w.getSchemaModifications()
@@ -1690,13 +1771,13 @@ public class MartBuilderXML extends DefaultHandler {
 				// Flag it as restricted
 				if (expr != null && !aliases.isEmpty() && tableKey != null
 						&& colKey != null) {
-					final ExpressionColumnDefinition expcol = new ExpressionColumnDefinition(expr,
-							aliases, groupBy);
+					final ExpressionColumnDefinition expcol = new ExpressionColumnDefinition(
+							expr, aliases, groupBy, colKey);
 					final Map expMap = w.getDataSetModifications()
 							.getExpressionColumns();
 					if (!expMap.containsKey(tableKey))
-						expMap.put(tableKey, new HashMap());
-					((Map) expMap.get(tableKey)).put(colKey, expcol);
+						expMap.put(tableKey, new HashSet());
+					((Collection) expMap.get(tableKey)).add(expcol);
 				}
 			} catch (final Exception e) {
 				if (e instanceof SAXException)

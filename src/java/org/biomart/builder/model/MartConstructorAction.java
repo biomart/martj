@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.resources.Log;
@@ -95,12 +96,17 @@ public abstract class MartConstructorAction {
 	public static class CopyOptimiser extends MartConstructorAction {
 
 		private String fromOptTableName;
+
 		private String toOptTableName;
+
 		private String optColumnName;
+
 		private List fromKeyColumns;
+
 		private List toKeyColumns;
+
 		private String viaTableName;
-		
+
 		/**
 		 * Creates a new CopyOptimiser action.
 		 * 
@@ -125,7 +131,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param fromOptTableName the fromOptTableName to set
+		 * @param fromOptTableName
+		 *            the fromOptTableName to set
 		 */
 		public void setFromOptTableName(String fromOptTableName) {
 			this.fromOptTableName = fromOptTableName;
@@ -139,7 +146,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param optColumnName the optColumnName to set
+		 * @param optColumnName
+		 *            the optColumnName to set
 		 */
 		public void setOptColumnName(String optColumnName) {
 			this.optColumnName = optColumnName;
@@ -153,7 +161,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param toOptTableName the toOptTableName to set
+		 * @param toOptTableName
+		 *            the toOptTableName to set
 		 */
 		public void setToOptTableName(String toOptTableName) {
 			this.toOptTableName = toOptTableName;
@@ -167,7 +176,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param fromKeyColumns the fromKeyColumns to set
+		 * @param fromKeyColumns
+		 *            the fromKeyColumns to set
 		 */
 		public void setFromKeyColumns(List fromKeyColumns) {
 			this.fromKeyColumns = fromKeyColumns;
@@ -181,7 +191,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param toKeyColumns the toKeyColumns to set
+		 * @param toKeyColumns
+		 *            the toKeyColumns to set
 		 */
 		public void setToKeyColumns(List toKeyColumns) {
 			this.toKeyColumns = toKeyColumns;
@@ -195,7 +206,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param viaTableName the viaTableName to set
+		 * @param viaTableName
+		 *            the viaTableName to set
 		 */
 		public void setViaTableName(String viaTableName) {
 			this.viaTableName = viaTableName;
@@ -208,12 +220,17 @@ public abstract class MartConstructorAction {
 	public static class UpdateOptimiser extends MartConstructorAction {
 
 		private Collection keyColumns;
+
 		private String optTableName;
+
 		private Collection nonNullColumns;
+
 		private String optColumnName;
+
 		private String sourceTableName;
+
 		private boolean countNotBool;
-		
+
 		/**
 		 * Creates a new UpdateOptimiser action.
 		 * 
@@ -238,7 +255,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param countNotBool the countNotBool to set
+		 * @param countNotBool
+		 *            the countNotBool to set
 		 */
 		public void setCountNotBool(boolean countNotBool) {
 			this.countNotBool = countNotBool;
@@ -252,7 +270,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param keyColumns the keyColumns to set
+		 * @param keyColumns
+		 *            the keyColumns to set
 		 */
 		public void setKeyColumns(Collection keyColumns) {
 			this.keyColumns = keyColumns;
@@ -266,7 +285,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param nonNullColumns the nonNullColumns to set
+		 * @param nonNullColumns
+		 *            the nonNullColumns to set
 		 */
 		public void setNonNullColumns(Collection nonNullColumns) {
 			this.nonNullColumns = nonNullColumns;
@@ -280,7 +300,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param optColumnName the optColumnName to set
+		 * @param optColumnName
+		 *            the optColumnName to set
 		 */
 		public void setOptColumnName(String optColumnName) {
 			this.optColumnName = optColumnName;
@@ -294,7 +315,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param optTableName the optTableName to set
+		 * @param optTableName
+		 *            the optTableName to set
 		 */
 		public void setOptTableName(String optTableName) {
 			this.optTableName = optTableName;
@@ -308,21 +330,23 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param sourceTableName the sourceTableName to set
+		 * @param sourceTableName
+		 *            the sourceTableName to set
 		 */
 		public void setSourceTableName(String sourceTableName) {
 			this.sourceTableName = sourceTableName;
 		}
 	}
-	
+
 	/**
 	 * Create optimiser table actions.
 	 */
 	public static class CreateOptimiser extends MartConstructorAction {
 
 		private Collection keyColumns;
+
 		private String optTableName;
-		
+
 		/**
 		 * Creates a new CreateOptimiser action.
 		 * 
@@ -347,7 +371,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param keyColumns the keyColumns to set
+		 * @param keyColumns
+		 *            the keyColumns to set
 		 */
 		public void setKeyColumns(Collection keyColumns) {
 			this.keyColumns = keyColumns;
@@ -361,13 +386,14 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param optTableName the optTableName to set
+		 * @param optTableName
+		 *            the optTableName to set
 		 */
 		public void setOptTableName(String optTableName) {
 			this.optTableName = optTableName;
 		}
 	}
-	
+
 	/**
 	 * LeftJoin actions.
 	 */
@@ -413,7 +439,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param leftJoinColumns the leftJoinColumns to set
+		 * @param leftJoinColumns
+		 *            the leftJoinColumns to set
 		 */
 		public void setLeftJoinColumns(List leftJoinColumns) {
 			this.leftJoinColumns = leftJoinColumns;
@@ -427,7 +454,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param leftSelectColumns the leftSelectColumns to set
+		 * @param leftSelectColumns
+		 *            the leftSelectColumns to set
 		 */
 		public void setLeftSelectColumns(List leftSelectColumns) {
 			this.leftSelectColumns = leftSelectColumns;
@@ -441,7 +469,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param leftTable the leftTable to set
+		 * @param leftTable
+		 *            the leftTable to set
 		 */
 		public void setLeftTable(String leftTable) {
 			this.leftTable = leftTable;
@@ -455,7 +484,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param resultTable the resultTable to set
+		 * @param resultTable
+		 *            the resultTable to set
 		 */
 		public void setResultTable(String resultTable) {
 			this.resultTable = resultTable;
@@ -469,7 +499,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param rightJoinColumns the rightJoinColumns to set
+		 * @param rightJoinColumns
+		 *            the rightJoinColumns to set
 		 */
 		public void setRightJoinColumns(List rightJoinColumns) {
 			this.rightJoinColumns = rightJoinColumns;
@@ -483,7 +514,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param rightSchema the rightSchema to set
+		 * @param rightSchema
+		 *            the rightSchema to set
 		 */
 		public void setRightSchema(String rightSchema) {
 			this.rightSchema = rightSchema;
@@ -497,7 +529,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param rightSelectColumns the rightSelectColumns to set
+		 * @param rightSelectColumns
+		 *            the rightSelectColumns to set
 		 */
 		public void setRightSelectColumns(List rightSelectColumns) {
 			this.rightSelectColumns = rightSelectColumns;
@@ -511,13 +544,14 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param rightTable the rightTable to set
+		 * @param rightTable
+		 *            the rightTable to set
 		 */
 		public void setRightTable(String rightTable) {
 			this.rightTable = rightTable;
 		}
 	}
-		
+
 	/**
 	 * Join actions.
 	 */
@@ -536,15 +570,15 @@ public abstract class MartConstructorAction {
 		private Map selectColumns;
 
 		private String resultTable;
-		
+
 		private RestrictedTableDefinition restrictedTableDefinition;
-		
+
 		private RestrictedRelationDefinition restrictedRelationDefinition;
-		
+
 		private boolean relationRestrictionLeftIsFirst;
-		
+
 		private String partitionColumn;
-		
+
 		private String partitionValue;
 
 		/**
@@ -676,9 +710,11 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param restrictedTableDefinition the tableRestriction to set
+		 * @param restrictedTableDefinition
+		 *            the tableRestriction to set
 		 */
-		public void setTableRestriction(RestrictedTableDefinition restrictedTableDefinition) {
+		public void setTableRestriction(
+				RestrictedTableDefinition restrictedTableDefinition) {
 			this.restrictedTableDefinition = restrictedTableDefinition;
 		}
 
@@ -690,7 +726,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param partitionColumn the partitionColumn to set
+		 * @param partitionColumn
+		 *            the partitionColumn to set
 		 */
 		public void setPartitionColumn(String partitionColumn) {
 			this.partitionColumn = partitionColumn;
@@ -704,7 +741,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param partitionValue the partitionValue to set
+		 * @param partitionValue
+		 *            the partitionValue to set
 		 */
 		public void setPartitionValue(String partitionValue) {
 			this.partitionValue = partitionValue;
@@ -718,9 +756,11 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param restrictedRelationDefinition the relationRestriction to set
+		 * @param restrictedRelationDefinition
+		 *            the relationRestriction to set
 		 */
-		public void setRelationRestriction(RestrictedRelationDefinition restrictedRelationDefinition) {
+		public void setRelationRestriction(
+				RestrictedRelationDefinition restrictedRelationDefinition) {
 			this.restrictedRelationDefinition = restrictedRelationDefinition;
 		}
 
@@ -732,11 +772,223 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param relationRestrictionLeftIsFirst the relationRestrictionLeftIsFirst to set
+		 * @param relationRestrictionLeftIsFirst
+		 *            the relationRestrictionLeftIsFirst to set
 		 */
 		public void setRelationRestrictionLeftIsFirst(
 				boolean relationRestrictionLeftIsFirst) {
 			this.relationRestrictionLeftIsFirst = relationRestrictionLeftIsFirst;
+		}
+	}
+
+	/**
+	 * ConcatJoin actions.
+	 */
+	public static class ConcatJoin extends MartConstructorAction {
+
+		private String leftTable;
+
+		private String rightSchema;
+
+		private String rightTable;
+
+		private List leftJoinColumns;
+
+		private List rightJoinColumns;
+
+		private String resultTable;
+
+		private RestrictedTableDefinition restrictedTableDefinition;
+
+		private RestrictedRelationDefinition restrictedRelationDefinition;
+
+		private boolean relationRestrictionLeftIsFirst;
+		
+		private String concatColumnName;
+		
+		private ConcatRelationDefinition concatColumnDefinition;
+
+		/**
+		 * Creates a new LeftJoin action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public ConcatJoin(String datasetSchemaName, String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcMerge");
+		}
+
+		/**
+		 * @return the leftJoinColumns
+		 */
+		public List getLeftJoinColumns() {
+			return leftJoinColumns;
+		}
+
+		/**
+		 * @param leftJoinColumns
+		 *            the leftJoinColumns to set
+		 */
+		public void setLeftJoinColumns(List leftJoinColumns) {
+			this.leftJoinColumns = leftJoinColumns;
+		}
+
+		/**
+		 * @return the leftTable
+		 */
+		public String getLeftTable() {
+			return leftTable;
+		}
+
+		/**
+		 * @param leftTable
+		 *            the leftTable to set
+		 */
+		public void setLeftTable(String leftTable) {
+			this.leftTable = leftTable;
+		}
+
+		/**
+		 * @return the resultTable
+		 */
+		public String getResultTable() {
+			return resultTable;
+		}
+
+		/**
+		 * @param resultTable
+		 *            the resultTable to set
+		 */
+		public void setResultTable(String resultTable) {
+			this.resultTable = resultTable;
+		}
+
+		/**
+		 * @return the rightJoinColumns
+		 */
+		public List getRightJoinColumns() {
+			return rightJoinColumns;
+		}
+
+		/**
+		 * @param rightJoinColumns
+		 *            the rightJoinColumns to set
+		 */
+		public void setRightJoinColumns(List rightJoinColumns) {
+			this.rightJoinColumns = rightJoinColumns;
+		}
+
+		/**
+		 * @return the rightSchema
+		 */
+		public String getRightSchema() {
+			return rightSchema;
+		}
+
+		/**
+		 * @param rightSchema
+		 *            the rightSchema to set
+		 */
+		public void setRightSchema(String rightSchema) {
+			this.rightSchema = rightSchema;
+		}
+
+		/**
+		 * @return the rightTable
+		 */
+		public String getRightTable() {
+			return rightTable;
+		}
+
+		/**
+		 * @param rightTable
+		 *            the rightTable to set
+		 */
+		public void setRightTable(String rightTable) {
+			this.rightTable = rightTable;
+		}
+
+		/**
+		 * @return the tableRestriction
+		 */
+		public RestrictedTableDefinition getTableRestriction() {
+			return restrictedTableDefinition;
+		}
+
+		/**
+		 * @param restrictedTableDefinition
+		 *            the tableRestriction to set
+		 */
+		public void setTableRestriction(
+				RestrictedTableDefinition restrictedTableDefinition) {
+			this.restrictedTableDefinition = restrictedTableDefinition;
+		}
+
+		/**
+		 * @return the relationRestriction
+		 */
+		public RestrictedRelationDefinition getRelationRestriction() {
+			return restrictedRelationDefinition;
+		}
+
+		/**
+		 * @param restrictedRelationDefinition
+		 *            the relationRestriction to set
+		 */
+		public void setRelationRestriction(
+				RestrictedRelationDefinition restrictedRelationDefinition) {
+			this.restrictedRelationDefinition = restrictedRelationDefinition;
+		}
+
+		/**
+		 * @return the relationRestrictionLeftIsFirst
+		 */
+		public boolean isRelationRestrictionLeftIsFirst() {
+			return relationRestrictionLeftIsFirst;
+		}
+
+		/**
+		 * @param relationRestrictionLeftIsFirst
+		 *            the relationRestrictionLeftIsFirst to set
+		 */
+		public void setRelationRestrictionLeftIsFirst(
+				boolean relationRestrictionLeftIsFirst) {
+			this.relationRestrictionLeftIsFirst = relationRestrictionLeftIsFirst;
+		}
+
+		/**
+		 * @return the concatColumnDefinition
+		 */
+		public ConcatRelationDefinition getConcatColumnDefinition() {
+			return concatColumnDefinition;
+		}
+
+		/**
+		 * @param concatColumnDefinition the concatColumnDefinition to set
+		 */
+		public void setConcatColumnDefinition(
+				ConcatRelationDefinition concatColumnDefinition) {
+			this.concatColumnDefinition = concatColumnDefinition;
+		}
+
+		/**
+		 * @return the concatColumnName
+		 */
+		public String getConcatColumnName() {
+			return concatColumnName;
+		}
+
+		/**
+		 * @param concatColumnName the concatColumnName to set
+		 */
+		public void setConcatColumnName(String concatColumnName) {
+			this.concatColumnName = concatColumnName;
 		}
 	}
 
@@ -779,7 +1031,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param expressionColumns the expressionColumns to set
+		 * @param expressionColumns
+		 *            the expressionColumns to set
 		 */
 		public void setExpressionColumns(Map expressionColumns) {
 			this.expressionColumns = expressionColumns;
@@ -793,7 +1046,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param groupByColumns the groupByColumns to set
+		 * @param groupByColumns
+		 *            the groupByColumns to set
 		 */
 		public void setGroupByColumns(Collection groupByColumns) {
 			this.groupByColumns = groupByColumns;
@@ -807,7 +1061,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param resultTable the resultTable to set
+		 * @param resultTable
+		 *            the resultTable to set
 		 */
 		public void setResultTable(String resultTable) {
 			this.resultTable = resultTable;
@@ -821,7 +1076,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param selectColumns the selectColumns to set
+		 * @param selectColumns
+		 *            the selectColumns to set
 		 */
 		public void setSelectColumns(Collection selectColumns) {
 			this.selectColumns = selectColumns;
@@ -835,7 +1091,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param table the table to set
+		 * @param table
+		 *            the table to set
 		 */
 		public void setTable(String table) {
 			this.table = table;
@@ -854,11 +1111,11 @@ public abstract class MartConstructorAction {
 		private Map selectColumns;
 
 		private String resultTable;
-		
+
 		private RestrictedTableDefinition restrictedTableDefinition;
-		
+
 		private String partitionColumn;
-		
+
 		private String partitionValue;
 
 		/**
@@ -945,9 +1202,11 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param restrictedTableDefinition the tableRestriction to set
+		 * @param restrictedTableDefinition
+		 *            the tableRestriction to set
 		 */
-		public void setTableRestriction(RestrictedTableDefinition restrictedTableDefinition) {
+		public void setTableRestriction(
+				RestrictedTableDefinition restrictedTableDefinition) {
 			this.restrictedTableDefinition = restrictedTableDefinition;
 		}
 
@@ -959,7 +1218,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param partitionColumn the partitionColumn to set
+		 * @param partitionColumn
+		 *            the partitionColumn to set
 		 */
 		public void setPartitionColumn(String partitionColumn) {
 			this.partitionColumn = partitionColumn;
@@ -973,7 +1233,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param partitionValue the partitionValue to set
+		 * @param partitionValue
+		 *            the partitionValue to set
 		 */
 		public void setPartitionValue(String partitionValue) {
 			this.partitionValue = partitionValue;
@@ -986,7 +1247,7 @@ public abstract class MartConstructorAction {
 	public static class DropColumns extends MartConstructorAction {
 
 		private Collection columns;
-		
+
 		private String table;
 
 		/**
@@ -1013,7 +1274,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param columns the columns to set
+		 * @param columns
+		 *            the columns to set
 		 */
 		public void setColumns(Collection columns) {
 			this.columns = columns;
@@ -1027,7 +1289,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param table the table to set
+		 * @param table
+		 *            the table to set
 		 */
 		public void setTable(String table) {
 			this.table = table;
@@ -1065,7 +1328,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param table the table to set
+		 * @param table
+		 *            the table to set
 		 */
 		public void setTable(String table) {
 			this.table = table;

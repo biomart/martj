@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.biomart.builder.model.TransformationUnit.Expression;
+import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -56,12 +56,12 @@ import org.biomart.common.resources.Resources;
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
- *			$Author$
+ *          $Author$
  * @since 0.1
  */
 public abstract class ExplainTransformationDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
-	
+
 	private List tableComponents = new ArrayList();
 
 	/**
@@ -80,9 +80,10 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		// Set the background.
 		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 	}
-	
+
 	/**
 	 * Find out what table components we have.
+	 * 
 	 * @return the list of components.
 	 */
 	public Collection getTableComponents() {
@@ -93,13 +94,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * The background colour to use for the diagram.
 	 */
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
-	
+
 	/**
 	 * This version of the class shows a single table.
 	 */
 	public static class SingleTable extends ExplainTransformationDiagram {
 		private static final long serialVersionUID = 1;
-		
+
 		private final SelectFromTable stu;
 
 		/**
@@ -123,12 +124,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			this.removeAll();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
-			final Schema tempSourceSchema = new GenericSchema(this.stu.getTable()
-					.getSchema().getName());
-			final Table tempSource = new GenericTable(this.stu.getTable().getName(),
-					tempSourceSchema);
+			final Schema tempSourceSchema = new GenericSchema(this.stu
+					.getTable().getSchema().getName());
+			final Table tempSource = new GenericTable(this.stu.getTable()
+					.getName(), tempSourceSchema);
 			tempSourceSchema.addTable(tempSource);
-			for (Iterator i = this.stu.getNewColumnNameMap().values().iterator(); i.hasNext();)
+			for (Iterator i = this.stu.getNewColumnNameMap().values()
+					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.addDiagramComponent(tc);
@@ -146,7 +148,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		private static final long serialVersionUID = 1;
 
 		private final JoinTable ltu;
-		
+
 		private final Collection lIncludeCols;
 
 		/**
@@ -175,8 +177,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			this.removeAll();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
-			final Schema tempSourceSchema = new GenericSchema(
-					Resources
+			final Schema tempSourceSchema = new GenericSchema(Resources
 					.get("dummyTempSchemaName"));
 			final Table tempSource = new GenericTable(Resources
 					.get("dummyTempTableName"), tempSourceSchema);
@@ -185,8 +186,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempSource.addColumn((Column) i.next());
 			Key tempSourceKey;
 			if (this.ltu.getSchemaSourceKey() instanceof ForeignKey) {
-				tempSourceKey = new GenericForeignKey(
-							this.ltu.getSourceDataSetColumns());
+				tempSourceKey = new GenericForeignKey(this.ltu
+						.getSourceDataSetColumns());
 				try {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
 				} catch (AssociationException e) {
@@ -194,20 +195,22 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					throw new BioMartError(e);
 				}
 			} else {
-				tempSourceKey = new GenericPrimaryKey(
-						this.ltu.getSourceDataSetColumns());
+				tempSourceKey = new GenericPrimaryKey(this.ltu
+						.getSourceDataSetColumns());
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
 
 			// Create a copy of the target table complete with target key.
-			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(this.ltu.getSchemaSourceKey());
+			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
+					this.ltu.getSchemaSourceKey());
 			final Table realTarget = realTargetKey.getTable();
 			final Schema tempTargetSchema = new GenericSchema(realTarget
 					.getSchema().getName());
 			final Table tempTarget = new GenericTable(realTarget.getName(),
 					tempTargetSchema);
 			tempTargetSchema.addTable(tempTarget);
-			for (Iterator i = this.ltu.getNewColumnNameMap().values().iterator(); i.hasNext();)
+			for (Iterator i = this.ltu.getNewColumnNameMap().values()
+					.iterator(); i.hasNext();)
 				tempTarget.addColumn((Column) i.next());
 			Key tempTargetKey;
 			if (realTargetKey instanceof ForeignKey) {
@@ -230,7 +233,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			Relation tempRelation;
 			try {
 				tempRelation = new GenericRelation(tempSourceKey,
-						tempTargetKey, this.ltu.getSchemaRelation().getCardinality());
+						tempTargetKey, this.ltu.getSchemaRelation()
+								.getCardinality());
 				tempSourceKey.addRelation(tempRelation);
 				tempTargetKey.addRelation(tempRelation);
 			} catch (AssociationException e) {
@@ -253,23 +257,25 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			this.resizeDiagram();
 		}
 	}
+
 	/**
 	 * This version of the class shows a single table.
 	 */
-	public static class ExpressionTable extends ExplainTransformationDiagram {
+	public static class AdditionalColumns extends ExplainTransformationDiagram {
 		private static final long serialVersionUID = 1;
-		
-		private final Expression etu;
+
+		private final TransformationUnit etu;
 
 		/**
 		 * Creates a diagram showing the given table.
 		 * 
 		 * @param martTab
 		 *            the mart tab to pass menu events onto.
-		 * @param stu
+		 * @param etu
 		 *            the transformation unit to show.
 		 */
-		public ExpressionTable(final MartTab martTab, final Expression etu) {
+		public AdditionalColumns(final MartTab martTab,
+				final TransformationUnit etu) {
 			super(martTab);
 
 			// Remember the params, and calculate the diagram.
@@ -282,13 +288,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			this.removeAll();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
-			final Schema tempSourceSchema = new GenericSchema(
-					Resources
+			final Schema tempSourceSchema = new GenericSchema(Resources
 					.get("dummyTempSchemaName"));
 			final Table tempSource = new GenericTable(Resources
 					.get("dummyTempTableName"), tempSourceSchema);
 			tempSourceSchema.addTable(tempSource);
-			for (Iterator i = this.etu.getNewColumnNameMap().values().iterator(); i.hasNext();)
+			for (Iterator i = this.etu.getNewColumnNameMap().values()
+					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.addDiagramComponent(tc);

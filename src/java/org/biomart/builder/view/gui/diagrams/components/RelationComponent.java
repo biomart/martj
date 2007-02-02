@@ -44,8 +44,8 @@ import org.biomart.common.model.Relation;
  * MartBuilder.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class RelationComponent extends JComponent implements DiagramComponent {

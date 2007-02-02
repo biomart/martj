@@ -61,6 +61,8 @@ public class SchemaModificationSet {
 
 	private final Map restrictedRelations = new HashMap();
 
+	private final Map concatRelations = new HashMap();
+
 	public SchemaModificationSet(final DataSet ds) {
 		this.ds = ds;
 	}
@@ -215,15 +217,15 @@ public class SchemaModificationSet {
 				|| (globalRests != null && globalRests.containsKey(table));
 	}
 
-	public RestrictedTableDefinition getRestrictedTable(final DataSetTable dsTable,
-			final Table table) {
+	public RestrictedTableDefinition getRestrictedTable(
+			final DataSetTable dsTable, final Table table) {
 		return this.getRestrictedTable(
 				dsTable == null ? SchemaModificationSet.DATASET : dsTable
 						.getName(), table);
 	}
 
-	private RestrictedTableDefinition getRestrictedTable(final String dsTableName,
-			final Table table) {
+	private RestrictedTableDefinition getRestrictedTable(
+			final String dsTableName, final Table table) {
 		if (!this.isRestrictedTable(dsTableName, table))
 			return null;
 		final Map globalRests = (Map) this.restrictedTables
@@ -344,8 +346,8 @@ public class SchemaModificationSet {
 						.getName(), relation, index);
 	}
 
-	private RestrictedRelationDefinition getRestrictedRelation(final String dsTableName,
-			final Relation relation, final int index) {
+	private RestrictedRelationDefinition getRestrictedRelation(
+			final String dsTableName, final Relation relation, final int index) {
 		if (!this.isRestrictedRelation(dsTableName, relation, index))
 			return null;
 		final Map globalRests = (Map) this.restrictedRelations
@@ -356,12 +358,152 @@ public class SchemaModificationSet {
 		return (rests != null && rests.containsKey(relation) && ((Map) rests
 				.get(relation)).containsKey(new Integer(index))) ? (RestrictedRelationDefinition) ((Map) rests
 				.get(relation)).get(new Integer(index))
-				: (RestrictedRelationDefinition) ((Map) globalRests.get(relation))
-						.get(new Integer(index));
+				: (RestrictedRelationDefinition) ((Map) globalRests
+						.get(relation)).get(new Integer(index));
 	}
 
 	public Map getRestrictedRelations() {
 		return this.restrictedRelations;
+	}
+
+	public String nextConcatColumn(final DataSetTable table) {
+		final String tableKey = table.getName();
+		int i = 1;
+		if (this.concatRelations.containsKey(tableKey))
+			while (((Map) this.concatRelations.get(tableKey))
+					.containsKey(Resources.get("concatColumnPrefix") + i)) {
+				i++;
+			}
+		return Resources.get("concatColumnPrefix") + i;
+	}
+
+	public void setConcatRelation(final Relation relation, final int index,
+			final ConcatRelationDefinition restriction)
+			throws ValidationException {
+		this.setConcatRelation(SchemaModificationSet.DATASET, relation, index,
+				restriction);
+	}
+
+	public void setConcatRelation(final DataSetTable dsTable,
+			final Relation relation, final int index,
+			final ConcatRelationDefinition restriction)
+			throws ValidationException {
+		this.setConcatRelation(dsTable.getName(), relation, index, restriction);
+	}
+
+	private void setConcatRelation(final String dsTableName,
+			final Relation relation, final int index,
+			final ConcatRelationDefinition restriction)
+			throws ValidationException {
+		if (!relation.isOneToMany())
+			throw new ValidationException(Resources
+					.get("cannotConcatNonOneMany"));
+		if (!this.concatRelations.containsKey(dsTableName))
+			this.concatRelations.put(dsTableName, new HashMap());
+		final Map restrictions = (Map) this.concatRelations.get(dsTableName);
+		if (!restrictions.containsKey(relation))
+			restrictions.put(relation, new HashMap());
+		((Map) restrictions.get(relation)).put(new Integer(index), restriction);
+	}
+
+	public void unsetConcatRelation(final Relation relation, final int index) {
+		this
+				.unsetConcatRelation(SchemaModificationSet.DATASET, relation,
+						index);
+	}
+
+	public void unsetConcatRelation(final DataSetTable dsTable,
+			final Relation relation, final int index)
+			throws ValidationException {
+		// Complain if asked to unmask globally masked relation.
+		final Map globalRests = (Map) this.concatRelations
+				.get(SchemaModificationSet.DATASET);
+		if (globalRests != null
+				&& globalRests.containsKey(relation)
+				&& ((Map) globalRests.get(relation)).containsKey(new Integer(
+						index)))
+			throw new ValidationException(Resources
+					.get("relationConcatedGlobally"));
+		this.unsetConcatRelation(dsTable.getName(), relation, index);
+	}
+
+	private void unsetConcatRelation(final String dsTableName,
+			final Relation relation, final int index) {
+		if (!this.isConcatRelation(dsTableName, relation, index))
+			return;
+		if (this.concatRelations.containsKey(dsTableName)) {
+			final Map rests = (Map) this.concatRelations.get(dsTableName);
+			((Map) rests.get(relation)).remove(new Integer(index));
+			if (((Map) rests.get(relation)).isEmpty())
+				rests.remove(relation);
+			if (rests.isEmpty())
+				this.concatRelations.remove(dsTableName);
+		}
+	}
+
+	public boolean isConcatRelation(final DataSetTable dsTable,
+			final Relation relation) {
+		return this.isConcatRelation(
+				dsTable == null ? SchemaModificationSet.DATASET : dsTable
+						.getName(), relation);
+	}
+
+	private boolean isConcatRelation(final String dsTableName,
+			final Relation relation) {
+		final Map globalRests = (Map) this.concatRelations
+				.get(SchemaModificationSet.DATASET);
+		final Map rests = this.concatRelations.containsKey(dsTableName) ? (Map) this.concatRelations
+				.get(dsTableName)
+				: globalRests;
+		return (rests != null && rests.containsKey(relation))
+				|| (globalRests != null && globalRests.containsKey(relation));
+	}
+
+	public boolean isConcatRelation(final DataSetTable dsTable,
+			final Relation relation, final int index) {
+		return this.isConcatRelation(
+				dsTable == null ? SchemaModificationSet.DATASET : dsTable
+						.getName(), relation, index);
+	}
+
+	private boolean isConcatRelation(final String dsTableName,
+			final Relation relation, final int index) {
+		final Map globalRests = (Map) this.concatRelations
+				.get(SchemaModificationSet.DATASET);
+		final Map rests = this.concatRelations.containsKey(dsTableName) ? (Map) this.concatRelations
+				.get(dsTableName)
+				: globalRests;
+		return (rests != null && rests.containsKey(relation) && ((Map) rests
+				.get(relation)).containsKey(new Integer(index)))
+				|| (globalRests != null && globalRests.containsKey(relation) && ((Map) globalRests
+						.get(relation)).containsKey(new Integer(index)));
+	}
+
+	public ConcatRelationDefinition getConcatRelation(
+			final DataSetTable dsTable, final Relation relation, final int index) {
+		return this.getConcatRelation(
+				dsTable == null ? SchemaModificationSet.DATASET : dsTable
+						.getName(), relation, index);
+	}
+
+	private ConcatRelationDefinition getConcatRelation(
+			final String dsTableName, final Relation relation, final int index) {
+		if (!this.isConcatRelation(dsTableName, relation, index))
+			return null;
+		final Map globalRests = (Map) this.concatRelations
+				.get(SchemaModificationSet.DATASET);
+		final Map rests = this.concatRelations.containsKey(dsTableName) ? (Map) this.concatRelations
+				.get(dsTableName)
+				: globalRests;
+		return (rests != null && rests.containsKey(relation) && ((Map) rests
+				.get(relation)).containsKey(new Integer(index))) ? (ConcatRelationDefinition) ((Map) rests
+				.get(relation)).get(new Integer(index))
+				: (ConcatRelationDefinition) ((Map) globalRests.get(relation))
+						.get(new Integer(index));
+	}
+
+	public Map getConcatRelations() {
+		return this.concatRelations;
 	}
 
 	public void setForceIncludeRelation(final Relation relation) {
@@ -559,8 +701,7 @@ public class SchemaModificationSet {
 		if (!this.compoundRelations.containsKey(tableName))
 			this.compoundRelations.put(tableName, new HashMap());
 		final Map masks = (Map) this.compoundRelations.get(tableName);
-		if (!masks.containsKey(relation))
-			masks.put(relation, new Integer(n));
+		masks.put(relation, new Integer(n));
 	}
 
 	public void unsetCompoundRelation(final Relation relation) {
@@ -622,9 +763,11 @@ public class SchemaModificationSet {
 			final Relation relation) {
 		final Map globalComps = (Map) this.compoundRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map comps = this.compoundRelations.containsKey(tableName) ? (Map) this.compoundRelations
-				.get(tableName)
+		final Map comps = this.compoundRelations.containsKey(tableName) ? 
+				(Map) this.compoundRelations.get(tableName)
 				: globalComps;
+		// FIXME : Doesn't return the relation even though the containsKey()
+		// returns true!
 		return ((Integer) comps.get(relation)).intValue();
 	}
 
@@ -665,6 +808,21 @@ public class SchemaModificationSet {
 						.get(entry2.getKey())).putAll((Map) entry2.getValue());
 			}
 			((Map) target.restrictedRelations.get(entry.getKey()))
+					.putAll((Map) entry.getValue());
+		}
+		target.concatRelations.clear();
+		// We have to use an iterator because of nested maps.
+		for (final Iterator i = this.concatRelations.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			target.concatRelations.put(entry.getKey(), new HashMap());
+			for (final Iterator j = ((Map) entry.getValue()).entrySet()
+					.iterator(); j.hasNext();) {
+				final Map.Entry entry2 = (Map.Entry) j.next();
+				((Map) ((Map) target.concatRelations.get(entry.getKey()))
+						.get(entry2.getKey())).putAll((Map) entry2.getValue());
+			}
+			((Map) target.concatRelations.get(entry.getKey()))
 					.putAll((Map) entry.getValue());
 		}
 	}
@@ -782,8 +940,8 @@ public class SchemaModificationSet {
 		 * @param aliases
 		 *            the aliases to use for columns.
 		 */
-		public RestrictedRelationDefinition(final String expr, final Map leftAliases,
-				final Map rightAliases) {
+		public RestrictedRelationDefinition(final String expr,
+				final Map leftAliases, final Map rightAliases) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -862,6 +1020,122 @@ public class SchemaModificationSet {
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, rightTablePrefix + "."
 						+ col.getName());
+			}
+			Log.debug("Expression is: " + sub);
+			return sub;
+		}
+
+		/**
+		 * The actual expression. The values from the alias maps will be used to
+		 * refer to various columns. This value is RDBMS-specific.
+		 * 
+		 * @param expr
+		 *            the actual expression to use.
+		 */
+		public void setExpression(final String expr) {
+			this.expr = expr;
+		}
+	}
+
+	/**
+	 * Defines the restriction on a table, ie. a where-clause.
+	 */
+	public static class ConcatRelationDefinition {
+
+		private Map aliases;
+
+		private String expr;
+
+		private String rowSep;
+
+		private String colKey;
+
+		/**
+		 * This constructor gives the restriction an initial expression and a
+		 * set of aliases. The expression may not be empty, and neither can the
+		 * alias map.
+		 * 
+		 * @param expr
+		 *            the expression to define for this restriction.
+		 * @param aliases
+		 *            the aliases to use for columns.
+		 */
+		public ConcatRelationDefinition(final String expr, final Map aliases,
+				final String rowSep, final String colKey) {
+			// Test for good arguments.
+			if (expr == null || expr.trim().length() == 0)
+				throw new IllegalArgumentException(Resources
+						.get("concatRelMissingExpression"));
+			if (aliases == null || aliases.isEmpty())
+				throw new IllegalArgumentException(Resources
+						.get("concatRelMissingAliases"));
+			if (aliases == null || aliases.isEmpty())
+				throw new IllegalArgumentException(Resources
+						.get("concatRelMissingRowSep"));
+
+			// Remember the settings.
+			this.aliases = new TreeMap();
+			this.aliases.putAll(aliases);
+			this.expr = expr;
+			this.rowSep = rowSep;
+			this.colKey = colKey;
+		}
+
+		/**
+		 * Retrieves the map used for setting up aliases.
+		 * 
+		 * @return the aliases map. Keys must be {@link Column} instances, and
+		 *         values are aliases used in the expression.
+		 */
+		public Map getAliases() {
+			return this.aliases;
+		}
+
+		/**
+		 * Returns the expression, <i>without</i> substitution. This value is
+		 * RDBMS-specific.
+		 * 
+		 * @return the unsubstituted expression.
+		 */
+		public String getExpression() {
+			return this.expr;
+		}
+
+		public String getColKey() {
+			return this.colKey;
+		}
+
+		/**
+		 * Returns the expression, <i>without</i> substitution. This value is
+		 * RDBMS-specific.
+		 * 
+		 * @return the unsubstituted expression.
+		 */
+		public String getRowSep() {
+			return this.rowSep;
+		}
+
+		/**
+		 * Returns the expression, <i>with</i> substitution. This value is
+		 * RDBMS-specific. The prefix map must contain two entries. Each entry
+		 * relates to one of the keys of a relation. The key of the map is the
+		 * key of the relation, and the value is the prefix to use in the
+		 * substituion, eg. "a" if columns for the table for that key should be
+		 * prefixed as "a.mycolumn".
+		 * 
+		 * @param tablePrefix
+		 *            the prefix to use for the table in the expression.
+		 * @return the substituted expression.
+		 */
+		public String getSubstitutedExpression(final String tablePrefix) {
+			Log.debug("Calculating restricted table expression");
+			String sub = this.expr;
+			for (final Iterator i = this.aliases.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final Column col = (Column) entry.getKey();
+				final String alias = ":" + (String) entry.getValue();
+				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;

@@ -33,9 +33,9 @@ import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.exceptions.AssociationException;
@@ -162,32 +162,6 @@ public class MartBuilderUtils {
 		relation.setStatus(status);
 		mart.synchroniseDataSets();
 	}
-
-	/**
-	 * Flags a relation as concat-only within a dataset, then synchronise the
-	 * dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to flag the relation in.
-	 * @param relation
-	 *            the relation to flag as concat-only.
-	 * @param type
-	 *            the type of concat-only relation this should be.
-	 * @throws ValidationException
-	 *             if the dataset could not be synchronised.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised. FIXME: Reinstate.
-	 *             public static void concatOnlyRelation(final DataSet dataset,
-	 *             final Relation relation, final DataSetConcatRelationType
-	 *             type) throws SQLException, DataModelException,
-	 *             ValidationException {
-	 *             Log.info(Resources.get("logReqConcatRel"));
-	 *             dataset.flagConcatOnlyRelation(relation, type);
-	 *             dataset.unflagSubclassRelation(relation);
-	 *             dataset.synchronise(); }
-	 */
 
 	/**
 	 * Attempts to establish a relation between two keys in a mart. The relation
@@ -623,16 +597,72 @@ public class MartBuilderUtils {
 	 *            the group-by columns required will be worked out
 	 *            automatically.
 	 */
-	public static void setExpressionColumn(final DataSetTable dsTable, final String column,
-			final Map aliases, final String expression, final boolean groupBy)
+	public static void concatRelation(final DataSetTable dsTable,
+			final Relation rel, final int index, final String column,
+			final Map aliases, final String expression, final String rowSep)
+			throws SQLException, DataModelException, ValidationException {
+		Log.info(Resources.get("logReqConcatRelation"));
+		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
+				expression, aliases, rowSep, column);
+		((DataSet) dsTable.getSchema()).getSchemaModifications()
+				.setConcatRelation(dsTable, rel, index, expr);
+		((DataSet) dsTable.getSchema()).synchronise();
+	}
+
+	/**
+	 * This method asks to modify an expression column.
+	 * 
+	 * @param column
+	 *            the column to modify.
+	 * @param columnAliases
+	 *            the map of columns on the table to labels in the expression.
+	 * @param expression
+	 *            the expression for the column.
+	 * @param groupBy
+	 *            whether this column requires a group-by statement. If it does,
+	 *            the group-by columns required will be worked out
+	 *            automatically.
+	 */
+	public static void concatRelation(final DataSet ds, final Relation rel,
+			final int index, final String column, final Map aliases,
+			final String expression, final String rowSep) throws SQLException,
+			DataModelException, ValidationException {
+		Log.info(Resources.get("logReqConcatRelation"));
+		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
+				expression, aliases, rowSep, column);
+		ds.getSchemaModifications().setConcatRelation(rel, index, expr);
+		ds.synchronise();
+	}
+
+	/**
+	 * This method asks to modify an expression column.
+	 * 
+	 * @param def
+	 *            the column to modify.
+	 * @param columnAliases
+	 *            the map of columns on the table to labels in the expression.
+	 * @param expression
+	 *            the expression for the column.
+	 * @param groupBy
+	 *            whether this column requires a group-by statement. If it does,
+	 *            the group-by columns required will be worked out
+	 *            automatically.
+	 */
+	public static void setExpressionColumn(final DataSetTable dsTable,
+			final ExpressionColumnDefinition def, final Map aliases,
+			final String expression, final boolean groupBy)
 			throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqChangeExprCol"));
-		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(expression, aliases,
-				groupBy);
-		((DataSet)dsTable.getSchema()).getDataSetModifications()
-				.setExpressionColumn(dsTable,
-						column, expr);
-		((DataSet)dsTable.getSchema()).synchronise();
+		((DataSet) dsTable.getSchema()).getDataSetModifications()
+				.unsetExpressionColumn(dsTable, def);
+		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(
+				expression, aliases, groupBy,
+				def == null ? ((DataSet) dsTable.getSchema())
+						.getDataSetModifications()
+						.nextExpressionColumn(dsTable) : def.getColKey());
+		((DataSet) dsTable.getSchema()).getDataSetModifications()
+				.setExpressionColumn(dsTable, expr);
+		((DataSet) dsTable.getSchema()).synchronise();
 	}
 
 	/**
@@ -677,13 +707,42 @@ public class MartBuilderUtils {
 	 * @param column
 	 *            the expression column to remove.
 	 */
-	public static void removeExpressionColumn(final DataSetTable dsTable, final String column)
-			throws SQLException, DataModelException {
+	public static void unconcatRelation(final DataSet ds,
+			final Relation relation, final int index)
+			throws ValidationException, SQLException, DataModelException {
+		Log.info(Resources.get("logReqUnconcatRelation"));
+		ds.getSchemaModifications().unsetConcatRelation(relation, index);
+		ds.synchronise();
+	}
+
+	/**
+	 * This method asks to remove a particular expression column.
+	 * 
+	 * @param column
+	 *            the expression column to remove.
+	 */
+	public static void unconcatRelation(final DataSetTable dsTable,
+			final Relation relation, final int index)
+			throws ValidationException, SQLException, DataModelException {
+		Log.info(Resources.get("logReqUnconcatRelation"));
+		((DataSet) dsTable.getSchema()).getSchemaModifications()
+				.unsetConcatRelation(dsTable, relation, index);
+		((DataSet) dsTable.getSchema()).synchronise();
+	}
+
+	/**
+	 * This method asks to remove a particular expression column.
+	 * 
+	 * @param column
+	 *            the expression column to remove.
+	 */
+	public static void removeExpressionColumn(final DataSetTable dsTable,
+			final ExpressionColumnDefinition column) throws SQLException,
+			DataModelException {
 		Log.info(Resources.get("logReqRemoveExprCol"));
-		((DataSet)dsTable.getSchema()).getDataSetModifications()
-				.unsetExpressionColumn(dsTable,
-						column);
-		((DataSet)dsTable.getSchema()).synchronise();
+		((DataSet) dsTable.getSchema()).getDataSetModifications()
+				.unsetExpressionColumn(dsTable, column);
+		((DataSet) dsTable.getSchema()).synchronise();
 	}
 
 	/**
@@ -881,8 +940,8 @@ public class MartBuilderUtils {
 			final Table table, final String expression, final Map aliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
-		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(expression,
-				aliases);
+		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
+				expression, aliases);
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setRestrictedTable(datasetTable, table, restriction);
 	}
@@ -906,8 +965,8 @@ public class MartBuilderUtils {
 			final String expression, final Map aliases)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
-		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(expression,
-				aliases);
+		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
+				expression, aliases);
 		dataset.getSchemaModifications().setRestrictedTable(table, restriction);
 	}
 
@@ -1093,8 +1152,6 @@ public class MartBuilderUtils {
 			DataModelException {
 		Log.info(Resources.get("logReqSubclassRel"));
 		dataset.getSchemaModifications().setSubclassedRelation(relation);
-		// FIXME: Reinstate.
-		// dataset.unflagConcatOnlyRelation(relation);
 		dataset.synchronise();
 	}
 
@@ -1188,26 +1245,6 @@ public class MartBuilderUtils {
 		Log.info(Resources.get("logReqSyncMartSchema"));
 		mart.synchroniseSchemas();
 	}
-
-	/**
-	 * Unflags a relation as concat-only within a dataset, then regenerates the
-	 * dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to unflag the relation within.
-	 * @param relation
-	 *            the relation to unflag.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised. FIXME: Reinstate.
-	 *             public static void unconcatOnlyRelation(final DataSet
-	 *             dataset, final Relation relation) throws SQLException,
-	 *             DataModelException {
-	 *             Log.info(Resources.get("logReqUnconcatRelation"));
-	 *             dataset.unflagConcatOnlyRelation(relation);
-	 *             dataset.synchronise(); }
-	 */
 
 	/**
 	 * Unmasks a column within a dataset.

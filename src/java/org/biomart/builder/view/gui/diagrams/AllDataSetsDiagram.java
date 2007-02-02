@@ -27,10 +27,10 @@ import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 
 /**
  * This diagram draws a {@link DataSetComponent} for each dataset in a mart.
- *  
+ * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class AllDataSetsDiagram extends Diagram {

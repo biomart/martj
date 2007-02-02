@@ -45,6 +45,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
 import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
@@ -52,7 +53,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
-import org.biomart.builder.view.gui.dialogs.CompoundRelationEditorDialog;
+import org.biomart.builder.view.gui.dialogs.CompoundRelationDialog;
+import org.biomart.builder.view.gui.dialogs.ConcatRelationDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
@@ -239,22 +241,6 @@ public class DataSetTabSet extends JTabbedPane {
 		// at least one tab remains visible and up-to-date.
 		this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1, 0));
 	}
-
-	/*
-	 * Request that a relation be marked as concat-only.
-	 * 
-	 * @param ds the dataset we are working with. @param relation the relation
-	 * to mark. @param type the type of concatenation to use on this relation.
-	 * FIXME: Reinstate. private void requestConcatOnlyRelation(final DataSet
-	 * ds, final Relation relation, final DataSetConcatRelationType type) { try { //
-	 * Mark the relation concat-only. MartBuilderUtils.concatOnlyRelation(ds,
-	 * relation, type); // Recalculate the dataset diagram based on the modified
-	 * dataset. this.recalculateDataSetDiagram(ds); // Update the explanation
-	 * diagram so that it // correctly reflects the changed relation.
-	 * this.recalculateExplanationDialog(); // Update the modified status.
-	 * this.martTab.getMartTabSet().setModifiedStatus(true); } catch (final
-	 * Throwable t) { StackTrace.showStackTrace(t); } }
-	 */
 
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
@@ -453,35 +439,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks for an expression column to be added to the table.
-	 * 
-	 * @param table
-	 *            the table to add the expression column to. FIXME: Reinstate.
-	 *            public void requestAddExpressionColumn(final DataSetTable
-	 *            table) { final ExpressionColumnDialog dialog = new
-	 *            ExpressionColumnDialog(table, null); dialog.show(); //
-	 *            Cancelled? if (dialog.getCancelled()) return; // Get the
-	 *            details. final String columnName = dialog.getColumnName();
-	 *            final Map columnAliases = dialog.getColumnAliases(); final
-	 *            String expression = dialog.getExpression(); final boolean
-	 *            groupBy = dialog.getGroupBy(); // Do this in the background.
-	 *            LongProcess.run(new Runnable() { public void run() { try { //
-	 *            Add the column. MartBuilderUtils.addExpressionColumn(table,
-	 *            columnName, columnAliases, expression, groupBy);
-	 * 
-	 * SwingUtilities.invokeLater(new Runnable() { public void run() { //
-	 * Recalculate the dataset diagram based on the // newly modified dataset.
-	 * DataSetTabSet.this .recalculateDataSetDiagram((DataSet) table
-	 * .getSchema()); // Recalculate the explanation diagram too.
-	 * DataSetTabSet.this.recalculateExplanationDialog(); // Update the modified
-	 * status for the tabset. DataSetTabSet.this.martTab.getMartTabSet()
-	 * .setModifiedStatus(true); } }); } catch (final Throwable t) {
-	 * SwingUtilities.invokeLater(new Runnable() { public void run() {
-	 * StackTrace.showStackTrace(t); } }); } } }); }
-	 * 
-	 */
-
-	/**
 	 * Request that the optimiser type used post-construction of a dataset be
 	 * changed.
 	 * 
@@ -500,20 +457,83 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Request that a relation be marked as concat-only. A dialog will be shown
-	 * to allow the user to choose the concat-only type to use.
+	 * Asks that a relation be restricted.
 	 * 
 	 * @param ds
 	 *            the dataset we are working with.
 	 * @param relation
-	 *            the relation to mark. FIXME: Reinstate. public void
-	 *            requestCreateConcatOnlyRelation(final DataSet ds, final
-	 *            Relation relation) { // Pop up a dialog to ask which columns
-	 *            to use. final DataSetConcatRelationType newType =
-	 *            ConcatRelationEditorDialog .createConcatRelation(relation); //
-	 *            If they chose some columns, create the key. if (newType !=
-	 *            null) this.requestConcatOnlyRelation(ds, relation, newType); }
+	 *            the schema relation to mask.
 	 */
+	public void requestConcatRelation(final DataSet dataset,
+			final DataSetTable dsTable, final Relation relation) {
+		// Get index offset into compound relation.
+		final int index = dataset.getSchemaModifications().isCompoundRelation(
+				dsTable, relation) ? this.askUserForCompoundRelationIndex(
+				dataset, dsTable, relation) : 0;
+
+		// Cancelled?
+		if (index == -1)
+			return;
+
+		final ConcatRelationDefinition definition = dataset
+				.getSchemaModifications().getConcatRelation(dsTable, relation,
+						index);
+
+		final ConcatRelationDialog dialog = new ConcatRelationDialog(relation
+				.getManyKey().getTable(), definition);
+		dialog.show();
+
+		final String colKey = definition == null ? dataset
+				.getSchemaModifications().nextConcatColumn(dsTable)
+				: definition.getColKey();
+
+		// Cancelled?
+		if (dialog.getCancelled())
+			return;
+
+		// Get updated details from the user.
+		final Map aliases = dialog.getColumnAliases();
+		final String expression = dialog.getExpression();
+		final String rowSep = dialog.getRowSep();
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Update the restriction.
+					if (dsTable != null)
+						MartBuilderUtils.concatRelation(dsTable, relation,
+								index, colKey, aliases, expression, rowSep);
+					else
+						MartBuilderUtils.concatRelation(dataset, relation,
+								index, colKey, aliases, expression, rowSep);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this
+									.recalculateDataSetDiagram((DataSet) dsTable
+											.getSchema());
+
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
+
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
+						}
+					});
+				}
+			}
+		});
+	}
 
 	/**
 	 * On a request to create DDL for the current dataset, open the DDL creation
@@ -796,7 +816,7 @@ public class DataSetTabSet extends JTabbedPane {
 			n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
 
 		// Pop up a dialog and update 'compound'.
-		final int newN = CompoundRelationEditorDialog.getCompoundValue(n);
+		final int newN = CompoundRelationDialog.getCompoundValue(n);
 
 		// Skip altogether if no change.
 		if (newN == n)
@@ -883,7 +903,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the schema relation to mask.
 	 */
-	public void requestModifyRelationRestriction(final DataSet dataset,
+	public void requestRestrictRelation(final DataSet dataset,
 			final DataSetTable dsTable, final Relation relation) {
 		// Get index offset into compound relation.
 		final int index = dataset.getSchemaModifications().isCompoundRelation(
@@ -940,7 +960,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param relation
 	 *            the relation to unrestrict.
 	 */
-	public void requestRemoveRelationRestriction(final DataSet dataset,
+	public void requestUnrestrictRelation(final DataSet dataset,
 			final DataSetTable dsTable, final Relation relation) {
 		// Get index offset into compound relation.
 		final int index = dataset.getSchemaModifications().isCompoundRelation(
@@ -977,6 +997,65 @@ public class DataSetTabSet extends JTabbedPane {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
 							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks for a relation restriction to be removed.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param relation
+	 *            the relation to unrestrict.
+	 */
+	public void requestUnconcatRelation(final DataSet dataset,
+			final DataSetTable dsTable, final Relation relation) {
+		// Get index offset into compound relation.
+		final int index = dataset.getSchemaModifications().isCompoundRelation(
+				dsTable, relation) ? this.askUserForCompoundRelationIndex(
+				dataset, dsTable, relation) : 0;
+
+		// Cancelled?
+		if (index == -1)
+			return;
+
+		// Do this in the background.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Remove the restriction.
+					if (dsTable != null)
+						MartBuilderUtils.unconcatRelation(dsTable, relation,
+								index);
+					else
+						MartBuilderUtils.unconcatRelation(dataset, relation,
+								index);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Repaint the dataset diagram based on the modified
+							// dataset.
+							DataSetTabSet.this
+									.recalculateDataSetDiagram((DataSet) dsTable
+											.getSchema());
+
+							// Update the explanation diagram so that it
+							// correctly reflects any changed relation.
+							DataSetTabSet.this.recalculateExplanationDialog();
+
+							// Update the modified status for this tabset.
+							DataSetTabSet.this.martTab.getMartTabSet()
+									.setModifiedStatus(true);
 						}
 					});
 				}
@@ -1139,27 +1218,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * newType = ConcatRelationEditorDialog .modifyConcatRelation(relation,
 	 * type); // If they chose some columns, create the key. if (newType !=
 	 * null) this.requestConcatOnlyRelation(ds, relation, newType); }
-	 * 
-	 * /** Asks for an expression column to be modified.
-	 * 
-	 * @param column
-	 *            the expression column to modify.
-	 * 
-	 * public void requestModifyExpressionColumn(final ExpressionColumn column) {
-	 * final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
-	 * (DataSetTable) column.getTable(), column); dialog.show(); // Cancelled?
-	 * if (dialog.getCancelled()) return; // Get updated details from the user.
-	 * final Map columnAliases = dialog.getColumnAliases(); final String
-	 * expression = dialog.getExpression(); final boolean groupBy =
-	 * dialog.getGroupBy(); // Do this in the background. LongProcess.run(new
-	 * Runnable() { public void run() { try { // Modify the column.
-	 * MartBuilderUtils.modifyExpressionColumn(column, columnAliases,
-	 * expression, groupBy); // Update the modified status for the tabset.
-	 * DataSetTabSet.this.martTab.getMartTabSet() .setModifiedStatus(true); }
-	 * catch (final Throwable t) { SwingUtilities.invokeLater(new Runnable() {
-	 * public void run() { StackTrace.showStackTrace(t); } }); } } }); }
 	 */
-		
+
 	/**
 	 * Asks for a expression column to be modified.
 	 * 
@@ -1170,10 +1230,10 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param restriction
 	 *            the existing restriction.
 	 */
-	public void requestModifyExpressionColumn(
-			final DataSetTable dsTable, final ExpressionColumn column) {
-		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(dsTable,
-				column==null?null:((DataSet)dsTable.getSchema()).getDataSetModifications().getExpressionColumn(dsTable, column.getName()), column);
+	public void requestExpressionColumn(final DataSetTable dsTable,
+			final ExpressionColumn column) {
+		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
+				dsTable, column == null ? null : column.getDefinition(), column);
 		dialog.show();
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -1187,8 +1247,8 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Update the restriction.
-					MartBuilderUtils.setExpressionColumn(dsTable, column==null?
-							((DataSet)dsTable.getSchema()).getDataSetModifications().nextExpressionColumn(dsTable):column.getName(),
+					MartBuilderUtils.setExpressionColumn(dsTable,
+							column == null ? null : column.getDefinition(),
 							aliases, expression, groupBy);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
@@ -1201,7 +1261,9 @@ public class DataSetTabSet extends JTabbedPane {
 						public void run() {
 							// Repaint the dataset diagram based on the modified
 							// dataset.
-							DataSetTabSet.this.recalculateDataSetDiagram((DataSet)dsTable.getSchema());
+							DataSetTabSet.this
+									.recalculateDataSetDiagram((DataSet) dsTable
+											.getSchema());
 
 							// Update the explanation diagram so that it
 							// correctly reflects any changed relation.
@@ -1227,14 +1289,15 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param restriction
 	 *            the existing restriction.
 	 */
-	public void requestRemoveExpressionColumn(
-			final DataSetTable dsTable, final ExpressionColumn column) {
+	public void requestRemoveExpressionColumn(final DataSetTable dsTable,
+			final ExpressionColumn column) {
 		// Do this in the background.
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Update the restriction.
-					MartBuilderUtils.removeExpressionColumn(dsTable, column.getName());
+					MartBuilderUtils.removeExpressionColumn(dsTable, column
+							.getDefinition());
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1246,7 +1309,9 @@ public class DataSetTabSet extends JTabbedPane {
 						public void run() {
 							// Repaint the dataset diagram based on the modified
 							// dataset.
-							DataSetTabSet.this.recalculateDataSetDiagram((DataSet)dsTable.getSchema());
+							DataSetTabSet.this
+									.recalculateDataSetDiagram((DataSet) dsTable
+											.getSchema());
 
 							// Update the explanation diagram so that it
 							// correctly reflects any changed relation.
@@ -1272,7 +1337,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param restriction
 	 *            the existing restriction.
 	 */
-	public void requestModifyTableRestriction(final DataSet dataset,
+	public void requestRestrictTable(final DataSet dataset,
 			final DataSetTable dsTable, final Table table) {
 		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
 				dataset.getSchemaModifications().getRestrictedTable(dsTable,
@@ -1341,8 +1406,8 @@ public class DataSetTabSet extends JTabbedPane {
 		// If the column is already partitioned, open a dialog
 		// explaining this and asking the user to edit the settings.
 		if (dataset.getDataSetModifications().isPartitionedColumn(column)) {
-			final PartitionedColumnDefinition oldType = dataset.getDataSetModifications()
-					.getPartitionedColumn(column);
+			final PartitionedColumnDefinition oldType = dataset
+					.getDataSetModifications().getPartitionedColumn(column);
 			type = PartitionColumnDialog.updatePartitionedColumn(oldType);
 			// Check they didn't cancel the request, or left the
 			// scheme unchanged.
@@ -1501,27 +1566,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks for an expression column to be removed from the table.
-	 * 
-	 * @param column
-	 *            the expression column to remove. FIXME: Reinstate. public void
-	 *            requestRemoveExpressionColumn(final ExpressionColumn column) { //
-	 *            Do this in the background. LongProcess.run(new Runnable() {
-	 *            public void run() { try { // Remove the column.
-	 *            MartBuilderUtils.removeExpressionColumn(column);
-	 * 
-	 * SwingUtilities.invokeLater(new Runnable() { public void run() { //
-	 * Recalculate the dataset diagram based on the // newly modified dataset.
-	 * DataSetTabSet.this .recalculateDataSetDiagram((DataSet) column
-	 * .getTable().getSchema()); // Recalculate the explanation diagram too.
-	 * DataSetTabSet.this.recalculateExplanationDialog(); // Update the modified
-	 * status for the tabset. DataSetTabSet.this.martTab.getMartTabSet()
-	 * .setModifiedStatus(true); } }); } catch (final Throwable t) {
-	 * SwingUtilities.invokeLater(new Runnable() { public void run() {
-	 * StackTrace.showStackTrace(t); } }); } } }); }
-	 */
-
-	/**
 	 * Asks for a table restriction to be removed.
 	 * 
 	 * @param dataset
@@ -1529,7 +1573,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param table
 	 *            the table to unrestrict.
 	 */
-	public void requestRemoveTableRestriction(final DataSet dataset,
+	public void requestUnrestrictTable(final DataSet dataset,
 			final DataSetTable dsTable, final Table table) {
 		// Do this in the background.
 		LongProcess.run(new Runnable() {

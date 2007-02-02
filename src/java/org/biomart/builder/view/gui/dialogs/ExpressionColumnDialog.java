@@ -96,9 +96,13 @@ public class ExpressionColumnDialog extends JDialog {
 	 *            the table to source columns from.
 	 * @param template
 	 *            the column to use as a template, if any.
+	 * @param skipIncludeCol 
+	 * 			  the column not to include in the
+	 *            selection - to prevent self-recursion.
 	 */
 	public ExpressionColumnDialog(final DataSetTable table,
-			final ExpressionColumnDefinition template, final DataSetColumn skipIncludeCol) {
+			final ExpressionColumnDefinition template,
+			final DataSetColumn skipIncludeCol) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(template == null ? Resources.get("addExpColDialogTitle")
@@ -158,7 +162,7 @@ public class ExpressionColumnDialog extends JDialog {
 			if (skipIncludeCol == null || !col.equals(skipIncludeCol))
 				sortedCols.put(col.getModifiedName(), col);
 		}
-		for (final Iterator i = sortedCols.values().iterator(); i.hasNext(); )
+		for (final Iterator i = sortedCols.values().iterator(); i.hasNext();)
 			columnEditor.addItem(i.next());
 		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
 		columnEditor.setRenderer(new ListCellRenderer() {
@@ -167,7 +171,7 @@ public class ExpressionColumnDialog extends JDialog {
 					final boolean isSelected, final boolean cellHasFocus) {
 				final DataSetColumn col = (DataSetColumn) value;
 				final JLabel label = new JLabel();
-				if (col!=null)
+				if (col != null)
 					label.setText(col.getModifiedName());
 				label.setOpaque(true);
 				label.setFont(list.getFont());
@@ -182,10 +186,12 @@ public class ExpressionColumnDialog extends JDialog {
 			}
 		});
 		columnColumn.setCellRenderer(new TableCellRenderer() {
-			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+			public Component getTableCellRendererComponent(JTable table,
+					Object value, boolean isSelected, boolean hasFocus,
+					int row, int column) {
 				final DataSetColumn col = (DataSetColumn) value;
 				final JLabel label = new JLabel();
-				if (col!=null)
+				if (col != null)
 					label.setText(col.getModifiedName());
 				label.setOpaque(true);
 				label.setFont(table.getFont());

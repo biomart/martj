@@ -54,8 +54,8 @@ import org.biomart.common.resources.Resources;
  * select one or more columns from a single table on this list.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class SuggestInvisibleDataSetDialog extends JDialog {
@@ -111,10 +111,12 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 
 		// Create a drop-down list of underlying tables.
 		this.tables = new JComboBox();
-		for (final Iterator i = table.getTransformationUnits().iterator(); i.hasNext(); ) {
-			final TransformationUnit tu = (TransformationUnit)i.next();
-			if (tu instanceof SelectFromTable && !(((SelectFromTable)tu).getTable() instanceof DataSetTable))
-				this.tables.addItem(((SelectFromTable)tu).getTable());
+		for (final Iterator i = table.getTransformationUnits().iterator(); i
+				.hasNext();) {
+			final TransformationUnit tu = (TransformationUnit) i.next();
+			if (tu instanceof SelectFromTable
+					&& !(((SelectFromTable) tu).getTable() instanceof DataSetTable))
+				this.tables.addItem(((SelectFromTable) tu).getTable());
 		}
 
 		// Start with an empty available columns list.

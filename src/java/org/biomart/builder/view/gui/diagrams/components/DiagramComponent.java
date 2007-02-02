@@ -32,8 +32,8 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * interest to the diagram.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface DiagramComponent {

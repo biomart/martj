@@ -51,19 +51,19 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.1
  */
-public class CompoundRelationEditorDialog extends JDialog {
+public class CompoundRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	/**
 	 * Gets a compound arity.
 	 * 
-	 * @param compound
+	 * @param startvalue
 	 *            the initial arity to select.
 	 * @return the arity the user defined.
 	 */
-	public static int getCompoundValue(
-			final int startvalue) {
-		final CompoundRelationEditorDialog dialog = new CompoundRelationEditorDialog(startvalue);
+	public static int getCompoundValue(final int startvalue) {
+		final CompoundRelationDialog dialog = new CompoundRelationDialog(
+				startvalue);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return dialog.getArity();
@@ -71,11 +71,10 @@ public class CompoundRelationEditorDialog extends JDialog {
 
 	private SpinnerNumberModel arity;
 
-	private CompoundRelationEditorDialog(final int startvalue) {
+	private CompoundRelationDialog(final int startvalue) {
 		// Create the base dialog.
 		super();
-		this.setTitle(Resources
-				.get("compoundRelationDialogTitle"));
+		this.setTitle(Resources.get("compoundRelationDialogTitle"));
 		this.setModal(true);
 
 		// Create the layout manager for this panel.
@@ -96,12 +95,13 @@ public class CompoundRelationEditorDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Set up the arity spinner field.
-		this.arity = new SpinnerNumberModel(startvalue, 1, 10, 1); 
+		this.arity = new SpinnerNumberModel(startvalue, 1, 10, 1);
 		final JSpinner spinner = new JSpinner(this.arity);
-		
+
 		// Set up the check box to turn it on and off.
 		final JCheckBox checkbox = new JCheckBox();
-		if (startvalue>1) checkbox.setSelected(true);
+		if (startvalue > 1)
+			checkbox.setSelected(true);
 
 		// The close and execute buttons.
 		final JButton close = new JButton(Resources.get("closeButton"));
@@ -122,22 +122,23 @@ public class CompoundRelationEditorDialog extends JDialog {
 		field.add(execute);
 		gridBag.setConstraints(field, fieldLastRowConstraints);
 		content.add(field);
-		
+
 		// Intercept the spinner.
-    	spinner.addChangeListener(new ChangeListener() {
-    	    public void stateChanged(ChangeEvent e) {
-    	    	if (CompoundRelationEditorDialog.this.getArity()<=1)
-    	    		checkbox.setSelected(false);
-    	    	else
-    	    		checkbox.setSelected(true);
-    	    }
-    	});
+		spinner.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				if (CompoundRelationDialog.this.getArity() <= 1)
+					checkbox.setSelected(false);
+				else
+					checkbox.setSelected(true);
+			}
+		});
 		// Intercept the checkbox.
 		checkbox.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (checkbox.isSelected() && CompoundRelationEditorDialog.this.getArity()==1) 
+				if (checkbox.isSelected()
+						&& CompoundRelationDialog.this.getArity() == 1)
 					arity.setValue(new Integer(2));
-				else 
+				else
 					arity.setValue(new Integer(1));
 			}
 		});
@@ -147,8 +148,9 @@ public class CompoundRelationEditorDialog extends JDialog {
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
-				CompoundRelationEditorDialog.this.arity.setValue(new Integer(startvalue));
-				CompoundRelationEditorDialog.this.hide();
+				CompoundRelationDialog.this.arity.setValue(new Integer(
+						startvalue));
+				CompoundRelationDialog.this.hide();
 			}
 		});
 
@@ -156,8 +158,8 @@ public class CompoundRelationEditorDialog extends JDialog {
 		// then closes the dialog.
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (CompoundRelationEditorDialog.this.validateFields()) 
-					CompoundRelationEditorDialog.this.hide();
+				if (CompoundRelationDialog.this.validateFields())
+					CompoundRelationDialog.this.hide();
 			}
 		});
 
@@ -177,10 +179,9 @@ public class CompoundRelationEditorDialog extends JDialog {
 		final List messages = new ArrayList();
 
 		// Must enter something in the arity box.
-		if (this.arity.getNumber()==null)
-			messages
-					.add(Resources.get("fieldIsEmpty", Resources.get("arity")));
-		
+		if (this.arity.getNumber() == null)
+			messages.add(Resources.get("fieldIsEmpty", Resources.get("arity")));
+
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(null,

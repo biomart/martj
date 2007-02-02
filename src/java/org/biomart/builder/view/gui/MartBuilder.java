@@ -70,7 +70,7 @@ public class MartBuilder extends BioMartGUI {
 		// Set up the set of tabs to hold the various marts.
 		this.martTabSet = new MartTabSet(this);
 		this.getContentPane().add(this.martTabSet, BorderLayout.CENTER);
-		
+
 		// Go straight to the 'New' page.
 		this.martTabSet.requestNewMart();
 	}

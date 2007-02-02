@@ -30,6 +30,7 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -37,13 +38,12 @@ import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.common.resources.Resources;
 
 /**
- * This context is basically the same as {@link DataSetContext}, except
- * it only provides context menus and adaptations for {@link DataSetColumn}
- * instances.
+ * This context is basically the same as {@link DataSetContext}, except it only
+ * provides context menus and adaptations for {@link DataSetColumn} instances.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class TransformationContext extends DataSetContext {
@@ -57,8 +57,7 @@ public class TransformationContext extends DataSetContext {
 	 *            the dataset this context will use for customising menus and
 	 *            colours.
 	 */
-	public TransformationContext(final MartTab martTab,
-			final DataSet dataset) {
+	public TransformationContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab, dataset);
 	}
 
@@ -75,16 +74,22 @@ public class TransformationContext extends DataSetContext {
 			if (column instanceof InheritedColumn)
 				component.setBackground(ColumnComponent.INHERITED_COLOUR);
 			// Fade out all MASKED columns.
-			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column))
+			else if (((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.FADED_COLOUR);
-		
+
 			// Blue PARTITIONED columns.
-			else if (((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column))
+			else if (((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isPartitionedColumn(column))
 				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
 
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
+
+			// Magenta CONCAT columns.
+			else if (column instanceof ConcatColumn)
+				component.setBackground(ColumnComponent.CONCAT_COLOUR);
 
 			// All others are normal.
 			else
@@ -110,9 +115,8 @@ public class TransformationContext extends DataSetContext {
 			rename.setMnemonic(Resources.get("renameColumnMnemonic").charAt(0));
 			rename.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					TransformationContext.this.getMartTab()
-							.getDataSetTabSet().requestRenameDataSetColumn(
-									column);
+					TransformationContext.this.getMartTab().getDataSetTabSet()
+							.requestRenameDataSetColumn(column);
 				}
 			});
 			contextMenu.add(rename);
@@ -120,28 +124,36 @@ public class TransformationContext extends DataSetContext {
 			contextMenu.addSeparator();
 
 			// Mask the column.
-			final boolean isMasked = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isMaskedColumn(column);
-			final boolean isPartitioned = ((DataSet)column.getTable().getSchema()).getDataSetModifications().isPartitionedColumn(column);
+			final boolean isMasked = ((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isMaskedColumn(column);
+			final boolean isPartitioned = ((DataSet) column.getTable()
+					.getSchema()).getDataSetModifications()
+					.isPartitionedColumn(column);
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
 			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (mask.isSelected())
-						TransformationContext.this.getMartTab()
-								.getDataSetTabSet().requestMaskColumn(
-										TransformationContext.this
-												.getDataSet(), column);
+						TransformationContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestMaskColumn(
+										TransformationContext.this.getDataSet(),
+										column);
 					else
-						TransformationContext.this.getMartTab()
-								.getDataSetTabSet().requestUnmaskColumn(
-										TransformationContext.this
-												.getDataSet(), column);
+						TransformationContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestUnmaskColumn(
+										TransformationContext.this.getDataSet(),
+										column);
 				}
 			});
 			contextMenu.add(mask);
 			mask.setSelected(isMasked);
-			if (isPartitioned || column instanceof ExpressionColumn)
+			if (isPartitioned || column instanceof ConcatColumn
+					|| column instanceof ExpressionColumn)
 				mask.setEnabled(false);
 
 			contextMenu.addSeparator();
@@ -151,19 +163,19 @@ public class TransformationContext extends DataSetContext {
 			if (isPartitioned) {
 
 				// The option to change the partition type.
-				final JMenuItem changepartition = new JMenuItem(
-						Resources.get("changePartitionColumnTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("expandAll.gif")));
+				final JMenuItem changepartition = new JMenuItem(Resources
+						.get("changePartitionColumnTitle"), new ImageIcon(
+						Resources.getResourceAsURL("expandAll.gif")));
 				changepartition.setMnemonic(Resources.get(
 						"changePartitionColumnMnemonic").charAt(0));
 				changepartition.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						TransformationContext.this.getMartTab()
-								.getDataSetTabSet().requestPartitionByColumn(
-										TransformationContext.this
-												.getDataSet(), column);
+						TransformationContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestPartitionByColumn(
+										TransformationContext.this.getDataSet(),
+										column);
 					}
 				});
 				contextMenu.add(changepartition);
@@ -175,23 +187,24 @@ public class TransformationContext extends DataSetContext {
 			else {
 
 				// Option to enable partitioning.
-				final JMenuItem partition = new JMenuItem(
-						Resources.get("partitionColumnTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("expandAll.gif")));
+				final JMenuItem partition = new JMenuItem(Resources
+						.get("partitionColumnTitle"), new ImageIcon(Resources
+						.getResourceAsURL("expandAll.gif")));
 				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
 						.charAt(0));
 				partition.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent evt) {
-						TransformationContext.this.getMartTab()
-								.getDataSetTabSet().requestPartitionByColumn(
-										TransformationContext.this
-												.getDataSet(), column);
+						TransformationContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestPartitionByColumn(
+										TransformationContext.this.getDataSet(),
+										column);
 					}
 				});
 				contextMenu.add(partition);
-				if (isMasked)
+				if (isMasked || column instanceof ConcatColumn
+						|| column instanceof ExpressionColumn)
 					partition.setEnabled(false);
 			}
 
@@ -202,10 +215,10 @@ public class TransformationContext extends DataSetContext {
 					.charAt(0));
 			unpartition.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					TransformationContext.this.getMartTab()
-							.getDataSetTabSet().requestUnpartitionByColumn(
-									TransformationContext.this
-											.getDataSet(), column);
+					TransformationContext.this.getMartTab().getDataSetTabSet()
+							.requestUnpartitionByColumn(
+									TransformationContext.this.getDataSet(),
+									column);
 				}
 			});
 			contextMenu.add(unpartition);
@@ -225,8 +238,8 @@ public class TransformationContext extends DataSetContext {
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						TransformationContext.this.getMartTab()
-								.getDataSetTabSet()
-								.requestModifyExpressionColumn((DataSetTable)column.getTable(),
+								.getDataSetTabSet().requestExpressionColumn(
+										(DataSetTable) column.getTable(),
 										(ExpressionColumn) column);
 					}
 				});
@@ -241,7 +254,8 @@ public class TransformationContext extends DataSetContext {
 					public void actionPerformed(final ActionEvent evt) {
 						TransformationContext.this.getMartTab()
 								.getDataSetTabSet()
-								.requestRemoveExpressionColumn((DataSetTable)column.getTable(),
+								.requestRemoveExpressionColumn(
+										(DataSetTable) column.getTable(),
 										(ExpressionColumn) column);
 					}
 				});

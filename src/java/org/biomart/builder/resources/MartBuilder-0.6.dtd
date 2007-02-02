@@ -59,7 +59,12 @@
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
-<!ELEMENT dataset (compoundRelation*,subclassRelation*,renamedTable*,renamedColumn*,nonInheritedColumn*,maskedColumn*,partitionedColumn*,maskedRelation*,maskedTable*,mergedRelation*,forcedRelation*,restrictedTable*,restrictedRelation*,expressionColumn*)>
+<!ELEMENT dataset (
+compoundRelation*,subclassRelation*,renamedTable*,
+renamedColumn*,nonInheritedColumn*,maskedColumn*,
+partitionedColumn*,maskedRelation*,maskedTable*,
+mergedRelation*,forcedRelation*,restrictedTable*,
+restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|NONE) #REQUIRED>
@@ -136,3 +141,13 @@
 <!ATTLIST expressionColumn aliasNames CDATA #REQUIRED>
 <!ATTLIST expressionColumn expression CDATA #REQUIRED>
 <!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>
+
+<!ELEMENT concatRelation EMPTY>
+<!ATTLIST concatRelation tableKey CDATA #REQUIRED>
+<!ATTLIST concatRelation colKey CDATA #REQUIRED>
+<!ATTLIST concatRelation relationId IDREF #REQUIRED>
+<!ATTLIST concatRelation index CDATA #REQUIRED>
+<!ATTLIST concatRelation aliasColumnIds IDREFS #REQUIRED>
+<!ATTLIST concatRelation aliasNames CDATA #REQUIRED>
+<!ATTLIST concatRelation expression CDATA #REQUIRED>
+<!ATTLIST concatRelation rowSep CDATA #REQUIRED>

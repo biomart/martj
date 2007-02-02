@@ -33,12 +33,12 @@ import org.biomart.common.model.Schema;
  * This diagram draws a {@link SchemaComponent} for each schema in the mart. If
  * any of them have external relations to other schemas, then a
  * {@link RelationComponent} is drawn between them, and implicitly this causes
- * the table that the relation links from to be added inside the appropriate 
+ * the table that the relation links from to be added inside the appropriate
  * schema component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {

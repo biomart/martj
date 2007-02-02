@@ -45,7 +45,7 @@ import org.biomart.common.resources.Resources;
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
- *			$Author$
+ *          $Author$
  * @since 0.1
  */
 public class SchemaComponent extends BoxShapedComponent {
@@ -142,11 +142,11 @@ public class SchemaComponent extends BoxShapedComponent {
 		// external keys to identify the tables to do this.
 		for (final Iterator i = this.getSchema().getRelations().iterator(); i
 				.hasNext();) {
-			final Relation rel = (Relation)i.next();
+			final Relation rel = (Relation) i.next();
 			if (!rel.isExternal())
 				continue;
-			final Key key = rel.getFirstKey().getTable().getSchema().equals(this.getSchema())
-			 ? rel.getFirstKey() : rel.getSecondKey();
+			final Key key = rel.getFirstKey().getTable().getSchema().equals(
+					this.getSchema()) ? rel.getFirstKey() : rel.getSecondKey();
 			final Table table = key.getTable();
 
 			// Only add the table if it's not already added!

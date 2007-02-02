@@ -51,8 +51,8 @@ import org.biomart.common.model.Table;
  * placed in a ring around a centre point.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class RadialLayout implements LayoutManager {
@@ -125,18 +125,22 @@ public class RadialLayout implements LayoutManager {
 				Integer ringNumber = new Integer(0);
 				if (comp instanceof TableComponent) {
 					final Collection rels = new HashSet();
-					for (final Iterator j = ((Table)((TableComponent)comp).getObject()).getRelations().iterator(); j.hasNext(); )  {
-						final Relation rel = (Relation)j.next();
-				 		if (!rel.isExternal())
-				 			rels.add(rel);
+					for (final Iterator j = ((Table) ((TableComponent) comp)
+							.getObject()).getRelations().iterator(); j
+							.hasNext();) {
+						final Relation rel = (Relation) j.next();
+						if (!rel.isExternal())
+							rels.add(rel);
 					}
 					ringNumber = new Integer(rels.size());
 				} else if (comp instanceof SchemaComponent) {
 					final Collection rels = new HashSet();
-					for (final Iterator j = ((Schema)((SchemaComponent)comp).getObject()).getRelations().iterator(); j.hasNext(); )  {
-						final Relation rel = (Relation)j.next();
-				 		if (rel.isExternal())
-				 			rels.add(rel);
+					for (final Iterator j = ((Schema) ((SchemaComponent) comp)
+							.getObject()).getRelations().iterator(); j
+							.hasNext();) {
+						final Relation rel = (Relation) j.next();
+						if (rel.isExternal())
+							rels.add(rel);
 					}
 					ringNumber = new Integer(rels.size());
 				}

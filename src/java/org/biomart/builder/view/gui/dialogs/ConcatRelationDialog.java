@@ -41,6 +41,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
@@ -58,7 +59,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.1
  */
-public class RestrictedTableDialog extends JDialog {
+public class ConcatRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private JButton cancel;
@@ -77,6 +78,8 @@ public class RestrictedTableDialog extends JDialog {
 
 	private JButton remove;
 
+	private JTextField rowSep;
+
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
 	 * table.
@@ -86,13 +89,12 @@ public class RestrictedTableDialog extends JDialog {
 	 * @param template
 	 *            the restriction to use as a template, if any.
 	 */
-	public RestrictedTableDialog(final Table table,
-			final SchemaModificationSet.RestrictedTableDefinition template) {
+	public ConcatRelationDialog(final Table table,
+			final SchemaModificationSet.ConcatRelationDefinition template) {
 		// Creates the basic dialog.
 		super();
-		this.setTitle(template == null ? Resources
-				.get("addTblRestrictDialogTitle") : Resources
-				.get("modifyTblRestrictDialogTitle"));
+		this.setTitle(template == null ? Resources.get("newConcatDialogTitle")
+				: Resources.get("editConcatDialogTitle"));
 		this.setModal(true);
 
 		// Remembers the dataset tabset this dialog is referring to.
@@ -126,6 +128,7 @@ public class RestrictedTableDialog extends JDialog {
 
 		// Create the fields that will contain the user's table choices.
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
+		this.rowSep = new JTextField(5);
 
 		// First table aliases.
 		this.columnAliasModel = new ColumnAliasTableModel(template);
@@ -166,8 +169,8 @@ public class RestrictedTableDialog extends JDialog {
 			private int aliasCount = 1;
 
 			public void actionPerformed(final ActionEvent e) {
-				RestrictedTableDialog.this.columnAliasModel.insertRow(
-						RestrictedTableDialog.this.columnAliasModel
+				ConcatRelationDialog.this.columnAliasModel.insertRow(
+						ConcatRelationDialog.this.columnAliasModel
 								.getRowCount(), new Object[] {
 								columnEditor.getItemAt(0),
 								Resources.get("defaultAlias")
@@ -178,12 +181,12 @@ public class RestrictedTableDialog extends JDialog {
 		// Listener for the remove button.
 		this.remove.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				final int rows[] = RestrictedTableDialog.this.columnAliasTable
+				final int rows[] = ConcatRelationDialog.this.columnAliasTable
 						.getSelectedRows();
 				// Reverse order, so we don't end up with changing
 				// indices along the way.
 				for (int i = rows.length - 1; i >= 0; i--)
-					RestrictedTableDialog.this.columnAliasModel
+					ConcatRelationDialog.this.columnAliasModel
 							.removeRow(rows[i]);
 			}
 		});
@@ -214,6 +217,13 @@ public class RestrictedTableDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
+		// Row separator.
+		field = new JPanel();
+		field.add(new JLabel(Resources.get("rowSepLabel")));
+		field.add(this.rowSep);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
 		// Add the buttons to the dialog.
 		label = new JLabel();
 		gridBag.setConstraints(label, labelLastRowConstraints);
@@ -228,7 +238,7 @@ public class RestrictedTableDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				RestrictedTableDialog.this.hide();
+				ConcatRelationDialog.this.hide();
 			}
 		});
 
@@ -236,9 +246,9 @@ public class RestrictedTableDialog extends JDialog {
 		// the appropriate partition type, then close the dialog.
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (RestrictedTableDialog.this.validateFields()) {
-					RestrictedTableDialog.this.cancelled = false;
-					RestrictedTableDialog.this.hide();
+				if (ConcatRelationDialog.this.validateFields()) {
+					ConcatRelationDialog.this.cancelled = false;
+					ConcatRelationDialog.this.hide();
 				}
 			}
 		});
@@ -253,8 +263,10 @@ public class RestrictedTableDialog extends JDialog {
 		this.setLocationRelativeTo(null);
 
 		// Set some nice defaults.
-		if (template != null)
+		if (template != null) {
 			this.expression.setText(template.getExpression());
+			this.rowSep.setText(template.getRowSep());
+		}
 		// Aliases were already copied in the JTable constructor above.
 	}
 
@@ -271,6 +283,11 @@ public class RestrictedTableDialog extends JDialog {
 		if (this.isEmpty(this.expression.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("expression")));
+
+		// We must have a row separator!
+		if (this.rowSep.getText().length() == 0)
+			messages
+					.add(Resources.get("fieldIsEmpty", Resources.get("rowSep")));
 
 		// Validate other fields.
 		if (this.columnAliasModel.getColumnAliases().isEmpty())
@@ -315,6 +332,15 @@ public class RestrictedTableDialog extends JDialog {
 	}
 
 	/**
+	 * Return the expression the user selected.
+	 * 
+	 * @return the expression.
+	 */
+	public String getRowSep() {
+		return this.rowSep.getText();
+	}
+
+	/**
 	 * This internal class represents a map of dataset columns to aliases.
 	 */
 	private static class ColumnAliasTableModel extends DefaultTableModel {
@@ -331,7 +357,7 @@ public class RestrictedTableDialog extends JDialog {
 		 *            the model to copy existing settings from.
 		 */
 		public ColumnAliasTableModel(
-				final SchemaModificationSet.RestrictedTableDefinition template) {
+				final SchemaModificationSet.ConcatRelationDefinition template) {
 			super(new Object[] { Resources.get("columnAliasTableColHeader"),
 					Resources.get("columnAliasTableAliasHeader") }, 0);
 			// Populate columns, and aliases from template.

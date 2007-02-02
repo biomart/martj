@@ -92,6 +92,11 @@ public class ColumnComponent extends BoxShapedComponent {
 	 */
 	public static Color PARTITIONED_COLOUR = Color.BLUE;
 
+	/**
+	 * Constant referring to concat column colour.
+	 */
+	public static Color CONCAT_COLOUR = Color.YELLOW;
+
 	private GridBagConstraints constraints;
 
 	private GridBagLayout layout;

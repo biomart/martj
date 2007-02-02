@@ -44,7 +44,7 @@ import org.biomart.builder.view.gui.diagrams.AllSchemasDiagram;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
-import org.biomart.builder.view.gui.dialogs.KeyEditorDialog;
+import org.biomart.builder.view.gui.dialogs.KeyDialog;
 import org.biomart.common.controller.CommonUtils;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
@@ -495,9 +495,9 @@ public class SchemaTabSet extends JTabbedPane {
 					// Change the status.
 					MartBuilderUtils.changeKeyStatus(SchemaTabSet.this.martTab
 							.getMart(), key, status);
-					
+
 					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {							
+						public void run() {
 							// Recalculate the schema diagram this key appears
 							// in, as the table components will have changed
 							// size, and some relations may have disappeared.
@@ -654,7 +654,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateForeignKey(final Table table) {
 		// Pop up a dialog to ask which columns to use.
-		final List cols = KeyEditorDialog.createForeignKey(table);
+		final List cols = KeyDialog.createForeignKey(table);
 
 		// If they chose some columns, create the key.
 		if (!cols.isEmpty())
@@ -715,7 +715,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreatePrimaryKey(final Table table) {
 		// Pop up a dialog to ask which columns to use.
-		final List cols = KeyEditorDialog.createPrimaryKey(table);
+		final List cols = KeyDialog.createPrimaryKey(table);
 
 		// If they chose some columns, create the key.
 		if (!cols.isEmpty())
@@ -907,7 +907,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestEditKey(final Key key) {
 		// Pop up the dialog which describes the key, and obtain the
 		// list of columns they selected in response.
-		final List cols = KeyEditorDialog.editKey(key);
+		final List cols = KeyDialog.editKey(key);
 
 		// If they selected any columns, and those columns are not
 		// the same as the ones already in the key, modify the key.
@@ -1193,7 +1193,7 @@ public class SchemaTabSet extends JTabbedPane {
 			}
 		});
 	}
-	
+
 	/**
 	 * Asks user for a new name, then renames a schema, which is optionally part
 	 * of a schema group.
@@ -1239,10 +1239,10 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				// Recalculate the all-schemas diagram.
 				SchemaTabSet.this.recalculateOverviewDiagram();
-				
+
 				// Recalculate the all-schemas diagram.
 				SchemaTabSet.this.recalculateSchemaDiagram(schema);
-				
+
 				// Some datasets may have referred to the individual
 				// schema. As it no longer exists, they will
 				// have been dropped, so the dataset tabset needs to
@@ -1251,8 +1251,8 @@ public class SchemaTabSet extends JTabbedPane {
 						.recalculateAllDataSetDiagrams();
 
 				// Set the dataset tabset status as modified.
-				SchemaTabSet.this.martTab.getMartTabSet()
-						.setModifiedStatus(true);
+				SchemaTabSet.this.martTab.getMartTabSet().setModifiedStatus(
+						true);
 			}
 		});
 	}
@@ -1307,10 +1307,11 @@ public class SchemaTabSet extends JTabbedPane {
 			final int count) {
 		try {
 			// Get the rows.
-			final Collection rows = MartBuilderUtils.selectRows(table, offset, count);
+			final Collection rows = MartBuilderUtils.selectRows(table, offset,
+					count);
 			// Convert to a nested vector.
 			final Vector data = new Vector();
-			for (final Iterator i = rows.iterator(); i.hasNext();) 
+			for (final Iterator i = rows.iterator(); i.hasNext();)
 				data.add(new Vector((List) i.next()));
 			// Get the column names.
 			final Vector colNames = new Vector();

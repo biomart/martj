@@ -36,8 +36,8 @@ import org.biomart.common.resources.Resources;
  * datasets tab.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class AllDataSetsContext implements DiagramContext {
@@ -81,8 +81,8 @@ public class AllDataSetsContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			// Gray out if there are no datasets.
-			boolean grayOut = this.martTab.getDataSetTabSet().getTabCount()<=1;
-			
+			boolean grayOut = this.martTab.getDataSetTabSet().getTabCount() <= 1;
+
 			// Option to remove all datasets from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeAllDataSetsTitle"), new ImageIcon(Resources
@@ -95,7 +95,8 @@ public class AllDataSetsContext implements DiagramContext {
 							.requestRemoveAllDataSets();
 				}
 			});
-			if (grayOut) remove.setEnabled(false);
+			if (grayOut)
+				remove.setEnabled(false);
 			contextMenu.add(remove);
 
 		}
@@ -163,11 +164,9 @@ public class AllDataSetsContext implements DiagramContext {
 			contextMenu.addSeparator();
 
 			// Option to explain how the dataset was constructed.
-			final JMenuItem explain = new JMenuItem(
-					Resources.get("explainDataSetTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("help.gif")));
+			final JMenuItem explain = new JMenuItem(Resources
+					.get("explainDataSetTitle"), new ImageIcon(Resources
+					.getResourceAsURL("help.gif")));
 			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
 					0));
 			explain.addActionListener(new ActionListener() {
@@ -181,11 +180,9 @@ public class AllDataSetsContext implements DiagramContext {
 			contextMenu.addSeparator();
 
 			// Option to create the DDL for the dataset.
-			final JMenuItem saveDDL = new JMenuItem(
-					Resources.get("saveDDLTitle"),
-					new ImageIcon(
-							Resources
-									.getResourceAsURL("saveText.gif")));
+			final JMenuItem saveDDL = new JMenuItem(Resources
+					.get("saveDDLTitle"), new ImageIcon(Resources
+					.getResourceAsURL("saveText.gif")));
 			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			saveDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {

@@ -42,8 +42,8 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * object rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements

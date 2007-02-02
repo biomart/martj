@@ -25,8 +25,8 @@ import org.biomart.common.exceptions.BioMartException;
  * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class MartBuilderException extends BioMartException {
@@ -41,8 +41,8 @@ public class MartBuilderException extends BioMartException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>MartBuilderException</tt> with the specified
-	 * detail message.
+	 * Constructs an instance of <tt>MartBuilderException</tt> with the
+	 * specified detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -52,8 +52,8 @@ public class MartBuilderException extends BioMartException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>MartBuilderException</tt> with the specified
-	 * detail message and cause.
+	 * Constructs an instance of <tt>MartBuilderException</tt> with the
+	 * specified detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -65,8 +65,8 @@ public class MartBuilderException extends BioMartException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>MartBuilderException</tt> with the specified
-	 * cause.
+	 * Constructs an instance of <tt>MartBuilderException</tt> with the
+	 * specified cause.
 	 * 
 	 * @param t
 	 *            the underlying cause.

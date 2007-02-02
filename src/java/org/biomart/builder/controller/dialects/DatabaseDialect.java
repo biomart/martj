@@ -44,8 +44,8 @@ import org.biomart.common.resources.Resources;
  * which dialect to use for a given {@link DataLink}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public abstract class DatabaseDialect {
@@ -67,8 +67,9 @@ public abstract class DatabaseDialect {
 	 * subclass has been created and registered.
 	 */
 	protected DatabaseDialect() {
-		Log.info(Resources.get("logRegisterDialect", this
-				.getClass().getName()));
+		Log
+				.info(Resources.get("logRegisterDialect", this.getClass()
+						.getName()));
 	}
 
 	/**
@@ -84,12 +85,14 @@ public abstract class DatabaseDialect {
 	 *         found.
 	 */
 	public static DatabaseDialect getDialect(final DataLink dataLink) {
-		Log.info(Resources.get("logGetDialect",""+dataLink));
+		Log.info(Resources.get("logGetDialect", "" + dataLink));
 		for (final Iterator i = DatabaseDialect.dialects.iterator(); i
 				.hasNext();) {
 			final DatabaseDialect d = (DatabaseDialect) i.next();
 			if (d.understandsDataLink(dataLink)) {
-				Log.info(Resources.get("logGotDialect", d.getClass().getName()));
+				Log
+						.info(Resources.get("logGotDialect", d.getClass()
+								.getName()));
 				return d;
 			}
 		}
@@ -120,7 +123,8 @@ public abstract class DatabaseDialect {
 	 * @throws SQLException
 	 *             in case of problems.
 	 */
-	public abstract Collection executeSelectDistinct(Column col) throws SQLException;
+	public abstract Collection executeSelectDistinct(Column col)
+			throws SQLException;
 
 	/**
 	 * Gets rows from the given table. This method should perform the select and
@@ -161,8 +165,8 @@ public abstract class DatabaseDialect {
 	 * @throws SQLException
 	 *             in case of problems.
 	 */
-	public abstract Collection executeSelectRows(Table table, int offset, int count)
-			throws SQLException;
+	public abstract Collection executeSelectRows(Table table, int offset,
+			int count) throws SQLException;
 
 	/**
 	 * Given a particular action, return a SQL or DDL statement that will

@@ -33,6 +33,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
+import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -42,6 +43,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
+import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -52,6 +54,8 @@ import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
+import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
@@ -291,7 +295,7 @@ public interface MartConstructor {
 					final Collection parentColNames = new HashSet();
 					for (final Iterator j = parentTable.getColumns().iterator(); j
 							.hasNext();) {
-						final DataSetColumn col = (DataSetColumn)j.next();
+						final DataSetColumn col = (DataSetColumn) j.next();
 						if (!(col instanceof ExpressionColumn))
 							parentColNames.add(col.getModifiedName());
 					}
@@ -337,7 +341,6 @@ public interface MartConstructor {
 			// Use the transformation units to create the basic table.
 			// TODO Cope with pseudo-partitioned schema - affects partition
 			// values!
-			// TODO Cope with relation restrictions.
 			for (final Iterator j = dsTable.getTransformationUnits().iterator(); j
 					.hasNext();) {
 				final TransformationUnit tu = (TransformationUnit) j.next();
@@ -365,21 +368,26 @@ public interface MartConstructor {
 					final String tempTable = tempName + tempNameCount++;
 
 					// Translate TU to Action.
-					// TODO : Concat column TUNITs.
-					// Left-join?
-					if (tu instanceof JoinTable)
-						this.doJoinTable(dataset, dsTable, (JoinTable) tu,
+					// Expression?
+					if (tu instanceof Expression)
+						this.doExpression(dataset, dsTable, (Expression) tu,
 								previousTempTables, partitionValue, tempTable);
+					// Concat?
+					else if (tu instanceof Concat)
+						this.doConcat(dataset, dsTable, (Concat) tu,
+								previousTempTables, partitionValue, tempTable);
+					// Left-join?
+					else if (tu instanceof JoinTable)
+						this.doJoinTable(dataset, dsTable, (JoinTable) tu,
+								previousTempTables, delayedTempDrop != null,
+								partitionValue, tempTable);
 					// Select-from?
 					else if (tu instanceof SelectFromTable)
 						this.doSelectFromTable(dataset, dsTable,
 								(SelectFromTable) tu, previousTempTables,
-								partitionValue, tempTable);
-					// Expression?
-					else if (tu instanceof Expression) {
-						this.doExpression(dataset, dsTable, (Expression) tu,
-								previousTempTables, partitionValue, tempTable);
-					} else
+								delayedTempDrop != null, partitionValue,
+								tempTable);
+					else
 						throw new BioMartError();
 
 					// Drop the previous table if we're finished with it.
@@ -425,9 +433,7 @@ public interface MartConstructor {
 				for (final Iterator x = dsTable.getColumns().iterator(); x
 						.hasNext();) {
 					final DataSetColumn col = (DataSetColumn) x.next();
-					if (!col.getDependency())
-						continue;
-					if (dataset.getDataSetModifications().isMaskedColumn(col))
+					if (!col.isRequiredFinal())
 						dropCols.add(col.getModifiedName());
 				}
 				if (!dropCols.isEmpty()) {
@@ -490,9 +496,7 @@ public interface MartConstructor {
 			for (final Iterator x = dsTable.getColumns().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
-				if (col.getDependency()
-						|| !dataset.getDataSetModifications().isMaskedColumn(
-								col))
+				if (col.isRequiredInterim())
 					rightSelectCols.add(col.getModifiedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
@@ -528,17 +532,15 @@ public interface MartConstructor {
 		private void doOptimiseTable(final DataSet dataset,
 				final DataSetTable dsTable, final DataSetOptimiserType oType,
 				final String partitionValue) throws Exception {
+			final String finalCombinedName = this.getFinalName(dsTable,
+					GenericConstructorRunnable.NO_PARTITION);
 			if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				// Tables are same name, but use 'bool' or 'count'
 				// instead of 'main'
 				final String optTable = this.getOptimiserTableName(dsTable,
 						oType);
 				// If main/subclass table type, create table.
-				if (oType.equals(DataSetOptimiserType.TABLE)
-						|| oType.equals(DataSetOptimiserType.TABLE_BOOL)
-						|| oType.equals(DataSetOptimiserType.TABLE_INHERIT)
-						|| oType
-								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) {
+				if (oType.isTable()) {
 					// The key cols are those from the primary key.
 					final List keyCols = new ArrayList();
 					for (final Iterator y = dsTable.getPrimaryKey()
@@ -548,16 +550,14 @@ public interface MartConstructor {
 
 					// Create the table by selecting the pk.
 					final CreateOptimiser create = new CreateOptimiser(
-							this.datasetSchemaName, this.getFinalName(dsTable,
-									GenericConstructorRunnable.NO_PARTITION));
+							this.datasetSchemaName, finalCombinedName);
 					create.setKeyColumns(keyCols);
 					create.setOptTableName(optTable);
 					this.issueAction(create);
 
 					// Index the pk on the new table.
-					final Index index = new Index(this.datasetSchemaName, this
-							.getFinalName(dsTable,
-									GenericConstructorRunnable.NO_PARTITION));
+					final Index index = new Index(this.datasetSchemaName,
+							finalCombinedName);
 					index.setTable(optTable);
 					index.setColumns(keyCols);
 					this.issueAction(index);
@@ -592,29 +592,20 @@ public interface MartConstructor {
 
 				// Do the bool/count update.
 				final UpdateOptimiser update = new UpdateOptimiser(
-						this.datasetSchemaName, this.getFinalName(dsTable,
-								GenericConstructorRunnable.NO_PARTITION));
+						this.datasetSchemaName, finalCombinedName);
 				update.setKeyColumns(keyCols);
 				update.setNonNullColumns(nonNullCols);
 				update.setSourceTableName(this.getFinalName(dsTable,
 						partitionValue));
 				update.setOptTableName(optTable);
 				update.setOptColumnName(optCol);
-				update.setCountNotBool(oType
-						.equals(DataSetOptimiserType.COLUMN)
-						|| oType.equals(DataSetOptimiserType.COLUMN_INHERIT)
-						|| oType.equals(DataSetOptimiserType.TABLE)
-						|| oType.equals(DataSetOptimiserType.TABLE_INHERIT));
+				update.setCountNotBool(!oType.isBool());
 				this.issueAction(update);
 
 				// Work out the inherited parents.
 				final List parents = new ArrayList();
 				parents.add(parent);
-				if (oType.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
-						|| oType
-								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)
-						|| oType.equals(DataSetOptimiserType.COLUMN_INHERIT)
-						|| oType.equals(DataSetOptimiserType.TABLE_INHERIT))
+				if (oType.isInherit())
 					for (int z = 0; z < parents.size(); z++) {
 						final DataSetTable child = (DataSetTable) parents
 								.get(z);
@@ -642,8 +633,7 @@ public interface MartConstructor {
 						toKeyCols.add(((DataSetColumn) y.next())
 								.getModifiedName());
 					final CopyOptimiser copy = new CopyOptimiser(
-							this.datasetSchemaName, this.getFinalName(dsTable,
-									GenericConstructorRunnable.NO_PARTITION));
+							this.datasetSchemaName, finalCombinedName);
 					copy.setFromOptTableName(this.getOptimiserTableName(
 							fromParent, oType));
 					copy.setFromKeyColumns(fromKeyCols);
@@ -660,8 +650,12 @@ public interface MartConstructor {
 
 		private void doSelectFromTable(final DataSet dataset,
 				final DataSetTable dsTable, final SelectFromTable stu,
-				final Map previousTempTables, final String partitionValue,
-				final String tempTable) throws Exception {
+				final Map previousTempTables, final boolean doPartition,
+				final String partitionValue, final String tempTable)
+				throws Exception {
+
+			final String finalCombinedName = this.getFinalName(dsTable,
+					GenericConstructorRunnable.NO_PARTITION);
 
 			final Table sourceTable = stu.getTable();
 			final String schema = sourceTable instanceof DataSetTable ? this.datasetSchemaName
@@ -679,9 +673,7 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
-				if (col.getDependency()
-						|| !dataset.getDataSetModifications().isMaskedColumn(
-								col))
+				if (col.isRequiredInterim())
 					selectCols
 							.put(
 									sourceTable instanceof DataSetTable ? ((DataSetColumn) sourceTable
@@ -692,14 +684,13 @@ public interface MartConstructor {
 											.getModifiedName());
 			}
 			// Do the select.
-			final Select action = new Select(this.datasetSchemaName, this
-					.getFinalName(dsTable,
-							GenericConstructorRunnable.NO_PARTITION));
+			final Select action = new Select(this.datasetSchemaName,
+					finalCombinedName);
 			action.setSchema(schema);
 			action.setTable(table);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
-			if (!partitionValue.equals(GenericConstructorRunnable.NO_PARTITION)) {
+			if (doPartition) {
 				action.setPartitionColumn((String) stu
 						.getReverseNewColumnNameMap().get(
 								dsTable.getColumnByName(dataset
@@ -714,10 +705,104 @@ public interface MartConstructor {
 			this.issueAction(action);
 		}
 
-		private void doJoinTable(final DataSet dataset,
-				final DataSetTable dsTable, final JoinTable ljtu,
+		private void doConcat(final DataSet dataset,
+				final DataSetTable dsTable, final Concat ljtu,
 				final Map previousTempTables, final String partitionValue,
 				final String tempTable) throws Exception {
+			final String finalCombinedName = this.getFinalName(dsTable,
+					GenericConstructorRunnable.NO_PARTITION);
+			final String tempJoinTable = tempTable + "C";
+
+			final String rightSchema = ((JDBCSchema) ljtu.getTable()
+					.getSchema()).getDatabaseSchema();
+			final String rightTable = ljtu.getTable().getName();
+			final List leftJoinCols = new ArrayList();
+			final List rightJoinCols = ljtu.getSchemaRelation().getOtherKey(
+					ljtu.getSchemaSourceKey()).getColumnNames();
+
+			// Populate vars.
+			for (final Iterator k = ljtu.getSourceDataSetColumns().iterator(); k
+					.hasNext();)
+				leftJoinCols.add(((DataSetColumn) k.next()).getModifiedName());
+			final ConcatColumn concCol = (ConcatColumn) ljtu
+					.getNewColumnNameMap().values().iterator().next();
+			final ConcatRelationDefinition concDef = concCol.getDefinition();
+
+			// Index the left-hand side of the join.
+			Index index = new Index(this.datasetSchemaName, finalCombinedName);
+			index.setTable((String) previousTempTables.get(partitionValue));
+			index.setColumns(leftJoinCols);
+			this.issueAction(index);
+
+			// Create the temp RHS table. The concat column will
+			// be called "conc_col".
+			final ConcatJoin action = new ConcatJoin(this.datasetSchemaName,
+					finalCombinedName);
+			action
+					.setLeftTable((String) previousTempTables
+							.get(partitionValue));
+			action.setRightSchema(rightSchema);
+			action.setRightTable(rightTable);
+			action.setLeftJoinColumns(leftJoinCols);
+			action.setRightJoinColumns(rightJoinCols);
+			action.setConcatColumnName("conc_col");
+			action.setConcatColumnDefinition(concDef);
+			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
+					ljtu.getTable()))
+				action.setTableRestriction(dataset.getSchemaModifications()
+						.getRestrictedTable(dsTable, ljtu.getTable()));
+			if (dataset.getSchemaModifications()
+					.isRestrictedRelation(dsTable, ljtu.getSchemaRelation(),
+							ljtu.getSchemaRelationIteration())) {
+				action.setRelationRestrictionLeftIsFirst(ljtu
+						.getSchemaRelation().getFirstKey().equals(
+								ljtu.getSchemaSourceKey()));
+				action.setRelationRestriction(dataset.getSchemaModifications()
+						.getRestrictedRelation(dsTable,
+								ljtu.getSchemaRelation(),
+								ljtu.getSchemaRelationIteration()));
+			}
+			action.setResultTable(tempJoinTable);
+			this.issueAction(action);
+
+			// Index the temp RHS table.
+			index = new Index(this.datasetSchemaName, finalCombinedName);
+			index.setTable(tempJoinTable);
+			// Concat table will have left join cols as key cols.
+			index.setColumns(leftJoinCols);
+			this.issueAction(index);
+
+			// Make the join between LHS and temp RHS.
+			final Map selectCols = new HashMap();
+			selectCols.put("conc_col", concCol.getModifiedName());
+			final Join jaction = new Join(this.datasetSchemaName,
+					finalCombinedName);
+			jaction.setLeftTable((String) previousTempTables
+					.get(partitionValue));
+			jaction.setRightSchema(this.datasetSchemaName);
+			jaction.setRightTable(tempJoinTable);
+			jaction.setLeftJoinColumns(leftJoinCols);
+			// Concat table will have left join cols as key cols.
+			jaction.setRightJoinColumns(leftJoinCols); 
+			jaction.setSelectColumns(selectCols);
+			jaction.setResultTable(tempTable);
+			this.issueAction(jaction);
+
+			// Drop temp RHS.
+			final Drop drop = new Drop(this.datasetSchemaName,
+					finalCombinedName);
+			drop.setTable(tempJoinTable);
+			this.issueAction(drop);
+		}
+
+		private void doJoinTable(final DataSet dataset,
+				final DataSetTable dsTable, final JoinTable ljtu,
+				final Map previousTempTables, final boolean doPartition,
+				final String partitionValue, final String tempTable)
+				throws Exception {
+			final String finalCombinedName = this.getFinalName(dsTable,
+					GenericConstructorRunnable.NO_PARTITION);
+
 			final String rightSchema = ((JDBCSchema) ljtu.getTable()
 					.getSchema()).getDatabaseSchema();
 			final String rightTable = ljtu.getTable().getName();
@@ -733,22 +818,18 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
-				if (col.getDependency()
-						|| !dataset.getDataSetModifications().isMaskedColumn(
-								col))
+				if (col.isRequiredInterim())
 					selectCols.put(entry.getKey(), col.getModifiedName());
 			}
 			// Index the left-hand side of the join.
-			final Index index = new Index(this.datasetSchemaName, this
-					.getFinalName(dsTable,
-							GenericConstructorRunnable.NO_PARTITION));
+			final Index index = new Index(this.datasetSchemaName,
+					finalCombinedName);
 			index.setTable((String) previousTempTables.get(partitionValue));
 			index.setColumns(leftJoinCols);
 			this.issueAction(index);
 			// Make the join.
-			final Join action = new Join(this.datasetSchemaName, this
-					.getFinalName(dsTable,
-							GenericConstructorRunnable.NO_PARTITION));
+			final Join action = new Join(this.datasetSchemaName,
+					finalCombinedName);
 			action
 					.setLeftTable((String) previousTempTables
 							.get(partitionValue));
@@ -758,7 +839,7 @@ public interface MartConstructor {
 			action.setRightJoinColumns(rightJoinCols);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
-			if (!partitionValue.equals(GenericConstructorRunnable.NO_PARTITION)) {
+			if (doPartition) {
 				action.setPartitionColumn((String) ljtu
 						.getReverseNewColumnNameMap().get(
 								dsTable.getColumnByName(dataset
@@ -788,19 +869,21 @@ public interface MartConstructor {
 				final DataSetTable dsTable, final Expression etu,
 				final Map previousTempTables, final String partitionValue,
 				final String tempTable) throws Exception {
+
+			final String finalCombinedName = this.getFinalName(dsTable,
+					GenericConstructorRunnable.NO_PARTITION);
 			// Some useful stuff.
 			boolean createdXTable = false;
 			final String xTableName = tempTable + "X";
 			final String firstTable = (String) previousTempTables
-			.get(partitionValue);
+					.get(partitionValue);
 
 			// Work out what columns we can select in the first group.
 			final Collection selectCols = new HashSet();
 			for (final Iterator z = dsTable.getColumns().iterator(); z
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) z.next();
-				if ((col.getDependency() || !dataset.getDataSetModifications()
-						.isMaskedColumn(col))
+				if (col.isRequiredInterim()
 						&& !(col instanceof ExpressionColumn))
 					selectCols.add(col.getModifiedName());
 			}
@@ -808,39 +891,37 @@ public interface MartConstructor {
 			// Do each group of similar expressions in a single statement.
 			for (final Iterator i = etu.getOrderedExpressionGroups().iterator(); i
 					.hasNext();) {
-				final Map expGroup = (Map) i.next();
-				
+				final Collection expGroup = (Collection) i.next();
+
 				// Work out all group by and expression columns.
 				final Collection groupByCols = new HashSet();
 				final Map exprCols = new HashMap();
-				for (final Iterator j = expGroup.entrySet().iterator(); j
-						.hasNext();) {
-					final Map.Entry entry = (Map.Entry)j.next();
-					final String expColName = (String) entry.getKey();
-					final String expColModName = ((DataSetColumn)entry.getValue()).getModifiedName();
-					final ExpressionColumnDefinition expr = dataset
-							.getDataSetModifications().getExpressionColumn(
-									dsTable, expColName);
-					if (expr.isGroupBy()) 
+				for (final Iterator j = expGroup.iterator(); j.hasNext();) {
+					final ExpressionColumn expCol = (ExpressionColumn) j.next();
+					final ExpressionColumnDefinition expr = expCol
+							.getDefinition();
+					if (expr.isGroupBy())
 						for (final Iterator x = dsTable.getColumns().iterator(); x
 								.hasNext();) {
 							final DataSetColumn col = (DataSetColumn) x.next();
-							if (expr.getAliases().keySet().contains(col.getName())
-									|| !selectCols.contains(col.getModifiedName()))
+							if (expr.getAliases().keySet().contains(
+									col.getName())
+									|| !selectCols.contains(col
+											.getModifiedName()))
 								continue;
 							groupByCols.add(col.getModifiedName());
 						}
-					exprCols.put(expColModName,expr.getSubstitutedExpression(dsTable));
+					exprCols.put(expCol.getModifiedName(), expr
+							.getSubstitutedExpression(dsTable));
 				}
-				
+
 				// Select only columns from all group bys in this group.
-				if (!groupByCols.isEmpty()) 
+				if (!groupByCols.isEmpty())
 					selectCols.retainAll(groupByCols);
-				
+
 				// Issue an AddExpression for the group.
 				final AddExpression action = new AddExpression(
-						this.datasetSchemaName, this.getFinalName(dsTable,
-								GenericConstructorRunnable.NO_PARTITION));
+						this.datasetSchemaName, finalCombinedName);
 				action.setTable(createdXTable ? xTableName : firstTable);
 				// We use a set to prevent post-modification problems.
 				action.setSelectColumns(new HashSet(selectCols));
@@ -849,28 +930,25 @@ public interface MartConstructor {
 					action.setGroupByColumns(groupByCols);
 				action.setResultTable(tempTable);
 				this.issueAction(action);
-				
+
 				// Update select cols for next time.
-				for (final Iterator j = expGroup.values().iterator(); j
-						.hasNext();)
-					selectCols
-							.add(((DataSetColumn) j.next()).getModifiedName());
-				
+				for (final Iterator j = expGroup.iterator(); j.hasNext();)
+					selectCols.add(((ExpressionColumn) j.next())
+							.getModifiedName());
+
 				// Drop the previous X table if it exists.
 				if (createdXTable) {
-					final Drop drop = new Drop(this.datasetSchemaName, this
-							.getFinalName(dsTable,
-									GenericConstructorRunnable.NO_PARTITION));
+					final Drop drop = new Drop(this.datasetSchemaName,
+							finalCombinedName);
 					drop.setTable(xTableName);
 					this.issueAction(drop);
 				}
-				
+
 				// Rename temp to X table if there will be another in the loop.
 				if (i.hasNext()) {
 					createdXTable = true;
 					final Rename rename = new Rename(this.datasetSchemaName,
-							this.getFinalName(dsTable,
-									GenericConstructorRunnable.NO_PARTITION));
+							finalCombinedName);
 					rename.setFrom(tempTable);
 					rename.setTo(xTableName);
 					this.issueAction(rename);
@@ -878,7 +956,8 @@ public interface MartConstructor {
 			}
 		}
 
-		private String populatePartitionValues(final PartitionedColumnDefinition pc,
+		private String populatePartitionValues(
+				final PartitionedColumnDefinition pc,
 				final DataSetColumn partCol, final List partitionValues,
 				final Map previousTempTables) throws SQLException {
 			partitionValues.clear();

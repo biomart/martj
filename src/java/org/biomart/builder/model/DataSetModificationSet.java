@@ -231,7 +231,8 @@ public class DataSetModificationSet {
 	}
 
 	public void setPartitionedColumn(final DataSetColumn column,
-			final PartitionedColumnDefinition restriction) throws ValidationException {
+			final PartitionedColumnDefinition restriction)
+			throws ValidationException {
 		final String tableKey = column.getTable().getName();
 		// Refuse to partition subclass tables.
 		if (!((DataSetTable) column.getTable()).getType().equals(
@@ -281,7 +282,8 @@ public class DataSetModificationSet {
 				.getKey());
 	}
 
-	public PartitionedColumnDefinition getPartitionedColumn(final DataSetColumn column) {
+	public PartitionedColumnDefinition getPartitionedColumn(
+			final DataSetColumn column) {
 		if (!this.isPartitionedColumn(column))
 			return null;
 		final String tableKey = column.getTable().getName();
@@ -305,19 +307,19 @@ public class DataSetModificationSet {
 	}
 
 	public void setExpressionColumn(final DataSetTable table,
-			final String colName, final ExpressionColumnDefinition expr) {
+			final ExpressionColumnDefinition expr) {
 		final String tableKey = table.getName();
 		if (!this.expressionColumns.containsKey(tableKey))
-			this.expressionColumns.put(tableKey, new HashMap());
-		((Map) this.expressionColumns.get(tableKey)).put(colName, expr);
+			this.expressionColumns.put(tableKey, new HashSet());
+		((Collection) this.expressionColumns.get(tableKey)).add(expr);
 	}
 
 	public void unsetExpressionColumn(final DataSetTable table,
-			final String colName) {
+			final ExpressionColumnDefinition expr) {
 		final String tableKey = table.getName();
 		if (this.expressionColumns.containsKey(tableKey)) {
-			((Map) this.expressionColumns.get(tableKey)).remove(colName);
-			if (((Map) this.expressionColumns.get(tableKey)).isEmpty())
+			((Collection) this.expressionColumns.get(tableKey)).remove(expr);
+			if (((Collection) this.expressionColumns.get(tableKey)).isEmpty())
 				this.expressionColumns.remove(tableKey);
 		}
 	}
@@ -325,15 +327,6 @@ public class DataSetModificationSet {
 	public boolean hasExpressionColumn(final DataSetTable table) {
 		final String tableKey = table.getName();
 		return this.expressionColumns.containsKey(tableKey);
-	}
-
-	public ExpressionColumnDefinition getExpressionColumn(final DataSetTable table,
-			final String colName) {
-		final String tableKey = table.getName();
-		if (!this.expressionColumns.containsKey(tableKey))
-			return null;
-		return (ExpressionColumnDefinition) ((Map) this.expressionColumns.get(tableKey))
-				.get(colName);
 	}
 
 	public Map getExpressionColumns() {
@@ -431,7 +424,8 @@ public class DataSetModificationSet {
 		 * Use this class to partition on a set of values - ie. only columns
 		 * with one of these values will be returned.
 		 */
-		public static class ValueCollection implements PartitionedColumnDefinition {
+		public static class ValueCollection implements
+				PartitionedColumnDefinition {
 			private boolean includeNull;
 
 			private Set values = new HashSet();
@@ -507,6 +501,8 @@ public class DataSetModificationSet {
 
 		private boolean groupBy;
 
+		private String colKey;
+
 		/**
 		 * This constructor gives the restriction an initial expression and a
 		 * set of aliases. The expression may not be empty, and neither can the
@@ -518,7 +514,7 @@ public class DataSetModificationSet {
 		 *            the aliases to use for columns.
 		 */
 		public ExpressionColumnDefinition(final String expr, final Map aliases,
-				final boolean groupBy) {
+				final boolean groupBy, final String colKey) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -532,6 +528,7 @@ public class DataSetModificationSet {
 			this.aliases.putAll(aliases);
 			this.expr = expr;
 			this.groupBy = groupBy;
+			this.colKey = colKey;
 		}
 
 		/**
@@ -552,6 +549,10 @@ public class DataSetModificationSet {
 		 */
 		public String getExpression() {
 			return this.expr;
+		}
+
+		public String getColKey() {
+			return this.colKey;
 		}
 
 		public boolean isGroupBy() {
@@ -578,8 +579,7 @@ public class DataSetModificationSet {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final String col = (String) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, ((DataSetColumn) dsTable
-						.getColumnByName(col)).getModifiedName());
+				sub = sub.replaceAll(alias, dsTable.getModifiedName(col));
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;

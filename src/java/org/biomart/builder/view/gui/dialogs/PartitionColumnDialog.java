@@ -52,8 +52,8 @@ import org.biomart.common.view.gui.StackTrace;
  * what values to use.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class PartitionColumnDialog extends JDialog {
@@ -109,7 +109,7 @@ public class PartitionColumnDialog extends JDialog {
 
 	private JComboBox type;
 
-	private PartitionColumnDialog(final String executeButtonText, 
+	private PartitionColumnDialog(final String executeButtonText,
 			final PartitionedColumnDefinition template) {
 		// Creates the basic dialog.
 		super();
@@ -154,7 +154,7 @@ public class PartitionColumnDialog extends JDialog {
 		this.nullable = new JCheckBox();
 
 		// Make the drop-down type choice change which value and nullable
-		// options appear. 
+		// options appear.
 		this.type.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				final String selectedItem = (String) PartitionColumnDialog.this.type
@@ -191,7 +191,7 @@ public class PartitionColumnDialog extends JDialog {
 					PartitionColumnDialog.this.multiValue.setVisible(false);
 					PartitionColumnDialog.this.nullable.setVisible(false);
 				}
-				
+
 				// Update the dialog size to fit the new fields.
 				PartitionColumnDialog.this.pack();
 			}
@@ -326,7 +326,8 @@ public class PartitionColumnDialog extends JDialog {
 		return string == null || string.trim().length() == 0;
 	}
 
-	private void copySettingsFromPartitionType(final PartitionedColumnDefinition template) {
+	private void copySettingsFromPartitionType(
+			final PartitionedColumnDefinition template) {
 		// If an existing single partition has been specified, populate
 		// its details into the box.
 		if (template instanceof SingleValue) {

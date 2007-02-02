@@ -32,8 +32,7 @@ import org.biomart.common.resources.Resources;
 
 /**
  * This simple dialog explains a dataset by drawing the schema diagram for the
- * underlying schemas, then applying the {@link ExplainContext} to the
- * diagrams.
+ * underlying schemas, then applying the {@link ExplainContext} to the diagrams.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
@@ -79,8 +78,7 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 		final JPanel content = new JPanel(new BorderLayout());
 
 		// The content pane is the schema tab set with an explain context.
-		final ExplainContext context = new ExplainContext(
-				martTab, this.dataset);
+		final ExplainContext context = new ExplainContext(martTab, this.dataset);
 		this.schemaTabSet.setDiagramContext(context);
 		content.add(this.schemaTabSet, BorderLayout.CENTER);
 		// Must be set visible as previous display location is invisible.

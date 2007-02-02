@@ -23,8 +23,8 @@ package org.biomart.builder.exceptions;
  * construction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ConstructorException extends MartBuilderException {

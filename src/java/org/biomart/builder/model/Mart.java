@@ -193,14 +193,15 @@ public class Mart {
 				suggestedDataSet = (DataSet) dataset.replicate(dataset
 						.getName());
 			try {
-				suggestedDataSet.getSchemaModifications().setSubclassedRelation(r);
+				suggestedDataSet.getSchemaModifications()
+						.setSubclassedRelation(r);
 			} catch (ValidationException e) {
 				// Eh? We asked for it, dammit!
 				throw new BioMartError(e);
 			}
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
-					(Collection) relationTablesIncluded.get(r), suggestedDataSet, r
-							.getManyKey().getTable()));
+					(Collection) relationTablesIncluded.get(r),
+					suggestedDataSet, r.getManyKey().getTable()));
 		}
 
 		// Return the resulting datasets.
@@ -318,9 +319,8 @@ public class Mart {
 			if (ds.getCentralTable().getSchema().equals(schema))
 				this.removeDataSet(ds);
 		}
-		for (final Iterator i = schema.getRelations().iterator(); i
-				.hasNext();) {
-			final Relation r = (Relation)i.next();
+		for (final Iterator i = schema.getRelations().iterator(); i.hasNext();) {
+			final Relation r = (Relation) i.next();
 			if (r.isExternal())
 				r.destroy();
 		}
@@ -430,8 +430,7 @@ public class Mart {
 		final Set suggestedDataSets = new TreeSet();
 		for (final Iterator i = rootTables.iterator(); i.hasNext();) {
 			final Table rootTable = (Table) i.next();
-			Log.debug("Constructing dataset for root table "
-					+ rootTable);
+			Log.debug("Constructing dataset for root table " + rootTable);
 			final DataSet dataset = new DataSet(this, rootTable, rootTable
 					.getName());
 			this.addDataSet(dataset);
@@ -461,8 +460,8 @@ public class Mart {
 			// covered by the subclass relations is the same as the
 			// original set of tables requested.
 			final Collection scTables = new HashSet();
-			for (final Iterator j = candidate.getSchemaModifications().getSubclassedRelations()
-					.iterator(); j.hasNext();) {
+			for (final Iterator j = candidate.getSchemaModifications()
+					.getSubclassedRelations().iterator(); j.hasNext();) {
 				final Relation r = (Relation) j.next();
 				scTables.add(r.getFirstKey().getTable());
 				scTables.add(r.getSecondKey().getTable());
@@ -525,8 +524,8 @@ public class Mart {
 	 */
 	public Collection suggestInvisibleDataSets(final DataSet dataset,
 			final Collection columns) throws SQLException, DataModelException {
-		Log.debug("Suggesting invisible datasets for " + dataset
-				+ " columns " + columns);
+		Log.debug("Suggesting invisible datasets for " + dataset + " columns "
+				+ columns);
 		final Collection invisibleDataSets = new HashSet();
 		final Table sourceTable = ((Column) columns.iterator().next())
 				.getTable();
@@ -550,8 +549,7 @@ public class Mart {
 			}
 		// Remove from the found tables all those which are already
 		// used, and the one from which the original columns came.
-		Log
-				.debug("Removing candidates that are already used in this dataset");
+		Log.debug("Removing candidates that are already used in this dataset");
 		candidates.remove(sourceTable);
 		for (final Iterator i = dataset.getTables().iterator(); i.hasNext();)
 			candidates.remove(((DataSetTable) i.next()).getFocusTable());

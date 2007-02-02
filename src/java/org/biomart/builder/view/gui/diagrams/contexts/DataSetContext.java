@@ -38,6 +38,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
+import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -168,6 +169,9 @@ public class DataSetContext extends SchemaContext {
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
+			// Magenta CONCAT columns.
+			else if (column instanceof ConcatColumn)
+				component.setBackground(ColumnComponent.CONCAT_COLOUR);
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
@@ -396,7 +400,7 @@ public class DataSetContext extends SchemaContext {
 			expression.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestModifyExpressionColumn(table, null);
+							.requestExpressionColumn(table, null);
 				}
 			});
 			contextMenu.add(expression);
@@ -577,7 +581,8 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 			mask.setSelected(isMasked);
-			if (isPartitioned || column instanceof ExpressionColumn)
+			if (isPartitioned || column instanceof ConcatColumn
+					|| column instanceof ExpressionColumn)
 				mask.setEnabled(false);
 
 			// Non-inherit inherited columns.
@@ -604,8 +609,8 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(inherited);
 			inherited.setSelected(isNonInherited);
-			inherited.setEnabled(isMasked
-					|| !((DataSetTable) column.getTable()).getType().equals(
+			inherited.setEnabled(!isMasked
+					&& !((DataSetTable) column.getTable()).getType().equals(
 							DataSetTableType.DIMENSION));
 
 			contextMenu.addSeparator();
@@ -652,6 +657,8 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(partition);
 				if (isMasked
+						|| column instanceof ConcatColumn
+						|| column instanceof ExpressionColumn
 						|| !((DataSetTable) column.getTable()).getType()
 								.equals(DataSetTableType.DIMENSION))
 					partition.setEnabled(false);
@@ -686,7 +693,7 @@ public class DataSetContext extends SchemaContext {
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestModifyExpressionColumn(
+								.requestExpressionColumn(
 										(DataSetTable) column.getTable(),
 										(ExpressionColumn) column);
 					}

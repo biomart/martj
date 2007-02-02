@@ -264,7 +264,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			return "TEMP__" + this.tempTableSeq++;
 		}
 
-		public Collection listDistinctValues(final Column col) throws SQLException {
+		public Collection listDistinctValues(final Column col)
+				throws SQLException {
 			Log.info(Resources.get("logDistinct", "" + col));
 			return this.dialect.executeSelectDistinct(col);
 		}
@@ -418,10 +419,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				// Add the action to the current map.
 				final String dsTableName = action.getDataSetTableName();
 				if (!this.actions.containsKey(dsTableName))
-					this.actions.put(dsTableName,
-							new ArrayList());
-				((List) this.actions.get(dsTableName))
-						.add(action);
+					this.actions.put(dsTableName, new ArrayList());
+				((List) this.actions.get(dsTableName)).add(action);
 			}
 		}
 	}

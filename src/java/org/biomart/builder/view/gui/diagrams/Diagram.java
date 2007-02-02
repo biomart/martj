@@ -97,8 +97,7 @@ public abstract class Diagram extends JPanel {
 		// Set us up with the layout.
 		super(layout);
 
-		Log.debug("Creating new diagram of type "
-				+ this.getClass().getName());
+		Log.debug("Creating new diagram of type " + this.getClass().getName());
 
 		// Enable mouse events to be picked up all over the diagram.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);

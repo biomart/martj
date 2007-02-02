@@ -212,7 +212,7 @@ public class MartTabSet extends JTabbedPane {
 			final Exception failure = constructor.getFailureException();
 			// By singling out ValidationException we can show users useful
 			// messages straight away.
-			if (failure != null) 
+			if (failure != null)
 				StackTrace
 						.showStackTrace(failure instanceof ValidationException ? failure
 								: new ConstructorException(Resources

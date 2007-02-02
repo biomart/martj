@@ -49,8 +49,8 @@ import org.biomart.common.resources.Resources;
  * the user to select one or more of them for inclusion.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class SuggestDataSetDialog extends JDialog {

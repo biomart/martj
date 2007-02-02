@@ -22,8 +22,8 @@ package org.biomart.builder.view.gui.dialogs;
  * Explanation dialogs must be able to repaint/redraw themselves on request.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface ExplainDialog {

@@ -39,8 +39,8 @@ import org.biomart.common.resources.Resources;
  * it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class DataSetComponent extends BoxShapedComponent {

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.TreeSet;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -147,7 +149,7 @@ public abstract class TransformationUnit {
 	public static class Expression extends TransformationUnit {
 
 		private DataSetTable dsTable;
-		
+
 		public Expression(final TransformationUnit previousUnit,
 				final DataSetTable dsTable) {
 			super(previousUnit);
@@ -161,7 +163,7 @@ public abstract class TransformationUnit {
 		public DataSetTable getDataSetTable() {
 			return this.dsTable;
 		}
-		
+
 		public Collection getOrderedExpressionGroups() {
 			final List groups = new ArrayList();
 			final Collection entries = new TreeSet(new Comparator() {
@@ -170,50 +172,49 @@ public abstract class TransformationUnit {
 					final Map.Entry entryB = (Map.Entry) b;
 					final String colNameA = (String) entryA.getKey();
 					final String colNameB = (String) entryB.getKey();
-					final ExpressionColumnDefinition exprA = ((DataSet) Expression.this.dsTable.getSchema())
-					.getDataSetModifications().getExpressionColumn(
-							dsTable, colNameA);
-					final ExpressionColumnDefinition exprB = ((DataSet) Expression.this.dsTable.getSchema())
-					.getDataSetModifications().getExpressionColumn(
-							dsTable, colNameB);
-					return exprB.getAliases().keySet().contains(colNameA) ? -1 : ((exprA.isGroupBy() == exprB.isGroupBy()) ? 1 : -1);
+					final ExpressionColumnDefinition exprA = ((ExpressionColumn) entryA
+							.getValue()).getDefinition();
+					final ExpressionColumnDefinition exprB = ((ExpressionColumn) entryB
+							.getValue()).getDefinition();
+					return exprB.getAliases().keySet().contains(colNameA) ? -1
+							: ((exprA.isGroupBy() == exprB.isGroupBy()) ? 1
+									: -1);
 				}
 			});
 			entries.addAll(this.getNewColumnNameMap().entrySet());
 			// Iterator over entries and sort into groups.
 			Map.Entry previousEntry = null;
-			Map currentGroup = new HashMap();
+			Collection currentGroup = new HashSet();
 			groups.add(currentGroup);
 			for (final Iterator i = entries.iterator(); i.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
 				if (previousEntry != null) {
 					final String colNameA = (String) entry.getKey();
 					final String colNameB = (String) previousEntry.getKey();
-					final ExpressionColumnDefinition exprA = ((DataSet) Expression.this.dsTable.getSchema())
-					.getDataSetModifications().getExpressionColumn(
-							dsTable, colNameA);
-					final ExpressionColumnDefinition exprB = ((DataSet) Expression.this.dsTable.getSchema())
-					.getDataSetModifications().getExpressionColumn(
-							dsTable, colNameB);
-					if (exprB.getAliases().keySet().contains(colNameA) || !(exprA.isGroupBy() == exprB.isGroupBy())) {
-						currentGroup = new HashMap();
+					final ExpressionColumnDefinition exprA = ((ExpressionColumn) entry
+							.getValue()).getDefinition();
+					final ExpressionColumnDefinition exprB = ((ExpressionColumn) previousEntry
+							.getValue()).getDefinition();
+					if (exprB.getAliases().keySet().contains(colNameA)
+							|| !(exprA.isGroupBy() == exprB.isGroupBy())) {
+						currentGroup = new HashSet();
 						groups.add(currentGroup);
 					}
 				}
-				currentGroup.put(entry.getKey(), entry.getValue());
+				currentGroup.add(entry.getValue());
 				previousEntry = entry;
 			}
 			return groups;
 		}
 	}
-	// FIXME: Reinstate.
-	/*
-	 * public static class ConcatSchemaTable extends LeftJoinSchemaTable {
-	 * public static final String CONCAT_COLNAME = "__CONCAT";
-	 * 
-	 * public ConcatSchemaTable(final Table schemaTable, final List
-	 * sourceDataSetColumnNames, final Key schemaSourceKey, final Relation
-	 * schemaRelation) { super(schemaTable, sourceDataSetColumnNames,
-	 * schemaSourceKey, schemaRelation); } }
-	 */
+
+	public static class Concat extends JoinTable {
+
+		public Concat(final TransformationUnit previousUnit, final Table table,
+				final List sourceDataSetColumns, final Key schemaSourceKey,
+				final Relation schemaRelation, final int schemaRelationIteration) {
+			super(previousUnit, table, sourceDataSetColumns, schemaSourceKey,
+					schemaRelation, schemaRelationIteration);
+		}
+	}
 }

@@ -215,10 +215,9 @@ public class TableComponent extends BoxShapedComponent {
 		for (final Iterator i = this.getTable().getColumns().iterator(); i
 				.hasNext();) {
 			final Column col = (Column) i.next();
-			if (col instanceof DataSetColumn)
-				sortedColMap.put(((DataSetColumn) col).getModifiedName(), col);
-			else
-				sortedColMap.put(col.getName(), col);
+			sortedColMap.put(
+					(col instanceof DataSetColumn) ? ((DataSetColumn) col)
+							.getModifiedName() : col.getName(), col);
 		}
 		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
 			final Column col = (Column) i.next();

@@ -39,8 +39,8 @@ import org.biomart.common.model.Key.PrimaryKey;
  * Represents a key by listing out in a set of labels each column in the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class KeyComponent extends BoxShapedComponent {

@@ -48,11 +48,11 @@ import org.biomart.common.resources.Resources;
  * move those columns around, thus editing the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
-public class KeyEditorDialog extends JDialog {
+public class KeyDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	/**
@@ -64,9 +64,8 @@ public class KeyEditorDialog extends JDialog {
 	 * @return the list of columns the user selected.
 	 */
 	public static List createForeignKey(final Table table) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(table,
-				Resources.get("newFKDialogTitle"), Resources.get("addButton"),
-				null);
+		final KeyDialog dialog = new KeyDialog(table, Resources
+				.get("newFKDialogTitle"), Resources.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
@@ -81,9 +80,8 @@ public class KeyEditorDialog extends JDialog {
 	 * @return the list of columns the user selected.
 	 */
 	public static List createPrimaryKey(final Table table) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(table,
-				Resources.get("newPKDialogTitle"), Resources.get("addButton"),
-				null);
+		final KeyDialog dialog = new KeyDialog(table, Resources
+				.get("newPKDialogTitle"), Resources.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
@@ -98,9 +96,9 @@ public class KeyEditorDialog extends JDialog {
 	 * @return the list of columns the user selected.
 	 */
 	public static List editKey(final Key key) {
-		final KeyEditorDialog dialog = new KeyEditorDialog(key
-				.getTable(), Resources.get("editKeyDialogTitle"), Resources
-				.get("modifyButton"), key.getColumns());
+		final KeyDialog dialog = new KeyDialog(key.getTable(), Resources
+				.get("editKeyDialogTitle"), Resources.get("modifyButton"), key
+				.getColumns());
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		return Arrays.asList(dialog.selectedColumns.toArray());
@@ -110,8 +108,8 @@ public class KeyEditorDialog extends JDialog {
 
 	private DefaultListModel tableColumns;
 
-	private KeyEditorDialog(final Table table,
-			final String title, final String action, final List columns) {
+	private KeyDialog(final Table table, final String title,
+			final String action, final List columns) {
 		// Create the base dialog.
 		super();
 		this.setTitle(title);
@@ -150,10 +148,8 @@ public class KeyEditorDialog extends JDialog {
 		final JList keyColList = new JList(this.selectedColumns);
 		final JButton upButton = new JButton(new ImageIcon(Resources
 				.getResourceAsURL("arrowUp.gif")));
-		final JButton downButton = new JButton(
-				new ImageIcon(
-						Resources
-								.getResourceAsURL("arrowDown.gif")));
+		final JButton downButton = new JButton(new ImageIcon(Resources
+				.getResourceAsURL("arrowDown.gif")));
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		final Box content = Box.createHorizontalBox();
@@ -203,8 +199,8 @@ public class KeyEditorDialog extends JDialog {
 				final Object selected = tabColList.getSelectedValue();
 				if (selected != null) {
 					// Move a column from table to key.
-					KeyEditorDialog.this.selectedColumns.addElement(selected);
-					KeyEditorDialog.this.tableColumns.removeElement(selected);
+					KeyDialog.this.selectedColumns.addElement(selected);
+					KeyDialog.this.tableColumns.removeElement(selected);
 				}
 			}
 		});
@@ -213,9 +209,8 @@ public class KeyEditorDialog extends JDialog {
 				final Object selected = keyColList.getSelectedValue();
 				if (selected != null) {
 					// Move a column from key to table.
-					KeyEditorDialog.this.tableColumns.addElement(selected);
-					KeyEditorDialog.this.selectedColumns
-							.removeElement(selected);
+					KeyDialog.this.tableColumns.addElement(selected);
+					KeyDialog.this.selectedColumns.removeElement(selected);
 				}
 			}
 		});
@@ -225,15 +220,15 @@ public class KeyEditorDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				final Object selected = keyColList.getSelectedValue();
 				if (selected != null) {
-					final int currIndex = KeyEditorDialog.this.selectedColumns
+					final int currIndex = KeyDialog.this.selectedColumns
 							.indexOf(selected);
 					if (currIndex > 0) {
 						// Swap the selected item with the one above it.
-						final Object swap = KeyEditorDialog.this.selectedColumns
+						final Object swap = KeyDialog.this.selectedColumns
 								.get(currIndex - 1);
-						KeyEditorDialog.this.selectedColumns.setElementAt(
-								selected, currIndex - 1);
-						KeyEditorDialog.this.selectedColumns.setElementAt(swap,
+						KeyDialog.this.selectedColumns.setElementAt(selected,
+								currIndex - 1);
+						KeyDialog.this.selectedColumns.setElementAt(swap,
 								currIndex);
 						// Select the selected item again, as it will
 						// have moved.
@@ -246,15 +241,15 @@ public class KeyEditorDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				final Object selected = keyColList.getSelectedValue();
 				if (selected != null) {
-					final int currIndex = KeyEditorDialog.this.selectedColumns
+					final int currIndex = KeyDialog.this.selectedColumns
 							.indexOf(selected);
-					if (currIndex < KeyEditorDialog.this.selectedColumns.size() - 1) {
+					if (currIndex < KeyDialog.this.selectedColumns.size() - 1) {
 						// Swap the selected item with the one below it.
-						final Object swap = KeyEditorDialog.this.selectedColumns
+						final Object swap = KeyDialog.this.selectedColumns
 								.get(currIndex + 1);
-						KeyEditorDialog.this.selectedColumns.setElementAt(
-								selected, currIndex + 1);
-						KeyEditorDialog.this.selectedColumns.setElementAt(swap,
+						KeyDialog.this.selectedColumns.setElementAt(selected,
+								currIndex + 1);
+						KeyDialog.this.selectedColumns.setElementAt(swap,
 								currIndex);
 						// Select the selected item again, as it will
 						// have moved.
@@ -268,7 +263,7 @@ public class KeyEditorDialog extends JDialog {
 		// without taking any action.
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				KeyEditorDialog.this.hide();
+				KeyDialog.this.hide();
 			}
 		});
 
@@ -276,8 +271,8 @@ public class KeyEditorDialog extends JDialog {
 		// then closes the dialog.
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (KeyEditorDialog.this.validateFields())
-					KeyEditorDialog.this.hide();
+				if (KeyDialog.this.validateFields())
+					KeyDialog.this.hide();
 			}
 		});
 

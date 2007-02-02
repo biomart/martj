@@ -122,8 +122,8 @@ public class SchemaDiagram extends Diagram {
 		// Add a RelationComponent for each relation. We only work with
 		// internal relations because we can't correctly display external ones
 		// as they have ends in other schemas.
-		for (final Iterator i = this.getSchema().getRelations()
-				.iterator(); i.hasNext();) {
+		for (final Iterator i = this.getSchema().getRelations().iterator(); i
+				.hasNext();) {
 			final Relation relation = (Relation) i.next();
 			if (relation.isExternal())
 				continue;

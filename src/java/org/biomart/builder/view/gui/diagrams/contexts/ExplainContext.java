@@ -49,15 +49,15 @@ import org.biomart.common.resources.Resources;
  * the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ExplainContext extends SchemaContext {
 	private DataSet dataset;
 
 	private DataSetTable datasetTable;
-	
+
 	/**
 	 * Creates a new context within a given set of tabs, which applies to a
 	 * specific dataset table. All menu options will apply to this dataset, and
@@ -71,10 +71,10 @@ public class ExplainContext extends SchemaContext {
 	 */
 	public ExplainContext(final MartTab martTab, final DataSetTable datasetTable) {
 		super(martTab);
-		this.dataset = (DataSet)datasetTable.getSchema();
+		this.dataset = (DataSet) datasetTable.getSchema();
 		this.datasetTable = datasetTable;
 	}
-	
+
 	/**
 	 * Creates a new context within a given set of tabs, which applies to a
 	 * specific dataset. All menu options will apply to this dataset, and
@@ -99,31 +99,37 @@ public class ExplainContext extends SchemaContext {
 		if (object instanceof Table) {
 			final Table table = (Table) object;
 			final TableComponent tblcomp = (TableComponent) component;
-			tblcomp.setDotted(this.dataset.getSchemaModifications().isRestrictedTable(this.datasetTable, table));
+			tblcomp.setDotted(this.dataset.getSchemaModifications()
+					.isRestrictedTable(this.datasetTable, table));
 		}
-		
+
 		// This section customises the appearance of relation lines within
 		// the schema diagram.
 		if (object instanceof Relation) {
 
 			// Work out what relation we are dealing with.
 			final Relation relation = (Relation) object;
-			
+
 			// Fade out all UNINCLUDED, INFERRED_INCORRECT and MASKED relations.
-			final boolean included = this.datasetTable==null?
-					this.dataset.getIncludedRelations().contains(relation)
-					: this.datasetTable.getIncludedRelations().contains(relation);
-			if (!included || relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| this.dataset.getSchemaModifications().isMaskedRelation(this.datasetTable, relation))
+			final boolean included = this.datasetTable == null ? this.dataset
+					.getIncludedRelations().contains(relation)
+					: this.datasetTable.getIncludedRelations().contains(
+							relation);
+			if (!included
+					|| relation.getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT)
+					|| this.dataset.getSchemaModifications().isMaskedRelation(
+							this.datasetTable, relation))
 				component.setForeground(RelationComponent.MASKED_COLOUR);
 
-			// FIXME: Reinstate.
 			// Highlight CONCAT-ONLY relations.
-			//else if (this.dataset.getConcatOnlyRelations().contains(relation))
-			//	component.setForeground(RelationComponent.CONCAT_COLOUR);
-			
+			else if (this.dataset.getSchemaModifications().isConcatRelation(
+					this.datasetTable, relation))
+				component.setForeground(RelationComponent.CONCAT_COLOUR);
+
 			// Highlight SUBCLASS relations.
-			else if (this.dataset.getSchemaModifications().isSubclassedRelation(relation))
+			else if (this.dataset.getSchemaModifications()
+					.isSubclassedRelation(relation))
 				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All others are normal.
@@ -134,16 +140,20 @@ public class ExplainContext extends SchemaContext {
 		// This section customises table objects.
 		else if (object instanceof Table) {
 			// Fade out UNINCLUDED tables.
-			final boolean isFocus = this.datasetTable!=null && this.datasetTable.getFocusTable().equals((Table)object);
-			final Set included = new HashSet(this.datasetTable!=null ? this.datasetTable.getIncludedRelations() : this.dataset.getIncludedRelations());
-			included.retainAll(((Table)object).getRelations());
+			final boolean isFocus = this.datasetTable != null
+					&& this.datasetTable.getFocusTable().equals((Table) object);
+			final Set included = new HashSet(
+					this.datasetTable != null ? this.datasetTable
+							.getIncludedRelations() : this.dataset
+							.getIncludedRelations());
+			included.retainAll(((Table) object).getRelations());
 			if (included.isEmpty() && !isFocus)
 				component.setForeground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
 			else
 				component.setForeground(TableComponent.NORMAL_COLOUR);
 		}
-		
+
 		// This section customises the appearance of key objects within
 		// table objects in the diagram.
 		else if (object instanceof Key) {
@@ -209,8 +219,7 @@ public class ExplainContext extends SchemaContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestMaskTable(
-									ExplainContext.this.dataset, 
+							.requestMaskTable(ExplainContext.this.dataset,
 									ExplainContext.this.datasetTable, table);
 				}
 			});
@@ -224,34 +233,32 @@ public class ExplainContext extends SchemaContext {
 			unmask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestUnmaskTable(
-									ExplainContext.this.dataset,
+							.requestUnmaskTable(ExplainContext.this.dataset,
 									ExplainContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(unmask);
 
 			contextMenu.addSeparator();
-			
+
 			// If it's a restricted table...
-			if (this.dataset.getSchemaModifications().isRestrictedTable(this.datasetTable, table)) {
+			if (this.dataset.getSchemaModifications().isRestrictedTable(
+					this.datasetTable, table)) {
 
 				// Option to modify restriction.
-				final JMenuItem modify = new JMenuItem(
-						Resources.get("modifyTableRestrictionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("filter.gif")));
+				final JMenuItem modify = new JMenuItem(Resources
+						.get("modifyTableRestrictionTitle"), new ImageIcon(
+						Resources.getResourceAsURL("filter.gif")));
 				modify.setMnemonic(Resources.get(
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this.getMartTab()
+						ExplainContext.this
+								.getMartTab()
 								.getDataSetTabSet()
-								.requestModifyTableRestriction(
+								.requestRestrictTable(
 										ExplainContext.this.dataset,
-										ExplainContext.this.datasetTable,
-										table);
+										ExplainContext.this.datasetTable, table);
 					}
 				});
 				contextMenu.add(modify);
@@ -259,20 +266,19 @@ public class ExplainContext extends SchemaContext {
 			} else {
 
 				// Add a table restriction.
-				final JMenuItem restriction = new JMenuItem(
-						Resources.get("addTableRestrictionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("filter.gif")));
+				final JMenuItem restriction = new JMenuItem(Resources
+						.get("addTableRestrictionTitle"), new ImageIcon(
+						Resources.getResourceAsURL("filter.gif")));
 				restriction.setMnemonic(Resources.get(
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestModifyTableRestriction(
+						ExplainContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestRestrictTable(
 										ExplainContext.this.dataset,
-										ExplainContext.this.datasetTable,
-										table);
+										ExplainContext.this.datasetTable, table);
 					}
 				});
 				contextMenu.add(restriction);
@@ -286,12 +292,14 @@ public class ExplainContext extends SchemaContext {
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestRemoveTableRestriction(
-									ExplainContext.this.dataset, ExplainContext.this.datasetTable, table);
+							.requestUnrestrictTable(
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, table);
 				}
 			});
 			contextMenu.add(remove);
-			if (!this.dataset.getSchemaModifications().isRestrictedTable(this.datasetTable, table))
+			if (!this.dataset.getSchemaModifications().isRestrictedTable(
+					this.datasetTable, table))
 				remove.setEnabled(false);
 		}
 
@@ -308,19 +316,25 @@ public class ExplainContext extends SchemaContext {
 			// Work out what state the relation is already in.
 			final boolean incorrect = relation.getStatus().equals(
 					ComponentStatus.INFERRED_INCORRECT);
-			final boolean relationMasked = this.dataset.getSchemaModifications().isMaskedRelation(this.datasetTable, relation);
-			// FIXME: Reinstate.
-			/*
+			final boolean relationMasked = this.dataset
+					.getSchemaModifications().isMaskedRelation(
+							this.datasetTable, relation);
+
 			final boolean relationConcated = this.dataset
-					.getConcatOnlyRelations().contains(relation);
-			*/
+					.getSchemaModifications().isConcatRelation(
+							this.datasetTable, relation);
 			final boolean relationSubclassed = this.dataset
 					.getSchemaModifications().isSubclassedRelation(relation);
 			final boolean relationCompounded = this.dataset
-			.getSchemaModifications().isCompoundRelation(this.datasetTable, relation);
+					.getSchemaModifications().isCompoundRelation(
+							this.datasetTable, relation);
 			final boolean relationForced = this.dataset
-			.getSchemaModifications().isForceIncludeRelation(this.datasetTable, relation);
-			final boolean relationIncluded = this.datasetTable==null ? this.dataset.getIncludedRelations().contains(relation) : this.datasetTable.getIncludedRelations().contains(relation);
+					.getSchemaModifications().isForceIncludeRelation(
+							this.datasetTable, relation);
+			final boolean relationIncluded = this.datasetTable == null ? this.dataset
+					.getIncludedRelations().contains(relation)
+					: this.datasetTable.getIncludedRelations().contains(
+							relation);
 
 			// The mask/unmask option allows the user to mask/unmask a relation.
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
@@ -329,65 +343,72 @@ public class ExplainContext extends SchemaContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (mask.isSelected())
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestMaskRelation(
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestMaskRelation(
 										ExplainContext.this.dataset,
 										ExplainContext.this.datasetTable,
 										relation);
 					else
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestUnmaskRelation(
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestUnmaskRelation(
 										ExplainContext.this.dataset,
 										ExplainContext.this.datasetTable,
 										relation);
 				}
 			});
 			contextMenu.add(mask);
-			if (incorrect || relationCompounded || (!relationMasked && !relationIncluded))
+			if (incorrect || relationCompounded
+					|| (!relationMasked && !relationIncluded))
 				mask.setEnabled(false);
 			if (relationMasked)
 				mask.setSelected(true);
-			
+
 			// The force option allows the user to forcibly include a relation
 			// that would otherwise remain unincluded.
 			final JCheckBoxMenuItem force = new JCheckBoxMenuItem(Resources
 					.get("forceIncludeRelationTitle"));
-			force.setMnemonic(Resources.get("forceIncludeRelationMnemonic").charAt(0));
+			force.setMnemonic(Resources.get("forceIncludeRelationMnemonic")
+					.charAt(0));
 			force.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (force.isSelected())
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestForceRelation(
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestForceRelation(
 										ExplainContext.this.dataset,
 										ExplainContext.this.datasetTable,
 										relation);
 					else
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestUnforceRelation(
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestUnforceRelation(
 										ExplainContext.this.dataset,
 										ExplainContext.this.datasetTable,
 										relation);
 				}
 			});
 			contextMenu.add(force);
-			if (incorrect || relationMasked || (relationIncluded && !relationForced))
+			if (incorrect || relationMasked
+					|| (relationIncluded && !relationForced))
 				force.setEnabled(false);
 			if (relationForced)
 				force.setSelected(true);
-			
+
 			// The compound option allows the user to compound a relation.
 			final JCheckBoxMenuItem compound = new JCheckBoxMenuItem(Resources
 					.get("compoundRelationTitle"));
-			compound.setMnemonic(Resources.get("compoundRelationMnemonic").charAt(0));
+			compound.setMnemonic(Resources.get("compoundRelationMnemonic")
+					.charAt(0));
 			compound.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainContext.this.getMartTab()
-							.getDataSetTabSet().requestCompoundRelation(
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestCompoundRelation(
 									ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable,
-									relation);
-					compound.setSelected(ExplainContext.this.dataset
-							.getSchemaModifications().isCompoundRelation(ExplainContext.this.datasetTable, relation));
+									ExplainContext.this.datasetTable, relation);
+					compound
+							.setSelected(ExplainContext.this.dataset
+									.getSchemaModifications()
+									.isCompoundRelation(
+											ExplainContext.this.datasetTable,
+											relation));
 				}
 			});
 			contextMenu.add(compound);
@@ -395,7 +416,7 @@ public class ExplainContext extends SchemaContext {
 				compound.setEnabled(false);
 			if (relationCompounded)
 				compound.setSelected(true);
-						
+
 			// The subclass/unsubclass option allows subclassing, but is
 			// only selectable when the relation is unmasked and not
 			// incorrect or already flagged as being in any conflicting state.
@@ -406,43 +427,38 @@ public class ExplainContext extends SchemaContext {
 			subclass.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (subclass.isSelected())
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestSubclassRelation(
-										ExplainContext.this.dataset,
-										relation);
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestSubclassRelation(
+										ExplainContext.this.dataset, relation);
 					else
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestUnsubclassRelation(
-										ExplainContext.this.dataset,
-										relation);
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestUnsubclassRelation(
+										ExplainContext.this.dataset, relation);
 				}
 			});
 			contextMenu.add(subclass);
-			if (incorrect || relationMasked || relation.isOneToOne() || this.datasetTable!=null)
-				// FIXME: Reinstate
-				//	|| relationConcated)
+			if (incorrect || relationMasked || relation.isOneToOne()
+					|| relationConcated || this.datasetTable != null)
 				subclass.setEnabled(false);
 			if (relationSubclassed)
 				subclass.setSelected(true);
 
 			contextMenu.addSeparator();
-			
+
 			// If it's a restricted relation...
-			if (this.dataset.getSchemaModifications().isRestrictedRelation(this.datasetTable, relation)) {
+			if (this.dataset.getSchemaModifications().isRestrictedRelation(
+					this.datasetTable, relation)) {
 
 				// Option to modify restriction.
-				final JMenuItem modify = new JMenuItem(
-						Resources.get("modifyRelationRestrictionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("filter.gif")));
+				final JMenuItem modify = new JMenuItem(Resources
+						.get("modifyRelationRestrictionTitle"), new ImageIcon(
+						Resources.getResourceAsURL("filter.gif")));
 				modify.setMnemonic(Resources.get(
 						"modifyRelationRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet()
-								.requestModifyRelationRestriction(
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestRestrictRelation(
 										ExplainContext.this.dataset,
 										ExplainContext.this.datasetTable,
 										relation);
@@ -451,21 +467,19 @@ public class ExplainContext extends SchemaContext {
 				contextMenu.add(modify);
 				if (incorrect || relationMasked)
 					modify.setEnabled(false);
-				
+
 			} else {
 
 				// Add a relation restriction.
-				final JMenuItem restriction = new JMenuItem(
-						Resources.get("addRelationRestrictionTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("filter.gif")));
+				final JMenuItem restriction = new JMenuItem(Resources
+						.get("addRelationRestrictionTitle"), new ImageIcon(
+						Resources.getResourceAsURL("filter.gif")));
 				restriction.setMnemonic(Resources.get(
 						"addRelationRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this.getMartTab()
-								.getDataSetTabSet().requestModifyRelationRestriction(
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestRestrictRelation(
 										ExplainContext.this.dataset,
 										ExplainContext.this.datasetTable,
 										relation);
@@ -477,42 +491,37 @@ public class ExplainContext extends SchemaContext {
 			// Option to remove restriction.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeRelationRestrictionTitle"));
-			remove.setMnemonic(Resources.get("removeRelationRestrictionMnemonic")
-					.charAt(0));
+			remove.setMnemonic(Resources.get(
+					"removeRelationRestrictionMnemonic").charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestRemoveRelationRestriction(
-									ExplainContext.this.dataset, ExplainContext.this.datasetTable, relation);
+							.requestUnrestrictRelation(
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, relation);
 				}
 			});
 			contextMenu.add(remove);
-			if (!this.dataset.getSchemaModifications().isRestrictedRelation(this.datasetTable, relation))
+			if (!this.dataset.getSchemaModifications().isRestrictedRelation(
+					this.datasetTable, relation))
 				remove.setEnabled(false);
 
-			// FIXME: Reinstate.
-			/*
 			// If it's a concat column...
-			if (this.dataset.getConcatOnlyRelations().contains(relation)) {
+			if (relationConcated) {
 
 				// Option to modify concat.
-				final JMenuItem modify = new JMenuItem(
-						Resources.get("modifyConcatRelationTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("collapseAll.gif")));
+				final JMenuItem modify = new JMenuItem(Resources
+						.get("modifyConcatRelationTitle"), new ImageIcon(
+						Resources.getResourceAsURL("collapseAll.gif")));
 				modify.setMnemonic(Resources
 						.get("modifyConcatRelationMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainDataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestModifyConcatOnlyRelation(
-										ExplainDataSetContext.this.dataset,
-										relation,
-										ExplainDataSetContext.this.dataset
-												.getConcatRelationType(relation));
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestConcatRelation(
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
+										relation);
 					}
 				});
 				contextMenu.add(modify);
@@ -520,42 +529,41 @@ public class ExplainContext extends SchemaContext {
 			} else {
 
 				// Add a relation concat.
-				final JMenuItem concat = new JMenuItem(
-						Resources.get("addConcatRelationTitle"),
-						new ImageIcon(
-								Resources
-										.getResourceAsURL("collapseAll.gif")));
+				final JMenuItem concat = new JMenuItem(Resources
+						.get("addConcatRelationTitle"), new ImageIcon(Resources
+						.getResourceAsURL("collapseAll.gif")));
 				concat.setMnemonic(Resources.get("addConcatRelationMnemonic")
 						.charAt(0));
 				concat.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainDataSetContext.this.getMartTab()
-								.getDataSetTabSet()
-								.requestCreateConcatOnlyRelation(
-										ExplainDataSetContext.this.dataset,
+						ExplainContext.this.getMartTab().getDataSetTabSet()
+								.requestConcatRelation(
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable,
 										relation);
 					}
 				});
 				contextMenu.add(concat);
+				if (relationSubclassed || !relation.isOneToMany())
+					concat.setEnabled(false);
 			}
 
 			// Option to remove concat.
-			final JMenuItem remove = new JMenuItem(Resources
+			final JMenuItem removec = new JMenuItem(Resources
 					.get("removeConcatRelationTitle"));
-			remove.setMnemonic(Resources.get("removeConcatRelationMnemonic")
+			removec.setMnemonic(Resources.get("removeConcatRelationMnemonic")
 					.charAt(0));
-			remove.addActionListener(new ActionListener() {
+			removec.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					ExplainDataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestUnconcatOnlyRelation(
-									ExplainDataSetContext.this.dataset,
-									relation);
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestUnconcatRelation(
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, relation);
 				}
 			});
-			contextMenu.add(remove);
-			if (!this.dataset.getConcatOnlyRelations().contains(relation))
-				remove.setEnabled(false);
-			*/
+			contextMenu.add(removec);
+			if (!relationConcated)
+				removec.setEnabled(false);
 		}
 
 		// This submenu applies when keys are clicked on.
