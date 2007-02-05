@@ -49,20 +49,32 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 public abstract class BoxShapedComponent extends JPanel implements
 		DiagramComponent {
 
-	private static final float BOX_DASHSIZE = 7.0f; // 72 = 1 inch
+	private static final float BOX_DASHSIZE = 6.0f; // 72 = 1 inch
 
-	private static final float BOX_DOTSIZE = 3.0f; // 72 = 1 inch
+	private static final float BOX_DOTSIZE = 2.0f; // 72 = 1 inch
 
 	private static final float BOX_LINEWIDTH = 1.0f; // 72 = 1 inch
 
 	private static final float BOX_MITRE_TRIM = 10.0f; // 72 = 1 inch
 
-	private static final Stroke DOTTED_OUTLINE = new BasicStroke(
+	private static final Stroke DOTTED_DASHED_OUTLINE = new BasicStroke(
 			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM,
 			new float[] { BoxShapedComponent.BOX_DASHSIZE,
 					BoxShapedComponent.BOX_DOTSIZE,
 					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE}, 0);
+
+	private static final Stroke DASHED_OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM,
+			new float[] { BoxShapedComponent.BOX_DASHSIZE,
+					BoxShapedComponent.BOX_DASHSIZE }, 0);
+
+	private static final Stroke DOTTED_OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM,
+			new float[] { BoxShapedComponent.BOX_DOTSIZE,
 					BoxShapedComponent.BOX_DOTSIZE }, 0);
 
 	private static final Stroke OUTLINE = new BasicStroke(
@@ -71,7 +83,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	private Diagram diagram;
 
-	private boolean dotted = false;
+	private boolean restricted = false;
+
+	private boolean compounded = false;
 
 	private Object object;
 
@@ -207,14 +221,26 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	/**
 	 * If this is set to <tt>true</tt> then the component will appear with a
-	 * dotted/dashed outline. Otherwise, it appears with a solid outline.
+	 * dashed outline. Otherwise, it appears with a solid outline.
 	 * 
-	 * @param dotted
+	 * @param restricted
+	 *            <tt>true</tt> if the component is to appear with a dashed
+	 *            outline. The default is <tt>false</tt>.
+	 */
+	public void setRestricted(final boolean restricted) {
+		this.restricted = restricted;
+	}
+
+	/**
+	 * If this is set to <tt>true</tt> then the component will appear with a
+	 * dotted outline. Otherwise, it appears with a solid outline.
+	 * 
+	 * @param compounded
 	 *            <tt>true</tt> if the component is to appear with a dotted
 	 *            outline. The default is <tt>false</tt>.
 	 */
-	public void setDotted(final boolean dotted) {
-		this.dotted = dotted;
+	public void setCompounded(final boolean compounded) {
+		this.compounded = compounded;
 	}
 
 	public void setState(final Object state) {
@@ -225,10 +251,10 @@ public abstract class BoxShapedComponent extends JPanel implements
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
-		if (this.dotted)
-			this.stroke = BoxShapedComponent.DOTTED_OUTLINE;
+		if (this.restricted)
+			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_DASHED_OUTLINE : BoxShapedComponent.DASHED_OUTLINE;
 		else
-			this.stroke = BoxShapedComponent.OUTLINE;
+			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_OUTLINE : BoxShapedComponent.OUTLINE;
 		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
 	}
 }

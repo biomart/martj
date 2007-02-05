@@ -175,6 +175,7 @@ public class TransformationContext extends DataSetContext {
 								.getDataSetTabSet()
 								.requestPartitionByColumn(
 										TransformationContext.this.getDataSet(),
+										(DataSetTable)column.getTable(),
 										column);
 					}
 				});
@@ -199,6 +200,7 @@ public class TransformationContext extends DataSetContext {
 								.getDataSetTabSet()
 								.requestPartitionByColumn(
 										TransformationContext.this.getDataSet(),
+										(DataSetTable)column.getTable(),
 										column);
 					}
 				});
@@ -218,7 +220,7 @@ public class TransformationContext extends DataSetContext {
 					TransformationContext.this.getMartTab().getDataSetTabSet()
 							.requestUnpartitionByColumn(
 									TransformationContext.this.getDataSet(),
-									column);
+									(DataSetTable)column.getTable());
 				}
 			});
 			contextMenu.add(unpartition);

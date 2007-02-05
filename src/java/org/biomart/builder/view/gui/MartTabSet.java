@@ -43,6 +43,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileFilter;
 
+import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ValidationException;
@@ -52,6 +53,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.StackTrace;
 
@@ -362,7 +364,14 @@ public class MartTabSet extends JTabbedPane {
 	 */
 	public void loadMart() {
 		// Open the file chooser.
+		final String currentDir = Settings.getProperty("currentOpenDir");
+		this.xmlFileChooser.setCurrentDirectory(currentDir == null ? null
+				: new File(currentDir));
 		if (this.xmlFileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+			// Update the load dialog.
+			Settings.setProperty("currentOpenDir", this.xmlFileChooser
+					.getCurrentDirectory().getPath());
+
 			// Find out which files they selected.
 			final File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
 
@@ -372,6 +381,21 @@ public class MartTabSet extends JTabbedPane {
 				LongProcess.run(new Runnable() {
 					public void run() {
 						try {
+							// Do we need to close the existing unsaved
+							// unmodified default tab?
+							MartTab defaultTab = MartTabSet.this
+									.getSelectedMartTab();
+							int defaultIndex = MartTabSet.this
+									.getSelectedIndex();
+							if (MartTabSet.this.getComponentCount() > 1
+									|| (defaultTab != null && !MartTabSet.this
+											.getTitleAt(defaultIndex)
+											.equals(
+													Resources
+															.get("unsavedMart"))))
+								defaultTab = null;
+
+							// Load the files.
 							for (int i = 0; i < loadFiles.length; i++) {
 								final File file = loadFiles[i];
 								final Mart mart = MartBuilderXML.load(file);
@@ -380,6 +404,23 @@ public class MartTabSet extends JTabbedPane {
 										MartTabSet.this.addMartTab(mart, file);
 									}
 								});
+							}
+
+							// Finally, remove the unsaved default tab if
+							// we need to.
+							if (defaultTab != null) {
+								// Remove the tab.
+								MartTabSet.this.removeTabAt(defaultIndex);
+
+								// Remove the mart from the modified map.
+								MartTabSet.this.martModifiedStatus
+										.remove(defaultTab.getMart());
+
+								// Remove the XML file the mart came from from
+								// the file map.
+								MartTabSet.this.martXMLFile.remove(defaultTab
+										.getMart());
+
 							}
 						} catch (final Throwable t) {
 							SwingUtilities.invokeLater(new Runnable() {
@@ -409,6 +450,22 @@ public class MartTabSet extends JTabbedPane {
 		// Open the DDL creation dialog and let it do it's stuff.
 		(new SaveDDLDialog(currentMartTab, currentMartTab.getMart()
 				.getDataSets())).show();
+	}
+
+	/**
+	 * Sets the output schema on the currently selected mart.
+	 * 
+	 * @param outputSchema
+	 *            the new output schema.
+	 */
+	public void requestSetOutputSchema(final String outputSchema) {
+		final String oldOne = this.getSelectedMartTab().getMart()
+				.getOutputSchema();
+		if (oldOne == null || !oldOne.equals(outputSchema)) {
+			MartBuilderUtils.setOutputSchema(this.getSelectedMartTab()
+					.getMart(), outputSchema);
+			this.setModifiedStatus(true);
+		}
 	}
 
 	/**
@@ -483,13 +540,10 @@ public class MartTabSet extends JTabbedPane {
 						MartBuilderXML.save(currentMart,
 								(File) MartTabSet.this.martXMLFile
 										.get(currentMart));
-
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								// We're not modified any more!
-								MartTabSet.this.setModifiedStatus(false);
-							}
-						});
+						// We're not modified any more! But
+						// this shouldn't get executed if save
+						// fails - hence no finally block.
+						MartTabSet.this.setModifiedStatus(false);
 					} catch (final Throwable t) {
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
@@ -514,7 +568,12 @@ public class MartTabSet extends JTabbedPane {
 
 		// Show a file chooser. If the user didn't cancel it, process the
 		// response.
+		final String currentDir = Settings.getProperty("currentSaveDir");
+		this.xmlFileChooser.setCurrentDirectory(currentDir == null ? null
+				: new File(currentDir));
 		if (this.xmlFileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+			Settings.setProperty("currentSaveDir", this.xmlFileChooser
+					.getCurrentDirectory().getPath());
 
 			// Find out the file the user chose.
 			final File saveAsFile = this.xmlFileChooser.getSelectedFile();

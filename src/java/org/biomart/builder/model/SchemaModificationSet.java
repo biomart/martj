@@ -43,6 +43,9 @@ import org.biomart.common.resources.Resources;
  */
 public class SchemaModificationSet {
 
+	/**
+	 * The name to use for dataset-wide modifications.
+	 */
 	public static final String DATASET = "__DATASET_WIDE__";
 
 	private final DataSet ds;

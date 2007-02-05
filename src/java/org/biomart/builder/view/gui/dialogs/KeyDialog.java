@@ -38,7 +38,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
-import org.biomart.common.model.Key;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
@@ -55,60 +54,23 @@ import org.biomart.common.resources.Resources;
 public class KeyDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Creates a new foreign key, or rather creates a list of columns for the
-	 * calling code to create a key with.
-	 * 
-	 * @param table
-	 *            the table the key is to be created on.
-	 * @return the list of columns the user selected.
-	 */
-	public static List createForeignKey(final Table table) {
-		final KeyDialog dialog = new KeyDialog(table, Resources
-				.get("newFKDialogTitle"), Resources.get("addButton"), null);
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		return Arrays.asList(dialog.selectedColumns.toArray());
-	}
-
-	/**
-	 * Creates a new primary key, or rather creates a list of columns for the
-	 * calling code to create a key with.
-	 * 
-	 * @param table
-	 *            the table the key is to be created on.
-	 * @return the list of columns the user selected.
-	 */
-	public static List createPrimaryKey(final Table table) {
-		final KeyDialog dialog = new KeyDialog(table, Resources
-				.get("newPKDialogTitle"), Resources.get("addButton"), null);
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		return Arrays.asList(dialog.selectedColumns.toArray());
-	}
-
-	/**
-	 * Edits an existing key, or rather creates a list of columns for the
-	 * calling code to edit the key with.
-	 * 
-	 * @param key
-	 *            the key to be edited.
-	 * @return the list of columns the user selected.
-	 */
-	public static List editKey(final Key key) {
-		final KeyDialog dialog = new KeyDialog(key.getTable(), Resources
-				.get("editKeyDialogTitle"), Resources.get("modifyButton"), key
-				.getColumns());
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		return Arrays.asList(dialog.selectedColumns.toArray());
-	}
-
 	private DefaultListModel selectedColumns;
 
 	private DefaultListModel tableColumns;
 
-	private KeyDialog(final Table table, final String title,
+	/**
+	 * Pop up a dialog to define or edit a key.
+	 * 
+	 * @param table
+	 *            the table the key belongs to.
+	 * @param title
+	 *            the title to give the dialog.
+	 * @param action
+	 *            the text to put on the OK button.
+	 * @param columns
+	 *            the columns to preselect as part of the key.
+	 */
+	public KeyDialog(final Table table, final String title,
 			final String action, final List columns) {
 		// Create the base dialog.
 		super();
@@ -300,5 +262,14 @@ public class KeyDialog extends JDialog {
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
+	}
+
+	/**
+	 * Get the columns the user chose.
+	 * 
+	 * @return the columns the user selected, in order.
+	 */
+	public List getSelectedColumns() {
+		return Arrays.asList(this.selectedColumns.toArray());
 	}
 }

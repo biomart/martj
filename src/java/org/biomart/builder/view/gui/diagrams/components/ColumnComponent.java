@@ -90,7 +90,7 @@ public class ColumnComponent extends BoxShapedComponent {
 	/**
 	 * Constant referring to partitioned column colour.
 	 */
-	public static Color PARTITIONED_COLOUR = Color.BLUE;
+	public static Color PARTITIONED_COLOUR = Color.CYAN;
 
 	/**
 	 * Constant referring to concat column colour.

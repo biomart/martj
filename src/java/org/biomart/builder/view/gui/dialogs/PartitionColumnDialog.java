@@ -18,6 +18,8 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -27,19 +29,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
+import javax.swing.border.EtchedBorder;
 
+import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.SingleValue;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
 import org.biomart.common.exceptions.BioMartError;
@@ -59,58 +67,37 @@ import org.biomart.common.view.gui.StackTrace;
 public class PartitionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * This opens a dialog in order for the user to create a new partition type.
-	 * It returns that type, or null if they cancelled it.
-	 * 
-	 * @return the newly created partition type, or null if the dialog was
-	 *         cancelled.
-	 */
-	public static PartitionedColumnDefinition createPartitionedColumn() {
-		final PartitionColumnDialog dialog = new PartitionColumnDialog(
-				Resources.get("createPartitionButton"), null);
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		return dialog.partitionType;
-	}
-
-	/**
-	 * This opens a dialog in order for the user to edit an existing partition
-	 * type. Actually what it does is use an existing type to provide a template
-	 * to create a new type, so it is an entirely new type that is returned -
-	 * the existing one is untouched. If it returns null, the user cancelled the
-	 * dialog.
-	 * 
-	 * @param template
-	 *            the template to copy settings from. Can be null.
-	 * @return the replacement, updated, partition type, or null if the dialog
-	 *         was cancelled.
-	 */
-	public static PartitionedColumnDefinition updatePartitionedColumn(
-			final PartitionedColumnDefinition template) {
-		final PartitionColumnDialog dialog = new PartitionColumnDialog(
-				Resources.get("updatePartitionButton"), template);
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		return dialog.partitionType;
-	}
-
 	private JButton cancel;
 
 	private JButton execute;
 
 	private JTextArea multiValue;
 
+	private JPanel multiValueHolder;
+
 	private JCheckBox nullable;
 
 	private PartitionedColumnDefinition partitionType;
 
-	private JTextField singleValue;
-
 	private JComboBox type;
 
-	private PartitionColumnDialog(final String executeButtonText,
-			final PartitionedColumnDefinition template) {
+	private JComboBox columns;
+
+	/**
+	 * Pop up a dialog asking how to partition a table.
+	 * 
+	 * @param executeButtonText
+	 *            the text to use on the OK button.
+	 * @param template
+	 *            the template to use to populate the fields of the dialog.
+	 * @param dsTable
+	 *            the table we are partitioning.
+	 * @param dsColumn
+	 *            the column to preselect in the dropdown of columns.
+	 */
+	public PartitionColumnDialog(final String executeButtonText,
+			final PartitionedColumnDefinition template,
+			final DataSetTable dsTable, final DataSetColumn dsColumn) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(Resources.get("partitionColumnDialogTitle"));
@@ -145,13 +132,46 @@ public class PartitionColumnDialog extends JDialog {
 		// Create the fields that will contain the user's choice and any
 		// values they may enter.
 		final JLabel valueLabel = new JLabel(Resources.get("valuesLabel"));
-		this.singleValue = new JTextField(30);
 		this.multiValue = new JTextArea(5, 30);
+		this.multiValueHolder = new JPanel(new BorderLayout());
+		this.multiValueHolder.setAlignmentX(LEFT_ALIGNMENT);
+		this.multiValueHolder.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
+		this.multiValueHolder.add(new JScrollPane(this.multiValue),
+				BorderLayout.CENTER);
 		this.type = new JComboBox(new String[] {
-				Resources.get("singlePartitionOption"),
-				Resources.get("collectionPartitionOption"),
-				Resources.get("uniquePartitionOption") });
+				Resources.get("uniquePartitionOption"),
+				Resources.get("collectionPartitionOption") });
 		this.nullable = new JCheckBox();
+		this.columns = new JComboBox();
+		this.columns.setRenderer(new ListCellRenderer() {
+			public Component getListCellRendererComponent(final JList list,
+					final Object value, final int index,
+					final boolean isSelected, final boolean cellHasFocus) {
+				final DataSetColumn col = (DataSetColumn) value;
+				final JLabel label = new JLabel();
+				if (col != null)
+					label.setText(col.getModifiedName());
+				label.setOpaque(true);
+				label.setFont(list.getFont());
+				if (isSelected) {
+					label.setBackground(list.getSelectionBackground());
+					label.setForeground(list.getSelectionForeground());
+				} else {
+					label.setBackground(list.getBackground());
+					label.setForeground(list.getForeground());
+				}
+				return label;
+			}
+		});
+		final Map sortedCols = new TreeMap();
+		for (final Iterator i = dsTable.getColumns().iterator(); i.hasNext();) {
+			final DataSetColumn col = (DataSetColumn) i.next();
+			sortedCols.put(col.getModifiedName(), col);
+		}
+		for (final Iterator i = sortedCols.values().iterator(); i.hasNext();)
+			this.columns.addItem(i.next());
+		if (dsColumn != null)
+			this.columns.setSelectedItem(dsColumn);
 
 		// Make the drop-down type choice change which value and nullable
 		// options appear.
@@ -160,25 +180,14 @@ public class PartitionColumnDialog extends JDialog {
 				final String selectedItem = (String) PartitionColumnDialog.this.type
 						.getSelectedItem();
 
-				// Single partitions have a single value field, with a nullable
-				// box saying 'use null'.
-				if (selectedItem.equals(Resources.get("singlePartitionOption"))) {
-					valueLabel.setVisible(true);
-					PartitionColumnDialog.this.singleValue.setVisible(true);
-					PartitionColumnDialog.this.multiValue.setVisible(false);
-					PartitionColumnDialog.this.nullable.setText(Resources
-							.get("useNullLabel"));
-					PartitionColumnDialog.this.nullable.setVisible(true);
-				}
-
 				// Multi-value partitions have a multi value field, with a
 				// nullable
 				// box saying 'include null'.
-				else if (selectedItem.equals(Resources
+				if (selectedItem.equals(Resources
 						.get("collectionPartitionOption"))) {
 					valueLabel.setVisible(true);
-					PartitionColumnDialog.this.singleValue.setVisible(false);
-					PartitionColumnDialog.this.multiValue.setVisible(true);
+					PartitionColumnDialog.this.multiValueHolder
+							.setVisible(true);
 					PartitionColumnDialog.this.nullable.setText(Resources
 							.get("includeNullLabel"));
 					PartitionColumnDialog.this.nullable.setVisible(true);
@@ -187,8 +196,8 @@ public class PartitionColumnDialog extends JDialog {
 				// Other kinds of partition have no value or nullable fields.
 				else {
 					valueLabel.setVisible(false);
-					PartitionColumnDialog.this.singleValue.setVisible(false);
-					PartitionColumnDialog.this.multiValue.setVisible(false);
+					PartitionColumnDialog.this.multiValueHolder
+							.setVisible(false);
 					PartitionColumnDialog.this.nullable.setVisible(false);
 				}
 
@@ -197,31 +206,24 @@ public class PartitionColumnDialog extends JDialog {
 			}
 		});
 
-		// Whenever nullable is selected, the values box may change.
-		this.nullable.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-
-				// If it selected, the single value field can't be used.
-				if (PartitionColumnDialog.this.nullable.isSelected()) {
-					PartitionColumnDialog.this.singleValue.setText(null);
-					PartitionColumnDialog.this.singleValue.setEnabled(false);
-				}
-
-				// Otherwise, it can.
-				else
-					PartitionColumnDialog.this.singleValue.setEnabled(true);
-			}
-		});
-
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = new JButton(executeButtonText);
 
 		// Add the partition type label and field to the dialog.
-		JLabel label = new JLabel(Resources.get("partitionTypeLabel"));
+		JLabel label = new JLabel(Resources.get("partitionedColumnLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		JPanel field = new JPanel();
+		field.add(this.columns);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the partition type label and field to the dialog.
+		label = new JLabel(Resources.get("partitionTypeLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
 		field.add(this.type);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
@@ -230,8 +232,7 @@ public class PartitionColumnDialog extends JDialog {
 		gridBag.setConstraints(valueLabel, labelConstraints);
 		content.add(valueLabel);
 		field = new JPanel();
-		field.add(this.singleValue);
-		field.add(this.multiValue);
+		field.add(this.multiValueHolder);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -293,13 +294,8 @@ public class PartitionColumnDialog extends JDialog {
 			// Attempt to create the appropriate type.
 			final String type = (String) this.type.getSelectedItem();
 
-			// Single-value uses the single value and/or nullable.
-			if (type.equals(Resources.get("singlePartitionOption")))
-				return new SingleValue(this.singleValue.getText().trim(),
-						this.nullable.isSelected());
-
 			// Multi-value uses the multi values, and/or nullable.
-			else if (type.equals(Resources.get("collectionPartitionOption"))) {
+			if (type.equals(Resources.get("collectionPartitionOption"))) {
 				final String[] values = this.multiValue.getText().trim().split(
 						System.getProperty("line.separator"));
 				return new ValueCollection(Arrays.asList(values), this.nullable
@@ -328,18 +324,8 @@ public class PartitionColumnDialog extends JDialog {
 
 	private void copySettingsFromPartitionType(
 			final PartitionedColumnDefinition template) {
-		// If an existing single partition has been specified, populate
-		// its details into the box.
-		if (template instanceof SingleValue) {
-			final SingleValue sv = (SingleValue) template;
-			this.type.setSelectedItem(Resources.get("singlePartitionOption"));
-			this.singleValue.setText(sv.getValue());
-			if (sv.getIncludeNull())
-				this.nullable.doClick();
-		}
-
-		// Else, do the same for an existing multi-value collection partition.
-		else if (template instanceof ValueCollection) {
+		// Multi value collection? Copy the values out of it.
+		if (template instanceof ValueCollection) {
 			final ValueCollection vc = (ValueCollection) template;
 			if (vc.getIncludeNull())
 				this.nullable.doClick();
@@ -371,18 +357,8 @@ public class PartitionColumnDialog extends JDialog {
 		// Work out which partition type is currently selected.
 		final String selectedItem = (String) this.type.getSelectedItem();
 
-		// If it's single...
-		if (selectedItem.equals(Resources.get("singlePartitionOption"))) {
-			// Check we have a value, or nullable is selected.
-			if (this.isEmpty(this.singleValue.getText())
-					&& !this.nullable.isSelected())
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("value")));
-		}
-
 		// If it's multi...
-		else if (selectedItem
-				.equals(Resources.get("collectionPartitionOption")))
+		if (selectedItem.equals(Resources.get("collectionPartitionOption")))
 			// Check we have a value, or nullable is selected.
 			if (this.isEmpty(this.multiValue.getText())
 					&& !this.nullable.isSelected())
@@ -398,5 +374,23 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Validation succeeds if there are no messages.
 		return messages.isEmpty();
+	}
+
+	/**
+	 * Get the partition definition the user set up in this dialog.
+	 * 
+	 * @return the partition definition.
+	 */
+	public PartitionedColumnDefinition getPartitionType() {
+		return this.partitionType;
+	}
+
+	/**
+	 * Get the column the user selected to partition on.
+	 * 
+	 * @return the column to partition.
+	 */
+	public DataSetColumn getColumn() {
+		return (DataSetColumn) this.columns.getSelectedItem();
 	}
 }

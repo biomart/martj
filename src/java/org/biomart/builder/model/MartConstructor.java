@@ -21,6 +21,7 @@ package org.biomart.builder.model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,7 +40,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.SingleValue;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
@@ -355,7 +355,7 @@ public interface MartConstructor {
 					if (tu.getNewColumnNameMap().containsValue(partCol))
 						delayedTempDrop = this.populatePartitionValues(dataset
 								.getDataSetModifications()
-								.getPartitionedColumn(partCol), partCol,
+								.getPartitionedColumnDef(dsTable), partCol,
 								partitionValues, previousTempTables);
 					else
 						delayedTempDrop = null;
@@ -467,6 +467,8 @@ public interface MartConstructor {
 					index.setColumns(keyCols);
 					this.issueAction(index);
 				}
+
+				// TODO Create all non-standard indexes.
 
 				// Create optimiser columns - either count or bool,
 				// or none if not required.
@@ -602,6 +604,15 @@ public interface MartConstructor {
 				update.setCountNotBool(!oType.isBool());
 				this.issueAction(update);
 
+				// Index the column if required.
+				if (dataset.isIndexOptimiser()) {
+					final Index index = new Index(this.datasetSchemaName,
+							finalCombinedName);
+					index.setTable(optTable);
+					index.setColumns(Collections.singletonList(optCol));
+					this.issueAction(index);
+				}
+
 				// Work out the inherited parents.
 				final List parents = new ArrayList();
 				parents.add(parent);
@@ -632,6 +643,8 @@ public interface MartConstructor {
 							.getColumns().iterator(); y.hasNext();)
 						toKeyCols.add(((DataSetColumn) y.next())
 								.getModifiedName());
+
+					// Copy the column.
 					final CopyOptimiser copy = new CopyOptimiser(
 							this.datasetSchemaName, finalCombinedName);
 					copy.setFromOptTableName(this.getOptimiserTableName(
@@ -644,6 +657,16 @@ public interface MartConstructor {
 							oType));
 					copy.setOptColumnName(optCol);
 					this.issueAction(copy);
+
+					// Index the copied column if required.
+					if (dataset.isIndexOptimiser()) {
+						final Index index = new Index(this.datasetSchemaName,
+								finalCombinedName);
+						index.setTable(this.getOptimiserTableName(toParent,
+								oType));
+						index.setColumns(Collections.singletonList(optCol));
+						this.issueAction(index);
+					}
 				}
 			}
 		}
@@ -783,7 +806,7 @@ public interface MartConstructor {
 			jaction.setRightTable(tempJoinTable);
 			jaction.setLeftJoinColumns(leftJoinCols);
 			// Concat table will have left join cols as key cols.
-			jaction.setRightJoinColumns(leftJoinCols); 
+			jaction.setRightJoinColumns(leftJoinCols);
 			jaction.setSelectColumns(selectCols);
 			jaction.setResultTable(tempTable);
 			this.issueAction(jaction);
@@ -961,12 +984,7 @@ public interface MartConstructor {
 				final DataSetColumn partCol, final List partitionValues,
 				final Map previousTempTables) throws SQLException {
 			partitionValues.clear();
-			if (pc instanceof SingleValue) {
-				if (((SingleValue) pc).getIncludeNull())
-					partitionValues.add(null);
-				else
-					partitionValues.add(((SingleValue) pc).getValue());
-			} else if (pc instanceof ValueCollection) {
+			if (pc instanceof ValueCollection) {
 				if (((ValueCollection) pc).getIncludeNull())
 					partitionValues.add(null);
 				partitionValues.addAll(((ValueCollection) pc).getValues());
@@ -989,7 +1007,7 @@ public interface MartConstructor {
 				throws Exception {
 			// Execute the action.
 			this.statusMessage = action.getStatusMessage();
-			this.issueListenerEvent(MartConstructorListener.ACTION_EVENT,
+			this.issueListenerEvent(MartConstructorListener.ACTION_EVENT, null,
 					action);
 		}
 
@@ -1084,12 +1102,17 @@ public interface MartConstructor {
 			this.issueListenerEvent(event, null);
 		}
 
-		private void issueListenerEvent(final int event,
+		private void issueListenerEvent(final int event, final Object data)
+				throws Exception {
+			this.issueListenerEvent(event, data, null);
+		}
+
+		private void issueListenerEvent(final int event, final Object data,
 				final MartConstructorAction action) throws Exception {
 			for (final Iterator i = this.martConstructorListeners.iterator(); i
 					.hasNext();)
 				((MartConstructorListener) i.next())
-						.martConstructorEventOccurred(event, action);
+						.martConstructorEventOccurred(event, data, action);
 		}
 
 		public void addMartConstructorListener(
@@ -1145,11 +1168,14 @@ public interface MartConstructor {
 						// Loop over all the datasets we want included from this
 						// mart. Build actions for each one.
 						for (final Iterator i = ((Collection) j.next())
-								.iterator(); i.hasNext();)
+								.iterator(); i.hasNext();) {
+							final DataSet ds = (DataSet) i.next();
 							try {
 								this
-										.issueListenerEvent(MartConstructorListener.DATASET_STARTED);
-								this.makeActionsForDataset((DataSet) i.next(),
+										.issueListenerEvent(
+												MartConstructorListener.DATASET_STARTED,
+												ds.getName());
+								this.makeActionsForDataset(ds,
 										totalDataSetCount);
 							} catch (final Throwable t) {
 								throw t;
@@ -1157,9 +1183,11 @@ public interface MartConstructor {
 								// Make sure the helper always gets a chance to
 								// tidy up,
 								// even if an exception is thrown.
-								this
-										.issueListenerEvent(MartConstructorListener.DATASET_ENDED);
+								this.issueListenerEvent(
+										MartConstructorListener.DATASET_ENDED,
+										ds.getName());
 							}
+						}
 					} finally {
 						this
 								.issueListenerEvent(MartConstructorListener.MART_ENDED);
@@ -1266,6 +1294,8 @@ public interface MartConstructor {
 		 * @param event
 		 *            the event that occurred. See the constants defined
 		 *            elsewhere in this interface for possible events.
+		 * @param data
+		 *            ancilliary data, may be null.
 		 * @param action
 		 *            an action object that belongs to this event. Will be
 		 *            <tt>null</tt> in all cases except where the event is
@@ -1273,7 +1303,7 @@ public interface MartConstructor {
 		 * @throws Exception
 		 *             if anything goes wrong whilst handling the event.
 		 */
-		public void martConstructorEventOccurred(int event,
+		public void martConstructorEventOccurred(int event, Object data,
 				MartConstructorAction action) throws Exception;
 	}
 }

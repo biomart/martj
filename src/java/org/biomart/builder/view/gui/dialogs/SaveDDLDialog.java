@@ -24,6 +24,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
@@ -35,6 +37,7 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -60,6 +63,7 @@ import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.model.MartConstructor.MartConstructorListener;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.StackTrace;
 
 /**
@@ -86,7 +90,7 @@ public class SaveDDLDialog extends JDialog {
 
 	private JTextField targetSchemaName;
 
-	private JCheckBox viewDDL;
+	private JComboBox outputFormat;
 
 	private JFileChooser outputFileChooser;
 
@@ -146,10 +150,16 @@ public class SaveDDLDialog extends JDialog {
 
 		// Create input fields for target schema name and granularity.
 		this.targetSchemaName = new JTextField(20);
+		this.targetSchemaName.setText(martTab.getMart().getOutputSchema());
 		this.includeComments = new JCheckBox(Resources
 				.get("includeCommentsLabel"));
 		this.includeComments.setSelected(true);
-		this.viewDDL = new JCheckBox(Resources.get("viewDDLOnCompletion"));
+
+		this.outputFormat = new JComboBox();
+		this.outputFormat.addItem(Resources.get("singleFileDDL"));
+		this.outputFormat.addItem(Resources.get("filePerTableDDL"));
+		this.outputFormat.addItem(Resources.get("viewDDL"));
+		this.outputFormat.setSelectedItem(Resources.get("singleFileDDL"));
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
@@ -170,7 +180,11 @@ public class SaveDDLDialog extends JDialog {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
 					final String filename = file.getName();
-					final String extension = Resources.get("zipExtension");
+					final String extension = SaveDDLDialog.this.outputFormat
+							.getSelectedItem().equals(
+									Resources.get("singleFileDDL")) ? Resources
+							.get("ddlExtension") : Resources
+							.get("zipExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -179,17 +193,31 @@ public class SaveDDLDialog extends JDialog {
 				return file;
 			}
 		};
+		final String currentDir = Settings.getProperty("currentSaveDir");
+		this.outputFileChooser.setCurrentDirectory(currentDir == null ? null
+				: new File(currentDir));
 		this.outputFileChooser.setFileFilter(new FileFilter() {
-
 			// Accepts only files ending in ".zip" or ".ddl".
 			public boolean accept(final File f) {
 				return f.isDirectory()
-						|| f.getName().toLowerCase().endsWith(
-								Resources.get("zipExtension"));
+						|| f
+								.getName()
+								.toLowerCase()
+								.endsWith(
+										SaveDDLDialog.this.outputFormat
+												.getSelectedItem()
+												.equals(
+														Resources
+																.get("singleFileDDL")) ? Resources
+												.get("ddlExtension")
+												: Resources.get("zipExtension"));
 			}
 
 			public String getDescription() {
-				return Resources.get("ZipDDLFileFilterDescription");
+				return SaveDDLDialog.this.outputFormat.getSelectedItem()
+						.equals(Resources.get("singleFileDDL")) ? Resources
+						.get("DDLFileFilterDescription") : Resources
+						.get("ZipDDLFileFilterDescription");
 			}
 		});
 		this.outputFileLocation = new JTextField(20);
@@ -201,6 +229,9 @@ public class SaveDDLDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (SaveDDLDialog.this.outputFileChooser
 						.showSaveDialog(content) == JFileChooser.APPROVE_OPTION) {
+					Settings.setProperty("currentSaveDir",
+							SaveDDLDialog.this.outputFileChooser
+									.getCurrentDirectory().getPath());
 					final File file = SaveDDLDialog.this.outputFileChooser
 							.getSelectedFile();
 					// When a file is chosen, put its name in the driver
@@ -213,9 +244,10 @@ public class SaveDDLDialog extends JDialog {
 		});
 
 		// Add listeners to view DDL and granularity options.
-		this.viewDDL.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				if (SaveDDLDialog.this.viewDDL.isSelected()) {
+		this.outputFormat.addItemListener(new ItemListener() {
+			public void itemStateChanged(final ItemEvent e) {
+				if (SaveDDLDialog.this.outputFormat.getSelectedItem().equals(
+						Resources.get("viewDDL"))) {
 					SaveDDLDialog.this.outputFileLocation.setText(null);
 					SaveDDLDialog.this.outputFileLocation.setEnabled(false);
 					SaveDDLDialog.this.outputFileLocationButton
@@ -248,16 +280,16 @@ public class SaveDDLDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the view DDL field.
-		label = new JLabel();
+		// Add the format field.
+		label = new JLabel(Resources.get("outputFormatLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
-		field.add(this.viewDDL);
+		field.add(this.outputFormat);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the include cpmments field.
+		// Add the include comments field.
 		label = new JLabel();
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
@@ -331,24 +363,35 @@ public class SaveDDLDialog extends JDialog {
 		final StringBuffer sb = new StringBuffer();
 		// Make the constructor object which will create the DDL.
 		MartConstructor constructor;
-		if (this.viewDDL.isSelected())
-			constructor = new SaveDDLMartConstructor(sb, this.includeComments
-					.isSelected());
-		else
+		if (this.outputFormat.getSelectedItem().equals(
+				Resources.get("singleFileDDL")))
 			constructor = new SaveDDLMartConstructor(new File(
 					this.outputFileLocation.getText()), this.includeComments
+					.isSelected(), true);
+		else if (this.outputFormat.getSelectedItem().equals(
+				Resources.get("filePerTableDDL")))
+			constructor = new SaveDDLMartConstructor(new File(
+					this.outputFileLocation.getText()), this.includeComments
+					.isSelected(), false);
+		else
+			constructor = new SaveDDLMartConstructor(sb, this.includeComments
 					.isSelected());
+
 		try {
 			// Obtain the DDL generator from the constructor object.
+			final String outputSchema = this.targetSchemaName.getText();
+			this.martTab.getMartTabSet().requestSetOutputSchema(outputSchema);
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(
-					this.targetSchemaName.getText(), selectedDataSets);
+					outputSchema, selectedDataSets);
 			// If we want screen output, add a listener that listens for
 			// completion of construction. When completed, use the
 			// stringbuffer, which will contain the DDL, to pop up a simple
 			// text dialog for the user to view it with.
-			if (this.viewDDL.isSelected())
+			if (this.outputFormat.getSelectedItem().equals(
+					Resources.get("viewDDL")))
 				cr.addMartConstructorListener(new MartConstructorListener() {
 					public void martConstructorEventOccurred(final int event,
+							final Object data,
 							final MartConstructorAction action)
 							throws Exception {
 						if (event == MartConstructorListener.CONSTRUCTION_ENDED
@@ -471,7 +514,8 @@ public class SaveDDLDialog extends JDialog {
 					.get("targetSchema")));
 
 		// Must have an output file.
-		if (!this.viewDDL.isSelected()
+		if (!this.outputFormat.getSelectedItem().equals(
+				Resources.get("viewDDL"))
 				&& this.isEmpty(this.outputFileLocation.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("saveDDLFileLocation")));

@@ -77,6 +77,11 @@ public class TableComponent extends BoxShapedComponent {
 	public static Color DIMENSION_COLOUR = Color.BLUE;
 
 	/**
+	 * Colour for dimension tables (in the dataset context).
+	 */
+	public static Color DIMENSION_PARTITIONED_COLOUR = Color.CYAN;
+
+	/**
 	 * Colour for main tables (in the dataset context) and all tables in other
 	 * contexts.
 	 */

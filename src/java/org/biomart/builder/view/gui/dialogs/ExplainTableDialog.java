@@ -273,28 +273,28 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 						new String[] { "" + stepNumber,
 								Resources.get("explainExpressionLabel") }));
 				diagram = new ExplainTransformationDiagram.AdditionalColumns(
-						this.martTab, (Expression) tu);
+						this.martTab, (Expression) tu, stepNumber);
 			} else if (tu instanceof Concat) {
 				// Do an expression column list.
 				label = new JLabel(Resources.get("stepTableLabel",
 						new String[] { "" + stepNumber,
 								Resources.get("explainConcatLabel") }));
 				diagram = new ExplainTransformationDiagram.TempReal(
-						this.martTab, (Concat) tu, columnsSoFar);
+						this.martTab, (Concat) tu, columnsSoFar, stepNumber);
 			} else if (tu instanceof JoinTable) {
 				// Temp table to schema table join.
 				label = new JLabel(Resources.get("stepTableLabel",
 						new String[] { "" + stepNumber,
 								Resources.get("explainMergeLabel") }));
 				diagram = new ExplainTransformationDiagram.TempReal(
-						this.martTab, (JoinTable) tu, columnsSoFar);
+						this.martTab, (JoinTable) tu, columnsSoFar, stepNumber);
 			} else if (tu instanceof SelectFromTable) {
 				// Do a single-step select.
 				label = new JLabel(Resources.get("stepTableLabel",
 						new String[] { "" + stepNumber,
 								Resources.get("explainSelectLabel") }));
 				diagram = new ExplainTransformationDiagram.SingleTable(
-						this.martTab, (SelectFromTable) tu);
+						this.martTab, (SelectFromTable) tu, stepNumber);
 			} else
 				throw new BioMartError();
 			this.transformationTableComponents.addAll(diagram

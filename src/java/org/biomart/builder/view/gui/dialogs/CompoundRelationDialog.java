@@ -47,34 +47,30 @@ import org.biomart.common.resources.Resources;
  * concatenation operation.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class CompoundRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Gets a compound arity.
-	 * 
-	 * @param startvalue
-	 *            the initial arity to select.
-	 * @return the arity the user defined.
-	 */
-	public static int getCompoundValue(final int startvalue) {
-		final CompoundRelationDialog dialog = new CompoundRelationDialog(
-				startvalue);
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		return dialog.getArity();
-	}
-
 	private SpinnerNumberModel arity;
 
-	private CompoundRelationDialog(final int startvalue) {
+	/**
+	 * Pop up a dialog to define the arity of a relation.
+	 * 
+	 * @param startvalue
+	 *            the initial preselected arity.
+	 * @param title
+	 *            the title to give the dialog.
+	 * @param label
+	 *            the title to give the arity selector.
+	 */
+	public CompoundRelationDialog(final int startvalue, final String title,
+			final String label) {
 		// Create the base dialog.
 		super();
-		this.setTitle(Resources.get("compoundRelationDialogTitle"));
+		this.setTitle(title);
 		this.setModal(true);
 
 		// Create the layout manager for this panel.
@@ -110,7 +106,7 @@ public class CompoundRelationDialog extends JDialog {
 		// Input fields.
 		JPanel field = new JPanel();
 		field.add(checkbox);
-		field.add(new JLabel(Resources.get("compoundRelationNLabel")));
+		field.add(new JLabel(label));
 		field.add(spinner);
 		field.add(new JLabel(Resources.get("compoundRelationSpinnerLabel")));
 		gridBag.setConstraints(field, fieldConstraints);
@@ -170,7 +166,12 @@ public class CompoundRelationDialog extends JDialog {
 		this.pack();
 	}
 
-	private int getArity() {
+	/**
+	 * Get the arity the user selected.
+	 * 
+	 * @return the selected arity.
+	 */
+	public int getArity() {
 		return this.arity.getNumber().intValue();
 	}
 

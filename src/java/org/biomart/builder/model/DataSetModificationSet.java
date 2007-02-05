@@ -18,7 +18,6 @@
 package org.biomart.builder.model;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -239,26 +238,18 @@ public class DataSetModificationSet {
 				DataSetTableType.DIMENSION))
 			throw new ValidationException(Resources
 					.get("partitionOnlyDimensionTables"));
-		// Check to see if we already have a partitioned column in this
-		// table, that is not the same column as this one.
-		if (this.partitionedColumns.containsKey(tableKey))
-			throw new ValidationException(Resources
-					.get("cannotPartitionMultiColumns"));
 		// Check type of column.
-		if (!(column instanceof WrappedColumn || column instanceof InheritedColumn))
+		if (!(column instanceof WrappedColumn))
 			throw new ValidationException(Resources
 					.get("cannotPartitionNonWrapSchColumns"));
-		// Do it.
+		// Do it. This will overwrite any existing partitioned column.
 		this.partitionedColumns.put(tableKey, new HashMap());
 		final Map restrictions = (Map) this.partitionedColumns.get(tableKey);
 		restrictions.put(column.getName(), restriction);
 	}
 
-	public void unsetPartitionedColumn(final DataSetColumn column) {
-		// Skip already-unmasked relations.
-		if (!this.isPartitionedColumn(column))
-			return;
-		final String tableKey = column.getTable().getName();
+	public void unsetPartitionedColumn(final DataSetTable table) {
+		final String tableKey = table.getName();
 		this.partitionedColumns.remove(tableKey);
 	}
 
@@ -279,11 +270,12 @@ public class DataSetModificationSet {
 				.getKey());
 	}
 
-	public PartitionedColumnDefinition getPartitionedColumn(
-			final DataSetColumn column) {
-		final String tableKey = column.getTable().getName();
+	public PartitionedColumnDefinition getPartitionedColumnDef(
+			final DataSetTable dsTable) {
+		final String tableKey = dsTable.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
-		return (PartitionedColumnDefinition) pcs.get(column.getName());
+		return (PartitionedColumnDefinition) pcs.get(
+				this.getPartitionedColumnName(dsTable));
 	}
 
 	public Map getPartitionedColumns() {
@@ -358,47 +350,6 @@ public class DataSetModificationSet {
 	 * decide.
 	 */
 	public interface PartitionedColumnDefinition {
-		/**
-		 * Use this class to partition on a single value - ie. only rows
-		 * matching this value will be returned.
-		 */
-		public static class SingleValue extends ValueCollection {
-			private String value;
-
-			/**
-			 * The constructor specifies the value to partition on.
-			 * 
-			 * @param value
-			 *            the value to partition on.
-			 * @param useNull
-			 *            if set to <tt>true</tt>, the value will be ignored,
-			 *            and null will be used instead.
-			 */
-			public SingleValue(final String value, final boolean useNull) {
-				super(Collections.singleton(value), useNull);
-				this.value = value;
-			}
-
-			/**
-			 * Returns the value we will partition on.
-			 * 
-			 * @return the value we will partition on.
-			 */
-			public String getValue() {
-				return this.value;
-			}
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "SingleValue:" suffixed with the output of
-			 * {@link #getValue()}.
-			 */
-			public String toString() {
-				return "SingleValue:" + this.value;
-			}
-		}
-
 		/**
 		 * Use this class to refer to a column partitioned by every unique
 		 * value.

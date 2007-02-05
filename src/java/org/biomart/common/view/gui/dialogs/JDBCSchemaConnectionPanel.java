@@ -226,7 +226,8 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 			// Accepts only files ending in ".jar".
 			public boolean accept(final File f) {
 				return f.isDirectory()
-						|| f.getName().toLowerCase().endsWith(".jar");
+						|| f.getName().toLowerCase().endsWith(
+								Resources.get("jarExtension"));
 			}
 
 			public String getDescription() {

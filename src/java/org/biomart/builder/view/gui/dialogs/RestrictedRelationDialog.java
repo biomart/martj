@@ -174,7 +174,7 @@ public class RestrictedRelationDialog extends JDialog {
 						RestrictedRelationDialog.this.lcolumnAliasModel
 								.getRowCount(), new Object[] {
 								lcolumnEditor.getItemAt(0),
-								Resources.get("defaultAlias")
+								Resources.get("defaultFirstAlias")
 										+ (this.aliasCount++) });
 			}
 		});
@@ -248,7 +248,7 @@ public class RestrictedRelationDialog extends JDialog {
 						RestrictedRelationDialog.this.rcolumnAliasModel
 								.getRowCount(), new Object[] {
 								rcolumnEditor.getItemAt(0),
-								Resources.get("defaultAlias")
+								Resources.get("defaultSecondAlias")
 										+ (this.aliasCount++) });
 			}
 		});

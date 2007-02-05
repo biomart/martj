@@ -99,6 +99,11 @@ public class DataSetContext extends SchemaContext {
 			final DataSetTable target = (DataSetTable) relation.getManyKey()
 					.getTable();
 
+			// Is it compounded?
+			((RelationComponent) component).setCompounded(this.dataset
+					.getSchemaModifications().isCompoundRelation(null,
+							target.getFocusRelation()));
+
 			// Fade MASKED DIMENSION relations.
 			if (this.getDataSet().getDataSetModifications().isMaskedTable(
 					target))
@@ -141,8 +146,18 @@ public class DataSetContext extends SchemaContext {
 				component.setForeground(TableComponent.SUBCLASS_COLOUR);
 
 			// Highlight DIMENSION tables.
-			else if (tableType.equals(DataSetTableType.DIMENSION))
-				component.setForeground(TableComponent.DIMENSION_COLOUR);
+			else if (tableType.equals(DataSetTableType.DIMENSION)) {
+				component
+						.setForeground(this.getDataSet()
+								.getDataSetModifications().isPartitionedTable(
+										(DataSetTable) object) ? TableComponent.DIMENSION_PARTITIONED_COLOUR
+								: TableComponent.DIMENSION_COLOUR);
+
+				// Is it compounded?
+				((TableComponent) component).setCompounded(this.dataset
+						.getSchemaModifications().isCompoundRelation(null,
+								((DataSetTable) object).getFocusRelation()));
+			}
 
 			// All others are normal.
 			else
@@ -155,11 +170,8 @@ public class DataSetContext extends SchemaContext {
 			// Which column is it?
 			final DataSetColumn column = (DataSetColumn) object;
 
-			// Red INHERITED columns.
-			if (column instanceof InheritedColumn)
-				component.setBackground(ColumnComponent.INHERITED_COLOUR);
 			// Fade out all MASKED columns.
-			else if (((DataSet) column.getTable().getSchema())
+			if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.FADED_COLOUR);
 			// Blue PARTITIONED columns.
@@ -180,6 +192,9 @@ public class DataSetContext extends SchemaContext {
 			if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isNonInheritedColumn(column))
 				component.setForeground(ColumnComponent.NONINHERITED_FG_COLOUR);
+			// Red INHERITED columns.
+			else if (column instanceof InheritedColumn)
+				component.setForeground(ColumnComponent.INHERITED_COLOUR);
 			else
 				component.setForeground(ColumnComponent.NORMAL_FG_COLOUR);
 		}
@@ -295,6 +310,28 @@ public class DataSetContext extends SchemaContext {
 				if (this.getDataSet().getDataSetOptimiserType().equals(value))
 					opt.setSelected(true);
 			}
+			
+			// Add the optimiser index option.
+			optSubmenu.addSeparator();
+			final JCheckBoxMenuItem indexOpt = new JCheckBoxMenuItem(Resources
+					.get("indexOptimiserTitle"));
+			indexOpt.setMnemonic(Resources.get("indexOptimiserMnemonic")
+					.charAt(0));
+			indexOpt.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					if (indexOpt.isSelected())
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestIndexOptimiser(
+										DataSetContext.this.getDataSet());
+					else
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestNoIndexOptimiser(
+										DataSetContext.this.getDataSet());
+				}
+			});
+			if (this.getDataSet().isIndexOptimiser())
+				indexOpt.setSelected(true);
+			optSubmenu.add(indexOpt);
 
 			contextMenu.addSeparator();
 
@@ -415,6 +452,9 @@ public class DataSetContext extends SchemaContext {
 				final boolean isMerged = this.getDataSet()
 						.getSchemaModifications().isMergedRelation(
 								table.getFocusRelation());
+				final boolean isCompound = this.getDataSet()
+						.getSchemaModifications().isCompoundRelation(null,
+								table.getFocusRelation());
 				final JCheckBoxMenuItem mergeDM = new JCheckBoxMenuItem(
 						Resources.get("mergeDimensionTitle"));
 				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
@@ -435,6 +475,8 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(mergeDM);
 				mergeDM.setSelected(isMerged);
+				if (isCompound)
+					mergeDM.setEnabled(false);
 
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
@@ -459,8 +501,10 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(removeDM);
-				removeDM.setEnabled(!isMerged);
-				removeDM.setSelected(isMasked && !isMerged);
+				if (isMerged || isCompound)
+					removeDM.setEnabled(false);
+				if (isMasked)
+					removeDM.setSelected(true);
 
 				// The dim table can be subclassed by using this option. This
 				// simply subclasses the relation that caused the dim to exist.
@@ -476,9 +520,96 @@ public class DataSetContext extends SchemaContext {
 										table.getFocusRelation());
 					}
 				});
-				if (isMerged || isMasked)
+				if (isMerged || isMasked || isCompound)
 					subclass.setEnabled(false);
 				contextMenu.add(subclass);
+
+				// The compound option allows the user to compound a relation.
+				final JCheckBoxMenuItem compound = new JCheckBoxMenuItem(
+						Resources.get("replicateDimensionTitle"));
+				compound.setMnemonic(Resources
+						.get("replicateDimensionMnemonic").charAt(0));
+				compound.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestReplicateDimension(
+										DataSetContext.this.dataset, table);
+						compound.setSelected(DataSetContext.this.dataset
+								.getSchemaModifications().isCompoundRelation(
+										null, table.getFocusRelation()));
+					}
+				});
+				contextMenu.add(compound);
+				if (isMasked || isMerged)
+					compound.setEnabled(false);
+				if (isCompound)
+					compound.setSelected(true);
+				contextMenu.addSeparator();
+
+				// If it is partitioned, make a submenu to change the partition
+				// type.
+				final boolean isPartitioned = this.dataset
+						.getDataSetModifications().isPartitionedTable(table);
+				if (isPartitioned) {
+
+					// The option to change the partition type.
+					final JMenuItem changepartition = new JMenuItem(Resources
+							.get("changePartitionTableTitle"), new ImageIcon(
+							Resources.getResourceAsURL("expandAll.gif")));
+					changepartition.setMnemonic(Resources.get(
+							"changePartitionTableMnemonic").charAt(0));
+					changepartition.addActionListener(new ActionListener() {
+						public void actionPerformed(final ActionEvent evt) {
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestPartitionByColumn(
+											DataSetContext.this.getDataSet(),
+											table, null);
+						}
+					});
+					contextMenu.add(changepartition);
+
+				}
+
+				// If it is not partitioned, allow the user to turn partitioning
+				// on.
+				else {
+
+					// Option to enable partitioning.
+					final JMenuItem partition = new JMenuItem(Resources
+							.get("partitionTableTitle"), new ImageIcon(
+							Resources.getResourceAsURL("expandAll.gif")));
+					partition.setMnemonic(Resources.get(
+							"partitionTableMnemonic").charAt(0));
+					partition.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent evt) {
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestPartitionByColumn(
+											DataSetContext.this.getDataSet(),
+											table, null);
+						}
+					});
+					contextMenu.add(partition);
+					if (isMasked)
+						partition.setEnabled(false);
+				}
+
+				// The option to turn off partitioning.
+				final JMenuItem unpartition = new JMenuItem(Resources
+						.get("unpartitionTableTitle"));
+				unpartition.setMnemonic(Resources.get(
+						"unpartitionTableMnemonic").charAt(0));
+				unpartition.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestUnpartitionByColumn(
+										DataSetContext.this.getDataSet(), table);
+					}
+				});
+				contextMenu.add(unpartition);
+				if (!isPartitioned)
+					unpartition.setEnabled(false);
 			}
 
 			// Subclass tables have their own options too.
@@ -630,6 +761,7 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestPartitionByColumn(
 										DataSetContext.this.getDataSet(),
+										(DataSetTable) column.getTable(),
 										column);
 					}
 				});
@@ -652,6 +784,7 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestPartitionByColumn(
 										DataSetContext.this.getDataSet(),
+										(DataSetTable) column.getTable(),
 										column);
 					}
 				});
@@ -673,7 +806,8 @@ public class DataSetContext extends SchemaContext {
 				public void actionPerformed(final ActionEvent evt) {
 					DataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestUnpartitionByColumn(
-									DataSetContext.this.getDataSet(), column);
+									DataSetContext.this.getDataSet(),
+									(DataSetTable) column.getTable());
 				}
 			});
 			contextMenu.add(unpartition);

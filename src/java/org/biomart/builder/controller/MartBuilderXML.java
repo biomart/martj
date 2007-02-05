@@ -46,7 +46,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.SingleValue;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
@@ -302,7 +301,7 @@ public class MartBuilderXML extends DefaultHandler {
 	private void writeAttribute(final String name, final String value,
 			final Writer xmlWriter) throws IOException {
 		// Write it.
-		if (value == null)
+		if (value == null || "".equals(value))
 			return;
 		xmlWriter.write(" ");
 		xmlWriter.write(name);
@@ -325,7 +324,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 * @throws IOException
 	 *             if it failed to write it.
 	 */
-	private void writeAttribute(final String name, final String[] values,
+	private void writeListAttribute(final String name, final String[] values,
 			final Writer xmlWriter) throws IOException {
 		// Write it.
 		final StringBuffer sb = new StringBuffer();
@@ -334,11 +333,18 @@ public class MartBuilderXML extends DefaultHandler {
 			if (value != null) {
 				if (i > 0)
 					sb.append(",");
-				sb.append(values[i]);
+				sb.append(values[i].replaceAll(",", "__COMMA__"));
 			}
 		}
 		this.writeAttribute(name, sb.length() == 0 ? null : sb.toString(),
 				xmlWriter);
+	}
+
+	private String[] readListAttribute(final String string) {
+		final String[] values = string.split("\\s*,\\s*");
+		for (int i = 0; i < values.length; i++)
+			values[i] = values[i].replaceAll("__COMMA__", ",");
+		return values;
 	}
 
 	/**
@@ -516,7 +522,7 @@ public class MartBuilderXML extends DefaultHandler {
 				for (final Iterator kci = key.getColumns().iterator(); kci
 						.hasNext();)
 					columnIds.add(this.reverseMappedObjects.get(kci.next()));
-				this.writeAttribute("columnIds", (String[]) columnIds
+				this.writeListAttribute("columnIds", (String[]) columnIds
 						.toArray(new String[0]), xmlWriter);
 				this.writeAttribute("status", key.getStatus().getName(),
 						xmlWriter);
@@ -563,6 +569,7 @@ public class MartBuilderXML extends DefaultHandler {
 		// Start by enclosing the whole lot in a <mart> tag.
 		Log.debug("Writing mart: " + mart);
 		this.openElement("mart", xmlWriter);
+		this.writeAttribute("outputSchema", mart.getOutputSchema(), xmlWriter);
 
 		// Write out each schema.
 		final Set externalRelations = new HashSet();
@@ -588,6 +595,8 @@ public class MartBuilderXML extends DefaultHandler {
 					.getName(), xmlWriter);
 			this.writeAttribute("invisible", Boolean
 					.toString(ds.getInvisible()), xmlWriter);
+			this.writeAttribute("indexOptimiser", Boolean
+					.toString(ds.isIndexOptimiser()), xmlWriter);
 
 			// Get schema and dataset mods.
 			final SchemaModificationSet schemaMods = ds
@@ -670,26 +679,19 @@ public class MartBuilderXML extends DefaultHandler {
 					final Map.Entry entry2 = (Map.Entry) y.next();
 					final PartitionedColumnDefinition pc = (PartitionedColumnDefinition) entry2
 							.getValue();
-					final String pcType = (pc instanceof SingleValue) ? "singleValue"
-							: ((pc instanceof ValueCollection) ? "valueCollection"
-									: "uniqueValues");
+					final String pcType = (pc instanceof ValueCollection) ? "valueCollection"
+									: "uniqueValues";
 					this.openElement("partitionedColumn", xmlWriter);
 					this.writeAttribute("tableKey", (String) entry.getKey(),
 							xmlWriter);
 					this.writeAttribute("colKey", (String) entry2.getKey(),
 							xmlWriter);
 					this.writeAttribute("partitionType", pcType, xmlWriter);
-					if (pc instanceof SingleValue) {
-						this.writeAttribute("partitionUseNull", ""
-								+ ((SingleValue) pc).getIncludeNull(),
-								xmlWriter);
-						this.writeAttribute("partitionValue",
-								((SingleValue) pc).getValue(), xmlWriter);
-					} else if (pc instanceof ValueCollection) {
+					if (pc instanceof ValueCollection) {
 						this.writeAttribute("partitionUseNull", ""
 								+ ((ValueCollection) pc).getIncludeNull(),
 								xmlWriter);
-						this.writeAttribute("partitionValues",
+						this.writeListAttribute("partitionValues",
 								(String[]) ((ValueCollection) pc).getValues()
 										.toArray(new String[0]), xmlWriter);
 					} else if (pc instanceof UniqueValues) {
@@ -1065,7 +1067,9 @@ public class MartBuilderXML extends DefaultHandler {
 			// Start building a new mart. There can only be one mart tag
 			// per file, as if more than one is found, the later tags
 			// will override the earlier ones.
-			element = this.constructedMart = new Mart();
+			final Mart mart = new Mart();
+			mart.setOutputSchema((String)attributes.get("outputSchema"));
+			element = this.constructedMart = mart;
 		}
 
 		// JDBC schema (anywhere, optionally inside schema group).
@@ -1214,8 +1218,8 @@ public class MartBuilderXML extends DefaultHandler {
 						.get((String) attributes.get("status"));
 
 				// Decode the column IDs from the comma-separated list.
-				final String[] pkColIds = ((String) attributes.get("columnIds"))
-						.split("\\s*,\\s*");
+				final String[] pkColIds = this
+						.readListAttribute((String) attributes.get("columnIds"));
 				final List pkCols = new ArrayList();
 				for (int i = 0; i < pkColIds.length; i++)
 					pkCols.add(this.mappedObjects.get(pkColIds[i]));
@@ -1257,8 +1261,8 @@ public class MartBuilderXML extends DefaultHandler {
 						.get((String) attributes.get("status"));
 
 				// Decode the column IDs from the comma-separated list.
-				final String[] fkColIds = ((String) attributes.get("columnIds"))
-						.split("\\s*,\\s*");
+				final String[] fkColIds = this
+						.readListAttribute((String) attributes.get("columnIds"));
 				final List fkCols = new ArrayList();
 				for (int i = 0; i < fkColIds.length; i++)
 					fkCols.add(this.mappedObjects.get(fkColIds[i]));
@@ -1517,20 +1521,13 @@ public class MartBuilderXML extends DefaultHandler {
 				PartitionedColumnDefinition resolvedPartitionType;
 				if (partitionType == null || "null".equals(partitionType))
 					resolvedPartitionType = null;
-				else if ("singleValue".equals(partitionType)) {
-					String value = null;
-					boolean useNull = Boolean.valueOf(
-							(String) attributes.get("partitionUseNull"))
-							.booleanValue();
-					if (!useNull)
-						value = (String) attributes.get("partitionValue");
-					resolvedPartitionType = new SingleValue(value, useNull);
-				} else if ("valueCollection".equals(partitionType)) {
+				else if ("valueCollection".equals(partitionType)) {
 					// Values are comma-separated.
 					final List valueList = new ArrayList();
 					if (attributes.containsKey("partitionValues"))
-						valueList.addAll(Arrays.asList(((String) attributes
-								.get("partitionValues")).split("\\s*,\\s*")));
+						valueList.addAll(Arrays.asList(this
+								.readListAttribute((String) attributes
+										.get("partitionValues"))));
 					final boolean includeNull = Boolean.valueOf(
 							(String) attributes.get("partitionUseNull"))
 							.booleanValue();
@@ -1652,10 +1649,12 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();
-				final String[] aliasColumnIds = ((String) attributes
-						.get("aliasColumnIds")).split(",");
-				final String[] aliasNames = ((String) attributes
-						.get("aliasNames")).split(",");
+				final String[] aliasColumnIds = this
+						.readListAttribute((String) attributes
+								.get("aliasColumnIds"));
+				final String[] aliasNames = this
+						.readListAttribute((String) attributes
+								.get("aliasNames"));
 				for (int i = 0; i < aliasColumnIds.length; i++) {
 					final Column wrapped = (Column) this.mappedObjects
 							.get(aliasColumnIds[i]);
@@ -1710,10 +1709,12 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();
-				final String[] aliasColumnIds = ((String) attributes
-						.get("aliasColumnIds")).split(",");
-				final String[] aliasNames = ((String) attributes
-						.get("aliasNames")).split(",");
+				final String[] aliasColumnIds = this
+						.readListAttribute((String) attributes
+								.get("aliasColumnIds"));
+				final String[] aliasNames = this
+						.readListAttribute((String) attributes
+								.get("aliasNames"));
 				for (int i = 0; i < aliasColumnIds.length; i++) {
 					final Column wrapped = (Column) this.mappedObjects
 							.get(aliasColumnIds[i]);
@@ -1757,10 +1758,12 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();
-				final String[] aliasColumnNames = ((String) attributes
-						.get("aliasColumnNames")).split(",");
-				final String[] aliasNames = ((String) attributes
-						.get("aliasNames")).split(",");
+				final String[] aliasColumnNames = this
+						.readListAttribute((String) attributes
+								.get("aliasColumnNames"));
+				final String[] aliasNames = this
+						.readListAttribute((String) attributes
+								.get("aliasNames"));
 				for (int i = 0; i < aliasColumnNames.length; i++)
 					aliases.put(aliasColumnNames[i], aliasNames[i]);
 				// Get the expression to use.
@@ -1806,10 +1809,12 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Get the aliases to use for the first table.
 				final Map laliases = new HashMap();
-				final String[] laliasColumnIds = ((String) attributes
-						.get("leftAliasColumnIds")).split(",");
-				final String[] laliasNames = ((String) attributes
-						.get("leftAliasNames")).split(",");
+				final String[] laliasColumnIds = this
+						.readListAttribute((String) attributes
+								.get("leftAliasColumnIds"));
+				final String[] laliasNames = this
+						.readListAttribute((String) attributes
+								.get("leftAliasNames"));
 				for (int i = 0; i < laliasColumnIds.length; i++) {
 					final Column wrapped = (Column) this.mappedObjects
 							.get(laliasColumnIds[i]);
@@ -1818,10 +1823,12 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// and the second
 				final Map raliases = new HashMap();
-				final String[] raliasColumnIds = ((String) attributes
-						.get("rightAliasColumnIds")).split(",");
-				final String[] raliasNames = ((String) attributes
-						.get("rightAliasNames")).split(",");
+				final String[] raliasColumnIds = this
+						.readListAttribute((String) attributes
+								.get("rightAliasColumnIds"));
+				final String[] raliasNames = this
+						.readListAttribute((String) attributes
+								.get("rightAliasNames"));
 				for (int i = 0; i < raliasColumnIds.length; i++) {
 					final Column wrapped = (Column) this.mappedObjects
 							.get(raliasColumnIds[i]);
@@ -1865,6 +1872,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final Table centralTable = (Table) this.mappedObjects
 						.get(attributes.get("centralTableId"));
 				final String optType = (String) attributes.get("optimiser");
+				final boolean index = Boolean.valueOf(
+						(String) attributes.get("indexOptimiser")).booleanValue();
 
 				// Construct the dataset.
 				final DataSet ds = new DataSet(this.constructedMart,
@@ -1899,6 +1908,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// schema settings.
 				ds.setDataSetOptimiserType(opt);
 				ds.setInvisible(invisible);
+				ds.setIndexOptimiser(index);
 				element = ds;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)

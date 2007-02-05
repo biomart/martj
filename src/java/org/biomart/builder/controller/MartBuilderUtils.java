@@ -63,6 +63,20 @@ import org.biomart.common.resources.Resources;
 public class MartBuilderUtils {
 
 	/**
+	 * Sets the output schema on a mart.
+	 * 
+	 * @param mart
+	 *            the mart to change.
+	 * @param outputSchema
+	 *            the new output schema value.
+	 */
+	public static void setOutputSchema(final Mart mart,
+			final String outputSchema) {
+		Log.info(Resources.get("logReqOutputSchema"));
+		mart.setOutputSchema(outputSchema);
+	}
+
+	/**
 	 * Adds a schema to a mart.
 	 * 
 	 * @param mart
@@ -126,14 +140,12 @@ public class MartBuilderUtils {
 		// Change the cardinality.
 		relation.setCardinality(cardinality);
 
-		// If 1:1, make sure it isn't used as a subclass or concat-only relation
+		// If 1:1, make sure it isn't used as a subclass relation
 		// in any dataset.
 		if (relation.isOneToOne())
 			for (final Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
 				final DataSet ds = (DataSet) i.next();
 				ds.getSchemaModifications().unsetSubclassedRelation(relation);
-				// FIXME: Reinstate.
-				// ds.unflagConcatOnlyRelation(relation);
 			}
 
 		// Synchronise the datasets.
@@ -584,18 +596,28 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * This method asks to modify an expression column.
+	 * This method asks to modify a concat column.
 	 * 
+	 * @param dsTable
+	 *            the table the concat relation is associated with.
+	 * @param rel
+	 *            the relation to concat.
+	 * @param index
+	 *            the index of the relation to concat.
 	 * @param column
-	 *            the column to modify.
-	 * @param columnAliases
+	 *            the name to give the concat column.
+	 * @param aliases
 	 *            the map of columns on the table to labels in the expression.
 	 * @param expression
 	 *            the expression for the column.
-	 * @param groupBy
-	 *            whether this column requires a group-by statement. If it does,
-	 *            the group-by columns required will be worked out
-	 *            automatically.
+	 * @param rowSep
+	 *            the separator to use between concated rows.
+	 * @throws SQLException
+	 *             if something went wrong.
+	 * @throws DataModelException
+	 *             if something went wrong.
+	 * @throws ValidationException
+	 *             if something went wrong.
 	 */
 	public static void concatRelation(final DataSetTable dsTable,
 			final Relation rel, final int index, final String column,
@@ -612,16 +634,26 @@ public class MartBuilderUtils {
 	/**
 	 * This method asks to modify an expression column.
 	 * 
+	 * @param ds
+	 *            the dataset the concat relation is associated with.
+	 * @param rel
+	 *            the relation to concat.
+	 * @param index
+	 *            the index of the relation to concat.
 	 * @param column
-	 *            the column to modify.
-	 * @param columnAliases
+	 *            the name to give the concat column.
+	 * @param aliases
 	 *            the map of columns on the table to labels in the expression.
 	 * @param expression
 	 *            the expression for the column.
-	 * @param groupBy
-	 *            whether this column requires a group-by statement. If it does,
-	 *            the group-by columns required will be worked out
-	 *            automatically.
+	 * @param rowSep
+	 *            the separator to use between concated rows.
+	 * @throws SQLException
+	 *             if something went wrong.
+	 * @throws DataModelException
+	 *             if something went wrong.
+	 * @throws ValidationException
+	 *             if something went wrong.
 	 */
 	public static void concatRelation(final DataSet ds, final Relation rel,
 			final int index, final String column, final Map aliases,
@@ -637,9 +669,11 @@ public class MartBuilderUtils {
 	/**
 	 * This method asks to modify an expression column.
 	 * 
+	 * @param dsTable
+	 *            the table the expression is part of.
 	 * @param def
 	 *            the column to modify.
-	 * @param columnAliases
+	 * @param aliases
 	 *            the map of columns on the table to labels in the expression.
 	 * @param expression
 	 *            the expression for the column.
@@ -647,6 +681,10 @@ public class MartBuilderUtils {
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
 	 *            automatically.
+	 * @throws SQLException
+	 *             if something went wrong.
+	 * @throws DataModelException
+	 *             if something went wrong.
 	 */
 	public static void setExpressionColumn(final DataSetTable dsTable,
 			final ExpressionColumnDefinition def, final Map aliases,
@@ -656,9 +694,8 @@ public class MartBuilderUtils {
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.unsetExpressionColumn(dsTable, def);
 		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(
-				expression, aliases, groupBy,
-				def == null ? ((DataSet) dsTable.getSchema())
-						.getDataSetModifications()
+				expression, aliases, groupBy, def == null ? ((DataSet) dsTable
+						.getSchema()).getDataSetModifications()
 						.nextExpressionColumn(dsTable) : def.getColKey());
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.setExpressionColumn(dsTable, expr);
@@ -704,8 +741,18 @@ public class MartBuilderUtils {
 	/**
 	 * This method asks to remove a particular expression column.
 	 * 
-	 * @param column
-	 *            the expression column to remove.
+	 * @param ds
+	 *            the dataset to remove the concat from.
+	 * @param relation
+	 *            the relation to unconcat.
+	 * @param index
+	 *            the index of the relation to unconcat.
+	 * @throws ValidationException
+	 *             if something went wrong.
+	 * @throws SQLException
+	 *             if something went wrong.
+	 * @throws DataModelException
+	 *             if something went wrong.
 	 */
 	public static void unconcatRelation(final DataSet ds,
 			final Relation relation, final int index)
@@ -718,8 +765,18 @@ public class MartBuilderUtils {
 	/**
 	 * This method asks to remove a particular expression column.
 	 * 
-	 * @param column
-	 *            the expression column to remove.
+	 * @param dsTable
+	 *            the table to remove the concat from.
+	 * @param relation
+	 *            the relation to unconcat.
+	 * @param index
+	 *            the index of the relation to unconcat.
+	 * @throws ValidationException
+	 *             if something went wrong.
+	 * @throws SQLException
+	 *             if something went wrong.
+	 * @throws DataModelException
+	 *             if something went wrong.
 	 */
 	public static void unconcatRelation(final DataSetTable dsTable,
 			final Relation relation, final int index)
@@ -733,8 +790,14 @@ public class MartBuilderUtils {
 	/**
 	 * This method asks to remove a particular expression column.
 	 * 
+	 * @param dsTable
+	 *            the table to remove the concat from.
 	 * @param column
-	 *            the expression column to remove.
+	 *            the expression to remove.
+	 * @throws SQLException
+	 *             if something went wrong.
+	 * @throws DataModelException
+	 *             if something went wrong.
 	 */
 	public static void removeExpressionColumn(final DataSetTable dsTable,
 			final ExpressionColumnDefinition column) throws SQLException,
@@ -1011,12 +1074,16 @@ public class MartBuilderUtils {
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to flag the relation in.
-	 * @param table
-	 *            the table to flag as restricted.
+	 * @param relation
+	 *            the relation to flag as restricted.
+	 * @param index
+	 *            the index of the restricted relation.
 	 * @param expression
 	 *            the expression to use for the restriction for the relation.
-	 * @param aliases
-	 *            the aliases to use for columns.
+	 * @param lhsAliases
+	 *            the aliases to use for columns on the from end.
+	 * @param rhsAliases
+	 *            the aliases to use for columns on the to end.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1038,12 +1105,16 @@ public class MartBuilderUtils {
 	 * 
 	 * @param dataset
 	 *            the dataset to flag the relation in.
-	 * @param table
-	 *            the table to flag as restricted.
+	 * @param relation
+	 *            the relation to flag as restricted.
+	 * @param index
+	 *            the index of the restricted relation.
 	 * @param expression
 	 *            the expression to use for the restriction for the relation.
-	 * @param aliases
-	 *            the aliases to use for columns.
+	 * @param lhsAliases
+	 *            the aliases to use for columns on the from end.
+	 * @param rhsAliases
+	 *            the aliases to use for columns on the to end.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1064,8 +1135,10 @@ public class MartBuilderUtils {
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to unflag the relation in.
-	 * @param table
-	 *            the table to unflag as restricted.
+	 * @param relation
+	 *            the relation to unflag as restricted.
+	 * @param index
+	 *            the index of the relation to unrestrict.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1083,8 +1156,10 @@ public class MartBuilderUtils {
 	 * 
 	 * @param dataset
 	 *            the dataset to unflag the relation in.
-	 * @param table
-	 *            the table to unflag as restricted.
+	 * @param relation
+	 *            the relation to unflag as restricted.
+	 * @param index
+	 *            the index of the relation to unrestrict.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1405,16 +1480,16 @@ public class MartBuilderUtils {
 	 * 
 	 * @param dataset
 	 *            the dataset to turn off partitioning for on this column.
-	 * @param column
-	 *            the column to turn off partitioning for.
+	 * @param table
+	 *            the table to turn off partitioning for.
 	 * @throws ValidationException
 	 *             if the column could not be used for partitioning, for
 	 *             whatever reason.
 	 */
 	public static void unpartitionByColumn(final DataSet dataset,
-			final DataSetColumn column) throws ValidationException {
+			final DataSetTable table) throws ValidationException {
 		Log.info(Resources.get("logReqUnpartitionCol"));
-		dataset.getDataSetModifications().unsetPartitionedColumn(column);
+		dataset.getDataSetModifications().unsetPartitionedColumn(table);
 	}
 
 	/**
@@ -1445,6 +1520,28 @@ public class MartBuilderUtils {
 	public static void visibleDataSet(final DataSet dataset) {
 		Log.info(Resources.get("logReqVisibleDataset"));
 		dataset.setInvisible(false);
+	}
+
+	/**
+	 * Turns index optimiser off in a given dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to disable index optimiser in.
+	 */
+	public static void noIndexOptimiserDataSet(final DataSet dataset) {
+		Log.info(Resources.get("logReqNoIndOptDataset"));
+		dataset.setIndexOptimiser(false);
+	}
+
+	/**
+	 * Turns index optimiser on in a given dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to enable index optimiser in.
+	 */
+	public static void indexOptimiserDataSet(final DataSet dataset) {
+		Log.info(Resources.get("logReqIndOptDataset"));
+		dataset.setIndexOptimiser(true);
 	}
 
 	/**

@@ -98,9 +98,10 @@ public class ExplainContext extends SchemaContext {
 		// This bit adds a restricted outline to restricted tables.
 		if (object instanceof Table) {
 			final Table table = (Table) object;
-			final TableComponent tblcomp = (TableComponent) component;
-			tblcomp.setDotted(this.dataset.getSchemaModifications()
-					.isRestrictedTable(this.datasetTable, table));
+
+			((TableComponent) component).setRestricted(this.dataset
+					.getSchemaModifications().isRestrictedTable(
+							this.datasetTable, table));
 		}
 
 		// This section customises the appearance of relation lines within
@@ -109,6 +110,16 @@ public class ExplainContext extends SchemaContext {
 
 			// Work out what relation we are dealing with.
 			final Relation relation = (Relation) object;
+
+			// Is it restricted?
+			((RelationComponent) component).setRestricted(this.dataset
+					.getSchemaModifications().isRestrictedRelation(
+							this.datasetTable, relation));
+
+			// Is it compounded?
+			((RelationComponent) component).setCompounded(this.dataset
+					.getSchemaModifications().isCompoundRelation(
+							this.datasetTable, relation));
 
 			// Fade out all UNINCLUDED, INFERRED_INCORRECT and MASKED relations.
 			final boolean included = this.datasetTable == null ? this.dataset

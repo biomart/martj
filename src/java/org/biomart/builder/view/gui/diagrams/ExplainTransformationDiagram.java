@@ -64,6 +64,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 	private List tableComponents = new ArrayList();
 
+	private int step;
+
 	/**
 	 * Creates an empty diagram, using the single-parameter constructor from
 	 * {@link Diagram}.
@@ -71,14 +73,26 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * @param martTab
 	 *            the tabset to communicate with when (if) context menus are
 	 *            selected.
+	 * @param step
+	 *            the step of the transformation this diagram represents.
 	 */
-	protected ExplainTransformationDiagram(MartTab martTab) {
+	protected ExplainTransformationDiagram(MartTab martTab, int step) {
 		super(martTab);
+		this.step = step;
 	}
 
 	protected void updateAppearance() {
 		// Set the background.
 		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
+	}
+
+	/**
+	 * Get which step this diagram is representing.
+	 * 
+	 * @return the step of the transformation.
+	 */
+	protected int getStep() {
+		return this.step;
 	}
 
 	/**
@@ -110,9 +124,12 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the mart tab to pass menu events onto.
 		 * @param stu
 		 *            the transformation unit to show.
+		 * @param step
+		 *            the step of the transformation this diagram represents.
 		 */
-		public SingleTable(final MartTab martTab, final SelectFromTable stu) {
-			super(martTab);
+		public SingleTable(final MartTab martTab, final SelectFromTable stu,
+				int step) {
+			super(martTab, step);
 
 			// Remember the params, and calculate the diagram.
 			this.stu = stu;
@@ -161,10 +178,12 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the transformation to explain.
 		 * @param lIncludeCols
 		 *            the columns to show in the temp table.
+		 * @param step
+		 *            the step of the transformation this diagram represents.
 		 */
 		public TempReal(final MartTab martTab, final JoinTable ltu,
-				final List lIncludeCols) {
-			super(martTab);
+				final List lIncludeCols, int step) {
+			super(martTab, step);
 
 			// Remember the columns, and calculate the diagram.
 			this.ltu = ltu;
@@ -180,7 +199,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final Schema tempSourceSchema = new GenericSchema(Resources
 					.get("dummyTempSchemaName"));
 			final Table tempSource = new GenericTable(Resources
-					.get("dummyTempTableName"), tempSourceSchema);
+					.get("dummyTempTableName")
+					+ " " + this.getStep(), tempSourceSchema);
 			tempSourceSchema.addTable(tempSource);
 			for (Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
@@ -273,10 +293,12 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the mart tab to pass menu events onto.
 		 * @param etu
 		 *            the transformation unit to show.
+		 * @param step
+		 *            the step of the transformation this diagram represents.
 		 */
 		public AdditionalColumns(final MartTab martTab,
-				final TransformationUnit etu) {
-			super(martTab);
+				final TransformationUnit etu, int step) {
+			super(martTab, step);
 
 			// Remember the params, and calculate the diagram.
 			this.etu = etu;
@@ -291,7 +313,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final Schema tempSourceSchema = new GenericSchema(Resources
 					.get("dummyTempSchemaName"));
 			final Table tempSource = new GenericTable(Resources
-					.get("dummyTempTableName"), tempSourceSchema);
+					.get("dummyTempTableName")
+					+ " " + this.getStep(), tempSourceSchema);
 			tempSourceSchema.addTable(tempSource);
 			for (Iterator i = this.etu.getNewColumnNameMap().values()
 					.iterator(); i.hasNext();)

@@ -97,7 +97,7 @@ public class SchemaContext implements DiagramContext {
 		// This bit removes a restricted outline from any restricted tables.
 		if (object instanceof Table) {
 			final TableComponent tblcomp = (TableComponent) component;
-			tblcomp.setDotted(false);
+			tblcomp.setRestricted(false);
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.

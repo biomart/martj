@@ -74,6 +74,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 	private StringBuffer outputStringBuffer;
 
+	private boolean singleFile;
+
 	/**
 	 * Creates a constructor that, when requested, will begin constructing a
 	 * mart and outputting DDL to a file.
@@ -86,15 +88,20 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 * @param includeComments
 	 *            <tt>true</tt> if comments are to be included in the DDL
 	 *            statements generated, <tt>false</tt> if not.
+	 * @param singleFile
+	 *            if outputting as a file, <tt>true</tt> if the file should
+	 *            be a single DDL file, <tt>false</tt> if it should be broken
+	 *            down into tables.
 	 */
 	public SaveDDLMartConstructor(final File outputFile,
-			final boolean includeComments) {
+			final boolean includeComments, final boolean singleFile) {
 		Log.info(Resources.get("logSaveDDLFile", outputFile.getPath()));
 		// Remember the settings.
 		this.outputFile = outputFile;
 		this.includeComments = includeComments;
 		// This last call is redundant but is included for clarity.
 		this.outputStringBuffer = null;
+		this.singleFile = singleFile;
 	}
 
 	/**
@@ -126,8 +133,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// Work out what kind of helper to use. The helper will
 		// perform the actual conversion of action to DDL and divide
 		// the results into appropriate files or buffers.
-		final DDLHelper helper = this.outputStringBuffer == null ? (DDLHelper) new TableAsFileHelper(
+		final DDLHelper helper = this.outputStringBuffer == null ? (this.singleFile ? (DDLHelper) new SingleFileHelper(
 				this.outputFile, this.includeComments)
+				: (DDLHelper) new TableAsFileHelper(this.outputFile,
+						this.includeComments))
 				: new SingleStringBufferHelper(this.outputStringBuffer,
 						this.includeComments);
 		Log.debug("Chose helper " + helper.getClass().getName());
@@ -307,7 +316,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		}
 
 		public void martConstructorEventOccurred(final int event,
-				final MartConstructorAction action) throws Exception {
+				final Object data, final MartConstructorAction action)
+				throws Exception {
 			if (event == MartConstructorListener.ACTION_EVENT) {
 				// Convert the action to some DDL.
 				final String[] cmd = this.getStatementsForAction(action);
@@ -327,13 +337,15 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private Map actions;
 
-		private int datasetSequence;
+		private String dataset;
 
-		private int martSequence;
+		private int martSequence = 0;
 
 		private FileOutputStream outputFileStream;
 
 		private ZipOutputStream outputZipStream;
+
+		private List orderedTables;
 
 		/**
 		 * Constructs a helper which will output all DDL into a single file per
@@ -348,13 +360,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		public TableAsFileHelper(final File outputFile,
 				final boolean includeComments) {
 			super(outputFile, includeComments);
-			this.martSequence = 0;
-			this.datasetSequence = 0;
 			this.actions = new HashMap();
+			this.orderedTables = new ArrayList();
 		}
 
 		public void martConstructorEventOccurred(final int event,
-				final MartConstructorAction action) throws Exception {
+				final Object data, final MartConstructorAction action)
+				throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 				// Create and open the zip file.
 				Log.debug("Starting zip file " + this.getFile().getPath());
@@ -369,21 +381,25 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
+			} else if (event == MartConstructorListener.MART_STARTED) {
+				this.martSequence++;
+				Log.debug("Mart " + this.martSequence + " starting");
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
 				// Clear out action map ready for next dataset.
-				Log.debug("Dataset starting");
+				this.dataset = (String) data;
+				Log.debug("Dataset " + this.dataset + " starting");
 				this.actions.clear();
+				this.orderedTables.clear();
 			} else if (event == MartConstructorListener.DATASET_ENDED) {
-				// Write out one file per table in part1 files.
+				// Write out one file per table in files.
 				Log.debug("Dataset ending");
 				for (final Iterator i = this.actions.entrySet().iterator(); i
 						.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
 					final String tableName = (String) actionEntry.getKey();
-					final String entryFilename = this.martSequence + "/"
-							+ this.datasetSequence + "/" + tableName
-							+ Resources.get("perTablePart1FileName")
-							+ Resources.get("ddlExtension");
+					final String entryFilename = Resources.get("martPrefix")
+							+ this.martSequence + "/" + this.dataset + "/"
+							+ tableName + Resources.get("ddlExtension");
 					Log.debug("Starting entry " + entryFilename);
 					ZipEntry entry = new ZipEntry(entryFilename);
 					entry.setTime(System.currentTimeMillis());
@@ -410,17 +426,76 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					Log.debug("Closing entry");
 					this.outputZipStream.closeEntry();
 				}
-				// Bump up the dataset count for the next one.
-				this.datasetSequence++;
-			} else if (event == MartConstructorListener.MART_ENDED)
-				// Bump up the mart count for the next one.
-				this.martSequence++;
-			else if (event == MartConstructorListener.ACTION_EVENT) {
+				// Write the dataset manifest.
+				ZipEntry entry = new ZipEntry(Resources.get("martPrefix")
+						+ this.martSequence + "/" + this.dataset + "/"
+						+ Resources.get("datasetManifest"));
+				entry.setTime(System.currentTimeMillis());
+				this.outputZipStream.putNextEntry(entry);
+				for (final Iterator i = this.orderedTables.iterator(); i
+						.hasNext();) {
+					this.outputZipStream.write(((String) i.next()).getBytes());
+					this.outputZipStream.write(Resources.get("ddlExtension")
+							.getBytes());
+					this.outputZipStream.write(System.getProperty(
+							"line.separator").getBytes());
+				}
+				this.outputZipStream.closeEntry();
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Add the action to the current map.
 				final String dsTableName = action.getDataSetTableName();
+				if (!this.orderedTables.contains(dsTableName))
+					this.orderedTables.add(dsTableName);
 				if (!this.actions.containsKey(dsTableName))
 					this.actions.put(dsTableName, new ArrayList());
 				((List) this.actions.get(dsTableName)).add(action);
+			}
+		}
+	}
+
+	/**
+	 * Statements are saved as a single SQL file.
+	 */
+	public static class SingleFileHelper extends DDLHelper {
+
+		private FileOutputStream outputFileStream;
+
+		/**
+		 * Constructs a helper which will output all DDL into a single file per
+		 * table inside the given zip file.
+		 * 
+		 * @param outputFile
+		 *            the zip file to write the DDL into.
+		 * @param includeComments
+		 *            <tt>true</tt> if comments are to be included,
+		 *            <tt>false</tt> if not.
+		 */
+		public SingleFileHelper(final File outputFile,
+				final boolean includeComments) {
+			super(outputFile, includeComments);
+		}
+
+		public void martConstructorEventOccurred(final int event,
+				final Object data, final MartConstructorAction action)
+				throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				// Create and open the zip file.
+				Log.debug("Starting zip file " + this.getFile().getPath());
+				this.outputFileStream = new FileOutputStream(this.getFile());
+			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				// Close the zip stream. Will also close the
+				// file output stream by default.
+				Log.debug("Closing zip file");
+				this.outputFileStream.flush();
+				this.outputFileStream.close();
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
+				// Convert the action to some DDL.
+				final String[] cmd = this.getStatementsForAction(action);
+				// Write the data.
+				for (int i = 0; i < cmd.length; i++) {
+					this.outputFileStream.write(cmd[i].getBytes());
+					this.outputFileStream.write(";\n".getBytes());
+				}
 			}
 		}
 	}

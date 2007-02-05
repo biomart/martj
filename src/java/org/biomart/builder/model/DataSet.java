@@ -104,6 +104,8 @@ public class DataSet extends GenericSchema {
 	private final DataSetModificationSet dsMods;
 
 	private DataSetOptimiserType optimiser;
+	
+	private boolean indexOptimiser;
 
 	/**
 	 * The constructor creates a dataset around one central table and gives the
@@ -382,8 +384,9 @@ public class DataSet extends GenericSchema {
 							dsTable.getTransformationUnits().size() - 1),
 					dsTable);
 			dsTable.addTransformationUnit(tu);
-			for (final Iterator i = ((Collection) this.dsMods.getExpressionColumns()
-					.get(dsTable.getName())).iterator(); i.hasNext();) {
+			for (final Iterator i = ((Collection) this.dsMods
+					.getExpressionColumns().get(dsTable.getName())).iterator(); i
+					.hasNext();) {
 				final ExpressionColumnDefinition expr = (ExpressionColumnDefinition) i
 						.next();
 				// Save up the aliases to make dependents later.
@@ -717,6 +720,15 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
+	 * Sees if the optimiser will index its columns.
+	 * 
+	 * @return <tt>true</tt> if it will.
+	 */
+	public boolean isIndexOptimiser() {
+		return this.indexOptimiser;
+	}
+
+	/**
 	 * Test to see if this dataset is invisible.
 	 * 
 	 * @return <tt>true</tt> if it is invisible, <tt>false</tt> otherwise.
@@ -770,6 +782,18 @@ public class DataSet extends GenericSchema {
 		Log.debug("Setting optimiser " + optimiser + " in " + this.getName());
 		// Do it.
 		this.optimiser = optimiser;
+	}
+
+	/**
+	 * Sets the optimiser index type.
+	 * 
+	 * @param index
+	 *            the optimiser index if <tt>true</tt>.
+	 */
+	public void setIndexOptimiser(final boolean index) {
+		Log.debug("Setting optimiser index in " + this.getName());
+		// Do it.
+		this.indexOptimiser = index;
 	}
 
 	/**
@@ -860,25 +884,38 @@ public class DataSet extends GenericSchema {
 			this.dependency = false;
 		}
 
+		/**
+		 * Test to see if this column is required during intermediate
+		 * construction phases.
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
 		public boolean isRequiredInterim() {
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
 			return this.dependency || !mods.isMaskedColumn(this);
 		}
 
+		/**
+		 * Test to see if this column is required in the final completed dataset
+		 * table.
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
 		public boolean isRequiredFinal() {
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
 			// If appears in aliases on any group-by expression column
 			// then is not required final.
-			final Collection exprCols = (Collection) mods.getExpressionColumns().get(
-					this.getTable().getName());
-			if (exprCols!=null)
+			final Collection exprCols = (Collection) mods
+					.getExpressionColumns().get(this.getTable().getName());
+			if (exprCols != null)
 				for (final Iterator i = exprCols.iterator(); i.hasNext();) {
-				final ExpressionColumnDefinition entry = (ExpressionColumnDefinition) i.next();
-				if (entry.getAliases().containsKey(this.getName()))
-					return false;
-			}
+					final ExpressionColumnDefinition entry = (ExpressionColumnDefinition) i
+							.next();
+					if (entry.getAliases().containsKey(this.getName()))
+						return false;
+				}
 			return !mods.isMaskedColumn(this);
 		}
 
@@ -930,6 +967,8 @@ public class DataSet extends GenericSchema {
 			 *            the name to give this column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
+			 * @param definition
+			 *            the definition of this column's expression.
 			 */
 			public ExpressionColumn(final String name,
 					final DataSetTable dsTable,
@@ -939,6 +978,11 @@ public class DataSet extends GenericSchema {
 				this.definition = definition;
 			}
 
+			/**
+			 * Obtain the expression behind this column.
+			 * 
+			 * @return the expression.
+			 */
 			public ExpressionColumnDefinition getDefinition() {
 				return this.definition;
 			}
@@ -965,6 +1009,8 @@ public class DataSet extends GenericSchema {
 			 *            the name to give this column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
+			 * @param definition
+			 *            the definition of the concat expression.
 			 */
 			public ConcatColumn(final String name, final DataSetTable dsTable,
 					final ConcatRelationDefinition definition) {
@@ -973,6 +1019,12 @@ public class DataSet extends GenericSchema {
 				this.definition = definition;
 			}
 
+			/**
+			 * Obtain the expression used in each concatenated row inside this
+			 * column.
+			 * 
+			 * @return the concat expression used.
+			 */
 			public ConcatRelationDefinition getDefinition() {
 				return this.definition;
 			}
@@ -1313,6 +1365,8 @@ public class DataSet extends GenericSchema {
 		/**
 		 * Return this modified name including any renames etc.
 		 * 
+		 * @param columnName
+		 *            the column name to look up the modified name for.
 		 * @return the modified name.
 		 */
 		public String getModifiedName(String columnName) {

@@ -62,12 +62,35 @@ public class Mart {
 	// Use tree map to keep them in alphabetical order.
 	private final Map schemas = new TreeMap();
 
+	private String outputSchema = null;
+
 	/**
 	 * This constructor does nothing except log a message saying the mart has
 	 * been created.
 	 */
 	public Mart() {
 		Log.info(Resources.get("logNewMart"));
+	}
+
+	/**
+	 * Optional, sets the default target schema this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @param outputSchema
+	 *            the target schema.
+	 */
+	public void setOutputSchema(final String outputSchema) {
+		this.outputSchema = outputSchema;
+	}
+
+	/**
+	 * Optional, gets the default target schema this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @return the target schema.
+	 */
+	public String getOutputSchema() {
+		return this.outputSchema;
 	}
 
 	/**

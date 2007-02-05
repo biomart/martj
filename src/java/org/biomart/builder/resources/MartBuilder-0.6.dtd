@@ -23,6 +23,7 @@
 -->
 
 <!ELEMENT mart (jdbcSchema+,relation*,dataset*)>
+<!ATTLIST jdbcSchema outputSchema CDATA #IMPLIED>
 
 <!ELEMENT jdbcSchema (table+,relation*)>
 <!ATTLIST jdbcSchema driverClassLocation CDATA #IMPLIED>
@@ -68,6 +69,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|NONE) #REQUIRED>
+<!ATTLIST dataset indexOptimiser CDATA #IMPLIED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
 
 <!ELEMENT subclassRelation EMPTY>
@@ -98,7 +100,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ELEMENT partitionedColumn EMPTY>
 <!ATTLIST partitionedColumn tableKey CDATA #REQUIRED>
 <!ATTLIST partitionedColumn colKey CDATA #REQUIRED>
-<!ATTLIST partitionedColumn partitionType (null|singleValue|uniqueValues|valueCollection) #IMPLIED>
+<!ATTLIST partitionedColumn partitionType (null|uniqueValues|valueCollection) #IMPLIED>
 <!ATTLIST partitionedColumn partitionUseNull (true|false) #IMPLIED>
 <!ATTLIST partitionedColumn partitionValue CDATA #IMPLIED>
 <!ATTLIST partitionedColumn partitionValues CDATA #IMPLIED>
