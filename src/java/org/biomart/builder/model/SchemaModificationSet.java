@@ -125,9 +125,8 @@ public class SchemaModificationSet {
 			final Relation relation) {
 		final Collection globalMasks = (Collection) this.maskedRelations
 				.get(SchemaModificationSet.DATASET);
-		final Collection masks = this.maskedRelations.containsKey(tableName) ? (Collection) this.maskedRelations
-				.get(tableName)
-				: globalMasks;
+		final Collection masks = (Collection) this.maskedRelations
+				.get(tableName);
 		return (masks != null && masks.contains(relation))
 				|| (globalMasks != null && globalMasks.contains(relation));
 	}
@@ -210,9 +209,7 @@ public class SchemaModificationSet {
 			final Table table) {
 		final Map globalRests = (Map) this.restrictedTables
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.restrictedTables.containsKey(dsTableName) ? (Map) this.restrictedTables
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.restrictedTables.get(dsTableName);
 		return (rests != null && rests.containsKey(table))
 				|| (globalRests != null && globalRests.containsKey(table));
 	}
@@ -230,9 +227,7 @@ public class SchemaModificationSet {
 			return null;
 		final Map globalRests = (Map) this.restrictedTables
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.restrictedTables.containsKey(dsTableName) ? (Map) this.restrictedTables
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.restrictedTables.get(dsTableName);
 		return (rests != null && rests.containsKey(table)) ? (RestrictedTableDefinition) rests
 				.get(table)
 				: (RestrictedTableDefinition) globalRests.get(table);
@@ -312,9 +307,7 @@ public class SchemaModificationSet {
 			final Relation relation) {
 		final Map globalRests = (Map) this.restrictedRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.restrictedRelations.containsKey(dsTableName) ? (Map) this.restrictedRelations
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.restrictedRelations.get(dsTableName);
 		return (rests != null && rests.containsKey(relation))
 				|| (globalRests != null && globalRests.containsKey(relation));
 	}
@@ -330,9 +323,7 @@ public class SchemaModificationSet {
 			final Relation relation, final int index) {
 		final Map globalRests = (Map) this.restrictedRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.restrictedRelations.containsKey(dsTableName) ? (Map) this.restrictedRelations
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.restrictedRelations.get(dsTableName);
 		return (rests != null && rests.containsKey(relation) && ((Map) rests
 				.get(relation)).containsKey(new Integer(index)))
 				|| (globalRests != null && globalRests.containsKey(relation) && ((Map) globalRests
@@ -352,9 +343,7 @@ public class SchemaModificationSet {
 			return null;
 		final Map globalRests = (Map) this.restrictedRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.restrictedRelations.containsKey(dsTableName) ? (Map) this.restrictedRelations
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.restrictedRelations.get(dsTableName);
 		return (rests != null && rests.containsKey(relation) && ((Map) rests
 				.get(relation)).containsKey(new Integer(index))) ? (RestrictedRelationDefinition) ((Map) rests
 				.get(relation)).get(new Integer(index))
@@ -452,9 +441,7 @@ public class SchemaModificationSet {
 			final Relation relation) {
 		final Map globalRests = (Map) this.concatRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.concatRelations.containsKey(dsTableName) ? (Map) this.concatRelations
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.concatRelations.get(dsTableName);
 		return (rests != null && rests.containsKey(relation))
 				|| (globalRests != null && globalRests.containsKey(relation));
 	}
@@ -470,9 +457,7 @@ public class SchemaModificationSet {
 			final Relation relation, final int index) {
 		final Map globalRests = (Map) this.concatRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.concatRelations.containsKey(dsTableName) ? (Map) this.concatRelations
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.concatRelations.get(dsTableName);
 		return (rests != null && rests.containsKey(relation) && ((Map) rests
 				.get(relation)).containsKey(new Integer(index)))
 				|| (globalRests != null && globalRests.containsKey(relation) && ((Map) globalRests
@@ -492,9 +477,7 @@ public class SchemaModificationSet {
 			return null;
 		final Map globalRests = (Map) this.concatRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map rests = this.concatRelations.containsKey(dsTableName) ? (Map) this.concatRelations
-				.get(dsTableName)
-				: globalRests;
+		final Map rests = (Map) this.concatRelations.get(dsTableName);
 		return (rests != null && rests.containsKey(relation) && ((Map) rests
 				.get(relation)).containsKey(new Integer(index))) ? (ConcatRelationDefinition) ((Map) rests
 				.get(relation)).get(new Integer(index))
@@ -565,10 +548,8 @@ public class SchemaModificationSet {
 			final Relation relation) {
 		final Collection globalIncs = (Collection) this.forceIncludeRelations
 				.get(SchemaModificationSet.DATASET);
-		final Collection incs = this.forceIncludeRelations
-				.containsKey(tableName) ? (Collection) this.forceIncludeRelations
-				.get(tableName)
-				: globalIncs;
+		final Collection incs = (Collection) this.forceIncludeRelations
+				.get(tableName);
 		return (incs != null && incs.contains(relation))
 				|| (globalIncs != null && globalIncs.contains(relation));
 	}
@@ -744,9 +725,7 @@ public class SchemaModificationSet {
 			final Relation relation) {
 		final Map globalComps = (Map) this.compoundRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map comps = this.compoundRelations.containsKey(tableName) ? (Map) this.compoundRelations
-				.get(tableName)
-				: globalComps;
+		final Map comps = (Map) this.compoundRelations.get(tableName);
 		return (comps != null && comps.containsKey(relation))
 				|| (globalComps != null && globalComps.containsKey(relation));
 	}
@@ -763,12 +742,10 @@ public class SchemaModificationSet {
 			final Relation relation) {
 		final Map globalComps = (Map) this.compoundRelations
 				.get(SchemaModificationSet.DATASET);
-		final Map comps = this.compoundRelations.containsKey(tableName) ? 
-				(Map) this.compoundRelations.get(tableName)
-				: globalComps;
-		// FIXME : Doesn't return the relation even though the containsKey()
-		// returns true!
-		return ((Integer) comps.get(relation)).intValue();
+		final Map comps = (Map) this.compoundRelations.get(tableName);
+		return (comps != null && comps.containsKey(relation)) ? ((Integer) comps
+				.get(relation)).intValue()
+				: ((Integer) globalComps.get(relation)).intValue();
 	}
 
 	public Map getCompoundRelations() {

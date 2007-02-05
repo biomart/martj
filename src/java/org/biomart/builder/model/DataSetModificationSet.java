@@ -30,8 +30,8 @@ import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.common.model.Key;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -245,8 +245,7 @@ public class DataSetModificationSet {
 			throw new ValidationException(Resources
 					.get("cannotPartitionMultiColumns"));
 		// Check type of column.
-		// TODO Also exclude concat and recursive columns.
-		if (column instanceof ExpressionColumn)
+		if (!(column instanceof WrappedColumn || column instanceof InheritedColumn))
 			throw new ValidationException(Resources
 					.get("cannotPartitionNonWrapSchColumns"));
 		// Do it.
@@ -274,8 +273,6 @@ public class DataSetModificationSet {
 	}
 
 	public String getPartitionedColumnName(final DataSetTable table) {
-		if (!this.isPartitionedTable(table))
-			return null;
 		final String tableKey = table.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
 		return (String) (((Map.Entry) pcs.entrySet().iterator().next())
@@ -284,8 +281,6 @@ public class DataSetModificationSet {
 
 	public PartitionedColumnDefinition getPartitionedColumn(
 			final DataSetColumn column) {
-		if (!this.isPartitionedColumn(column))
-			return null;
 		final String tableKey = column.getTable().getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
 		return (PartitionedColumnDefinition) pcs.get(column.getName());
