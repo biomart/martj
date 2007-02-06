@@ -656,7 +656,7 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 			}
 
-			// Write out masked columns and tables.
+			// Write out masked columns.
 			for (final Iterator x = dsMods.getMaskedColumns().entrySet()
 					.iterator(); x.hasNext();) {
 				final Map.Entry entry = (Map.Entry) x.next();
@@ -667,6 +667,20 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					this.writeAttribute("colKey", (String) y.next(), xmlWriter);
 					this.closeElement("maskedColumn", xmlWriter);
+				}
+			}
+
+			// Write out indexed columns.
+			for (final Iterator x = dsMods.getIndexedColumns().entrySet()
+					.iterator(); x.hasNext();) {
+				final Map.Entry entry = (Map.Entry) x.next();
+				for (final Iterator y = ((Collection) entry.getValue())
+						.iterator(); y.hasNext();) {
+					this.openElement("indexedColumn", xmlWriter);
+					this.writeAttribute("tableKey", (String) entry.getKey(),
+							xmlWriter);
+					this.writeAttribute("colKey", (String) y.next(), xmlWriter);
+					this.closeElement("indexedColumn", xmlWriter);
 				}
 			}
 
@@ -1580,6 +1594,34 @@ public class MartBuilderXML extends DefaultHandler {
 				throw new SAXException(e);
 			}
 		}
+
+		// Indexdd Column (inside dataset).
+		else if ("indexedColumn".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("indexedColumnOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				final String tableKey = (String) attributes.get("tableKey");
+				final String colKey = (String) attributes.get("colKey");
+
+				// Subclass it.
+				if (tableKey != null && colKey != null) {
+					final Map colMap = w.getDataSetModifications()
+							.getIndexedColumns();
+					if (!colMap.containsKey(tableKey))
+						colMap.put(tableKey, new HashSet());
+					((Collection) colMap.get(tableKey)).add(colKey);
+				}
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
 
 		// Renamed table (inside dataset).
 		else if ("renamedTable".equals(eName)) {

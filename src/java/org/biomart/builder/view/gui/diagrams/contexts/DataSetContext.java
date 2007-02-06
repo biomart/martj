@@ -41,7 +41,9 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
@@ -178,6 +180,9 @@ public class DataSetContext extends SchemaContext {
 			else if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isPartitionedColumn(column))
 				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
+			// Red INHERITED columns.
+			else if (column instanceof InheritedColumn)
+				component.setBackground(ColumnComponent.INHERITED_COLOUR);
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
@@ -187,17 +192,25 @@ public class DataSetContext extends SchemaContext {
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
+			
+			// Indexed?
+			if (((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isIndexedColumn(column))
+				((BoxShapedComponent)component).setIndexed(true);
+			else
+				((BoxShapedComponent)component).setIndexed(false);
 
 			// Change foreground of non-inherited columns.
 			if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isNonInheritedColumn(column))
 				component.setForeground(ColumnComponent.NONINHERITED_FG_COLOUR);
-			// Red INHERITED columns.
-			else if (column instanceof InheritedColumn)
-				component.setForeground(ColumnComponent.INHERITED_COLOUR);
 			else
 				component.setForeground(ColumnComponent.NORMAL_FG_COLOUR);
 		}
+		
+		// Keys
+		else if (object instanceof Key) 
+			((BoxShapedComponent)component).setIndexed(true);
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
@@ -743,6 +756,29 @@ public class DataSetContext extends SchemaContext {
 			inherited.setEnabled(!isMasked
 					&& !((DataSetTable) column.getTable()).getType().equals(
 							DataSetTableType.DIMENSION));
+			
+			// Index the column.
+			final boolean isIndexed = ((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isIndexedColumn(column);
+			final JCheckBoxMenuItem index = new JCheckBoxMenuItem(Resources
+					.get("indexColumnTitle"));
+			index.setMnemonic(Resources.get("indexColumnMnemonic").charAt(0));
+			index.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					if (index.isSelected())
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestIndexColumn(
+										DataSetContext.this.getDataSet(),
+										column);
+					else
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnindexColumn(
+										DataSetContext.this.getDataSet(),
+										column);
+				}
+			});
+			contextMenu.add(index);
+			index.setSelected(isIndexed);
 
 			contextMenu.addSeparator();
 
@@ -790,8 +826,7 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(partition);
 				if (isMasked
-						|| column instanceof ConcatColumn
-						|| column instanceof ExpressionColumn
+						|| !(column instanceof WrappedColumn)
 						|| !((DataSetTable) column.getTable()).getType()
 								.equals(DataSetTableType.DIMENSION))
 					partition.setEnabled(false);

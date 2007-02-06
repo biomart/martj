@@ -318,6 +318,20 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Indexes a column within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to index the column in.
+	 * @param column
+	 *            the column to index.
+	 */
+	public static void indexColumn(final DataSet dataset,
+			final DataSetColumn column) {
+		Log.info(Resources.get("logReqIndexColumn"));
+		dataset.getDataSetModifications().setIndexedColumn(column);
+	}
+
+	/**
 	 * Masks a column within a dataset.
 	 * 
 	 * @param dataset
@@ -1319,6 +1333,20 @@ public class MartBuilderUtils {
 			throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqSyncMartSchema"));
 		mart.synchroniseSchemas();
+	}
+
+	/**
+	 * Unindexes a column within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to unindex the column in.
+	 * @param column
+	 *            the column to unindex.
+	 */
+	public static void unindexColumn(final DataSet dataset,
+			final DataSetColumn column) {
+		Log.info(Resources.get("logReqUnindexColumn"));
+		dataset.getDataSetModifications().unsetIndexedColumn(column);
 	}
 
 	/**

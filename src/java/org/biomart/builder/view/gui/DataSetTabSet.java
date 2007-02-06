@@ -688,6 +688,43 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Requests that a column be indexed.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param column
+	 *            the column to index.
+	 */
+	public void requestIndexColumn(final DataSet ds, final DataSetColumn column) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Mask the column.
+					MartBuilderUtils.indexColumn(ds, column);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.repaintDataSetDiagram(ds);
+
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.repaintExplanationDialog();
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			}
+		});
+	}
+
+	/**
 	 * Requests that a dimension be masked.
 	 * 
 	 * @param ds
@@ -2062,6 +2099,44 @@ public class DataSetTabSet extends JTabbedPane {
 		});
 	}
 
+	/**
+	 * Requests that a column be unindexed.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param column
+	 *            the column to unindex.
+	 */
+	public void requestUnindexColumn(final DataSet ds, final DataSetColumn column) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Unmask the column.
+					MartBuilderUtils.unindexColumn(ds, column);
+
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				} finally {
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					DataSetTabSet.this.repaintDataSetDiagram(ds);
+
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.repaintExplanationDialog();
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				}
+			}
+		});
+	}
+	
 	/**
 	 * Requests that a column be un-non-inherited.
 	 * 

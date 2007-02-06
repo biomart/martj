@@ -428,13 +428,25 @@ public interface MartConstructor {
 							finalCombinedName, partitionValue,
 							previousTempTables, tempName + tempNameCount++);
 
-				// Drop masked dependencies.
+				// Drop masked dependencies and create column indices.
 				final List dropCols = new ArrayList();
 				for (final Iterator x = dsTable.getColumns().iterator(); x
 						.hasNext();) {
 					final DataSetColumn col = (DataSetColumn) x.next();
 					if (!col.isRequiredFinal())
 						dropCols.add(col.getModifiedName());
+					else {
+						// Create index if required.
+						if (dataset.getDataSetModifications().isIndexedColumn(
+								col)) {
+							final Index index = new Index(
+									this.datasetSchemaName, finalCombinedName);
+							index.setTable((String) previousTempTables
+									.get(partitionValue));
+							index.setColumns(Collections.singletonList(col.getModifiedName()));
+							this.issueAction(index);
+						}
+					}
 				}
 				if (!dropCols.isEmpty()) {
 					final DropColumns dropcol = new DropColumns(
@@ -467,8 +479,6 @@ public interface MartConstructor {
 					index.setColumns(keyCols);
 					this.issueAction(index);
 				}
-
-				// TODO Create all non-standard indexes.
 
 				// Create optimiser columns - either count or bool,
 				// or none if not required.

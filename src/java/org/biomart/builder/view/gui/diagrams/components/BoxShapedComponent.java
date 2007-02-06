@@ -42,8 +42,8 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * object rather than exact component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public abstract class BoxShapedComponent extends JPanel implements
@@ -63,7 +63,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 			new float[] { BoxShapedComponent.BOX_DASHSIZE,
 					BoxShapedComponent.BOX_DOTSIZE,
 					BoxShapedComponent.BOX_DOTSIZE,
-					BoxShapedComponent.BOX_DOTSIZE}, 0);
+					BoxShapedComponent.BOX_DOTSIZE }, 0);
 
 	private static final Stroke DASHED_OUTLINE = new BasicStroke(
 			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
@@ -77,11 +77,25 @@ public abstract class BoxShapedComponent extends JPanel implements
 			new float[] { BoxShapedComponent.BOX_DOTSIZE,
 					BoxShapedComponent.BOX_DOTSIZE }, 0);
 
+	private static final Stroke INDEXED_OUTLINE = new BasicStroke(
+			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
+			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM,
+			new float[] { BoxShapedComponent.BOX_DASHSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE,
+					BoxShapedComponent.BOX_DOTSIZE }, 0);
+
 	private static final Stroke OUTLINE = new BasicStroke(
 			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
 
 	private Diagram diagram;
+
+	private boolean indexed = false;
 
 	private boolean restricted = false;
 
@@ -243,6 +257,19 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.compounded = compounded;
 	}
 
+	/**
+	 * If this is set to <tt>true</tt> then the component will appear with a
+	 * thick outline. Otherwise, it appears with a normal outline. This
+	 * overrides compounded and restricted settings.
+	 * 
+	 * @param indexed
+	 *            <tt>true</tt> if the component is to appear with a thick
+	 *            outline. The default is <tt>false</tt>.
+	 */
+	public void setIndexed(final boolean indexed) {
+		this.indexed = indexed;
+	}
+
 	public void setState(final Object state) {
 		this.state = state;
 	}
@@ -251,10 +278,14 @@ public abstract class BoxShapedComponent extends JPanel implements
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
-		if (this.restricted)
-			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_DASHED_OUTLINE : BoxShapedComponent.DASHED_OUTLINE;
+		if (this.indexed)
+			this.stroke = BoxShapedComponent.INDEXED_OUTLINE;
+		else if (this.restricted)
+			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_DASHED_OUTLINE
+					: BoxShapedComponent.DASHED_OUTLINE;
 		else
-			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_OUTLINE : BoxShapedComponent.OUTLINE;
+			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_OUTLINE
+					: BoxShapedComponent.OUTLINE;
 		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
 	}
 }

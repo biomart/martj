@@ -784,6 +784,7 @@ public class SchemaModificationSet {
 			for (final Iterator j = ((Map) entry.getValue()).entrySet()
 					.iterator(); j.hasNext();) {
 				final Map.Entry entry2 = (Map.Entry) j.next();
+				((Map) target.restrictedRelations.get(entry.getKey())).put(entry2.getKey(), new HashMap());
 				((Map) ((Map) target.restrictedRelations.get(entry.getKey()))
 						.get(entry2.getKey())).putAll((Map) entry2.getValue());
 			}
@@ -799,6 +800,7 @@ public class SchemaModificationSet {
 			for (final Iterator j = ((Map) entry.getValue()).entrySet()
 					.iterator(); j.hasNext();) {
 				final Map.Entry entry2 = (Map.Entry) j.next();
+				((Map) target.concatRelations.get(entry.getKey())).put(entry2.getKey(), new HashMap());
 				((Map) ((Map) target.concatRelations.get(entry.getKey()))
 						.get(entry2.getKey())).putAll((Map) entry2.getValue());
 			}

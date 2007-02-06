@@ -55,6 +55,8 @@ public class DataSetModificationSet {
 
 	private Map maskedColumns = new HashMap();
 
+	private Map indexedColumns = new HashMap();
+
 	private Map partitionedColumns = new HashMap();
 
 	private Map nonInheritedColumns = new HashMap();
@@ -99,6 +101,37 @@ public class DataSetModificationSet {
 
 	public Map getMaskedColumns() {
 		return this.maskedColumns;
+	}
+
+	public void setIndexedColumn(final DataSetColumn column) {
+		final String tableKey = column.getTable().getName();
+		if (!this.isIndexedColumn(column)) {
+			if (!this.indexedColumns.containsKey(tableKey))
+				this.indexedColumns.put(tableKey, new HashSet());
+			((Collection) this.indexedColumns.get(tableKey)).add(column
+					.getName());
+		}
+	}
+
+	public void unsetIndexedColumn(final DataSetColumn column) {
+		final String tableKey = column.getTable().getName();
+		if (this.indexedColumns.containsKey(tableKey)) {
+			((Collection) this.indexedColumns.get(tableKey)).remove(column
+					.getName());
+			if (((Collection) this.indexedColumns.get(tableKey)).isEmpty())
+				this.maskedColumns.remove(tableKey);
+		}
+	}
+
+	public boolean isIndexedColumn(final DataSetColumn column) {
+		final String tableKey = column.getTable().getName();
+		return this.indexedColumns.containsKey(tableKey)
+				&& ((Collection) this.indexedColumns.get(tableKey))
+						.contains(column.getName());
+	}
+
+	public Map getIndexedColumns() {
+		return this.indexedColumns;
 	}
 
 	public void setNonInheritedColumn(final DataSetColumn column)
@@ -327,6 +360,8 @@ public class DataSetModificationSet {
 		target.renamedColumns.putAll(this.renamedColumns);
 		target.maskedColumns.clear();
 		target.maskedColumns.putAll(this.maskedColumns);
+		target.indexedColumns.clear();
+		target.indexedColumns.putAll(this.indexedColumns);
 		target.maskedTables.clear();
 		target.maskedTables.addAll(this.maskedTables);
 		target.expressionColumns.clear();

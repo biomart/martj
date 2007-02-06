@@ -62,7 +62,7 @@
 
 <!ELEMENT dataset (
 compoundRelation*,subclassRelation*,renamedTable*,
-renamedColumn*,nonInheritedColumn*,maskedColumn*,
+renamedColumn*,nonInheritedColumn*,maskedColumn*,indexedColumn*,
 partitionedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,forcedRelation*,restrictedTable*,
 restrictedRelation*,expressionColumn*,concatRelation*)>
@@ -96,6 +96,10 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ELEMENT maskedColumn EMPTY>
 <!ATTLIST maskedColumn tableKey CDATA #REQUIRED>
 <!ATTLIST maskedColumn colKey CDATA #REQUIRED>
+
+<!ELEMENT indexedColumn EMPTY>
+<!ATTLIST indexedColumn tableKey CDATA #REQUIRED>
+<!ATTLIST indexedColumn colKey CDATA #REQUIRED>
 
 <!ELEMENT partitionedColumn EMPTY>
 <!ATTLIST partitionedColumn tableKey CDATA #REQUIRED>
