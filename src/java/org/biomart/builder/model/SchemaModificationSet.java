@@ -573,15 +573,17 @@ public class SchemaModificationSet {
 		// Check that the relation is a 1:M relation and isn't a loop-back.
 		if (!relation.isOneToMany())
 			throw new ValidationException(Resources.get("subclassNotOneMany"));
-		if (relation.getFirstKey().getTable().equals(
-				relation.getSecondKey().getTable()))
-			throw new ValidationException(Resources
-					.get("subclassNotBetweenTwoTables"));
 
 		// Work out the child end of the relation - the M end. The parent is
 		// the 1 end.
 		final Table parentTable = relation.getOneKey().getTable();
 		final Table childTable = relation.getManyKey().getTable();
+		if (parentTable.equals(childTable))
+			throw new ValidationException(Resources
+					.get("subclassNotBetweenTwoTables"));
+		if (parentTable.getPrimaryKey()==null || childTable.getPrimaryKey()==null)
+			throw new ValidationException(Resources
+					.get("subclassTargetNoPK"));
 
 		// If there are no existing subclass relations, then we only
 		// need to test that either the parent or the child is the central
