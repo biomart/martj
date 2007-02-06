@@ -104,7 +104,7 @@ public class DataSet extends GenericSchema {
 	private final DataSetModificationSet dsMods;
 
 	private DataSetOptimiserType optimiser;
-	
+
 	private boolean indexOptimiser;
 
 	/**
@@ -215,9 +215,10 @@ public class DataSet extends GenericSchema {
 		// FK linking them back. Subclass tables get all columns, plus
 		// the PK with FK link, plus all the relations we followed to
 		// get these columns.
+		TransformationUnit parentTU = null;
 		if (parentDSTable != null) {
-			final TransformationUnit tu = new SelectFromTable(parentDSTable);
-			dsTable.addTransformationUnit(tu);
+			parentTU = new SelectFromTable(parentDSTable);
+			dsTable.addTransformationUnit(parentTU);
 
 			// Make a list to hold the child table's FK cols.
 			final List dsTableFKCols = new ArrayList();
@@ -238,7 +239,6 @@ public class DataSet extends GenericSchema {
 					// Skip columns that are not in the primary key.
 					boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
-					// Skip columns that are not in the source key.
 					boolean inSourceKey = parentDSCol instanceof WrappedColumn
 							&& (sourceRelation.getFirstKey().getColumns()
 									.contains(
@@ -259,7 +259,8 @@ public class DataSet extends GenericSchema {
 				InheritedColumn dsCol = new InheritedColumn(dsTable,
 						parentDSCol);
 				dsTable.addColumn(dsCol);
-				tu.getNewColumnNameMap().put(parentDSCol.getName(), dsCol);
+				parentTU.getNewColumnNameMap()
+						.put(parentDSCol.getName(), dsCol);
 				// Add the column to the child's FK, but only if it was in
 				// the parent PK.
 				if (parentDSTablePK.getColumns().contains(parentDSCol))
@@ -312,7 +313,7 @@ public class DataSet extends GenericSchema {
 		// values in the normal, subclass and dimension queues. We only
 		// want dimensions constructed if we are not already constructing
 		// a dimension ourselves.
-		this.processTable(null, dsTable, dsTablePKCols, realTable, normalQ,
+		this.processTable(parentTU, dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
 				relationCount, !type.equals(DataSetTableType.DIMENSION),
 				relationIteration);
@@ -400,7 +401,7 @@ public class DataSet extends GenericSchema {
 			// Mark all aliased columns as dependents
 			for (final Iterator j = aliases.iterator(); j.hasNext();)
 				((DataSetColumn) dsTable.getColumnByName((String) j.next()))
-						.setDependency(true);
+						.setExpressionDependency(true);
 		}
 	}
 
@@ -479,9 +480,9 @@ public class DataSet extends GenericSchema {
 
 			// Remember we've been here.
 			this.includedRelations.add(sourceRelation);
-		} else {
+		} else
 			tu = new SelectFromTable(mergeTable);
-		}
+
 		dsTable.addTransformationUnit(tu);
 
 		// Work out the merge table's PK.
@@ -537,7 +538,7 @@ public class DataSet extends GenericSchema {
 				for (final Iterator j = mergeTable.getKeys().iterator(); j
 						.hasNext();)
 					if (((Key) j.next()).getColumns().contains(c))
-						wc.setDependency(true);
+						wc.setKeyDependency(true);
 
 				// If the column was in the merge table's PK, and we are
 				// expecting to add the PK to the generated table's PK, then
@@ -582,61 +583,69 @@ public class DataSet extends GenericSchema {
 				boolean followRelation = false;
 				boolean forceFollowRelation = false;
 
-				// Are we at the 1 end of a 1:M, or at either end of a M:M?
+				// Are we at the 1 end of a 1:M?
 				// If so, we may need to make a dimension, a subclass, or
 				// a concat column.
-				if (r.isManyToMany() || r.isOneToMany()
+				if (r.isOneToMany()
 						&& r.getOneKey().getTable().equals(mergeTable)) {
+
+					// Forcibly follow concat relations.
+					if (this.schemaMods.isConcatRelation(dsTable, r))
+						forceFollowRelation = true;
+
 					// Subclass subclassed relations, if we are currently
 					// not building a dimension table.
-					if (this.schemaMods.isSubclassedRelation(r)
+					else if (this.schemaMods.isSubclassedRelation(r)
 							&& !dsTable.getType().equals(
 									DataSetTableType.DIMENSION)) {
-						final Key sourceKey = r.getFirstKey().getTable()
-								.equals(mergeTable) ? r.getFirstKey() : r
-								.getSecondKey();
 						final List newSourceDSCols = new ArrayList();
-						for (final Iterator j = sourceKey.getColumnNames()
+						for (final Iterator j = r.getOneKey().getColumns()
 								.iterator(); j.hasNext();)
 							newSourceDSCols.add(tu
-									.getDataSetColumnFor((String) j.next()));
+									.getDataSetColumnFor((Column) j.next()));
 						subclassQ.add(new Object[] { newSourceDSCols, r,
 								new Integer(relationIteration) });
 					}
 
 					// Dimensionize dimension relations, which are all other 1:M
-					// or M:M relations, if we are not constructing a dimension
+					// relations, if we are not constructing a dimension
 					// table, and are currently intending to construct
 					// dimensions.
 					else if (makeDimensions
 							&& !dsTable.getType().equals(
 									DataSetTableType.DIMENSION)) {
-						final Key sourceKey = r.getFirstKey().getTable()
-								.equals(mergeTable) ? r.getFirstKey() : r
-								.getSecondKey();
 						final List newSourceDSCols = new ArrayList();
-						for (final Iterator j = sourceKey.getColumnNames()
-								.iterator(); j.hasNext();)
-							newSourceDSCols.add(tu
-									.getDataSetColumnFor((String) j.next()));
-						final int parentCompounded = sourceRelation == null ? 1
-								: (this.schemaMods.isCompoundRelation(dsTable,
-										sourceRelation) ? this.schemaMods
-										.getCompoundRelation(dsTable,
-												sourceRelation) : 1);
-						final int childCompounded = parentCompounded > 1 ? 1
-								: (this.schemaMods.isCompoundRelation(dsTable,
-										r) ? this.schemaMods
-										.getCompoundRelation(dsTable, r) : 1);
-						for (int k = 0; k < childCompounded; k++)
-							dimensionQ.add(new Object[] { newSourceDSCols, r,
-									new Integer(k) });
-						if (this.schemaMods.isMergedRelation(r))
-							forceFollowRelation = true;
+						boolean allUnmasked = true;
+						for (final Iterator j = r.getOneKey().getColumns()
+								.iterator(); j.hasNext() && allUnmasked;) {
+							final DataSetColumn newCol = tu
+									.getDataSetColumnFor((Column) j.next());
+							newSourceDSCols.add(newCol);
+							allUnmasked &= !dsMods.isMaskedColumn(newCol)
+									&& !dsMods.isNonInheritedColumn(newCol);
+						}
+						// Don't follow relation if any of the
+						// source key columns have been masked.
+						if (allUnmasked) {
+							final int parentCompounded = sourceRelation == null ? 1
+									: (this.schemaMods.isCompoundRelation(
+											dsTable, sourceRelation) ? this.schemaMods
+											.getCompoundRelation(dsTable,
+													sourceRelation)
+											: 1);
+							final int childCompounded = parentCompounded > 1 ? 1
+									: (this.schemaMods.isCompoundRelation(
+											dsTable, r) ? this.schemaMods
+											.getCompoundRelation(dsTable, r)
+											: 1);
+							// Follow the relation.
+							for (int k = 0; k < childCompounded; k++)
+								dimensionQ.add(new Object[] { newSourceDSCols,
+										r, new Integer(k) });
+							if (this.schemaMods.isMergedRelation(r))
+								forceFollowRelation = true;
+						}
 					}
-
-					else if (this.schemaMods.isConcatRelation(dsTable, r))
-						forceFollowRelation = true;
 
 					// Forcibly follow forced relations.
 					else if (this.schemaMods.isForceIncludeRelation(dsTable, r))
@@ -667,36 +676,46 @@ public class DataSet extends GenericSchema {
 							mergeTable) ? r.getSecondKey() : r.getFirstKey();
 					final Key sourceKey = r.getOtherKey(targetKey);
 					final List newSourceDSCols = new ArrayList();
-					for (final Iterator j = sourceKey.getColumnNames()
-							.iterator(); j.hasNext();)
-						newSourceDSCols.add(tu.getDataSetColumnFor((String) j
-								.next()));
-					// Repeat queueing of relation N times if compounded.
-					// Note that we only spin off one child per parent if
-					// the parent was compounded. If the child compound value
-					// is less than the parent, this results in only some
-					// nested compounding. If it is greater, only the parent
-					// value number of compounds appears.
-					final int parentCompounded = sourceRelation == null ? 1
-							: (this.schemaMods.isCompoundRelation(dsTable,
-									sourceRelation) ? this.schemaMods
-									.getCompoundRelation(dsTable,
-											sourceRelation) : 1);
-					final int childCompounded = parentCompounded > 1 ? 1
-							: (this.schemaMods.isCompoundRelation(dsTable, r) ? this.schemaMods
-									.getCompoundRelation(dsTable, r)
-									: 1);
-					for (int k = 0; k < childCompounded; k++)
-						normalQ
-								.add(new Object[] {
-										r,
-										newSourceDSCols,
-										targetKey.getTable(),
-										tu,
-										Boolean.valueOf(makeDimensions
-												&& (r.isOneToOne())
-												|| forceFollowRelation),
-										new Integer(k) });
+					boolean allUnmasked = true;
+					for (final Iterator j = sourceKey.getColumns().iterator(); j
+							.hasNext()
+							&& allUnmasked;) {
+						final DataSetColumn newCol = tu
+								.getDataSetColumnFor((Column) j.next());
+						newSourceDSCols.add(newCol);
+						allUnmasked &= !dsMods.isMaskedColumn(newCol)
+								&& !dsMods.isNonInheritedColumn(newCol);
+					}
+					// Don't follow relation if any of the
+					// source key columns have been masked.
+					if (allUnmasked) {
+						// Repeat queueing of relation N times if compounded.
+						// Note that we only spin off one child per parent if
+						// the parent was compounded. If the child compound
+						// value
+						// is less than the parent, this results in only some
+						// nested compounding. If it is greater, only the parent
+						// value number of compounds appears.
+						final int parentCompounded = sourceRelation == null ? 1
+								: (this.schemaMods.isCompoundRelation(dsTable,
+										sourceRelation) ? this.schemaMods
+										.getCompoundRelation(dsTable,
+												sourceRelation) : 1);
+						final int childCompounded = parentCompounded > 1 ? 1
+								: (this.schemaMods.isCompoundRelation(dsTable,
+										r) ? this.schemaMods
+										.getCompoundRelation(dsTable, r) : 1);
+						for (int k = 0; k < childCompounded; k++)
+							normalQ.add(new Object[] {
+									r,
+									newSourceDSCols,
+									targetKey.getTable(),
+									tu,
+									Boolean.valueOf(makeDimensions
+											&& (r.isOneToOne())
+											|| forceFollowRelation),
+									new Integer(k) });
+					}
 				}
 			}
 	}
@@ -862,7 +881,9 @@ public class DataSet extends GenericSchema {
 	 * available from this class.
 	 */
 	public static class DataSetColumn extends GenericColumn {
-		private boolean dependency;
+		private boolean keyDependency;
+
+		private boolean expressionDependency;
 
 		/**
 		 * This constructor gives the column a name.
@@ -881,7 +902,8 @@ public class DataSet extends GenericSchema {
 					+ this.getClass().getName());
 
 			// Set up default mask/partition values.
-			this.dependency = false;
+			this.keyDependency = false;
+			this.expressionDependency = false;
 		}
 
 		/**
@@ -893,7 +915,8 @@ public class DataSet extends GenericSchema {
 		public boolean isRequiredInterim() {
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
-			return this.dependency || !mods.isMaskedColumn(this);
+			return this.keyDependency || this.expressionDependency
+					|| !mods.isMaskedColumn(this);
 		}
 
 		/**
@@ -903,6 +926,8 @@ public class DataSet extends GenericSchema {
 		 * @return <tt>true</tt> if it is.
 		 */
 		public boolean isRequiredFinal() {
+			if (this.keyDependency)
+				return true;
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
 			// If appears in aliases on any group-by expression column
@@ -942,8 +967,41 @@ public class DataSet extends GenericSchema {
 		 *            it will be removed again after the dependency is
 		 *            satisified.
 		 */
-		public void setDependency(final boolean dependency) {
-			this.dependency = dependency;
+		public void setKeyDependency(final boolean dependency) {
+			this.keyDependency = dependency;
+		}
+
+		/**
+		 * Changes the dependency flag on this column.
+		 * 
+		 * @param dependency
+		 *            the new dependency flag. <tt>true</tt> indicates that
+		 *            this column is required for the fundamental structure of
+		 *            the dataset table to exist. The column will get selected
+		 *            regardless of it's masking flag. However, if it is masked,
+		 *            it will be removed again after the dependency is
+		 *            satisified.
+		 */
+		public void setExpressionDependency(final boolean dependency) {
+			this.expressionDependency = dependency;
+		}
+
+		/**
+		 * Is this column required as a dependency?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isKeyDependency() {
+			return this.keyDependency;
+		}
+
+		/**
+		 * Is this column required as a dependency?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isExpressionDependency() {
+			return this.expressionDependency;
 		}
 
 		/**

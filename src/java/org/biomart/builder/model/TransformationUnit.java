@@ -31,9 +31,12 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
+import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.InverseMap;
 
 /**
@@ -69,7 +72,7 @@ public abstract class TransformationUnit {
 		return new InverseMap(this.newColumnNameMap);
 	}
 
-	public abstract DataSetColumn getDataSetColumnFor(final String columnName);
+	public abstract DataSetColumn getDataSetColumnFor(final Column column);
 
 	public static class SelectFromTable extends TransformationUnit {
 		private final Table table;
@@ -88,8 +91,17 @@ public abstract class TransformationUnit {
 			return this.table;
 		}
 
-		public DataSetColumn getDataSetColumnFor(final String columnName) {
-			return (DataSetColumn) this.getNewColumnNameMap().get(columnName);
+		public DataSetColumn getDataSetColumnFor(final Column column) {
+			DataSetColumn candidate = (DataSetColumn) this
+					.getNewColumnNameMap().get(column.getName());
+			if (candidate == null)
+				candidate = (DataSetColumn) this.getNewColumnNameMap().get(
+						column.getName() + Resources.get("keySuffix"));
+			if (candidate != null)
+				return candidate;
+			else
+				// Should never happen.
+				throw new BioMartError();
 		}
 	}
 
@@ -129,20 +141,32 @@ public abstract class TransformationUnit {
 			return this.schemaRelationIteration;
 		}
 
-		public DataSetColumn getDataSetColumnFor(final String columnName) {
-			final DataSetColumn candidate = (DataSetColumn) this
-					.getNewColumnNameMap().get(columnName);
+		public DataSetColumn getDataSetColumnFor(final Column column) {
+			final String name = column.getName();
+			DataSetColumn candidate = this.getDataSetColumnFor(column, name);
+			if (candidate == null)
+				candidate = this.getDataSetColumnFor(column, name
+						+ Resources.get("keySuffix"));
+			if (candidate != null)
+				return candidate;
+			else
+				// Should never happen.
+				throw new BioMartError();
+		}
+
+		private DataSetColumn getDataSetColumnFor(final Column column, final String name) {
+			DataSetColumn candidate = (DataSetColumn) this
+					.getNewColumnNameMap().get(name);
 			if (candidate == null && this.getPreviousUnit() != null) {
 				final Key ourKey = this.schemaRelation.getFirstKey()
-						.getColumnNames().contains(columnName) ? this.schemaRelation
-						.getFirstKey()
-						: this.schemaRelation.getSecondKey();
+						.getColumns().contains(column) ? this.schemaRelation
+						.getFirstKey() : this.schemaRelation.getSecondKey();
 				final Key parentKey = this.schemaRelation.getOtherKey(ourKey);
-				final int pos = ourKey.getColumnNames().indexOf(columnName);
-				return this.getPreviousUnit().getDataSetColumnFor(
-						(String) parentKey.getColumnNames().get(pos));
-			} else
-				return candidate;
+				final int pos = ourKey.getColumns().indexOf(column);
+				candidate = this.getPreviousUnit().getDataSetColumnFor(
+						(Column) parentKey.getColumns().get(pos));
+			}
+			return candidate;
 		}
 	}
 
@@ -156,8 +180,12 @@ public abstract class TransformationUnit {
 			this.dsTable = dsTable;
 		}
 
-		public DataSetColumn getDataSetColumnFor(final String columnName) {
-			return (DataSetColumn) this.getNewColumnNameMap().get(columnName);
+		public DataSetColumn getDataSetColumnFor(final Column column) {
+			if (this.getPreviousUnit() != null)
+				return this.getPreviousUnit().getDataSetColumnFor(column);
+			else
+				// Should never happen.
+				throw new BioMartError();
 		}
 
 		public DataSetTable getDataSetTable() {

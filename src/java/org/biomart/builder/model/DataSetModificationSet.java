@@ -307,8 +307,8 @@ public class DataSetModificationSet {
 			final DataSetTable dsTable) {
 		final String tableKey = dsTable.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
-		return (PartitionedColumnDefinition) pcs.get(
-				this.getPartitionedColumnName(dsTable));
+		return (PartitionedColumnDefinition) pcs.get(this
+				.getPartitionedColumnName(dsTable));
 	}
 
 	public Map getPartitionedColumns() {
