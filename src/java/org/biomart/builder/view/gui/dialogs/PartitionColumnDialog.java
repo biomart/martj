@@ -298,7 +298,18 @@ public class PartitionColumnDialog extends JDialog {
 			if (type.equals(Resources.get("collectionPartitionOption"))) {
 				final String[] values = this.multiValue.getText().trim().split(
 						System.getProperty("line.separator"));
-				return new ValueCollection(Arrays.asList(values), this.nullable
+				// Check that none of the entries have non-allowable symbols
+				// or start/end in underscores.
+				boolean allOK = true;
+				for (int i = 0; i < values.length && allOK; i++) 
+					allOK = values[i].matches("^[^_]\\w+[^_]$");
+				// If there any messages, display them.
+				if (allOK || 
+					JOptionPane.showConfirmDialog(null,
+							Resources.get("partValueWithSpecialChar"), Resources
+									.get("questionTitle"),
+							JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+					return new ValueCollection(Arrays.asList(values), this.nullable
 						.isSelected());
 			}
 

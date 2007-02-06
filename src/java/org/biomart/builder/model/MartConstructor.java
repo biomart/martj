@@ -422,7 +422,7 @@ public interface MartConstructor {
 				// If was partitioned, do a final left join with the
 				// parent table in order to reinstate missing rows dropped
 				// by the inner join for the partition.
-				if (!partitionValue
+				if (partitionValue==null || !partitionValue
 						.equals(GenericConstructorRunnable.NO_PARTITION))
 					this.doPartitionLeftJoin(dataset, dsTable,
 							finalCombinedName, partitionValue,
@@ -1058,7 +1058,7 @@ public interface MartConstructor {
 			final StringBuffer sb = new StringBuffer();
 			sb.append(dsTable.getModifiedName());
 			sb.append(Resources.get("tablenameSubSep"));
-			if (!partitionValue.equals(GenericConstructorRunnable.NO_PARTITION)) {
+			if (partitionValue==null || !partitionValue.equals(GenericConstructorRunnable.NO_PARTITION)) {
 				sb.append(this.getSanitizedPartitionValue(partitionValue));
 				sb.append(Resources.get("tablenameSubSep"));
 			}
@@ -1074,8 +1074,8 @@ public interface MartConstructor {
 		}
 
 		private String getSanitizedPartitionValue(final String partitionValue) {
-			return partitionValue.replaceAll("\\W+", "_")
-					.replaceAll("__+", "_");
+			return (""+partitionValue).replaceAll("\\W+", "_")
+					.replaceAll("__+", "_").replaceAll("(^_+|_+$)", "");
 		}
 
 		private String getFinalName(final DataSetTable dsTable,
@@ -1091,7 +1091,7 @@ public interface MartConstructor {
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("subclassSuffix"));
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-				if (!partitionValue
+				if (partitionValue==null || !partitionValue
 						.equals(GenericConstructorRunnable.NO_PARTITION)) {
 					finalName.append(Resources.get("tablenameSubSep"));
 					// Substitute non-[char/number/underscore] symbols with
