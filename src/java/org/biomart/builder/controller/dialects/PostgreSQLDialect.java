@@ -447,16 +447,19 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String toOptTableName = action.getToOptTableName();
 		final String fromOptTableName = action.getFromOptTableName();
 		final String viaTableName = action.getViaTableName();
-		final String optColName = action.getOptColumnName();
+		final String fromOptColName = action.getFromOptColumnName();
+		final String toOptColName = action.getToOptColumnName();
 
 		statements.add("set search_path=" + schemaName + ",pg_catalog");
 
 		statements.add("alter table " + schemaName + "." + toOptTableName
-				+ " add " + optColName + " integer default 0");
+				+ " add " + toOptColName + " integer default 0");
+		
+		final String function = action.isCountNotBool() ? "sum":"max";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("update " + schemaName + "." + toOptTableName + " set "
-				+ optColName + "=(select max(b." + optColName + ") from "
+				+ toOptColName + "=(select "+function+"(b." + fromOptColName + ") from "
 				+ schemaName + "." + fromOptTableName + " b inner join "
 				+ schemaName + "." + viaTableName + " c on ");
 		for (final Iterator i = action.getFromKeyColumns().iterator(); i

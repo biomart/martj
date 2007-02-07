@@ -239,13 +239,17 @@ public class DataSet extends GenericSchema {
 					// Skip columns that are not in the primary key.
 					boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
-					boolean inSourceKey = parentDSCol instanceof WrappedColumn
+					DataSetColumn inhParentDSCol = parentDSCol;
+					while (inhParentDSCol instanceof InheritedColumn)
+						inhParentDSCol = ((InheritedColumn) inhParentDSCol)
+								.getInheritedColumn();
+					boolean inSourceKey = inhParentDSCol instanceof WrappedColumn
 							&& (sourceRelation.getFirstKey().getColumns()
 									.contains(
-											((WrappedColumn) parentDSCol)
+											((WrappedColumn) inhParentDSCol)
 													.getWrappedColumn()) || sourceRelation
 									.getSecondKey().getColumns().contains(
-											((WrappedColumn) parentDSCol)
+											((WrappedColumn) inhParentDSCol)
 													.getWrappedColumn()));
 					if (!inPK && !inSourceKey)
 						continue;

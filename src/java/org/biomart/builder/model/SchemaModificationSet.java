@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.ValidationException;
@@ -37,8 +38,8 @@ import org.biomart.common.resources.Resources;
  * This interface defines a set of modifications to a schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class SchemaModificationSet {
@@ -358,14 +359,18 @@ public class SchemaModificationSet {
 		return this.restrictedRelations;
 	}
 
-	public String nextConcatColumn(final DataSetTable table) {
-		final String tableKey = table.getName();
+	public String nextConcatColumn() {
+		final Set used = new HashSet();
+		for (final Iterator j = this.concatRelations.values().iterator(); j
+				.hasNext();)
+			for (final Iterator k = ((Map) j.next()).values().iterator(); k
+					.hasNext();)
+				for (final Iterator i = ((Map) k.next()).values().iterator(); i
+						.hasNext();)
+					used.add(((ConcatRelationDefinition) i.next()).getColKey());
 		int i = 1;
-		if (this.concatRelations.containsKey(tableKey))
-			while (((Map) this.concatRelations.get(tableKey))
-					.containsKey(Resources.get("concatColumnPrefix") + i)) {
-				i++;
-			}
+		while (used.contains(Resources.get("concatColumnPrefix") + i))
+			i++;
 		return Resources.get("concatColumnPrefix") + i;
 	}
 
@@ -581,9 +586,9 @@ public class SchemaModificationSet {
 		if (parentTable.equals(childTable))
 			throw new ValidationException(Resources
 					.get("subclassNotBetweenTwoTables"));
-		if (parentTable.getPrimaryKey()==null || childTable.getPrimaryKey()==null)
-			throw new ValidationException(Resources
-					.get("subclassTargetNoPK"));
+		if (parentTable.getPrimaryKey() == null
+				|| childTable.getPrimaryKey() == null)
+			throw new ValidationException(Resources.get("subclassTargetNoPK"));
 
 		// If there are no existing subclass relations, then we only
 		// need to test that either the parent or the child is the central
@@ -786,7 +791,8 @@ public class SchemaModificationSet {
 			for (final Iterator j = ((Map) entry.getValue()).entrySet()
 					.iterator(); j.hasNext();) {
 				final Map.Entry entry2 = (Map.Entry) j.next();
-				((Map) target.restrictedRelations.get(entry.getKey())).put(entry2.getKey(), new HashMap());
+				((Map) target.restrictedRelations.get(entry.getKey())).put(
+						entry2.getKey(), new HashMap());
 				((Map) ((Map) target.restrictedRelations.get(entry.getKey()))
 						.get(entry2.getKey())).putAll((Map) entry2.getValue());
 			}
@@ -802,7 +808,8 @@ public class SchemaModificationSet {
 			for (final Iterator j = ((Map) entry.getValue()).entrySet()
 					.iterator(); j.hasNext();) {
 				final Map.Entry entry2 = (Map.Entry) j.next();
-				((Map) target.concatRelations.get(entry.getKey())).put(entry2.getKey(), new HashMap());
+				((Map) target.concatRelations.get(entry.getKey())).put(entry2
+						.getKey(), new HashMap());
 				((Map) ((Map) target.concatRelations.get(entry.getKey()))
 						.get(entry2.getKey())).putAll((Map) entry2.getValue());
 			}

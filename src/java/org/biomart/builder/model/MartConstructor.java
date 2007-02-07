@@ -186,6 +186,8 @@ public interface MartConstructor {
 
 		private double percentComplete = 0.0;
 
+		private Map uniqueOptCols = new HashMap();
+
 		private String statusMessage = Resources.get("mcCreatingGraph");
 
 		/**
@@ -311,7 +313,11 @@ public interface MartConstructor {
 										tbl.getModifiedName(),
 										parentTable.getModifiedName() }));
 				}
-				// Expand the table
+				// Expand the table. We need to insert each one directly
+				// after its parent table and before any subsequent
+				// subclass table. This ensures that by the time the subclass
+				// table is created, the parent table will have all its
+				// columns in place and complete already.
 				for (final Iterator j = tbl.getRelations().iterator(); j
 						.hasNext();) {
 					final Relation r = (Relation) j.next();
@@ -320,7 +326,7 @@ public interface MartConstructor {
 					if (!tablesToProcess.contains(dsTab)
 							&& !dataset.getDataSetModifications()
 									.isMaskedTable(dsTab))
-						tablesToProcess.add(dsTab);
+						tablesToProcess.add(i + 1, dsTab);
 				}
 			}
 			return tablesToProcess;
@@ -422,8 +428,9 @@ public interface MartConstructor {
 				// If was partitioned, do a final left join with the
 				// parent table in order to reinstate missing rows dropped
 				// by the inner join for the partition.
-				if (partitionValue==null || !partitionValue
-						.equals(GenericConstructorRunnable.NO_PARTITION))
+				if (partitionValue == null
+						|| !partitionValue
+								.equals(GenericConstructorRunnable.NO_PARTITION))
 					this.doPartitionLeftJoin(dataset, dsTable,
 							finalCombinedName, partitionValue,
 							previousTempTables, tempName + tempNameCount++);
@@ -443,7 +450,8 @@ public interface MartConstructor {
 									this.datasetSchemaName, finalCombinedName);
 							index.setTable((String) previousTempTables
 									.get(partitionValue));
-							index.setColumns(Collections.singletonList(col.getModifiedName()));
+							index.setColumns(Collections.singletonList(col
+									.getModifiedName()));
 							this.issueAction(index);
 						}
 					}
@@ -575,10 +583,6 @@ public interface MartConstructor {
 					this.issueAction(index);
 				}
 			} else {
-				// Columns are dimension table names with '_bool' or
-				// '_count' appended.
-				final String optCol = this.getOptimiserColumnName(dsTable,
-						partitionValue, oType);
 				// Work out the dimension parent.
 				final DataSetTable parent = (DataSetTable) ((Relation) dsTable
 						.getRelations().iterator().next()).getOneKey()
@@ -586,6 +590,10 @@ public interface MartConstructor {
 				// Set up the column on the dimension parent.
 				final String optTable = this.getOptimiserTableName(parent,
 						oType);
+				// Columns are dimension table names with '_bool' or
+				// '_count' appended.
+				final String optCol = this.getOptimiserColumnName(parent,
+						dsTable, partitionValue, oType);
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
 				// where all child non-key cols are non-null.
@@ -665,7 +673,10 @@ public interface MartConstructor {
 					copy.setToKeyColumns(toKeyCols);
 					copy.setToOptTableName(this.getOptimiserTableName(toParent,
 							oType));
-					copy.setOptColumnName(optCol);
+					copy.setFromOptColumnName(optCol);
+					copy.setToOptColumnName(this.getOptimiserColumnName(
+							toParent, dsTable, partitionValue, oType));
+					copy.setCountNotBool(!oType.isBool());
 					this.issueAction(copy);
 
 					// Index the copied column if required.
@@ -715,6 +726,16 @@ public interface MartConstructor {
 											.getModifiedName()
 											: entry.getKey(), col
 											.getModifiedName());
+			}
+			// Add to selectCols all the inherited has columns.
+			if (sourceTable instanceof DataSetTable) {
+				final Collection hasCols = (Collection) this.uniqueOptCols
+						.get(sourceTable);
+				if (hasCols != null)
+					for (final Iterator k = hasCols.iterator(); k.hasNext();) {
+						final String hasCol = (String) k.next();
+						selectCols.put(hasCol, hasCol);
+					}
 			}
 			// Do the select.
 			final Select action = new Select(this.datasetSchemaName,
@@ -1053,29 +1074,48 @@ public interface MartConstructor {
 			return finalName.toString().replaceAll("\\W", "");
 		}
 
-		private String getOptimiserColumnName(final DataSetTable dsTable,
-				final String partitionValue, final DataSetOptimiserType oType) {
-			final StringBuffer sb = new StringBuffer();
-			sb.append(dsTable.getModifiedName());
-			sb.append(Resources.get("tablenameSubSep"));
-			if (partitionValue==null || !partitionValue.equals(GenericConstructorRunnable.NO_PARTITION)) {
-				sb.append(this.getSanitizedPartitionValue(partitionValue));
+		private String getOptimiserColumnName(final DataSetTable parent,
+				final DataSetTable dsTable, final String partitionValue,
+				final DataSetOptimiserType oType) {
+			// Set up storage for unique names if required.
+			if (!this.uniqueOptCols.containsKey(parent))
+				uniqueOptCols.put(parent, new HashSet());
+			// Make a unique name.
+			int counter = -1;
+			String name;
+			do {
+				final StringBuffer sb = new StringBuffer();
+				sb.append(dsTable.getModifiedName());
 				sb.append(Resources.get("tablenameSubSep"));
-			}
-			sb
-					.append((oType.equals(DataSetOptimiserType.COLUMN_BOOL)
-							|| oType
-									.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
-							|| oType.equals(DataSetOptimiserType.TABLE_BOOL) || oType
-							.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) ? Resources
-							.get("boolColSuffix")
-							: Resources.get("countColSuffix"));
-			return sb.toString();
+				if (partitionValue == null
+						|| !partitionValue
+								.equals(GenericConstructorRunnable.NO_PARTITION)) {
+					sb.append(this.getSanitizedPartitionValue(partitionValue));
+					sb.append(Resources.get("tablenameSubSep"));
+				}
+				if (++counter > 0) {
+					sb.append("" + counter);
+					sb.append(Resources.get("tablenameSubSep"));
+				}
+				sb
+						.append((oType.equals(DataSetOptimiserType.COLUMN_BOOL)
+								|| oType
+										.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
+								|| oType
+										.equals(DataSetOptimiserType.TABLE_BOOL) || oType
+								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) ? Resources
+								.get("boolColSuffix")
+								: Resources.get("countColSuffix"));
+				name = sb.toString();
+			} while (((Collection) uniqueOptCols.get(parent)).contains(name));
+			// Store the name above in the unique list for the parent.
+			((Collection) uniqueOptCols.get(parent)).add(name);
+			return name;
 		}
 
 		private String getSanitizedPartitionValue(final String partitionValue) {
-			return (""+partitionValue).replaceAll("\\W+", "_")
-					.replaceAll("__+", "_").replaceAll("(^_+|_+$)", "");
+			return ("" + partitionValue).replaceAll("\\W+", "_").replaceAll(
+					"__+", "_").replaceAll("(^_+|_+$)", "");
 		}
 
 		private String getFinalName(final DataSetTable dsTable,
@@ -1091,8 +1131,9 @@ public interface MartConstructor {
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("subclassSuffix"));
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-				if (partitionValue==null || !partitionValue
-						.equals(GenericConstructorRunnable.NO_PARTITION)) {
+				if (partitionValue == null
+						|| !partitionValue
+								.equals(GenericConstructorRunnable.NO_PARTITION)) {
 					finalName.append(Resources.get("tablenameSubSep"));
 					// Substitute non-[char/number/underscore] symbols with
 					// underscores, and replace multiple underscores with

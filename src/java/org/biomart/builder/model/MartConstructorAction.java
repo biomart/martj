@@ -99,13 +99,17 @@ public abstract class MartConstructorAction {
 
 		private String toOptTableName;
 
-		private String optColumnName;
+		private String fromOptColumnName;
+
+		private String toOptColumnName;
 
 		private List fromKeyColumns;
 
 		private List toKeyColumns;
 
 		private String viaTableName;
+		
+		private boolean countNotBool;
 
 		/**
 		 * Creates a new CopyOptimiser action.
@@ -141,16 +145,16 @@ public abstract class MartConstructorAction {
 		/**
 		 * @return the optColumnName
 		 */
-		public String getOptColumnName() {
-			return optColumnName;
+		public String getFromOptColumnName() {
+			return fromOptColumnName;
 		}
 
 		/**
 		 * @param optColumnName
 		 *            the optColumnName to set
 		 */
-		public void setOptColumnName(String optColumnName) {
-			this.optColumnName = optColumnName;
+		public void setFromOptColumnName(String optColumnName) {
+			this.fromOptColumnName = optColumnName;
 		}
 
 		/**
@@ -211,6 +215,34 @@ public abstract class MartConstructorAction {
 		 */
 		public void setViaTableName(String viaTableName) {
 			this.viaTableName = viaTableName;
+		}
+
+		/**
+		 * @return the countNotBool
+		 */
+		public boolean isCountNotBool() {
+			return countNotBool;
+		}
+
+		/**
+		 * @param countNotBool the countNotBool to set
+		 */
+		public void setCountNotBool(boolean countNotBool) {
+			this.countNotBool = countNotBool;
+		}
+
+		/**
+		 * @return the toOptColumnName
+		 */
+		public String getToOptColumnName() {
+			return toOptColumnName;
+		}
+
+		/**
+		 * @param toOptColumnName the toOptColumnName to set
+		 */
+		public void setToOptColumnName(String toOptColumnName) {
+			this.toOptColumnName = toOptColumnName;
 		}
 	}
 

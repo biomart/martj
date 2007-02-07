@@ -710,7 +710,7 @@ public class MartBuilderUtils {
 		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(
 				expression, aliases, groupBy, def == null ? ((DataSet) dsTable
 						.getSchema()).getDataSetModifications()
-						.nextExpressionColumn(dsTable) : def.getColKey());
+						.nextExpressionColumn() : def.getColKey());
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.setExpressionColumn(dsTable, expr);
 		((DataSet) dsTable.getSchema()).synchronise();

@@ -315,14 +315,16 @@ public class DataSetModificationSet {
 		return this.partitionedColumns;
 	}
 
-	public String nextExpressionColumn(final DataSetTable table) {
-		final String tableKey = table.getName();
+	public String nextExpressionColumn() {
+		final Set used = new HashSet();
+		for (final Iterator j = this.expressionColumns.values().iterator(); j
+				.hasNext();)
+			for (final Iterator i = ((Collection) j.next()).iterator(); i
+					.hasNext();)
+				used.add(((ExpressionColumnDefinition) i.next()).getColKey());
 		int i = 1;
-		if (this.expressionColumns.containsKey(tableKey))
-			while (((Map) this.expressionColumns.get(tableKey))
-					.containsKey(Resources.get("expressionColumnPrefix") + i)) {
-				i++;
-			}
+		while (used.contains(Resources.get("expressionColumnPrefix") + i))
+			i++;
 		return Resources.get("expressionColumnPrefix") + i;
 	}
 
