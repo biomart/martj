@@ -42,6 +42,7 @@ import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefiniti
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
@@ -352,21 +353,22 @@ public interface MartConstructor {
 				final TransformationUnit tu = (TransformationUnit) j.next();
 
 				// Partitioned column from this unit? Then partition it.
-				final String delayedTempDrop;
+				String delayedTempDrop = null;
+				PartitionedColumnDefinition pc = null;
 				if (dataset.getDataSetModifications().isPartitionedTable(
 						dsTable)) {
+					pc = dataset
+					.getDataSetModifications().getPartitionedColumnDef(
+							dsTable);
 					final DataSetColumn partCol = (DataSetColumn) dsTable
 							.getColumnByName(dataset.getDataSetModifications()
 									.getPartitionedColumnName(dsTable));
 					if (tu.getNewColumnNameMap().containsValue(partCol))
-						delayedTempDrop = this.populatePartitionValues(dataset
-								.getDataSetModifications()
-								.getPartitionedColumnDef(dsTable), partCol,
-								partitionValues, previousTempTables);
+						delayedTempDrop = this.populatePartitionValues(pc,
+								partCol, partitionValues, previousTempTables);
 					else
-						delayedTempDrop = null;
-				} else
-					delayedTempDrop = null;
+						pc = null;
+				}
 
 				// Do unit once per partition.
 				for (final Iterator v = partitionValues.iterator(); v.hasNext();) {
@@ -385,14 +387,13 @@ public interface MartConstructor {
 					// Left-join?
 					else if (tu instanceof JoinTable)
 						this.doJoinTable(dataset, dsTable, (JoinTable) tu,
-								previousTempTables, delayedTempDrop != null,
-								partitionValue, tempTable);
+								previousTempTables, pc, partitionValue,
+								tempTable);
 					// Select-from?
 					else if (tu instanceof SelectFromTable)
 						this.doSelectFromTable(dataset, dsTable,
-								(SelectFromTable) tu, previousTempTables,
-								delayedTempDrop != null, partitionValue,
-								tempTable);
+								(SelectFromTable) tu, previousTempTables, pc,
+								partitionValue, tempTable);
 					else
 						throw new BioMartError();
 
@@ -694,7 +695,8 @@ public interface MartConstructor {
 
 		private void doSelectFromTable(final DataSet dataset,
 				final DataSetTable dsTable, final SelectFromTable stu,
-				final Map previousTempTables, final boolean doPartition,
+				final Map previousTempTables,
+				final PartitionedColumnDefinition pc,
 				final String partitionValue, final String tempTable)
 				throws Exception {
 
@@ -744,12 +746,14 @@ public interface MartConstructor {
 			action.setTable(table);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
-			if (doPartition) {
+			if (pc != null) {
 				action.setPartitionColumn((String) stu
 						.getReverseNewColumnNameMap().get(
 								dsTable.getColumnByName(dataset
 										.getDataSetModifications()
 										.getPartitionedColumnName(dsTable))));
+				if (pc instanceof ValueRange)
+					action.setPartitionRangeDef((ValueRange) pc);
 				action.setPartitionValue(partitionValue);
 			}
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
@@ -851,7 +855,8 @@ public interface MartConstructor {
 
 		private void doJoinTable(final DataSet dataset,
 				final DataSetTable dsTable, final JoinTable ljtu,
-				final Map previousTempTables, final boolean doPartition,
+				final Map previousTempTables,
+				final PartitionedColumnDefinition pc,
 				final String partitionValue, final String tempTable)
 				throws Exception {
 			final String finalCombinedName = this.getFinalName(dsTable,
@@ -893,12 +898,14 @@ public interface MartConstructor {
 			action.setRightJoinColumns(rightJoinCols);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
-			if (doPartition) {
+			if (pc != null) {
 				action.setPartitionColumn((String) ljtu
 						.getReverseNewColumnNameMap().get(
 								dsTable.getColumnByName(dataset
 										.getDataSetModifications()
 										.getPartitionedColumnName(dsTable))));
+				if (pc instanceof ValueRange)
+					action.setPartitionRangeDef((ValueRange) pc);
 				action.setPartitionValue(partitionValue);
 			}
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
@@ -1026,7 +1033,8 @@ public interface MartConstructor {
 				partitionValues.addAll(this.helper
 						.listDistinctValues(((WrappedColumn) col)
 								.getWrappedColumn()));
-			}
+			} else if (pc instanceof ValueRange)
+				partitionValues.addAll(((ValueRange) pc).getRanges().keySet());
 			final String delayedTempDrop = (String) previousTempTables
 					.get(GenericConstructorRunnable.NO_PARTITION);
 			for (final Iterator z = partitionValues.iterator(); z.hasNext();)

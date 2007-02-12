@@ -68,59 +68,6 @@ public class OracleDialect extends DatabaseDialect {
 
 	private int indexCount;
 
-	/*
-	 * public void doConcat(final Concat action, final List statements) { final
-	 * String srcSchemaName = action.getSourceTableSchema() == null ? action
-	 * .getDataSetSchemaName() : ((JDBCSchema) action.getSourceTableSchema())
-	 * .getDatabaseSchema(); final String srcTableName =
-	 * action.getSourceTableName(); final List srcTableKeyCols =
-	 * action.getSourceTablePKColumns(); final String trgtSchemaName =
-	 * action.getConcatTableSchema() == null ? action .getDataSetSchemaName() :
-	 * ((JDBCSchema) action.getConcatTableSchema()) .getDatabaseSchema(); final
-	 * String trgtTableName = action.getConcatTableName(); final String
-	 * trgtColName = action.getTargetTableConcatColumnName(); final String
-	 * concatSchemaName = action.getTargetTableSchema() == null ? action
-	 * .getDataSetSchemaName() : ((JDBCSchema) action.getTargetTableSchema())
-	 * .getDatabaseSchema(); final String concatTableName =
-	 * action.getTargetTableName(); final String columnSep =
-	 * action.getColumnSeparator(); final String recordSep =
-	 * action.getRecordSeparator(); final boolean firstIsSource =
-	 * action.isFirstTableSourceTable();
-	 * 
-	 * final StringBuffer sb = new StringBuffer(); // If we haven't defined the
-	 * group_concat function yet, define it. // Note limitation of total 32767
-	 * characters for group_concat result. if
-	 * (!OracleDialect.GROUP_CONCAT_CREATED) { final BufferedReader br = new
-	 * BufferedReader( new InputStreamReader( Resources
-	 * .getResourceAsStream("ora_group_concat.sql"))); try { String line; while
-	 * ((line = br.readLine()) != null) { sb.append(line);
-	 * sb.append(System.getProperty("line.separator")); } } catch (final
-	 * IOException e) { throw new BioMartError(e); }
-	 * OracleDialect.GROUP_CONCAT_CREATED = true; }
-	 * 
-	 * sb.append("create table " + concatSchemaName + "." + concatTableName + "
-	 * as select a.*, group_concat(concat_expr("); for (final Iterator i =
-	 * action.getConcatTableConcatColumns().iterator(); i .hasNext();) { final
-	 * Column col = (Column) i.next(); sb.append(col.getName()); if
-	 * (i.hasNext()) { sb.append("||'"); sb.append(columnSep); sb.append("'||"); } }
-	 * sb.append(",'"); sb.append(recordSep); sb.append("')) as ");
-	 * sb.append(trgtColName);
-	 * 
-	 * sb.append(" from " + srcSchemaName + "." + srcTableName + " a inner join " +
-	 * trgtSchemaName + "." + trgtTableName + " b on "); for (int i = 0; i <
-	 * action.getConcatTableFKColumns().size(); i++) { if (i > 0) sb.append("
-	 * and "); final String pkColName = ((Column)
-	 * action.getSourceTablePKColumns() .get(i)).getName(); final String
-	 * fkColName = ((Column) action.getConcatTableFKColumns()
-	 * .get(i)).getName(); sb.append("a." + pkColName + "=b." + fkColName + ""); } //
-	 * Do group-by. sb.append(" group by "); for (final Iterator i =
-	 * srcTableKeyCols.iterator(); i.hasNext();) { final Column srcKeyCol =
-	 * (Column) i.next(); sb.append("a."); sb.append(srcKeyCol.getName()); if
-	 * (i.hasNext()) sb.append(','); }
-	 * 
-	 * statements.add(sb.toString()); }
-	 */
-
 	public void doConcatJoin(final ConcatJoin action, final List statements)
 			throws Exception {
 		final String srcSchemaName = action.getDataSetSchemaName();
@@ -243,14 +190,22 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(" and ");
 			else
 				sb.append(" where ");
-			sb.append(" a.");
-			sb.append(action.getPartitionColumn());
-			if (action.getPartitionValue() == null)
-				sb.append(" is null");
+			if (action.getPartitionRangeDef() != null)
+				sb.append(action.getPartitionRangeDef()
+						.getSubstitutedExpression(action.getPartitionValue(),
+								"a", action.getPartitionColumn()));
 			else {
-				sb.append("='");
-				sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
-				sb.append('\'');
+				sb.append("a.");
+				sb.append(action.getPartitionColumn());
+				if (action.getPartitionValue() == null)
+					sb.append(" is null");
+				else {
+					sb.append("='");
+					sb
+							.append(action.getPartitionValue().replaceAll("'",
+									"\\'"));
+					sb.append('\'');
+				}
 			}
 		}
 
@@ -362,14 +317,23 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append(')');
 		}
 		if (action.getPartitionColumn() != null) {
-			sb.append(" and b.");
-			sb.append(action.getPartitionColumn());
-			if (action.getPartitionValue() == null)
-				sb.append(" is null");
+			sb.append(" and ");
+			if (action.getPartitionRangeDef() != null)
+				sb.append(action.getPartitionRangeDef()
+						.getSubstitutedExpression(action.getPartitionValue(),
+								"b", action.getPartitionColumn()));
 			else {
-				sb.append("='");
-				sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
-				sb.append('\'');
+				sb.append("b.");
+				sb.append(action.getPartitionColumn());
+				if (action.getPartitionValue() == null)
+					sb.append(" is null");
+				else {
+					sb.append("='");
+					sb
+							.append(action.getPartitionValue().replaceAll("'",
+									"\\'"));
+					sb.append('\'');
+				}
 			}
 		}
 
@@ -507,14 +471,15 @@ public class OracleDialect extends DatabaseDialect {
 
 		statements.add("alter table " + schemaName + "." + toOptTableName
 				+ " add (" + toOptColName + " number default 0)");
-		
-		final String function = action.isCountNotBool() ? "sum":"max";
+
+		final String function = action.isCountNotBool() ? "sum" : "max";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("update " + schemaName + "." + toOptTableName + " a set "
-				+ toOptColName + "=(select "+function+"(b." + fromOptColName + ") from "
-				+ schemaName + "." + fromOptTableName + " b inner join "
-				+ schemaName + "." + viaTableName + " c on ");
+				+ toOptColName + "=(select " + function + "(b."
+				+ fromOptColName + ") from " + schemaName + "."
+				+ fromOptTableName + " b inner join " + schemaName + "."
+				+ viaTableName + " c on ");
 		for (final Iterator i = action.getFromKeyColumns().iterator(); i
 				.hasNext();) {
 			final String keyCol = (String) i.next();

@@ -104,10 +104,12 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ELEMENT partitionedColumn EMPTY>
 <!ATTLIST partitionedColumn tableKey CDATA #REQUIRED>
 <!ATTLIST partitionedColumn colKey CDATA #REQUIRED>
-<!ATTLIST partitionedColumn partitionType (null|uniqueValues|valueCollection) #IMPLIED>
+<!ATTLIST partitionedColumn partitionType (null|uniqueValues|valueCollection|valueRange) #IMPLIED>
 <!ATTLIST partitionedColumn partitionUseNull (true|false) #IMPLIED>
 <!ATTLIST partitionedColumn partitionValue CDATA #IMPLIED>
 <!ATTLIST partitionedColumn partitionValues CDATA #IMPLIED>
+<!ATTLIST partitionedColumn rangeNames CDATA #IMPLIED>
+<!ATTLIST partitionedColumn rangeExpressions CDATA #IMPLIED>
 
 <!ELEMENT maskedRelation EMPTY>
 <!ATTLIST maskedRelation tableKey CDATA #REQUIRED>

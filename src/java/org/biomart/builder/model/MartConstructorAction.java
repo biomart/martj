@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -603,15 +604,17 @@ public abstract class MartConstructorAction {
 
 		private String resultTable;
 
-		private RestrictedTableDefinition restrictedTableDefinition;
+		private RestrictedTableDefinition tableRestriction;
 
-		private RestrictedRelationDefinition restrictedRelationDefinition;
+		private RestrictedRelationDefinition relationRestriction;
 
 		private boolean relationRestrictionLeftIsFirst;
 
 		private String partitionColumn;
 
 		private String partitionValue;
+		
+		private ValueRange partitionRangeDef;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -738,16 +741,16 @@ public abstract class MartConstructorAction {
 		 * @return the tableRestriction
 		 */
 		public RestrictedTableDefinition getTableRestriction() {
-			return restrictedTableDefinition;
+			return tableRestriction;
 		}
 
 		/**
-		 * @param restrictedTableDefinition
+		 * @param tableRestriction
 		 *            the tableRestriction to set
 		 */
 		public void setTableRestriction(
-				RestrictedTableDefinition restrictedTableDefinition) {
-			this.restrictedTableDefinition = restrictedTableDefinition;
+				RestrictedTableDefinition tableRestriction) {
+			this.tableRestriction = tableRestriction;
 		}
 
 		/**
@@ -784,16 +787,16 @@ public abstract class MartConstructorAction {
 		 * @return the relationRestriction
 		 */
 		public RestrictedRelationDefinition getRelationRestriction() {
-			return restrictedRelationDefinition;
+			return relationRestriction;
 		}
 
 		/**
-		 * @param restrictedRelationDefinition
+		 * @param relationRestriction
 		 *            the relationRestriction to set
 		 */
 		public void setRelationRestriction(
-				RestrictedRelationDefinition restrictedRelationDefinition) {
-			this.restrictedRelationDefinition = restrictedRelationDefinition;
+				RestrictedRelationDefinition relationRestriction) {
+			this.relationRestriction = relationRestriction;
 		}
 
 		/**
@@ -810,6 +813,20 @@ public abstract class MartConstructorAction {
 		public void setRelationRestrictionLeftIsFirst(
 				boolean relationRestrictionLeftIsFirst) {
 			this.relationRestrictionLeftIsFirst = relationRestrictionLeftIsFirst;
+		}
+
+		/**
+		 * @return the partitionRangeDef
+		 */
+		public ValueRange getPartitionRangeDef() {
+			return partitionRangeDef;
+		}
+
+		/**
+		 * @param partitionRangeDef the partitionRangeDef to set
+		 */
+		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
+			this.partitionRangeDef = partitionRangeDef;
 		}
 	}
 
@@ -1144,11 +1161,13 @@ public abstract class MartConstructorAction {
 
 		private String resultTable;
 
-		private RestrictedTableDefinition restrictedTableDefinition;
+		private RestrictedTableDefinition tableRestriction;
 
 		private String partitionColumn;
 
 		private String partitionValue;
+		
+		private ValueRange partitionRangeDef;
 
 		/**
 		 * Creates a new Select action.
@@ -1230,16 +1249,16 @@ public abstract class MartConstructorAction {
 		 * @return the tableRestriction
 		 */
 		public RestrictedTableDefinition getTableRestriction() {
-			return restrictedTableDefinition;
+			return tableRestriction;
 		}
 
 		/**
-		 * @param restrictedTableDefinition
+		 * @param tableRestriction
 		 *            the tableRestriction to set
 		 */
 		public void setTableRestriction(
-				RestrictedTableDefinition restrictedTableDefinition) {
-			this.restrictedTableDefinition = restrictedTableDefinition;
+				RestrictedTableDefinition tableRestriction) {
+			this.tableRestriction = tableRestriction;
 		}
 
 		/**
@@ -1270,6 +1289,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setPartitionValue(String partitionValue) {
 			this.partitionValue = partitionValue;
+		}
+
+		/**
+		 * @return the partitionRangeDef
+		 */
+		public ValueRange getPartitionRangeDef() {
+			return partitionRangeDef;
+		}
+
+		/**
+		 * @param partitionRangeDef the partitionRangeDef to set
+		 */
+		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
+			this.partitionRangeDef = partitionRangeDef;
 		}
 	}
 

@@ -48,6 +48,7 @@ import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefiniti
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -595,8 +596,8 @@ public class MartBuilderXML extends DefaultHandler {
 					.getName(), xmlWriter);
 			this.writeAttribute("invisible", Boolean
 					.toString(ds.getInvisible()), xmlWriter);
-			this.writeAttribute("indexOptimiser", Boolean
-					.toString(ds.isIndexOptimiser()), xmlWriter);
+			this.writeAttribute("indexOptimiser", Boolean.toString(ds
+					.isIndexOptimiser()), xmlWriter);
 
 			// Get schema and dataset mods.
 			final SchemaModificationSet schemaMods = ds
@@ -694,7 +695,8 @@ public class MartBuilderXML extends DefaultHandler {
 					final PartitionedColumnDefinition pc = (PartitionedColumnDefinition) entry2
 							.getValue();
 					final String pcType = (pc instanceof ValueCollection) ? "valueCollection"
-									: "uniqueValues";
+							: (pc instanceof ValueRange ? "valueRange"
+									: "uniqueValues");
 					this.openElement("partitionedColumn", xmlWriter);
 					this.writeAttribute("tableKey", (String) entry.getKey(),
 							xmlWriter);
@@ -710,6 +712,15 @@ public class MartBuilderXML extends DefaultHandler {
 										.toArray(new String[0]), xmlWriter);
 					} else if (pc instanceof UniqueValues) {
 						// Nothing extra needed for unique values.
+					} else if (pc instanceof ValueRange) {
+						this.writeListAttribute("rangeNames",
+								(String[]) ((ValueRange) pc).getRanges()
+										.keySet().toArray(new String[0]),
+								xmlWriter);
+						this.writeListAttribute("rangeExpressions",
+								(String[]) ((ValueRange) pc).getRanges()
+										.values().toArray(new String[0]),
+								xmlWriter);
 					}
 					this.closeElement("partitionedColumn", xmlWriter);
 				}
@@ -1082,7 +1093,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// per file, as if more than one is found, the later tags
 			// will override the earlier ones.
 			final Mart mart = new Mart();
-			mart.setOutputSchema((String)attributes.get("outputSchema"));
+			mart.setOutputSchema((String) attributes.get("outputSchema"));
 			element = this.constructedMart = mart;
 		}
 
@@ -1550,6 +1561,21 @@ public class MartBuilderXML extends DefaultHandler {
 							includeNull);
 				} else if ("uniqueValues".equals(partitionType))
 					resolvedPartitionType = new UniqueValues();
+				else if ("valueRange".equals(partitionType)) {
+					final List rangeNames = new ArrayList();
+					rangeNames.addAll(Arrays.asList(this
+							.readListAttribute((String) attributes
+									.get("rangeNames"))));
+					final List rangeExpressions = new ArrayList();
+					rangeExpressions.addAll(Arrays.asList(this
+							.readListAttribute((String) attributes
+									.get("rangeExpressions"))));
+					// Make the range collection.
+					final Map ranges = new HashMap();
+					for (int i = 0; i < rangeNames.size(); i++)
+						ranges.put(rangeNames.get(i), rangeExpressions.get(i));
+					resolvedPartitionType = new ValueRange(ranges);
+				}
 				else
 					throw new SAXException(Resources.get(
 							"unknownPartitionColumnType", partitionType));
@@ -1621,7 +1647,6 @@ public class MartBuilderXML extends DefaultHandler {
 				throw new SAXException(e);
 			}
 		}
-
 
 		// Renamed table (inside dataset).
 		else if ("renamedTable".equals(eName)) {
@@ -1915,7 +1940,8 @@ public class MartBuilderXML extends DefaultHandler {
 						.get(attributes.get("centralTableId"));
 				final String optType = (String) attributes.get("optimiser");
 				final boolean index = Boolean.valueOf(
-						(String) attributes.get("indexOptimiser")).booleanValue();
+						(String) attributes.get("indexOptimiser"))
+						.booleanValue();
 
 				// Construct the dataset.
 				final DataSet ds = new DataSet(this.constructedMart,

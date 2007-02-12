@@ -39,8 +39,8 @@ import org.biomart.common.resources.Resources;
  * This interface defines a set of modifications to a schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class DataSetModificationSet {
@@ -468,6 +468,63 @@ public class DataSetModificationSet {
 			public String toString() {
 				return "ValueCollection:"
 						+ (this.values == null ? "<undef>" : this.values
+								.toString());
+			}
+		}
+
+		/**
+		 * Use this class to partition on a range of values - ie. only columns
+		 * which fit one of these ranges will be returned.
+		 */
+		public static class ValueRange implements PartitionedColumnDefinition {
+			private Map ranges = new HashMap();
+
+			/**
+			 * The constructor specifies the ranges to partition on. Duplicate
+			 * values will be ignored. Keys of the range are names for the
+			 * ranges. Values are range expressions where :col represents the
+			 * name of the column.
+			 * 
+			 * @param ranges
+			 *            the set of unique ranges to partition on.
+			 */
+			public ValueRange(final Map ranges) {
+				this.ranges = new HashMap();
+				this.ranges.putAll(ranges);
+			}
+
+			public boolean equals(final Object o) {
+				if (o == null || !(o instanceof ValueRange))
+					return false;
+				final ValueRange vc = (ValueRange) o;
+				return vc.getRanges().equals(this.ranges);
+			}
+
+			/**
+			 * Returns the set of values we will partition on. May be empty but
+			 * never null.
+			 * 
+			 * @return the values we will partition on.
+			 */
+			public Map getRanges() {
+				return this.ranges;
+			}
+
+			public String getSubstitutedExpression(final String name,
+					final String alias, final String colName) {
+				return ((String) this.ranges.get(name)).replaceAll(":col",
+						alias + "." + colName);
+			}
+
+			/**
+			 * {@inheritDoc}
+			 * <p>
+			 * This will return "ValueRange:" suffixed with the output of
+			 * {@link #getRanges()}.
+			 */
+			public String toString() {
+				return "ValueRange:"
+						+ (this.ranges == null ? "<undef>" : this.ranges
 								.toString());
 			}
 		}

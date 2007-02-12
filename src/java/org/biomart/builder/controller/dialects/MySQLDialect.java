@@ -176,14 +176,22 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(" and ");
 			else
 				sb.append(" where ");
-			sb.append(" a.");
-			sb.append(action.getPartitionColumn());
-			if (action.getPartitionValue() == null)
-				sb.append(" is null");
+			if (action.getPartitionRangeDef() != null)
+				sb.append(action.getPartitionRangeDef()
+						.getSubstitutedExpression(action.getPartitionValue(),
+								"a", action.getPartitionColumn()));
 			else {
-				sb.append("='");
-				sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
-				sb.append('\'');
+				sb.append("a.");
+				sb.append(action.getPartitionColumn());
+				if (action.getPartitionValue() == null)
+					sb.append(" is null");
+				else {
+					sb.append("='");
+					sb
+							.append(action.getPartitionValue().replaceAll("'",
+									"\\'"));
+					sb.append('\'');
+				}
 			}
 		}
 
@@ -294,14 +302,23 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(')');
 		}
 		if (action.getPartitionColumn() != null) {
-			sb.append(" and b.");
-			sb.append(action.getPartitionColumn());
-			if (action.getPartitionValue() == null)
-				sb.append(" is null");
+			sb.append(" and ");
+			if (action.getPartitionRangeDef() != null)
+				sb.append(action.getPartitionRangeDef()
+						.getSubstitutedExpression(action.getPartitionValue(),
+								"b", action.getPartitionColumn()));
 			else {
-				sb.append("='");
-				sb.append(action.getPartitionValue().replaceAll("'", "\\'"));
-				sb.append('\'');
+				sb.append("b.");
+				sb.append(action.getPartitionColumn());
+				if (action.getPartitionValue() == null)
+					sb.append(" is null");
+				else {
+					sb.append("='");
+					sb
+							.append(action.getPartitionValue().replaceAll("'",
+									"\\'"));
+					sb.append('\'');
+				}
 			}
 		}
 
@@ -435,14 +452,15 @@ public class MySQLDialect extends DatabaseDialect {
 
 		statements.add("alter table " + schemaName + "." + toOptTableName
 				+ " add column (" + toOptColName + " integer default 0)");
-		
-		final String function = action.isCountNotBool() ? "sum":"max";
+
+		final String function = action.isCountNotBool() ? "sum" : "max";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("update " + schemaName + "." + toOptTableName + " a set "
-				+ toOptColName + "=(select "+function+"(b." + fromOptColName + ") from "
-				+ schemaName + "." + fromOptTableName + " b inner join "
-				+ schemaName + "." + viaTableName + " c on ");
+				+ toOptColName + "=(select " + function + "(b."
+				+ fromOptColName + ") from " + schemaName + "."
+				+ fromOptTableName + " b inner join " + schemaName + "."
+				+ viaTableName + " c on ");
 		for (final Iterator i = action.getFromKeyColumns().iterator(); i
 				.hasNext();) {
 			final String keyCol = (String) i.next();
