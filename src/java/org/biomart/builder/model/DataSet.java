@@ -884,7 +884,7 @@ public class DataSet extends GenericSchema {
 	 * A column on a dataset table has to be one of the types of dataset column
 	 * available from this class.
 	 */
-	public static class DataSetColumn extends GenericColumn {
+	public static class DataSetColumn extends org.biomart.common.model.Column.GenericColumn {
 		private boolean keyDependency;
 
 		private boolean expressionDependency;
@@ -1359,7 +1359,7 @@ public class DataSet extends GenericSchema {
 	 * such it has no real columns of its own, so every column is from another
 	 * table and is given an alias.
 	 */
-	public static class DataSetTable extends GenericTable {
+	public static class DataSetTable extends org.biomart.common.model.Table.GenericTable {
 		private final List transformationUnits;
 
 		private final DataSetTableType type;
