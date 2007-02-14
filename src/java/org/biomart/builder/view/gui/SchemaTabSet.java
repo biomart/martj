@@ -460,7 +460,7 @@ public class SchemaTabSet extends JTabbedPane {
 						public void run() {
 							// Repaint the dataset diagram based on the modified
 							// dataset.
-							if (s == null)
+							if (s != null)
 								SchemaTabSet.this.recalculateSchemaDiagram(s);
 							else
 								SchemaTabSet.this
@@ -504,7 +504,7 @@ public class SchemaTabSet extends JTabbedPane {
 						public void run() {
 							// Repaint the dataset diagram based on the modified
 							// dataset.
-							if (s == null)
+							if (s != null)
 								SchemaTabSet.this.repaintSchemaDiagram(s);
 							else
 								SchemaTabSet.this.repaintAllSchemaDiagrams();

@@ -479,7 +479,7 @@ public class DataSetTabSet extends JTabbedPane {
 						public void run() {
 							// Repaint the dataset diagram based on the modified
 							// dataset.
-							if (ds == null)
+							if (ds != null)
 								DataSetTabSet.this
 										.recalculateDataSetDiagram(ds);
 							else
@@ -515,7 +515,7 @@ public class DataSetTabSet extends JTabbedPane {
 						public void run() {
 							// Repaint the dataset diagram based on the modified
 							// dataset.
-							if (ds == null)
+							if (ds != null)
 								DataSetTabSet.this.repaintDataSetDiagram(ds);
 							else
 								DataSetTabSet.this.repaintAllDataSetDiagrams();
