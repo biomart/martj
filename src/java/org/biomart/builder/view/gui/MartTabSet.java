@@ -45,10 +45,10 @@ import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.controller.MartBuilderXML;
+import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Mart;
-import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.common.resources.Log;

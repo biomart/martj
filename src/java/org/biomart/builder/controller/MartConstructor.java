@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.model;
+package org.biomart.builder.controller;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -30,6 +30,10 @@ import java.util.Map;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ValidationException;
+import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Mart;
+import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -299,7 +303,9 @@ public interface MartConstructor {
 					for (final Iterator j = parentTable.getColumns().iterator(); j
 							.hasNext();) {
 						final DataSetColumn col = (DataSetColumn) j.next();
-						if (!(col instanceof ExpressionColumn))
+						if (!(col instanceof ExpressionColumn)
+								&& !!dataset.getDataSetModifications()
+										.isMaskedColumn(col))
 							parentColNames.add(col.getModifiedName());
 					}
 					final Collection ourColNames = new HashSet();
@@ -340,6 +346,7 @@ public interface MartConstructor {
 			final String tempName = "TEMP";
 			int tempNameCount = 0;
 			final Map previousTempTables = new HashMap();
+			final Map previousIndexes = new HashMap();
 			final List partitionValues = new ArrayList();
 			partitionValues.add(GenericConstructorRunnable.NO_PARTITION);
 			previousTempTables.put(GenericConstructorRunnable.NO_PARTITION,
@@ -357,15 +364,15 @@ public interface MartConstructor {
 				PartitionedColumnDefinition pc = null;
 				if (dataset.getDataSetModifications().isPartitionedTable(
 						dsTable)) {
-					pc = dataset
-					.getDataSetModifications().getPartitionedColumnDef(
-							dsTable);
+					pc = dataset.getDataSetModifications()
+							.getPartitionedColumnDef(dsTable);
 					final DataSetColumn partCol = (DataSetColumn) dsTable
 							.getColumnByName(dataset.getDataSetModifications()
 									.getPartitionedColumnName(dsTable));
 					if (tu.getNewColumnNameMap().containsValue(partCol))
 						delayedTempDrop = this.populatePartitionValues(pc,
-								partCol, partitionValues, previousTempTables);
+								partCol, partitionValues, previousTempTables,
+								previousIndexes);
 					else
 						pc = null;
 				}
@@ -374,26 +381,29 @@ public interface MartConstructor {
 				for (final Iterator v = partitionValues.iterator(); v.hasNext();) {
 					final String partitionValue = (String) v.next();
 					final String tempTable = tempName + tempNameCount++;
+					previousIndexes.put(tempTable, new HashSet());
 
 					// Translate TU to Action.
 					// Expression?
 					if (tu instanceof Expression)
 						this.doExpression(dataset, dsTable, (Expression) tu,
-								previousTempTables, partitionValue, tempTable);
+								previousTempTables, previousIndexes,
+								partitionValue, tempTable);
 					// Concat?
 					else if (tu instanceof Concat)
 						this.doConcat(dataset, dsTable, (Concat) tu,
-								previousTempTables, partitionValue, tempTable);
+								previousTempTables, previousIndexes,
+								partitionValue, tempTable);
 					// Left-join?
 					else if (tu instanceof JoinTable)
 						this.doJoinTable(dataset, dsTable, (JoinTable) tu,
-								previousTempTables, pc, partitionValue,
-								tempTable);
+								previousTempTables, previousIndexes, pc,
+								partitionValue, tempTable);
 					// Select-from?
 					else if (tu instanceof SelectFromTable)
 						this.doSelectFromTable(dataset, dsTable,
-								(SelectFromTable) tu, previousTempTables, pc,
-								partitionValue, tempTable);
+								(SelectFromTable) tu, previousTempTables,
+								previousIndexes, pc, partitionValue, tempTable);
 					else
 						throw new BioMartError();
 
@@ -434,14 +444,15 @@ public interface MartConstructor {
 								.equals(GenericConstructorRunnable.NO_PARTITION))
 					this.doPartitionLeftJoin(dataset, dsTable,
 							finalCombinedName, partitionValue,
-							previousTempTables, tempName + tempNameCount++);
+							previousTempTables, previousIndexes, tempName
+									+ tempNameCount++);
 
 				// Drop masked dependencies and create column indices.
 				final List dropCols = new ArrayList();
 				for (final Iterator x = dsTable.getColumns().iterator(); x
 						.hasNext();) {
 					final DataSetColumn col = (DataSetColumn) x.next();
-					if (!col.isRequiredFinal())
+					if (col.isRequiredInterim() && !col.isRequiredFinal())
 						dropCols.add(col.getModifiedName());
 					else {
 						// Create index if required.
@@ -502,7 +513,8 @@ public interface MartConstructor {
 		private void doPartitionLeftJoin(final DataSet dataset,
 				final DataSetTable dsTable, final String finalCombinedName,
 				final String partitionValue, final Map previousTempTables,
-				final String tempTable) throws Exception {
+				final Map previousIndexes, final String tempTable)
+				throws Exception {
 			// Work out the parent table.
 			final DataSetTable parent = (DataSetTable) ((Relation) dsTable
 					.getRelations().iterator().next()).getOneKey().getTable();
@@ -521,12 +533,15 @@ public interface MartConstructor {
 					rightSelectCols.add(col.getModifiedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
-			// Index the right-hand side of the join.
-			final Index index = new Index(this.datasetSchemaName,
-					finalCombinedName);
-			index.setTable((String) previousTempTables.get(partitionValue));
-			index.setColumns(leftJoinCols);
-			this.issueAction(index);
+			// Index the left-hand side of the join.
+			if (!((Collection) previousIndexes.get((String) previousTempTables
+					.get(partitionValue))).contains(leftJoinCols)) {
+				final Index index = new Index(this.datasetSchemaName,
+						finalCombinedName);
+				index.setTable((String) previousTempTables.get(partitionValue));
+				index.setColumns(leftJoinCols);
+				this.issueAction(index);
+			}
 			// Make the join.
 			final LeftJoin action = new LeftJoin(this.datasetSchemaName,
 					finalCombinedName);
@@ -695,7 +710,7 @@ public interface MartConstructor {
 
 		private void doSelectFromTable(final DataSet dataset,
 				final DataSetTable dsTable, final SelectFromTable stu,
-				final Map previousTempTables,
+				final Map previousTempTables, final Map previousIndexes,
 				final PartitionedColumnDefinition pc,
 				final String partitionValue, final String tempTable)
 				throws Exception {
@@ -765,8 +780,9 @@ public interface MartConstructor {
 
 		private void doConcat(final DataSet dataset,
 				final DataSetTable dsTable, final Concat ljtu,
-				final Map previousTempTables, final String partitionValue,
-				final String tempTable) throws Exception {
+				final Map previousTempTables, final Map previousIndexes,
+				final String partitionValue, final String tempTable)
+				throws Exception {
 			final String finalCombinedName = this.getFinalName(dsTable,
 					GenericConstructorRunnable.NO_PARTITION);
 			final String tempJoinTable = tempTable + "C";
@@ -787,10 +803,14 @@ public interface MartConstructor {
 			final ConcatRelationDefinition concDef = concCol.getDefinition();
 
 			// Index the left-hand side of the join.
-			Index index = new Index(this.datasetSchemaName, finalCombinedName);
-			index.setTable((String) previousTempTables.get(partitionValue));
-			index.setColumns(leftJoinCols);
-			this.issueAction(index);
+			if (!((Collection) previousIndexes.get((String) previousTempTables
+					.get(partitionValue))).contains(leftJoinCols)) {
+				final Index index = new Index(this.datasetSchemaName,
+						finalCombinedName);
+				index.setTable((String) previousTempTables.get(partitionValue));
+				index.setColumns(leftJoinCols);
+				this.issueAction(index);
+			}
 
 			// Create the temp RHS table. The concat column will
 			// be called "conc_col".
@@ -824,7 +844,8 @@ public interface MartConstructor {
 			this.issueAction(action);
 
 			// Index the temp RHS table.
-			index = new Index(this.datasetSchemaName, finalCombinedName);
+			final Index index = new Index(this.datasetSchemaName,
+					finalCombinedName);
 			index.setTable(tempJoinTable);
 			// Concat table will have left join cols as key cols.
 			index.setColumns(leftJoinCols);
@@ -855,7 +876,7 @@ public interface MartConstructor {
 
 		private void doJoinTable(final DataSet dataset,
 				final DataSetTable dsTable, final JoinTable ljtu,
-				final Map previousTempTables,
+				final Map previousTempTables, final Map previousIndexes,
 				final PartitionedColumnDefinition pc,
 				final String partitionValue, final String tempTable)
 				throws Exception {
@@ -881,11 +902,14 @@ public interface MartConstructor {
 					selectCols.put(entry.getKey(), col.getModifiedName());
 			}
 			// Index the left-hand side of the join.
-			final Index index = new Index(this.datasetSchemaName,
-					finalCombinedName);
-			index.setTable((String) previousTempTables.get(partitionValue));
-			index.setColumns(leftJoinCols);
-			this.issueAction(index);
+			if (!((Collection) previousIndexes.get((String) previousTempTables
+					.get(partitionValue))).contains(leftJoinCols)) {
+				final Index index = new Index(this.datasetSchemaName,
+						finalCombinedName);
+				index.setTable((String) previousTempTables.get(partitionValue));
+				index.setColumns(leftJoinCols);
+				this.issueAction(index);
+			}
 			// Make the join.
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);
@@ -928,8 +952,9 @@ public interface MartConstructor {
 
 		private void doExpression(final DataSet dataset,
 				final DataSetTable dsTable, final Expression etu,
-				final Map previousTempTables, final String partitionValue,
-				final String tempTable) throws Exception {
+				final Map previousTempTables, final Map previousIndexes,
+				final String partitionValue, final String tempTable)
+				throws Exception {
 
 			final String finalCombinedName = this.getFinalName(dsTable,
 					GenericConstructorRunnable.NO_PARTITION);
@@ -1020,7 +1045,8 @@ public interface MartConstructor {
 		private String populatePartitionValues(
 				final PartitionedColumnDefinition pc,
 				final DataSetColumn partCol, final List partitionValues,
-				final Map previousTempTables) throws SQLException {
+				final Map previousTempTables, final Map previousIndexes)
+				throws SQLException {
 			partitionValues.clear();
 			if (pc instanceof ValueCollection) {
 				if (((ValueCollection) pc).getIncludeNull())
@@ -1037,8 +1063,11 @@ public interface MartConstructor {
 				partitionValues.addAll(((ValueRange) pc).getRanges().keySet());
 			final String delayedTempDrop = (String) previousTempTables
 					.get(GenericConstructorRunnable.NO_PARTITION);
-			for (final Iterator z = partitionValues.iterator(); z.hasNext();)
-				previousTempTables.put(z.next(), delayedTempDrop);
+			for (final Iterator z = partitionValues.iterator(); z.hasNext();) {
+				Object partitionValue = z.next();
+				previousTempTables.put(partitionValue, delayedTempDrop);
+				previousIndexes.put(delayedTempDrop, new HashSet());
+			}
 			return delayedTempDrop;
 		}
 

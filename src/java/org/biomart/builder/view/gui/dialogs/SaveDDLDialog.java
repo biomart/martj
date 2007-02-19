@@ -55,12 +55,12 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.DefaultEditorKit;
 
+import org.biomart.builder.controller.MartConstructor;
 import org.biomart.builder.controller.SaveDDLMartConstructor;
+import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
+import org.biomart.builder.controller.MartConstructor.MartConstructorListener;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.builder.model.MartConstructor.ConstructorRunnable;
-import org.biomart.builder.model.MartConstructor.MartConstructorListener;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;

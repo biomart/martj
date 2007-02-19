@@ -36,7 +36,6 @@ import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.MartConstructor;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.common.controller.JDBCSchema;

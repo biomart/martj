@@ -514,8 +514,10 @@ public class PartitionColumnDialog extends JDialog {
 						.get("value")));
 
 		// Validate other fields.
-		if (this.expressionAliasModel.getExpressionAliases().isEmpty())
-			messages.add(Resources.get("expressionAliasMissing"));
+		if (selectedItem.equals(Resources.get("rangePartitionOption")))
+			// Check we have an expression.
+			if (this.expressionAliasModel.getExpressionAliases().isEmpty())
+				messages.add(Resources.get("expressionAliasMissing"));
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
