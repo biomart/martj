@@ -295,20 +295,6 @@ public class DataSet extends GenericSchema {
 			relationCount.put(rel, new Integer(compounded));
 		}
 
-		// Don't follow the source relation again.
-		/*
-		 * relationCount.put(sourceRelation, new Integer(0));
-		 */
-		// Don't follow the parent's relations again, if this is
-		// a subclass table. Otherwise, follow everything as normal.
-		/*
-		 * if (type.equals(DataSetTableType.MAIN_SUBCLASS)) for (final Iterator
-		 * i = parentDSTable.getTransformationUnits() .iterator(); i.hasNext();) {
-		 * final TransformationUnit u = (TransformationUnit) i.next(); if (u
-		 * instanceof JoinTable) relationCount.put(((JoinTable)
-		 * u).getSchemaRelation(), new Integer(0)); }
-		 */
-
 		// Process the table. This operation will populate the initial
 		// values in the normal, subclass and dimension queues. We only
 		// want dimensions constructed if we are not already constructing

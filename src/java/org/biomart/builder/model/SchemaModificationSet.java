@@ -592,18 +592,8 @@ public class SchemaModificationSet {
 				|| childTable.getPrimaryKey() == null)
 			throw new ValidationException(Resources.get("subclassTargetNoPK"));
 
-		// If there are no existing subclass relations, then we only
-		// need to test that either the parent or the child is the central
-		// table.
-		if (this.subclassedRelations.isEmpty()) {
-			if (!(parentTable.equals(this.ds.getCentralTable()) || childTable
-					.equals(this.ds.getCentralTable())))
-				throw new ValidationException(Resources
-						.get("subclassNotOnCentralTable"));
-		}
-
 		// We have existing subclass relations.
-		else {
+		if (!this.subclassedRelations.isEmpty()) {
 			// We need to test if the selected relation links to
 			// a table which itself has subclass relations, or
 			// is the central table, and has not got an
@@ -633,17 +623,6 @@ public class SchemaModificationSet {
 			if (childHasM1 || parentHas1M)
 				throw new ValidationException(Resources
 						.get("mixedCardinalitySubclasses"));
-
-			// If parent is not central or doesn't have M:1, and
-			// child is not central or doesn't have 1:M, we cannot do this.
-			final boolean parentIsCentral = parentTable.equals(this.ds
-					.getCentralTable());
-			final boolean childIsCentral = parentTable.equals(this.ds
-					.getCentralTable());
-			if (!(parentIsCentral || childIsCentral)
-					&& !(parentHasM1 || childHas1M))
-				throw new ValidationException(Resources
-						.get("subclassNotOnCentralTable"));
 		}
 
 		// Mark the relation.
