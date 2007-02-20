@@ -1014,8 +1014,7 @@ public class MartBuilderUtils {
 	 *             if this could not be done.
 	 */
 	public static void restrictTable(final DataSetTable datasetTable,
-			final Table table, final String expression, final Map aliases)
-			throws ValidationException {
+			final Table table, final String expression, final Map aliases) throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
 		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
 				expression, aliases);

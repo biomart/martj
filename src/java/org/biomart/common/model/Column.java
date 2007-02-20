@@ -80,8 +80,7 @@ public interface Column extends Comparable {
 			String baseName = name;
 			if (name.endsWith(Resources.get("keySuffix"))) {
 				suffix = Resources.get("keySuffix");
-				baseName = name.substring(0, name.indexOf(Resources
-						.get("keySuffix")));
+				baseName = name.substring(0, name.indexOf(suffix));
 			}
 			// Now simply check to see if the name is used, and
 			// then add an incrementing number to it until it is unique.

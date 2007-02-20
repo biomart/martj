@@ -1789,7 +1789,7 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
-
+				
 				// Flag it as restricted
 				if (expr != null && !aliases.isEmpty() && tableKey != null
 						&& tbl != null) {

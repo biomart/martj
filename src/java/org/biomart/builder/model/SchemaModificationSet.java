@@ -838,6 +838,9 @@ public class SchemaModificationSet {
 		 *            the expression to define for this restriction.
 		 * @param aliases
 		 *            the aliases to use for columns.
+		 * @param onceOnly
+		 *            if this is to happen only the first time the table is
+		 *            passed over.
 		 */
 		public RestrictedTableDefinition(final String expr, final Map aliases) {
 			// Test for good arguments.

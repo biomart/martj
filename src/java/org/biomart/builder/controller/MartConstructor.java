@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ValidationException;
@@ -60,6 +61,7 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -397,13 +399,13 @@ public interface MartConstructor {
 					// Left-join?
 					else if (tu instanceof JoinTable)
 						this.doJoinTable(dataset, dsTable, (JoinTable) tu,
-								previousTempTables, previousIndexes, pc,
+								previousTempTables, previousIndexes,pc,
 								partitionValue, tempTable);
 					// Select-from?
 					else if (tu instanceof SelectFromTable)
 						this.doSelectFromTable(dataset, dsTable,
 								(SelectFromTable) tu, previousTempTables,
-								previousIndexes, pc, partitionValue, tempTable);
+								previousIndexes,pc, partitionValue, tempTable);
 					else
 						throw new BioMartError();
 
