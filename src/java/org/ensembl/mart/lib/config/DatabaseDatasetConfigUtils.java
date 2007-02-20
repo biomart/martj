@@ -7559,7 +7559,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 				+ " WHERE "
 				+ columnName
 				+ " IS NOT NULL ORDER BY "
-				+ columnName;
+				+ colForDisplay;
     }
     else{
     	sql =
@@ -7734,8 +7734,12 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 	    		
     List options = new ArrayList();
     Connection conn = dsource.getConnection();
-    if (orderSQL == null || orderSQL.equals(""))
-      orderSQL = "ORDER BY " + columnName;
+    if (orderSQL == null || orderSQL.equals("")){
+        if (!"".equals(colForDisplay))
+        	orderSQL = "ORDER BY " + colForDisplay;	
+        else		
+        	orderSQL = "ORDER BY " + columnName;
+    }
     else
       orderSQL = " ORDER BY " + orderSQL;
     
