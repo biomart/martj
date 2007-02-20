@@ -606,26 +606,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Write out subclass relations inside dataset. Can go before or
 			// after.
-			// First we put subclassed relations into order, central table
-			// of dataset first. This is because when they are read back in,
-			// they cannot be read back in an order which if the user were
-			// to replicate by clicking would produce exceptions. We use a 
-			// simple bubblesort to do this.
-			final List scRels = new ArrayList(schemaMods.getSubclassedRelations());
-			boolean finished = false;
-			while (!finished) {
-				finished = true;
-				for (int i = 0; i < scRels.size()-1; i++) {
-					final Relation a = (Relation)scRels.get(i);
-					final Relation b = (Relation)scRels.get(i+1);
-					if (!a.getManyKey().getTable().equals(b.getOneKey().getTable())) {
-						scRels.set(i,b);
-						scRels.set(i+1,a);
-						finished = false;
-					}
-				}
-			}
-			for (final Iterator x = scRels.iterator(); x.hasNext();) {
+			for (final Iterator x = schemaMods.getSubclassedRelations()
+					.iterator(); x.hasNext();) {
 				final Relation r = (Relation) x.next();
 				this.openElement("subclassRelation", xmlWriter);
 				this.writeAttribute("relationId",
@@ -1593,8 +1575,7 @@ public class MartBuilderXML extends DefaultHandler {
 					for (int i = 0; i < rangeNames.size(); i++)
 						ranges.put(rangeNames.get(i), rangeExpressions.get(i));
 					resolvedPartitionType = new ValueRange(ranges);
-				}
-				else
+				} else
 					throw new SAXException(Resources.get(
 							"unknownPartitionColumnType", partitionType));
 

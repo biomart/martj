@@ -304,7 +304,7 @@ public interface MartConstructor {
 							.hasNext();) {
 						final DataSetColumn col = (DataSetColumn) j.next();
 						if (!(col instanceof ExpressionColumn)
-								&& !!dataset.getDataSetModifications()
+								&& !dataset.getDataSetModifications()
 										.isMaskedColumn(col))
 							parentColNames.add(col.getModifiedName());
 					}
@@ -533,14 +533,16 @@ public interface MartConstructor {
 					rightSelectCols.add(col.getModifiedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
-			// Index the left-hand side of the join.
+			// Index the left-hand side of the join. 
 			if (!((Collection) previousIndexes.get((String) previousTempTables
 					.get(partitionValue))).contains(leftJoinCols)) {
+				final String indTbl = (String) previousTempTables.get(partitionValue);
 				final Index index = new Index(this.datasetSchemaName,
 						finalCombinedName);
-				index.setTable((String) previousTempTables.get(partitionValue));
+				index.setTable(indTbl);
 				index.setColumns(leftJoinCols);
 				this.issueAction(index);
+				((Collection)previousIndexes.get(indTbl)).add(leftJoinCols);
 			}
 			// Make the join.
 			final LeftJoin action = new LeftJoin(this.datasetSchemaName,
@@ -810,6 +812,8 @@ public interface MartConstructor {
 				index.setTable((String) previousTempTables.get(partitionValue));
 				index.setColumns(leftJoinCols);
 				this.issueAction(index);
+				((Collection) previousIndexes.get((String) previousTempTables
+						.get(partitionValue))).add(leftJoinCols);
 			}
 
 			// Create the temp RHS table. The concat column will
@@ -909,6 +913,8 @@ public interface MartConstructor {
 				index.setTable((String) previousTempTables.get(partitionValue));
 				index.setColumns(leftJoinCols);
 				this.issueAction(index);
+				((Collection) previousIndexes.get((String) previousTempTables
+						.get(partitionValue))).add(leftJoinCols);
 			}
 			// Make the join.
 			final Join action = new Join(this.datasetSchemaName,

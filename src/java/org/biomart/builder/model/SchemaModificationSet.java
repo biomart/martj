@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -51,7 +52,8 @@ public class SchemaModificationSet {
 
 	private final DataSet ds;
 
-	private final Collection subclassedRelations = new HashSet();
+	// Linked because they must be kept in order for XML read/write.
+	private final Collection subclassedRelations = new LinkedHashSet();
 
 	private Collection mergedRelations = new HashSet();
 

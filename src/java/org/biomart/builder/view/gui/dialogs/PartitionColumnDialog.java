@@ -561,8 +561,6 @@ public class PartitionColumnDialog extends JDialog {
 		 * Construct a model of aliases for the given table, and copy any
 		 * existing aliases from the given template.
 		 * 
-		 * @param table
-		 *            the table we are showing columns for.
 		 * @param template
 		 *            the existing alises to copy.
 		 */
