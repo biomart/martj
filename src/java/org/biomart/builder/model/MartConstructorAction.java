@@ -94,7 +94,59 @@ public abstract class MartConstructorAction {
 	/**
 	 * Copy optimiser table actions.
 	 */
-	public static class CopyOptimiser extends MartConstructorAction {
+	public static class CopyOptimiserVia extends CopyOptimiserDirect {
+
+		private List fromKeyColumns;
+
+		private String viaTableName;
+
+		/**
+		 * Creates a new CopyOptimiser action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public CopyOptimiserVia(String datasetSchemaName, String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		/**
+		 * @return the fromKeyColumns
+		 */
+		public List getFromKeyColumns() {
+			return fromKeyColumns;
+		}
+
+		/**
+		 * @param fromKeyColumns
+		 *            the fromKeyColumns to set
+		 */
+		public void setFromKeyColumns(List fromKeyColumns) {
+			this.fromKeyColumns = fromKeyColumns;
+		}
+
+		/**
+		 * @return the viaTableName
+		 */
+		public String getViaTableName() {
+			return viaTableName;
+		}
+
+		/**
+		 * @param viaTableName
+		 *            the viaTableName to set
+		 */
+		public void setViaTableName(String viaTableName) {
+			this.viaTableName = viaTableName;
+		}
+	}
+	
+	/**
+	 * Copy optimiser table actions.
+	 */
+	public static class CopyOptimiserDirect extends MartConstructorAction {
 
 		private String fromOptTableName;
 
@@ -104,11 +156,7 @@ public abstract class MartConstructorAction {
 
 		private String toOptColumnName;
 
-		private List fromKeyColumns;
-
 		private List toKeyColumns;
-
-		private String viaTableName;
 		
 		private boolean countNotBool;
 
@@ -120,7 +168,7 @@ public abstract class MartConstructorAction {
 		 * @param datasetTableName
 		 *            the dataset table we are working on.
 		 */
-		public CopyOptimiser(String datasetSchemaName, String datasetTableName) {
+		public CopyOptimiserDirect(String datasetSchemaName, String datasetTableName) {
 			super(datasetSchemaName, datasetTableName);
 		}
 
@@ -174,21 +222,6 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @return the fromKeyColumns
-		 */
-		public List getFromKeyColumns() {
-			return fromKeyColumns;
-		}
-
-		/**
-		 * @param fromKeyColumns
-		 *            the fromKeyColumns to set
-		 */
-		public void setFromKeyColumns(List fromKeyColumns) {
-			this.fromKeyColumns = fromKeyColumns;
-		}
-
-		/**
 		 * @return the toKeyColumns
 		 */
 		public List getToKeyColumns() {
@@ -201,21 +234,6 @@ public abstract class MartConstructorAction {
 		 */
 		public void setToKeyColumns(List toKeyColumns) {
 			this.toKeyColumns = toKeyColumns;
-		}
-
-		/**
-		 * @return the viaTableName
-		 */
-		public String getViaTableName() {
-			return viaTableName;
-		}
-
-		/**
-		 * @param viaTableName
-		 *            the viaTableName to set
-		 */
-		public void setViaTableName(String viaTableName) {
-			this.viaTableName = viaTableName;
 		}
 
 		/**

@@ -34,7 +34,8 @@ import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
-import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiserDirect;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiserVia;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
@@ -441,7 +442,7 @@ public class MySQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doCopyOptimiser(final CopyOptimiser action,
+	public void doCopyOptimiserVia(final CopyOptimiserVia action,
 			final List statements) {
 		final String schemaName = action.getDataSetSchemaName();
 		final String toOptTableName = action.getToOptTableName();
@@ -478,6 +479,38 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append("a.");
 			sb.append(keyCol);
 			sb.append("=c.");
+			sb.append(keyCol);
+			if (i.hasNext())
+				sb.append(" and ");
+		}
+		sb.append(')');
+		statements.add(sb.toString());
+	}
+
+	public void doCopyOptimiserDirect(final CopyOptimiserDirect action,
+			final List statements) {
+		final String schemaName = action.getDataSetSchemaName();
+		final String toOptTableName = action.getToOptTableName();
+		final String fromOptTableName = action.getFromOptTableName();
+		final String fromOptColName = action.getFromOptColumnName();
+		final String toOptColName = action.getToOptColumnName();
+
+		statements.add("alter table " + schemaName + "." + toOptTableName
+				+ " add column (" + toOptColName + " integer default 0)");
+
+		final String function = action.isCountNotBool() ? "sum" : "max";
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("update " + schemaName + "." + toOptTableName + " a set "
+				+ toOptColName + "=(select " + function + "(b."
+				+ fromOptColName + ") from " + schemaName + "."
+				+ fromOptTableName + " b where ");
+		for (final Iterator i = action.getToKeyColumns().iterator(); i
+				.hasNext();) {
+			final String keyCol = (String) i.next();
+			sb.append("a.");
+			sb.append(keyCol);
+			sb.append("=b.");
 			sb.append(keyCol);
 			if (i.hasNext())
 				sb.append(" and ");

@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ValidationException;
@@ -50,7 +49,8 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
-import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiserDirect;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiserVia;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
@@ -61,7 +61,6 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
-import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -82,8 +81,8 @@ import org.biomart.common.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface MartConstructor {
@@ -399,13 +398,13 @@ public interface MartConstructor {
 					// Left-join?
 					else if (tu instanceof JoinTable)
 						this.doJoinTable(dataset, dsTable, (JoinTable) tu,
-								previousTempTables, previousIndexes,pc,
+								previousTempTables, previousIndexes, pc,
 								partitionValue, tempTable);
 					// Select-from?
 					else if (tu instanceof SelectFromTable)
 						this.doSelectFromTable(dataset, dsTable,
 								(SelectFromTable) tu, previousTempTables,
-								previousIndexes,pc, partitionValue, tempTable);
+								previousIndexes, pc, partitionValue, tempTable);
 					else
 						throw new BioMartError();
 
@@ -535,16 +534,17 @@ public interface MartConstructor {
 					rightSelectCols.add(col.getModifiedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
-			// Index the left-hand side of the join. 
+			// Index the left-hand side of the join.
 			if (!((Collection) previousIndexes.get((String) previousTempTables
 					.get(partitionValue))).contains(leftJoinCols)) {
-				final String indTbl = (String) previousTempTables.get(partitionValue);
+				final String indTbl = (String) previousTempTables
+						.get(partitionValue);
 				final Index index = new Index(this.datasetSchemaName,
 						finalCombinedName);
 				index.setTable(indTbl);
 				index.setColumns(leftJoinCols);
 				this.issueAction(index);
-				((Collection)previousIndexes.get(indTbl)).add(leftJoinCols);
+				((Collection) previousIndexes.get(indTbl)).add(leftJoinCols);
 			}
 			// Make the join.
 			final LeftJoin action = new LeftJoin(this.datasetSchemaName,
@@ -683,16 +683,24 @@ public interface MartConstructor {
 								.getModifiedName());
 
 					// Copy the column.
-					final CopyOptimiser copy = new CopyOptimiser(
-							this.datasetSchemaName, finalCombinedName);
-					copy.setFromOptTableName(this.getOptimiserTableName(
-							fromParent, oType));
-					copy.setFromKeyColumns(fromKeyCols);
-					copy.setViaTableName(this.getFinalName(fromParent,
-							GenericConstructorRunnable.NO_PARTITION));
+					final String fromTableName = this.getOptimiserTableName(
+							fromParent, oType);
+					final String viaTableName = this.getFinalName(fromParent,
+							GenericConstructorRunnable.NO_PARTITION);
+					final CopyOptimiserDirect copy;
+					if (fromTableName.equals(viaTableName)) 
+						copy = new CopyOptimiserDirect(
+								this.datasetSchemaName, finalCombinedName);
+					else {
+						copy = new CopyOptimiserVia(
+								this.datasetSchemaName, finalCombinedName);
+						((CopyOptimiserVia)copy).setFromKeyColumns(fromKeyCols);
+						((CopyOptimiserVia)copy).setViaTableName(viaTableName);
+					}
+					copy.setFromOptTableName(fromTableName);
 					copy.setToKeyColumns(toKeyCols);
-					copy.setToOptTableName(this.getOptimiserTableName(toParent,
-							oType));
+					copy.setToOptTableName(this.getOptimiserTableName(
+							toParent, oType));
 					copy.setFromOptColumnName(optCol);
 					copy.setToOptColumnName(this.getOptimiserColumnName(
 							toParent, dsTable, partitionValue, oType));
