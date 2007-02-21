@@ -243,8 +243,14 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				// Note the column.
 				if (!dbFKs.containsKey(fkColSeq))
 					dbFKs.put(fkColSeq, new ArrayList());
-				((List) dbFKs.get(fkColSeq)).add(this.getTableByName(fkTblName)
-						.getColumnByName(fkColName));
+				// In Oracle, FKs can be invalid, so we need to check them.
+				final Table fkTbl = this.getTableByName(fkTblName);
+				if (fkTbl!=null) {
+					final Column fkCol = fkTbl
+					.getColumnByName(fkColName);
+					if (fkCol!=null)
+						((List) dbFKs.get(fkColSeq)).add(fkCol);
+				}
 			}
 			dbTblFKCols.close();
 
