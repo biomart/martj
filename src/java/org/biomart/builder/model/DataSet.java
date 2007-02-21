@@ -129,7 +129,7 @@ public class DataSet extends GenericSchema {
 		this.centralTable = centralTable;
 		this.optimiser = DataSetOptimiserType.NONE;
 		this.schemaMods = new SchemaModificationSet(this);
-		this.dsMods = new DataSetModificationSet();
+		this.dsMods = new DataSetModificationSet(this);
 		this.includedRelations = new HashSet();
 	}
 
@@ -618,36 +618,27 @@ public class DataSet extends GenericSchema {
 							&& !dsTable.getType().equals(
 									DataSetTableType.DIMENSION)) {
 						final List newSourceDSCols = new ArrayList();
-						boolean allUnmasked = true;
 						for (final Iterator j = r.getOneKey().getColumns()
-								.iterator(); j.hasNext() && allUnmasked;) {
+								.iterator(); j.hasNext();) {
 							final DataSetColumn newCol = tu
 									.getDataSetColumnFor((Column) j.next());
 							newSourceDSCols.add(newCol);
-							allUnmasked &= !dsMods.isMaskedColumn(newCol)
-									&& !dsMods.isNonInheritedColumn(newCol);
 						}
-						// Don't follow relation if any of the
-						// source key columns have been masked.
-						if (allUnmasked) {
-							final int parentCompounded = sourceRelation == null ? 1
-									: (this.schemaMods.isCompoundRelation(
-											dsTable, sourceRelation) ? this.schemaMods
-											.getCompoundRelation(dsTable,
-													sourceRelation)
-											: 1);
-							final int childCompounded = parentCompounded > 1 ? 1
-									: (this.schemaMods.isCompoundRelation(
-											dsTable, r) ? this.schemaMods
-											.getCompoundRelation(dsTable, r)
-											: 1);
-							// Follow the relation.
-							for (int k = 0; k < childCompounded; k++)
-								dimensionQ.add(new Object[] { newSourceDSCols,
-										r, new Integer(k) });
-							if (this.schemaMods.isMergedRelation(r))
-								forceFollowRelation = true;
-						}
+						final int parentCompounded = sourceRelation == null ? 1
+								: (this.schemaMods.isCompoundRelation(dsTable,
+										sourceRelation) ? this.schemaMods
+										.getCompoundRelation(dsTable,
+												sourceRelation) : 1);
+						final int childCompounded = parentCompounded > 1 ? 1
+								: (this.schemaMods.isCompoundRelation(dsTable,
+										r) ? this.schemaMods
+										.getCompoundRelation(dsTable, r) : 1);
+						// Follow the relation.
+						for (int k = 0; k < childCompounded; k++)
+							dimensionQ.add(new Object[] { newSourceDSCols, r,
+									new Integer(k) });
+						if (this.schemaMods.isMergedRelation(r))
+							forceFollowRelation = true;
 					}
 
 					// Forcibly follow forced relations.
@@ -679,46 +670,39 @@ public class DataSet extends GenericSchema {
 							mergeTable) ? r.getSecondKey() : r.getFirstKey();
 					final Key sourceKey = r.getOtherKey(targetKey);
 					final List newSourceDSCols = new ArrayList();
-					boolean allUnmasked = true;
 					for (final Iterator j = sourceKey.getColumns().iterator(); j
-							.hasNext()
-							&& allUnmasked;) {
+							.hasNext();) {
 						final DataSetColumn newCol = tu
 								.getDataSetColumnFor((Column) j.next());
 						newSourceDSCols.add(newCol);
-						allUnmasked &= !dsMods.isMaskedColumn(newCol)
-								&& !dsMods.isNonInheritedColumn(newCol);
 					}
-					// Don't follow relation if any of the
-					// source key columns have been masked.
-					if (allUnmasked) {
-						// Repeat queueing of relation N times if compounded.
-						// Note that we only spin off one child per parent if
-						// the parent was compounded. If the child compound
-						// value
-						// is less than the parent, this results in only some
-						// nested compounding. If it is greater, only the parent
-						// value number of compounds appears.
-						final int parentCompounded = sourceRelation == null ? 1
-								: (this.schemaMods.isCompoundRelation(dsTable,
-										sourceRelation) ? this.schemaMods
-										.getCompoundRelation(dsTable,
-												sourceRelation) : 1);
-						final int childCompounded = parentCompounded > 1 ? 1
-								: (this.schemaMods.isCompoundRelation(dsTable,
-										r) ? this.schemaMods
-										.getCompoundRelation(dsTable, r) : 1);
-						for (int k = 0; k < childCompounded; k++)
-							normalQ.add(new Object[] {
-									r,
-									newSourceDSCols,
-									targetKey.getTable(),
-									tu,
-									Boolean.valueOf(makeDimensions
-											&& (r.isOneToOne())
-											|| forceFollowRelation),
-									new Integer(k) });
-					}
+					// Repeat queueing of relation N times if compounded.
+					// Note that we only spin off one child per parent if
+					// the parent was compounded. If the child compound
+					// value
+					// is less than the parent, this results in only some
+					// nested compounding. If it is greater, only the parent
+					// value number of compounds appears.
+					final int parentCompounded = sourceRelation == null ? 1
+							: (this.schemaMods.isCompoundRelation(dsTable,
+									sourceRelation) ? this.schemaMods
+									.getCompoundRelation(dsTable,
+											sourceRelation) : 1);
+					final int childCompounded = parentCompounded > 1 ? 1
+							: (this.schemaMods.isCompoundRelation(dsTable, r) ? this.schemaMods
+									.getCompoundRelation(dsTable, r)
+									: 1);
+					for (int k = 0; k < childCompounded; k++)
+						normalQ
+								.add(new Object[] {
+										r,
+										newSourceDSCols,
+										targetKey.getTable(),
+										tu,
+										Boolean.valueOf(makeDimensions
+												&& (r.isOneToOne())
+												|| forceFollowRelation),
+										new Integer(k) });
 				}
 			}
 	}
@@ -878,6 +862,9 @@ public class DataSet extends GenericSchema {
 		// Generate the main table. It will recursively generate all the others.
 		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
 				null, null, new HashMap(), 0);
+		
+		// Update the modification sets.
+		this.dsMods.synchronise();
 	}
 
 	/**

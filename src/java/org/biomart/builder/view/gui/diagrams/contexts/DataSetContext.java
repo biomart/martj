@@ -624,9 +624,39 @@ public class DataSetContext extends SchemaContext {
 				if (!isPartitioned)
 					unpartition.setEnabled(false);
 			}
+			// Special stuff for all non-dimension tables.
+			else {				
+				// (Un)non-inherit all columns on this table.
+				final JMenuItem non = new JMenuItem(Resources
+						.get("nonInheritAllTitle"));
+				non.setMnemonic(Resources.get("nonInheritAllMnemonic")
+						.charAt(0));
+				non.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestNonInheritAllColumns(
+										DataSetContext.this.getDataSet(),
+										table);
+					}
+				});
+				contextMenu.add(non);
+				final JMenuItem unnon = new JMenuItem(Resources
+						.get("unNonInheritAllTitle"));
+				unnon.setMnemonic(Resources.get("unNonInheritAllMnemonic")
+						.charAt(0));
+				unnon.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnNonInheritAllColumns(
+										DataSetContext.this.getDataSet(),
+										table);
+					}
+				});
+				contextMenu.add(unnon);
+			}
 
 			// Subclass tables have their own options too.
-			else if (tableType.equals(DataSetTableType.MAIN_SUBCLASS)) {
+			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS)) {
 
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.

@@ -45,6 +45,8 @@ import org.biomart.common.resources.Resources;
  */
 public class DataSetModificationSet {
 
+	private final DataSet ds;
+	
 	// NOTE: Using Collections/Strings avoids problems with changing hashcodes.
 
 	private Map renamedTables = new HashMap();
@@ -62,6 +64,10 @@ public class DataSetModificationSet {
 	private Map nonInheritedColumns = new HashMap();
 
 	private Map expressionColumns = new HashMap();
+	
+	public DataSetModificationSet(final DataSet ds) {
+		this.ds = ds;
+	}
 
 	public void setMaskedColumn(final DataSetColumn column)
 			throws ValidationException {
@@ -138,11 +144,9 @@ public class DataSetModificationSet {
 			throws ValidationException {
 		final String tableKey = column.getTable().getName();
 		if (!this.isNonInheritedColumn(column)) {
-			for (final Iterator i = column.getTable().getKeys().iterator(); i
-					.hasNext();)
-				if (((Key) i.next()).getColumns().contains(column))
-					throw new ValidationException(Resources
-							.get("cannotNonInheritNecessaryColumn"));
+			if (column.getModifiedName().endsWith(Resources.get("keySuffix")))
+				throw new ValidationException(Resources
+						.get("cannotNonInheritNecessaryColumn"));
 			if (!this.nonInheritedColumns.containsKey(tableKey))
 				this.nonInheritedColumns.put(tableKey, new HashSet());
 			((Collection) this.nonInheritedColumns.get(tableKey)).add(column
@@ -359,7 +363,14 @@ public class DataSetModificationSet {
 		target.renamedTables.clear();
 		target.renamedTables.putAll(this.renamedTables);
 		target.renamedColumns.clear();
-		target.renamedColumns.putAll(this.renamedColumns);
+		// We have to use an iterator because of nested maps.
+		for (final Iterator i = this.renamedColumns.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			target.renamedColumns.put(entry.getKey(), new HashMap());
+			((Map) target.renamedColumns.get(entry.getKey()))
+					.putAll((Map) entry.getValue());
+		}
 		target.maskedColumns.clear();
 		target.maskedColumns.putAll(this.maskedColumns);
 		target.indexedColumns.clear();
@@ -634,6 +645,101 @@ public class DataSetModificationSet {
 		 */
 		public void setExpression(final String expr) {
 			this.expr = expr;
+		}
+	}
+	
+	/**
+	 * Remove any references to non-existent objects.
+	 */
+	public void synchronise() {
+		for (final Iterator i = this.renamedTables.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (this.ds.getTableByName((String)entry.getKey())==null)
+				i.remove();
+		}
+		for (final Iterator i = this.expressionColumns.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (this.ds.getTableByName((String)entry.getKey())==null)
+				i.remove();
+		}
+		for (final Iterator i = this.maskedTables.iterator(); i.hasNext(); ) {
+			final String tbl = (String)i.next();
+			if (this.ds.getTableByName(tbl)==null)
+				i.remove();
+		}
+		for (final Iterator i = this.renamedColumns.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (this.ds.getTableByName((String)entry.getKey())==null)
+				i.remove();
+			else {
+				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
+				final Map cols = (Map)entry.getValue();
+				for (final Iterator j = cols.entrySet().iterator(); j.hasNext(); ) {
+					final Map.Entry entry2 = (Map.Entry)j.next();
+					if (tbl.getColumnByName((String)entry2.getKey())==null)
+						j.remove();
+				}
+				if (cols.isEmpty())
+					i.remove();
+			}
+		}
+		for (final Iterator i = this.maskedColumns.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (this.ds.getTableByName((String)entry.getKey())==null)
+				i.remove();
+			else {
+				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
+				final Collection cols = (Collection)entry.getValue();
+				for (final Iterator j = cols.iterator(); j.hasNext(); ) 
+					if (tbl.getColumnByName((String)j.next())==null)
+						j.remove();
+				if (cols.isEmpty())
+					i.remove();
+			}
+		}
+		for (final Iterator i = this.indexedColumns.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (this.ds.getTableByName((String)entry.getKey())==null)
+				i.remove();
+			else {
+				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
+				final Collection cols = (Collection)entry.getValue();
+				for (final Iterator j = cols.iterator(); j.hasNext(); ) 
+					if (tbl.getColumnByName((String)j.next())==null)
+						j.remove();
+				if (cols.isEmpty())
+					i.remove();
+			}
+		}
+		for (final Iterator i = this.nonInheritedColumns.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (this.ds.getTableByName((String)entry.getKey())==null)
+				i.remove();
+			else {
+				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
+				final Collection cols = (Collection)entry.getValue();
+				for (final Iterator j = cols.iterator(); j.hasNext(); ) 
+					if (tbl.getColumnByName((String)j.next())==null)
+						j.remove();
+				if (cols.isEmpty())
+					i.remove();
+			}
+		}
+		for (final Iterator i = this.partitionedColumns.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (this.ds.getTableByName((String)entry.getKey())==null)
+				i.remove();
+			else {
+				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
+				final Map cols = (Map)entry.getValue();
+				for (final Iterator j = cols.entrySet().iterator(); j.hasNext(); ) {
+					final Map.Entry entry2 = (Map.Entry)j.next();
+					if (tbl.getColumnByName((String)entry2.getKey())==null)
+						j.remove();
+				}
+				if (cols.isEmpty())
+					i.remove();
+			}
 		}
 	}
 }

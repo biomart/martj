@@ -589,8 +589,8 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.show();
 
 		final String colKey = definition == null ? dataset
-				.getSchemaModifications().nextConcatColumn()
-				: definition.getColKey();
+				.getSchemaModifications().nextConcatColumn() : definition
+				.getColKey();
 
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -676,6 +676,24 @@ public class DataSetTabSet extends JTabbedPane {
 				MartBuilderUtils.invisibleDataSet(dataset);
 			}
 		}, dataset);
+	}
+
+	/**
+	 * Requests that all columns be non-inherited.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the table to non-inherit all columns on.
+	 */
+	public void requestNonInheritAllColumns(final DataSet ds,
+			final DataSetTable table) {
+		this.runThenRecalculate(new Task() {
+			public void run() throws Throwable {
+				// Mask the column.
+				MartBuilderUtils.nonInheritAllColumns(ds, table);
+			}
+		}, ds);
 	}
 
 	/**
@@ -1225,13 +1243,14 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		final PartitionedColumnDefinition type = dialog.getPartitionType();
+		final DataSetColumn partCol = dialog.getColumn();
 		if (type == null)
 			return;
 		// Do the partitioning.
 		this.runThenRepaint(new Task() {
 			public void run() throws Throwable {
 				// Do the partitioning.
-				MartBuilderUtils.partitionByColumn(dataset, column, type);
+				MartBuilderUtils.partitionByColumn(dataset, partCol, type);
 			}
 		}, dataset);
 	}
@@ -1594,6 +1613,23 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() throws Throwable {
 				// Unmask the column.
 				MartBuilderUtils.unNonInheritColumn(ds, column);
+			}
+		}, ds);
+	}
+
+	/**
+	 * Requests that all columns be un-non-inherited.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param table
+	 *            the table to un-non-inherit all columns on.
+	 */
+	public void requestUnNonInheritAllColumns(final DataSet ds,
+			final DataSetTable table) {
+		this.runThenRecalculate(new Task() {
+			public void run() throws Throwable {
+				MartBuilderUtils.unNonInheritAllColumns(ds, table);
 			}
 		}, ds);
 	}

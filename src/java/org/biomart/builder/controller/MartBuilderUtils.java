@@ -277,6 +277,32 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Non-inherits all column within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to uninherit the column in.
+	 * @param table
+	 *            the table to uninherit.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void nonInheritAllColumns(final DataSet dataset,
+			final DataSetTable table) throws SQLException, DataModelException {
+		Log.info(Resources.get("logReqNonInheritColumn"));
+		for (final Iterator i = table.getColumns().iterator(); i.hasNext();) {
+			final DataSetColumn column = (DataSetColumn) i.next();
+			try {
+				dataset.getDataSetModifications().setNonInheritedColumn(column);
+			} catch (ValidationException e) {
+				// We don't care.
+			}
+		}
+		dataset.synchronise();
+	}
+
+	/**
 	 * Non-inherits a column within a dataset.
 	 * 
 	 * @param dataset
@@ -314,6 +340,27 @@ public class MartBuilderUtils {
 			final DataSetColumn column) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqUnNonInheritColumn"));
 		dataset.getDataSetModifications().unsetNonInheritedColumn(column);
+		dataset.synchronise();
+	}
+
+	/**
+	 * Un-Non-inherits all column within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to uninherit the column in.
+	 * @param table
+	 *            the table to uninherit.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void unNonInheritAllColumns(final DataSet dataset,
+			final DataSetTable table) throws SQLException, DataModelException {
+		Log.info(Resources.get("logReqNonInheritColumn"));
+		for (final Iterator i = table.getColumns().iterator(); i.hasNext();)
+			dataset.getDataSetModifications().unsetNonInheritedColumn(
+					(DataSetColumn) i.next());
 		dataset.synchronise();
 	}
 
@@ -1014,7 +1061,8 @@ public class MartBuilderUtils {
 	 *             if this could not be done.
 	 */
 	public static void restrictTable(final DataSetTable datasetTable,
-			final Table table, final String expression, final Map aliases) throws ValidationException {
+			final Table table, final String expression, final Map aliases)
+			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
 		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
 				expression, aliases);
