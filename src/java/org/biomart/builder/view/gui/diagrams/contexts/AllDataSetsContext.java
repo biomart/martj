@@ -29,6 +29,7 @@ import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -66,7 +67,13 @@ public class AllDataSetsContext implements DiagramContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
-		// Nothing to do here.
+		if (object instanceof DataSet) {
+			// Set the background colour.
+			if (((DataSet)object).getInvisible())
+				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
+			else
+				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
+		}
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,

@@ -18,9 +18,6 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -32,30 +29,23 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
-import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.ListCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.common.model.Key;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
+import org.biomart.common.view.gui.panels.TwoColumnTablePanel.DataSetColumnStringTablePanel;
 
 /**
  * This dialog asks users to create or modify an expression column.
@@ -72,19 +62,13 @@ public class ExpressionColumnDialog extends JDialog {
 
 	private boolean cancelled;
 
-	private ColumnAliasTableModel columnAliasModel;
-
-	private JTable columnAliasTable;
+	private TwoColumnTablePanel columnAliasModel;
 
 	private JButton execute;
 
 	private JTextArea expression;
 
 	private JCheckBox groupBy;
-
-	private JButton insert;
-
-	private JButton remove;
 
 	private DataSetTable table;
 
@@ -140,129 +124,47 @@ public class ExpressionColumnDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create the fields that will contain the user's table choices.
+		final Map defaults = new HashMap();
+		if (template!=null) 
+			for (final Iterator i = template.getAliases().entrySet().iterator(); i.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)i.next();
+				defaults.put(table.getColumnByName((String)entry.getKey()), entry.getValue());
+			}
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
-		this.columnAliasModel = new ColumnAliasTableModel(table, template);
-		this.columnAliasTable = new JTable(this.columnAliasModel);
-		this.columnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX.
-		// Arbitrary size.
-		this.columnAliasTable.setPreferredScrollableViewportSize(new Dimension(
-				400, 100));
-		// Some buttons.
-		this.insert = new JButton(Resources.get("insertAliasButton"));
-		this.remove = new JButton(Resources.get("removeAliasButton"));
+		this.columnAliasModel = new DataSetColumnStringTablePanel(defaults, table.getColumns(), skipIncludeCol) {
+			private static final long serialVersionUID = 1L;
+			private int alias = 1;
+
+			public String getInsertButtonText() {
+				return Resources.get("insertAliasButton");
+			}
+			public String getRemoveButtonText() {
+				return Resources.get("removeAliasButton");
+			}
+			public String getFirstColumnHeader() {
+				return Resources.get("columnAliasTableColHeader");
+			}
+			public String getSecondColumnHeader() {
+				return Resources.get("columnAliasTableAliasHeader");
+			}
+			public Object getNewRowSecondColumn() {
+				return Resources.get("defaultAlias")+this.alias++;
+			}
+		};
+		
 		this.groupBy = new JCheckBox(Resources.get("groupbyLabel"));
-
-		// Set the column-editor for the column column.
-		final TableColumn columnColumn = this.columnAliasTable.getColumnModel()
-				.getColumn(0);
-		final JComboBox columnEditor = new JComboBox();
-		final Map sortedCols = new TreeMap();
-		for (final Iterator i = this.table.getColumns().iterator(); i.hasNext();) {
-			final DataSetColumn col = (DataSetColumn) i.next();
-			if (skipIncludeCol == null || !col.equals(skipIncludeCol))
-				sortedCols.put(col.getModifiedName(), col);
-		}
-		for (final Iterator i = sortedCols.values().iterator(); i.hasNext();)
-			columnEditor.addItem(i.next());
-		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
-		columnEditor.setRenderer(new ListCellRenderer() {
-			public Component getListCellRendererComponent(final JList list,
-					final Object value, final int index,
-					final boolean isSelected, final boolean cellHasFocus) {
-				final DataSetColumn col = (DataSetColumn) value;
-				final JLabel label = new JLabel();
-				if (col != null)
-					label.setText(col.getModifiedName());
-				label.setOpaque(true);
-				label.setFont(list.getFont());
-				if (isSelected) {
-					label.setBackground(list.getSelectionBackground());
-					label.setForeground(list.getSelectionForeground());
-				} else {
-					label.setBackground(list.getBackground());
-					label.setForeground(list.getForeground());
-				}
-				return label;
-			}
-		});
-		columnColumn.setCellRenderer(new TableCellRenderer() {
-			public Component getTableCellRendererComponent(JTable table,
-					Object value, boolean isSelected, boolean hasFocus,
-					int row, int column) {
-				final DataSetColumn col = (DataSetColumn) value;
-				final JLabel label = new JLabel();
-				if (col != null)
-					label.setText(col.getModifiedName());
-				label.setOpaque(true);
-				label.setFont(table.getFont());
-				if (isSelected) {
-					label.setBackground(table.getSelectionBackground());
-					label.setForeground(table.getSelectionForeground());
-				} else {
-					label.setBackground(table.getBackground());
-					label.setForeground(table.getForeground());
-				}
-				return label;
-			}
-		});
-
-		// Size the table columns.
-		this.columnAliasTable.getColumnModel().getColumn(0).setPreferredWidth(
-				columnEditor.getPreferredSize().width);
-		this.columnAliasTable.getColumnModel().getColumn(1).setPreferredWidth(
-				this.columnAliasTable.getTableHeader().getDefaultRenderer()
-						.getTableCellRendererComponent(
-								null,
-								this.columnAliasTable.getColumnModel()
-										.getColumn(1).getHeaderValue(), false,
-								false, 0, 0).getPreferredSize().width);
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = template == null ? new JButton(Resources
 				.get("addButton")) : new JButton(Resources.get("modifyButton"));
 
-		// Listener for the insert button.
-		this.insert.addActionListener(new ActionListener() {
-			private int aliasCount = 1;
-
-			public void actionPerformed(final ActionEvent e) {
-				ExpressionColumnDialog.this.columnAliasModel.insertRow(
-						ExpressionColumnDialog.this.columnAliasModel
-								.getRowCount(), new Object[] {
-								columnEditor.getItemAt(0),
-								Resources.get("defaultAlias")
-										+ (this.aliasCount++) });
-			}
-		});
-
-		// Listener for the remove button.
-		this.remove.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				final int rows[] = ExpressionColumnDialog.this.columnAliasTable
-						.getSelectedRows();
-				// Reverse order, so we don't end up with changing
-				// indices along the way.
-				for (int i = rows.length - 1; i >= 0; i--)
-					ExpressionColumnDialog.this.columnAliasModel
-							.removeRow(rows[i]);
-			}
-		});
-
 		// Add the column aliases table.
 		JLabel label = new JLabel(Resources.get("columnAliasLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		JPanel field = new JPanel();
-		field.add(new JScrollPane(this.columnAliasTable));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.insert);
-		field.add(this.remove);
+		field.add(this.columnAliasModel);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -345,7 +247,7 @@ public class ExpressionColumnDialog extends JDialog {
 					.get("expression")));
 
 		// Validate other fields.
-		if (this.columnAliasModel.getColumnAliases().isEmpty())
+		if (this.columnAliasModel.getValues().isEmpty())
 			messages.add(Resources.get("columnAliasMissing"));
 
 		// If group-by is selected, we can't allow them to use columns
@@ -392,7 +294,7 @@ public class ExpressionColumnDialog extends JDialog {
 	 * @return the aliases.
 	 */
 	public Map getColumnAliases() {
-		return this.columnAliasModel.getColumnAliases();
+		return this.columnAliasModel.getValues();
 	}
 
 	/**
@@ -411,62 +313,5 @@ public class ExpressionColumnDialog extends JDialog {
 	 */
 	public boolean getGroupBy() {
 		return this.groupBy.isSelected();
-	}
-
-	/**
-	 * This internal class represents a map of dataset columns to aliases.
-	 */
-	private static class ColumnAliasTableModel extends DefaultTableModel {
-		private static final Class[] colClasses = new Class[] {
-				DataSetColumn.class, String.class };
-
-		private static final long serialVersionUID = 1;
-
-		/**
-		 * Construct a model of aliases for the given table, and copy any
-		 * existing aliases from the given template.
-		 * 
-		 * @param table
-		 *            the table we are showing columns for.
-		 * @param template
-		 *            the existing alises to copy.
-		 */
-		public ColumnAliasTableModel(final DataSetTable table,
-				final ExpressionColumnDefinition template) {
-			super(new Object[] { Resources.get("columnAliasTableColHeader"),
-					Resources.get("columnAliasTableAliasHeader") }, 0);
-			// Populate columns, and aliases from template.
-			if (template != null)
-				for (final Iterator i = template.getAliases().entrySet()
-						.iterator(); i.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final String colName = (String) entry.getKey();
-					this.insertRow(this.getRowCount(), new Object[] {
-							table.getColumnByName(colName),
-							(String) entry.getValue() });
-				}
-		}
-
-		/**
-		 * Find out what aliases the user has defined.
-		 * 
-		 * @return a map where the keys are columns and the values are aliases.
-		 */
-		public Map getColumnAliases() {
-			// Return the map of column to alias.
-			final HashMap aliases = new HashMap();
-			for (int i = 0; i < this.getRowCount(); i++) {
-				final DataSetColumn col = (DataSetColumn) this.getValueAt(i, 0);
-				final String alias = (String) this.getValueAt(i, 1);
-				if (col != null
-						&& !(alias == null || alias.trim().length() == 0))
-					aliases.put(col.getName(), alias);
-			}
-			return aliases;
-		}
-
-		public Class getColumnClass(final int column) {
-			return ColumnAliasTableModel.colClasses[column];
-		}
 	}
 }

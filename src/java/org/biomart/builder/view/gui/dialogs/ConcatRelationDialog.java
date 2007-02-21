@@ -18,37 +18,29 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
 
 import org.biomart.builder.model.SchemaModificationSet;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.Column.GenericColumn;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
+import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -66,17 +58,11 @@ public class ConcatRelationDialog extends JDialog {
 
 	private boolean cancelled;
 
-	private ColumnAliasTableModel columnAliasModel;
-
-	private JTable columnAliasTable;
+	private TwoColumnTablePanel columnAliasModel;
 
 	private JButton execute;
 
 	private JTextArea expression;
-
-	private JButton insert;
-
-	private JButton remove;
 
 	private JTextField rowSep;
 
@@ -131,80 +117,38 @@ public class ConcatRelationDialog extends JDialog {
 		this.rowSep = new JTextField(5);
 
 		// First table aliases.
-		this.columnAliasModel = new ColumnAliasTableModel(template);
-		this.columnAliasTable = new JTable(this.columnAliasModel);
-		this.columnAliasTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX fix.
-		this.columnAliasTable.setPreferredScrollableViewportSize(new Dimension(
-				400, 100));
-		// Arbitrary size.
-		this.insert = new JButton(Resources.get("insertAliasButton"));
-		this.remove = new JButton(Resources.get("removeAliasButton"));
+		this.columnAliasModel = new ColumnStringTablePanel(template==null?null:template.getAliases(), table.getColumns()) {
+			private static final long serialVersionUID = 1L;
+			private int alias = 1;
 
-		// Set the column-editor for the first column column.
-		final TableColumn columnColumn = this.columnAliasTable.getColumnModel()
-				.getColumn(0);
-		final JComboBox columnEditor = new JComboBox();
-		for (final Iterator i = table.getColumns().iterator(); i.hasNext();)
-			columnEditor.addItem(i.next());
-		columnColumn.setCellEditor(new DefaultCellEditor(columnEditor));
-
-		// Size the first table columns.
-		this.columnAliasTable.getColumnModel().getColumn(0).setPreferredWidth(
-				columnEditor.getPreferredSize().width);
-		this.columnAliasTable.getColumnModel().getColumn(1).setPreferredWidth(
-				this.columnAliasTable.getTableHeader().getDefaultRenderer()
-						.getTableCellRendererComponent(
-								null,
-								this.columnAliasTable.getColumnModel()
-										.getColumn(1).getHeaderValue(), false,
-								false, 0, 0).getPreferredSize().width);
+			public String getInsertButtonText() {
+				return Resources.get("insertAliasButton");
+			}
+			public String getRemoveButtonText() {
+				return Resources.get("removeAliasButton");
+			}
+			public String getFirstColumnHeader() {
+				return Resources.get("columnAliasTableColHeader");
+			}
+			public String getSecondColumnHeader() {
+				return Resources.get("columnAliasTableAliasHeader");
+			}
+			public Object getNewRowSecondColumn() {
+				return Resources.get("defaultAlias")+this.alias++;
+			}
+		}; 
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = template == null ? new JButton(Resources
 				.get("addButton")) : new JButton(Resources.get("modifyButton"));
 
-		// Listener for the insert button.
-		this.insert.addActionListener(new ActionListener() {
-			private int aliasCount = 1;
-
-			public void actionPerformed(final ActionEvent e) {
-				ConcatRelationDialog.this.columnAliasModel.insertRow(
-						ConcatRelationDialog.this.columnAliasModel
-								.getRowCount(), new Object[] {
-								columnEditor.getItemAt(0),
-								Resources.get("defaultAlias")
-										+ (this.aliasCount++) });
-			}
-		});
-
-		// Listener for the remove button.
-		this.remove.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				final int rows[] = ConcatRelationDialog.this.columnAliasTable
-						.getSelectedRows();
-				// Reverse order, so we don't end up with changing
-				// indices along the way.
-				for (int i = rows.length - 1; i >= 0; i--)
-					ConcatRelationDialog.this.columnAliasModel
-							.removeRow(rows[i]);
-			}
-		});
-
 		// Add the aliases.
 		JLabel label = new JLabel(Resources.get("columnAliasLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		JPanel field = new JPanel();
-		field.add(new JScrollPane(this.columnAliasTable));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.insert);
-		field.add(this.remove);
+		field.add(this.columnAliasModel);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -290,7 +234,7 @@ public class ConcatRelationDialog extends JDialog {
 					.add(Resources.get("fieldIsEmpty", Resources.get("rowSep")));
 
 		// Validate other fields.
-		if (this.columnAliasModel.getColumnAliases().isEmpty())
+		if (this.columnAliasModel.getValues().isEmpty())
 			messages.add(Resources.get("columnAliasMissing"));
 
 		// If there any messages, display them.
@@ -319,7 +263,7 @@ public class ConcatRelationDialog extends JDialog {
 	 * @return the aliases.
 	 */
 	public Map getColumnAliases() {
-		return this.columnAliasModel.getColumnAliases();
+		return this.columnAliasModel.getValues();
 	}
 
 	/**
@@ -338,60 +282,5 @@ public class ConcatRelationDialog extends JDialog {
 	 */
 	public String getRowSep() {
 		return this.rowSep.getText();
-	}
-
-	/**
-	 * This internal class represents a map of dataset columns to aliases.
-	 */
-	private static class ColumnAliasTableModel extends DefaultTableModel {
-		private static final Class[] colClasses = new Class[] {
-				GenericColumn.class, String.class };
-
-		private static final long serialVersionUID = 1;
-
-		/**
-		 * This constructor sets up a new model, and populates it with the
-		 * contents of the given restriction if provided.
-		 * 
-		 * @param template
-		 *            the model to copy existing settings from.
-		 */
-		public ColumnAliasTableModel(
-				final SchemaModificationSet.ConcatRelationDefinition template) {
-			super(new Object[] { Resources.get("columnAliasTableColHeader"),
-					Resources.get("columnAliasTableAliasHeader") }, 0);
-			// Populate columns, and aliases from template.
-			if (template != null)
-				for (final Iterator i = template.getAliases().entrySet()
-						.iterator(); i.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final GenericColumn col = (GenericColumn) entry.getKey();
-					this.insertRow(this.getRowCount(), new Object[] { col,
-							(String) entry.getValue() });
-				}
-		}
-
-		/**
-		 * Find out what aliases the user has given.
-		 * 
-		 * @return a map of aliases. Keys are column instances, values are the
-		 *         aliases the user assigned.
-		 */
-		public Map getColumnAliases() {
-			// Return the map of column to alias.
-			final HashMap aliases = new HashMap();
-			for (int i = 0; i < this.getRowCount(); i++) {
-				final GenericColumn col = (GenericColumn) this.getValueAt(i, 0);
-				final String alias = (String) this.getValueAt(i, 1);
-				if (col != null
-						&& !(alias == null || alias.trim().length() == 0))
-					aliases.put(col, alias);
-			}
-			return aliases;
-		}
-
-		public Class getColumnClass(final int column) {
-			return ColumnAliasTableModel.colClasses[column];
-		}
 	}
 }

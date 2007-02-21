@@ -142,10 +142,6 @@ public class SchemaTabSet extends JTabbedPane {
 		// current context on this schema tabset.
 		schemaDiagram.setDiagramContext(this.getDiagramContext());
 
-		// Update the all-schemas diagram so that it includes the new
-		// schema.
-		this.recalculateOverviewDiagram();
-
 		if (selectNewSchema) {
 			// Fake a click on the schema tab and on the button
 			// that selects the schema editor in the current mart tabset.
@@ -465,6 +461,9 @@ public class SchemaTabSet extends JTabbedPane {
 							else
 								SchemaTabSet.this
 										.recalculateAllSchemaDiagrams();
+
+							// Update the all-schemas diagram so that it includes the new
+							// schema.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
 							// This may have caused new dimensions or subclass
@@ -508,6 +507,8 @@ public class SchemaTabSet extends JTabbedPane {
 								SchemaTabSet.this.repaintSchemaDiagram(s);
 							else
 								SchemaTabSet.this.repaintAllSchemaDiagrams();
+							
+							// Repaint overview too.
 							SchemaTabSet.this.repaintOverviewDiagram();
 
 							// This may have caused new dimensions or subclass

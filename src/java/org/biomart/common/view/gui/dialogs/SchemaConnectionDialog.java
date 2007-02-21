@@ -42,6 +42,8 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.panels.JDBCSchemaConnectionPanel;
+import org.biomart.common.view.gui.panels.SchemaConnectionPanel;
 
 /**
  * This dialog box allows the user to define or modify a schema, by giving it a

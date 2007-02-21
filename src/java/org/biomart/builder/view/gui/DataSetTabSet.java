@@ -152,10 +152,6 @@ public class DataSetTabSet extends JTabbedPane {
 		datasetDiagram.setDiagramContext(new DataSetContext(this.martTab,
 				dataset));
 
-		// Update the all-datasets diagram so that it includes the new
-		// dataset.
-		this.recalculateOverviewDiagram();
-
 		if (selectDataset) {
 			// Fake a click on the dataset tab.
 			this.setSelectedIndex(this.indexOfTab(dataset.getName()));
@@ -485,6 +481,9 @@ public class DataSetTabSet extends JTabbedPane {
 							else
 								DataSetTabSet.this
 										.recalculateAllDataSetDiagrams();
+							
+							// And the overview.
+							DataSetTabSet.this.recalculateOverviewDiagram();
 
 							// Update the explanation diagram so that it
 							// correctly reflects any changed relation.
@@ -506,6 +505,10 @@ public class DataSetTabSet extends JTabbedPane {
 		});
 	}
 
+	private void runThenRepaint(final Task task) {
+		this.runThenRepaint(task, null);
+	}
+
 	private void runThenRepaint(final Task task, final DataSet ds) {
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -519,6 +522,9 @@ public class DataSetTabSet extends JTabbedPane {
 								DataSetTabSet.this.repaintDataSetDiagram(ds);
 							else
 								DataSetTabSet.this.repaintAllDataSetDiagrams();
+							
+							// And the overview.
+							DataSetTabSet.this.repaintOverviewDiagram();
 
 							// Update the explanation diagram so that it
 							// correctly reflects any changed relation.
@@ -675,7 +681,7 @@ public class DataSetTabSet extends JTabbedPane {
 				// Do the invisibility.
 				MartBuilderUtils.invisibleDataSet(dataset);
 			}
-		}, dataset);
+		});
 	}
 
 	/**
@@ -1781,6 +1787,6 @@ public class DataSetTabSet extends JTabbedPane {
 				// Do the visibility.
 				MartBuilderUtils.visibleDataSet(dataset);
 			}
-		}, dataset);
+		});
 	}
 }

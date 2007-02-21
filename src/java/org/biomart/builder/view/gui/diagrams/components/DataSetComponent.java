@@ -130,10 +130,7 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.removeAll();
 
 		// Set the background colour.
-		if (this.getDataSet().getInvisible())
-			this.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
-		else
-			this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
+		this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 		// Add the label for the dataset name,
 		final JLabel label = new JLabel(this.getDataSet().getName());
