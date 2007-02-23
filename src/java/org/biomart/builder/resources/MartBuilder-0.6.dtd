@@ -131,6 +131,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable expression CDATA #REQUIRED>
+<!ATTLIST restrictedTable hard (true|false) #IMPLIED>
 
 <!ELEMENT restrictedRelation EMPTY>
 <!ATTLIST restrictedRelation tableKey CDATA #REQUIRED>
@@ -141,6 +142,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST restrictedRelation rightAliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedRelation rightAliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedRelation expression CDATA #REQUIRED>
+<!ATTLIST restrictedRelation hard (true|false) #IMPLIED>
 
 <!ELEMENT expressionColumn EMPTY>
 <!ATTLIST expressionColumn tableKey CDATA #REQUIRED>
@@ -159,3 +161,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST concatRelation aliasNames CDATA #REQUIRED>
 <!ATTLIST concatRelation expression CDATA #REQUIRED>
 <!ATTLIST concatRelation rowSep CDATA #REQUIRED>
+<!ATTLIST concatRelation recursionType (NONE|PREPEND|APPEND) #IMPLIED>
+<!ATTLIST concatRelation recursionKey IDREF #IMPLIED>
+<!ATTLIST concatRelation firstRelation IDREF #IMPLIED>
+<!ATTLIST concatRelation secondRelation IDREF #IMPLIED>

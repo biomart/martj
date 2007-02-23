@@ -38,6 +38,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
@@ -682,11 +683,14 @@ public class MartBuilderUtils {
 	 */
 	public static void concatRelation(final DataSetTable dsTable,
 			final Relation rel, final int index, final String column,
-			final Map aliases, final String expression, final String rowSep)
+			final Map aliases, final String expression, final String rowSep,
+			final RecursionType recursionType, final Key recursionKey,
+			final Relation firstRelation, final Relation secondRelation)
 			throws SQLException, DataModelException, ValidationException {
 		Log.info(Resources.get("logReqConcatRelation"));
 		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
-				expression, aliases, rowSep, column);
+				expression, aliases, rowSep, column,
+				recursionType, recursionKey, firstRelation, secondRelation);
 		((DataSet) dsTable.getSchema()).getSchemaModifications()
 				.setConcatRelation(dsTable, rel, index, expr);
 		((DataSet) dsTable.getSchema()).synchronise();
@@ -718,11 +722,14 @@ public class MartBuilderUtils {
 	 */
 	public static void concatRelation(final DataSet ds, final Relation rel,
 			final int index, final String column, final Map aliases,
-			final String expression, final String rowSep) throws SQLException,
+			final String expression, final String rowSep,
+			final RecursionType recursionType, final Key recursionKey,
+			final Relation firstRelation, final Relation secondRelation) throws SQLException,
 			DataModelException, ValidationException {
 		Log.info(Resources.get("logReqConcatRelation"));
 		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
-				expression, aliases, rowSep, column);
+				expression, aliases, rowSep, column,
+				recursionType, recursionKey, firstRelation, secondRelation);
 		ds.getSchemaModifications().setConcatRelation(rel, index, expr);
 		ds.synchronise();
 	}
@@ -1061,11 +1068,12 @@ public class MartBuilderUtils {
 	 *             if this could not be done.
 	 */
 	public static void restrictTable(final DataSetTable datasetTable,
-			final Table table, final String expression, final Map aliases)
+			final Table table, final String expression, final Map aliases,
+			final boolean hard)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
 		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
-				expression, aliases);
+				expression, aliases, hard);
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setRestrictedTable(datasetTable, table, restriction);
 	}
@@ -1086,11 +1094,11 @@ public class MartBuilderUtils {
 	 *             if this could not be done.
 	 */
 	public static void restrictTable(final DataSet dataset, final Table table,
-			final String expression, final Map aliases)
+			final String expression, final Map aliases, final boolean hard)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictTable"));
 		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
-				expression, aliases);
+				expression, aliases, hard);
 		dataset.getSchemaModifications().setRestrictedTable(table, restriction);
 	}
 
@@ -1150,11 +1158,11 @@ public class MartBuilderUtils {
 	 */
 	public static void restrictRelation(final DataSetTable datasetTable,
 			final Relation relation, final int index, final String expression,
-			final Map lhsAliases, final Map rhsAliases)
+			final Map lhsAliases, final Map rhsAliases, final boolean hard)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictRelation"));
 		final RestrictedRelationDefinition restriction = new RestrictedRelationDefinition(
-				expression, lhsAliases, rhsAliases);
+				expression, lhsAliases, rhsAliases, hard);
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setRestrictedRelation(datasetTable, relation, index,
 						restriction);
@@ -1181,11 +1189,11 @@ public class MartBuilderUtils {
 	 */
 	public static void restrictRelation(final DataSet dataset,
 			final Relation relation, final int index, final String expression,
-			final Map lhsAliases, final Map rhsAliases)
+			final Map lhsAliases, final Map rhsAliases, final boolean hard)
 			throws ValidationException {
 		Log.info(Resources.get("logReqRestrictRelation"));
 		final RestrictedRelationDefinition restriction = new RestrictedRelationDefinition(
-				expression, lhsAliases, rhsAliases);
+				expression, lhsAliases, rhsAliases, hard);
 		dataset.getSchemaModifications().setRestrictedRelation(relation, index,
 				restriction);
 	}

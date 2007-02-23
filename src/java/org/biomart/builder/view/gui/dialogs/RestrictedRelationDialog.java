@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -64,6 +65,8 @@ public class RestrictedRelationDialog extends JDialog {
 	private JButton execute;
 
 	private JTextArea expression;
+	
+	private JCheckBox hard;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
@@ -114,6 +117,7 @@ public class RestrictedRelationDialog extends JDialog {
 
 		// Create the fields that will contain the user's table choices.
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
+		this.hard = new JCheckBox(Resources.get("hardLabel"));
 
 		// First table aliases.
 		this.lcolumnAliasModel = new ColumnStringTablePanel(template==null?null:template.getLeftAliases(), relation.getFirstKey().getTable().getColumns()) {
@@ -185,6 +189,15 @@ public class RestrictedRelationDialog extends JDialog {
 		field.add(new JScrollPane(this.expression));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
+		
+		// Add the hard option.
+		label = new JLabel();
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.hard);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
@@ -230,8 +243,10 @@ public class RestrictedRelationDialog extends JDialog {
 		this.setLocationRelativeTo(null);
 
 		// Set some nice defaults.
-		if (template != null)
+		if (template != null) {
 			this.expression.setText(template.getExpression());
+			this.hard.setSelected(template.isHard());
+		}
 		// Aliases were already copied in the JTable constructor above.
 	}
 
@@ -299,5 +314,9 @@ public class RestrictedRelationDialog extends JDialog {
 	 */
 	public String getExpression() {
 		return this.expression.getText().trim();
+	}
+	
+	public boolean getHard() {
+		return this.hard.isSelected();
 	}
 }

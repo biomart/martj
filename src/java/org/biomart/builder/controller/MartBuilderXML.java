@@ -52,6 +52,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
@@ -816,6 +817,8 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					this.writeAttribute("expression", restrict.getExpression(),
 							xmlWriter);
+					this.writeAttribute("hard", ""+restrict.isHard(),
+							xmlWriter);
 					this.closeElement("restrictedTable", xmlWriter);
 				}
 			}
@@ -863,6 +866,24 @@ public class MartBuilderXML extends DefaultHandler {
 								.getExpression(), xmlWriter);
 						this.writeAttribute("rowSep", restrict.getRowSep(),
 								xmlWriter);
+						this.writeAttribute("recursionType", restrict
+								.getRecursionType().getName(), xmlWriter);
+						if (restrict.getRecursionType() != RecursionType.NONE) {
+							this.writeAttribute("recursionKey",
+									(String) this.reverseMappedObjects
+											.get(restrict.getRecursionKey()),
+									xmlWriter);
+							this.writeAttribute("firstRelation",
+									(String) this.reverseMappedObjects
+											.get(restrict.getFirstRelation()),
+									xmlWriter);
+							if (restrict.getSecondRelation() != null)
+								this.writeAttribute("secondRelation",
+										(String) this.reverseMappedObjects
+												.get(restrict
+														.getSecondRelation()),
+										xmlWriter);
+						}
 						this.closeElement("concatRelation", xmlWriter);
 					}
 				}
@@ -984,6 +1005,8 @@ public class MartBuilderXML extends DefaultHandler {
 								.toString(), xmlWriter);
 						this.writeAttribute("expression", restrict
 								.getExpression(), xmlWriter);
+						this.writeAttribute("hard", ""+restrict.isHard(),
+								xmlWriter);
 						this.closeElement("restrictedRelation", xmlWriter);
 					}
 				}
@@ -1732,12 +1755,35 @@ public class MartBuilderXML extends DefaultHandler {
 				final String rowSep = (String) attributes.get("rowSep");
 				final String colKey = (String) attributes.get("colKey");
 
+				// Recursion stuff.
+				RecursionType rType = attributes.containsKey("recursionType") ? RecursionType
+						.get((String) attributes.get("recursionType"))
+						: RecursionType.NONE;
+				Key rKey = null;
+				Relation fRel = null;
+				Relation sRel = null;
+				if (rType != RecursionType.NONE) {
+					rKey = (Key) this.mappedObjects.get((String) attributes
+							.get("relationKey"));
+					fRel = (Relation) this.mappedObjects
+							.get((String) attributes.get("firstRelation"));
+					if (attributes.containsKey("secondRelation"))
+						sRel = (Relation) this.mappedObjects
+								.get((String) attributes.get("secondRelation"));
+					if (rKey == null
+							|| fRel == null
+							|| (!fRel.getFirstKey().getTable().equals(
+									fRel.getSecondKey().getTable()) && sRel == null))
+						rType = RecursionType.NONE;
+				}
+
 				// Flag it as restricted
 				if (expr != null && rel != null && tableKey != null
 						&& !aliases.isEmpty() && rowSep != null
 						&& colKey != null) {
 					final ConcatRelationDefinition restrict = new ConcatRelationDefinition(
-							expr, aliases, rowSep, colKey);
+							expr, aliases, rowSep, colKey, rType, rKey, fRel,
+							sRel);
 					final Map restMap = w.getSchemaModifications()
 							.getConcatRelations();
 					if (!restMap.containsKey(tableKey))
@@ -1789,12 +1835,13 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
-				
+				final boolean hard = Boolean.valueOf((String)attributes.get("hard")).booleanValue();
+
 				// Flag it as restricted
 				if (expr != null && !aliases.isEmpty() && tableKey != null
 						&& tbl != null) {
 					final RestrictedTableDefinition restrict = new RestrictedTableDefinition(
-							expr, aliases);
+							expr, aliases, hard);
 					final Map restMap = w.getSchemaModifications()
 							.getRestrictedTables();
 					if (!restMap.containsKey(tableKey))
@@ -1903,12 +1950,13 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
+				final boolean hard = Boolean.valueOf((String)attributes.get("hard")).booleanValue();
 
 				// Flag it as restricted
 				if (expr != null && rel != null && tableKey != null
 						&& !laliases.isEmpty() && !raliases.isEmpty()) {
 					final RestrictedRelationDefinition restrict = new RestrictedRelationDefinition(
-							expr, laliases, raliases);
+							expr, laliases, raliases, hard);
 					final Map restMap = w.getSchemaModifications()
 							.getRestrictedRelations();
 					if (!restMap.containsKey(tableKey))

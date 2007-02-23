@@ -27,8 +27,8 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.ValidationException;
-import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -245,21 +245,29 @@ public class SchemaModificationSet {
 	}
 
 	public void setRestrictedRelation(final Relation relation, final int index,
-			final RestrictedRelationDefinition restriction) {
+			final RestrictedRelationDefinition restriction)
+			throws ValidationException {
 		this.setRestrictedRelation(SchemaModificationSet.DATASET, relation,
 				index, restriction);
 	}
 
 	public void setRestrictedRelation(final DataSetTable dsTable,
 			final Relation relation, final int index,
-			final RestrictedRelationDefinition restriction) {
+			final RestrictedRelationDefinition restriction)
+			throws ValidationException {
 		this.setRestrictedRelation(dsTable.getName(), relation, index,
 				restriction);
 	}
 
 	private void setRestrictedRelation(final String dsTableName,
 			final Relation relation, final int index,
-			final RestrictedRelationDefinition restriction) {
+			final RestrictedRelationDefinition restriction)
+			throws ValidationException {
+		if (this.isConcatRelation(dsTableName, relation, index)
+				&& this.getConcatRelation(dsTableName, relation, index)
+						.getRecursionType() != RecursionType.NONE)
+			throw new ValidationException(Resources
+					.get("cannotConcatRecurseRestricted"));
 		if (!this.restrictedRelations.containsKey(dsTableName))
 			this.restrictedRelations.put(dsTableName, new HashMap());
 		final Map restrictions = (Map) this.restrictedRelations
@@ -398,6 +406,10 @@ public class SchemaModificationSet {
 		if (!relation.isOneToMany())
 			throw new ValidationException(Resources
 					.get("cannotConcatNonOneMany"));
+		if (this.isRestrictedRelation(dsTableName, relation)
+				&& restriction.getRecursionType() != RecursionType.NONE)
+			throw new ValidationException(Resources
+					.get("cannotConcatRecurseRestricted"));
 		if (!this.concatRelations.containsKey(dsTableName))
 			this.concatRelations.put(dsTableName, new HashMap());
 		final Map restrictions = (Map) this.concatRelations.get(dsTableName);
@@ -809,6 +821,8 @@ public class SchemaModificationSet {
 
 		private String expr;
 
+		private boolean hard;
+
 		/**
 		 * This constructor gives the restriction an initial expression and a
 		 * set of aliases. The expression may not be empty, and neither can the
@@ -822,7 +836,8 @@ public class SchemaModificationSet {
 		 *            if this is to happen only the first time the table is
 		 *            passed over.
 		 */
-		public RestrictedTableDefinition(final String expr, final Map aliases) {
+		public RestrictedTableDefinition(final String expr, final Map aliases,
+				final boolean hard) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -835,6 +850,7 @@ public class SchemaModificationSet {
 			this.aliases = new TreeMap();
 			this.aliases.putAll(aliases);
 			this.expr = expr;
+			this.hard = hard;
 		}
 
 		/**
@@ -845,6 +861,10 @@ public class SchemaModificationSet {
 		 */
 		public Map getAliases() {
 			return this.aliases;
+		}
+
+		public boolean isHard() {
+			return this.hard;
 		}
 
 		/**
@@ -906,6 +926,8 @@ public class SchemaModificationSet {
 
 		private String expr;
 
+		private boolean hard;
+
 		/**
 		 * This constructor gives the restriction an initial expression and a
 		 * set of aliases. The expression may not be empty, and neither can the
@@ -917,7 +939,8 @@ public class SchemaModificationSet {
 		 *            the aliases to use for columns.
 		 */
 		public RestrictedRelationDefinition(final String expr,
-				final Map leftAliases, final Map rightAliases) {
+				final Map leftAliases, final Map rightAliases,
+				final boolean hard) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -933,6 +956,7 @@ public class SchemaModificationSet {
 			this.rightAliases = new TreeMap();
 			this.rightAliases.putAll(rightAliases);
 			this.expr = expr;
+			this.hard = hard;
 		}
 
 		/**
@@ -963,6 +987,10 @@ public class SchemaModificationSet {
 		 */
 		public String getExpression() {
 			return this.expr;
+		}
+
+		public boolean isHard() {
+			return this.hard;
 		}
 
 		/**
@@ -1026,6 +1054,14 @@ public class SchemaModificationSet {
 
 		private String colKey;
 
+		private RecursionType recursionType;
+
+		private Key recursionKey;
+
+		private Relation firstRelation;
+
+		private Relation secondRelation;
+
 		/**
 		 * This constructor gives the restriction an initial expression and a
 		 * set of aliases. The expression may not be empty, and neither can the
@@ -1037,7 +1073,9 @@ public class SchemaModificationSet {
 		 *            the aliases to use for columns.
 		 */
 		public ConcatRelationDefinition(final String expr, final Map aliases,
-				final String rowSep, final String colKey) {
+				final String rowSep, final String colKey,
+				RecursionType recursionType, final Key recursionKey,
+				final Relation firstRelation, final Relation secondRelation) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -1048,6 +1086,21 @@ public class SchemaModificationSet {
 			if (aliases == null || aliases.isEmpty())
 				throw new IllegalArgumentException(Resources
 						.get("concatRelMissingRowSep"));
+			if (recursionType == null)
+				recursionType = RecursionType.NONE;
+			if (recursionType != RecursionType.NONE) {
+				if (recursionKey == null)
+					throw new IllegalArgumentException(Resources
+							.get("concatRelMissingRecursionKey"));
+				if (firstRelation == null)
+					throw new IllegalArgumentException(Resources
+							.get("concatRelMissingFirstRelation"));
+				if (secondRelation == null
+						&& !firstRelation.getFirstKey().getTable().equals(
+								firstRelation.getSecondKey().getTable()))
+					throw new IllegalArgumentException(Resources
+							.get("concatRelMissingSecondRelation"));
+			}
 
 			// Remember the settings.
 			this.aliases = new TreeMap();
@@ -1055,6 +1108,10 @@ public class SchemaModificationSet {
 			this.expr = expr;
 			this.rowSep = rowSep;
 			this.colKey = colKey;
+			this.recursionType = recursionType;
+			this.recursionKey = recursionKey;
+			this.firstRelation = firstRelation;
+			this.secondRelation = secondRelation;
 		}
 
 		/**
@@ -1077,8 +1134,46 @@ public class SchemaModificationSet {
 			return this.expr;
 		}
 
+		/**
+		 * @return the expr
+		 */
 		public String getColKey() {
 			return this.colKey;
+		}
+
+		/**
+		 * @return the expr
+		 */
+		public String getExpr() {
+			return expr;
+		}
+
+		/**
+		 * @return the firstRelation
+		 */
+		public Relation getFirstRelation() {
+			return firstRelation;
+		}
+
+		/**
+		 * @return the recursionKey
+		 */
+		public Key getRecursionKey() {
+			return recursionKey;
+		}
+
+		/**
+		 * @return the recursionType
+		 */
+		public RecursionType getRecursionType() {
+			return recursionType;
+		}
+
+		/**
+		 * @return the secondRelation
+		 */
+		public Relation getSecondRelation() {
+			return secondRelation;
 		}
 
 		/**
@@ -1117,15 +1212,93 @@ public class SchemaModificationSet {
 			return sub;
 		}
 
-		/**
-		 * The actual expression. The values from the alias maps will be used to
-		 * refer to various columns. This value is RDBMS-specific.
-		 * 
-		 * @param expr
-		 *            the actual expression to use.
-		 */
-		public void setExpression(final String expr) {
-			this.expr = expr;
+		public static class RecursionType implements Comparable {
+			private static final Map singletons = new HashMap();
+
+			/**
+			 * Use this constant to refer to a key with many values.
+			 */
+			public static final RecursionType APPEND = RecursionType
+					.get("APPEND");
+
+			/**
+			 * Use this constant to refer to a key with one value.
+			 */
+			public static final RecursionType PREPEND = RecursionType
+					.get("PREPEND");
+
+			/**
+			 * Use this constant to refer to a key with one value.
+			 */
+			public static final RecursionType NONE = RecursionType.get("NONE");
+
+			/**
+			 * The static factory method creates and returns a cardinality with
+			 * the given name. It ensures the object returned is a singleton.
+			 * Note that the names of cardinality objects are case-sensitive.
+			 * 
+			 * @param name
+			 *            the name of the cardinality object.
+			 * @return the cardinality object.
+			 */
+			public static RecursionType get(final String name) {
+				// Do we already have this one?
+				// If so, then return it.
+				if (RecursionType.singletons.containsKey(name))
+					return (RecursionType) RecursionType.singletons.get(name);
+
+				// Otherwise, create it, remember it.
+				final RecursionType c = new RecursionType(name);
+				RecursionType.singletons.put(name, c);
+
+				// Return it.
+				return c;
+			}
+
+			private final String name;
+
+			/**
+			 * The private constructor takes a single parameter, which defines
+			 * the name this cardinality object will display when printed.
+			 * 
+			 * @param name
+			 *            the name of the cardinality.
+			 */
+			private RecursionType(final String name) {
+				this.name = name;
+			}
+
+			public int compareTo(final Object o) throws ClassCastException {
+				final RecursionType c = (RecursionType) o;
+				return this.toString().compareTo(c.toString());
+			}
+
+			public boolean equals(final Object o) {
+				// We are dealing with singletons so can use == happily.
+				return o == this;
+			}
+
+			/**
+			 * Displays the name of this cardinality object.
+			 * 
+			 * @return the name of this cardinality object.
+			 */
+			public String getName() {
+				return this.name;
+			}
+
+			public int hashCode() {
+				return this.toString().hashCode();
+			}
+
+			/**
+			 * {@inheritDoc}
+			 * <p>
+			 * Always returns the name of this cardinality.
+			 */
+			public String toString() {
+				return this.getName();
+			}
 		}
 	}
 }

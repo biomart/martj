@@ -61,6 +61,7 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -437,13 +438,11 @@ public interface MartConstructor {
 				final String finalName = this.getFinalName(dsTable,
 						partitionValue);
 
-				// If was partitioned, do a final left join with the
-				// parent table in order to reinstate missing rows dropped
-				// by the inner join for the partition.
-				if (partitionValue == null
-						|| !partitionValue
-								.equals(GenericConstructorRunnable.NO_PARTITION))
-					this.doPartitionLeftJoin(dataset, dsTable,
+				// Do a final left-join against the parent to reinstate
+				// any potentially missing rows. This isn't always necessary
+				// but sometimes it is, and it is safer to err on the side
+				// of doing it every time.
+				this.doParentLeftJoin(dataset, dsTable,
 							finalCombinedName, partitionValue,
 							previousTempTables, previousIndexes, tempName
 									+ tempNameCount++);
@@ -511,7 +510,7 @@ public interface MartConstructor {
 			}
 		}
 
-		private void doPartitionLeftJoin(final DataSet dataset,
+		private void doParentLeftJoin(final DataSet dataset,
 				final DataSetTable dsTable, final String finalCombinedName,
 				final String partitionValue, final Map previousTempTables,
 				final Map previousIndexes, final String tempTable)
@@ -855,6 +854,24 @@ public interface MartConstructor {
 								ljtu.getSchemaRelationIteration()));
 			}
 			action.setResultTable(tempJoinTable);
+			action.setRecursionType(concDef.getRecursionType());
+			if (concDef.getRecursionType()!=RecursionType.NONE) {
+				final Key viaKey = concDef.getFirstRelation().getOtherKey(concDef.getRecursionKey());
+				final Table viaTable = viaKey.getTable(); 
+				action.setRecursionFromColumns(concDef.getRecursionKey().getColumnNames());
+				action.setRecursionToColumns(viaKey.getColumnNames());
+				action.setRecursionTable(viaTable.getName());
+				if (concDef.getSecondRelation()!=null) {
+					action.setRecursionSecondFromColumns(
+							(concDef.getSecondRelation().getFirstKey().equals(viaTable)
+							? concDef.getSecondRelation().getFirstKey()
+									: concDef.getSecondRelation().getSecondKey()).getColumnNames());
+					action.setRecursionSecondToColumns(							
+							(concDef.getSecondRelation().getSecondKey().equals(viaTable)
+							? concDef.getSecondRelation().getFirstKey()
+									: concDef.getSecondRelation().getSecondKey()).getColumnNames());
+				}
+			}
 			this.issueAction(action);
 
 			// Index the temp RHS table.

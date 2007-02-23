@@ -45,6 +45,7 @@ import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
@@ -73,6 +74,10 @@ public class MySQLDialect extends DatabaseDialect {
 		final String trgtSchemaName = action.getRightSchema();
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
+		final boolean isRecursive = action.getRecursionType() != RecursionType.NONE;
+		final boolean isDoubleRecursive = action
+				.getRecursionSecondFromColumns() != null;
+		final String recursionTempTable = "MART_RECURSE";
 
 		// If we haven't defined the group_concat size yet, define it.
 		// Note limitation of total 18446744073709551616 characters for
@@ -81,8 +86,254 @@ public class MySQLDialect extends DatabaseDialect {
 			statements.add("set group_concat_max_len=18446744073709551616");
 			MySQLDialect.GROUP_CONCAT_SIZED = true;
 		}
-
+		
 		final StringBuffer sb = new StringBuffer();
+
+		if (isRecursive) {
+			// Start block.
+			statements.add("DELIMITER // ");
+			sb.append("CREATE PROCEDURE () mart_recurse MODIFIES SQL DATA BEGIN DECLARE rows_updated INT DEFAULT 1; ");
+			// Create intial temp table
+			sb.append("create table " + action.getDataSetSchemaName() + "."
+					+ recursionTempTable + " as select ");
+			for (final Iterator i = action.getRightJoinColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append("a.");
+				sb.append(entry);
+				sb.append(",");
+			}
+			sb.append(action.getConcatColumnDefinition()
+					.getSubstitutedExpression("a"));
+			sb.append(" as ");
+			sb.append(action.getConcatColumnName());
+			sb.append(",1 as finalRow");
+			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append(",");
+				sb.append("b.");
+				sb.append(entry);
+			}
+			sb.append(" from " + srcSchemaName + "." + srcTableName
+					+ " as x inner join ");
+			sb.append(trgtSchemaName + "." + trgtTableName);
+			sb.append(" as a on ");
+			for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final String pkColName = (String) action.getLeftJoinColumns()
+						.get(i);
+				final String fkColName = (String) action.getRightJoinColumns()
+						.get(i);
+				sb.append("x." + pkColName + "=a." + fkColName);
+			}
+			if (action.getTableRestriction() != null) {
+				sb.append(" and (");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression("a"));
+				sb.append(')');
+			}
+			sb.append(" inner join ");
+			if (isDoubleRecursive) {
+				sb.append(trgtSchemaName + "." + action.getRecursionTable());
+				sb.append(" as c on ");
+				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
+					if (i > 0)
+						sb.append(" and ");
+					final String pkColName = (String) action
+							.getRecursionFromColumns().get(i);
+					final String fkColName = (String) action
+							.getRecursionToColumns().get(i);
+					sb.append("a." + pkColName + "=c." + fkColName);
+				}
+				sb.append(" inner join ");
+				sb.append(trgtSchemaName + "." + trgtTableName);
+				sb.append(" as b on ");
+				for (int i = 0; i < action.getRecursionSecondFromColumns()
+						.size(); i++) {
+					if (i > 0)
+						sb.append(" and ");
+					final String pkColName = (String) action
+							.getRecursionSecondFromColumns().get(i);
+					final String fkColName = (String) action
+							.getRecursionSecondToColumns().get(i);
+					sb.append("c." + pkColName + "=b." + fkColName);
+				}
+			} else {
+				sb.append(trgtSchemaName + "." + trgtTableName);
+				sb.append(" as b on ");
+				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
+					if (i > 0)
+						sb.append(" and ");
+					final String pkColName = (String) action
+							.getRecursionFromColumns().get(i);
+					final String fkColName = (String) action
+							.getRecursionToColumns().get(i);
+					sb.append("a." + pkColName + "=b." + fkColName);
+				}
+			}
+			sb.append("; ");
+			// Index rtJoinCols.
+			sb.append("create index " + recursionTempTable + "_I_" + this.indexCount++
+				+ " on " + action.getDataSetSchemaName() + "."
+					+ recursionTempTable + "(");
+			for (final Iterator i = action.getRightJoinColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append(entry);
+				if (i.hasNext())
+					sb.append(',');
+			}
+			sb.append("); ");
+			// Index parentFromCols.
+			sb.append("create index " + recursionTempTable + "_I_" + this.indexCount++
+					+ " on " + action.getDataSetSchemaName() + "."
+						+ recursionTempTable + "(");
+			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append(entry);
+				if (i.hasNext())
+					sb.append(',');
+			}
+			sb.append("); ");
+			// Index finalRow.
+			sb.append("create index " + recursionTempTable + "_I_" + this.indexCount++
+					+ " on " + action.getDataSetSchemaName() + "."
+						+ recursionTempTable + "(finalRow); ");
+			// Loop
+			sb.append("WHILE rows_updated > 1 DO ");
+			// Insert into table with flag = 0.
+			sb.append("insert into " + action.getDataSetSchemaName() + "."
+					+ recursionTempTable + " select ");
+			for (final Iterator i = action.getRightJoinColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append("x.");
+				sb.append(entry);
+				sb.append(",");
+			}
+			if (action.getRecursionType() == RecursionType.APPEND) {
+				sb.append("x.");
+				sb.append(action.getConcatColumnName());
+				sb.append("||'");
+				sb.append(action.getConcatColumnDefinition().getRowSep()
+						.replaceAll("'", "\\'"));
+				sb.append("'||");
+				sb.append(action.getConcatColumnDefinition()
+						.getSubstitutedExpression("a"));
+			} else {
+				sb.append(action.getConcatColumnDefinition()
+						.getSubstitutedExpression("a"));
+				sb.append("||'");
+				sb.append(action.getConcatColumnDefinition().getRowSep()
+						.replaceAll("'", "\\'"));
+				sb.append("'||");
+				sb.append("x.");
+				sb.append(action.getConcatColumnName());
+			}
+			sb.append(" as ");
+			sb.append(action.getConcatColumnName());
+			sb.append(",0 as finalRow");
+			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append(",");
+				sb.append("b.");
+				sb.append(entry);
+			}
+			sb.append(" from " + action.getDataSetSchemaName() + "."
+					+ recursionTempTable + " as x inner join ");
+			sb.append(trgtSchemaName + "." + trgtTableName);
+			sb.append(" as a on ");
+			for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
+				if (i > 0)
+					sb.append(" and ");
+				final String pkColName = (String) action.getLeftJoinColumns()
+						.get(i);
+				final String fkColName = (String) action.getRightJoinColumns()
+						.get(i);
+				sb.append("x." + pkColName + "=a." + fkColName);
+			}
+			if (action.getTableRestriction() != null) {
+				sb.append(" and (");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression("a"));
+				sb.append(')');
+			}
+			sb.append(" inner join ");
+			if (isDoubleRecursive) {
+				sb.append(trgtSchemaName + "." + action.getRecursionTable());
+				sb.append(" as c on ");
+				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
+					if (i > 0)
+						sb.append(" and ");
+					final String pkColName = (String) action
+							.getRecursionFromColumns().get(i);
+					final String fkColName = (String) action
+							.getRecursionToColumns().get(i);
+					sb.append("a." + pkColName + "=c." + fkColName);
+				}
+				sb.append(" inner join ");
+				sb.append(trgtSchemaName + "." + trgtTableName);
+				sb.append(" as b on ");
+				for (int i = 0; i < action.getRecursionSecondFromColumns()
+						.size(); i++) {
+					if (i > 0)
+						sb.append(" and ");
+					final String pkColName = (String) action
+							.getRecursionSecondFromColumns().get(i);
+					final String fkColName = (String) action
+							.getRecursionSecondToColumns().get(i);
+					sb.append("c." + pkColName + "=b." + fkColName);
+				}
+			} else {
+				sb.append(trgtSchemaName + "." + trgtTableName);
+				sb.append(" as b on ");
+				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
+					if (i > 0)
+						sb.append(" and ");
+					final String pkColName = (String) action
+							.getRecursionFromColumns().get(i);
+					final String fkColName = (String) action
+							.getRecursionToColumns().get(i);
+					sb.append("a." + pkColName + "=b." + fkColName);
+				}
+			}
+			sb.append("; ");
+			// Delete old rows where old row flag = 1 and parentFromCols
+			// are not null.
+			sb.append("delete from " + action.getDataSetSchemaName() + "."
+					+ recursionTempTable + " where finalRow=1");
+			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
+					.hasNext();) {
+				final String entry = (String) i.next();
+				sb.append(" and ");
+				sb.append(entry);
+				sb.append(" is not null");
+			}
+			sb.append("; ");
+			// Update rowsUpdated.
+			sb.append("set rows_updated = ROW_COUNT(); ");
+			// Update old row flag.
+			sb
+					.append("update " + action.getDataSetSchemaName() + "."
+							+ recursionTempTable
+							+ " set finalRow=1 where finalRow=0; ");
+			// End loop when expanded all successfully.
+			sb.append("END WHILE; ");
+			// Finish up.
+			sb.append(" END //");
+			// Reset the statement buffer.
+			statements.add(sb.toString());
+			sb.setLength(0);
+			statements.add("DELIMITER ; ");
+			statements.add("CALL mart_recurse();");
+			statements.add("DROP PROCEDURE mart_recurse;");
+		}
+
+		// Now do the grouping on the nicely recursed (or original if not recursed) table.
 		sb.append("create table " + action.getDataSetSchemaName() + "."
 				+ mergeTableName + " as select ");
 		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
@@ -93,17 +344,26 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(",");
 		}
 		sb.append("group_concat(");
-		sb.append(action.getConcatColumnDefinition().getSubstitutedExpression(
-				"b"));
+		if (isRecursive) {
+			sb.append("b.");
+			sb.append(action.getConcatColumnName());
+		} else {
+			sb.append(action.getConcatColumnDefinition()
+					.getSubstitutedExpression("b"));
+		}
 		sb.append(" separator '");
 		sb.append(action.getConcatColumnDefinition().getRowSep().replaceAll(
 				"'", "\\'"));
 		sb.append("') as ");
 		sb.append(action.getConcatColumnName());
 		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a inner join " + trgtSchemaName + "." + trgtTableName
-				+ " as b on ");
-		if (action.getRelationRestriction() != null)
+				+ " as a inner join ");
+		if (isRecursive)
+			sb.append(action.getDataSetSchemaName() + "." + recursionTempTable);
+		else
+			sb.append(trgtSchemaName + "." + trgtTableName);
+		sb.append(" as b on ");
+		if (!isRecursive && action.getRelationRestriction() != null)
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a"));
@@ -117,7 +377,7 @@ public class MySQLDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("a." + pkColName + "=b." + fkColName + "");
 			}
-		if (action.getTableRestriction() != null) {
+		if (!isRecursive && action.getTableRestriction() != null) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction()
 					.getSubstitutedExpression("b"));
@@ -134,6 +394,11 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 
 		statements.add(sb.toString());
+		
+		if (isRecursive) {
+			statements.add("drop table " + action.getDataSetSchemaName() + "."
+					+ recursionTempTable);
+		}
 	}
 
 	public void doRename(final Rename action, final List statements)
@@ -263,7 +528,9 @@ public class MySQLDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		final String joinType = action.getPartitionColumn() != null ? "inner"
+		final String joinType = (action.getPartitionColumn() != null 
+				|| (action.getRelationRestriction()!=null && action.getRelationRestriction().isHard()) 
+				|| (action.getTableRestriction()!=null && action.getTableRestriction().isHard())) ? "inner"
 				: "left";
 
 		final StringBuffer sb = new StringBuffer();

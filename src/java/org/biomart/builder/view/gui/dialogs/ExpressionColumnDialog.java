@@ -42,10 +42,10 @@ import javax.swing.JTextArea;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.builder.view.gui.panels.DataSetColumnStringTablePanel;
 import org.biomart.common.model.Key;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel.DataSetColumnStringTablePanel;
 
 /**
  * This dialog asks users to create or modify an expression column.

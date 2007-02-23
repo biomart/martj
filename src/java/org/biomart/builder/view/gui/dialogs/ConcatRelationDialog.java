@@ -24,10 +24,14 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -37,6 +41,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import org.biomart.builder.model.SchemaModificationSet;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
@@ -47,8 +54,8 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTableP
  * table for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ConcatRelationDialog extends JDialog {
@@ -65,6 +72,14 @@ public class ConcatRelationDialog extends JDialog {
 	private JTextArea expression;
 
 	private JTextField rowSep;
+
+	private JComboBox recursionType;
+
+	private JComboBox recursionKey;
+
+	private JComboBox firstRelation;
+
+	private JComboBox secondRelation;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
@@ -117,27 +132,104 @@ public class ConcatRelationDialog extends JDialog {
 		this.rowSep = new JTextField(5);
 
 		// First table aliases.
-		this.columnAliasModel = new ColumnStringTablePanel(template==null?null:template.getAliases(), table.getColumns()) {
+		this.columnAliasModel = new ColumnStringTablePanel(
+				template == null ? null : template.getAliases(), table
+						.getColumns()) {
 			private static final long serialVersionUID = 1L;
+
 			private int alias = 1;
 
 			public String getInsertButtonText() {
 				return Resources.get("insertAliasButton");
 			}
+
 			public String getRemoveButtonText() {
 				return Resources.get("removeAliasButton");
 			}
+
 			public String getFirstColumnHeader() {
 				return Resources.get("columnAliasTableColHeader");
 			}
+
 			public String getSecondColumnHeader() {
 				return Resources.get("columnAliasTableAliasHeader");
 			}
-			public Object getNewRowSecondColumn() {
-				return Resources.get("defaultAlias")+this.alias++;
-			}
-		}; 
 
+			public Object getNewRowSecondColumn() {
+				return Resources.get("defaultAlias") + this.alias++;
+			}
+		};
+
+		// Recursion stuff.
+		final GridBagLayout recursionGrid = new GridBagLayout();
+		final JPanel recursionPanel = new JPanel(recursionGrid);
+		this.recursionType = new JComboBox(
+				new RecursionType[] { RecursionType.NONE,
+						RecursionType.PREPEND, RecursionType.APPEND });
+		this.recursionKey = new JComboBox(table.getKeys().toArray(new Key[0]));
+		this.firstRelation = new JComboBox();
+		this.secondRelation = new JComboBox();
+		this.recursionType.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				recursionPanel
+						.setVisible(ConcatRelationDialog.this.recursionType
+								.getSelectedItem() != RecursionType.NONE);
+				ConcatRelationDialog.this.pack();
+			}
+		});
+		this.recursionKey.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				Collection firstRels = Collections.EMPTY_SET;
+				final Key key = (Key) ConcatRelationDialog.this.recursionKey
+						.getSelectedItem();
+				if (key!=null) {
+				firstRels = new ArrayList(key.getRelations());
+				for (final Iterator i = firstRels.iterator(); i.hasNext();)
+					if (((Relation) i.next()).isOneToOne())
+						i.remove();
+				}
+				ConcatRelationDialog.this.firstRelation.removeAllItems();
+				for (final Iterator i = firstRels.iterator(); i.hasNext();)
+					ConcatRelationDialog.this.firstRelation.addItem(i.next());
+				if (firstRels.size()>0)
+					ConcatRelationDialog.this.firstRelation.setSelectedIndex(0);
+			}
+		});
+		this.firstRelation.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				Collection secondRels =  Collections.EMPTY_SET;
+				final Key key = (Key) ConcatRelationDialog.this.recursionKey
+						.getSelectedItem();
+				final Table tbl = key.getTable();
+				final Relation rel = (Relation) ConcatRelationDialog.this.firstRelation
+						.getSelectedItem();
+				if (rel!=null) {
+				if (rel.getFirstKey().getTable().equals(
+						rel.getSecondKey().getTable())) 
+					ConcatRelationDialog.this.secondRelation.setEnabled(false);
+				else {
+					ConcatRelationDialog.this.secondRelation.setEnabled(true);
+					secondRels = new ArrayList(rel.getOtherKey(key).getTable()
+							.getRelations());
+					for (final Iterator i = secondRels.iterator(); i.hasNext();) {
+						final Relation candidate = (Relation) i.next();
+						if (candidate.isOneToOne()
+								|| !(candidate.getFirstKey().getTable().equals(
+										tbl) || candidate.getSecondKey()
+										.getTable().equals(tbl))
+										|| candidate.equals(rel))
+							i.remove();
+					}
+				}
+				}
+				ConcatRelationDialog.this.secondRelation.removeAllItems();
+				for (final Iterator i = secondRels.iterator(); i.hasNext();)
+					ConcatRelationDialog.this.secondRelation.addItem(i.next());
+				if (secondRels.size()>0)
+					ConcatRelationDialog.this.secondRelation.setSelectedIndex(0);
+			}
+		});
+		
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = template == null ? new JButton(Resources
@@ -160,6 +252,40 @@ public class ConcatRelationDialog extends JDialog {
 		field.add(new JScrollPane(this.expression));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
+		
+		// Add the recursion combo box.
+		label = new JLabel(Resources.get("recursionTypeLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.recursionType);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the recursion panel.
+		label = new JLabel(Resources.get("recursionKeyLabel"));
+		recursionGrid.setConstraints(label, labelConstraints);
+		recursionPanel.add(label);
+		field = new JPanel();
+		field.add(this.recursionKey);
+		recursionGrid.setConstraints(field, fieldConstraints);
+		recursionPanel.add(field);	
+		label = new JLabel(Resources.get("firstRelationLabel"));
+		recursionGrid.setConstraints(label, labelConstraints);
+		recursionPanel.add(label);
+		field = new JPanel();
+		field.add(this.firstRelation);
+		recursionGrid.setConstraints(field, fieldConstraints);
+		recursionPanel.add(field);	
+		label = new JLabel(Resources.get("secondRelationLabel"));
+		recursionGrid.setConstraints(label, labelConstraints);
+		recursionPanel.add(label);
+		field = new JPanel();
+		field.add(this.secondRelation);
+		recursionGrid.setConstraints(field, fieldConstraints);
+		recursionPanel.add(field);	
+		gridBag.setConstraints(recursionPanel, fieldConstraints);
+		content.add(recursionPanel);
 
 		// Row separator.
 		field = new JPanel();
@@ -210,7 +336,17 @@ public class ConcatRelationDialog extends JDialog {
 		if (template != null) {
 			this.expression.setText(template.getExpression());
 			this.rowSep.setText(template.getRowSep());
-		}
+			this.recursionType.setSelectedItem(template.getRecursionType());
+			if (template.getRecursionType() != RecursionType.NONE) {
+				this.recursionKey.setSelectedItem(template.getRecursionKey());
+				this.firstRelation.setSelectedItem(template.getFirstRelation());
+				if (template.getSecondRelation() != null)
+					this.secondRelation.setSelectedItem(template
+							.getSecondRelation());
+			} else 
+				this.recursionKey.setSelectedIndex(0);
+		} else
+			this.recursionType.setSelectedItem(RecursionType.NONE);
 		// Aliases were already copied in the JTable constructor above.
 	}
 
@@ -236,6 +372,16 @@ public class ConcatRelationDialog extends JDialog {
 		// Validate other fields.
 		if (this.columnAliasModel.getValues().isEmpty())
 			messages.add(Resources.get("columnAliasMissing"));
+		
+		// Recursive?
+		if (this.recursionType.getSelectedItem()!=RecursionType.NONE) {
+			if (this.recursionKey.getSelectedIndex()<0)
+				messages.add(Resources.get("fieldIsEmpty", Resources.get("recursionKey")));
+			if (this.firstRelation.getSelectedIndex()<0)
+				messages.add(Resources.get("fieldIsEmpty", Resources.get("firstRelation")));
+			if (this.secondRelation.isEnabled() && this.secondRelation.getSelectedIndex()<0)
+						messages.add(Resources.get("fieldIsEmpty", Resources.get("secondRelation")));
+		}
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
@@ -282,5 +428,21 @@ public class ConcatRelationDialog extends JDialog {
 	 */
 	public String getRowSep() {
 		return this.rowSep.getText();
+	}
+
+	public RecursionType getRecursionType() {
+		return (RecursionType) this.recursionType.getSelectedItem();
+	}
+
+	public Key getRecursionKey() {
+		return (Key) this.recursionKey.getSelectedItem();
+	}
+
+	public Relation getFirstRelation() {
+		return (Relation) this.firstRelation.getSelectedItem();
+	}
+
+	public Relation getSecondRelation() {
+		return (Relation) this.secondRelation.getSelectedItem();
 	}
 }

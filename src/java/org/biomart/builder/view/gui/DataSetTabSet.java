@@ -46,6 +46,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
 import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
@@ -65,6 +66,7 @@ import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
+import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Log;
@@ -606,16 +608,22 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliases = dialog.getColumnAliases();
 		final String expression = dialog.getExpression();
 		final String rowSep = dialog.getRowSep();
+		final RecursionType recursionType = dialog.getRecursionType();
+		final Key recursionKey = dialog.getRecursionKey();
+		final Relation firstRelation = dialog.getFirstRelation();
+		final Relation secondRelation = dialog.getSecondRelation();
 		// Do this in the background.
 		this.runThenRecalculate(new Task() {
 			public void run() throws Throwable {
 				// Update the restriction.
 				if (dsTable != null)
 					MartBuilderUtils.concatRelation(dsTable, relation, index,
-							colKey, aliases, expression, rowSep);
+							colKey, aliases, expression, rowSep,
+							recursionType, recursionKey, firstRelation, secondRelation);
 				else
 					MartBuilderUtils.concatRelation(dataset, relation, index,
-							colKey, aliases, expression, rowSep);
+							colKey, aliases, expression, rowSep,
+							recursionType, recursionKey, firstRelation, secondRelation);
 			}
 		}, dataset);
 	}
@@ -974,16 +982,17 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliasesLHS = dialog.getLHSColumnAliases();
 		final Map aliasesRHS = dialog.getRHSColumnAliases();
 		final String expression = dialog.getExpression();
+		final boolean hard = dialog.getHard();
 		// Do this in the background.
 		this.runThenRepaint(new Task() {
 			public void run() throws Throwable {
 				// Update the restriction.
 				if (dsTable != null)
 					MartBuilderUtils.restrictRelation(dsTable, relation, index,
-							expression, aliasesLHS, aliasesRHS);
+							expression, aliasesLHS, aliasesRHS, hard);
 				else
 					MartBuilderUtils.restrictRelation(dataset, relation, index,
-							expression, aliasesLHS, aliasesRHS);
+							expression, aliasesLHS, aliasesRHS, hard);
 			}
 		}, dataset);
 	}
@@ -1197,16 +1206,17 @@ public class DataSetTabSet extends JTabbedPane {
 		// Get updated details from the user.
 		final Map aliases = dialog.getColumnAliases();
 		final String expression = dialog.getExpression();
+		final boolean hard = dialog.getHard();
 		// Do this in the background.
 		this.runThenRepaint(new Task() {
 			public void run() throws Throwable {
 				// Update the restriction.
 				if (dsTable != null)
 					MartBuilderUtils.restrictTable(dsTable, table, expression,
-							aliases);
+							aliases, hard);
 				else
 					MartBuilderUtils.restrictTable(dataset, table, expression,
-							aliases);
+							aliases, hard);
 			}
 		}, dataset);
 	}

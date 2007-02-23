@@ -26,6 +26,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
+import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -108,7 +109,8 @@ public abstract class MartConstructorAction {
 		 * @param datasetTableName
 		 *            the dataset table we are working on.
 		 */
-		public CopyOptimiserVia(String datasetSchemaName, String datasetTableName) {
+		public CopyOptimiserVia(String datasetSchemaName,
+				String datasetTableName) {
 			super(datasetSchemaName, datasetTableName);
 		}
 
@@ -142,7 +144,7 @@ public abstract class MartConstructorAction {
 			this.viaTableName = viaTableName;
 		}
 	}
-	
+
 	/**
 	 * Copy optimiser table actions.
 	 */
@@ -157,7 +159,7 @@ public abstract class MartConstructorAction {
 		private String toOptColumnName;
 
 		private List toKeyColumns;
-		
+
 		private boolean countNotBool;
 
 		/**
@@ -168,7 +170,8 @@ public abstract class MartConstructorAction {
 		 * @param datasetTableName
 		 *            the dataset table we are working on.
 		 */
-		public CopyOptimiserDirect(String datasetSchemaName, String datasetTableName) {
+		public CopyOptimiserDirect(String datasetSchemaName,
+				String datasetTableName) {
 			super(datasetSchemaName, datasetTableName);
 		}
 
@@ -244,7 +247,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param countNotBool the countNotBool to set
+		 * @param countNotBool
+		 *            the countNotBool to set
 		 */
 		public void setCountNotBool(boolean countNotBool) {
 			this.countNotBool = countNotBool;
@@ -258,7 +262,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param toOptColumnName the toOptColumnName to set
+		 * @param toOptColumnName
+		 *            the toOptColumnName to set
 		 */
 		public void setToOptColumnName(String toOptColumnName) {
 			this.toOptColumnName = toOptColumnName;
@@ -631,7 +636,7 @@ public abstract class MartConstructorAction {
 		private String partitionColumn;
 
 		private String partitionValue;
-		
+
 		private ValueRange partitionRangeDef;
 
 		/**
@@ -841,7 +846,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param partitionRangeDef the partitionRangeDef to set
+		 * @param partitionRangeDef
+		 *            the partitionRangeDef to set
 		 */
 		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
 			this.partitionRangeDef = partitionRangeDef;
@@ -870,10 +876,22 @@ public abstract class MartConstructorAction {
 		private RestrictedRelationDefinition restrictedRelationDefinition;
 
 		private boolean relationRestrictionLeftIsFirst;
-		
+
 		private String concatColumnName;
-		
+
 		private ConcatRelationDefinition concatColumnDefinition;
+
+		private RecursionType recursionType;
+
+		private List recursionFromColumns;
+
+		private List recursionToColumns;
+
+		private String recursionTable;
+
+		private List recursionSecondFromColumns;
+
+		private List recursionSecondToColumns;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -888,7 +906,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcMerge");
+			return Resources.get("mcConcat");
 		}
 
 		/**
@@ -1037,7 +1055,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param concatColumnDefinition the concatColumnDefinition to set
+		 * @param concatColumnDefinition
+		 *            the concatColumnDefinition to set
 		 */
 		public void setConcatColumnDefinition(
 				ConcatRelationDefinition concatColumnDefinition) {
@@ -1052,10 +1071,102 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param concatColumnName the concatColumnName to set
+		 * @param concatColumnName
+		 *            the concatColumnName to set
 		 */
 		public void setConcatColumnName(String concatColumnName) {
 			this.concatColumnName = concatColumnName;
+		}
+
+		/**
+		 * @return the recursionFromColumns
+		 */
+		public List getRecursionFromColumns() {
+			return recursionFromColumns;
+		}
+
+		/**
+		 * @param recursionFromColumns
+		 *            the recursionFromColumns to set
+		 */
+		public void setRecursionFromColumns(List recursionFromColumns) {
+			this.recursionFromColumns = recursionFromColumns;
+		}
+
+		/**
+		 * @return the recursionSecondFromColumns
+		 */
+		public List getRecursionSecondFromColumns() {
+			return recursionSecondFromColumns;
+		}
+
+		/**
+		 * @param recursionSecondFromColumns
+		 *            the recursionSecondFromColumns to set
+		 */
+		public void setRecursionSecondFromColumns(
+				List recursionSecondFromColumns) {
+			this.recursionSecondFromColumns = recursionSecondFromColumns;
+		}
+
+		/**
+		 * @return the recursionSecondToColumns
+		 */
+		public List getRecursionSecondToColumns() {
+			return recursionSecondToColumns;
+		}
+
+		/**
+		 * @param recursionSecondToColumns
+		 *            the recursionSecondToColumns to set
+		 */
+		public void setRecursionSecondToColumns(List recursionSecondToColumns) {
+			this.recursionSecondToColumns = recursionSecondToColumns;
+		}
+
+		/**
+		 * @return the recursionTable
+		 */
+		public String getRecursionTable() {
+			return recursionTable;
+		}
+
+		/**
+		 * @param recursionTable
+		 *            the recursionTable to set
+		 */
+		public void setRecursionTable(String recursionTable) {
+			this.recursionTable = recursionTable;
+		}
+
+		/**
+		 * @return the recursionToColumns
+		 */
+		public List getRecursionToColumns() {
+			return recursionToColumns;
+		}
+
+		/**
+		 * @param recursionToColumns
+		 *            the recursionToColumns to set
+		 */
+		public void setRecursionToColumns(List recursionToColumns) {
+			this.recursionToColumns = recursionToColumns;
+		}
+
+		/**
+		 * @return the recursionType
+		 */
+		public RecursionType getRecursionType() {
+			return recursionType;
+		}
+
+		/**
+		 * @param recursionType
+		 *            the recursionType to set
+		 */
+		public void setRecursionType(RecursionType recursionType) {
+			this.recursionType = recursionType;
 		}
 	}
 
@@ -1184,7 +1295,7 @@ public abstract class MartConstructorAction {
 		private String partitionColumn;
 
 		private String partitionValue;
-		
+
 		private ValueRange partitionRangeDef;
 
 		/**
@@ -1317,7 +1428,8 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @param partitionRangeDef the partitionRangeDef to set
+		 * @param partitionRangeDef
+		 *            the partitionRangeDef to set
 		 */
 		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
 			this.partitionRangeDef = partitionRangeDef;
