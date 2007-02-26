@@ -369,6 +369,10 @@ public interface Schema extends Comparable, DataLink {
 		public void replicateContents(final Schema targetSchema) {
 			Log.debug("Replicating contents from " + this.getName() + " to "
 					+ targetSchema);
+			// Copy partitions.
+			targetSchema.getPartitions().clear();
+			targetSchema.getPartitions().putAll(this.getPartitions());
+			
 			// Drop all tables in target schema.
 			targetSchema.removeAllTables();
 
