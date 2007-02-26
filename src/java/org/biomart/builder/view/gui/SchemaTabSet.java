@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.ImageIcon;
@@ -59,6 +60,7 @@ import org.biomart.common.utils.Task;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.StackTrace;
 import org.biomart.common.view.gui.dialogs.SchemaConnectionDialog;
+import org.biomart.common.view.gui.dialogs.SchemaPartitionDialog;
 
 /**
  * This tabset has one tab for the diagram which represents all schemas, and one
@@ -462,7 +464,8 @@ public class SchemaTabSet extends JTabbedPane {
 								SchemaTabSet.this
 										.recalculateAllSchemaDiagrams();
 
-							// Update the all-schemas diagram so that it includes the new
+							// Update the all-schemas diagram so that it
+							// includes the new
 							// schema.
 							SchemaTabSet.this.recalculateOverviewDiagram();
 
@@ -507,7 +510,7 @@ public class SchemaTabSet extends JTabbedPane {
 								SchemaTabSet.this.repaintSchemaDiagram(s);
 							else
 								SchemaTabSet.this.repaintAllSchemaDiagrams();
-							
+
 							// Repaint overview too.
 							SchemaTabSet.this.repaintOverviewDiagram();
 
@@ -846,6 +849,27 @@ public class SchemaTabSet extends JTabbedPane {
 			// schema to reflect them.
 			if (SchemaConnectionDialog.modifySchema(schema))
 				this.requestSynchroniseSchema(schema);
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
+	 * Pops up a dialog with details of the schema partitions, which allows the
+	 * user to modify them.
+	 * 
+	 * @param schema
+	 *            the schema to modify partitions for.
+	 */
+	public void requestModifySchemaPartitions(final Schema schema) {
+		try {
+			final Map partitions = SchemaPartitionDialog
+					.definePartitions(schema);
+			if (!partitions.equals(schema.getPartitions())) {
+				CommonUtils.setSchemaPartitions(schema, partitions);
+				SchemaTabSet.this.martTab.getMartTabSet().setModifiedStatus(
+						true);
+			}
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		}

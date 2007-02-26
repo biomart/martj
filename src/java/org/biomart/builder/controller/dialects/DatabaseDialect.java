@@ -117,13 +117,15 @@ public abstract class DatabaseDialect {
 	 * use {@link JDBCDataLink#getConnection()} to connect to the database and
 	 * execute the query.
 	 * 
+	 * @param
+	 * 		schemaName the name of the schema to interrogate.
 	 * @param col
 	 *            the column to get the distinct values from.
 	 * @return a list of the distinct values in the column.
 	 * @throws SQLException
 	 *             in case of problems.
 	 */
-	public abstract Collection executeSelectDistinct(Column col)
+	public abstract Collection executeSelectDistinct(final String schemaName, Column col)
 			throws SQLException;
 
 	/**

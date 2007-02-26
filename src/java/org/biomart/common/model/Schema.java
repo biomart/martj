@@ -51,8 +51,8 @@ import org.biomart.common.resources.Resources;
  * keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface Schema extends Comparable, DataLink {
@@ -211,6 +211,26 @@ public interface Schema extends Comparable, DataLink {
 	public void storeInHistory();
 
 	/**
+	 * If this schema is identical across multiple source schemas, and the user
+	 * wants to process each of those sequentially using the same schema
+	 * settings, then the map returned by this call should be used to set up
+	 * those partitions.
+	 * <p>
+	 * Note that the schema itself does not necessarily have to appear in the
+	 * partition map - it is only a template by which each partition will be
+	 * created.
+	 * <p>
+	 * The keys of the maps are strings - they can mean different things
+	 * according to whether this is a JDBC schema, an XML schema, etc. The
+	 * values are the prefix to stick on table names in datasets generated from
+	 * this schema.
+	 * 
+	 * @return the map of partitions. If empty, then partitioning is not
+	 *         required. It will never be <tt>null</tt>.
+	 */
+	public Map getPartitions();
+
+	/**
 	 * The generic implementation should suffice as the ground for most complex
 	 * implementations. It keeps track of tables it has seen, and performs
 	 * simple lookups for them.
@@ -226,6 +246,8 @@ public interface Schema extends Comparable, DataLink {
 		private String name;
 
 		private final Map tables = new TreeMap();
+		
+		private final Map partitions = new TreeMap();
 
 		/**
 		 * The constructor creates a schema with the given name. Keyguessing is
@@ -249,10 +271,14 @@ public interface Schema extends Comparable, DataLink {
 		 *            if not.
 		 */
 		public GenericSchema(final String name, final boolean keyguessing) {
-			Log.info(Resources.get("logCreatingSchema",
-					new String[] { name, "" + keyguessing }));
+			Log.info(Resources.get("logCreatingSchema", new String[] { name,
+					"" + keyguessing }));
 			this.name = name;
 			this.keyguessing = keyguessing;
+		}
+		
+		public Map getPartitions() {
+			return this.partitions;
 		}
 
 		public void addTable(final Table table) {
@@ -266,8 +292,8 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void changeTableMapKey(final String oldName, final String newName) {
-			Log.debug("Remapping table " + oldName + " to "
-					+ newName + " in " + this.getName());
+			Log.debug("Remapping table " + oldName + " to " + newName + " in "
+					+ this.getName());
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
 				return;
@@ -288,11 +314,11 @@ public interface Schema extends Comparable, DataLink {
 			final Schema t = (Schema) o;
 			return t.toString().equals(this.toString());
 		}
-		
+
 		public Collection getRelations() {
 			final Set relations = new HashSet();
-			for (final Iterator i = this.getTables().iterator(); i.hasNext();) 
-				relations.addAll(((Table)i.next()).getRelations());
+			for (final Iterator i = this.getTables().iterator(); i.hasNext();)
+				relations.addAll(((Table) i.next()).getRelations());
 			return relations;
 		}
 
@@ -317,8 +343,9 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void removeTableByName(String tableName) {
-			Log.debug("Removing table " + tableName + " from "
-					+ this.getName());
+			Log
+					.debug("Removing table " + tableName + " from "
+							+ this.getName());
 			this.tables.remove(tableName);
 		}
 
@@ -367,7 +394,8 @@ public interface Schema extends Comparable, DataLink {
 						.hasNext();) {
 					final Column col = (Column) j.next();
 					try {
-						final Column newCol = new GenericColumn(col.getName(), newTable);
+						final Column newCol = new GenericColumn(col.getName(),
+								newTable);
 						newTable.addColumn(newCol);
 					} catch (final Throwable t) {
 						throw new BioMartError(t);
@@ -493,8 +521,8 @@ public interface Schema extends Comparable, DataLink {
 					}
 
 					try {
-						final Relation newRel = new GenericRelation(newFirstKey,
-								newSecondKey, card);
+						final Relation newRel = new GenericRelation(
+								newFirstKey, newSecondKey, card);
 						newRel.setCardinality(card);
 						newRel.setStatus(status);
 						newFirstKey.addRelation(newRel);
@@ -508,8 +536,8 @@ public interface Schema extends Comparable, DataLink {
 
 		public void setKeyGuessing(final boolean keyguessing)
 				throws SQLException, DataModelException {
-			Log.info(Resources.get("logChangeKeyguessing",
-					new String[] { "" + keyguessing, this.getName() }));
+			Log.info(Resources.get("logChangeKeyguessing", new String[] {
+					"" + keyguessing, this.getName() }));
 			this.keyguessing = keyguessing;
 			this.synchroniseKeys();
 		}

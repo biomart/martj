@@ -351,6 +351,19 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(update);
 
+			// Add the partitioned schema option.
+			final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(Resources
+					.get("partitionSchemaTitle"));
+			partition.setMnemonic(Resources.get("partitionSchemaMnemonic").charAt(0));
+			partition.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getSchemaTabSet()
+							.requestModifySchemaPartitions(schema);
+				}
+			});
+			partition.setSelected(!schema.getPartitions().isEmpty());
+			contextMenu.add(partition);
+
 			// Option to remove the schema from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeSchemaTitle"), new ImageIcon(Resources

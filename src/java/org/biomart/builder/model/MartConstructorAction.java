@@ -59,8 +59,8 @@ public abstract class MartConstructorAction {
 	 * @param datasetTableName
 	 *            the name of the table this action is associated with.
 	 */
-	public MartConstructorAction(final String datasetSchemaName,
-			final String datasetTableName) {
+	public MartConstructorAction(String datasetSchemaName,
+			String datasetTableName) {
 		this.datasetSchemaName = datasetSchemaName;
 		this.datasetTableName = datasetTableName;
 		Log.debug("Constructor action created: " + this.getClass().getName());

@@ -88,8 +88,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            <tt>true</tt> if comments are to be included in the DDL
 	 *            statements generated, <tt>false</tt> if not.
 	 * @param singleFile
-	 *            if outputting as a file, <tt>true</tt> if the file should
-	 *            be a single DDL file, <tt>false</tt> if it should be broken
+	 *            if outputting as a file, <tt>true</tt> if the file should be
+	 *            a single DDL file, <tt>false</tt> if it should be broken
 	 *            down into tables.
 	 */
 	public SaveDDLMartConstructor(final File outputFile,
@@ -272,10 +272,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			return "TEMP__" + this.tempTableSeq++;
 		}
 
-		public Collection listDistinctValues(final Column col)
-				throws SQLException {
+		public Collection listDistinctValues(final String schemaName,
+				final Column col) throws SQLException {
 			Log.info(Resources.get("logDistinct", "" + col));
-			return this.dialect.executeSelectDistinct(col);
+			return this.dialect.executeSelectDistinct(schemaName, col);
 		}
 
 		/**
@@ -338,6 +338,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private String dataset;
 
+		private String partition;
+
 		private int martSequence = 0;
 
 		private FileOutputStream outputFileStream;
@@ -384,21 +386,25 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.martSequence++;
 				Log.debug("Mart " + this.martSequence + " starting");
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
-				// Clear out action map ready for next dataset.
 				this.dataset = (String) data;
 				Log.debug("Dataset " + this.dataset + " starting");
+			} else if (event == MartConstructorListener.PARTITION_STARTED) {
+				// Clear out action map ready for next dataset.
+				this.partition = (String) data;
+				Log.debug("Partition " + this.partition + " starting");
 				this.actions.clear();
 				this.orderedTables.clear();
-			} else if (event == MartConstructorListener.DATASET_ENDED) {
+			} else if (event == MartConstructorListener.PARTITION_ENDED) {
 				// Write out one file per table in files.
-				Log.debug("Dataset ending");
+				Log.debug("Partition ending");
 				for (final Iterator i = this.actions.entrySet().iterator(); i
 						.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
 					final String tableName = (String) actionEntry.getKey();
 					final String entryFilename = Resources.get("martPrefix")
-							+ this.martSequence + "/" + this.dataset + "/"
-							+ tableName + Resources.get("ddlExtension");
+							+ this.martSequence + "/" + this.partition + "/"
+							+ this.dataset + "/" + tableName
+							+ Resources.get("ddlExtension");
 					Log.debug("Starting entry " + entryFilename);
 					ZipEntry entry = new ZipEntry(entryFilename);
 					entry.setTime(System.currentTimeMillis());
@@ -428,7 +434,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				}
 				// Write the dataset manifest.
 				ZipEntry entry = new ZipEntry(Resources.get("martPrefix")
-						+ this.martSequence + "/" + this.dataset + "/"
+						+ this.martSequence + "/" + this.partition+ "/" + this.dataset + "/"
 						+ Resources.get("datasetManifest"));
 				entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(entry);

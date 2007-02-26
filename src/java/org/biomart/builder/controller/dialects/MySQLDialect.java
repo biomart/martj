@@ -789,7 +789,7 @@ public class MySQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public Collection executeSelectDistinct(final Column col)
+	public Collection executeSelectDistinct(final String schemaName, final Column col)
 			throws SQLException {
 		final String colName = col.getName();
 		final String tableName = col.getTable().getName();
@@ -797,7 +797,6 @@ public class MySQLDialect extends DatabaseDialect {
 
 		// The simple case where we actually do a select distinct.
 		final Collection results = new ArrayList();
-		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
 				"select distinct " + colName + " from " + schemaName + "."

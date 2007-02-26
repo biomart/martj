@@ -21,6 +21,7 @@ package org.biomart.common.controller;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
@@ -40,8 +41,8 @@ import org.biomart.common.resources.Resources;
  * manipulating the various objects in the data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class CommonUtils {
@@ -194,6 +195,23 @@ public class CommonUtils {
 	public static boolean testSchema(final Schema schema) throws Exception {
 		Log.info(Resources.get("logRequestTestSchema"));
 		return schema.test();
+	}
+
+	/**
+	 * Updates the schema partitions. If the map is empty, then it clears all
+	 * partitioning.
+	 * 
+	 * @param schema
+	 *            the schema to update.
+	 * @param partitions
+	 *            the new partitions to use. If <tt>null</tt>, it is treated
+	 *            the same as an empty map.
+	 */
+	public static void setSchemaPartitions(final Schema schema,
+			final Map partitions) {
+		schema.getPartitions().clear();
+		if (partitions != null)
+			schema.getPartitions().putAll(partitions);
 	}
 
 	/**

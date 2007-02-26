@@ -343,6 +343,8 @@ public class MartBuilderXML extends DefaultHandler {
 	}
 
 	private String[] readListAttribute(final String string) {
+		if (string==null || string.length()==0) 
+			return new String[0];
 		final String[] values = string.split("\\s*,\\s*");
 		for (int i = 0; i < values.length; i++)
 			values[i] = values[i].replaceAll("__COMMA__", ",");
@@ -430,6 +432,10 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("name", jdbcSchema.getName(), xmlWriter);
 			this.writeAttribute("keyguessing", Boolean.toString(jdbcSchema
 					.getKeyGuessing()), xmlWriter);
+			
+			// Partitions.
+			this.writeListAttribute("partitionSchemas", (String[])jdbcSchema.getPartitions().keySet().toArray(new String[0]), xmlWriter);
+			this.writeListAttribute("partitionPrefixes", (String[])jdbcSchema.getPartitions().values().toArray(new String[0]), xmlWriter);
 		}
 		// Other schema types are not recognised.
 		else
@@ -1145,11 +1151,19 @@ public class MartBuilderXML extends DefaultHandler {
 			final boolean keyguessing = Boolean.valueOf(
 					(String) attributes.get("keyguessing")).booleanValue();
 
+			// Does it have partitions?
+			final Map partitions = new HashMap();
+			final String[] partSchs = this.readListAttribute((String)attributes.get("partitionSchemas"));
+			final String[] partPres = this.readListAttribute((String)attributes.get("partitionPrefixes"));
+			for (int i = 0; i < partSchs.length; i++) 
+				partitions.put(partSchs[i], partPres[i]);
+			
 			// Construct the JDBC schema.
 			try {
 				final Schema schema = new JDBCSchema(driverClassLocation,
 						driverClassName, url, schemaName, username, password,
 						name, keyguessing);
+				schema.getPartitions().putAll(partitions);
 				schema.storeInHistory();
 				// Add the schema directly to the mart if outside a group.
 				this.constructedMart.addSchema(schema);
