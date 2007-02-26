@@ -338,6 +338,7 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append("end loop; ");
 			// Finish up.
 			sb.append(" END;");
+			sb.append('/');
 			// Reset the statement buffer.
 			statements.add(sb.toString());
 			sb.setLength(0);
@@ -813,7 +814,7 @@ public class OracleDialect extends DatabaseDialect {
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
 				"select distinct " + colName + " from " + schemaName + "."
-						+ tableName + "").executeQuery();
+						+ tableName).executeQuery();
 		while (rs.next())
 			results.add(rs.getString(1));
 		rs.close();
@@ -836,10 +837,10 @@ public class OracleDialect extends DatabaseDialect {
 		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
-				"select * from (select rownum as __seqnum,"
+				"select * from (select rownum as mart__seqnum,"
 						+ colNames.toString() + " from " + schemaName + "."
-						+ tableName + ") where __seqnum > " + offset
-						+ " and __seqnum <= " + (offset + count))
+						+ tableName + ") where mart__seqnum > " + offset
+						+ " and mart__seqnum <= " + (offset + count))
 				.executeQuery();
 		while (rs.next()) {
 			final List values = new ArrayList();

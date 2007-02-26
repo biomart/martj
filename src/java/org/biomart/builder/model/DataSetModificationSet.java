@@ -46,7 +46,7 @@ import org.biomart.common.resources.Resources;
 public class DataSetModificationSet {
 
 	private final DataSet ds;
-	
+
 	// NOTE: Using Collections/Strings avoids problems with changing hashcodes.
 
 	private Map renamedTables = new HashMap();
@@ -64,7 +64,7 @@ public class DataSetModificationSet {
 	private Map nonInheritedColumns = new HashMap();
 
 	private Map expressionColumns = new HashMap();
-	
+
 	public DataSetModificationSet(final DataSet ds) {
 		this.ds = ds;
 	}
@@ -228,17 +228,23 @@ public class DataSetModificationSet {
 		} else if (!name.equals(col.getModifiedName())) {
 			if (!this.renamedColumns.containsKey(tableKey))
 				this.renamedColumns.put(tableKey, new HashMap());
+			// Is it in a key?
+			boolean colIsInKey = false;
+			for (final Iterator i = col.getTable().getKeys().iterator(); i
+					.hasNext()
+					&& !colIsInKey;)
+				if (((Key) i.next()).getColumns().contains(col))
+					colIsInKey = true;
 			// First we need to find out the base name, ie. the bit
 			// we append numbers to make it unique, but before any
 			// key suffix. If we appended numbers after the key
 			// suffix then it would confuse MartEditor.
-			String suffix = "";
+			String suffix = Resources.get("keySuffix");
 			String baseName = name;
-			if (name.endsWith(Resources.get("keySuffix"))) {
-				suffix = Resources.get("keySuffix");
-				baseName = name.substring(0, name.indexOf(Resources
-						.get("keySuffix")));
-			}
+			if (name.endsWith(Resources.get("keySuffix"))) 
+				baseName = name.substring(0, name.indexOf(suffix));
+			else if (!colIsInKey)
+				suffix = "";
 			// Now simply check to see if the name is used, and
 			// then add an incrementing number to it until it is unique.
 			for (int i = 1; ((Map) this.renamedColumns.get(tableKey))
@@ -647,94 +653,106 @@ public class DataSetModificationSet {
 			this.expr = expr;
 		}
 	}
-	
+
 	/**
 	 * Remove any references to non-existent objects.
 	 */
 	public void synchronise() {
-		for (final Iterator i = this.renamedTables.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (this.ds.getTableByName((String)entry.getKey())==null)
+		for (final Iterator i = this.renamedTables.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
 				i.remove();
 		}
-		for (final Iterator i = this.expressionColumns.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (this.ds.getTableByName((String)entry.getKey())==null)
+		for (final Iterator i = this.expressionColumns.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
 				i.remove();
 		}
-		for (final Iterator i = this.maskedTables.iterator(); i.hasNext(); ) {
-			final String tbl = (String)i.next();
-			if (this.ds.getTableByName(tbl)==null)
+		for (final Iterator i = this.maskedTables.iterator(); i.hasNext();) {
+			final String tbl = (String) i.next();
+			if (this.ds.getTableByName(tbl) == null)
 				i.remove();
 		}
-		for (final Iterator i = this.renamedColumns.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (this.ds.getTableByName((String)entry.getKey())==null)
+		for (final Iterator i = this.renamedColumns.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
 				i.remove();
 			else {
-				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
-				final Map cols = (Map)entry.getValue();
-				for (final Iterator j = cols.entrySet().iterator(); j.hasNext(); ) {
-					final Map.Entry entry2 = (Map.Entry)j.next();
-					if (tbl.getColumnByName((String)entry2.getKey())==null)
+				final DataSetTable tbl = (DataSetTable) this.ds
+						.getTableByName((String) entry.getKey());
+				final Map cols = (Map) entry.getValue();
+				for (final Iterator j = cols.entrySet().iterator(); j.hasNext();) {
+					final Map.Entry entry2 = (Map.Entry) j.next();
+					if (tbl.getColumnByName((String) entry2.getKey()) == null)
 						j.remove();
 				}
 				if (cols.isEmpty())
 					i.remove();
 			}
 		}
-		for (final Iterator i = this.maskedColumns.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (this.ds.getTableByName((String)entry.getKey())==null)
+		for (final Iterator i = this.maskedColumns.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
 				i.remove();
 			else {
-				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
-				final Collection cols = (Collection)entry.getValue();
-				for (final Iterator j = cols.iterator(); j.hasNext(); ) 
-					if (tbl.getColumnByName((String)j.next())==null)
+				final DataSetTable tbl = (DataSetTable) this.ds
+						.getTableByName((String) entry.getKey());
+				final Collection cols = (Collection) entry.getValue();
+				for (final Iterator j = cols.iterator(); j.hasNext();)
+					if (tbl.getColumnByName((String) j.next()) == null)
 						j.remove();
 				if (cols.isEmpty())
 					i.remove();
 			}
 		}
-		for (final Iterator i = this.indexedColumns.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (this.ds.getTableByName((String)entry.getKey())==null)
+		for (final Iterator i = this.indexedColumns.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
 				i.remove();
 			else {
-				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
-				final Collection cols = (Collection)entry.getValue();
-				for (final Iterator j = cols.iterator(); j.hasNext(); ) 
-					if (tbl.getColumnByName((String)j.next())==null)
+				final DataSetTable tbl = (DataSetTable) this.ds
+						.getTableByName((String) entry.getKey());
+				final Collection cols = (Collection) entry.getValue();
+				for (final Iterator j = cols.iterator(); j.hasNext();)
+					if (tbl.getColumnByName((String) j.next()) == null)
 						j.remove();
 				if (cols.isEmpty())
 					i.remove();
 			}
 		}
-		for (final Iterator i = this.nonInheritedColumns.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (this.ds.getTableByName((String)entry.getKey())==null)
+		for (final Iterator i = this.nonInheritedColumns.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
 				i.remove();
 			else {
-				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
-				final Collection cols = (Collection)entry.getValue();
-				for (final Iterator j = cols.iterator(); j.hasNext(); ) 
-					if (tbl.getColumnByName((String)j.next())==null)
+				final DataSetTable tbl = (DataSetTable) this.ds
+						.getTableByName((String) entry.getKey());
+				final Collection cols = (Collection) entry.getValue();
+				for (final Iterator j = cols.iterator(); j.hasNext();)
+					if (tbl.getColumnByName((String) j.next()) == null)
 						j.remove();
 				if (cols.isEmpty())
 					i.remove();
 			}
 		}
-		for (final Iterator i = this.partitionedColumns.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (this.ds.getTableByName((String)entry.getKey())==null)
+		for (final Iterator i = this.partitionedColumns.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
 				i.remove();
 			else {
-				final DataSetTable tbl = (DataSetTable)this.ds.getTableByName((String)entry.getKey());
-				final Map cols = (Map)entry.getValue();
-				for (final Iterator j = cols.entrySet().iterator(); j.hasNext(); ) {
-					final Map.Entry entry2 = (Map.Entry)j.next();
-					if (tbl.getColumnByName((String)entry2.getKey())==null)
+				final DataSetTable tbl = (DataSetTable) this.ds
+						.getTableByName((String) entry.getKey());
+				final Map cols = (Map) entry.getValue();
+				for (final Iterator j = cols.entrySet().iterator(); j.hasNext();) {
+					final Map.Entry entry2 = (Map.Entry) j.next();
+					if (tbl.getColumnByName((String) entry2.getKey()) == null)
 						j.remove();
 				}
 				if (cols.isEmpty())

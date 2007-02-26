@@ -316,11 +316,20 @@ public interface MartConstructor {
 						ourColNames.add(((DataSetColumn) j.next())
 								.getModifiedName());
 					// Make the check.
-					if (!ourColNames.containsAll(parentColNames))
+					if (!ourColNames.containsAll(parentColNames)) {
+						final StringBuffer missingCols = new StringBuffer();
+						final Collection cols = new HashSet(parentColNames);
+						cols.removeAll(ourColNames);
+						for (final Iterator j = cols.iterator(); j.hasNext(); ) {
+							missingCols.append(j.next());
+							if (j.hasNext()) missingCols.append(", ");
+						}
 						throw new ValidationException(Resources.get(
 								"subclassMissingCols", new String[] {
 										tbl.getModifiedName(),
-										parentTable.getModifiedName() }));
+										parentTable.getModifiedName(),
+										missingCols.toString()}));
+					}
 				}
 				// Expand the table. We need to insert each one directly
 				// after its parent table and before any subsequent
@@ -442,7 +451,8 @@ public interface MartConstructor {
 				// any potentially missing rows. This isn't always necessary
 				// but sometimes it is, and it is safer to err on the side
 				// of doing it every time.
-				this.doParentLeftJoin(dataset, dsTable,
+				if (!dsTable.getType().equals(DataSetTableType.MAIN))
+					this.doParentLeftJoin(dataset, dsTable,
 							finalCombinedName, partitionValue,
 							previousTempTables, previousIndexes, tempName
 									+ tempNameCount++);

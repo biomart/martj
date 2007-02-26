@@ -86,14 +86,6 @@ public class DataSet extends GenericSchema {
 
 	private final Collection includedRelations;
 
-	// TODO SchemaModMaps for source schema changes.
-	// - Recursion - infinite, use JDBC to flatten before transformation,
-	// with some kind of expression column specifying how to flatten
-	// each level of recursion and how to concatenate them.
-	// defined on a combo of table and single relation.
-	// - Partitioned Source Schema - read from multiple source schemas
-	// and generate one set of dataset tables for each in constructor,
-	// using some kind of shorthand prefix modifier to table names.
 	private final SchemaModificationSet schemaMods;
 
 	private final DataSetModificationSet dsMods;

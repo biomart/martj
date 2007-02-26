@@ -215,23 +215,26 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(",");
 			}
 			if (action.getRecursionType() == RecursionType.APPEND) {
-				sb.append("x.");
+				sb.append("concat(x.");
 				sb.append(action.getConcatColumnName());
-				sb.append("||'");
+				sb.append(",'");
 				sb.append(action.getConcatColumnDefinition().getRowSep()
 						.replaceAll("'", "\\'"));
-				sb.append("'||");
+				sb.append("',");
 				sb.append(action.getConcatColumnDefinition()
 						.getSubstitutedExpression("a"));
+				sb.append(')');
 			} else {
+				sb.append("concat(");
 				sb.append(action.getConcatColumnDefinition()
 						.getSubstitutedExpression("a"));
-				sb.append("||'");
+				sb.append(",'");
 				sb.append(action.getConcatColumnDefinition().getRowSep()
 						.replaceAll("'", "\\'"));
-				sb.append("'||");
+				sb.append("',");
 				sb.append("x.");
 				sb.append(action.getConcatColumnName());
+				sb.append(')');
 			}
 			sb.append(" as ");
 			sb.append(action.getConcatColumnName());
@@ -798,7 +801,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final Connection conn = ((JDBCSchema) schema).getConnection();
 		final ResultSet rs = conn.prepareStatement(
 				"select distinct " + colName + " from " + schemaName + "."
-						+ tableName + "").executeQuery();
+						+ tableName).executeQuery();
 		while (rs.next())
 			results.add(rs.getString(1));
 		rs.close();

@@ -416,7 +416,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						// Write the data.
 						for (int k = 0; k < cmd.length; k++) {
 							this.outputZipStream.write(cmd[k].getBytes());
-							this.outputZipStream.write(';');
+							if (!(cmd[k].endsWith(";") || cmd[k].endsWith("/")))
+								this.outputZipStream.write(';');
 							this.outputZipStream.write(System.getProperty(
 									"line.separator").getBytes());
 						}

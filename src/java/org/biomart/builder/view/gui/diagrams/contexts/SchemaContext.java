@@ -106,6 +106,12 @@ public class SchemaContext implements DiagramContext {
 			// What relation is this?
 			final Relation relation = (Relation) object;
 
+			// Is it restricted?
+			((RelationComponent) component).setRestricted(false);
+
+			// Is it compounded?
+			((RelationComponent) component).setCompounded(false);
+
 			// Fade out all INFERRED_INCORRECT relations.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 				component.setForeground(RelationComponent.INCORRECT_COLOUR);

@@ -182,54 +182,61 @@ public class ConcatRelationDialog extends JDialog {
 				Collection firstRels = Collections.EMPTY_SET;
 				final Key key = (Key) ConcatRelationDialog.this.recursionKey
 						.getSelectedItem();
-				if (key!=null) {
-				firstRels = new ArrayList(key.getRelations());
-				for (final Iterator i = firstRels.iterator(); i.hasNext();)
-					if (((Relation) i.next()).isOneToOne())
-						i.remove();
+				if (key != null) {
+					firstRels = new ArrayList(key.getRelations());
+					for (final Iterator i = firstRels.iterator(); i.hasNext();)
+						if (((Relation) i.next()).isOneToOne())
+							i.remove();
 				}
 				ConcatRelationDialog.this.firstRelation.removeAllItems();
 				for (final Iterator i = firstRels.iterator(); i.hasNext();)
 					ConcatRelationDialog.this.firstRelation.addItem(i.next());
-				if (firstRels.size()>0)
+				if (firstRels.size() > 0)
 					ConcatRelationDialog.this.firstRelation.setSelectedIndex(0);
+				ConcatRelationDialog.this.pack();
 			}
 		});
 		this.firstRelation.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				Collection secondRels =  Collections.EMPTY_SET;
+				Collection secondRels = Collections.EMPTY_SET;
 				final Key key = (Key) ConcatRelationDialog.this.recursionKey
 						.getSelectedItem();
 				final Table tbl = key.getTable();
 				final Relation rel = (Relation) ConcatRelationDialog.this.firstRelation
 						.getSelectedItem();
-				if (rel!=null) {
-				if (rel.getFirstKey().getTable().equals(
-						rel.getSecondKey().getTable())) 
-					ConcatRelationDialog.this.secondRelation.setEnabled(false);
-				else {
-					ConcatRelationDialog.this.secondRelation.setEnabled(true);
-					secondRels = new ArrayList(rel.getOtherKey(key).getTable()
-							.getRelations());
-					for (final Iterator i = secondRels.iterator(); i.hasNext();) {
-						final Relation candidate = (Relation) i.next();
-						if (candidate.isOneToOne()
-								|| !(candidate.getFirstKey().getTable().equals(
-										tbl) || candidate.getSecondKey()
-										.getTable().equals(tbl))
-										|| candidate.equals(rel))
-							i.remove();
+				if (rel != null) {
+					if (rel.getFirstKey().getTable().equals(
+							rel.getSecondKey().getTable()))
+						ConcatRelationDialog.this.secondRelation
+								.setEnabled(false);
+					else {
+						ConcatRelationDialog.this.secondRelation
+								.setEnabled(true);
+						secondRels = new ArrayList(rel.getOtherKey(key)
+								.getTable().getRelations());
+						for (final Iterator i = secondRels.iterator(); i
+								.hasNext();) {
+							final Relation candidate = (Relation) i.next();
+							if (candidate.isOneToOne()
+									|| !(candidate.getFirstKey().getTable()
+											.equals(tbl) || candidate
+											.getSecondKey().getTable().equals(
+													tbl))
+									|| candidate.equals(rel))
+								i.remove();
+						}
 					}
-				}
 				}
 				ConcatRelationDialog.this.secondRelation.removeAllItems();
 				for (final Iterator i = secondRels.iterator(); i.hasNext();)
 					ConcatRelationDialog.this.secondRelation.addItem(i.next());
-				if (secondRels.size()>0)
-					ConcatRelationDialog.this.secondRelation.setSelectedIndex(0);
+				if (secondRels.size() > 0)
+					ConcatRelationDialog.this.secondRelation
+							.setSelectedIndex(0);
+				ConcatRelationDialog.this.pack();
 			}
 		});
-		
+
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = template == null ? new JButton(Resources
@@ -252,7 +259,7 @@ public class ConcatRelationDialog extends JDialog {
 		field.add(new JScrollPane(this.expression));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-		
+
 		// Add the recursion combo box.
 		label = new JLabel(Resources.get("recursionTypeLabel"));
 		gridBag.setConstraints(label, labelConstraints);
@@ -269,21 +276,21 @@ public class ConcatRelationDialog extends JDialog {
 		field = new JPanel();
 		field.add(this.recursionKey);
 		recursionGrid.setConstraints(field, fieldConstraints);
-		recursionPanel.add(field);	
+		recursionPanel.add(field);
 		label = new JLabel(Resources.get("firstRelationLabel"));
 		recursionGrid.setConstraints(label, labelConstraints);
 		recursionPanel.add(label);
 		field = new JPanel();
 		field.add(this.firstRelation);
 		recursionGrid.setConstraints(field, fieldConstraints);
-		recursionPanel.add(field);	
+		recursionPanel.add(field);
 		label = new JLabel(Resources.get("secondRelationLabel"));
 		recursionGrid.setConstraints(label, labelConstraints);
 		recursionPanel.add(label);
 		field = new JPanel();
 		field.add(this.secondRelation);
 		recursionGrid.setConstraints(field, fieldConstraints);
-		recursionPanel.add(field);	
+		recursionPanel.add(field);
 		gridBag.setConstraints(recursionPanel, fieldConstraints);
 		content.add(recursionPanel);
 
@@ -343,7 +350,7 @@ public class ConcatRelationDialog extends JDialog {
 				if (template.getSecondRelation() != null)
 					this.secondRelation.setSelectedItem(template
 							.getSecondRelation());
-			} else 
+			} else
 				this.recursionKey.setSelectedIndex(0);
 		} else
 			this.recursionType.setSelectedItem(RecursionType.NONE);
@@ -372,15 +379,19 @@ public class ConcatRelationDialog extends JDialog {
 		// Validate other fields.
 		if (this.columnAliasModel.getValues().isEmpty())
 			messages.add(Resources.get("columnAliasMissing"));
-		
+
 		// Recursive?
-		if (this.recursionType.getSelectedItem()!=RecursionType.NONE) {
-			if (this.recursionKey.getSelectedIndex()<0)
-				messages.add(Resources.get("fieldIsEmpty", Resources.get("recursionKey")));
-			if (this.firstRelation.getSelectedIndex()<0)
-				messages.add(Resources.get("fieldIsEmpty", Resources.get("firstRelation")));
-			if (this.secondRelation.isEnabled() && this.secondRelation.getSelectedIndex()<0)
-						messages.add(Resources.get("fieldIsEmpty", Resources.get("secondRelation")));
+		if (this.recursionType.getSelectedItem() != RecursionType.NONE) {
+			if (this.recursionKey.getSelectedIndex() < 0)
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("recursionKey")));
+			if (this.firstRelation.getSelectedIndex() < 0)
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("firstRelation")));
+			if (this.secondRelation.isEnabled()
+					&& this.secondRelation.getSelectedIndex() < 0)
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("secondRelation")));
 		}
 
 		// If there any messages, display them.
