@@ -464,10 +464,10 @@ public class DataSetContext extends SchemaContext {
 				contextMenu.add(unnon);
 			}
 
-			contextMenu.addSeparator();
-
 			// Subclass tables have their own options too.
 			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS)) {
+
+				contextMenu.addSeparator();
 
 				// The subclass table can be removed by using this option. This
 				// simply masks the relation that caused the subclass to exist.
@@ -496,11 +496,6 @@ public class DataSetContext extends SchemaContext {
 
 		// Column menu goes here.
 		else if (object instanceof DataSetColumn) {
-			// Columns first show the stuff that would have showed
-			// had the table been clicked on.
-			final Table table = ((DataSetColumn) object).getTable();
-			this.populateContextMenu(contextMenu, table);
-
 			// Add separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
