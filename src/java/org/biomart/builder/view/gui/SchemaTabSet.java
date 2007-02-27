@@ -123,6 +123,19 @@ public class SchemaTabSet extends JTabbedPane {
 		this.recalculateSchemaTabs();
 	}
 
+	/**
+	 * Works out which schema tab is selected, and return it.
+	 * 
+	 * @return the currently selected schema, or <tt>null</tt> if none is
+	 *         selected.
+	 */
+	public Schema getSelectedSchema() {
+		if (this.getSelectedIndex()<=0 || !this.isShowing()) return null;
+		final SchemaDiagram selectedDiagram = (SchemaDiagram)((JScrollPane) this.getSelectedComponent())
+				.getViewport().getView();
+		return selectedDiagram.getSchema();
+	}
+
 	private void addSchemaTab(final Schema schema, final boolean selectNewSchema) {
 		Log.info(Resources.get("logAddSchemaTab", "" + schema));
 		// Create the diagram to represent this schema.
@@ -212,6 +225,28 @@ public class SchemaTabSet extends JTabbedPane {
 		// The empty menu to start with.
 		final JPopupMenu contextMenu = new JPopupMenu();
 
+		// Add an option to rename this schema tab and associated schema.
+		final JMenuItem rename = new JMenuItem(Resources
+				.get("renameSchemaTitle"));
+		rename.setMnemonic(Resources.get("renameSchemaMnemonic").charAt(0));
+		rename.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaTabSet.this.requestRenameSchema(schema);
+			}
+		});
+		contextMenu.add(rename);
+
+		// Add an option to replicate this schema tab.
+		final JMenuItem replicate = new JMenuItem(Resources
+				.get("replicateSchemaTitle"));
+		replicate.setMnemonic(Resources.get("replicateSchemaMnemonic").charAt(0));
+		replicate.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaTabSet.this.requestReplicateSchema(schema);
+			}
+		});
+		contextMenu.add(replicate);
+
 		// Add an option to remove this schema tab, and the
 		// associated schema from the mart.
 		final JMenuItem close = new JMenuItem(Resources
@@ -224,17 +259,6 @@ public class SchemaTabSet extends JTabbedPane {
 			}
 		});
 		contextMenu.add(close);
-
-		// Add an option to rename this schema tab and associated schema.
-		final JMenuItem rename = new JMenuItem(Resources
-				.get("renameSchemaTitle"));
-		rename.setMnemonic(Resources.get("renameSchemaMnemonic").charAt(0));
-		rename.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				SchemaTabSet.this.requestRenameSchema(schema, null);
-			}
-		});
-		contextMenu.add(rename);
 
 		// Return the menu.
 		return contextMenu;
@@ -947,12 +971,8 @@ public class SchemaTabSet extends JTabbedPane {
 	 * 
 	 * @param schema
 	 *            the schema to rename.
-	 * @param schemaGroup
-	 *            (optional, set to null if not used) the group in which this
-	 *            schema is living.
 	 */
-	public void requestRenameSchema(final Schema schema,
-			final Schema schemaGroup) {
+	public void requestRenameSchema(final Schema schema) {
 		// Ask for a new name, suggesting the schema's existing name
 		// as the default response.
 		final String newName = this.askUserForSchemaName(schema.getName());
@@ -963,12 +983,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 		this.runThenRepaint(new Task() {
 			public void run() throws Throwable {
-				// Was the schema in a group? Rename it within the group.
-				if (schemaGroup != null)
-					// Rename it within the group.
-					MartBuilderUtils.renameSchemaInSchemaGroup(schema, newName);
-				else {
-					// Work out which tab the schema is in.
+									// Work out which tab the schema is in.
 					final int idx = SchemaTabSet.this.indexOfTab(schema
 							.getName());
 
@@ -980,7 +995,6 @@ public class SchemaTabSet extends JTabbedPane {
 					SchemaTabSet.this.setTitleAt(idx, schema.getName());
 
 				}
-			}
 		}, schema);
 	}
 

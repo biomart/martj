@@ -131,6 +131,19 @@ public class DataSetTabSet extends JTabbedPane {
 		this.recalculateDataSetTabs();
 	}
 
+	/**
+	 * Works out which dataset tab is selected, and return it.
+	 * 
+	 * @return the currently selected dataset tab, or <tt>null</tt> if none is
+	 *         selected.
+	 */
+	public DataSet getSelectedDataSet() {
+		if (this.getSelectedIndex()<=0 || !this.isShowing()) return null;
+		final DataSetDiagram selectedDiagram = (DataSetDiagram)((JScrollPane) this.getSelectedComponent())
+				.getViewport().getView();
+		return selectedDiagram.getDataSet();
+	}
+
 	private void addDataSetTab(final DataSet dataset,
 			final boolean selectDataset) {
 		Log.info(Resources.get("logAddDatasetTab", "" + dataset));
@@ -190,6 +203,31 @@ public class DataSetTabSet extends JTabbedPane {
 		// Start with an empty menu.
 		final JPopupMenu contextMenu = new JPopupMenu();
 
+		// This item allows the user to rename the dataset.
+		final JMenuItem rename = new JMenuItem(Resources
+				.get("renameDataSetTitle"));
+		rename.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(0));
+		rename.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				DataSetTabSet.this.requestRenameDataSet(dataset);
+			}
+		});
+		contextMenu.add(rename);
+
+		// Add an option to replicate this dataset.
+		final JMenuItem replicate = new JMenuItem(Resources
+				.get("replicateDataSetTitle"));
+		replicate
+				.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
+						0));
+		replicate.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				DataSetTabSet.this
+						.requestReplicateDataSet(dataset);
+			}
+		});
+		contextMenu.add(replicate);
+
 		// This item allows the user to remove the dataset from the mart.
 		final JMenuItem close = new JMenuItem(Resources
 				.get("removeDataSetTitle"), new ImageIcon(Resources
@@ -201,17 +239,6 @@ public class DataSetTabSet extends JTabbedPane {
 			}
 		});
 		contextMenu.add(close);
-
-		// This item allows the user to rename the dataset.
-		final JMenuItem rename = new JMenuItem(Resources
-				.get("renameDataSetTitle"));
-		rename.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(0));
-		rename.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				DataSetTabSet.this.requestRenameDataSet(dataset);
-			}
-		});
-		contextMenu.add(rename);
 
 		// Return the menu.
 		return contextMenu;

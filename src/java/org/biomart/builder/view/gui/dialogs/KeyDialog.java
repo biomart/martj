@@ -28,7 +28,6 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -37,6 +36,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicArrowButton;
 
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
@@ -100,18 +100,14 @@ public class KeyDialog extends JDialog {
 		// Create the table column list, and the buttons
 		// to move columns to/from the selected column list.
 		final JList tabColList = new JList(this.tableColumns);
-		final JButton insertButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("add.gif")));
-		final JButton removeButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("remove.gif")));
+		final JButton insertButton = new BasicArrowButton(BasicArrowButton.EAST);
+		final JButton removeButton = new BasicArrowButton(BasicArrowButton.WEST);
 
 		// Create the key column list, and the buttons to
 		// move columns to/from the table columns list.
 		final JList keyColList = new JList(this.selectedColumns);
-		final JButton upButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("arrowUp.gif")));
-		final JButton downButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("arrowDown.gif")));
+		final JButton upButton = new BasicArrowButton(BasicArrowButton.NORTH);
+		final JButton downButton = new BasicArrowButton(BasicArrowButton.SOUTH);
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		final Box content = Box.createHorizontalBox();
@@ -127,8 +123,8 @@ public class KeyDialog extends JDialog {
 		leftPanel.setBorder(new EmptyBorder(2, 2, 2, 2));
 		// Buttons down the right-hand-side, vertically.
 		final Box leftButtonPanel = Box.createVerticalBox();
-		leftButtonPanel.add(removeButton);
 		leftButtonPanel.add(insertButton);
+		leftButtonPanel.add(removeButton);
 		leftButtonPanel.setBorder(new EmptyBorder(2, 2, 2, 2));
 		leftPanel.add(leftButtonPanel, BorderLayout.LINE_END);
 		content.add(leftPanel);

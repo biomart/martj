@@ -92,17 +92,6 @@ public class SchemaDiagram extends Diagram {
 		this.recalculateDiagram();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * Uses the schema as the general background base object for this diagram.
-	 * This means that any click on the background will be treated as though the
-	 * schema object was clicked on.
-	 */
-	protected Object getContextMenuBaseObject() {
-		return this.getSchema();
-	}
-
 	protected void updateAppearance() {
 		// Set the background.
 		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);

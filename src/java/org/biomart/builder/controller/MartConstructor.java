@@ -315,12 +315,7 @@ public interface MartConstructor {
 			// Create a list in the order by which we want to process tables.
 			final List tablesToProcess = new ArrayList();
 			// Main table first.
-			for (final Iterator i = dataset.getTables().iterator(); i.hasNext()
-					&& tablesToProcess.isEmpty();) {
-				final DataSetTable table = (DataSetTable) i.next();
-				if (table.getType().equals(DataSetTableType.MAIN))
-					tablesToProcess.add(table);
-			}
+			tablesToProcess.add(dataset.getMainTable());
 			// Now recursively expand the table list.
 			for (int i = 0; i < tablesToProcess.size(); i++) {
 				final DataSetTable tbl = (DataSetTable) tablesToProcess.get(i);

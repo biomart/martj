@@ -29,6 +29,7 @@ import javax.swing.WindowConstants;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
+import org.biomart.common.view.gui.dialogs.AboutDialog;
 
 /**
  * This abstract class provides some useful common stuff for launcing any
@@ -143,6 +144,13 @@ public abstract class BioMartGUI extends JFrame {
 		} else {
 			Log.info(Resources.get("logRequestNormalExitDenied"));
 		}
+	}
+
+	/**
+	 * Requests the app to show an about dialog.
+	 */
+	public void requestShowAbout() {
+		AboutDialog.displayAbout();
 	}
 
 	/**

@@ -18,50 +18,32 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.text.DefaultEditorKit;
 
 import org.biomart.builder.controller.MartConstructor;
 import org.biomart.builder.controller.SaveDDLMartConstructor;
@@ -72,9 +54,8 @@ import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
-import org.biomart.common.view.gui.ComponentPrinter;
-import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 
 /**
  * A dialog which allows the user to choose some options about creating DDL over
@@ -406,7 +387,8 @@ public class SaveDDLDialog extends JDialog {
 							throws Exception {
 						if (event == MartConstructorListener.CONSTRUCTION_ENDED
 								&& cr.getFailureException() == null)
-							SaveDDLDialog.this.displayTextPane(sb);
+							ViewTextDialog.displayText(Resources
+									.get("mcViewDDLWindowTitle"), sb.toString());
 					}
 				});
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);
@@ -416,232 +398,6 @@ public class SaveDDLDialog extends JDialog {
 					.get("martConstructionFailed"), Resources
 					.get("messageTitle"), JOptionPane.WARNING_MESSAGE);
 		}
-	}
-
-	private void displayTextPane(final StringBuffer textBuffer) {
-		// Create a window frame.
-		final JFrame editorFrame = new JFrame(Resources
-				.get("mcViewDDLWindowTitle"));
-
-		// Build the text editor pane.
-		final JTextArea editorPane = new JTextArea(textBuffer.toString());
-
-		// Make it read-only and word-wrapped.
-		editorPane.setEditable(false);
-		editorPane.setWrapStyleWord(true);
-		editorPane.setLineWrap(true);
-
-		// Create a simple copy/select-all/wrap menu.
-		final JPopupMenu menu = new JPopupMenu();
-
-		// Copy.
-		final JMenuItem copy = new JMenuItem(editorPane.getActionMap().get(
-				DefaultEditorKit.copyAction));
-		copy.setText(Resources.get("copy"));
-		copy.setMnemonic(Resources.get("copyMnemonic").charAt(0));
-		menu.add(copy);
-
-		// Select-all.
-		final JMenuItem selectAll = new JMenuItem(editorPane.getActionMap()
-				.get(DefaultEditorKit.selectAllAction));
-		selectAll.setText(Resources.get("selectAll"));
-		selectAll.setMnemonic(Resources.get("selectAllMnemonic").charAt(0));
-		menu.add(selectAll);
-
-		menu.addSeparator();
-
-		// Wrap.
-		final JCheckBoxMenuItem wrap = new JCheckBoxMenuItem(Resources
-				.get("wordWrap"));
-		wrap.setMnemonic(Resources.get("wordWrapMnemonic").charAt(0));
-		wrap.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				editorPane.setLineWrap(wrap.isSelected());
-			}
-		});
-		wrap.setSelected(true);
-		menu.add(wrap);
-
-		menu.addSeparator();
-
-		// Attach a mouse listener to the editor pane that
-		// will open the menu on demand.
-		editorPane.addMouseListener(new MouseListener() {
-			public void mouseReleased(MouseEvent e) {
-				this.handleMouse(e);
-			}
-
-			public void mouseClicked(MouseEvent e) {
-				this.handleMouse(e);
-			}
-
-			public void mousePressed(MouseEvent e) {
-				this.handleMouse(e);
-			}
-
-			public void mouseEntered(MouseEvent e) {
-				this.handleMouse(e);
-			}
-
-			public void mouseExited(MouseEvent e) {
-				this.handleMouse(e);
-			}
-
-			private void handleMouse(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					copy.setEnabled(editorPane.getSelectedText() != null);
-					menu.show(e.getComponent(), e.getX(), e.getY());
-					e.consume();
-				}
-			}
-		});
-
-		// Put the editor pane in a scroll pane.
-		final JScrollPane editorScrollPane = new JScrollPane(editorPane);
-		editorScrollPane
-				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		editorScrollPane.setPreferredSize(new Dimension(600, 400));
-
-		// Build the toolbar.
-		final JToolBar toolBarPane = new JToolBar();
-		toolBarPane.setFloatable(false);
-		toolBarPane.setRollover(true);
-
-		// Create a file chooser for finding the DDL file we will save.
-		final JFileChooser saver = new JFileChooser() {
-			private static final long serialVersionUID = 1L;
-
-			public File getSelectedFile() {
-				File file = super.getSelectedFile();
-				if (file != null && !file.exists()) {
-					final String filename = file.getName();
-					final String extension = Resources.get("ddlExtension");
-					if (!filename.endsWith(extension)
-							&& filename.indexOf('.') < 0)
-						file = new File(file.getParentFile(), filename
-								+ extension);
-				}
-				return file;
-			}
-		};
-		final String currentDir = Settings.getProperty("currentSaveDir");
-		saver.setCurrentDirectory(currentDir == null ? null : new File(
-				currentDir));
-		saver.setFileFilter(new FileFilter() {
-			// Accepts only files ending in ".zip" or ".ddl".
-			public boolean accept(final File f) {
-				return f.isDirectory()
-						|| f.getName().toLowerCase().endsWith(
-								Resources.get("singleFileDDL"));
-			}
-
-			public String getDescription() {
-				return Resources.get("DDLFileFilterDescription");
-			}
-		});
-
-		// Make the save button as an image.
-		final JButton saverButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("save.gif")));
-		saverButton.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				if (saver.showSaveDialog(editorFrame) == JFileChooser.APPROVE_OPTION) {
-					Settings.setProperty("currentSaveDir", saver
-							.getCurrentDirectory().getPath());
-					final File file = saver.getSelectedFile();
-					// When a file is chosen, save the file.
-					if (file != null) {
-						LongProcess.run(new Runnable() {
-							public void run() {
-								try {
-									final FileWriter fw = new FileWriter(file);
-									fw.write(editorPane.getText());
-								} catch (final Throwable t) {
-									SwingUtilities.invokeLater(new Runnable() {
-										public void run() {
-											StackTrace.showStackTrace(t);
-										}
-									});
-								}
-							}
-						});
-					}
-				}
-			}
-		});
-
-		// Add the save option to the toolbar.
-		toolBarPane.add(saverButton);
-
-		// Make a print button.
-		final JButton printButton = new JButton(new ImageIcon(Resources
-				.getResourceAsURL("print.gif")));
-		printButton.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				LongProcess.run(new Runnable() {
-					public void run() {
-						try {
-							(new ComponentPrinter(editorPane)).print();
-						} catch (final Throwable t) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									StackTrace.showStackTrace(t);
-								}
-							});
-						}
-					}
-				});
-			}
-		});
-		toolBarPane.add(printButton);
-
-		// Make a find button.
-		final JTextField searchText = new JTextField(20);
-		final JButton searchButton = new JButton(Resources.get("searchButton"));
-		searchText.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				searchButton.doClick();
-				searchText.requestFocus();
-			}
-		});
-		searchButton.addActionListener(new ActionListener() {
-			private Matcher matcher;
-
-			private String currSearch = "";
-
-			public void actionPerformed(final ActionEvent e) {
-				final String search = searchText.getText().trim();
-				if (search.length() == 0)
-					return;
-				if (!currSearch.equals(search)) {
-					this.currSearch = search;
-					this.matcher = Pattern.compile(currSearch).matcher(
-							editorPane.getText());
-					editorPane.setCaretPosition(0);
-				}
-				if (this.matcher.find(editorPane.getCaretPosition())) {
-					editorPane.getCaret().setDot(this.matcher.start());
-					editorPane.getCaret().moveDot(this.matcher.end());
-					editorPane.getCaret().setSelectionVisible(true);
-				} else 
-					Toolkit.getDefaultToolkit().beep();
-			}
-		});
-		toolBarPane.add(searchText);
-		toolBarPane.add(searchButton);
-
-		// Create a frame around the scrollpane.
-		final JPanel content = new JPanel(new BorderLayout());
-		editorFrame.setContentPane(content);
-
-		// Construct the content panel.
-		content.add(toolBarPane, BorderLayout.PAGE_START);
-		content.add(editorScrollPane, BorderLayout.CENTER);
-
-		// Show the frame.
-		editorFrame.pack();
-		editorFrame.setLocationRelativeTo(null);
-		editorFrame.show();
 	}
 
 	private boolean isEmpty(final String string) {

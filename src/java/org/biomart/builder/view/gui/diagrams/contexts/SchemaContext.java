@@ -25,7 +25,6 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -40,7 +39,6 @@ import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
@@ -151,66 +149,8 @@ public class SchemaContext implements DiagramContext {
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
-		// The background area of the diagram has some simple menu items
-		// that refer to all schemas.
-		if (object == null) {
-
-			// Add a separator if the menu is not empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// Gray out options if there are no schemas.
-			boolean grayOut = this.martTab.getSchemaTabSet().getTabCount() <= 1;
-
-			// Menu option to suggest a bunch of datasets.
-			final JMenuItem suggest = new JMenuItem(Resources
-					.get("suggestDataSetsTitle"));
-			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
-					.charAt(0));
-			suggest.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getDataSetTabSet()
-							.requestSuggestDataSets(null);
-				}
-			});
-			if (grayOut)
-				suggest.setEnabled(false);
-			contextMenu.add(suggest);
-
-			contextMenu.addSeparator();
-
-			// Synchronise all schemas in the mart.
-			final JMenuItem syncAll = new JMenuItem(Resources
-					.get("synchroniseAllSchemasTitle"), new ImageIcon(Resources
-					.getResourceAsURL("refresh.gif")));
-			syncAll.setMnemonic(Resources.get("synchroniseAllSchemasMnemonic")
-					.charAt(0));
-			syncAll.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestSynchroniseAllSchemas();
-				}
-			});
-			if (grayOut)
-				syncAll.setEnabled(false);
-			contextMenu.add(syncAll);
-
-			// Add a new schema to the mart.
-			final JMenuItem add = new JMenuItem(
-					Resources.get("addSchemaTitle"), new ImageIcon(Resources
-							.getResourceAsURL("add.gif")));
-			add.setMnemonic(Resources.get("addSchemaMnemonic").charAt(0));
-			add.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestAddSchema();
-				}
-			});
-			contextMenu.add(add);
-		}
-
 		// Table objects have their own menus too.
-		else if (object instanceof Table) {
+		if (object instanceof Table) {
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
@@ -277,120 +217,6 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(fk);
-		}
-
-		// Schema objects have different menus to the background.
-		else if (object instanceof Schema) {
-
-			// Add a separator if the menu is not already empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// What schema is this?
-			final Schema schema = (Schema) object;
-
-			// Menu option to suggest a bunch of datasets.
-			final JMenuItem suggest = new JMenuItem(Resources
-					.get("suggestDataSetsTitle"));
-			suggest.setMnemonic(Resources.get("suggestDataSetsMnemonic")
-					.charAt(0));
-			suggest.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getDataSetTabSet()
-							.requestSuggestDataSets(null);
-				}
-			});
-			contextMenu.add(suggest);
-
-			contextMenu.addSeparator();
-
-			// Add a checkbox menu item to turn keyguessing on/off.
-			final JCheckBoxMenuItem keyguess = new JCheckBoxMenuItem(Resources
-					.get("enableKeyGuessingTitle"));
-			keyguess.setMnemonic(Resources.get("enableKeyGuessingMnemonic")
-					.charAt(0));
-			keyguess.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (keyguess.isSelected())
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestEnableKeyGuessing(schema);
-					else
-						SchemaContext.this.martTab.getSchemaTabSet()
-								.requestDisableKeyGuessing(schema);
-				}
-			});
-			contextMenu.add(keyguess);
-			if (schema.getKeyGuessing())
-				keyguess.setSelected(true);
-
-			contextMenu.addSeparator();
-
-			// Add an option to rename this schema.
-			final JMenuItem rename = new JMenuItem(Resources
-					.get("renameSchemaTitle"));
-			rename.setMnemonic(Resources.get("renameSchemaMnemonic").charAt(0));
-			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestRenameSchema(schema, null);
-				}
-			});
-			contextMenu.add(rename);
-
-			// Add an option to synchronise this schema against it's datasource
-			// or database.
-			final JMenuItem update = new JMenuItem(Resources
-					.get("updateSchemaTitle"), new ImageIcon(Resources
-					.getResourceAsURL("refresh.gif")));
-			update.setMnemonic(Resources.get("updateSchemaMnemonic").charAt(0));
-			update.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestModifySchema(schema);
-				}
-			});
-			contextMenu.add(update);
-
-			// Add the partitioned schema option.
-			final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(Resources
-					.get("partitionSchemaTitle"));
-			partition.setMnemonic(Resources.get("partitionSchemaMnemonic").charAt(0));
-			partition.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestModifySchemaPartitions(schema);
-				}
-			});
-			partition.setSelected(!schema.getPartitions().isEmpty());
-			contextMenu.add(partition);
-
-			// Option to remove the schema from the mart.
-			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeSchemaTitle"), new ImageIcon(Resources
-					.getResourceAsURL("cut.gif")));
-			remove.setMnemonic(Resources.get("removeSchemaMnemonic").charAt(0));
-			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestRemoveSchema(schema);
-				}
-			});
-			contextMenu.add(remove);
-
-			contextMenu.addSeparator();
-
-			// Option to replicate the schema.
-			final JMenuItem replicate = new JMenuItem(Resources
-					.get("replicateSchemaTitle"));
-			replicate.setMnemonic(Resources.get("replicateSchemaMnemonic")
-					.charAt(0));
-			replicate.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestReplicateSchema(schema);
-				}
-			});
-			contextMenu.add(replicate);
 		}
 
 		// Relations have their own menus too.

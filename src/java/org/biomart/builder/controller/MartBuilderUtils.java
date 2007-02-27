@@ -991,25 +991,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Renames a schema within a group of schemas. Schema groups do not care
-	 * what their members are called, so we don't need to pass in a reference.
-	 * Likewise, marts don't care because they're only aware of the groups, not
-	 * the individual schemas within them. However, take care when extracting a
-	 * schema from a group that it doesn't share a name with some other
-	 * individual schema.
-	 * 
-	 * @param schema
-	 *            the schema to rename.
-	 * @param newName
-	 *            the new name to give the schema.
-	 */
-	public static void renameSchemaInSchemaGroup(final Schema schema,
-			final String newName) {
-		Log.info(Resources.get("logReqRenameSchemaInGroup"));
-		schema.setName(newName);
-	}
-
-	/**
 	 * Creates an exact copy of a dataset within the mart, giving it the name
 	 * specified. All tables, keys and relations will be copied over, and have
 	 * the same statuses. Masked columns, partitions etc. will also be copied.

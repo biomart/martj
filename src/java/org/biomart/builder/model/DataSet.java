@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -709,6 +710,21 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
+	 * Returns the central table of this dataset.
+	 * 
+	 * @return the central table of this dataset.
+	 */
+	public DataSetTable getMainTable() {
+		for (final Iterator i = this.getTables().iterator(); i.hasNext(); ) {
+			final DataSetTable dst = (DataSetTable)i.next();
+			if (dst.getType().equals(DataSetTableType.MAIN))
+				return dst;
+		}
+		// Should never happen.
+		throw new BioMartError();
+	}
+
+	/**
 	 * Returns the post-creation optimiser type this dataset will use.
 	 * 
 	 * @return the optimiser type that will be used.
@@ -1336,6 +1352,24 @@ public class DataSet extends GenericSchema {
 		 */
 		public String toString() {
 			return this.getName();
+		}
+		
+		public static Map getTypes() {
+			final Map optimiserTypes = new LinkedHashMap();
+			optimiserTypes.put("None", DataSetOptimiserType.NONE);
+			optimiserTypes.put("Column", DataSetOptimiserType.COLUMN);
+			optimiserTypes.put("ColumnInherit",
+					DataSetOptimiserType.COLUMN_INHERIT);
+			optimiserTypes.put("ColumnBool", DataSetOptimiserType.COLUMN_BOOL);
+			optimiserTypes.put("ColumnBoolInherit",
+					DataSetOptimiserType.COLUMN_BOOL_INHERIT);
+			optimiserTypes.put("Table", DataSetOptimiserType.TABLE);
+			optimiserTypes.put("TableInherit",
+					DataSetOptimiserType.TABLE_INHERIT);
+			optimiserTypes.put("TableBool", DataSetOptimiserType.TABLE_BOOL);
+			optimiserTypes.put("TableBoolInherit",
+					DataSetOptimiserType.TABLE_BOOL_INHERIT);
+			return optimiserTypes;
 		}
 	}
 

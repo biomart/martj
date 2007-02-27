@@ -20,22 +20,15 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
@@ -216,194 +209,8 @@ public class DataSetContext extends SchemaContext {
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
-		// Did the user click on a dataset object?
-		if (object instanceof DataSet) {
-
-			// Add a separator if the menu is not empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// Option to rename the dataset.
-			final JMenuItem rename = new JMenuItem(Resources
-					.get("renameDataSetTitle"));
-			rename
-					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
-							0));
-			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestRenameDataSet(
-									DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(rename);
-
-			// Option to remove the dataset from the mart.
-			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeDataSetTitle"), new ImageIcon(Resources
-					.getResourceAsURL("cut.gif")));
-			remove
-					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
-							0));
-			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestRemoveDataSet(
-									DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(remove);
-
-			contextMenu.addSeparator();
-
-			// Option to replicate the dataset.
-			final JMenuItem replicate = new JMenuItem(Resources
-					.get("replicateDataSetTitle"));
-			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
-					.charAt(0));
-			replicate.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestReplicateDataSet(
-									DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(replicate);
-
-			contextMenu.addSeparator();
-
-			// Make a submenu for the optimiser type.
-			final JMenu optSubmenu = new JMenu(Resources.get("optimiserTitle"));
-			optSubmenu
-					.setMnemonic(Resources.get("optimiserMnemonic").charAt(0));
-			contextMenu.add(optSubmenu);
-
-			// Make a group for the different optimiser types.
-			final ButtonGroup optGroup = new ButtonGroup();
-
-			// Set up a temporary map to store the optimiser types.
-			// Use LinkedHashMap to preserve the order they appear in here.
-			final Map optimiserTypes = new LinkedHashMap();
-			optimiserTypes.put("None", DataSetOptimiserType.NONE);
-			optimiserTypes.put("Column", DataSetOptimiserType.COLUMN);
-			optimiserTypes.put("ColumnInherit",
-					DataSetOptimiserType.COLUMN_INHERIT);
-			optimiserTypes.put("ColumnBool", DataSetOptimiserType.COLUMN_BOOL);
-			optimiserTypes.put("ColumnBoolInherit",
-					DataSetOptimiserType.COLUMN_BOOL_INHERIT);
-			optimiserTypes.put("Table", DataSetOptimiserType.TABLE);
-			optimiserTypes.put("TableInherit",
-					DataSetOptimiserType.TABLE_INHERIT);
-			optimiserTypes.put("TableBool", DataSetOptimiserType.TABLE_BOOL);
-			optimiserTypes.put("TableBoolInherit",
-					DataSetOptimiserType.TABLE_BOOL_INHERIT);
-
-			// Loop through the map to create the submenu.
-			for (final Iterator i = optimiserTypes.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final String name = (String) entry.getKey();
-				final DataSetOptimiserType value = (DataSetOptimiserType) entry
-						.getValue();
-				final JRadioButtonMenuItem opt = new JRadioButtonMenuItem(
-						Resources.get("optimiser" + name + "Title"));
-				opt.setMnemonic(Resources.get("optimiser" + name + "Mnemonic")
-						.charAt(0));
-				opt.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestChangeOptimiserType(
-										DataSetContext.this.getDataSet(), value);
-					}
-				});
-				optGroup.add(opt);
-				optSubmenu.add(opt);
-				if (this.getDataSet().getDataSetOptimiserType().equals(value))
-					opt.setSelected(true);
-			}
-			
-			// Add the optimiser index option.
-			optSubmenu.addSeparator();
-			final JCheckBoxMenuItem indexOpt = new JCheckBoxMenuItem(Resources
-					.get("indexOptimiserTitle"));
-			indexOpt.setMnemonic(Resources.get("indexOptimiserMnemonic")
-					.charAt(0));
-			indexOpt.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (indexOpt.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestIndexOptimiser(
-										DataSetContext.this.getDataSet());
-					else
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestNoIndexOptimiser(
-										DataSetContext.this.getDataSet());
-				}
-			});
-			if (this.getDataSet().isIndexOptimiser())
-				indexOpt.setSelected(true);
-			optSubmenu.add(indexOpt);
-
-			contextMenu.addSeparator();
-
-			// Add an option to make this dataset invisible.
-			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
-					.get("invisibleDataSetTitle"));
-			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
-					.charAt(0));
-			invisible.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (invisible.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestInvisibleDataSet(
-										DataSetContext.this.getDataSet());
-					else
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestVisibleDataSet(
-										DataSetContext.this.getDataSet());
-				}
-			});
-			if (this.getDataSet().getInvisible())
-				invisible.setSelected(true);
-			contextMenu.add(invisible);
-
-			contextMenu.addSeparator();
-
-			// Option to explain how the dataset was constructed.
-			final JMenuItem explain = new JMenuItem(Resources
-					.get("explainDataSetTitle"), new ImageIcon(Resources
-					.getResourceAsURL("help.gif")));
-			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
-					0));
-			explain.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestExplainDataSet(
-									DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(explain);
-
-			contextMenu.addSeparator();
-
-			// Option to create the DDL for the dataset.
-			final JMenuItem saveDDL = new JMenuItem(Resources
-					.get("saveDDLTitle"), new ImageIcon(Resources
-					.getResourceAsURL("saveText.gif")));
-			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
-			saveDDL.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestCreateDDL(DataSetContext.this.getDataSet());
-				}
-			});
-			contextMenu.add(saveDDL);
-		}
-
 		// Did the user click on a dataset table?
-		else if (object instanceof DataSetTable) {
+		if (object instanceof DataSetTable) {
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
@@ -441,6 +248,8 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(rename);
+
+			contextMenu.addSeparator();
 
 			// Add an expression column.
 			final JMenuItem expression = new JMenuItem(Resources
@@ -655,6 +464,8 @@ public class DataSetContext extends SchemaContext {
 				contextMenu.add(unnon);
 			}
 
+			contextMenu.addSeparator();
+
 			// Subclass tables have their own options too.
 			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS)) {
 
@@ -673,25 +484,6 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(unsubclass);
-			}
-
-			// Main tables have their own stuff as well.
-			else if (tableType.equals(DataSetTableType.MAIN)) {
-				// Suggest invisible datasets.
-				final JMenuItem invisible = new JMenuItem(Resources
-						.get("suggestInvisibleDatasetsTitle"));
-				invisible.setMnemonic(Resources.get(
-						"suggestInvisibleDatasetsMnemonic").charAt(0));
-				invisible.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestSuggestInvisibleDatasets(
-										DataSetContext.this.getDataSet(), table);
-					}
-				});
-				contextMenu.add(invisible);
 			}
 		}
 

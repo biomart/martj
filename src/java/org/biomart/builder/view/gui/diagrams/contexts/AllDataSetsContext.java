@@ -79,37 +79,8 @@ public class AllDataSetsContext implements DiagramContext {
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
-		// The background area of the diagram has some simple menu items
-		// that refer to all datasets.
-		if (object == null) {
-
-			// Add a separator if the menu is not already empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// Gray out if there are no datasets.
-			boolean grayOut = this.martTab.getDataSetTabSet().getTabCount() <= 1;
-
-			// Option to remove all datasets from the mart.
-			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeAllDataSetsTitle"), new ImageIcon(Resources
-					.getResourceAsURL("cut.gif")));
-			remove.setMnemonic(Resources.get("removeAllDataSetsMnemonic")
-					.charAt(0));
-			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.martTab.getDataSetTabSet()
-							.requestRemoveAllDataSets();
-				}
-			});
-			if (grayOut)
-				remove.setEnabled(false);
-			contextMenu.add(remove);
-
-		}
-
 		// DataSet objects have different menus to the background.
-		else if (object instanceof DataSet) {
+		if (object instanceof DataSet) {
 
 			// Add a separator if the menu is not already empty.
 			if (contextMenu.getComponentCount() > 0)
@@ -132,6 +103,20 @@ public class AllDataSetsContext implements DiagramContext {
 			});
 			contextMenu.add(rename);
 
+			// Add an option to replicate this dataset.
+			final JMenuItem replicate = new JMenuItem(Resources
+					.get("replicateDataSetTitle"));
+			replicate
+					.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
+							0));
+			replicate.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.martTab.getDataSetTabSet()
+							.requestReplicateDataSet(dataset);
+				}
+			});
+			contextMenu.add(replicate);
+
 			// Option to remove the dataset from the mart.
 			final JMenuItem remove = new JMenuItem(Resources
 					.get("removeDataSetTitle"), new ImageIcon(Resources
@@ -146,58 +131,6 @@ public class AllDataSetsContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(remove);
-
-			contextMenu.addSeparator();
-
-			// Add an option to make this dataset invisible.
-			final JCheckBoxMenuItem invisible = new JCheckBoxMenuItem(Resources
-					.get("invisibleDataSetTitle"));
-			invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic")
-					.charAt(0));
-			invisible.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (invisible.isSelected())
-						AllDataSetsContext.this.martTab.getDataSetTabSet()
-								.requestInvisibleDataSet(dataset);
-					else
-						AllDataSetsContext.this.martTab.getDataSetTabSet()
-								.requestVisibleDataSet(dataset);
-				}
-			});
-			if (dataset.getInvisible())
-				invisible.setSelected(true);
-			contextMenu.add(invisible);
-
-			contextMenu.addSeparator();
-
-			// Option to explain how the dataset was constructed.
-			final JMenuItem explain = new JMenuItem(Resources
-					.get("explainDataSetTitle"), new ImageIcon(Resources
-					.getResourceAsURL("help.gif")));
-			explain.setMnemonic(Resources.get("explainDataSetMnemonic").charAt(
-					0));
-			explain.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.getMartTab().getDataSetTabSet()
-							.requestExplainDataSet(dataset);
-				}
-			});
-			contextMenu.add(explain);
-
-			contextMenu.addSeparator();
-
-			// Option to create the DDL for the dataset.
-			final JMenuItem saveDDL = new JMenuItem(Resources
-					.get("saveDDLTitle"), new ImageIcon(Resources
-					.getResourceAsURL("saveText.gif")));
-			saveDDL.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
-			saveDDL.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.getMartTab().getDataSetTabSet()
-							.requestCreateDDL(dataset);
-				}
-			});
-			contextMenu.add(saveDDL);
 		}
 	}
 }

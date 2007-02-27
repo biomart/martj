@@ -205,20 +205,6 @@ public abstract class Diagram extends JPanel {
 		new ComponentImageSaver(this).save();
 	}
 
-	/**
-	 * Finds out what database object this diagram should treat as the
-	 * background object for the entire diagram. In other words, if you want the
-	 * background of the diagram to behave as if the user had clicked on a
-	 * specific database object, this is the method you would override to
-	 * provide that object. The default is to return null, ie. the diagram has
-	 * no background object.
-	 * 
-	 * @return the background database object for this diagram.
-	 */
-	protected Object getContextMenuBaseObject() {
-		return null;
-	}
-
 	protected void paintComponent(final Graphics g) {
 		// If the context has changed since last time we
 		// painted anything, update all our components'
@@ -239,13 +225,6 @@ public abstract class Diagram extends JPanel {
 
 			// Obtain the basic context menu for this diagram.
 			final JPopupMenu contextMenu = new JPopupMenu();
-
-			// Extend the basic menu by delegating to the context, using the
-			// background database object of this diagram to provide the
-			// options.
-			if (this.getDiagramContext() != null)
-				this.getDiagramContext().populateContextMenu(contextMenu,
-						this.getContextMenuBaseObject());
 
 			// Add the common diagram stuff.
 			this.populateContextMenu(contextMenu);
