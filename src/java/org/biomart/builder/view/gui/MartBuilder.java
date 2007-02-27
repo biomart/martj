@@ -667,10 +667,10 @@ public class MartBuilder extends BioMartGUI {
 						.getSelectedDataSet();
 				if (this.invisibleDataset.isSelected())
 					this.martBuilder.martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestVisibleDataSet(ds);
+							.getDataSetTabSet().requestInvisibleDataSet(ds);
 				else
 					this.martBuilder.martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestInvisibleDataSet(ds);
+							.getDataSetTabSet().requestVisibleDataSet(ds);
 			} else if (e.getSource() == this.explainDataset) {
 				final DataSet ds = this.martBuilder.martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
