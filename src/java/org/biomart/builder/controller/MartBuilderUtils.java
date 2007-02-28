@@ -685,12 +685,13 @@ public class MartBuilderUtils {
 			final Relation rel, final int index, final String column,
 			final Map aliases, final String expression, final String rowSep,
 			final RecursionType recursionType, final Key recursionKey,
-			final Relation firstRelation, final Relation secondRelation)
+			final Relation firstRelation, final Relation secondRelation,
+			final String concSep)
 			throws SQLException, DataModelException, ValidationException {
 		Log.info(Resources.get("logReqConcatRelation"));
 		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
 				expression, aliases, rowSep, column,
-				recursionType, recursionKey, firstRelation, secondRelation);
+				recursionType, recursionKey, firstRelation, secondRelation, concSep);
 		((DataSet) dsTable.getSchema()).getSchemaModifications()
 				.setConcatRelation(dsTable, rel, index, expr);
 		((DataSet) dsTable.getSchema()).synchronise();
@@ -724,12 +725,13 @@ public class MartBuilderUtils {
 			final int index, final String column, final Map aliases,
 			final String expression, final String rowSep,
 			final RecursionType recursionType, final Key recursionKey,
-			final Relation firstRelation, final Relation secondRelation) throws SQLException,
+			final Relation firstRelation, final Relation secondRelation,
+			final String concSep) throws SQLException,
 			DataModelException, ValidationException {
 		Log.info(Resources.get("logReqConcatRelation"));
 		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
 				expression, aliases, rowSep, column,
-				recursionType, recursionKey, firstRelation, secondRelation);
+				recursionType, recursionKey, firstRelation, secondRelation, concSep);
 		ds.getSchemaModifications().setConcatRelation(rel, index, expr);
 		ds.synchronise();
 	}

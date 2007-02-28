@@ -18,6 +18,7 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -117,7 +118,8 @@ public class SchemaTabSet extends JTabbedPane {
 		scroller.getViewport().setBackground(
 				this.allSchemasDiagram.getBackground());
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
-
+		this.setForegroundAt(0, Color.WHITE);
+		
 		// Populate the map to hold the relation between schemas and the
 		// diagrams representing them.
 		this.recalculateSchemaTabs();

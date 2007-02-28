@@ -21,6 +21,8 @@ package org.biomart.builder.view.gui;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -40,7 +42,6 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.BioMartGUI;
-import org.biomart.common.view.gui.dialogs.AboutDialog;
 
 /**
  * The main window housing the MartBuilder GUI. The {@link #main(String[])}
@@ -379,34 +380,26 @@ public class MartBuilder extends BioMartGUI {
 					"aboutMartBuilderMnemonic").charAt(0));
 			this.aboutMartBuilder.addActionListener(this);
 
-			// Construct the file menu.
-			final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
-			fileMenu.setMnemonic(Resources.get("fileMenuMnemonic").charAt(0));
-			fileMenu.add(this.newMart);
-			fileMenu.add(this.openMart);
-			fileMenu.addSeparator();
-			fileMenu.add(this.saveMart);
-			fileMenu.add(this.saveMartAs);
-			fileMenu.addSeparator();
-			fileMenu.add(this.closeMart);
-			fileMenu.addSeparator();
-			fileMenu.add(this.exit);
-
 			// Construct the mart menu.
 			final JMenu martMenu = new JMenu(Resources.get("martMenuTitle"));
 			martMenu.setMnemonic(Resources.get("martMenuMnemonic").charAt(0));
+			martMenu.add(this.newMart);
+			martMenu.add(this.openMart);
+			martMenu.add(this.closeMart);
+			martMenu.addSeparator();
+			martMenu.add(this.saveMart);
+			martMenu.add(this.saveMartAs);
 			martMenu.add(this.saveDDL);
 			martMenu.addSeparator();
-			martMenu.add(this.addSchema);
-			martMenu.add(this.updateAllSchemas);
-			martMenu.addSeparator();
-			martMenu.add(this.createDatasets);
-			martMenu.add(this.removeAllDatasets);
-
+			final int firstMartRecentFileEntry = martMenu.getMenuComponentCount();
+			
 			// Construct the schema menu.
 			final JMenu schemaMenu = new JMenu(Resources.get("schemaMenuTitle"));
 			schemaMenu.setMnemonic(Resources.get("schemaMenuMnemonic")
 					.charAt(0));
+			schemaMenu.add(this.addSchema);
+			schemaMenu.add(this.updateAllSchemas);
+			schemaMenu.addSeparator();
 			schemaMenu.add(this.keyguessingSchema);
 			schemaMenu.add(this.partitionedSchema);
 			schemaMenu.addSeparator();
@@ -421,6 +414,9 @@ public class MartBuilder extends BioMartGUI {
 					.get("datasetMenuTitle"));
 			datasetMenu.setMnemonic(Resources.get("datasetMenuMnemonic")
 					.charAt(0));
+			datasetMenu.add(this.createDatasets);
+			datasetMenu.add(this.removeAllDatasets);
+			datasetMenu.addSeparator();
 			datasetMenu.add(this.invisibleDataset);
 			datasetMenu.add(this.optimiseDatasetSubmenu);
 			datasetMenu.addSeparator();
@@ -436,14 +432,14 @@ public class MartBuilder extends BioMartGUI {
 			// Construct the help menu.
 			final JMenu helpMenu = new JMenu(Resources.get("helpMenuTitle"));
 			helpMenu.setMnemonic(Resources.get("helpMenuMnemonic").charAt(0));
-			// TODO help
+			// TODO A link to help docs
 			helpMenu.add(this.aboutMartBuilder);
 
 			// Add a listener which checks which options to enable each time the
 			// menu is opened. This mean that if no mart is currently selected,
 			// save and close will be disabled, and if the current mart is not
 			// modified, save will be disabled, etc.
-			fileMenu.addMenuListener(new MenuListener() {
+			martMenu.addMenuListener(new MenuListener() {
 				public void menuCanceled(final MenuEvent e) {
 				} // Interface requirement.
 
@@ -457,30 +453,34 @@ public class MartBuilder extends BioMartGUI {
 					MartBuilderMenuBar.this.saveMart.setEnabled(hasMart
 							&& martBuilder.martTabSet.getModifiedStatus());
 					MartBuilderMenuBar.this.saveMartAs.setEnabled(hasMart);
-					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
-				}
-			});
-			martMenu.addMenuListener(new MenuListener() {
-				public void menuCanceled(final MenuEvent e) {
-				} // Interface requirement.
-
-				public void menuDeselected(final MenuEvent e) {
-				} // Interface requirement.
-
-				public void menuSelected(final MenuEvent e) {
-					boolean hasMart = true;
-					if (martBuilder.martTabSet.getSelectedMartTab() == null)
-						hasMart = false;
 					MartBuilderMenuBar.this.saveDDL.setEnabled(hasMart
 							&& martBuilder.martTabSet.getSelectedMartTab()
 									.getMart().getDataSets().size() > 0);
-					MartBuilderMenuBar.this.addSchema.setEnabled(hasMart);
-					MartBuilderMenuBar.this.updateAllSchemas.setEnabled(hasMart &&
-							martBuilder.martTabSet.getSelectedMartTab().getSchemaTabSet().getComponentCount()>1);
-					MartBuilderMenuBar.this.createDatasets.setEnabled(hasMart &&
-							martBuilder.martTabSet.getSelectedMartTab().getSchemaTabSet().getComponentCount()>1);
-					MartBuilderMenuBar.this.removeAllDatasets.setEnabled(hasMart &&
-							martBuilder.martTabSet.getSelectedMartTab().getDataSetTabSet().getComponentCount()>1);
+					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
+					// Wipe from the separator before the Exit
+					// entry to the last non-separator/non-numbered entry.
+					// Then, insert after the separator a numbered list
+					// of recent files, followed by another separator if
+					// the list was not empty.
+					while (martMenu.getMenuComponentCount()>firstMartRecentFileEntry)
+						martMenu.remove(martMenu.getMenuComponent(firstMartRecentFileEntry));
+					final Collection names = Settings.getHistoryNamesForClass(MartTabSet.class);
+					int position = 1;
+					for (final Iterator i = names.iterator(); i.hasNext(); position++) {
+						final String name = (String)i.next();
+						final File location = new File((String)Settings.getHistoryProperties(MartTabSet.class, name).get("location"));
+						final JMenuItem file = new JMenuItem(position+" "+name);
+						file.setMnemonic((""+position).charAt(0));
+						file.addActionListener(new ActionListener() {
+							public void actionPerformed(final ActionEvent evt) {
+								martBuilder.martTabSet.loadMart(location);
+							}
+						});
+						martMenu.add(file);						
+					}
+					if (names.size()>0)
+						martMenu.addSeparator();
+					martMenu.add(MartBuilderMenuBar.this.exit);
 				}
 			});
 			schemaMenu.addMenuListener(new MenuListener() {
@@ -491,12 +491,18 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
+					boolean hasMart = true;
+					if (martBuilder.martTabSet.getSelectedMartTab() == null)
+						hasMart = false;
 					final Schema schema;
-					if (martBuilder.martTabSet.getSelectedMartTab() != null)
+					if (hasMart)
 						schema = martBuilder.martTabSet.getSelectedMartTab()
 								.getSchemaTabSet().getSelectedSchema();
 					else
 						schema = null;
+					MartBuilderMenuBar.this.addSchema.setEnabled(hasMart);
+					MartBuilderMenuBar.this.updateAllSchemas.setEnabled(hasMart &&
+							martBuilder.martTabSet.getSelectedMartTab().getSchemaTabSet().getComponentCount()>1);
 					MartBuilderMenuBar.this.keyguessingSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.keyguessingSchema
@@ -525,8 +531,15 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
+					boolean hasMart = true;
+					if (martBuilder.martTabSet.getSelectedMartTab() == null)
+						hasMart = false;
+					MartBuilderMenuBar.this.createDatasets.setEnabled(hasMart &&
+							martBuilder.martTabSet.getSelectedMartTab().getSchemaTabSet().getComponentCount()>1);
+					MartBuilderMenuBar.this.removeAllDatasets.setEnabled(hasMart &&
+							martBuilder.martTabSet.getSelectedMartTab().getDataSetTabSet().getComponentCount()>1);
 					final DataSet ds;
-					if (martBuilder.martTabSet.getSelectedMartTab() != null)
+					if (hasMart)
 						ds = martBuilder.martTabSet.getSelectedMartTab()
 								.getDataSetTabSet().getSelectedDataSet();
 					else
@@ -580,7 +593,6 @@ public class MartBuilder extends BioMartGUI {
 			});
 
 			// Adds the menus to the menu bar.
-			this.add(fileMenu);
 			this.add(martMenu);
 			this.add(schemaMenu);
 			this.add(datasetMenu);

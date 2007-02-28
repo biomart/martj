@@ -1062,6 +1062,8 @@ public class SchemaModificationSet {
 
 		private Relation secondRelation;
 
+		private String concSep;
+
 		/**
 		 * This constructor gives the restriction an initial expression and a
 		 * set of aliases. The expression may not be empty, and neither can the
@@ -1075,7 +1077,8 @@ public class SchemaModificationSet {
 		public ConcatRelationDefinition(final String expr, final Map aliases,
 				final String rowSep, final String colKey,
 				RecursionType recursionType, final Key recursionKey,
-				final Relation firstRelation, final Relation secondRelation) {
+				final Relation firstRelation, final Relation secondRelation,
+				final String concSep) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -1083,7 +1086,7 @@ public class SchemaModificationSet {
 			if (aliases == null || aliases.isEmpty())
 				throw new IllegalArgumentException(Resources
 						.get("concatRelMissingAliases"));
-			if (aliases == null || aliases.isEmpty())
+			if (rowSep == null || rowSep.length()==0)
 				throw new IllegalArgumentException(Resources
 						.get("concatRelMissingRowSep"));
 			if (recursionType == null)
@@ -1100,6 +1103,9 @@ public class SchemaModificationSet {
 								firstRelation.getSecondKey().getTable()))
 					throw new IllegalArgumentException(Resources
 							.get("concatRelMissingSecondRelation"));
+				if (concSep == null || concSep.length()==0)
+					throw new IllegalArgumentException(Resources
+							.get("concatRelMissingConcSep"));
 			}
 
 			// Remember the settings.
@@ -1112,6 +1118,7 @@ public class SchemaModificationSet {
 			this.recursionKey = recursionKey;
 			this.firstRelation = firstRelation;
 			this.secondRelation = secondRelation;
+			this.concSep = concSep;
 		}
 
 		/**
@@ -1184,6 +1191,10 @@ public class SchemaModificationSet {
 		 */
 		public String getRowSep() {
 			return this.rowSep;
+		}
+		
+		public String getConcSep() {
+			return this.concSep;
 		}
 
 		/**

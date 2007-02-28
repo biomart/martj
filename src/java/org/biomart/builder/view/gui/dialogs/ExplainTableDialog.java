@@ -120,7 +120,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		// Create the blank dialog, and give it an appropriate title.
 		super();
 		this.setTitle(Resources.get("explainTableDialogTitle", dsTable
-				.getName()));
+				.getModifiedName()));
 		this.setModal(true);
 		this.ds = (DataSet) dsTable.getSchema();
 		this.tableName = dsTable.getName();

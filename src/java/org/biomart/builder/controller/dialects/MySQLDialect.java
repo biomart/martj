@@ -218,7 +218,7 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append("concat(x.");
 				sb.append(action.getConcatColumnName());
 				sb.append(",'");
-				sb.append(action.getConcatColumnDefinition().getRowSep()
+				sb.append(action.getConcatColumnDefinition().getConcSep()
 						.replaceAll("'", "\\'"));
 				sb.append("',");
 				sb.append(action.getConcatColumnDefinition()
@@ -229,7 +229,7 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(action.getConcatColumnDefinition()
 						.getSubstitutedExpression("a"));
 				sb.append(",'");
-				sb.append(action.getConcatColumnDefinition().getRowSep()
+				sb.append(action.getConcatColumnDefinition().getConcSep()
 						.replaceAll("'", "\\'"));
 				sb.append("',");
 				sb.append("x.");

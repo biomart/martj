@@ -61,6 +61,8 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -197,6 +199,8 @@ public interface MartConstructor {
 		private Map uniqueOptCols = new HashMap();
 
 		private String statusMessage = Resources.get("mcCreatingGraph");
+		
+		private int tempNameCount = 0;
 
 		/**
 		 * Constructs a builder object that will construct an action graph
@@ -390,13 +394,14 @@ public interface MartConstructor {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 			final String tempName = "TEMP";
-			int tempNameCount = 0;
 			final Map previousTempTables = new HashMap();
 			final Map previousIndexes = new HashMap();
 			final List partitionValues = new ArrayList();
 			partitionValues.add(GenericConstructorRunnable.NO_PARTITION);
 			previousTempTables.put(GenericConstructorRunnable.NO_PARTITION,
 					null);
+			boolean requiresFinalLeftJoin = dataset.getDataSetModifications()
+					.isPartitionedTable(dsTable);
 
 			// Use the transformation units to create the basic table.
 			for (final Iterator j = dsTable.getTransformationUnits().iterator(); j
@@ -424,7 +429,7 @@ public interface MartConstructor {
 				// Do unit once per partition.
 				for (final Iterator v = partitionValues.iterator(); v.hasNext();) {
 					final String partitionValue = (String) v.next();
-					final String tempTable = tempName + tempNameCount++;
+					final String tempTable = tempName + this.tempNameCount++;
 					previousIndexes.put(tempTable, new HashSet());
 
 					// Translate TU to Action.
@@ -442,8 +447,9 @@ public interface MartConstructor {
 								partitionValue, tempTable);
 					// Left-join?
 					else if (tu instanceof JoinTable)
-						this.doJoinTable(templateSchema, schemaPartition,
-								schemaPrefix, dataset, dsTable, (JoinTable) tu,
+						requiresFinalLeftJoin |= this.doJoinTable(
+								templateSchema, schemaPartition, schemaPrefix,
+								dataset, dsTable, (JoinTable) tu,
 								previousTempTables, previousIndexes, pc,
 								partitionValue, tempTable);
 					// Select-from?
@@ -488,11 +494,11 @@ public interface MartConstructor {
 				// any potentially missing rows. This isn't always necessary
 				// but sometimes it is, and it is safer to err on the side
 				// of doing it every time.
-				if (!dsTable.getType().equals(DataSetTableType.MAIN))
+				if (requiresFinalLeftJoin)
 					this.doParentLeftJoin(templateSchema, schemaPartition,
 							schemaPrefix, dataset, dsTable, finalCombinedName,
 							partitionValue, previousTempTables,
-							previousIndexes, tempName + tempNameCount++);
+							previousIndexes, tempName + this.tempNameCount++);
 
 				// Drop masked dependencies and create column indices.
 				final List dropCols = new ArrayList();
@@ -970,7 +976,7 @@ public interface MartConstructor {
 			this.issueAction(drop);
 		}
 
-		private void doJoinTable(final Schema templateSchema,
+		private boolean doJoinTable(final Schema templateSchema,
 				final String schemaPartition, final String schemaPrefix,
 				final DataSet dataset, final DataSetTable dsTable,
 				final JoinTable ljtu, final Map previousTempTables,
@@ -978,6 +984,7 @@ public interface MartConstructor {
 				final PartitionedColumnDefinition pc,
 				final String partitionValue, final String tempTable)
 				throws Exception {
+			boolean requiresFinalLeftJoin = false;
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 
@@ -1034,21 +1041,28 @@ public interface MartConstructor {
 				action.setPartitionValue(partitionValue);
 			}
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
-					ljtu.getTable()))
-				action.setTableRestriction(dataset.getSchemaModifications()
-						.getRestrictedTable(dsTable, ljtu.getTable()));
+					ljtu.getTable())) {
+				final RestrictedTableDefinition def = dataset
+						.getSchemaModifications().getRestrictedTable(dsTable,
+								ljtu.getTable());
+				action.setTableRestriction(def);
+				requiresFinalLeftJoin |= def.isHard();
+			}
 			if (dataset.getSchemaModifications()
 					.isRestrictedRelation(dsTable, ljtu.getSchemaRelation(),
 							ljtu.getSchemaRelationIteration())) {
+				final RestrictedRelationDefinition def = dataset
+						.getSchemaModifications().getRestrictedRelation(
+								dsTable, ljtu.getSchemaRelation(),
+								ljtu.getSchemaRelationIteration());
 				action.setRelationRestrictionLeftIsFirst(ljtu
 						.getSchemaRelation().getFirstKey().equals(
 								ljtu.getSchemaSourceKey()));
-				action.setRelationRestriction(dataset.getSchemaModifications()
-						.getRestrictedRelation(dsTable,
-								ljtu.getSchemaRelation(),
-								ljtu.getSchemaRelationIteration()));
+				action.setRelationRestriction(def);
+				requiresFinalLeftJoin |= def.isHard();
 			}
 			this.issueAction(action);
+			return requiresFinalLeftJoin;
 		}
 
 		private void doExpression(final Schema templateSchema,

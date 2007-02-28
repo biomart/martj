@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -404,6 +405,13 @@ public class MartTabSet extends JTabbedPane {
 										MartTabSet.this.addMartTab(mart, file);
 									}
 								});
+								// Save XML filename in history of accessed
+								// files.
+								final Properties history = new Properties();
+								history.setProperty("location", file.getPath());
+								Settings.saveHistoryProperties(
+										MartTabSet.class, MartTabSet.this
+												.suggestTabName(mart), history);
 							}
 
 							// Finally, remove the unsaved default tab if
@@ -432,6 +440,72 @@ public class MartTabSet extends JTabbedPane {
 					}
 				});
 		}
+	}
+
+	/**
+	 * Loads a schema from a user-specified file(s), by popping up a dialog
+	 * allowing them to choose the file(s). If they choose a file, it is loaded
+	 * and parsed and a new tab is added representing its contents.
+	 * 
+	 * @param file
+	 *            the file to load. If it does not exist, this delegates to the
+	 *            normal load method.
+	 */
+	public void loadMart(final File file) {
+		// Open the file chooser.
+		// In the background, load them in turn.
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do we need to close the existing unsaved
+					// unmodified default tab?
+					MartTab defaultTab = MartTabSet.this.getSelectedMartTab();
+					int defaultIndex = MartTabSet.this.getSelectedIndex();
+					if (MartTabSet.this.getComponentCount() > 1
+							|| (defaultTab != null && !MartTabSet.this
+									.getTitleAt(defaultIndex).equals(
+											Resources.get("unsavedMart"))))
+						defaultTab = null;
+
+					// Load the files.
+					final Mart mart = MartBuilderXML.load(file);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							MartTabSet.this.addMartTab(mart, file);
+						}
+					});
+					// Save XML filename in history of accessed
+					// files.
+					final Properties history = new Properties();
+					history.setProperty("location", file.getPath());
+					Settings.saveHistoryProperties(MartTabSet.class,
+							MartTabSet.this.suggestTabName(mart), history);
+
+					// Finally, remove the unsaved default tab if
+					// we need to.
+					if (defaultTab != null) {
+						// Remove the tab.
+						MartTabSet.this.removeTabAt(defaultIndex);
+
+						// Remove the mart from the modified map.
+						MartTabSet.this.martModifiedStatus.remove(defaultTab
+								.getMart());
+
+						// Remove the XML file the mart came from from
+						// the file map.
+						MartTabSet.this.martXMLFile
+								.remove(defaultTab.getMart());
+
+					}
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
 	}
 
 	/**
@@ -585,6 +659,11 @@ public class MartTabSet extends JTabbedPane {
 			// Save it, and save the reference to the XML file for later.
 			this.martXMLFile.put(currentMart, saveAsFile);
 			this.saveMart();
+			// Save XML filename in history of accessed files.
+			final Properties history = new Properties();
+			history.setProperty("location", saveAsFile.getPath());
+			Settings.saveHistoryProperties(MartTabSet.class, this
+					.suggestTabName(currentMart), history);
 		}
 	}
 

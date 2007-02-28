@@ -225,20 +225,9 @@ public class DataSet extends GenericSchema {
 				// If this is not a subclass table, we need to filter columns.
 				if (!type.equals(DataSetTableType.MAIN_SUBCLASS)) {
 					// Skip columns that are not in the primary key.
-					boolean inPK = parentDSTablePK.getColumns().contains(
+					final boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
-					DataSetColumn inhParentDSCol = parentDSCol;
-					while (inhParentDSCol instanceof InheritedColumn)
-						inhParentDSCol = ((InheritedColumn) inhParentDSCol)
-								.getInheritedColumn();
-					boolean inSourceKey = inhParentDSCol instanceof WrappedColumn
-							&& (sourceRelation.getFirstKey().getColumns()
-									.contains(
-											((WrappedColumn) inhParentDSCol)
-													.getWrappedColumn()) || sourceRelation
-									.getSecondKey().getColumns().contains(
-											((WrappedColumn) inhParentDSCol)
-													.getWrappedColumn()));
+					final boolean inSourceKey = sourceDSCols!=null && sourceDSCols.contains(parentDSCol);
 					if (!inPK && !inSourceKey)
 						continue;
 				}

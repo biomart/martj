@@ -18,6 +18,7 @@
 
 package org.biomart.builder.view.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -126,6 +127,7 @@ public class DataSetTabSet extends JTabbedPane {
 		scroller.getViewport().setBackground(
 				this.allDataSetsDiagram.getBackground());
 		this.addTab(Resources.get("multiDataSetOverviewTab"), scroller);
+		this.setForegroundAt(0, Color.WHITE);
 
 		// Calculate the dataset tabs.
 		this.recalculateDataSetTabs();
@@ -639,6 +641,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final Key recursionKey = dialog.getRecursionKey();
 		final Relation firstRelation = dialog.getFirstRelation();
 		final Relation secondRelation = dialog.getSecondRelation();
+		final String concSep = dialog.getConcSep();
 		// Do this in the background.
 		this.runThenRecalculate(new Task() {
 			public void run() throws Throwable {
@@ -646,11 +649,13 @@ public class DataSetTabSet extends JTabbedPane {
 				if (dsTable != null)
 					MartBuilderUtils.concatRelation(dsTable, relation, index,
 							colKey, aliases, expression, rowSep,
-							recursionType, recursionKey, firstRelation, secondRelation);
+							recursionType, recursionKey, firstRelation, secondRelation,
+							concSep);
 				else
 					MartBuilderUtils.concatRelation(dataset, relation, index,
 							colKey, aliases, expression, rowSep,
-							recursionType, recursionKey, firstRelation, secondRelation);
+							recursionType, recursionKey, firstRelation, secondRelation,
+							concSep);
 			}
 		}, dataset);
 	}

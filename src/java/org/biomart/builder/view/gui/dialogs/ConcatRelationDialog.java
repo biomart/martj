@@ -73,6 +73,8 @@ public class ConcatRelationDialog extends JDialog {
 
 	private JTextField rowSep;
 
+	private JTextField concSep;
+
 	private JComboBox recursionType;
 
 	private JComboBox recursionKey;
@@ -130,6 +132,7 @@ public class ConcatRelationDialog extends JDialog {
 		// Create the fields that will contain the user's table choices.
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 		this.rowSep = new JTextField(5);
+		this.concSep = new JTextField(5);
 
 		// First table aliases.
 		this.columnAliasModel = new ColumnStringTablePanel(
@@ -292,11 +295,20 @@ public class ConcatRelationDialog extends JDialog {
 		recursionGrid.setConstraints(field, fieldConstraints);
 		recursionPanel.add(field);
 		gridBag.setConstraints(recursionPanel, fieldConstraints);
+		label = new JLabel(Resources.get("concSepLabel"));
+		recursionGrid.setConstraints(label, labelConstraints);
+		recursionPanel.add(label);
+		field = new JPanel();
+		field.add(this.concSep);
+		recursionGrid.setConstraints(field, fieldConstraints);
+		recursionPanel.add(field);
 		content.add(recursionPanel);
 
 		// Row separator.
+		label = new JLabel(Resources.get("rowSepLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
 		field = new JPanel();
-		field.add(new JLabel(Resources.get("rowSepLabel")));
 		field.add(this.rowSep);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
@@ -350,6 +362,7 @@ public class ConcatRelationDialog extends JDialog {
 				if (template.getSecondRelation() != null)
 					this.secondRelation.setSelectedItem(template
 							.getSecondRelation());
+				this.concSep.setText(template.getConcSep());
 			} else
 				this.recursionKey.setSelectedIndex(0);
 		} else
@@ -392,6 +405,9 @@ public class ConcatRelationDialog extends JDialog {
 					&& this.secondRelation.getSelectedIndex() < 0)
 				messages.add(Resources.get("fieldIsEmpty", Resources
 						.get("secondRelation")));
+			if (this.concSep.getText().length() == 0)
+				messages
+						.add(Resources.get("fieldIsEmpty", Resources.get("concSep")));
 		}
 
 		// If there any messages, display them.
@@ -439,6 +455,10 @@ public class ConcatRelationDialog extends JDialog {
 	 */
 	public String getRowSep() {
 		return this.rowSep.getText();
+	}
+	
+	public String getConcSep() {
+		return this.concSep.getText();
 	}
 
 	public RecursionType getRecursionType() {

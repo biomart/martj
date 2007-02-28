@@ -71,7 +71,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|NONE) #REQUIRED>
-<!ATTLIST dataset indexOptimiser CDATA #IMPLIED>
+<!ATTLIST dataset indexOptimiser (true|false) #REQUIRED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
 
 <!ELEMENT subclassRelation EMPTY>
@@ -133,7 +133,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable expression CDATA #REQUIRED>
-<!ATTLIST restrictedTable hard (true|false) #IMPLIED>
+<!ATTLIST restrictedTable hard (true|false) #REQUIRED>
 
 <!ELEMENT restrictedRelation EMPTY>
 <!ATTLIST restrictedRelation tableKey CDATA #REQUIRED>
@@ -163,7 +163,8 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST concatRelation aliasNames CDATA #REQUIRED>
 <!ATTLIST concatRelation expression CDATA #REQUIRED>
 <!ATTLIST concatRelation rowSep CDATA #REQUIRED>
-<!ATTLIST concatRelation recursionType (NONE|PREPEND|APPEND) #IMPLIED>
+<!ATTLIST concatRelation recursionType (NONE|PREPEND|APPEND) #REQUIRED>
 <!ATTLIST concatRelation recursionKey IDREF #IMPLIED>
 <!ATTLIST concatRelation firstRelation IDREF #IMPLIED>
 <!ATTLIST concatRelation secondRelation IDREF #IMPLIED>
+<!ATTLIST concatRelation concSep CDATA #IMPLIED>

@@ -889,6 +889,8 @@ public class MartBuilderXML extends DefaultHandler {
 												.get(restrict
 														.getSecondRelation()),
 										xmlWriter);
+							this.writeAttribute("concSep", restrict.getConcSep(),
+									xmlWriter);
 						}
 						this.closeElement("concatRelation", xmlWriter);
 					}
@@ -1776,6 +1778,7 @@ public class MartBuilderXML extends DefaultHandler {
 				Key rKey = null;
 				Relation fRel = null;
 				Relation sRel = null;
+				String concSep = null;
 				if (rType != RecursionType.NONE) {
 					rKey = (Key) this.mappedObjects.get((String) attributes
 							.get("relationKey"));
@@ -1789,6 +1792,7 @@ public class MartBuilderXML extends DefaultHandler {
 							|| (!fRel.getFirstKey().getTable().equals(
 									fRel.getSecondKey().getTable()) && sRel == null))
 						rType = RecursionType.NONE;
+					concSep = (String) attributes.get("concSep");
 				}
 
 				// Flag it as restricted
@@ -1797,7 +1801,7 @@ public class MartBuilderXML extends DefaultHandler {
 						&& colKey != null) {
 					final ConcatRelationDefinition restrict = new ConcatRelationDefinition(
 							expr, aliases, rowSep, colKey, rType, rKey, fRel,
-							sRel);
+							sRel, concSep);
 					final Map restMap = w.getSchemaModifications()
 							.getConcatRelations();
 					if (!restMap.containsKey(tableKey))
