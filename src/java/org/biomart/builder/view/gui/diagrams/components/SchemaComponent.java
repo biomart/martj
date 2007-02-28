@@ -25,6 +25,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.Iterator;
 
 import javax.swing.JLabel;
@@ -99,6 +100,23 @@ public class SchemaComponent extends BoxShapedComponent {
 
 	private Schema getSchema() {
 		return (Schema) this.getObject();
+	}
+
+	protected void processMouseEvent(final MouseEvent evt) {
+		boolean eventProcessed = false;
+		// Is it a right-click?
+		if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() >= 2) {
+			final int index = SchemaComponent.this.getDiagram().getMartTab()
+					.getSchemaTabSet().indexOfTab(
+							SchemaComponent.this.getSchema().getName());
+			SchemaComponent.this.getDiagram().getMartTab().getSchemaTabSet()
+					.setSelectedIndex(index);
+			// Mark as handled.
+			eventProcessed = true;
+		}
+		// Pass it on up if we're not interested.
+		if (!eventProcessed)
+			super.processMouseEvent(evt);
 	}
 
 	public JPopupMenu getContextMenu() {

@@ -25,6 +25,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -95,6 +96,23 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	private DataSet getDataSet() {
 		return (DataSet) this.getObject();
+	}
+
+	protected void processMouseEvent(final MouseEvent evt) {
+		boolean eventProcessed = false;
+		// Is it a right-click?
+		if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() >= 2) {
+			final int index = DataSetComponent.this.getDiagram().getMartTab()
+					.getDataSetTabSet().indexOfTab(
+							DataSetComponent.this.getDataSet().getName());
+			DataSetComponent.this.getDiagram().getMartTab().getDataSetTabSet()
+					.setSelectedIndex(index);
+			// Mark as handled.
+			eventProcessed = true;
+		}
+		// Pass it on up if we're not interested.
+		if (!eventProcessed)
+			super.processMouseEvent(evt);
 	}
 
 	public JPopupMenu getContextMenu() {
