@@ -565,8 +565,9 @@ public interface MartConstructor {
 				final Map previousTempTables, final Map previousIndexes,
 				final String tempTable) throws Exception {
 			// Work out the parent table.
-			final DataSetTable parent = (DataSetTable) ((Relation) dsTable
-					.getRelations().iterator().next()).getOneKey().getTable();
+			final DataSetTable parent = (DataSetTable) ((Relation) ((Key) dsTable
+					.getForeignKeys().iterator().next()).getRelations()
+					.iterator().next()).getOneKey().getTable();
 			// Work out what columns to take from each side.
 			final List leftJoinCols = new ArrayList();
 			final List leftSelectCols = leftJoinCols;
