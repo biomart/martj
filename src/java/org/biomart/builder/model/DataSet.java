@@ -1099,7 +1099,7 @@ public class DataSet extends GenericSchema {
 			public InheritedColumn(final DataSetTable dsTable,
 					final DataSetColumn dsColumn) {
 				// The super constructor will make the alias for us.
-				super(dsColumn.getName(), dsTable);
+				super(dsColumn.getModifiedName(), dsTable);
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
 			}
@@ -1113,14 +1113,8 @@ public class DataSet extends GenericSchema {
 				return this.dsColumn;
 			}
 
-			public String getName() {
-				return this.dsColumn == null ? super.getName() : this.dsColumn
-						.getName();
-			}
-
 			public String getModifiedName() {
-				return this.dsColumn == null ? super.getModifiedName()
-						: this.dsColumn.getModifiedName();
+				return this.getName();
 			}
 		}
 

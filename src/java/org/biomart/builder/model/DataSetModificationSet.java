@@ -176,12 +176,10 @@ public class DataSetModificationSet {
 	}
 
 	public void setTableRename(final DataSetTable table, String name) {
-		if (name.equals(table.getName()))
-			this.renamedTables.remove(table.getName());
-		else if (!name.equals(table.getModifiedName())) {
+		this.renamedTables.remove(table.getName());
+		if (!name.equals(table.getName()) && !name.equals(table.getModifiedName())) {
 			// Make the name unique.
 			final String baseName = name;
-			this.renamedTables.remove(table.getName());
 			for (int i = 1; this.renamedTables.containsValue(name); name = baseName
 					+ "_" + i++)
 				;
@@ -223,10 +221,9 @@ public class DataSetModificationSet {
 			throw new ValidationException(Resources
 					.get("cannotRenameInheritedColumn"));
 		final String tableKey = col.getTable().getName();
-		if (name.equals(col.getName())) {
-			if (this.renamedColumns.containsKey(tableKey))
-				((Map) this.renamedColumns.get(tableKey)).remove(col.getName());
-		} else if (!name.equals(col.getModifiedName())) {
+		if (this.renamedColumns.containsKey(tableKey))
+			((Map) this.renamedColumns.get(tableKey)).remove(col.getName());
+		if (!name.equals(col.getName()) && !name.equals(col.getModifiedName())) {
 			if (!this.renamedColumns.containsKey(tableKey))
 				this.renamedColumns.put(tableKey, new HashMap());
 			// First we need to find out the base name, ie. the bit
@@ -241,7 +238,6 @@ public class DataSetModificationSet {
 				keySuffix = "";
 			// Now simply check to see if the name is used, and
 			// then add an incrementing number to it until it is unique.
-			((Map) this.renamedColumns.get(tableKey)).remove(col.getName());
 			name = baseName + keySuffix;
 			for (int i = 1; ((Map) this.renamedColumns.get(tableKey))
 					.containsValue(name)
