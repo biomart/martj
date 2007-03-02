@@ -400,11 +400,7 @@ public class MartTabSet extends JTabbedPane {
 							for (int i = 0; i < loadFiles.length; i++) {
 								final File file = loadFiles[i];
 								final Mart mart = MartBuilderXML.load(file);
-								SwingUtilities.invokeLater(new Runnable() {
-									public void run() {
 										MartTabSet.this.addMartTab(mart, file);
-									}
-								});
 								// Save XML filename in history of accessed
 								// files.
 								final Properties history = new Properties();
@@ -469,11 +465,7 @@ public class MartTabSet extends JTabbedPane {
 
 					// Load the files.
 					final Mart mart = MartBuilderXML.load(file);
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
 							MartTabSet.this.addMartTab(mart, file);
-						}
-					});
 					// Save XML filename in history of accessed
 					// files.
 					final Properties history = new Properties();

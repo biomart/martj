@@ -33,8 +33,8 @@ import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -64,7 +64,7 @@ import org.biomart.common.view.gui.StackTrace;
  *          $Author$
  * @since 0.1
  */
-public class ViewTextDialog extends JDialog {
+public class ViewTextDialog extends JFrame {
 	private static final long serialVersionUID = 1;
 
 	/**
@@ -79,9 +79,7 @@ public class ViewTextDialog extends JDialog {
 	 */
 	private ViewTextDialog(final String title, final String text) {
 		// Create the base dialog.
-		super();
-		this.setTitle(title);
-		this.setModal(false);
+		super(title);
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.

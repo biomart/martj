@@ -150,7 +150,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.addDiagramComponent(tc);
+			this.add(tc);
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
@@ -264,15 +264,15 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 			// Add source and target tables.
 			final TableComponent tc1 = new TableComponent(tempSource, this);
-			this.addDiagramComponent(tc1);
+			this.add(tc1);
 			this.getTableComponents().add(tc1);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
-			this.addDiagramComponent(tc2);
+			this.add(tc2);
 			this.getTableComponents().add(tc2);
 			// Add relation.
 			final RelationComponent relationComponent = new RelationComponent(
 					tempRelation, this);
-			this.addDiagramComponent(relationComponent);
+			this.add(relationComponent);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
 		}
@@ -320,7 +320,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.addDiagramComponent(tc);
+			this.add(tc);
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();

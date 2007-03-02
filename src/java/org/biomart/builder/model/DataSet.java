@@ -227,7 +227,8 @@ public class DataSet extends GenericSchema {
 					// Skip columns that are not in the primary key.
 					final boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
-					final boolean inSourceKey = sourceDSCols!=null && sourceDSCols.contains(parentDSCol);
+					final boolean inSourceKey = sourceDSCols != null
+							&& sourceDSCols.contains(parentDSCol);
 					if (!inPK && !inSourceKey)
 						continue;
 				}
@@ -463,8 +464,10 @@ public class DataSet extends GenericSchema {
 
 		// We must merge only the first PK we come across, if this is
 		// a main table, or the first PK we come across after the
-		// inherited PK, if this is any other kind of table.
-		boolean includeMergeTablePK = mergeTablePK != null;
+		// inherited PK, if this is a subclass. Dimensions dont get
+		// merged at all.
+		boolean includeMergeTablePK = mergeTablePK != null
+				&& !dsTable.getType().equals(DataSetTableType.DIMENSION);
 		if (includeMergeTablePK && sourceRelation != null)
 			// Only add further PK columns if the relation did NOT
 			// involve our PK and was NOT 1:1.
@@ -704,8 +707,8 @@ public class DataSet extends GenericSchema {
 	 * @return the central table of this dataset.
 	 */
 	public DataSetTable getMainTable() {
-		for (final Iterator i = this.getTables().iterator(); i.hasNext(); ) {
-			final DataSetTable dst = (DataSetTable)i.next();
+		for (final Iterator i = this.getTables().iterator(); i.hasNext();) {
+			final DataSetTable dst = (DataSetTable) i.next();
 			if (dst.getType().equals(DataSetTableType.MAIN))
 				return dst;
 		}
@@ -859,7 +862,7 @@ public class DataSet extends GenericSchema {
 		// Generate the main table. It will recursively generate all the others.
 		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
 				null, null, new HashMap(), 0);
-		
+
 		// Update the modification sets.
 		this.dsMods.synchronise();
 	}
@@ -1342,7 +1345,7 @@ public class DataSet extends GenericSchema {
 		public String toString() {
 			return this.getName();
 		}
-		
+
 		public static Map getTypes() {
 			final Map optimiserTypes = new LinkedHashMap();
 			optimiserTypes.put("None", DataSetOptimiserType.NONE);

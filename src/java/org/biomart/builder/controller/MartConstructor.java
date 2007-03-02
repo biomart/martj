@@ -85,8 +85,8 @@ import org.biomart.common.resources.Resources;
  * up to the implementor.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public interface MartConstructor {
@@ -199,7 +199,7 @@ public interface MartConstructor {
 		private Map uniqueOptCols = new HashMap();
 
 		private String statusMessage = Resources.get("mcCreatingGraph");
-		
+
 		private int tempNameCount = 0;
 
 		/**
@@ -494,7 +494,8 @@ public interface MartConstructor {
 				// any potentially missing rows. This isn't always necessary
 				// but sometimes it is, and it is safer to err on the side
 				// of doing it every time.
-				if (requiresFinalLeftJoin)
+				if (requiresFinalLeftJoin
+						&& !dsTable.getType().equals(DataSetTableType.MAIN))
 					this.doParentLeftJoin(templateSchema, schemaPartition,
 							schemaPrefix, dataset, dsTable, finalCombinedName,
 							partitionValue, previousTempTables,

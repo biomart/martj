@@ -152,7 +152,7 @@ public class ColumnComponent extends BoxShapedComponent {
 		if (this.getColumn() instanceof WrappedColumn) {
 			final String wrappedName = ((WrappedColumn) this.getColumn())
 					.getWrappedColumn().getName();
-			if (!this.getColumn().getName().equals(wrappedName)) {
+			if (!((WrappedColumn)this.getColumn()).getModifiedName().equals(wrappedName)) {
 				label = new JLabel("(" + wrappedName + ")");
 				label.setFont(ColumnComponent.ITALIC_FONT);
 				this.layout.setConstraints(label, this.constraints);

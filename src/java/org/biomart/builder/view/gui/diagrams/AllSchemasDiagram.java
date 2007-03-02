@@ -82,7 +82,7 @@ public class AllSchemasDiagram extends Diagram {
 			final Schema schema = (Schema) i.next();
 			final SchemaComponent schemaComponent = new SchemaComponent(schema,
 					this);
-			this.addDiagramComponent(schemaComponent);
+			this.add(schemaComponent);
 			// Remember the external relations.
 			relations.addAll(schema.getRelations());
 		}
@@ -94,7 +94,7 @@ public class AllSchemasDiagram extends Diagram {
 				continue;
 			final RelationComponent relationComponent = new RelationComponent(
 					relation, this);
-			this.addDiagramComponent(relationComponent);
+			this.add(relationComponent);
 		}
 
 		// Resize the diagram to fit the components.

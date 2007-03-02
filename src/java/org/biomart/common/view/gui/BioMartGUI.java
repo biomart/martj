@@ -57,12 +57,6 @@ public abstract class BioMartGUI extends JFrame {
 		// Load our cache of settings.
 		Settings.load();
 
-		// Assign ourselves to the long-process hourglass container.
-		// This means that whenever the hourglass is on, it appears
-		// over our entire window, not just the component that
-		// called for it.
-		LongProcess.setContainer(this);
-
 		// Set the look and feel to the one specified by the user, or the system
 		// default if not specified by the user. This may be null.
 		Log.info(Resources.get("loadingLookAndFeel"));

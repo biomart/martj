@@ -105,7 +105,7 @@ public class SchemaDiagram extends Diagram {
 		for (final Iterator i = this.getSchema().getTables().iterator(); i
 				.hasNext();)
 			this
-					.addDiagramComponent(new TableComponent((Table) i.next(),
+					.add(new TableComponent((Table) i.next(),
 							this));
 
 		// Add a RelationComponent for each relation. We only work with
@@ -118,7 +118,7 @@ public class SchemaDiagram extends Diagram {
 				continue;
 			final RelationComponent relationComponent = new RelationComponent(
 					relation, this);
-			this.addDiagramComponent(relationComponent);
+			this.add(relationComponent);
 		}
 
 		// Resize the diagram to fit our new components.

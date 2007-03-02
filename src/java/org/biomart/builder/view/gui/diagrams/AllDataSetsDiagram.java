@@ -70,7 +70,7 @@ public class AllDataSetsDiagram extends Diagram {
 				.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 			final DataSetComponent dsComponent = new DataSetComponent(ds, this);
-			this.addDiagramComponent(dsComponent);
+			this.add(dsComponent);
 		}
 
 		// Resize the diagram to fit the components.

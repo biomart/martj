@@ -140,9 +140,10 @@ public class DataSetTabSet extends JTabbedPane {
 	 *         selected.
 	 */
 	public DataSet getSelectedDataSet() {
-		if (this.getSelectedIndex()<=0 || !this.isShowing()) return null;
-		final DataSetDiagram selectedDiagram = (DataSetDiagram)((JScrollPane) this.getSelectedComponent())
-				.getViewport().getView();
+		if (this.getSelectedIndex() <= 0 || !this.isShowing())
+			return null;
+		final DataSetDiagram selectedDiagram = (DataSetDiagram) ((JScrollPane) this
+				.getSelectedComponent()).getViewport().getView();
 		return selectedDiagram.getDataSet();
 	}
 
@@ -219,13 +220,11 @@ public class DataSetTabSet extends JTabbedPane {
 		// Add an option to replicate this dataset.
 		final JMenuItem replicate = new JMenuItem(Resources
 				.get("replicateDataSetTitle"));
-		replicate
-				.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
-						0));
+		replicate.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
+				0));
 		replicate.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				DataSetTabSet.this
-						.requestReplicateDataSet(dataset);
+				DataSetTabSet.this.requestReplicateDataSet(dataset);
 			}
 		});
 		contextMenu.add(replicate);
@@ -475,13 +474,9 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					task.run();
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							// Update the modified status for this tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -502,29 +497,23 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					task.run();
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							// Repaint the dataset diagram based on the modified
-							// dataset.
-							if (ds != null)
-								DataSetTabSet.this
-										.recalculateDataSetDiagram(ds);
-							else
-								DataSetTabSet.this
-										.recalculateAllDataSetDiagrams();
-							
-							// And the overview.
-							DataSetTabSet.this.recalculateOverviewDiagram();
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					if (ds != null)
+						DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					else
+						DataSetTabSet.this.recalculateAllDataSetDiagrams();
 
-							// Update the explanation diagram so that it
-							// correctly reflects any changed relation.
-							DataSetTabSet.this.recalculateExplanationDialog();
+					// And the overview.
+					DataSetTabSet.this.recalculateOverviewDiagram();
 
-							// Update the modified status for this tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.recalculateExplanationDialog();
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -545,27 +534,23 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					task.run();
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							// Repaint the dataset diagram based on the modified
-							// dataset.
-							if (ds != null)
-								DataSetTabSet.this.repaintDataSetDiagram(ds);
-							else
-								DataSetTabSet.this.repaintAllDataSetDiagrams();
-							
-							// And the overview.
-							DataSetTabSet.this.repaintOverviewDiagram();
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					if (ds != null)
+						DataSetTabSet.this.repaintDataSetDiagram(ds);
+					else
+						DataSetTabSet.this.repaintAllDataSetDiagrams();
 
-							// Update the explanation diagram so that it
-							// correctly reflects any changed relation.
-							DataSetTabSet.this.repaintExplanationDialog();
+					// And the overview.
+					DataSetTabSet.this.repaintOverviewDiagram();
 
-							// Update the modified status for this tabset.
-							DataSetTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
+					// Update the explanation diagram so that it
+					// correctly reflects any changed relation.
+					DataSetTabSet.this.repaintExplanationDialog();
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -648,13 +633,13 @@ public class DataSetTabSet extends JTabbedPane {
 				// Update the restriction.
 				if (dsTable != null)
 					MartBuilderUtils.concatRelation(dsTable, relation, index,
-							colKey, aliases, expression, rowSep,
-							recursionType, recursionKey, firstRelation, secondRelation,
+							colKey, aliases, expression, rowSep, recursionType,
+							recursionKey, firstRelation, secondRelation,
 							concSep);
 				else
 					MartBuilderUtils.concatRelation(dataset, relation, index,
-							colKey, aliases, expression, rowSep,
-							recursionType, recursionKey, firstRelation, secondRelation,
+							colKey, aliases, expression, rowSep, recursionType,
+							recursionKey, firstRelation, secondRelation,
 							concSep);
 			}
 		}, dataset);

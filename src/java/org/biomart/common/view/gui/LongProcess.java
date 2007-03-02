@@ -18,12 +18,11 @@
 
 package org.biomart.common.view.gui;
 
-import java.awt.Container;
+import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.DefaultKeyboardFocusManager;
 
 import javax.swing.SwingUtilities;
-
-import org.biomart.common.exceptions.BioMartError;
 
 /**
  * This simple class wraps a thread, and displays an hourglass for as long as
@@ -38,13 +37,11 @@ import org.biomart.common.exceptions.BioMartError;
  * avoid concurrent modification problems.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public abstract class LongProcess {
-
-	private static Container container;
 
 	private static final Object lockObject = "My Hourglass Lock";
 
@@ -53,65 +50,65 @@ public abstract class LongProcess {
 	/**
 	 * Runs the given task in the background, in a Swing-thread-safe
 	 * environment. Whilst the task is running, the hourglass is shown over the
-	 * container set using {@link LongProcess#setContainer(Container)}.
+	 * currently active window, as specified by
+	 * {@link DefaultKeyboardFocusManager#getActiveWindow()}.
 	 * 
 	 * @param process
 	 *            the process to run.
 	 */
 	public synchronized static void run(final Runnable process) {
+		// Which window needs it?
+		final Component window = DefaultKeyboardFocusManager
+				.getCurrentKeyboardFocusManager().getFocusOwner();
+
+		// Update the number of processes currently running.
+		synchronized (LongProcess.lockObject) {
+			// If this is the first process to start, open the
+			// hourglass.
+			if (++LongProcess.longProcessCount == 1)
+				try {
+					final Cursor normalCursor = new Cursor(Cursor.WAIT_CURSOR);
+					window.setCursor(normalCursor);
+				} catch (final Throwable t) {
+					LongProcess.longProcessCount = 0;
+					StackTrace.showStackTrace(t);
+					return;
+				}
+		}
 		new Thread(new Runnable() {
 			public void run() {
 				try {
-					// Update the number of processes currently running.
-					synchronized (LongProcess.lockObject) {
-						// If this is the first process to start, open the
-						// hourglass.
-						if (++LongProcess.longProcessCount == 1)
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									final Cursor normalCursor = new Cursor(
-											Cursor.WAIT_CURSOR);
-									LongProcess.container
-											.setCursor(normalCursor);
-								}
-							});
-					}
-
 					// Let the process run.
-					try {
-						process.run();
-					} catch (final Exception e) {
-						throw new BioMartError(e);
-					}
-				} catch (final Error e) {
-					throw e;
+					SwingUtilities.invokeAndWait(process);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
 				} finally {
 					// Decrease the number of processes currently running.
 					synchronized (LongProcess.lockObject) {
 						// If that was the last one, stop the hourglass.
 						if (--LongProcess.longProcessCount == 0)
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									final Cursor normalCursor = new Cursor(
-											Cursor.DEFAULT_CURSOR);
-									LongProcess.container
-											.setCursor(normalCursor);
-								}
-							});
+							try {
+								SwingUtilities.invokeAndWait(new Runnable() {
+									public void run() {
+										final Cursor normalCursor = new Cursor(
+												Cursor.DEFAULT_CURSOR);
+										window.setCursor(normalCursor);
+									}
+								});
+							} catch (final Throwable t) {
+								SwingUtilities.invokeLater(new Runnable() {
+									public void run() {
+										StackTrace.showStackTrace(t);
+									}
+								});
+							}
 					}
 				}
 			}
 		}).start();
-	}
-
-	/**
-	 * Sets the container which the hourglass will appear over.
-	 * 
-	 * @param newContainer
-	 *            the container over which the mouse will transform into an
-	 *            hourglass.
-	 */
-	public static void setContainer(final Container newContainer) {
-		LongProcess.container = newContainer;
 	}
 }

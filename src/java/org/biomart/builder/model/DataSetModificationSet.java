@@ -181,6 +181,7 @@ public class DataSetModificationSet {
 		else if (!name.equals(table.getModifiedName())) {
 			// Make the name unique.
 			final String baseName = name;
+			this.renamedTables.remove(table.getName());
 			for (int i = 1; this.renamedTables.containsValue(name); name = baseName
 					+ "_" + i++)
 				;
@@ -228,27 +229,23 @@ public class DataSetModificationSet {
 		} else if (!name.equals(col.getModifiedName())) {
 			if (!this.renamedColumns.containsKey(tableKey))
 				this.renamedColumns.put(tableKey, new HashMap());
-			// Is it in a key?
-			boolean colIsInKey = false;
-			for (final Iterator i = col.getTable().getKeys().iterator(); i
-					.hasNext()
-					&& !colIsInKey;)
-				if (((Key) i.next()).getColumns().contains(col))
-					colIsInKey = true;
 			// First we need to find out the base name, ie. the bit
 			// we append numbers to make it unique, but before any
 			// key suffix. If we appended numbers after the key
 			// suffix then it would confuse MartEditor.
-			String suffix = Resources.get("keySuffix");
+			String keySuffix = Resources.get("keySuffix");
 			String baseName = name;
-			if (name.endsWith(Resources.get("keySuffix"))) 
-				baseName = name.substring(0, name.indexOf(suffix));
-			else if (!colIsInKey)
-				suffix = "";
+			if (name.endsWith(keySuffix)) 
+				baseName = name.substring(0, name.indexOf(keySuffix));
+			else if (!col.getName().endsWith(keySuffix))
+				keySuffix = "";
 			// Now simply check to see if the name is used, and
 			// then add an incrementing number to it until it is unique.
+			((Map) this.renamedColumns.get(tableKey)).remove(col.getName());
+			name = baseName + keySuffix;
 			for (int i = 1; ((Map) this.renamedColumns.get(tableKey))
-					.containsValue(name); name = baseName + "_" + i++ + suffix)
+					.containsValue(name)
+					|| col.getTable().getColumnByName(name)!=null ; name = baseName + "_" + i++ + keySuffix)
 				;
 			((Map) this.renamedColumns.get(tableKey)).put(col.getName(), name);
 		}

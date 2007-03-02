@@ -19,6 +19,7 @@
 package org.biomart.builder.view.gui.diagrams;
 
 import java.awt.AWTEvent;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -252,19 +253,33 @@ public abstract class Diagram extends JPanel {
 	 */
 	protected abstract void updateAppearance();
 
-	/**
-	 * Adds a component to this diagram. First it adds the component to the
-	 * internal map, allowing users to later query which component is related to
-	 * which database object. Second, it adds the component to the layout for
-	 * this diagram.
-	 * 
-	 * @param comp
-	 *            the component to add.
-	 */
-	public void addDiagramComponent(final DiagramComponent comp) {
-		this.componentMap.put(comp.getObject(), comp);
-		this.componentMap.putAll(comp.getSubComponents());
-		super.add((JComponent) comp);
+	protected void addImpl(Component comp, Object constraints, int index) {
+		if (comp instanceof DiagramComponent) {
+			this.componentMap.put(((DiagramComponent) comp).getObject(), comp);
+			this.componentMap.putAll(((DiagramComponent) comp)
+					.getSubComponents());
+		}
+		super.addImpl(comp, constraints, index);
+	}
+
+	public void remove(Component comp) {
+		if (comp instanceof DiagramComponent)
+			this.componentMap.remove(((DiagramComponent) comp).getObject());
+		super.remove(comp);
+	}
+
+	public void remove(int index) {
+		final Object comp = this.getComponent(index);
+		if (comp instanceof DiagramComponent)
+			this.componentMap.remove(((DiagramComponent) comp).getObject());
+		super.remove(index);
+	}
+
+	public void removeAll() {
+		// Clear our internal lookup map.
+		this.componentMap.clear();
+		// Do what the parent JComponent would do.
+		super.removeAll();
 	}
 
 	/**
@@ -426,16 +441,8 @@ public abstract class Diagram extends JPanel {
 				comp.setState(entry.getValue());
 		}
 
-		// Update appearances of components.
+		// Resize the diagram to fit the components.
 		this.repaintDiagram();
-	}
-
-	public void removeAll() {
-		// Do what the parent JComponent would do.
-		super.removeAll();
-
-		// Clear our internal lookup map.
-		this.componentMap.clear();
 	}
 
 	/**
@@ -480,7 +487,9 @@ public abstract class Diagram extends JPanel {
 	public void setDiagramContext(final DiagramContext diagramContext) {
 		Log.debug("Switching diagram context");
 		// Apply it to ourselves.
-		this.diagramContext = diagramContext;
-		this.contextChanged = true;
+		if (diagramContext != this.diagramContext) {
+			this.diagramContext = diagramContext;
+			this.contextChanged = true;
+		}
 	}
 }

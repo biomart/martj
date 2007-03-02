@@ -119,7 +119,7 @@ public class SchemaTabSet extends JTabbedPane {
 				this.allSchemasDiagram.getBackground());
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
 		this.setForegroundAt(0, Color.WHITE);
-		
+
 		// Populate the map to hold the relation between schemas and the
 		// diagrams representing them.
 		this.recalculateSchemaTabs();
@@ -132,9 +132,10 @@ public class SchemaTabSet extends JTabbedPane {
 	 *         selected.
 	 */
 	public Schema getSelectedSchema() {
-		if (this.getSelectedIndex()<=0 || !this.isShowing()) return null;
-		final SchemaDiagram selectedDiagram = (SchemaDiagram)((JScrollPane) this.getSelectedComponent())
-				.getViewport().getView();
+		if (this.getSelectedIndex() <= 0 || !this.isShowing())
+			return null;
+		final SchemaDiagram selectedDiagram = (SchemaDiagram) ((JScrollPane) this
+				.getSelectedComponent()).getViewport().getView();
 		return selectedDiagram.getSchema();
 	}
 
@@ -241,7 +242,8 @@ public class SchemaTabSet extends JTabbedPane {
 		// Add an option to replicate this schema tab.
 		final JMenuItem replicate = new JMenuItem(Resources
 				.get("replicateSchemaTitle"));
-		replicate.setMnemonic(Resources.get("replicateSchemaMnemonic").charAt(0));
+		replicate.setMnemonic(Resources.get("replicateSchemaMnemonic")
+				.charAt(0));
 		replicate.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
 				SchemaTabSet.this.requestReplicateSchema(schema);
@@ -453,13 +455,9 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					task.run();
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							// Update the modified status for this tabset.
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
+					// Update the modified status for this tabset.
+					SchemaTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -480,34 +478,29 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					task.run();
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							// Repaint the dataset diagram based on the modified
-							// dataset.
-							if (s != null)
-								SchemaTabSet.this.recalculateSchemaDiagram(s);
-							else
-								SchemaTabSet.this
-										.recalculateAllSchemaDiagrams();
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					if (s != null)
+						SchemaTabSet.this.recalculateSchemaDiagram(s);
+					else
+						SchemaTabSet.this.recalculateAllSchemaDiagrams();
 
-							// Update the all-schemas diagram so that it
-							// includes the new
-							// schema.
-							SchemaTabSet.this.recalculateOverviewDiagram();
+					// Update the all-schemas diagram so that it
+					// includes the new
+					// schema.
+					SchemaTabSet.this.recalculateOverviewDiagram();
 
-							// This may have caused new dimensions or subclass
-							// tables to appear in datasets referring to
-							// tables in this schema, so we need to
-							// recalculate all dataset diagrams just
-							// in case.
-							SchemaTabSet.this.martTab.getDataSetTabSet()
-									.recalculateAllDataSetDiagrams();
+					// This may have caused new dimensions or subclass
+					// tables to appear in datasets referring to
+					// tables in this schema, so we need to
+					// recalculate all dataset diagrams just
+					// in case.
+					SchemaTabSet.this.martTab.getDataSetTabSet()
+							.recalculateAllDataSetDiagrams();
 
-							// Update the modified status for this tabset.
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
+					// Update the modified status for this tabset.
+					SchemaTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -528,31 +521,27 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					task.run();
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							// Repaint the dataset diagram based on the modified
-							// dataset.
-							if (s != null)
-								SchemaTabSet.this.repaintSchemaDiagram(s);
-							else
-								SchemaTabSet.this.repaintAllSchemaDiagrams();
+					// Repaint the dataset diagram based on the modified
+					// dataset.
+					if (s != null)
+						SchemaTabSet.this.repaintSchemaDiagram(s);
+					else
+						SchemaTabSet.this.repaintAllSchemaDiagrams();
 
-							// Repaint overview too.
-							SchemaTabSet.this.repaintOverviewDiagram();
+					// Repaint overview too.
+					SchemaTabSet.this.repaintOverviewDiagram();
 
-							// This may have caused new dimensions or subclass
-							// tables to appear in datasets referring to
-							// tables in this schema, so we need to
-							// recalculate all dataset diagrams just
-							// in case.
-							SchemaTabSet.this.martTab.getDataSetTabSet()
-									.recalculateAllDataSetDiagrams();
+					// This may have caused new dimensions or subclass
+					// tables to appear in datasets referring to
+					// tables in this schema, so we need to
+					// recalculate all dataset diagrams just
+					// in case.
+					SchemaTabSet.this.martTab.getDataSetTabSet()
+							.recalculateAllDataSetDiagrams();
 
-							// Update the modified status for this tabset.
-							SchemaTabSet.this.martTab.getMartTabSet()
-									.setModifiedStatus(true);
-						}
-					});
+					// Update the modified status for this tabset.
+					SchemaTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -604,7 +593,7 @@ public class SchemaTabSet extends JTabbedPane {
 					SchemaTabSet.this.addSchemaTab(schema, true);
 				}
 			}
-		}, schema);
+		});
 	}
 
 	/**
@@ -985,18 +974,17 @@ public class SchemaTabSet extends JTabbedPane {
 
 		this.runThenRepaint(new Task() {
 			public void run() throws Throwable {
-									// Work out which tab the schema is in.
-					final int idx = SchemaTabSet.this.indexOfTab(schema
-							.getName());
+				// Work out which tab the schema is in.
+				final int idx = SchemaTabSet.this.indexOfTab(schema.getName());
 
-					// Rename the schema.
-					MartBuilderUtils.renameSchema(SchemaTabSet.this.martTab
-							.getMart(), schema, newName);
+				// Rename the schema.
+				MartBuilderUtils.renameSchema(SchemaTabSet.this.martTab
+						.getMart(), schema, newName);
 
-					// Rename the tab displaying it.
-					SchemaTabSet.this.setTitleAt(idx, schema.getName());
+				// Rename the tab displaying it.
+				SchemaTabSet.this.setTitleAt(idx, schema.getName());
 
-				}
+			}
 		}, schema);
 	}
 
@@ -1016,7 +1004,7 @@ public class SchemaTabSet extends JTabbedPane {
 				|| newName.equals(schema.getName()))
 			return;
 
-		this.runOnly(new Task() {
+		this.runThenRecalculate(new Task() {
 			public void run() throws Throwable {
 				// Create the replicate.
 				final Schema newSchema = MartBuilderUtils.replicateSchema(
