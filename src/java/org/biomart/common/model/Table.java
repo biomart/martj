@@ -130,6 +130,8 @@ public interface Table extends Comparable {
 	 * @return the set of internal relations for this table.
 	 */
 	public Collection getInternalRelations();
+	
+	public Collection getExternalRelations();
 
 	/**
 	 * Returns a set of the keys on all columns in this table. It may be empty,
@@ -304,30 +306,36 @@ public interface Table extends Comparable {
 			return this.foreignKeys;
 		}
 
-		public Collection getInternalRelations() {
+		public Collection getExternalRelations() {
 			final Set relations = new HashSet(); // enforce uniqueness
 
-			// Try the primary key relations first.
-			if (this.getPrimaryKey() != null)
-				for (final Iterator j = this.getPrimaryKey().getRelations()
-						.iterator(); j.hasNext();) {
-					// Add all where the FK is the same schema as us.
-					final Relation relation = (Relation) j.next();
-					if (relation.getOtherKey(this.getPrimaryKey()).getTable()
-							.getSchema().equals(this.getSchema()))
-						relations.add(relation);
-				}
-
-			// Now do the FK relations.
-			for (final Iterator i = this.getForeignKeys().iterator(); i
+			for (final Iterator i = this.getKeys().iterator(); i
 					.hasNext();) {
-				final Key fk = (Key) i.next();
-				for (final Iterator j = fk.getRelations().iterator(); j
+				final Key k = (Key) i.next();
+				for (final Iterator j = k.getRelations().iterator(); j
 						.hasNext();) {
 					// Add all where the PK is the same schema as us.
 					final Relation relation = (Relation) j.next();
-					if (relation.getOtherKey(fk).getTable().getSchema().equals(
-							this.getSchema()))
+					if (relation.isExternal())
+						relations.add(relation);
+				}
+			}
+
+			// Return the complete set.
+			return relations;
+		}
+
+		public Collection getInternalRelations() {
+			final Set relations = new HashSet(); // enforce uniqueness
+
+			for (final Iterator i = this.getKeys().iterator(); i
+					.hasNext();) {
+				final Key k = (Key) i.next();
+				for (final Iterator j = k.getRelations().iterator(); j
+						.hasNext();) {
+					// Add all where the PK is the same schema as us.
+					final Relation relation = (Relation) j.next();
+					if (!relation.isExternal())
 						relations.add(relation);
 				}
 			}

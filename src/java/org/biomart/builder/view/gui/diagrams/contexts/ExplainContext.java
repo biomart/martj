@@ -182,7 +182,7 @@ public class ExplainContext extends SchemaContext {
 
 			// Remove drag-and-drop from the key as it does not apply in
 			// the window context.
-			component.removeMouseListener(SchemaContext.dragAdapter);
+			((KeyComponent)component).setDraggable(false);
 		}
 	}
 

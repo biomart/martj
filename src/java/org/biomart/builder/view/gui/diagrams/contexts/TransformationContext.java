@@ -35,6 +35,8 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
+import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
+import org.biomart.common.model.Key;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -94,6 +96,13 @@ public class TransformationContext extends DataSetContext {
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
+		}
+		
+		// Key?
+		else if (object instanceof Key) {
+			// Remove drag-and-drop from the key as it does not apply in
+			// the window context.
+			((KeyComponent)component).setDraggable(false);
 		}
 	}
 

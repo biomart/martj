@@ -326,6 +326,10 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.transformation.validate();
 	}
 
+	private void redrawTransformation() {
+		this.transformation.invalidate();
+	}
+
 	private void repaintTransformation() {
 		this.transformation.repaint(this.transformation.getVisibleRect());
 	}

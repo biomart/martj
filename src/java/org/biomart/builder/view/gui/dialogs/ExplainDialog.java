@@ -27,6 +27,7 @@ package org.biomart.builder.view.gui.dialogs;
  * @since 0.1
  */
 public interface ExplainDialog {
+	
 	/**
 	 * Recalculate the currently visible diagram.
 	 */

@@ -954,10 +954,12 @@ public class MartBuilderUtils {
 	 *             if the column is not allowed to be renamed.
 	 */
 	public static void renameDataSetColumn(final DataSetColumn col,
-			final String newName) throws ValidationException {
+			final String newName) throws ValidationException, SQLException,
+			DataModelException {
 		Log.info(Resources.get("logReqRenameDSColumn"));
 		((DataSet) col.getTable().getSchema()).getDataSetModifications()
 				.setColumnRename(col, newName);
+		((DataSet) col.getTable().getSchema()).synchronise();
 	}
 
 	/**

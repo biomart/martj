@@ -23,20 +23,44 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceContext;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.JLabel;
-import javax.swing.TransferHandler;
+import javax.swing.SwingUtilities;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.view.gui.StackTrace;
+
 
 /**
  * Represents a key by listing out in a set of labels each column in the key.
+ * <p>
+ * Drag-and-drop code courtesy of <a
+ * href="http://www.javaworld.com/javaworld/jw-03-1999/jw-03-dragndrop.html?page=1">JavaWorld</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
@@ -62,11 +86,6 @@ public class KeyComponent extends BoxShapedComponent {
 	public static Color INCORRECT_COLOUR = Color.RED;
 
 	/**
-	 * Plain font.
-	 */
-	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
-
-	/**
 	 * Constant referring to masked key colour.
 	 */
 	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
@@ -81,7 +100,14 @@ public class KeyComponent extends BoxShapedComponent {
 	 */
 	public static Color PK_BACKGROUND_COLOUR = Color.CYAN;
 
+	/**
+	 * Plain font.
+	 */
+	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
+
 	private GridBagConstraints constraints;
+
+	private boolean draggable;
 
 	private GridBagLayout layout;
 
@@ -100,6 +126,7 @@ public class KeyComponent extends BoxShapedComponent {
 		// Key components are set out in a vertical list.
 		this.layout = new GridBagLayout();
 		this.setLayout(this.layout);
+		this.draggable = false;
 
 		// Constraints for each column in the key.
 		this.constraints = new GridBagConstraints();
@@ -112,8 +139,150 @@ public class KeyComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Mark ourselves as handling 'draggedKey' events, for
-		// drag-and-drop capabilities.
-		this.setTransferHandler(new TransferHandler("draggedKey"));
+		// drag-and-drop capabilities.		
+		final DragSource dragSource = DragSource.getDefaultDragSource();
+		final DragSourceListener dsListener = new DragSourceListener() {
+			public void dragEnter(DragSourceDragEvent e) {
+				DragSourceContext context = e.getDragSourceContext();
+				int myaction = e.getDropAction();
+				if ((myaction & DnDConstants.ACTION_COPY) != 0) {
+					context.setCursor(DragSource.DefaultLinkDrop);
+				} else {
+					context.setCursor(DragSource.DefaultLinkNoDrop);
+				}
+			}
+
+			public void dragDropEnd(DragSourceDropEvent e) {
+			}
+
+			public void dragExit(DragSourceEvent dse) {
+				DragSourceContext context = dse.getDragSourceContext();
+				context.setCursor(DragSource.DefaultLinkNoDrop);
+			}
+
+			public void dragOver(DragSourceDragEvent dsde) {
+				this.dragEnter(dsde);
+			}
+
+			public void dropActionChanged(DragSourceDragEvent dsde) {
+				this.dragEnter(dsde);
+			}
+		};
+		final DragGestureListener dgListener = new DragGestureListener() {
+			public void dragGestureRecognized(DragGestureEvent e) {
+				if (KeyComponent.this.draggable) {
+					try {
+						Transferable transferable = new KeyTransferable(
+								KeyComponent.this.getKey());
+						e.startDrag(DragSource.DefaultLinkNoDrop, transferable,
+								dsListener);
+					} catch (final Throwable t) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								StackTrace.showStackTrace(t);
+							}
+						});
+					}
+				}
+			}
+		};
+		final DropTargetListener dtListener = new DropTargetListener() {
+			public void dragEnter(DropTargetDragEvent e) {
+				if (isDragOk(e) == false) {
+					e.rejectDrag();
+					return;
+				}
+				e.acceptDrag(DnDConstants.ACTION_COPY);
+			}
+
+			public void dragOver(DropTargetDragEvent e) {
+				if (isDragOk(e) == false) {
+					e.rejectDrag();
+					return;
+				}
+				e.acceptDrag(DnDConstants.ACTION_COPY);
+			}
+
+			public void dropActionChanged(DropTargetDragEvent e) {
+				if (isDragOk(e) == false) {
+					e.rejectDrag();
+					return;
+				}
+				e.acceptDrag(DnDConstants.ACTION_COPY);
+			}
+
+			public void dragExit(DropTargetEvent e) {
+			}
+
+			private boolean isDragOk(DropTargetDragEvent e) {
+				DataFlavor[] flavors = KeyTransferable.flavors;
+				DataFlavor chosen = null;
+				for (int i = 0; i < flavors.length; i++) {
+					if (e.isDataFlavorSupported(flavors[i])) {
+						chosen = flavors[i];
+						break;
+					}
+				}
+				if (chosen == null) {
+					return false;
+				}
+				int sa = e.getSourceActions();
+				if ((sa & DnDConstants.ACTION_COPY) == 0)
+					return false;
+				return true;
+			}
+
+			public void drop(DropTargetDropEvent e) {
+				DataFlavor[] flavors = KeyTransferable.flavors;
+				DataFlavor chosen = null;
+				for (int i = 0; i < flavors.length; i++) {
+					if (e.isDataFlavorSupported(flavors[i])) {
+						chosen = flavors[i];
+						break;
+					}
+				}
+				if (chosen == null) {
+					e.rejectDrop();
+					return;
+				}
+				int sa = e.getSourceActions();
+				if ((sa & DnDConstants.ACTION_COPY) == 0) {
+					e.rejectDrop();
+					return;
+				}
+				Object data = null;
+				try {
+					e.acceptDrop(DnDConstants.ACTION_COPY);
+					data = e.getTransferable().getTransferData(chosen);
+					if (data == null)
+						throw new NullPointerException();
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+					e.dropComplete(false);
+					return;
+				}
+				if (data instanceof Key) {
+					final Key sourceKey = (Key) data;
+					final Key targetKey = KeyComponent.this.getKey();
+					if (!sourceKey.equals(targetKey)) {
+						KeyComponent.this.getDiagram().getMartTab()
+								.getSchemaTabSet().requestCreateRelation(
+										sourceKey, targetKey);
+						e.dropComplete(true);
+						return;
+					}
+				}
+				e.dropComplete(false);
+			}
+		};
+		final DropTarget dropTarget = new DropTarget(this,
+				DnDConstants.ACTION_COPY, dtListener, true);
+		dragSource.createDefaultDragGestureRecognizer(this,
+				DnDConstants.ACTION_COPY, dgListener);
 	}
 
 	private Key getKey() {
@@ -141,30 +310,57 @@ public class KeyComponent extends BoxShapedComponent {
 			this.setBackground(KeyComponent.FK_BACKGROUND_COLOUR);
 
 		// Add the labels for each column.
+		final StringBuffer sb = new StringBuffer();
 		for (final Iterator i = this.getKey().getColumns().iterator(); i
 				.hasNext();) {
 			final Column column = (Column) i.next();
-			final JLabel label = new JLabel(
-					column instanceof DataSetColumn ? ((DataSetColumn) column)
-							.getModifiedName() : column.getName());
-			label.setFont(KeyComponent.PLAIN_FONT);
-			this.layout.setConstraints(label, this.constraints);
-			this.add(label);
+			sb
+					.append(column instanceof DataSetColumn ? ((DataSetColumn) column)
+							.getModifiedName()
+							: column.getName());
+			if (i.hasNext())
+				sb.append(", ");
 		}
+		final JLabel label = new JLabel(sb.toString());
+		label.setFont(KeyComponent.PLAIN_FONT);
+		this.layout.setConstraints(label, this.constraints);
+		this.add(label);
 	}
 
-	/**
-	 * For drag-and-drop, this receives an object that has been dragged from
-	 * another key, and creates a relation between the two using
-	 * {@link SchemaTabSet#requestCreateRelation(Key,Key)}.
-	 * 
-	 * @param key
-	 *            the key the user dropped on us with the mouse.
-	 */
-	public void setDraggedKey(final Key key) {
-		// Refuse to do it to ourselves.
-		if (!key.equals(this))
-			this.getDiagram().getMartTab().getSchemaTabSet()
-					.requestCreateRelation(key, this.getKey());
+	public void setDraggable(boolean draggable) {
+		this.draggable = draggable;
+	}
+
+	public static class KeyTransferable implements Transferable {
+		public static final DataFlavor keyFlavor = new DataFlavor(Key.class,
+				"MartBuilder Schema Key") {
+		};
+
+		public static final DataFlavor[] flavors = { KeyTransferable.keyFlavor };
+
+		private static final List flavorList = Arrays.asList(flavors);
+
+		public synchronized DataFlavor[] getTransferDataFlavors() {
+			return flavors;
+		}
+
+		public boolean isDataFlavorSupported(DataFlavor flavor) {
+			return (flavorList.contains(flavor));
+		}
+
+		private Key key;
+
+		public KeyTransferable(Key key) {
+			this.key = key;
+		}
+
+		public Object getTransferData(DataFlavor flavor)
+				throws UnsupportedFlavorException, IOException {
+			if (KeyTransferable.keyFlavor.equals(flavor)) {
+				return this.key;
+			} else {
+				throw new UnsupportedFlavorException(flavor);
+			}
+		}
 	}
 }

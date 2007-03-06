@@ -38,6 +38,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
+import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Key;
@@ -202,8 +203,13 @@ public class DataSetContext extends SchemaContext {
 		}
 		
 		// Keys
-		else if (object instanceof Key) 
+		else if (object instanceof Key) {
 			((BoxShapedComponent)component).setIndexed(true);
+
+			// Remove drag-and-drop from the key as it does not apply in
+			// the window context.
+			((KeyComponent)component).setDraggable(false);
+		}
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,

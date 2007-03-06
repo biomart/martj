@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.common.model.Relation;
@@ -58,13 +59,13 @@ public class AllSchemasDiagram extends Diagram {
 	 *            work out who receives all user menu events, etc.
 	 */
 	public AllSchemasDiagram(final MartTab martTab) {
-		super(martTab);
+		super(new SchemaLayoutManager(), martTab);
 
 		// Calculate the diagram.
 		this.recalculateDiagram();
 	}
 
-	protected void updateAppearance() {
+	protected void doUpdateAppearance() {
 		// Set the background.
 		this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
 	}
@@ -82,16 +83,22 @@ public class AllSchemasDiagram extends Diagram {
 			final Schema schema = (Schema) i.next();
 			final SchemaComponent schemaComponent = new SchemaComponent(schema,
 					this);
-			this.add(schemaComponent);
+			// Count and remember relations.
+			final Set schRels = new HashSet();
+			for (final Iterator j = schema.getRelations().iterator(); j.hasNext();) {
+				final Relation relation = (Relation) j.next();
+				if (!relation.isExternal())
+					continue;
+				schRels.add(relation);
+			}
+			this.add(schemaComponent, new SchemaLayoutConstraint(schRels.size()));
 			// Remember the external relations.
-			relations.addAll(schema.getRelations());
+			relations.addAll(schRels);
 		}
 
 		// Add a RelationComponent for each external relation.
 		for (final Iterator i = relations.iterator(); i.hasNext();) {
 			final Relation relation = (Relation) i.next();
-			if (!relation.isExternal())
-				continue;
 			final RelationComponent relationComponent = new RelationComponent(
 					relation, this);
 			this.add(relationComponent);

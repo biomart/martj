@@ -200,14 +200,10 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		// Only bother redrawing if we actually intersect the area being
 		// redrawn.
 		final Shape clippingArea = g2d.getClip();
-		if (clippingArea != null
-				&& !this.lineShape.intersects(clippingArea.getBounds2D()))
+		if (this.lineShape == null
+				|| (clippingArea != null && !this.lineShape
+						.intersects(clippingArea.getBounds2D())))
 			return;
-		// Fill in opaque background.
-		if (this.isOpaque()) {
-			g2d.setColor(this.getBackground());
-			g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
-		}
 		// Do painting of this component.
 		g2d.setColor(this.getForeground());
 		g2d.setStroke(this.stroke);
@@ -311,8 +307,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	public void recalculateDiagramComponent() {
-		// Nothing to do, but we have a tool-tip so update that instead.
-		this.setToolTipText(this.relation.getName());
+		if (this.relation!=null)
+			this.setToolTipText(this.relation.getName());
 	}
 
 	public void repaintDiagramComponent() {

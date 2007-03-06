@@ -59,7 +59,7 @@ public abstract class LongProcess {
 	public synchronized static void run(final Runnable process) {
 		// Which window needs it?
 		final Component window = DefaultKeyboardFocusManager
-				.getCurrentKeyboardFocusManager().getFocusOwner();
+				.getCurrentKeyboardFocusManager().getFocusedWindow();
 
 		// Update the number of processes currently running.
 		synchronized (LongProcess.lockObject) {

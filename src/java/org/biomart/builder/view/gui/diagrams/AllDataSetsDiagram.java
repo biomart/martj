@@ -23,6 +23,7 @@ import java.util.Iterator;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 
 /**
@@ -50,13 +51,13 @@ public class AllDataSetsDiagram extends Diagram {
 	 *            to work out who receives all user menu events, etc.
 	 */
 	public AllDataSetsDiagram(final MartTab martTab) {
-		super(martTab);
+		super(new SchemaLayoutManager(), martTab);
 
 		// Calculate the diagram.
 		this.recalculateDiagram();
 	}
 
-	protected void updateAppearance() {
+	protected void doUpdateAppearance() {
 		// Set the background.
 		this.setBackground(AllDataSetsDiagram.BACKGROUND_COLOUR);
 	}
@@ -70,7 +71,7 @@ public class AllDataSetsDiagram extends Diagram {
 				.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 			final DataSetComponent dsComponent = new DataSetComponent(ds, this);
-			this.add(dsComponent);
+			this.add(dsComponent, new SchemaLayoutConstraint(0));
 		}
 
 		// Resize the diagram to fit the components.

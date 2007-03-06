@@ -28,6 +28,7 @@ import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.exceptions.AssociationException;
@@ -77,11 +78,11 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 *            the step of the transformation this diagram represents.
 	 */
 	protected ExplainTransformationDiagram(MartTab martTab, int step) {
-		super(martTab);
+		super(new SchemaLayoutManager(), martTab);
 		this.step = step;
 	}
 
-	protected void updateAppearance() {
+	protected void doUpdateAppearance() {
 		// Set the background.
 		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
 	}
@@ -150,7 +151,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.add(tc);
+			this.add(tc, new SchemaLayoutConstraint(0));
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
@@ -264,10 +265,10 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 			// Add source and target tables.
 			final TableComponent tc1 = new TableComponent(tempSource, this);
-			this.add(tc1);
+			this.add(tc1, new SchemaLayoutConstraint(1));
 			this.getTableComponents().add(tc1);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
-			this.add(tc2);
+			this.add(tc2, new SchemaLayoutConstraint(1));
 			this.getTableComponents().add(tc2);
 			// Add relation.
 			final RelationComponent relationComponent = new RelationComponent(
@@ -320,7 +321,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.add(tc);
+			this.add(tc, new SchemaLayoutConstraint(0));
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();

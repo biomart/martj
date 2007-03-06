@@ -20,8 +20,6 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -29,7 +27,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.TransferHandler;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
@@ -54,18 +51,6 @@ import org.biomart.common.resources.Resources;
  * @since 0.1
  */
 public class SchemaContext implements DiagramContext {
-	/**
-	 * This mouse adapter intercepts clicks on objects and enables them to
-	 * initiate drag-and-drop events, if nothing else on the mouse event queue
-	 * claims them first.
-	 */
-	public static final MouseAdapter dragAdapter = new MouseAdapter() {
-		public void mousePressed(MouseEvent e) {
-			JComponent c = (JComponent) e.getSource();
-			TransferHandler handler = c.getTransferHandler();
-			handler.exportAsDrag(c, e, TransferHandler.COPY);
-		}
-	};
 
 	private MartTab martTab;
 
@@ -142,7 +127,7 @@ public class SchemaContext implements DiagramContext {
 				component.setForeground(KeyComponent.NORMAL_COLOUR);
 
 			// Add drag-and-drop to all keys here.
-			component.addMouseListener(SchemaContext.dragAdapter);
+			((KeyComponent)component).setDraggable(true);
 		}
 	}
 

@@ -23,8 +23,17 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.dnd.Autoscroll;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -42,6 +51,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
+import javax.swing.Scrollable;
+import javax.swing.SwingUtilities;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
@@ -65,13 +76,19 @@ import org.biomart.common.view.gui.ComponentPrinter;
  * Specific extensions of this basic diagram class handle the decisions as to
  * what to add and what to remove from the diagram. This base class simply deals
  * with the context menus and display of components in the diagram.
+ * <p>
+ * Autoscrolling code borrowed from <a
+ * href="http://www.javalobby.org/java/forums/t53436.html">http://www.javalobby.org/java/forums/t53436.html</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
  * @since 0.1
  */
-public abstract class Diagram extends JPanel {
+public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
+
+	private static final int AUTOSCROLL_INSET = 12;
+
 	// OK to use maps as it gets cleared out each time, the keys never change.
 	private final Map componentMap = new HashMap();
 
@@ -96,7 +113,9 @@ public abstract class Diagram extends JPanel {
 	 */
 	public Diagram(final LayoutManager layout, final MartTab martTab) {
 		// Set us up with the layout.
-		super(layout);
+		super();
+		if (layout != null)
+			this.setLayout(layout);
 
 		Log.debug("Creating new diagram of type " + this.getClass().getName());
 
@@ -105,6 +124,30 @@ public abstract class Diagram extends JPanel {
 
 		// Remember our settings.
 		this.martTab = martTab;
+
+		// Deal with drops.
+		final DropTargetListener dtListener = new DropTargetListener() {
+			public void dragEnter(DropTargetDragEvent e) {
+				e.rejectDrag();
+			}
+
+			public void dragOver(DropTargetDragEvent e) {
+				e.rejectDrag();
+			}
+
+			public void dropActionChanged(DropTargetDragEvent e) {
+				e.rejectDrag();
+			}
+
+			public void dragExit(DropTargetEvent e) {
+			}
+
+			public void drop(DropTargetDropEvent e) {
+				e.rejectDrop();
+			}
+		};
+		final DropTarget dropTarget = new DropTarget(this,
+				DnDConstants.ACTION_COPY, dtListener, true);
 	}
 
 	/**
@@ -122,7 +165,7 @@ public abstract class Diagram extends JPanel {
 	 *            currently visible when working out where to send events.
 	 */
 	public Diagram(final MartTab martTab) {
-		this(new LinearLayout(), martTab);
+		this(null, martTab);
 	}
 
 	private Table askUserForTable() {
@@ -210,10 +253,7 @@ public abstract class Diagram extends JPanel {
 		// If the context has changed since last time we
 		// painted anything, update all our components'
 		// appearance first.
-		if (this.contextChanged) {
-			this.repaintDiagram();
-			this.contextChanged = false;
-		}
+		this.updateAppearance();
 		// Now, repaint as normal.
 		super.paintComponent(g);
 	}
@@ -251,7 +291,7 @@ public abstract class Diagram extends JPanel {
 	 * Usually, the only thing this call would do is to set the background
 	 * colour of the diagram.
 	 */
-	protected abstract void updateAppearance();
+	protected abstract void doUpdateAppearance();
 
 	protected void addImpl(Component comp, Object constraints, int index) {
 		if (comp instanceof DiagramComponent) {
@@ -303,14 +343,17 @@ public abstract class Diagram extends JPanel {
 	 */
 	public void findObject(final Object object) {
 		// Don't do it if the object is null or if we are not in a viewport.
-		if (object == null || !(this.getParent() instanceof JViewport))
+		if (object == null)
 			return;
 
 		// Ensure the diagram is valid and the correct size.
 		this.resizeDiagram();
 
 		// Obtain the scrollpane view of this diagram.
-		final JViewport viewport = (JViewport) this.getParent();
+		final JViewport viewport = (JViewport) SwingUtilities.getAncestorOfClass(
+				JViewport.class, this);
+		if (viewport == null)
+			return;
 
 		// Look up the diagram component for the model object.
 		final JComponent comp = (JComponent) this.getDiagramComponent(object);
@@ -442,12 +485,13 @@ public abstract class Diagram extends JPanel {
 		}
 
 		// Resize the diagram to fit the components.
+		this.contextChanged = true; // Force complete recalc.
 		this.repaintDiagram();
 	}
 
 	/**
-	 * This method first calls {@link #updateAppearance()} on this diagram, then
-	 * walks through the components in the diagram, and calls
+	 * This method first calls {@link #doUpdateAppearance()} on this diagram,
+	 * then walks through the components in the diagram, and calls
 	 * {@link DiagramComponent#updateAppearance()} on each in turn. This has the
 	 * effect of updating the appearance of every component and causing it to
 	 * redraw. It does not recalculate the location of any of these components,
@@ -460,10 +504,17 @@ public abstract class Diagram extends JPanel {
 	 */
 	public void repaintDiagram() {
 		this.updateAppearance();
+		this.repaint(this.getVisibleRect());
+	}
+
+	private void updateAppearance() {
+		if (!this.contextChanged)
+			return;
+		this.contextChanged = false;
+		this.doUpdateAppearance();
 		for (final Iterator i = this.componentMap.values().iterator(); i
 				.hasNext();)
 			((DiagramComponent) i.next()).updateAppearance();
-		this.repaint(this.getVisibleRect());
 	}
 
 	/**
@@ -491,5 +542,64 @@ public abstract class Diagram extends JPanel {
 			this.diagramContext = diagramContext;
 			this.contextChanged = true;
 		}
+	}
+
+	public void autoscroll(Point cursorLoc) {
+		JViewport viewport = (JViewport) SwingUtilities.getAncestorOfClass(
+				JViewport.class, this);
+		if (viewport == null)
+			return;
+		Point viewPos = viewport.getViewPosition();
+		int viewHeight = viewport.getExtentSize().height;
+		int viewWidth = viewport.getExtentSize().width;
+
+		// perform scrolling
+		if ((cursorLoc.y - viewPos.y) < AUTOSCROLL_INSET) { // scroll up
+			viewport.setViewPosition(new Point(viewPos.x, Math.max(viewPos.y
+					- AUTOSCROLL_INSET, 0)));
+		} else if ((viewPos.y + viewHeight - cursorLoc.y) < AUTOSCROLL_INSET) { // scroll
+			// down
+			viewport.setViewPosition(new Point(viewPos.x, Math.min(viewPos.y
+					+ AUTOSCROLL_INSET, this.getHeight() - viewHeight)));
+		} else if ((cursorLoc.x - viewPos.x) < AUTOSCROLL_INSET) { // scroll
+			// left
+			viewport.setViewPosition(new Point(Math.max(viewPos.x
+					- AUTOSCROLL_INSET, 0), viewPos.y));
+		} else if ((viewPos.x + viewWidth - cursorLoc.x) < AUTOSCROLL_INSET) { // scroll
+			// right
+			viewport
+					.setViewPosition(new Point(Math.min(viewPos.x
+							+ AUTOSCROLL_INSET, this.getWidth() - viewWidth),
+							viewPos.y));
+		}
+	}
+
+	public Insets getAutoscrollInsets() {
+		int height = this.getHeight();
+		int width = this.getWidth();
+		return new Insets(height, width, height, width);
+	}
+
+	public Dimension getPreferredScrollableViewportSize() {
+		return this.getPreferredSize();
+	}
+
+	public int getScrollableBlockIncrement(Rectangle visibleRect,
+			int orientation, int direction) {
+		return this.getScrollableUnitIncrement(visibleRect, orientation,
+				direction) * 4;
+	}
+
+	public boolean getScrollableTracksViewportHeight() {
+		return false;
+	}
+
+	public boolean getScrollableTracksViewportWidth() {
+		return false;
+	}
+
+	public int getScrollableUnitIncrement(Rectangle visibleRect,
+			int orientation, int direction) {
+		return Diagram.AUTOSCROLL_INSET;
 	}
 }

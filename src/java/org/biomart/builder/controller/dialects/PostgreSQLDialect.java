@@ -350,20 +350,21 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		else
 			sb.append(trgtSchemaName + "." + trgtTableName);
 		sb.append(" as b where ");
-		if (!isRecursive && action.getRelationRestriction() != null)
+		for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
+			if (i > 0)
+				sb.append(" and ");
+			final String pkColName = (String) action.getLeftJoinColumns()
+					.get(i);
+			final String fkColName = (String) action.getRightJoinColumns()
+					.get(i);
+			sb.append("a." + pkColName + "=b." + fkColName + "");
+		}
+		if (action.getRelationRestriction() != null) {
+			sb.append(" and ");
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a"));
-		else
-			for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
-				if (i > 0)
-					sb.append(" and ");
-				final String pkColName = (String) action.getLeftJoinColumns()
-						.get(i);
-				final String fkColName = (String) action.getRightJoinColumns()
-						.get(i);
-				sb.append("a." + pkColName + "=b." + fkColName + "");
-			}
+		}
 		if (!isRecursive && action.getTableRestriction() != null) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction()
@@ -551,20 +552,21 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sb.append(" from " + srcSchemaName + "." + srcTableName + " as a "
 				+ joinType + " join " + trgtSchemaName + "." + trgtTableName
 				+ " as b on ");
-		if (action.getRelationRestriction() != null)
+		for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
+			if (i > 0)
+				sb.append(" and ");
+			final String pkColName = (String) action.getLeftJoinColumns()
+					.get(i);
+			final String fkColName = (String) action.getRightJoinColumns()
+					.get(i);
+			sb.append("a." + pkColName + "=b." + fkColName + "");
+		}
+		if (action.getRelationRestriction() != null) {
+			sb.append(" and ");
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a"));
-		else
-			for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
-				if (i > 0)
-					sb.append(" and ");
-				final String pkColName = (String) action.getLeftJoinColumns()
-						.get(i);
-				final String fkColName = (String) action.getRightJoinColumns()
-						.get(i);
-				sb.append("a." + pkColName + "=b." + fkColName + "");
-			}
+		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction()

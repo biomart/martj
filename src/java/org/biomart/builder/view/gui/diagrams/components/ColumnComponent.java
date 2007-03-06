@@ -78,11 +78,6 @@ public class ColumnComponent extends BoxShapedComponent {
 	public static Font NORMAL_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	/**
-	 * Italic font.
-	 */
-	public static Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
-
-	/**
 	 * Constant referring to normal column colour.
 	 */
 	public static Color NORMAL_COLOUR = Color.ORANGE;
@@ -140,24 +135,20 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 		// Add the label for the column name.
-		final String name = (this.getColumn() instanceof DataSetColumn) ? ((DataSetColumn) this
+		String name = (this.getColumn() instanceof DataSetColumn) ? ((DataSetColumn) this
 				.getColumn()).getModifiedName()
 				: this.getColumn().getName();
+		if (this.getColumn()!=null && this.getColumn() instanceof WrappedColumn) {
+			final String wrappedName = ((WrappedColumn) this
+					.getColumn()).getWrappedColumn().getName();
+			if (!((WrappedColumn) this.getColumn())
+					.getModifiedName().equals(wrappedName)) {
+				name += " (" + wrappedName + ")";
+			}
+		}
 		JLabel label = new JLabel(name);
 		label.setFont(ColumnComponent.NORMAL_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
-
-		// Is it a wrapped column? Add the original name too if different.
-		if (this.getColumn() instanceof WrappedColumn) {
-			final String wrappedName = ((WrappedColumn) this.getColumn())
-					.getWrappedColumn().getName();
-			if (!((WrappedColumn)this.getColumn()).getModifiedName().equals(wrappedName)) {
-				label = new JLabel("(" + wrappedName + ")");
-				label.setFont(ColumnComponent.ITALIC_FONT);
-				this.layout.setConstraints(label, this.constraints);
-				this.add(label);
-			}
-		}
 	}
 }

@@ -128,7 +128,7 @@ public class TableComponent extends BoxShapedComponent {
 		this.constraints.gridwidth = GridBagConstraints.REMAINDER;
 		this.constraints.fill = GridBagConstraints.HORIZONTAL;
 		this.constraints.anchor = GridBagConstraints.CENTER;
-		this.constraints.insets = new Insets(0, 1, 0, 2);
+		this.constraints.insets = new Insets(0, 2, 0, 2);
 
 		// Draw our contents.
 		this.recalculateDiagramComponent();
@@ -162,10 +162,10 @@ public class TableComponent extends BoxShapedComponent {
 		this.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 		// Add the table name label.
-		final String name = (this.getTable() instanceof DataSetTable) ? ((DataSetTable) this
-				.getTable()).getModifiedName()
-				: this.getTable().getName();
-		JLabel label = new JLabel(name);
+		JLabel label = new JLabel((this.getTable() instanceof DataSetTable) ? ((DataSetTable) this
+						.getTable()).getModifiedName()
+						: this.getTable().getName()
+			);
 		label.setFont(TableComponent.BOLD_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
@@ -238,6 +238,8 @@ public class TableComponent extends BoxShapedComponent {
 					this.constraints);
 			this.columnsListPanel.add(colComponent);
 		}
+		this.layout.setConstraints(this.columnsListPanel,
+				this.constraints);
 
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));
@@ -253,8 +255,8 @@ public class TableComponent extends BoxShapedComponent {
 				// Recalculate the diagram.
 				TableComponent.this.getDiagram().recalculateDiagram();
 				// Zoom to this table so that the user doesn't get lost.
-				TableComponent.this.getDiagram().findObject(
-						TableComponent.this.getTable());
+				//TableComponent.this.getDiagram().findObject(
+				//		TableComponent.this.getTable());
 			}
 		});
 
@@ -266,19 +268,11 @@ public class TableComponent extends BoxShapedComponent {
 	public void setState(final Object state) {
 		// For us, state is TRUE if we want the columns panel visible.
 		if (state != null && state.equals(Boolean.TRUE)) {
-			// If the state has changed from FALSE to TRUE, show the columns
-			// and change the button to 'hide columns'.
-			if (this.getState() == null
-					|| !this.getState().equals(Boolean.TRUE)) {
-				this.layout.setConstraints(this.columnsListPanel,
-						this.constraints);
+			if (this.getState()!=null && this.getState().equals(Boolean.FALSE))
 				this.add(this.columnsListPanel);
-			}
 			this.showHide.setText(Resources.get("hideColumnsButton"));
 		} else {
-			// If the state has changed from TRUE to FALSE, hide the columns
-			// and change the button to 'show columns'.
-			if (this.getState() != null && this.getState().equals(Boolean.TRUE))
+			if (this.getState()!=null && this.getState().equals(Boolean.TRUE))
 				this.remove(this.columnsListPanel);
 			this.showHide.setText(Resources.get("showColumnsButton"));
 		}
