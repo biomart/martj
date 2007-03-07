@@ -345,6 +345,9 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Set the size of the dialog.
 		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 
 	private PartitionedColumnDefinition createPartitionTypeFromSettings() {

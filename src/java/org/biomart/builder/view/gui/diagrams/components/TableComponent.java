@@ -33,6 +33,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -139,7 +140,7 @@ public class TableComponent extends BoxShapedComponent {
 	 * 
 	 * @return the table we represent.
 	 */
-	private Table getTable() {
+	public Table getTable() {
 		return (Table) this.getObject();
 	}
 
@@ -162,16 +163,14 @@ public class TableComponent extends BoxShapedComponent {
 		this.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 		// Add the table name label.
-		JLabel label = new JLabel((this.getTable() instanceof DataSetTable) ? ((DataSetTable) this
-						.getTable()).getModifiedName()
-						: this.getTable().getName()
-			);
-		label.setFont(TableComponent.BOLD_FONT);
-		this.layout.setConstraints(label, this.constraints);
-		this.add(label);
+		final JTextField name = new JTextField();
+		name.setFont(TableComponent.BOLD_FONT);
+		this.setRenameTextField(name);
+		this.layout.setConstraints(name, this.constraints);
+		this.add(name);
 
 		// Add the schema name label.
-		label = new JLabel(this.getTable().getSchema().getName());
+		JLabel label = new JLabel(this.getTable().getSchema().getName());
 		label.setFont(TableComponent.ITALIC_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
@@ -238,8 +237,7 @@ public class TableComponent extends BoxShapedComponent {
 					this.constraints);
 			this.columnsListPanel.add(colComponent);
 		}
-		this.layout.setConstraints(this.columnsListPanel,
-				this.constraints);
+		this.layout.setConstraints(this.columnsListPanel, this.constraints);
 
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));
@@ -254,9 +252,6 @@ public class TableComponent extends BoxShapedComponent {
 					TableComponent.this.setState(Boolean.TRUE);
 				// Recalculate the diagram.
 				TableComponent.this.getDiagram().recalculateDiagram();
-				// Zoom to this table so that the user doesn't get lost.
-				//TableComponent.this.getDiagram().findObject(
-				//		TableComponent.this.getTable());
 			}
 		});
 
@@ -265,14 +260,25 @@ public class TableComponent extends BoxShapedComponent {
 		this.setState(Boolean.FALSE);
 	}
 
+	public void performRename(final String newName) {
+		this.getDiagram().getMartTab().getDataSetTabSet().requestRenameDataSetTable((DataSetTable)this.getTable(), newName);
+	}
+	
+	public String getName() {
+		return (this.getTable() instanceof DataSetTable) ? ((DataSetTable) this
+						.getTable()).getModifiedName()
+						: this.getTable().getName();
+	}
+
 	public void setState(final Object state) {
 		// For us, state is TRUE if we want the columns panel visible.
 		if (state != null && state.equals(Boolean.TRUE)) {
-			if (this.getState()!=null && this.getState().equals(Boolean.FALSE))
+			if (this.getState() != null
+					&& this.getState().equals(Boolean.FALSE))
 				this.add(this.columnsListPanel);
 			this.showHide.setText(Resources.get("hideColumnsButton"));
 		} else {
-			if (this.getState()!=null && this.getState().equals(Boolean.TRUE))
+			if (this.getState() != null && this.getState().equals(Boolean.TRUE))
 				this.remove(this.columnsListPanel);
 			this.showHide.setText(Resources.get("showColumnsButton"));
 		}

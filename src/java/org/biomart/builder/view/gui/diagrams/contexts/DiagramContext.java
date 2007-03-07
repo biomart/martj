@@ -56,4 +56,6 @@ public interface DiagramContext {
 	 *            the database object we wish to customise this menu to.
 	 */
 	public void populateContextMenu(JPopupMenu contextMenu, Object object);
+	
+	public void populateMultiContextMenu(JPopupMenu contextMenu, Diagram diagram, Class clazz);
 }

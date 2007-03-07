@@ -30,8 +30,10 @@ import java.awt.event.MouseEvent;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextField;
 
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.resources.Resources;
 
@@ -56,12 +58,12 @@ public class DataSetComponent extends BoxShapedComponent {
 	/**
 	 * This color is the one used for the background of invisible datasets.
 	 */
-	public static Color INVISIBLE_BACKGROUND = Color.WHITE;
+	public static Color INVISIBLE_BACKGROUND = Color.LIGHT_GRAY;
 
 	/**
 	 * This color is the one used for the background of visible datasets.
 	 */
-	public static Color VISIBLE_BACKGROUND = Color.LIGHT_GRAY;
+	public static Color VISIBLE_BACKGROUND = Color.YELLOW;
 
 	private GridBagConstraints constraints;
 
@@ -151,9 +153,18 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 		// Add the label for the dataset name,
-		final JLabel label = new JLabel(this.getDataSet().getName());
-		label.setFont(DataSetComponent.BOLD_FONT);
-		this.layout.setConstraints(label, this.constraints);
-		this.add(label);
+		final JTextField name = new JTextField();
+		name.setFont(DataSetComponent.BOLD_FONT);
+		this.setRenameTextField(name);
+		this.layout.setConstraints(name, this.constraints);
+		this.add(name);
+	}
+
+	public void performRename(final String newName) {
+		this.getDiagram().getMartTab().getDataSetTabSet().requestRenameDataSet(this.getDataSet(), newName);
+	}
+	
+	public String getName() {
+		return this.getDataSet().getName();
 	}
 }

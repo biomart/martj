@@ -107,8 +107,6 @@ public class KeyComponent extends BoxShapedComponent {
 
 	private GridBagConstraints constraints;
 
-	private boolean draggable;
-
 	private GridBagLayout layout;
 
 	/**
@@ -126,7 +124,6 @@ public class KeyComponent extends BoxShapedComponent {
 		// Key components are set out in a vertical list.
 		this.layout = new GridBagLayout();
 		this.setLayout(this.layout);
-		this.draggable = false;
 
 		// Constraints for each column in the key.
 		this.constraints = new GridBagConstraints();
@@ -170,7 +167,7 @@ public class KeyComponent extends BoxShapedComponent {
 		};
 		final DragGestureListener dgListener = new DragGestureListener() {
 			public void dragGestureRecognized(DragGestureEvent e) {
-				if (KeyComponent.this.draggable) {
+				if (KeyComponent.this.isDraggable()) {
 					try {
 						Transferable transferable = new KeyTransferable(
 								KeyComponent.this.getKey());
@@ -325,10 +322,6 @@ public class KeyComponent extends BoxShapedComponent {
 		label.setFont(KeyComponent.PLAIN_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
-	}
-
-	public void setDraggable(boolean draggable) {
-		this.draggable = draggable;
 	}
 
 	public static class KeyTransferable implements Transferable {

@@ -98,6 +98,9 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 		// Pack the window.
 		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 
 	public void recalculateDialog() {

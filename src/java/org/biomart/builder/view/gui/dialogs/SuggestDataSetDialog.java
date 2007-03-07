@@ -165,15 +165,15 @@ public class SuggestDataSetDialog extends JDialog {
 		// Make the execute button the default button.
 		this.getRootPane().setDefaultButton(this.execute);
 
-		// Set the size of the dialog.
-		this.pack();
-
-		// Centre ourselves.
-		this.setLocationRelativeTo(null);
-
 		// Set the default selected table.
 		if (initialTable != null)
 			this.tables.setSelectedValue(initialTable, true);
+
+		// Set the size of the dialog.
+		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 
 	private boolean validateFields() {

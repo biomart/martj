@@ -31,7 +31,9 @@ import java.util.Iterator;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextField;
 
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -151,10 +153,11 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.setBackground(SchemaComponent.BACKGROUND_COLOUR);
 
 		// Add the label for the schema name,
-		JLabel label = new JLabel(this.getSchema().getName());
-		label.setFont(SchemaComponent.BOLD_FONT);
-		this.layout.setConstraints(label, this.constraints);
-		this.add(label);
+		final JTextField name = new JTextField();
+		name.setFont(SchemaComponent.BOLD_FONT);
+		this.setRenameTextField(name);
+		this.layout.setConstraints(name, this.constraints);
+		this.add(name);
 
 		// Now add any tables with external relations. Loop through the
 		// external keys to identify the tables to do this.
@@ -185,5 +188,13 @@ public class SchemaComponent extends BoxShapedComponent {
 				this.add(tableComponent);
 			}
 		}
+	}
+
+	public void performRename(final String newName) {
+		this.getDiagram().getMartTab().getSchemaTabSet().requestRenameSchema(this.getSchema(), newName);
+	}
+	
+	public String getName() {
+		return this.getSchema().getName();
 	}
 }

@@ -164,6 +164,9 @@ public class CompoundRelationDialog extends JDialog {
 
 		// Set size of window.
 		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 
 	/**

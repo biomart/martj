@@ -239,6 +239,9 @@ public class KeyDialog extends JDialog {
 
 		// Set size of window.
 		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 
 	private boolean validateFields() {

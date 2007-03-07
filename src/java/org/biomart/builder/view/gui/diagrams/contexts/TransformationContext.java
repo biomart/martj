@@ -96,6 +96,9 @@ public class TransformationContext extends DataSetContext {
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
+			
+			((ColumnComponent)component).setRenameable(true);
+			((ColumnComponent)component).setSelectable(true);
 		}
 		
 		// Key?

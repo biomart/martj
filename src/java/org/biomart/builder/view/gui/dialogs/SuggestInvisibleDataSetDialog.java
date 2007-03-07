@@ -214,7 +214,7 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		// Set the size of the dialog.
 		this.pack();
 
-		// Centre ourselves.
+		// Move ourselves.
 		this.setLocationRelativeTo(null);
 	}
 

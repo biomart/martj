@@ -20,17 +20,25 @@ package org.biomart.builder.view.gui.diagrams.components;
 
 import java.awt.AWTEvent;
 import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
@@ -92,6 +100,10 @@ public abstract class BoxShapedComponent extends JPanel implements
 	private static final Stroke OUTLINE = new BasicStroke(
 			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
+	
+	public static Color SELECTED_COLOUR = Color.WHITE;
+	
+	public static Color SELECTED_BORDER_COLOUR = Color.BLACK;
 
 	private Diagram diagram;
 
@@ -100,6 +112,18 @@ public abstract class BoxShapedComponent extends JPanel implements
 	private boolean restricted = false;
 
 	private boolean compounded = false;
+
+	private boolean draggable = false;
+
+	private boolean selectable = false;
+
+	private boolean renameable = false;
+	
+	private boolean selected = false;
+
+	private boolean beingRenamed = false;
+	
+	private JTextField name;
 
 	private Object object;
 
@@ -172,17 +196,54 @@ public abstract class BoxShapedComponent extends JPanel implements
 		// Is it a right-click?
 		if (evt.isPopupTrigger()) {
 			// Build the basic menu.
-			final JPopupMenu contextMenu = this.getContextMenu();
-			// Customise the context menu for this box's database object.
-			if (this.getDiagram().getDiagramContext() != null)
-				this.getDiagram().getDiagramContext().populateContextMenu(
-						contextMenu, this.getObject());
+			// If right-click on selected item, then
+			// get multi menu and return that instead.
+			final JPopupMenu contextMenu;
+			if (this.getDiagram().isSelected(this)) {
+				contextMenu = this.getMultiContextMenu();
+				// Customise the context menu for this box's database object.
+				if (this.getDiagram().getDiagramContext() != null)
+					this.getDiagram().getDiagramContext()
+							.populateMultiContextMenu(contextMenu,
+									this.getDiagram(), this.getObject().getClass());
+			} else {
+				this.getDiagram().deselectAll();
+				contextMenu = this.getContextMenu();
+				// Customise the context menu for this box's database object.
+				if (this.getDiagram().getDiagramContext() != null)
+					this.getDiagram().getDiagramContext().populateContextMenu(
+							contextMenu, this.getObject());
+			}
 			// Display.
-			if (contextMenu.getComponentCount() > 0)
+			if (contextMenu.getComponentCount() > 0) {
 				contextMenu.show(this, evt.getX(), evt.getY());
-			// Mark as handled.
-			eventProcessed = true;
-		}
+				// Mark as handled.
+				eventProcessed = true;
+			}
+		} 
+		else if (evt.getButton() == MouseEvent.BUTTON1) {
+				if (this.isSelectable()
+						&& evt.getClickCount() == 1) {
+					if (!this.beingRenamed) {
+						if (evt.isControlDown()) {
+							this.getDiagram()
+									.toggleGroupItem(
+											this);
+						} else
+							this.getDiagram()
+									.toggleItem(this);
+						eventProcessed = true;
+					}
+				} else if (this.isRenameable()
+						&& !this.beingRenamed
+						&& evt.getClickCount() > 1) {
+					this.getDiagram().selectOnlyItem(
+							this);
+					this.startRename();
+					eventProcessed = true;
+				}
+			}
+	
 		// Pass it on up if we're not interested.
 		if (!eventProcessed)
 			super.processMouseEvent(evt);
@@ -195,6 +256,12 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	public JPopupMenu getContextMenu() {
+		final JPopupMenu contextMenu = new JPopupMenu();
+		// No additional entries for us yet.
+		return contextMenu;
+	}
+
+	public JPopupMenu getMultiContextMenu() {
 		final JPopupMenu contextMenu = new JPopupMenu();
 		// No additional entries for us yet.
 		return contextMenu;
@@ -272,6 +339,124 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	public void setState(final Object state) {
 		this.state = state;
+	}
+
+	public boolean isRenameable() {
+		return renameable && this.name!=null;
+	}
+
+	public void setRenameable(boolean renameable) {
+		this.renameable = renameable;
+	}
+
+	public boolean isSelectable() {
+		return selectable && this.name!=null;
+	}
+
+	public void setSelectable(boolean selectable) {
+		this.selectable = selectable;
+	}
+
+	public boolean isDraggable() {
+		return draggable;
+	}
+
+	public void setDraggable(boolean draggable) {
+		this.draggable = draggable;
+	}
+	
+	public void select() {
+		this.selected = true;
+		this.cancelRename();
+	}
+	
+	public void deselect() {
+		this.selected = false;
+		this.cancelRename();
+	}
+	
+	public void setRenameTextField(final JTextField name) {
+		this.name = name;
+		this.name.setDisabledTextColor(this.name.getForeground());
+		this.name.setBackground(BoxShapedComponent.SELECTED_COLOUR);
+		this.name.getInputMap().put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "enterPressed");
+		this.name.getActionMap().put("enterPressed", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				if (BoxShapedComponent.this.isBeingRenamed())
+					BoxShapedComponent.this.doRename();
+			}
+		});
+		this.name.getInputMap().put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escapePressed");
+		this.name.getActionMap().put("escapePressed", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				if (BoxShapedComponent.this.isBeingRenamed())
+					BoxShapedComponent.this.cancelRename();
+			}
+		});
+		this.name.addMouseListener(new MouseListener() {
+
+			public void mouseClicked(MouseEvent e) {
+				BoxShapedComponent.this.processEvent(e);
+			}
+
+			public void mouseEntered(MouseEvent e) {
+				BoxShapedComponent.this.processEvent(e);
+			}
+
+			public void mouseExited(MouseEvent e) {
+				BoxShapedComponent.this.processEvent(e);
+			}
+
+			public void mousePressed(MouseEvent e) {
+				BoxShapedComponent.this.processEvent(e);
+			}
+
+			public void mouseReleased(MouseEvent e) {
+				BoxShapedComponent.this.processEvent(e);
+			}
+			
+		});
+		this.deselect();
+	}
+	
+	public void startRename() {
+		this.beingRenamed = true;
+		this.name.setText(this.getEditableName());
+		this.name.setBorder(BorderFactory.createLineBorder(BoxShapedComponent.SELECTED_BORDER_COLOUR));
+		this.name.setEditable(true);
+		this.name.setEnabled(true);
+		this.name.setOpaque(true);
+		this.name.requestFocus();
+	}
+	
+	public void cancelRename() {		
+		this.beingRenamed = false;
+		this.name.setBorder(BorderFactory.createEmptyBorder());
+		this.name.setEditable(false);
+		this.name.setEnabled(false);
+		this.name.setOpaque(this.isSelected());
+		this.name.setText(this.getName());
+	}
+	
+	public String getName() { return ""; }
+	
+	public String getEditableName() { return this.getName(); }
+
+	private void doRename() {
+		this.performRename(this.name.getText());
+		this.cancelRename();
+	}
+	
+	public void performRename(final String newName) {}
+	
+	public boolean isBeingRenamed() {
+		return this.beingRenamed;
+	}
+		
+	public boolean isSelected() {
+		return this.selected;
 	}
 
 	public void updateAppearance() {

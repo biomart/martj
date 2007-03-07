@@ -24,7 +24,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
-import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -135,9 +135,25 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 		// Add the label for the column name.
-		String name = (this.getColumn() instanceof DataSetColumn) ? ((DataSetColumn) this
+		final JTextField name = new JTextField();
+		name.setFont(ColumnComponent.NORMAL_FONT);
+		this.setRenameTextField(name);
+		this.layout.setConstraints(name, this.constraints);
+		this.add(name);
+	}
+
+	public void performRename(final String newName) {
+		this.getDiagram().getMartTab().getDataSetTabSet().requestRenameDataSetColumn((DataSetColumn)this.getColumn(), newName);
+	}
+	
+	public String getEditableName() {
+		return (this.getColumn() instanceof DataSetColumn) ? ((DataSetColumn) this
 				.getColumn()).getModifiedName()
 				: this.getColumn().getName();
+	}
+	
+	public String getName() {
+		String name = this.getEditableName();
 		if (this.getColumn()!=null && this.getColumn() instanceof WrappedColumn) {
 			final String wrappedName = ((WrappedColumn) this
 					.getColumn()).getWrappedColumn().getName();
@@ -146,9 +162,6 @@ public class ColumnComponent extends BoxShapedComponent {
 				name += " (" + wrappedName + ")";
 			}
 		}
-		JLabel label = new JLabel(name);
-		label.setFont(ColumnComponent.NORMAL_FONT);
-		this.layout.setConstraints(label, this.constraints);
-		this.add(label);
+		return name;
 	}
 }

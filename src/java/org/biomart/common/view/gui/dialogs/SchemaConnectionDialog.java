@@ -280,6 +280,9 @@ public class SchemaConnectionDialog extends JDialog {
 
 		// Pack and resize the window.
 		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 
 	private void requestTestSchema(final Schema schema) {

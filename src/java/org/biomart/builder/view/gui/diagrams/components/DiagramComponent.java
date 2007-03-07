@@ -43,6 +43,13 @@ public interface DiagramComponent {
 	 * @return the popup menu.
 	 */
 	public JPopupMenu getContextMenu();
+	
+	/**
+	 * Construct a context menu for the model object.
+	 * 
+	 * @return the popup menu.
+	 */
+	public JPopupMenu getMultiContextMenu();
 
 	/**
 	 * Retrieves the diagram this component belongs to.

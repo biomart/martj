@@ -29,13 +29,16 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
+import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
@@ -84,7 +87,7 @@ public class SchemaContext implements DiagramContext {
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.
-		if (object instanceof Relation) {
+		else if (object instanceof Relation) {
 
 			// What relation is this?
 			final Relation relation = (Relation) object;
@@ -129,6 +132,17 @@ public class SchemaContext implements DiagramContext {
 			// Add drag-and-drop to all keys here.
 			((KeyComponent)component).setDraggable(true);
 		}
+		
+		// Schema objects.
+		else if (object instanceof Schema) {			
+			((SchemaComponent) component).setRenameable(true);
+			((SchemaComponent) component).setSelectable(true);
+		}
+	}
+
+	public void populateMultiContextMenu(final JPopupMenu contextMenu,
+			final Diagram diagram, final Class clazz) {
+		// TODO Menu for schema objects.
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,

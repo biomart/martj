@@ -201,7 +201,7 @@ public class SchemaPartitionDialog extends JDialog {
 		// Set the size of the dialog.
 		this.pack();
 
-		// Centre ourselves.
+		// Move ourselves.
 		this.setLocationRelativeTo(null);
 
 		// Aliases were already copied in the JTable constructor above.

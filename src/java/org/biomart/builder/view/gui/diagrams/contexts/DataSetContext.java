@@ -20,6 +20,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Iterator;
 
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
@@ -36,6 +37,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
@@ -158,6 +160,9 @@ public class DataSetContext extends SchemaContext {
 			// All others are normal.
 			else
 				component.setForeground(TableComponent.NORMAL_COLOUR);
+
+			((TableComponent) component).setRenameable(true);
+			((TableComponent) component).setSelectable(true);
 		}
 
 		// Columns.
@@ -186,13 +191,13 @@ public class DataSetContext extends SchemaContext {
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
-			
+
 			// Indexed?
 			if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isIndexedColumn(column))
-				((BoxShapedComponent)component).setIndexed(true);
+				((BoxShapedComponent) component).setIndexed(true);
 			else
-				((BoxShapedComponent)component).setIndexed(false);
+				((BoxShapedComponent) component).setIndexed(false);
 
 			// Change foreground of non-inherited columns.
 			if (((DataSet) column.getTable().getSchema())
@@ -200,16 +205,155 @@ public class DataSetContext extends SchemaContext {
 				component.setForeground(ColumnComponent.NONINHERITED_FG_COLOUR);
 			else
 				component.setForeground(ColumnComponent.NORMAL_FG_COLOUR);
+
+			((ColumnComponent) component).setRenameable(true);
+			((ColumnComponent) component).setSelectable(true);
 		}
-		
+
 		// Keys
 		else if (object instanceof Key) {
-			((BoxShapedComponent)component).setIndexed(true);
+			((BoxShapedComponent) component).setIndexed(true);
 
 			// Remove drag-and-drop from the key as it does not apply in
 			// the window context.
-			((KeyComponent)component).setDraggable(false);
+			((KeyComponent) component).setDraggable(false);
 		}
+	}
+
+	public void populateMultiContextMenu(final JPopupMenu contextMenu,
+			final Diagram diagram, final Class clazz) {
+
+		if (clazz.equals(DataSetTable.class)) {
+			// If all are dimensions...
+			boolean allDimensions = true;
+			for (final Iterator i = diagram.getSelectedItems().iterator(); i
+					.hasNext();)
+				allDimensions &= ((DataSetTable) ((TableComponent) i.next())
+						.getTable()).getType().equals(
+						DataSetTableType.DIMENSION);
+			if (allDimensions) {
+				// The dimension can be removed by using this option. This
+				// simply masks the relation that caused the dimension to exist.
+				final JMenuItem removeDM = new JMenuItem(
+						Resources.get("maskGroupDimensionTitle"));
+				removeDM.setMnemonic(Resources
+						.get("maskGroupDimensionMnemonic").charAt(0));
+				removeDM.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						for (final Iterator i = diagram.getSelectedItems()
+								.iterator(); i.hasNext();) {
+							final DataSetTable table = ((DataSetTable) ((TableComponent) i
+									.next()).getTable());
+							final boolean isMasked = DataSetContext.this
+									.getDataSet().getDataSetModifications()
+									.isMaskedTable(table);
+							final boolean isMerged = DataSetContext.this
+									.getDataSet().getSchemaModifications()
+									.isMergedRelation(table.getFocusRelation());
+							final boolean isCompound = DataSetContext.this
+									.getDataSet().getSchemaModifications()
+									.isCompoundRelation(null,
+											table.getFocusRelation());
+							contextMenu.add(removeDM);
+							if (!isMerged && !isCompound && !isMasked)
+								DataSetContext.this.getMartTab()
+										.getDataSetTabSet()
+										.requestMaskDimension(
+												DataSetContext.this
+														.getDataSet(), table);
+						}
+					}
+				});
+				contextMenu.add(removeDM);
+
+				final JMenuItem reinstateDM = new JMenuItem(
+						Resources.get("unmaskGroupDimensionTitle"));
+				reinstateDM.setMnemonic(Resources.get(
+						"unmaskGroupDimensionMnemonic").charAt(0));
+				reinstateDM.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						for (final Iterator i = diagram.getSelectedItems()
+								.iterator(); i.hasNext();) {
+							final DataSetTable table = ((DataSetTable) ((TableComponent) i
+									.next()).getTable());
+							final boolean isMasked = DataSetContext.this
+									.getDataSet().getDataSetModifications()
+									.isMaskedTable(table);
+							contextMenu.add(removeDM);
+							if (isMasked)
+								DataSetContext.this.getMartTab()
+										.getDataSetTabSet()
+										.requestUnmaskDimension(
+												DataSetContext.this
+														.getDataSet(), table);
+						}
+					}
+				});
+				contextMenu.add(reinstateDM);
+
+				contextMenu.addSeparator();
+
+				// The dimension can be merged by using this option. This
+				// affects all dimensions based on this relation.
+				final JMenuItem mergeDM = new JMenuItem(
+						Resources.get("mergeGroupDimensionTitle"));
+				mergeDM.setMnemonic(Resources
+						.get("mergeGroupDimensionMnemonic").charAt(0));
+				mergeDM.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						for (final Iterator i = diagram.getSelectedItems()
+								.iterator(); i.hasNext();) {
+							final DataSetTable table = ((DataSetTable) ((TableComponent) i
+									.next()).getTable());
+							final boolean isMasked = DataSetContext.this
+									.getDataSet().getDataSetModifications()
+									.isMaskedTable(table);
+							final boolean isMerged = DataSetContext.this
+									.getDataSet().getSchemaModifications()
+									.isMergedRelation(table.getFocusRelation());
+							final boolean isCompound = DataSetContext.this
+									.getDataSet().getSchemaModifications()
+									.isCompoundRelation(null,
+											table.getFocusRelation());
+							contextMenu.add(removeDM);
+							if (!isMerged && !isCompound && !isMasked)
+								DataSetContext.this.getMartTab()
+										.getDataSetTabSet()
+										.requestMergeDimension(
+												DataSetContext.this
+														.getDataSet(), table);
+						}
+					}
+				});
+				contextMenu.add(mergeDM);
+
+				final JMenuItem unmergeDM = new JMenuItem(
+						Resources.get("unmergeGroupDimensionTitle"));
+				unmergeDM.setMnemonic(Resources.get(
+						"unmergeGroupDimensionMnemonic").charAt(0));
+				unmergeDM.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						for (final Iterator i = diagram.getSelectedItems()
+								.iterator(); i.hasNext();) {
+							final DataSetTable table = ((DataSetTable) ((TableComponent) i
+									.next()).getTable());
+							final boolean isMerged = DataSetContext.this
+									.getDataSet().getSchemaModifications()
+									.isMergedRelation(table.getFocusRelation());
+							contextMenu.add(removeDM);
+							if (isMerged)
+								DataSetContext.this.getMartTab()
+										.getDataSetTabSet()
+										.requestUnmergeDimension(
+												DataSetContext.this
+														.getDataSet(), table);
+						}
+					}
+				});
+				contextMenu.add(unmergeDM);
+			}
+		}
+		// TODO Menu for column objects
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
@@ -272,17 +416,19 @@ public class DataSetContext extends SchemaContext {
 
 			contextMenu.addSeparator();
 
+			final boolean isMasked = this.getDataSet()
+					.getDataSetModifications().isMaskedTable(table);
+			final boolean isMerged = this.getDataSet().getSchemaModifications()
+					.isMergedRelation(table.getFocusRelation());
+			final boolean isCompound = this.getDataSet()
+					.getSchemaModifications().isCompoundRelation(null,
+							table.getFocusRelation());
+
 			// Dimension tables have their own options.
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
 
 				// The dimension can be merged by using this option. This
 				// affects all dimensions based on this relation.
-				final boolean isMerged = this.getDataSet()
-						.getSchemaModifications().isMergedRelation(
-								table.getFocusRelation());
-				final boolean isCompound = this.getDataSet()
-						.getSchemaModifications().isCompoundRelation(null,
-								table.getFocusRelation());
 				final JCheckBoxMenuItem mergeDM = new JCheckBoxMenuItem(
 						Resources.get("mergeDimensionTitle"));
 				mergeDM.setMnemonic(Resources.get("mergeDimensionMnemonic")
@@ -308,8 +454,6 @@ public class DataSetContext extends SchemaContext {
 
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
-				final boolean isMasked = this.getDataSet()
-						.getDataSetModifications().isMaskedTable(table);
 				final JCheckBoxMenuItem removeDM = new JCheckBoxMenuItem(
 						Resources.get("maskDimensionTitle"));
 				removeDM.setMnemonic(Resources.get("maskDimensionMnemonic")
@@ -440,7 +584,7 @@ public class DataSetContext extends SchemaContext {
 					unpartition.setEnabled(false);
 			}
 			// Special stuff for all non-dimension tables.
-			else {				
+			else {
 				// (Un)non-inherit all columns on this table.
 				final JMenuItem non = new JMenuItem(Resources
 						.get("nonInheritAllTitle"));
@@ -448,10 +592,11 @@ public class DataSetContext extends SchemaContext {
 						.charAt(0));
 				non.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestNonInheritAllColumns(
-										DataSetContext.this.getDataSet(),
-										table);
+										DataSetContext.this.getDataSet(), table);
 					}
 				});
 				contextMenu.add(non);
@@ -461,10 +606,11 @@ public class DataSetContext extends SchemaContext {
 						.charAt(0));
 				unnon.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestUnNonInheritAllColumns(
-										DataSetContext.this.getDataSet(),
-										table);
+										DataSetContext.this.getDataSet(), table);
 					}
 				});
 				contextMenu.add(unnon);
@@ -490,6 +636,28 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(unsubclass);
+
+				// The compound option allows the user to compound a relation.
+				final JCheckBoxMenuItem compound = new JCheckBoxMenuItem(
+						Resources.get("recurseSubclassTitle"));
+				compound.setMnemonic(Resources.get("recurseSubclassMnemonic")
+						.charAt(0));
+				compound.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestRecurseSubclass(
+										DataSetContext.this.dataset, table);
+						compound.setSelected(DataSetContext.this.dataset
+								.getSchemaModifications().isCompoundRelation(
+										null, table.getFocusRelation()));
+					}
+				});
+				contextMenu.add(compound);
+				if (isMasked || isMerged)
+					compound.setEnabled(false);
+				if (isCompound)
+					compound.setSelected(true);
+				contextMenu.addSeparator();
 			}
 		}
 
@@ -579,7 +747,7 @@ public class DataSetContext extends SchemaContext {
 			inherited.setEnabled(!isMasked
 					&& !((DataSetTable) column.getTable()).getType().equals(
 							DataSetTableType.DIMENSION));
-			
+
 			// Index the column.
 			final boolean isIndexed = ((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isIndexedColumn(column);

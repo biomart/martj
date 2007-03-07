@@ -214,10 +214,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
+		
+		if (evt.getButton()!=0)
+			this.getDiagram().deselectAll();
 
 		// Is it a right-click?
 		if (evt.isPopupTrigger()) {
-
 			// Build the basic menu.
 			final JPopupMenu contextMenu = this.getContextMenu();
 
@@ -257,6 +259,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	public JPopupMenu getContextMenu() {
+		final JPopupMenu contextMenu = new JPopupMenu();
+		// No additional entries for us yet.
+		// Return it.
+		return contextMenu;
+	}
+
+	public JPopupMenu getMultiContextMenu() {
 		final JPopupMenu contextMenu = new JPopupMenu();
 		// No additional entries for us yet.
 		// Return it.

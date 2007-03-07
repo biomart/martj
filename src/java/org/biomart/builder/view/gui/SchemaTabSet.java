@@ -154,12 +154,12 @@ public class SchemaTabSet extends JTabbedPane {
 		// Remember which diagram the schema is connected with.
 		this.schemaToDiagram[0].add(schema);
 		this.schemaToDiagram[1].add(schemaDiagram);
+		
+		this.recalculateOverviewDiagram();
 
 		// Set the current context on the diagram to be the same as the
 		// current context on this schema tabset.
 		schemaDiagram.setDiagramContext(this.getDiagramContext());
-		
-		this.recalculateOverviewDiagram();
 
 		if (selectNewSchema) {
 			// Fake a click on the schema tab and on the button
@@ -1088,10 +1088,16 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestRenameSchema(final Schema schema) {
 		// Ask for a new name, suggesting the schema's existing name
 		// as the default response.
-		final String newName = this.askUserForSchemaName(schema.getName());
+		this.requestRenameSchema(schema, this.askUserForSchemaName(schema.getName()));
+	}
+	
+	public void requestRenameSchema(final Schema schema, final String name) {
+		// Ask for a new name, suggesting the schema's existing name
+		// as the default response.
+		final String newName = name==null?"":name.trim();
 
 		// If they cancelled or entered the same name, ignore the request.
-		if (newName == null || newName.equals(schema.getName()))
+		if (newName.length()==0 || newName.equals(schema.getName()))
 			return;
 
 		LongProcess.run(new Runnable() {

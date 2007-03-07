@@ -34,11 +34,13 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
+import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
@@ -94,19 +96,16 @@ public class ExplainContext extends SchemaContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
-
-		// This bit adds a restricted outline to restricted tables.
-		if (object instanceof Table) {
-			final Table table = (Table) object;
-
-			((TableComponent) component).setRestricted(this.dataset
-					.getSchemaModifications().isRestrictedTable(
-							this.datasetTable, table));
+		
+		// Schema objects.
+		if (object instanceof Schema) {			
+			((SchemaComponent) component).setRenameable(false);
+			((SchemaComponent) component).setSelectable(false);
 		}
 
 		// This section customises the appearance of relation lines within
 		// the schema diagram.
-		if (object instanceof Relation) {
+		else if (object instanceof Relation) {
 
 			// Work out what relation we are dealing with.
 			final Relation relation = (Relation) object;
@@ -163,6 +162,10 @@ public class ExplainContext extends SchemaContext {
 			// All others are normal.
 			else
 				component.setForeground(TableComponent.NORMAL_COLOUR);
+
+			((TableComponent) component).setRestricted(this.dataset
+					.getSchemaModifications().isRestrictedTable(
+							this.datasetTable, (Table) object));
 		}
 
 		// This section customises the appearance of key objects within

@@ -29,7 +29,9 @@ import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
+import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -73,7 +75,15 @@ public class AllDataSetsContext implements DiagramContext {
 				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else
 				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
+			
+			((DataSetComponent) component).setRenameable(true);
+			((DataSetComponent) component).setSelectable(true);
 		}
+	}
+
+	public void populateMultiContextMenu(final JPopupMenu contextMenu,
+			final Diagram diagram, final Class clazz) {
+		// TODO Menu for dataset objects.
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,

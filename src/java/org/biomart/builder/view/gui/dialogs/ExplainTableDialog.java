@@ -233,6 +233,9 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		// Pack the window.
 		this.pack();
 
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
+
 		// Select the default button (which shows the transformation card).
 		// We must physically click on it to make the card show.
 		transformationButton.doClick();

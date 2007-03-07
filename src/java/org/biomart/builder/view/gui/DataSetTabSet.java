@@ -891,6 +891,65 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dst
 	 *            the table to replicate.
 	 */
+	public void requestRecurseSubclass(final DataSet ds,
+			final DataSetTable dst) {
+		// Work out if it is already compounded.
+		final Relation relation = dst.getFocusRelation();
+		if (!ds.getSchemaModifications().isSubclassedRelation(relation))
+			return;
+		int n = 1;
+		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
+			n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
+
+		// Pop up a dialog and update 'compound'.
+		final CompoundRelationDialog dialog = new CompoundRelationDialog(n,
+				Resources.get("recurseSubclassDialogTitle"), Resources
+						.get("recurseSubclassNLabel"));
+		dialog.setLocationRelativeTo(null);
+		dialog.show();
+		final int newN = dialog.getArity();
+
+		// Skip altogether if no change.
+		if (newN == n)
+			return;
+
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do the work.
+					if (newN <= 1) {
+						// Uncompound the relation.
+						MartBuilderUtils.uncompoundRelation(ds, relation);
+					} else {
+						// Compound the relation.
+						MartBuilderUtils.compoundRelation(ds, relation, newN);
+					}
+
+					// And the overview.
+					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks that a relation be compounded.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to replicate.
+	 */
 	public void requestReplicateDimension(final DataSet ds,
 			final DataSetTable dst) {
 		// Work out if it is already compounded.
@@ -1674,12 +1733,22 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRenameDataSet(final DataSet dataset) {
 		// Ask user for the new name.
-		final String newName = this.askUserForName(Resources
-				.get("requestDataSetName"), dataset.getName());
+		this.requestRenameDataSet(dataset,this.askUserForName(Resources
+				.get("requestDataSetName"), dataset.getName()));
 
+	}
+
+	/**
+	 * Renames a dataset, then renames the tab too.
+	 * 
+	 * @param dataset
+	 *            the dataset to rename.
+	 */
+	public void requestRenameDataSet(final DataSet dataset, final String name) {
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		if (newName == null || newName.equals(dataset.getName()))
+		final String newName = name==null?"":name.trim();
+		if (newName.length()==0 || newName.equals(dataset.getName()))
 			return;
 
 		// Work out which tab the dataset is in.
@@ -1723,12 +1792,17 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRenameDataSetColumn(final DataSetColumn dsColumn) {
 		// Ask user for the new name.
-		final String newName = this.askUserForName(Resources
-				.get("requestDataSetColumnName"), dsColumn.getModifiedName());
+		this.requestRenameDataSetColumn(dsColumn, this.askUserForName(Resources
+				.get("requestDataSetColumnName"), dsColumn.getModifiedName()));
+	}
+	
+	public void requestRenameDataSetColumn(final DataSetColumn dsColumn, final String name) {
+		// Ask user for the new name.
+		final String newName = name==null?"":name.trim();
 
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		if (newName == null || newName.equals(dsColumn.getModifiedName()))
+		if (newName.length()==0 || newName.equals(dsColumn.getModifiedName()))
 			return;
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -1764,12 +1838,23 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRenameDataSetTable(final DataSetTable dsTable) {
 		// Ask user for the new name.
-		final String newName = this.askUserForName(Resources
-				.get("requestDataSetTableName"), dsTable.getModifiedName());
-
+		this.requestRenameDataSetTable(dsTable, this.askUserForName(Resources
+				.get("requestDataSetTableName"), dsTable.getModifiedName()));
+	}
+	/**
+	 * Renames a table, after prompting the user to enter a new name. By
+	 * default, the existing name is used. If the name entered is blank or
+	 * matches the existing name, no change is made.
+	 * 
+	 * @param dsTable
+	 *            the table to rename.
+	 */
+	public void requestRenameDataSetTable(final DataSetTable dsTable,
+			final String name) {
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		if (newName == null || newName.equals(dsTable.getModifiedName()))
+		final String newName = name==null?"":name.trim();
+		if (newName.length()==0 || newName.equals(dsTable.getModifiedName()))
 			return;
 
 		LongProcess.run(new Runnable() {

@@ -37,8 +37,11 @@ import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -55,6 +58,7 @@ import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.common.model.Table;
@@ -92,11 +96,11 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	// OK to use maps as it gets cleared out each time, the keys never change.
 	private final Map componentMap = new HashMap();
 
-	private boolean contextChanged = false;
-
 	private DiagramContext diagramContext;
 
 	private MartTab martTab;
+
+	private List selectedItems = new ArrayList();
 
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
@@ -166,6 +170,59 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	 */
 	public Diagram(final MartTab martTab) {
 		this(null, martTab);
+	}
+
+	public void selectOnlyItem(final BoxShapedComponent item) {
+		// (De)select this item only and clear rest of group.
+		this.deselectAll();
+		this.selectedItems.add(item);
+		item.select();
+	}
+	
+	public void toggleItem(final BoxShapedComponent item) {
+		// (De)select this item only and clear rest of group.
+		boolean selected = this.isSelected(item);
+		this.deselectAll();
+		if (!selected) {
+			this.selectedItems.add(item);
+			item.select();
+		}
+	}
+
+	public void toggleGroupItem(final BoxShapedComponent item) {
+		// Cancel all renames first.
+		for (final Iterator i = this.selectedItems.iterator(); i.hasNext(); )
+			((BoxShapedComponent)i.next()).cancelRename();
+		// (De)select this item within existing group.
+		if (this.isSelected(item)) {
+			// Unselect it.
+			this.selectedItems.remove(item);
+			item.deselect();
+		} else {
+			// Select it.
+			if (!(this.selectedItems.isEmpty() || this.selectedItems.get(0)
+					.getClass().equals(item.getClass()))) 
+				this.deselectAll();
+			this.selectedItems.add(item);
+			item.select();
+		}
+	}
+	
+	public void deselectAll() {
+		for (final Iterator i = this.selectedItems.iterator(); i.hasNext(); ) {
+			BoxShapedComponent comp = (BoxShapedComponent)i.next();
+			comp.cancelRename();
+			comp.deselect();
+		}
+		this.selectedItems.clear();
+	}
+
+	public boolean isSelected(final BoxShapedComponent item) {
+		return this.selectedItems.contains(item);
+	}
+	
+	public Collection getSelectedItems() {
+		return this.selectedItems;
 	}
 
 	private Table askUserForTable() {
@@ -261,9 +318,12 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
 
+		if (evt.getButton()>0)			
+			this.deselectAll();
+		
 		// Is it a right-click?
 		if (evt.isPopupTrigger()) {
-
+			
 			// Obtain the basic context menu for this diagram.
 			final JPopupMenu contextMenu = new JPopupMenu();
 
@@ -271,15 +331,14 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 			this.populateContextMenu(contextMenu);
 
 			// If our context menu actually has anything in it now, display it.
-			if (contextMenu.getComponentCount() > 0)
+			if (contextMenu.getComponentCount() > 0) {
 				contextMenu.show(this, evt.getX(), evt.getY());
-
-			// Mark the event as processed.
-			eventProcessed = true;
+				eventProcessed = true;
+			}
 		}
 
 		// Pass the event on up if we're not interested.
-		if (!eventProcessed)
+		if (!eventProcessed) 
 			super.processMouseEvent(evt);
 	}
 
@@ -350,8 +409,8 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		this.resizeDiagram();
 
 		// Obtain the scrollpane view of this diagram.
-		final JViewport viewport = (JViewport) SwingUtilities.getAncestorOfClass(
-				JViewport.class, this);
+		final JViewport viewport = (JViewport) SwingUtilities
+				.getAncestorOfClass(JViewport.class, this);
 		if (viewport == null)
 			return;
 
@@ -450,6 +509,7 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	 */
 	public void recalculateDiagram() {
 		Log.debug("Recalculating diagram");
+		this.deselectAll();
 		// Remember all the existing diagram component states.
 		final Map states = new HashMap();
 		for (final Iterator i = this.componentMap.entrySet().iterator(); i
@@ -485,7 +545,6 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		}
 
 		// Resize the diagram to fit the components.
-		this.contextChanged = true; // Force complete recalc.
 		this.repaintDiagram();
 	}
 
@@ -508,9 +567,6 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	}
 
 	private void updateAppearance() {
-		if (!this.contextChanged)
-			return;
-		this.contextChanged = false;
 		this.doUpdateAppearance();
 		for (final Iterator i = this.componentMap.values().iterator(); i
 				.hasNext();)
@@ -540,7 +596,7 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		// Apply it to ourselves.
 		if (diagramContext != this.diagramContext) {
 			this.diagramContext = diagramContext;
-			this.contextChanged = true;
+			this.repaintDiagram();
 		}
 	}
 

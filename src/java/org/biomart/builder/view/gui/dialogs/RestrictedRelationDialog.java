@@ -236,18 +236,18 @@ public class RestrictedRelationDialog extends JDialog {
 		// Make the execute button the default button.
 		this.getRootPane().setDefaultButton(this.execute);
 
-		// Set the size of the dialog.
-		this.pack();
-
-		// Centre ourselves.
-		this.setLocationRelativeTo(null);
-
 		// Set some nice defaults.
 		if (template != null) {
 			this.expression.setText(template.getExpression());
 			this.hard.setSelected(template.isHard());
 		}
 		// Aliases were already copied in the JTable constructor above.
+
+		// Set the size of the dialog.
+		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 
 	private boolean isEmpty(final String string) {
