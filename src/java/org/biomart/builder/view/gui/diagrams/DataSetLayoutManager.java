@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
@@ -328,28 +329,42 @@ public class DataSetLayoutManager implements LayoutManager2 {
 				final RelationComponent comp = (RelationComponent) i.next();
 				// Obtain first key and work out position relative to
 				// diagram.
+				int rowNum = 0;
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
 				final Rectangle firstKeyRectangle = firstKey.getBounds();
+				int firstKeyInsetX = firstKeyRectangle.x;
 				for (Container keyParent = firstKey.getParent(); keyParent != parent; keyParent = keyParent
-						.getParent())
+						.getParent()) {
 					firstKeyRectangle.setLocation(firstKeyRectangle.x
 							+ keyParent.getX(), firstKeyRectangle.y
 							+ keyParent.getY());
+					if (keyParent.getParent()!=parent)
+					firstKeyInsetX += keyParent.getX();
+					if (this.constraints.containsKey(keyParent))
+						rowNum = ((DataSetLayoutConstraint) this.constraints.get(keyParent))
+						.getRow();
+				}
 
 				// Do the same for the second key.
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
 				final Rectangle secondKeyRectangle = secondKey.getBounds();
+				int secondKeyInsetX = secondKeyRectangle.x;
 				for (Container keyParent = secondKey.getParent(); keyParent != parent; keyParent = keyParent
-						.getParent())
+						.getParent()) {
 					secondKeyRectangle.setLocation(secondKeyRectangle.x
 							+ keyParent.getX(), secondKeyRectangle.y
 							+ keyParent.getY());
+					if (keyParent.getParent()!=parent)
+					secondKeyInsetX += keyParent.getX();
+				}
 
 				// Work out left/right most.
 				final Rectangle leftKeyRectangle = firstKeyRectangle.getX() <= secondKeyRectangle
 						.getX() ? firstKeyRectangle : secondKeyRectangle;
 				final Rectangle rightKeyRectangle = firstKeyRectangle.getX() > secondKeyRectangle
 						.getX() ? firstKeyRectangle : secondKeyRectangle;
+				final int leftKeyInsetX = leftKeyRectangle==firstKeyRectangle?firstKeyInsetX:secondKeyInsetX;
+				final int rightKeyInsetX = rightKeyRectangle==firstKeyRectangle?firstKeyInsetX:secondKeyInsetX;
 
 				// Work out Y coord for top of relation.
 				int relTopY = (int) Math.min(leftKeyRectangle.getCenterY(),
@@ -361,27 +376,22 @@ public class DataSetLayoutManager implements LayoutManager2 {
 				// Both at same X location?
 				if (firstKeyRectangle.getX() == secondKeyRectangle.getX()) {
 					// Main/Subclass -> Subclass
-					relBottomY = (int) Math.max(firstKeyRectangle.getCenterY(),
-							secondKeyRectangle.getCenterY());
+					relBottomY = (int) Math.max(leftKeyRectangle.getCenterY(),
+							rightKeyRectangle.getCenterY());
 					relLeftX = (int) (leftKeyRectangle.getX() - DataSetLayoutManager.TABLE_PADDING);
 					relRightX = (int) rightKeyRectangle.getX();
 
-					leftX = (int) leftKeyRectangle.getX() ;
-					leftTagX = leftX - DataSetLayoutManager.RELATION_SPACING * 2;
+					leftX = (int) leftKeyRectangle.getX() - leftKeyInsetX;
+					leftTagX = leftX - DataSetLayoutManager.RELATION_SPACING;
 					leftY = (int) leftKeyRectangle.getCenterY();
-					rightX = (int) rightKeyRectangle.getX();
-					rightTagX = rightX - DataSetLayoutManager.RELATION_SPACING * 2;
+					rightX = (int) rightKeyRectangle.getX() - rightKeyInsetX;
+					rightTagX = rightX - DataSetLayoutManager.RELATION_SPACING;
 					rightY = (int) rightKeyRectangle.getCenterY();
 					viaX = leftX
 							- (int) (DataSetLayoutManager.TABLE_PADDING * 2);
 					viaY = ((leftY + rightY) / 2);
 				} else {
 					// Main/Subclass -> Dimension
-					final int rowNum = ((DataSetLayoutConstraint) this.constraints
-							.get(((Diagram) parent)
-									.getDiagramComponent(((Key) firstKey
-											.getObject()).getTable())))
-							.getRow();
 					relRightX = (int) rightKeyRectangle.getX();
 					relLeftX = (int) leftKeyRectangle.getMaxX();
 					relBottomY = 0;
@@ -389,11 +399,11 @@ public class DataSetLayoutManager implements LayoutManager2 {
 						relBottomY += ((Integer) this.rowHeights.get(r))
 								.intValue();
 
-					leftX = (int) leftKeyRectangle.getMaxX() ;
-					leftTagX = leftX + DataSetLayoutManager.RELATION_SPACING * 2;
+					leftX = (int) leftKeyRectangle.getMaxX() + leftKeyInsetX ;
+					leftTagX = leftX + DataSetLayoutManager.RELATION_SPACING;
 					leftY = (int) leftKeyRectangle.getCenterY();
-					rightX = (int) rightKeyRectangle.getX();
-					rightTagX = rightX - DataSetLayoutManager.RELATION_SPACING * 2;
+					rightX = (int) rightKeyRectangle.getX() - rightKeyInsetX;
+					rightTagX = rightX - DataSetLayoutManager.RELATION_SPACING;
 					rightY = (int) rightKeyRectangle.getCenterY();
 					viaX = leftX
 							+ (int) (((List) this.dimensionTables.get(rowNum))
@@ -408,10 +418,10 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 				// Set overall bounds.
 				final Rectangle bounds = new Rectangle(
-						(int) (relLeftX - DataSetLayoutManager.RELATION_SPACING * 4),
-						(int) (relTopY - DataSetLayoutManager.RELATION_SPACING * 4),
-						(int) ((relRightX - relLeftX) + (DataSetLayoutManager.RELATION_SPACING * 8)),
-						(int) ((relBottomY - relTopY) + (DataSetLayoutManager.RELATION_SPACING * 8)));
+						(int) (relLeftX - DataSetLayoutManager.RELATION_SPACING * 2),
+						(int) (relTopY - DataSetLayoutManager.RELATION_SPACING * 2),
+						(int) ((relRightX - relLeftX) + (DataSetLayoutManager.RELATION_SPACING * 4)),
+						(int) ((relBottomY - relTopY) + (DataSetLayoutManager.RELATION_SPACING * 4)));
 				comp.setBounds(bounds);
 
 				// Create a path to describe the relation shape. It

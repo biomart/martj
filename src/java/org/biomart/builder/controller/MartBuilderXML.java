@@ -985,7 +985,7 @@ public class MartBuilderXML extends DefaultHandler {
 							lcols.append((String) this.reverseMappedObjects
 									.get(entry4.getKey()));
 							lnames.append((String) entry4.getValue());
-							if (z.hasNext()) {
+							if (a.hasNext()) {
 								lcols.append(',');
 								lnames.append(',');
 							}
@@ -1002,7 +1002,7 @@ public class MartBuilderXML extends DefaultHandler {
 							rcols.append((String) this.reverseMappedObjects
 									.get(entry4.getKey()));
 							rnames.append((String) entry4.getValue());
-							if (z.hasNext()) {
+							if (a.hasNext()) {
 								rcols.append(',');
 								rnames.append(',');
 							}
