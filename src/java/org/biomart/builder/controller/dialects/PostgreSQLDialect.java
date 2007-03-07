@@ -363,7 +363,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(" and ");
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
-					action.isRelationRestrictionLeftIsFirst() ? "b" : "a"));
+					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
+							action.isRelationRestrictionLeftIsFirst(),
+							action.getRelationRestrictionPreviousUnit()));
 		}
 		if (!isRecursive && action.getTableRestriction() != null) {
 			sb.append(" and (");
@@ -565,7 +567,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(" and ");
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
-					action.isRelationRestrictionLeftIsFirst() ? "b" : "a"));
+					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
+							action.isRelationRestrictionLeftIsFirst(),
+							action.getRelationRestrictionPreviousUnit()));
 		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" and (");

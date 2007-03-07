@@ -166,6 +166,9 @@ public abstract class TransformationUnit {
 				candidate = this.getPreviousUnit().getDataSetColumnFor(
 						(Column) parentKey.getColumns().get(pos));
 			}
+			if (candidate == null) 
+				candidate = this.getPreviousUnit().getDataSetColumnFor(
+						column);
 			return candidate;
 		}
 	}

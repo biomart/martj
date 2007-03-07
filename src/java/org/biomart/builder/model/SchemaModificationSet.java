@@ -1006,7 +1006,8 @@ public class SchemaModificationSet {
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final String leftTablePrefix,
-				final String rightTablePrefix) {
+				final String rightTablePrefix, final boolean leftIsDataSet,
+				final TransformationUnit mappingUnit) {
 			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
 			for (final Iterator i = this.leftAliases.entrySet().iterator(); i
@@ -1015,7 +1016,7 @@ public class SchemaModificationSet {
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, leftTablePrefix + "."
-						+ col.getName());
+						+ (leftIsDataSet?mappingUnit.getDataSetColumnFor(col).getModifiedName():col.getName()));
 			}
 			for (final Iterator i = this.rightAliases.entrySet().iterator(); i
 					.hasNext();) {
@@ -1023,7 +1024,7 @@ public class SchemaModificationSet {
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, rightTablePrefix + "."
-						+ col.getName());
+						+ (!leftIsDataSet?mappingUnit.getDataSetColumnFor(col).getModifiedName():col.getName()));
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;

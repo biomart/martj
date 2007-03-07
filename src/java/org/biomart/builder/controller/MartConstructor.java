@@ -911,6 +911,7 @@ public interface MartConstructor {
 			if (dataset.getSchemaModifications()
 					.isRestrictedRelation(dsTable, ljtu.getSchemaRelation(),
 							ljtu.getSchemaRelationIteration())) {
+				action.setRelationRestrictionPreviousUnit(ljtu.getPreviousUnit());
 				action.setRelationRestrictionLeftIsFirst(ljtu
 						.getSchemaRelation().getFirstKey().equals(
 								ljtu.getSchemaSourceKey()));
@@ -1055,7 +1056,8 @@ public interface MartConstructor {
 				final RestrictedRelationDefinition def = dataset
 						.getSchemaModifications().getRestrictedRelation(
 								dsTable, ljtu.getSchemaRelation(),
-								ljtu.getSchemaRelationIteration());
+								ljtu.getSchemaRelationIteration());		
+				action.setRelationRestrictionPreviousUnit(ljtu.getPreviousUnit());
 				action.setRelationRestrictionLeftIsFirst(ljtu
 						.getSchemaRelation().getFirstKey().equals(
 								ljtu.getSchemaSourceKey()));

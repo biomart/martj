@@ -262,7 +262,7 @@ public class KeyComponent extends BoxShapedComponent {
 							StackTrace.showStackTrace(t);
 						}
 					});
-					e.dropComplete(false);
+					e.rejectDrop();
 					return;
 				}
 				if (data instanceof Key) {

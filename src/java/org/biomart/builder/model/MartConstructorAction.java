@@ -638,6 +638,8 @@ public abstract class MartConstructorAction {
 		private String partitionValue;
 
 		private ValueRange partitionRangeDef;
+		
+		private TransformationUnit relationRestrictionPreviousUnit;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -852,6 +854,21 @@ public abstract class MartConstructorAction {
 		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
 			this.partitionRangeDef = partitionRangeDef;
 		}
+
+		/**
+		 * @return the relationRestrictionPreviousUnit
+		 */
+		public TransformationUnit getRelationRestrictionPreviousUnit() {
+			return relationRestrictionPreviousUnit;
+		}
+
+		/**
+		 * @param relationRestrictionPreviousUnit the relationRestrictionPreviousUnit to set
+		 */
+		public void setRelationRestrictionPreviousUnit(
+				TransformationUnit relationRestrictionPreviousUnit) {
+			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
+		}
 	}
 
 	/**
@@ -892,6 +909,8 @@ public abstract class MartConstructorAction {
 		private List recursionSecondFromColumns;
 
 		private List recursionSecondToColumns;
+		
+		private TransformationUnit relationRestrictionPreviousUnit;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -1167,6 +1186,21 @@ public abstract class MartConstructorAction {
 		 */
 		public void setRecursionType(RecursionType recursionType) {
 			this.recursionType = recursionType;
+		}
+
+		/**
+		 * @return the relationRestrictionPreviousUnit
+		 */
+		public TransformationUnit getRelationRestrictionPreviousUnit() {
+			return relationRestrictionPreviousUnit;
+		}
+
+		/**
+		 * @param relationRestrictionPreviousUnit the relationRestrictionPreviousUnit to set
+		 */
+		public void setRelationRestrictionPreviousUnit(
+				TransformationUnit relationRestrictionPreviousUnit) {
+			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
 		}
 	}
 
