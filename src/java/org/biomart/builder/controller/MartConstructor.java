@@ -830,9 +830,9 @@ public interface MartConstructor {
 											.getModifiedName());
 			}
 			// Add to selectCols all the inherited has columns, if
-			// this is a subclass table.
+			// this is not a dimension table.
 			if (sourceTable instanceof DataSetTable
-					&& (((DataSetTable)sourceTable).getType().equals(DataSetTableType.MAIN_SUBCLASS))) {
+					&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				final Collection hasCols = (Collection) this.uniqueOptCols
 						.get(sourceTable);
 				if (hasCols != null)
