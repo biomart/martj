@@ -278,6 +278,7 @@ public class DataSetModificationSet {
 	public void setPartitionedColumn(final DataSetColumn column,
 			final PartitionedColumnDefinition restriction)
 			throws ValidationException {
+		// TODO Make a alias -> real value map instead.
 		final String tableKey = column.getTable().getName();
 		// Refuse to partition subclass tables.
 		if (!((DataSetTable) column.getTable()).getType().equals(
@@ -310,6 +311,7 @@ public class DataSetModificationSet {
 	}
 
 	public String getPartitionedColumnName(final DataSetTable table) {
+		// TODO Make a alias -> real value map instead.
 		final String tableKey = table.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
 		return (String) ((Map.Entry) pcs.entrySet().iterator().next()).getKey();
@@ -317,6 +319,7 @@ public class DataSetModificationSet {
 
 	public PartitionedColumnDefinition getPartitionedColumnDef(
 			final DataSetTable dsTable) {
+		// TODO Make a alias -> real value map instead.
 		final String tableKey = dsTable.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
 		return (PartitionedColumnDefinition) pcs.get(this

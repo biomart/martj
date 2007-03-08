@@ -373,6 +373,8 @@ public interface MartConstructor {
 				// subclass table. This ensures that by the time the subclass
 				// table is created, the parent table will have all its
 				// columns in place and complete already.
+				final Collection nextSCs = new HashSet();
+				final Collection nextDims = new HashSet();
 				for (final Iterator j = tbl.getRelations().iterator(); j
 						.hasNext();) {
 					final Relation r = (Relation) j.next();
@@ -380,9 +382,15 @@ public interface MartConstructor {
 							.getTable();
 					if (!tablesToProcess.contains(dsTab)
 							&& !dataset.getDataSetModifications()
-									.isMaskedTable(dsTab))
-						tablesToProcess.add(i + 1, dsTab);
+									.isMaskedTable(dsTab)) {
+						if (dsTab.getType().equals(DataSetTableType.DIMENSION))
+							nextDims.add(dsTab);
+						else
+							nextSCs.add(dsTab);
+					}
 				}
+				tablesToProcess.addAll(i+1,nextSCs);
+				tablesToProcess.addAll(i+1,nextDims);
 			}
 			return tablesToProcess;
 		}
@@ -419,6 +427,7 @@ public interface MartConstructor {
 							.getColumnByName(dataset.getDataSetModifications()
 									.getPartitionedColumnName(dsTable));
 					if (tu.getNewColumnNameMap().containsValue(partCol))
+						// TODO Make a alias -> real value map instead.
 						delayedTempDrop = this.populatePartitionValues(
 								schemaPartition, pc, partCol, partitionValues,
 								previousTempTables, previousIndexes);
@@ -428,6 +437,7 @@ public interface MartConstructor {
 
 				// Do unit once per partition.
 				for (final Iterator v = partitionValues.iterator(); v.hasNext();) {
+					// TODO Make a alias -> real value iterator instead.
 					final String partitionValue = (String) v.next();
 					final String tempTable = tempName + this.tempNameCount++;
 					previousIndexes.put(tempTable, new HashSet());
@@ -819,8 +829,10 @@ public interface MartConstructor {
 											: entry.getKey(), col
 											.getModifiedName());
 			}
-			// Add to selectCols all the inherited has columns.
-			if (sourceTable instanceof DataSetTable) {
+			// Add to selectCols all the inherited has columns, if
+			// this is a subclass table.
+			if (sourceTable instanceof DataSetTable
+					&& (((DataSetTable)sourceTable).getType().equals(DataSetTableType.MAIN_SUBCLASS))) {
 				final Collection hasCols = (Collection) this.uniqueOptCols
 						.get(sourceTable);
 				if (hasCols != null)
@@ -1166,6 +1178,7 @@ public interface MartConstructor {
 				final DataSetColumn partCol, final List partitionValues,
 				final Map previousTempTables, final Map previousIndexes)
 				throws SQLException {
+			// TODO Make a alias -> real value map instead.
 			partitionValues.clear();
 			if (pc instanceof ValueCollection) {
 				if (((ValueCollection) pc).getIncludeNull())
@@ -1238,6 +1251,7 @@ public interface MartConstructor {
 		private String getOptimiserColumnName(final DataSetTable parent,
 				final DataSetTable dsTable, final String partitionValue,
 				final DataSetOptimiserType oType) {
+			// TODO Make a alias -> real value map instead.
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
 				uniqueOptCols.put(parent, new HashSet());
@@ -1281,6 +1295,7 @@ public interface MartConstructor {
 
 		private String getFinalName(final String schemaPartitionPrefix,
 				final DataSetTable dsTable, final String partitionValue) {
+			// TODO Make a alias -> real value map instead.
 			final StringBuffer finalName = new StringBuffer();
 			if (schemaPartitionPrefix != null) {
 				finalName.append(schemaPartitionPrefix);

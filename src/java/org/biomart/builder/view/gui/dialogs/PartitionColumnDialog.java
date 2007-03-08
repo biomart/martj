@@ -68,6 +68,7 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTableP
  * @since 0.1
  */
 public class PartitionColumnDialog extends JDialog {
+	// TODO Make a alias -> real value map instead.
 	private static final long serialVersionUID = 1;
 
 	private JButton cancel;

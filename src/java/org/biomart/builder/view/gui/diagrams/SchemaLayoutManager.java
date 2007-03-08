@@ -241,6 +241,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				final Dimension prefSize = comp.getPreferredSize();
 				this.prefSizes.remove(comp);
 
+				final int compSpacing = SchemaLayoutManager.RELATION_SPACING
+						* ((SchemaLayoutConstraint) constraints).getRelCount();
+
 				this.tableCount--;
 				final int rowNum = constraints.getRow();
 
@@ -253,8 +256,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				int newRowWidth = oldRowWidth;
 				newRowWidth -= prefSize.getWidth()
 						+ (SchemaLayoutManager.TABLE_PADDING * 2)
-						+ (SchemaLayoutManager.RELATION_SPACING * 2 * constraints
-								.getRelCount());
+						+ (compSpacing * 2);
 				this.rowWidths.set(rowNum, new Integer(newRowWidth));
 
 				int newRowHeight = 0;
@@ -265,8 +267,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 									newRowHeight,
 									((Component) i.next()).getPreferredSize()
 											.getHeight()
-											+ (SchemaLayoutManager.RELATION_SPACING * 2 * constraints
-													.getRelCount()));
+											+ (compSpacing * 2));
 				}
 				newRowHeight += SchemaLayoutManager.TABLE_PADDING * 2;
 				this.rowHeights.set(rowNum, new Integer(newRowHeight));
@@ -335,9 +336,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				int firstKeyInsetX = firstKeyRectangle.x;
-				if (SwingUtilities.getAncestorOfClass(SchemaComponent.class, firstKey)!=null)
+				if (firstKey.getParent().getParent().equals(this))
 					firstKeyInsetX += firstKey.getParent().getBounds().getX();
-				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey.getParent(), firstKeyRectangle, SwingUtilities.getAncestorOfClass(Diagram.class, firstKey));
+				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey.getParent(), firstKeyRectangle, parent);
 				while ((int)firstKeyRectangle.getY() >= firstRowBottom) { firstRowBottom += ((Integer)this.rowHeights.get(++firstRowNum)).intValue(); }
 
 				// Do the same for the second key.
@@ -346,9 +347,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
 				Rectangle secondKeyRectangle = secondKey.getBounds();
 				int secondKeyInsetX = secondKeyRectangle.x;
-				if (SwingUtilities.getAncestorOfClass(SchemaComponent.class, secondKey)!=null)
+				if (secondKey.getParent().getParent().equals(this))
 					secondKeyInsetX += secondKey.getParent().getBounds().getX();
-				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey.getParent(), secondKeyRectangle, SwingUtilities.getAncestorOfClass(Diagram.class, secondKey));
+				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey.getParent(), secondKeyRectangle, parent);
 				while ((int)secondKeyRectangle.getY() >= secondRowBottom) { secondRowBottom += ((Integer)this.rowHeights.get(++secondRowNum)).intValue(); }
 
 				// Work out left/right most.

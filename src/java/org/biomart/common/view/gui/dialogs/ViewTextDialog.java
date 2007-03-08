@@ -191,11 +191,11 @@ public class ViewTextDialog extends JFrame {
 		saver.setCurrentDirectory(currentDir == null ? null : new File(
 				currentDir));
 		saver.setFileFilter(new FileFilter() {
-			// Accepts only files ending in ".zip" or ".ddl".
+			// Accepts only files ending in ".ddl".
 			public boolean accept(final File f) {
 				return f.isDirectory()
 						|| f.getName().toLowerCase().endsWith(
-								Resources.get("singleFileDDL"));
+								Resources.get("ddlExtension"));
 			}
 
 			public String getDescription() {

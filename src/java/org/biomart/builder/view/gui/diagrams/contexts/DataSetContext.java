@@ -81,7 +81,7 @@ public class DataSetContext extends SchemaContext {
 	
 	private void changeHideMasked(final boolean masked) {
 		this.hideMasked = masked;
-		this.getMartTab().getDataSetTabSet().repaint();
+		this.getMartTab().getDataSetTabSet().validate();
 	}
 
 	/**
