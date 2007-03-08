@@ -117,7 +117,6 @@ public class SchemaTabSet extends JTabbedPane {
 		scroller.getViewport().setBackground(
 				this.allSchemasDiagram.getBackground());
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
-		this.setForegroundAt(0, Color.WHITE);
 
 		// Populate the map to hold the relation between schemas and the
 		// diagrams representing them.

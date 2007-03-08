@@ -57,7 +57,7 @@ public class SchemaComponent extends BoxShapedComponent {
 	/**
 	 * Constant defining background colour.
 	 */
-	public static Color BACKGROUND_COLOUR = Color.LIGHT_GRAY;
+	public static Color BACKGROUND_COLOUR = Color.YELLOW;
 
 	/**
 	 * Bold font.

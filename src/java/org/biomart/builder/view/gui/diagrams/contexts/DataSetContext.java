@@ -20,12 +20,15 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
@@ -37,7 +40,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
@@ -59,6 +61,8 @@ import org.biomart.common.resources.Resources;
  */
 public class DataSetContext extends SchemaContext {
 	private DataSet dataset;
+	
+	private boolean hideMasked = false;
 
 	/**
 	 * Creates a new context that will adapt database objects according to the
@@ -73,6 +77,11 @@ public class DataSetContext extends SchemaContext {
 	public DataSetContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab);
 		this.dataset = dataset;
+	}
+	
+	private void changeHideMasked(final boolean masked) {
+		this.hideMasked = masked;
+		this.getMartTab().getDataSetTabSet().repaint();
 	}
 
 	/**
@@ -104,8 +113,10 @@ public class DataSetContext extends SchemaContext {
 
 			// Fade MASKED DIMENSION relations.
 			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					target))
+					target)) {
+				component.setVisible(!this.hideMasked);
 				component.setForeground(RelationComponent.MASKED_COLOUR);
+			}
 
 			// Fade MERGED DIMENSION relations.
 			else if (this.getDataSet().getSchemaModifications()
@@ -130,8 +141,10 @@ public class DataSetContext extends SchemaContext {
 
 			// Fade MASKED DIMENSION relations.
 			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					(DataSetTable) object))
+					(DataSetTable) object)) {
+				component.setVisible(!this.hideMasked);
 				component.setForeground(TableComponent.MASKED_COLOUR);
+			}
 
 			// Fade MERGED DIMENSION tables.
 			else if (this.getDataSet().getSchemaModifications()
@@ -221,29 +234,27 @@ public class DataSetContext extends SchemaContext {
 	}
 
 	public void populateMultiContextMenu(final JPopupMenu contextMenu,
-			final Diagram diagram, final Class clazz) {
+			final Collection selectedItems, final Class clazz) {
 
-		if (clazz.equals(DataSetTable.class)) {
+		// Menu for multiple table selection.
+		if (DataSetTable.class.isAssignableFrom(clazz)) {
 			// If all are dimensions...
 			boolean allDimensions = true;
-			for (final Iterator i = diagram.getSelectedItems().iterator(); i
-					.hasNext();)
-				allDimensions &= ((DataSetTable) ((TableComponent) i.next())
-						.getTable()).getType().equals(
+			for (final Iterator i = selectedItems.iterator(); i.hasNext();)
+				allDimensions &= ((DataSetTable) i.next()).getType().equals(
 						DataSetTableType.DIMENSION);
 			if (allDimensions) {
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
-				final JMenuItem removeDM = new JMenuItem(
-						Resources.get("maskGroupDimensionTitle"));
+				final JMenuItem removeDM = new JMenuItem(Resources
+						.get("maskGroupDimensionTitle"));
 				removeDM.setMnemonic(Resources
 						.get("maskGroupDimensionMnemonic").charAt(0));
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						for (final Iterator i = diagram.getSelectedItems()
-								.iterator(); i.hasNext();) {
-							final DataSetTable table = ((DataSetTable) ((TableComponent) i
-									.next()).getTable());
+						for (final Iterator i = selectedItems.iterator(); i
+								.hasNext();) {
+							final DataSetTable table = (DataSetTable) i.next();
 							final boolean isMasked = DataSetContext.this
 									.getDataSet().getDataSetModifications()
 									.isMaskedTable(table);
@@ -266,16 +277,15 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(removeDM);
 
-				final JMenuItem reinstateDM = new JMenuItem(
-						Resources.get("unmaskGroupDimensionTitle"));
+				final JMenuItem reinstateDM = new JMenuItem(Resources
+						.get("unmaskGroupDimensionTitle"));
 				reinstateDM.setMnemonic(Resources.get(
 						"unmaskGroupDimensionMnemonic").charAt(0));
 				reinstateDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						for (final Iterator i = diagram.getSelectedItems()
-								.iterator(); i.hasNext();) {
-							final DataSetTable table = ((DataSetTable) ((TableComponent) i
-									.next()).getTable());
+						for (final Iterator i = selectedItems.iterator(); i
+								.hasNext();) {
+							final DataSetTable table = (DataSetTable) i.next();
 							final boolean isMasked = DataSetContext.this
 									.getDataSet().getDataSetModifications()
 									.isMaskedTable(table);
@@ -290,77 +300,186 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(reinstateDM);
+			} else
+				JOptionPane.showMessageDialog(this.getMartTab().getMartTabSet()
+						.getMartBuilder(), Resources.get("multiTableDimOnly"),
+						Resources.get("questionTitle"),
+						JOptionPane.INFORMATION_MESSAGE);
+		}
+
+		// Menu for multiple column selection.
+		else if (DataSetColumn.class.isAssignableFrom(clazz)) {
+
+			// The dimension can be removed by using this option. This
+			// simply masks the relation that caused the dimension to exist.
+			final JMenuItem mask = new JMenuItem(Resources
+					.get("maskGroupColumnTitle"));
+			mask
+					.setMnemonic(Resources.get("maskGroupColumnMnemonic")
+							.charAt(0));
+			mask.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					final Collection columns = new HashSet();
+					for (final Iterator i = selectedItems.iterator(); i
+							.hasNext();) {
+						final DataSetColumn column = (DataSetColumn) i.next();
+						final boolean isMasked = DataSetContext.this
+								.getDataSet().getDataSetModifications()
+								.isMaskedColumn(column);
+						final boolean isPartitioned = DataSetContext.this
+								.getDataSet().getDataSetModifications()
+								.isPartitionedColumn(column);
+						if (!isMasked && !isPartitioned
+								&& !(column instanceof ConcatColumn)
+								&& !(column instanceof ExpressionColumn))
+							columns.add(column);
+					}
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestMaskColumns(
+									DataSetContext.this.getDataSet(), columns);
+				}
+			});
+			contextMenu.add(mask);
+
+			final JMenuItem unmask = new JMenuItem(Resources
+					.get("unmaskGroupColumnTitle"));
+			unmask.setMnemonic(Resources.get("unmaskGroupColumnMnemonic")
+					.charAt(0));
+			unmask.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					final Collection columns = new HashSet();
+					for (final Iterator i = selectedItems.iterator(); i
+							.hasNext();) {
+						final DataSetColumn column = (DataSetColumn) i.next();
+						final boolean isMasked = DataSetContext.this
+								.getDataSet().getDataSetModifications()
+								.isMaskedColumn(column);
+						if (isMasked)
+							columns.add(column);
+					}
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestUnmaskColumns(
+									DataSetContext.this.getDataSet(), columns);
+				}
+			});
+			contextMenu.add(unmask);
+
+			contextMenu.addSeparator();
+
+			// Index/Non-index
+			final JMenuItem index = new JMenuItem(Resources
+					.get("indexGroupColumnTitle"));
+			index.setMnemonic(Resources.get("indexGroupColumnMnemonic").charAt(
+					0));
+			index.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					for (final Iterator i = selectedItems.iterator(); i
+							.hasNext();) {
+						final DataSetColumn column = (DataSetColumn) i.next();
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestIndexColumn(
+										DataSetContext.this.getDataSet(),
+										column);
+					}
+				}
+			});
+			contextMenu.add(index);
+
+			final JMenuItem unindex = new JMenuItem(Resources
+					.get("unindexGroupColumnTitle"));
+			unindex.setMnemonic(Resources.get("unindexGroupColumnMnemonic")
+					.charAt(0));
+			unindex.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					for (final Iterator i = selectedItems.iterator(); i
+							.hasNext();) {
+						final DataSetColumn column = (DataSetColumn) i.next();
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnindexColumn(
+										DataSetContext.this.getDataSet(),
+										column);
+					}
+				}
+			});
+			contextMenu.add(unindex);
+
+			// If all are non-dimensions...
+			boolean allNonDimensions = true;
+			for (final Iterator i = selectedItems.iterator(); i.hasNext();)
+				allNonDimensions &= !((DataSetTable) ((DataSetColumn) i.next())
+						.getTable()).getType().equals(
+						DataSetTableType.DIMENSION);
+			if (allNonDimensions) {
 
 				contextMenu.addSeparator();
 
-				// The dimension can be merged by using this option. This
-				// affects all dimensions based on this relation.
-				final JMenuItem mergeDM = new JMenuItem(
-						Resources.get("mergeGroupDimensionTitle"));
-				mergeDM.setMnemonic(Resources
-						.get("mergeGroupDimensionMnemonic").charAt(0));
-				mergeDM.addActionListener(new ActionListener() {
+				// (Un)non-inherit all columns on this table.
+				final JMenuItem non = new JMenuItem(Resources
+						.get("nonInheritGroupTitle"));
+				non.setMnemonic(Resources.get("nonInheritGroupMnemonic")
+						.charAt(0));
+				non.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						for (final Iterator i = diagram.getSelectedItems()
-								.iterator(); i.hasNext();) {
-							final DataSetTable table = ((DataSetTable) ((TableComponent) i
-									.next()).getTable());
-							final boolean isMasked = DataSetContext.this
-									.getDataSet().getDataSetModifications()
-									.isMaskedTable(table);
-							final boolean isMerged = DataSetContext.this
-									.getDataSet().getSchemaModifications()
-									.isMergedRelation(table.getFocusRelation());
-							final boolean isCompound = DataSetContext.this
-									.getDataSet().getSchemaModifications()
-									.isCompoundRelation(null,
-											table.getFocusRelation());
-							contextMenu.add(removeDM);
-							if (!isMerged && !isCompound && !isMasked)
-								DataSetContext.this.getMartTab()
-										.getDataSetTabSet()
-										.requestMergeDimension(
-												DataSetContext.this
-														.getDataSet(), table);
+						for (final Iterator i = selectedItems.iterator(); i
+								.hasNext();) {
+							final DataSetColumn column = (DataSetColumn) i
+									.next();
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestNonInheritColumn(
+											DataSetContext.this.getDataSet(),
+											column);
 						}
 					}
 				});
-				contextMenu.add(mergeDM);
-
-				final JMenuItem unmergeDM = new JMenuItem(
-						Resources.get("unmergeGroupDimensionTitle"));
-				unmergeDM.setMnemonic(Resources.get(
-						"unmergeGroupDimensionMnemonic").charAt(0));
-				unmergeDM.addActionListener(new ActionListener() {
+				contextMenu.add(non);
+				final JMenuItem unnon = new JMenuItem(Resources
+						.get("unNonInheritGroupTitle"));
+				unnon.setMnemonic(Resources.get("unNonInheritGroupMnemonic")
+						.charAt(0));
+				unnon.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						for (final Iterator i = diagram.getSelectedItems()
-								.iterator(); i.hasNext();) {
-							final DataSetTable table = ((DataSetTable) ((TableComponent) i
-									.next()).getTable());
-							final boolean isMerged = DataSetContext.this
-									.getDataSet().getSchemaModifications()
-									.isMergedRelation(table.getFocusRelation());
-							contextMenu.add(removeDM);
-							if (isMerged)
-								DataSetContext.this.getMartTab()
-										.getDataSetTabSet()
-										.requestUnmergeDimension(
-												DataSetContext.this
-														.getDataSet(), table);
+						for (final Iterator i = selectedItems.iterator(); i
+								.hasNext();) {
+							final DataSetColumn column = (DataSetColumn) i
+									.next();
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestUnNonInheritColumn(
+											DataSetContext.this.getDataSet(),
+											column);
 						}
 					}
 				});
-				contextMenu.add(unmergeDM);
+				contextMenu.add(unnon);
 			}
 		}
-		// TODO Menu for column objects
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
+		
+		// Is it the diagram background?
+		if (object==null) {
+
+			// Add a separator if the menu is not empty.
+			if (contextMenu.getComponentCount() > 0)
+				contextMenu.addSeparator();
+			
+			// Do the show/hide masked tables thing.
+			final JCheckBoxMenuItem showHide = new JCheckBoxMenuItem(
+					Resources.get("hideMaskedDimensionsTitle"));
+			showHide.setMnemonic(Resources.get("hideMaskedDimensionsMnemonic")
+					.charAt(0));
+			showHide.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.changeHideMasked(showHide.isSelected());
+				}
+			});
+			contextMenu.add(showHide);
+			showHide.setSelected(this.hideMasked);
+		}
 
 		// Did the user click on a dataset table?
-		if (object instanceof DataSetTable) {
+		else if (object instanceof DataSetTable) {
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)

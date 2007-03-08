@@ -56,13 +56,13 @@ public class SchemaModificationSet {
 	// Linked because they must be kept in order for XML read/write.
 	private final Collection subclassedRelations = new LinkedHashSet();
 
-	private Collection mergedRelations = new HashSet();
+	private final Collection mergedRelations = new HashSet();
 
 	private final Map maskedRelations = new HashMap();
 
 	private final Map forceIncludeRelations = new HashMap();
 
-	private Map compoundRelations = new HashMap();
+	private final Map compoundRelations = new HashMap();
 
 	private final Map restrictedTables = new HashMap();
 
@@ -134,8 +134,8 @@ public class SchemaModificationSet {
 				.get(SchemaModificationSet.DATASET);
 		final Collection masks = (Collection) this.maskedRelations
 				.get(tableName);
-		return (masks != null && masks.contains(relation))
-				|| (globalMasks != null && globalMasks.contains(relation));
+		return masks != null && masks.contains(relation) || globalMasks != null
+				&& globalMasks.contains(relation);
 	}
 
 	public Map getMaskedRelations() {
@@ -217,8 +217,8 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.restrictedTables
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.restrictedTables.get(dsTableName);
-		return (rests != null && rests.containsKey(table))
-				|| (globalRests != null && globalRests.containsKey(table));
+		return rests != null && rests.containsKey(table) || globalRests != null
+				&& globalRests.containsKey(table);
 	}
 
 	public RestrictedTableDefinition getRestrictedTable(
@@ -235,7 +235,7 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.restrictedTables
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.restrictedTables.get(dsTableName);
-		return (rests != null && rests.containsKey(table)) ? (RestrictedTableDefinition) rests
+		return rests != null && rests.containsKey(table) ? (RestrictedTableDefinition) rests
 				.get(table)
 				: (RestrictedTableDefinition) globalRests.get(table);
 	}
@@ -323,8 +323,8 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.restrictedRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.restrictedRelations.get(dsTableName);
-		return (rests != null && rests.containsKey(relation))
-				|| (globalRests != null && globalRests.containsKey(relation));
+		return rests != null && rests.containsKey(relation)
+				|| globalRests != null && globalRests.containsKey(relation);
 	}
 
 	public boolean isRestrictedRelation(final DataSetTable dsTable,
@@ -339,10 +339,13 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.restrictedRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.restrictedRelations.get(dsTableName);
-		return (rests != null && rests.containsKey(relation) && ((Map) rests
-				.get(relation)).containsKey(new Integer(index)))
-				|| (globalRests != null && globalRests.containsKey(relation) && ((Map) globalRests
-						.get(relation)).containsKey(new Integer(index)));
+		return rests != null
+				&& rests.containsKey(relation)
+				&& ((Map) rests.get(relation)).containsKey(new Integer(index))
+				|| globalRests != null
+				&& globalRests.containsKey(relation)
+				&& ((Map) globalRests.get(relation)).containsKey(new Integer(
+						index));
 	}
 
 	public RestrictedRelationDefinition getRestrictedRelation(
@@ -359,8 +362,8 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.restrictedRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.restrictedRelations.get(dsTableName);
-		return (rests != null && rests.containsKey(relation) && ((Map) rests
-				.get(relation)).containsKey(new Integer(index))) ? (RestrictedRelationDefinition) ((Map) rests
+		return rests != null && rests.containsKey(relation)
+				&& ((Map) rests.get(relation)).containsKey(new Integer(index)) ? (RestrictedRelationDefinition) ((Map) rests
 				.get(relation)).get(new Integer(index))
 				: (RestrictedRelationDefinition) ((Map) globalRests
 						.get(relation)).get(new Integer(index));
@@ -410,6 +413,8 @@ public class SchemaModificationSet {
 				&& restriction.getRecursionType() != RecursionType.NONE)
 			throw new ValidationException(Resources
 					.get("cannotConcatRecurseRestricted"));
+		if (this.isCompoundRelation(dsTableName, relation))
+			throw new ValidationException(Resources.get("cannotConcatCompound"));
 		if (!this.concatRelations.containsKey(dsTableName))
 			this.concatRelations.put(dsTableName, new HashMap());
 		final Map restrictions = (Map) this.concatRelations.get(dsTableName);
@@ -465,8 +470,8 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.concatRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.concatRelations.get(dsTableName);
-		return (rests != null && rests.containsKey(relation))
-				|| (globalRests != null && globalRests.containsKey(relation));
+		return rests != null && rests.containsKey(relation)
+				|| globalRests != null && globalRests.containsKey(relation);
 	}
 
 	public boolean isConcatRelation(final DataSetTable dsTable,
@@ -481,10 +486,13 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.concatRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.concatRelations.get(dsTableName);
-		return (rests != null && rests.containsKey(relation) && ((Map) rests
-				.get(relation)).containsKey(new Integer(index)))
-				|| (globalRests != null && globalRests.containsKey(relation) && ((Map) globalRests
-						.get(relation)).containsKey(new Integer(index)));
+		return rests != null
+				&& rests.containsKey(relation)
+				&& ((Map) rests.get(relation)).containsKey(new Integer(index))
+				|| globalRests != null
+				&& globalRests.containsKey(relation)
+				&& ((Map) globalRests.get(relation)).containsKey(new Integer(
+						index));
 	}
 
 	public ConcatRelationDefinition getConcatRelation(
@@ -501,8 +509,8 @@ public class SchemaModificationSet {
 		final Map globalRests = (Map) this.concatRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map rests = (Map) this.concatRelations.get(dsTableName);
-		return (rests != null && rests.containsKey(relation) && ((Map) rests
-				.get(relation)).containsKey(new Integer(index))) ? (ConcatRelationDefinition) ((Map) rests
+		return rests != null && rests.containsKey(relation)
+				&& ((Map) rests.get(relation)).containsKey(new Integer(index)) ? (ConcatRelationDefinition) ((Map) rests
 				.get(relation)).get(new Integer(index))
 				: (ConcatRelationDefinition) ((Map) globalRests.get(relation))
 						.get(new Integer(index));
@@ -573,8 +581,8 @@ public class SchemaModificationSet {
 				.get(SchemaModificationSet.DATASET);
 		final Collection incs = (Collection) this.forceIncludeRelations
 				.get(tableName);
-		return (incs != null && incs.contains(relation))
-				|| (globalIncs != null && globalIncs.contains(relation));
+		return incs != null && incs.contains(relation) || globalIncs != null
+				&& globalIncs.contains(relation);
 	}
 
 	public Map getForceIncludeRelations() {
@@ -613,22 +621,17 @@ public class SchemaModificationSet {
 			// existing subclass relation in the direction we
 			// are working in.
 
-			// Check that child has no M:1s and parent has no 1:Ms already.
-			// Check that parent has M:1, and child has 1:M.
-			boolean parentHasM1 = false;
 			boolean childHasM1 = false;
 			boolean parentHas1M = false;
-			boolean childHas1M = false;
 			for (final Iterator i = this.subclassedRelations.iterator(); i
 					.hasNext();) {
 				final Relation rel = (Relation) i.next();
 				if (rel.getOneKey().getTable().equals(parentTable))
 					parentHas1M = true;
-				else if (rel.getOneKey().getTable().equals(childTable))
-					childHas1M = true;
-				if (rel.getManyKey().getTable().equals(parentTable))
-					parentHasM1 = true;
-				else if (rel.getManyKey().getTable().equals(childTable))
+				else if (rel.getOneKey().getTable().equals(childTable)) {
+				}
+				if (rel.getManyKey().getTable().equals(parentTable)) {
+				} else if (rel.getManyKey().getTable().equals(childTable))
 					childHasM1 = true;
 			}
 
@@ -672,17 +675,20 @@ public class SchemaModificationSet {
 		this.subclassedRelations.remove(relation);
 	}
 
-	public void setCompoundRelation(final Relation relation, final int n) {
+	public void setCompoundRelation(final Relation relation, final int n)
+			throws ValidationException {
 		this.setCompoundRelation(SchemaModificationSet.DATASET, relation, n);
 	}
 
 	public void setCompoundRelation(final DataSetTable table,
-			final Relation relation, final int n) {
+			final Relation relation, final int n) throws ValidationException {
 		this.setCompoundRelation(table.getName(), relation, n);
 	}
 
 	private void setCompoundRelation(final String tableName,
-			final Relation relation, final int n) {
+			final Relation relation, final int n) throws ValidationException {
+		if (this.isConcatRelation(tableName, relation, n))
+			throw new ValidationException(Resources.get("cannotConcatCompound"));
 		if (!this.compoundRelations.containsKey(tableName))
 			this.compoundRelations.put(tableName, new HashMap());
 		final Map masks = (Map) this.compoundRelations.get(tableName);
@@ -730,8 +736,8 @@ public class SchemaModificationSet {
 		final Map globalComps = (Map) this.compoundRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map comps = (Map) this.compoundRelations.get(tableName);
-		return (comps != null && comps.containsKey(relation))
-				|| (globalComps != null && globalComps.containsKey(relation));
+		return comps != null && comps.containsKey(relation)
+				|| globalComps != null && globalComps.containsKey(relation);
 	}
 
 	public int getCompoundRelation(final DataSetTable table,
@@ -747,9 +753,9 @@ public class SchemaModificationSet {
 		final Map globalComps = (Map) this.compoundRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map comps = (Map) this.compoundRelations.get(tableName);
-		return (comps != null && comps.containsKey(relation)) ? ((Integer) comps
-				.get(relation)).intValue()
-				: ((Integer) globalComps.get(relation)).intValue();
+		return comps != null && comps.containsKey(relation) ? ((Integer) comps
+				.get(relation)).intValue() : ((Integer) globalComps
+				.get(relation)).intValue();
 	}
 
 	public Map getCompoundRelations() {
@@ -1015,16 +1021,21 @@ public class SchemaModificationSet {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, leftTablePrefix + "."
-						+ (leftIsDataSet?mappingUnit.getDataSetColumnFor(col).getModifiedName():col.getName()));
+				sub = sub.replaceAll(alias, leftTablePrefix
+						+ "."
+						+ (leftIsDataSet ? mappingUnit.getDataSetColumnFor(col)
+								.getModifiedName() : col.getName()));
 			}
 			for (final Iterator i = this.rightAliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, rightTablePrefix + "."
-						+ (!leftIsDataSet?mappingUnit.getDataSetColumnFor(col).getModifiedName():col.getName()));
+				sub = sub.replaceAll(alias, rightTablePrefix
+						+ "."
+						+ (!leftIsDataSet ? mappingUnit
+								.getDataSetColumnFor(col).getModifiedName()
+								: col.getName()));
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
@@ -1087,7 +1098,7 @@ public class SchemaModificationSet {
 			if (aliases == null || aliases.isEmpty())
 				throw new IllegalArgumentException(Resources
 						.get("concatRelMissingAliases"));
-			if (rowSep == null || rowSep.length()==0)
+			if (rowSep == null || rowSep.length() == 0)
 				throw new IllegalArgumentException(Resources
 						.get("concatRelMissingRowSep"));
 			if (recursionType == null)
@@ -1104,7 +1115,7 @@ public class SchemaModificationSet {
 								firstRelation.getSecondKey().getTable()))
 					throw new IllegalArgumentException(Resources
 							.get("concatRelMissingSecondRelation"));
-				if (concSep == null || concSep.length()==0)
+				if (concSep == null || concSep.length() == 0)
 					throw new IllegalArgumentException(Resources
 							.get("concatRelMissingConcSep"));
 			}
@@ -1153,35 +1164,35 @@ public class SchemaModificationSet {
 		 * @return the expr
 		 */
 		public String getExpr() {
-			return expr;
+			return this.expr;
 		}
 
 		/**
 		 * @return the firstRelation
 		 */
 		public Relation getFirstRelation() {
-			return firstRelation;
+			return this.firstRelation;
 		}
 
 		/**
 		 * @return the recursionKey
 		 */
 		public Key getRecursionKey() {
-			return recursionKey;
+			return this.recursionKey;
 		}
 
 		/**
 		 * @return the recursionType
 		 */
 		public RecursionType getRecursionType() {
-			return recursionType;
+			return this.recursionType;
 		}
 
 		/**
 		 * @return the secondRelation
 		 */
 		public Relation getSecondRelation() {
-			return secondRelation;
+			return this.secondRelation;
 		}
 
 		/**
@@ -1193,7 +1204,7 @@ public class SchemaModificationSet {
 		public String getRowSep() {
 			return this.rowSep;
 		}
-		
+
 		public String getConcSep() {
 			return this.concSep;
 		}

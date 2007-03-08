@@ -49,21 +49,21 @@ public class DataSetModificationSet {
 
 	// NOTE: Using Collections/Strings avoids problems with changing hashcodes.
 
-	private Map renamedTables = new HashMap();
+	private final Map renamedTables = new HashMap();
 
-	private Map renamedColumns = new HashMap();
+	private final Map renamedColumns = new HashMap();
 
-	private Collection maskedTables = new HashSet();
+	private final Collection maskedTables = new HashSet();
 
-	private Map maskedColumns = new HashMap();
+	private final Map maskedColumns = new HashMap();
 
-	private Map indexedColumns = new HashMap();
+	private final Map indexedColumns = new HashMap();
 
-	private Map partitionedColumns = new HashMap();
+	private final Map partitionedColumns = new HashMap();
 
-	private Map nonInheritedColumns = new HashMap();
+	private final Map nonInheritedColumns = new HashMap();
 
-	private Map expressionColumns = new HashMap();
+	private final Map expressionColumns = new HashMap();
 
 	public DataSetModificationSet(final DataSet ds) {
 		this.ds = ds;
@@ -143,6 +143,10 @@ public class DataSetModificationSet {
 	public void setNonInheritedColumn(final DataSetColumn column)
 			throws ValidationException {
 		final String tableKey = column.getTable().getName();
+		if (((DataSetTable) column.getTable()).getType().equals(
+				DataSetTableType.DIMENSION))
+			throw new ValidationException(Resources
+					.get("cannotNonInheritDimensionColumn"));
 		if (!this.isNonInheritedColumn(column)) {
 			if (column.getModifiedName().endsWith(Resources.get("keySuffix")))
 				throw new ValidationException(Resources
@@ -177,7 +181,8 @@ public class DataSetModificationSet {
 
 	public void setTableRename(final DataSetTable table, String name) {
 		this.renamedTables.remove(table.getName());
-		if (!name.equals(table.getName()) && !name.equals(table.getModifiedName())) {
+		if (!name.equals(table.getName())
+				&& !name.equals(table.getModifiedName())) {
 			// Make the name unique.
 			final String baseName = name;
 			for (int i = 1; this.renamedTables.containsValue(name); name = baseName
@@ -199,7 +204,11 @@ public class DataSetModificationSet {
 		return this.renamedTables;
 	}
 
-	public void setMaskedTable(final DataSetTable table) {
+	public void setMaskedTable(final DataSetTable table)
+			throws ValidationException {
+		if (!table.getType().equals(DataSetTableType.DIMENSION))
+			throw new ValidationException(Resources
+					.get("cannotMaskNonDimension"));
 		this.maskedTables.add(table.getName());
 	}
 
@@ -232,7 +241,7 @@ public class DataSetModificationSet {
 			// suffix then it would confuse MartEditor.
 			String keySuffix = Resources.get("keySuffix");
 			String baseName = name;
-			if (name.endsWith(keySuffix)) 
+			if (name.endsWith(keySuffix))
 				baseName = name.substring(0, name.indexOf(keySuffix));
 			else if (!col.getName().endsWith(keySuffix))
 				keySuffix = "";
@@ -241,7 +250,8 @@ public class DataSetModificationSet {
 			name = baseName + keySuffix;
 			for (int i = 1; ((Map) this.renamedColumns.get(tableKey))
 					.containsValue(name)
-					|| col.getTable().getColumnByName(name)!=null ; name = baseName + "_" + i++ + keySuffix)
+					|| col.getTable().getColumnByName(name) != null; name = baseName
+					+ "_" + i++ + keySuffix)
 				;
 			((Map) this.renamedColumns.get(tableKey)).put(col.getName(), name);
 		}
@@ -302,8 +312,7 @@ public class DataSetModificationSet {
 	public String getPartitionedColumnName(final DataSetTable table) {
 		final String tableKey = table.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
-		return (String) (((Map.Entry) pcs.entrySet().iterator().next())
-				.getKey());
+		return (String) ((Map.Entry) pcs.entrySet().iterator().next()).getKey();
 	}
 
 	public PartitionedColumnDefinition getPartitionedColumnDef(

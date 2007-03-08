@@ -18,6 +18,8 @@
 
 package org.biomart.builder.view.gui.diagrams.contexts;
 
+import java.util.Collection;
+
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
@@ -57,5 +59,5 @@ public interface DiagramContext {
 	 */
 	public void populateContextMenu(JPopupMenu contextMenu, Object object);
 	
-	public void populateMultiContextMenu(JPopupMenu contextMenu, Diagram diagram, Class clazz);
+	public void populateMultiContextMenu(JPopupMenu contextMenu, Collection selectedItems, Class clazz);
 }

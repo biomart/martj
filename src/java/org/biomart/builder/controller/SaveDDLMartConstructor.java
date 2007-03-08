@@ -73,8 +73,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 	private StringBuffer outputStringBuffer;
 
-	private boolean singleFile;
-
 	/**
 	 * Creates a constructor that, when requested, will begin constructing a
 	 * mart and outputting DDL to a file.
@@ -87,20 +85,15 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 * @param includeComments
 	 *            <tt>true</tt> if comments are to be included in the DDL
 	 *            statements generated, <tt>false</tt> if not.
-	 * @param singleFile
-	 *            if outputting as a file, <tt>true</tt> if the file should be
-	 *            a single DDL file, <tt>false</tt> if it should be broken
-	 *            down into tables.
 	 */
 	public SaveDDLMartConstructor(final File outputFile,
-			final boolean includeComments, final boolean singleFile) {
+			final boolean includeComments) {
 		Log.info(Resources.get("logSaveDDLFile", outputFile.getPath()));
 		// Remember the settings.
 		this.outputFile = outputFile;
 		this.includeComments = includeComments;
 		// This last call is redundant but is included for clarity.
 		this.outputStringBuffer = null;
-		this.singleFile = singleFile;
 	}
 
 	/**
@@ -132,10 +125,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// Work out what kind of helper to use. The helper will
 		// perform the actual conversion of action to DDL and divide
 		// the results into appropriate files or buffers.
-		final DDLHelper helper = this.outputStringBuffer == null ? (this.singleFile ? (DDLHelper) new SingleFileHelper(
-				this.outputFile, this.includeComments)
-				: (DDLHelper) new TableAsFileHelper(this.outputFile,
-						this.includeComments))
+		final DDLHelper helper = this.outputStringBuffer == null ? (DDLHelper) new TableAsFileHelper(this.outputFile,
+						this.includeComments)
 				: new SingleStringBufferHelper(this.outputStringBuffer,
 						this.includeComments);
 		Log.debug("Chose helper " + helper.getClass().getName());
@@ -455,53 +446,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				if (!this.actions.containsKey(dsTableName))
 					this.actions.put(dsTableName, new ArrayList());
 				((List) this.actions.get(dsTableName)).add(action);
-			}
-		}
-	}
-
-	/**
-	 * Statements are saved as a single SQL file.
-	 */
-	public static class SingleFileHelper extends DDLHelper {
-
-		private FileOutputStream outputFileStream;
-
-		/**
-		 * Constructs a helper which will output all DDL into a single file per
-		 * table inside the given zip file.
-		 * 
-		 * @param outputFile
-		 *            the zip file to write the DDL into.
-		 * @param includeComments
-		 *            <tt>true</tt> if comments are to be included,
-		 *            <tt>false</tt> if not.
-		 */
-		public SingleFileHelper(final File outputFile,
-				final boolean includeComments) {
-			super(outputFile, includeComments);
-		}
-
-		public void martConstructorEventOccurred(final int event,
-				final Object data, final MartConstructorAction action)
-				throws Exception {
-			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
-				// Create and open the zip file.
-				Log.debug("Starting zip file " + this.getFile().getPath());
-				this.outputFileStream = new FileOutputStream(this.getFile());
-			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
-				// Close the zip stream. Will also close the
-				// file output stream by default.
-				Log.debug("Closing zip file");
-				this.outputFileStream.flush();
-				this.outputFileStream.close();
-			} else if (event == MartConstructorListener.ACTION_EVENT) {
-				// Convert the action to some DDL.
-				final String[] cmd = this.getStatementsForAction(action);
-				// Write the data.
-				for (int i = 0; i < cmd.length; i++) {
-					this.outputFileStream.write(cmd[i].getBytes());
-					this.outputFileStream.write(";\n".getBytes());
-				}
 			}
 		}
 	}

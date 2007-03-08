@@ -31,10 +31,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.SwingUtilities;
+
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
-import org.biomart.common.model.Key;
+import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 
 /**
  * This layout manager lays out components in grouped lines.
@@ -183,7 +185,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				final Dimension prefSize = comp.getPreferredSize();
 				this.prefSizes.put(comp, prefSize);
 
-				final int rowLength = (int) Math.floor(Math
+				final int rowLength = (int) Math.ceil(Math
 						.sqrt(++this.tableCount));
 				int rowNum = 0;
 				while (rowNum < this.rows.size()
@@ -329,37 +331,25 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				// Obtain first key and work out position relative to
 				// diagram.
 				int firstRowNum = 0;
+				int firstRowBottom = ((Integer)this.rowHeights.get(firstRowNum)).intValue();
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
-				final Rectangle firstKeyRectangle = firstKey.getBounds();
+				Rectangle firstKeyRectangle = firstKey.getBounds();
 				int firstKeyInsetX = firstKeyRectangle.x;
-				for (Container keyParent = firstKey.getParent(); keyParent != parent; keyParent = keyParent
-						.getParent()) {
-					firstKeyRectangle.setLocation(firstKeyRectangle.x
-							+ keyParent.getX(), firstKeyRectangle.y
-							+ keyParent.getY());
-					if (keyParent.getParent()!=parent)
-					firstKeyInsetX += keyParent.getX();
-					if (this.constraints.containsKey(keyParent))
-						firstRowNum = ((SchemaLayoutConstraint) this.constraints.get(keyParent))
-						.getRow();
-				}
+				if (SwingUtilities.getAncestorOfClass(SchemaComponent.class, firstKey)!=null)
+					firstKeyInsetX += firstKey.getParent().getBounds().getX();
+				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey.getParent(), firstKeyRectangle, SwingUtilities.getAncestorOfClass(Diagram.class, firstKey));
+				while ((int)firstKeyRectangle.getY() >= firstRowBottom) { firstRowBottom += ((Integer)this.rowHeights.get(++firstRowNum)).intValue(); }
 
 				// Do the same for the second key.
 				int secondRowNum = 0;
+				int secondRowBottom = ((Integer)this.rowHeights.get(secondRowNum)).intValue();
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
-				final Rectangle secondKeyRectangle = secondKey.getBounds();
+				Rectangle secondKeyRectangle = secondKey.getBounds();
 				int secondKeyInsetX = secondKeyRectangle.x;
-				for (Container keyParent = secondKey.getParent(); keyParent != parent; keyParent = keyParent
-						.getParent()) {
-					secondKeyRectangle.setLocation(secondKeyRectangle.x
-							+ keyParent.getX(), secondKeyRectangle.y
-							+ keyParent.getY());
-					if (keyParent.getParent()!=parent)
-						secondKeyInsetX += keyParent.getX();
-					if (this.constraints.containsKey(keyParent))
-						secondRowNum = ((SchemaLayoutConstraint) this.constraints.get(keyParent))
-						.getRow();
-				}
+				if (SwingUtilities.getAncestorOfClass(SchemaComponent.class, secondKey)!=null)
+					secondKeyInsetX += secondKey.getParent().getBounds().getX();
+				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey.getParent(), secondKeyRectangle, SwingUtilities.getAncestorOfClass(Diagram.class, secondKey));
+				while ((int)secondKeyRectangle.getY() >= secondRowBottom) { secondRowBottom += ((Integer)this.rowHeights.get(++secondRowNum)).intValue(); }
 
 				// Work out left/right most.
 				final Rectangle leftKeyRectangle = firstKeyRectangle.getX() <= secondKeyRectangle
@@ -377,7 +367,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				int leftTagX, rightTagX;
 
 				// Both at same X location?
-				if (firstKeyRectangle.getX() == secondKeyRectangle.getX()) {
+				if (Math.abs(firstKeyRectangle.getX()-secondKeyRectangle.getX())<100) {
 					relBottomY = (int) Math.max(leftKeyRectangle.getCenterY(),
 							rightKeyRectangle.getCenterY());
 					relLeftX = (int) (leftKeyRectangle.getX() - SchemaLayoutManager.TABLE_PADDING);
@@ -393,13 +383,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 							- (int) (SchemaLayoutManager.TABLE_PADDING * 2);
 					viaY = ((leftY + rightY) / 2);
 				} else {
-					final int rowNum = Math.max(firstRowNum,secondRowNum);
 					relRightX = (int) Math.max(leftKeyRectangle.getMaxX(), rightKeyRectangle.getX());
 					relLeftX = (int) Math.min(leftKeyRectangle.getMaxX(), rightKeyRectangle.getX());
-					relBottomY = 0;
-					for (int r = 0; r <= rowNum; r++)
-						relBottomY += ((Integer) this.rowHeights.get(r))
-								.intValue();
+					relBottomY = Math.max(firstRowBottom, secondRowBottom);
 
 					leftX = (int) leftKeyRectangle.getMaxX() + leftKeyInsetX;
 					leftTagX = leftX + SchemaLayoutManager.RELATION_SPACING;
@@ -410,7 +396,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 					viaX = (leftX + rightX) / 2;
 					if (Math.abs(rightX - leftX) < 100)
 						viaY = (leftY + rightY) / 2;
-					else if (Math.abs(rightY - leftY) > 20)
+					else if (Math.abs(rightY - leftY) > 100)
 						viaY = (relBottomY + relTopY) / 2;
 					else
 						viaY = relTopY

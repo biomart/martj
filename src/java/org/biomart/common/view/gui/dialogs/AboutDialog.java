@@ -107,7 +107,7 @@ public class AboutDialog extends JDialog {
 		item = new JLabel(Resources.get("aboutAppTitle"));
 		gridBag.setConstraints(item, labelConstraints);
 		content.add(item);
-		item = new JLabel(Resources.get("GUITitle", Resources.BIOMART_VERSION));
+		item = new JLabel(Resources.get("plainGUITitle"));
 		gridBag.setConstraints(item, fieldConstraints);
 		content.add(item);
 		

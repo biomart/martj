@@ -126,7 +126,6 @@ public class DataSetTabSet extends JTabbedPane {
 		scroller.getViewport().setBackground(
 				this.allDataSetsDiagram.getBackground());
 		this.addTab(Resources.get("multiDataSetOverviewTab"), scroller);
-		this.setForegroundAt(0, Color.WHITE);
 
 		// Calculate the dataset tabs.
 		this.recalculateDataSetTabs();
@@ -699,11 +698,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to mask.
 	 */
 	public void requestMaskColumn(final DataSet ds, final DataSetColumn column) {
+		this.requestMaskColumns(ds, Collections.singleton(column));
+	}
+	public void requestMaskColumns(final DataSet ds, final Collection columns) {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Mask the column.
-					MartBuilderUtils.maskColumn(ds, column);
+					MartBuilderUtils.maskColumns(ds, columns);
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(ds);
@@ -2086,12 +2088,15 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to unmask.
 	 */
 	public void requestUnmaskColumn(final DataSet ds, final DataSetColumn column) {
-
+		this.requestUnmaskColumns(ds, Collections.singleton(column));
+	}
+	
+	public void requestUnmaskColumns(final DataSet ds, final Collection columns) {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Unmask the column.
-					MartBuilderUtils.unmaskColumn(ds, column);
+					MartBuilderUtils.unmaskColumns(ds, columns);
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(ds);

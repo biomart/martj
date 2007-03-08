@@ -20,18 +20,17 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
+import java.util.Iterator;
 
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
-import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -71,19 +70,53 @@ public class AllDataSetsContext implements DiagramContext {
 			final Object object) {
 		if (object instanceof DataSet) {
 			// Set the background colour.
-			if (((DataSet)object).getInvisible())
+			if (((DataSet) object).getInvisible())
 				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else
 				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
-			
+
 			((DataSetComponent) component).setRenameable(true);
 			((DataSetComponent) component).setSelectable(true);
 		}
 	}
 
 	public void populateMultiContextMenu(final JPopupMenu contextMenu,
-			final Diagram diagram, final Class clazz) {
-		// TODO Menu for dataset objects.
+			final Collection selectedItems, final Class clazz) {
+		// Menu for multiple dataset objects.
+		if (DataSet.class.isAssignableFrom(clazz)) {
+			// Visible/invisible
+			final JMenuItem visible = new JMenuItem(Resources
+					.get("uninvisibleGroupDataSetTitle"));
+			visible.setMnemonic(Resources
+					.get("uninvisibleGroupDataSetMnemonic").charAt(0));
+			visible.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					for (final Iterator i = selectedItems.iterator(); i
+							.hasNext();) {
+						final DataSet ds = (DataSet) i.next();
+						AllDataSetsContext.this.getMartTab().getDataSetTabSet()
+								.requestVisibleDataSet(ds);
+					}
+				}
+			});
+			contextMenu.add(visible);
+
+			final JMenuItem invisible = new JMenuItem(Resources
+					.get("invisibleGroupDataSetTitle"));
+			invisible.setMnemonic(Resources
+					.get("invisibleGroupDataSetMnemonic").charAt(0));
+			invisible.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					for (final Iterator i = selectedItems.iterator(); i
+							.hasNext();) {
+						final DataSet ds = (DataSet) i.next();
+						AllDataSetsContext.this.getMartTab().getDataSetTabSet()
+								.requestInvisibleDataSet(ds);
+					}
+				}
+			});
+			contextMenu.add(invisible);
+		}
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
@@ -116,9 +149,8 @@ public class AllDataSetsContext implements DiagramContext {
 			// Add an option to replicate this dataset.
 			final JMenuItem replicate = new JMenuItem(Resources
 					.get("replicateDataSetTitle"));
-			replicate
-					.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
-							0));
+			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
+					.charAt(0));
 			replicate.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					AllDataSetsContext.this.martTab.getDataSetTabSet()

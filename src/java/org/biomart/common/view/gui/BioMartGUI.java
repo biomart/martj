@@ -19,13 +19,19 @@
 package org.biomart.common.view.gui;
 
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
+import org.biomart.builder.view.gui.MartBuilder;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
@@ -36,8 +42,8 @@ import org.biomart.common.view.gui.dialogs.AboutDialog;
  * BioMart Java appliaction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public abstract class BioMartGUI extends JFrame {
@@ -54,6 +60,12 @@ public abstract class BioMartGUI extends JFrame {
 		// Create the window.
 		super(Resources.get("GUITitle", Resources.BIOMART_VERSION));
 
+		// Set some nice Mac stuff.
+		System.setProperty("apple.awt.showGrowBox", "true");
+		System.setProperty("com.apple.mrj.application.apple.menu.about.name",
+				Resources.get("plainGUITitle"));
+		System.setProperty("apple.laf.useScreenMenuBar", "true");
+
 		// Load our cache of settings.
 		Settings.load();
 
@@ -68,8 +80,7 @@ public abstract class BioMartGUI extends JFrame {
 			// work.
 			if (lookAndFeelClass != null)
 				// only worry if we were actually given one.
-				Log.warn(Resources.get("badLookAndFeel",
-						lookAndFeelClass), e);
+				Log.warn(Resources.get("badLookAndFeel", lookAndFeelClass), e);
 			// Use system default.
 			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
 			try {
@@ -77,8 +88,7 @@ public abstract class BioMartGUI extends JFrame {
 			} catch (final Exception e2) {
 				// Ignore, as we'll end up with the cross-platform one if there
 				// is no system one.
-				Log.warn(Resources.get("badLookAndFeel",
-						lookAndFeelClass), e2);
+				Log.warn(Resources.get("badLookAndFeel", lookAndFeelClass), e2);
 			}
 		}
 
@@ -155,5 +165,55 @@ public abstract class BioMartGUI extends JFrame {
 	 */
 	public boolean confirmExitApp() {
 		return true;
+	}
+
+	// This is the main menu bar.
+	public static class BioMartMenuBar extends JMenuBar implements
+			ActionListener {
+		private static final long serialVersionUID = 1;
+
+		private JMenuItem exit;
+
+		private MartBuilder martBuilder;
+
+		/**
+		 * Constructor calls super then sets up our menu items.
+		 * 
+		 * @param martBuilder
+		 *            the mart builder gui to which we are attached.
+		 */
+		public BioMartMenuBar(final MartBuilder martBuilder) {
+			super();
+
+			// Remember our parent.
+			this.martBuilder = martBuilder;
+
+			// Don't do this menu on Macs.			
+			if (System.getProperty("os.name").toLowerCase().indexOf("mac") < 0) {
+				// Exit MartBuilder.
+				this.exit = new JMenuItem(Resources.get("exitTitle"));
+				this.exit.setMnemonic(Resources.get("exitMnemonic").charAt(0));
+				this.exit.addActionListener(this);
+
+				// Construct the mart menu.
+				final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
+				fileMenu.setMnemonic(Resources.get("fileMenuMnemonic")
+						.charAt(0));
+				fileMenu.add(BioMartMenuBar.this.exit);
+
+				// Adds the menus to the menu bar.
+				this.add(fileMenu);
+			}
+		}
+
+		protected MartBuilder getMartBuilder() {
+			return this.martBuilder;
+		}
+
+		public void actionPerformed(final ActionEvent e) {
+			// File menu.
+			if (e.getSource() == this.exit)
+				this.getMartBuilder().requestExitApp();
+		}
 	}
 }

@@ -20,6 +20,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -29,16 +30,13 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
-import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
@@ -130,19 +128,13 @@ public class SchemaContext implements DiagramContext {
 				component.setForeground(KeyComponent.NORMAL_COLOUR);
 
 			// Add drag-and-drop to all keys here.
-			((KeyComponent)component).setDraggable(true);
-		}
-		
-		// Schema objects.
-		else if (object instanceof Schema) {			
-			((SchemaComponent) component).setRenameable(true);
-			((SchemaComponent) component).setSelectable(true);
+			((KeyComponent) component).setDraggable(true);
 		}
 	}
 
 	public void populateMultiContextMenu(final JPopupMenu contextMenu,
-			final Diagram diagram, final Class clazz) {
-		// TODO Menu for schema objects.
+			final Collection selectedItems, final Class clazz) {
+		// Nothing to do here.
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,

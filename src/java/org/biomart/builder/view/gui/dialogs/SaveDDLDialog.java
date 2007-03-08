@@ -147,10 +147,9 @@ public class SaveDDLDialog extends JDialog {
 		this.includeComments.setSelected(true);
 
 		this.outputFormat = new JComboBox();
-		this.outputFormat.addItem(Resources.get("singleFileDDL"));
 		this.outputFormat.addItem(Resources.get("filePerTableDDL"));
 		this.outputFormat.addItem(Resources.get("viewDDL"));
-		this.outputFormat.setSelectedItem(Resources.get("singleFileDDL"));
+		this.outputFormat.setSelectedItem(Resources.get("viewDDL"));
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
@@ -171,11 +170,7 @@ public class SaveDDLDialog extends JDialog {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
 					final String filename = file.getName();
-					final String extension = SaveDDLDialog.this.outputFormat
-							.getSelectedItem().equals(
-									Resources.get("singleFileDDL")) ? Resources
-							.get("ddlExtension") : Resources
-							.get("zipExtension");
+					final String extension = Resources.get("zipExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -191,24 +186,12 @@ public class SaveDDLDialog extends JDialog {
 			// Accepts only files ending in ".zip" or ".ddl".
 			public boolean accept(final File f) {
 				return f.isDirectory()
-						|| f
-								.getName()
-								.toLowerCase()
-								.endsWith(
-										SaveDDLDialog.this.outputFormat
-												.getSelectedItem()
-												.equals(
-														Resources
-																.get("singleFileDDL")) ? Resources
-												.get("ddlExtension")
-												: Resources.get("zipExtension"));
+						|| f.getName().toLowerCase().endsWith(
+								Resources.get("zipExtension"));
 			}
 
 			public String getDescription() {
-				return SaveDDLDialog.this.outputFormat.getSelectedItem()
-						.equals(Resources.get("singleFileDDL")) ? Resources
-						.get("DDLFileFilterDescription") : Resources
-						.get("ZipDDLFileFilterDescription");
+				return Resources.get("ZipDDLFileFilterDescription");
 			}
 		});
 		this.outputFileLocation = new JTextField(20);
@@ -355,15 +338,10 @@ public class SaveDDLDialog extends JDialog {
 		// Make the constructor object which will create the DDL.
 		MartConstructor constructor;
 		if (this.outputFormat.getSelectedItem().equals(
-				Resources.get("singleFileDDL")))
-			constructor = new SaveDDLMartConstructor(new File(
-					this.outputFileLocation.getText()), this.includeComments
-					.isSelected(), true);
-		else if (this.outputFormat.getSelectedItem().equals(
 				Resources.get("filePerTableDDL")))
 			constructor = new SaveDDLMartConstructor(new File(
 					this.outputFileLocation.getText()), this.includeComments
-					.isSelected(), false);
+					.isSelected());
 		else
 			constructor = new SaveDDLMartConstructor(sb, this.includeComments
 					.isSelected());
@@ -387,8 +365,10 @@ public class SaveDDLDialog extends JDialog {
 							throws Exception {
 						if (event == MartConstructorListener.CONSTRUCTION_ENDED
 								&& cr.getFailureException() == null)
-							ViewTextDialog.displayText(Resources
-									.get("mcViewDDLWindowTitle"), sb.toString());
+							ViewTextDialog
+									.displayText(Resources
+											.get("mcViewDDLWindowTitle"), sb
+											.toString());
 					}
 				});
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);

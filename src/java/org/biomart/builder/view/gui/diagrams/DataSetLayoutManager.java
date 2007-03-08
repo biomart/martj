@@ -31,11 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
+import javax.swing.SwingUtilities;
+
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
-import org.biomart.common.model.Key;
 
 /**
  * This layout manager lays out components in grouped lines.
@@ -330,34 +330,19 @@ public class DataSetLayoutManager implements LayoutManager2 {
 				// Obtain first key and work out position relative to
 				// diagram.
 				int rowNum = 0;
+				int rowBottom = ((Integer)this.rowHeights.get(rowNum)).intValue();
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
-				final Rectangle firstKeyRectangle = firstKey.getBounds();
+				Rectangle firstKeyRectangle = firstKey.getBounds();
 				int firstKeyInsetX = firstKeyRectangle.x;
-				for (Container keyParent = firstKey.getParent(); keyParent != parent; keyParent = keyParent
-						.getParent()) {
-					firstKeyRectangle.setLocation(firstKeyRectangle.x
-							+ keyParent.getX(), firstKeyRectangle.y
-							+ keyParent.getY());
-					if (keyParent.getParent()!=parent)
-					firstKeyInsetX += keyParent.getX();
-					if (this.constraints.containsKey(keyParent))
-						rowNum = ((DataSetLayoutConstraint) this.constraints.get(keyParent))
-						.getRow();
-				}
+				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey.getParent(), firstKeyRectangle, SwingUtilities.getAncestorOfClass(Diagram.class, firstKey));
+				while ((int)firstKeyRectangle.getY() >= rowBottom) { rowBottom += ((Integer)this.rowHeights.get(++rowNum)).intValue(); }
 
 				// Do the same for the second key.
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
-				final Rectangle secondKeyRectangle = secondKey.getBounds();
+				Rectangle secondKeyRectangle = secondKey.getBounds();
 				int secondKeyInsetX = secondKeyRectangle.x;
-				for (Container keyParent = secondKey.getParent(); keyParent != parent; keyParent = keyParent
-						.getParent()) {
-					secondKeyRectangle.setLocation(secondKeyRectangle.x
-							+ keyParent.getX(), secondKeyRectangle.y
-							+ keyParent.getY());
-					if (keyParent.getParent()!=parent)
-					secondKeyInsetX += keyParent.getX();
-				}
-
+				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey.getParent(), secondKeyRectangle, SwingUtilities.getAncestorOfClass(Diagram.class, secondKey));
+				
 				// Work out left/right most.
 				final Rectangle leftKeyRectangle = firstKeyRectangle.getX() <= secondKeyRectangle
 						.getX() ? firstKeyRectangle : secondKeyRectangle;
@@ -394,10 +379,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					// Main/Subclass -> Dimension
 					relRightX = (int) rightKeyRectangle.getX();
 					relLeftX = (int) leftKeyRectangle.getMaxX();
-					relBottomY = 0;
-					for (int r = 0; r <= rowNum; r++)
-						relBottomY += ((Integer) this.rowHeights.get(r))
-								.intValue();
+					relBottomY = rowBottom;
 
 					leftX = (int) leftKeyRectangle.getMaxX() + leftKeyInsetX ;
 					leftTagX = leftX + DataSetLayoutManager.RELATION_SPACING;

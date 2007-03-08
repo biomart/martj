@@ -252,7 +252,7 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskTable(final DataSet dataset, final DataSetTable table)
-			throws SQLException, DataModelException {
+			throws SQLException, DataModelException, ValidationException {
 		Log.info(Resources.get("logReqMaskTable"));
 		dataset.getDataSetModifications().setMaskedTable(table);
 		dataset.synchronise();
@@ -392,12 +392,13 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
-	 */
-	public static void maskColumn(final DataSet dataset,
-			final DataSetColumn column) throws ValidationException,
+	 */	
+	public static void maskColumns(final DataSet dataset,
+			final Collection columns) throws ValidationException,
 			SQLException, DataModelException {
 		Log.info(Resources.get("logReqMaskColumn"));
-		dataset.getDataSetModifications().setMaskedColumn(column);
+		for (final Iterator i = columns.iterator(); i.hasNext(); )
+		dataset.getDataSetModifications().setMaskedColumn((DataSetColumn)i.next());
 		dataset.synchronise();
 	}
 
@@ -523,7 +524,7 @@ public class MartBuilderUtils {
 	 */
 	public static void compoundRelation(final DataSet dataset,
 			final Relation relation, final int n) throws SQLException,
-			DataModelException {
+			DataModelException, ValidationException {
 		Log.info(Resources.get("logReqCompoundRelation"));
 		dataset.getSchemaModifications().setCompoundRelation(relation, n);
 		dataset.synchronise();
@@ -546,7 +547,7 @@ public class MartBuilderUtils {
 	 */
 	public static void compoundRelation(final DataSetTable datasetTable,
 			final Relation relation, final int n) throws SQLException,
-			DataModelException {
+			DataModelException, ValidationException {
 		Log.info(Resources.get("logReqCompoundRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setCompoundRelation(datasetTable, relation, n);
@@ -1401,10 +1402,11 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskColumn(final DataSet dataset,
-			final DataSetColumn column) throws SQLException, DataModelException {
+	public static void unmaskColumns(final DataSet dataset,
+			final Collection columns) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqUnmaskColumn"));
-		dataset.getDataSetModifications().unsetMaskedColumn(column);
+		for (final Iterator i = columns.iterator(); i.hasNext(); )
+		dataset.getDataSetModifications().unsetMaskedColumn((DataSetColumn)i.next());
 		dataset.synchronise();
 	}
 

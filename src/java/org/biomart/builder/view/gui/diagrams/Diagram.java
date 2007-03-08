@@ -40,6 +40,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -178,7 +179,7 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		this.selectedItems.add(item);
 		item.select();
 	}
-	
+
 	public void toggleItem(final BoxShapedComponent item) {
 		// (De)select this item only and clear rest of group.
 		boolean selected = this.isSelected(item);
@@ -189,10 +190,33 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		}
 	}
 
+	public void toggleGroupItems(final Collection items) {
+		// Cancel all renames first.
+		for (final Iterator i = this.selectedItems.iterator(); i.hasNext();)
+			((BoxShapedComponent) i.next()).cancelRename();
+		for (final Iterator i = items.iterator(); i.hasNext();) {
+			BoxShapedComponent item = (BoxShapedComponent) i.next();
+			// (De)select this item within existing group.
+			if (this.isSelected(item)) {
+				// Unselect it.
+				this.selectedItems.remove(item);
+				item.deselect();
+			} else {
+				// Select it.
+				if (!this.selectedItems.isEmpty()
+						&& !this.selectedItems.get(0).getClass().equals(
+								item.getClass()))
+					this.deselectAll();
+				this.selectedItems.add(item);
+				item.select();
+			}
+		}
+	}
+
 	public void toggleGroupItem(final BoxShapedComponent item) {
 		// Cancel all renames first.
-		for (final Iterator i = this.selectedItems.iterator(); i.hasNext(); )
-			((BoxShapedComponent)i.next()).cancelRename();
+		for (final Iterator i = this.selectedItems.iterator(); i.hasNext();)
+			((BoxShapedComponent) i.next()).cancelRename();
 		// (De)select this item within existing group.
 		if (this.isSelected(item)) {
 			// Unselect it.
@@ -200,29 +224,49 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 			item.deselect();
 		} else {
 			// Select it.
-			if (!(this.selectedItems.isEmpty() || this.selectedItems.get(0)
-					.getClass().equals(item.getClass()))) 
+			if (!this.selectedItems.isEmpty()
+					&& !this.selectedItems.get(0).getClass().equals(
+							item.getClass()))
 				this.deselectAll();
 			this.selectedItems.add(item);
 			item.select();
 		}
 	}
-	
+
 	public void deselectAll() {
-		for (final Iterator i = this.selectedItems.iterator(); i.hasNext(); ) {
-			BoxShapedComponent comp = (BoxShapedComponent)i.next();
-			comp.cancelRename();
-			comp.deselect();
-		}
+		for (final Iterator i = this.selectedItems.iterator(); i.hasNext();)
+			((BoxShapedComponent) i.next()).deselect();
 		this.selectedItems.clear();
 	}
 
 	public boolean isSelected(final BoxShapedComponent item) {
 		return this.selectedItems.contains(item);
 	}
-	
+
 	public Collection getSelectedItems() {
 		return this.selectedItems;
+	}
+
+	public Collection getComponentsInRegion(final Component oneCorner,
+			final Component otherCorner, final Class componentClass) {
+		final Rectangle firstCorner = SwingUtilities.convertRectangle(oneCorner
+				.getParent(), oneCorner.getBounds(), this);
+		final Rectangle secondCorner = SwingUtilities.convertRectangle(
+				otherCorner.getParent(), otherCorner.getBounds(), this);
+		final Rectangle clipRegion = firstCorner.union(secondCorner);
+		final Collection results = new HashSet();
+		for (final Iterator i = this.componentMap.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (!entry.getKey().getClass().equals(componentClass))
+				continue;
+			final Component candidate = (Component) entry.getValue();
+			final Rectangle candRect = SwingUtilities.convertRectangle(
+					candidate.getParent(), candidate.getBounds(), this);
+			if (clipRegion.contains(candRect))
+				results.add(candidate);
+		}
+		return results;
 	}
 
 	private Table askUserForTable() {
@@ -295,6 +339,8 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		contextMenu.add(print);
 
 		// Return the completed context menu.
+		if (this.diagramContext!=null)
+			this.diagramContext.populateContextMenu(contextMenu, null);
 		return contextMenu;
 	}
 
@@ -318,12 +364,12 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
 
-		if (evt.getButton()>0)			
+		if (evt.getButton() > 0)
 			this.deselectAll();
-		
+
 		// Is it a right-click?
 		if (evt.isPopupTrigger()) {
-			
+
 			// Obtain the basic context menu for this diagram.
 			final JPopupMenu contextMenu = new JPopupMenu();
 
@@ -338,7 +384,7 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		}
 
 		// Pass the event on up if we're not interested.
-		if (!eventProcessed) 
+		if (!eventProcessed)
 			super.processMouseEvent(evt);
 	}
 

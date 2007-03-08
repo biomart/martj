@@ -252,12 +252,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 						RelationComponent.RELATION_LINEWIDTH * 4));
 	}
 
-	public boolean equals(final Object obj) {
-		return obj instanceof DiagramComponent
-				&& ((DiagramComponent) obj).getObject()
-						.equals(this.getObject());
-	}
-
 	public JPopupMenu getContextMenu() {
 		final JPopupMenu contextMenu = new JPopupMenu();
 		// No additional entries for us yet.
@@ -309,10 +303,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	public Map getSubComponents() {
 		// We have no sub-components.
 		return Collections.EMPTY_MAP;
-	}
-
-	public int hashCode() {
-		return this.getObject().hashCode();
 	}
 
 	public void recalculateDiagramComponent() {

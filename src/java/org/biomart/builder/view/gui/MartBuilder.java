@@ -30,7 +30,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.event.MenuEvent;
@@ -93,14 +92,10 @@ public class MartBuilder extends BioMartGUI {
 	}
 
 	// This is the main menu bar.
-	private class MartBuilderMenuBar extends JMenuBar implements ActionListener {
+	public static class MartBuilderMenuBar extends BioMartMenuBar {
 		private static final long serialVersionUID = 1;
 
 		private JMenuItem closeMart;
-
-		private JMenuItem exit;
-
-		private MartBuilder martBuilder;
 
 		private JMenuItem newMart;
 
@@ -159,15 +154,7 @@ public class MartBuilder extends BioMartGUI {
 		 *            the mart builder gui to which we are attached.
 		 */
 		public MartBuilderMenuBar(final MartBuilder martBuilder) {
-			super();
-
-			// Remember our parent.
-			this.martBuilder = martBuilder;
-
-			// Exit MartBuilder.
-			this.exit = new JMenuItem(Resources.get("exitTitle"));
-			this.exit.setMnemonic(Resources.get("exitMnemonic").charAt(0));
-			this.exit.addActionListener(this);
+			super(martBuilder);
 
 			// New mart.
 			this.newMart = new JMenuItem(Resources.get("newMartTitle"),
@@ -323,7 +310,7 @@ public class MartBuilder extends BioMartGUI {
 			// Remove dataset.
 			this.removeDataset = new JMenuItem(Resources
 					.get("removeDataSetTitle"), new ImageIcon(Resources
-							.getResourceAsURL("cut.gif")));
+					.getResourceAsURL("cut.gif")));
 			this.removeDataset.setMnemonic(Resources.get(
 					"removeDataSetMnemonic").charAt(0));
 			this.removeDataset.addActionListener(this);
@@ -390,9 +377,9 @@ public class MartBuilder extends BioMartGUI {
 			martMenu.add(this.saveMart);
 			martMenu.add(this.saveMartAs);
 			martMenu.add(this.saveDDL);
-			martMenu.addSeparator();
-			final int firstMartRecentFileEntry = martMenu.getMenuComponentCount();
-			
+			final int firstMartRecentFileEntry = martMenu
+					.getMenuComponentCount();
+
 			// Construct the schema menu.
 			final JMenu schemaMenu = new JMenu(Resources.get("schemaMenuTitle"));
 			schemaMenu.setMnemonic(Resources.get("schemaMenuMnemonic")
@@ -462,25 +449,29 @@ public class MartBuilder extends BioMartGUI {
 					// Then, insert after the separator a numbered list
 					// of recent files, followed by another separator if
 					// the list was not empty.
-					while (martMenu.getMenuComponentCount()>firstMartRecentFileEntry)
-						martMenu.remove(martMenu.getMenuComponent(firstMartRecentFileEntry));
-					final Collection names = Settings.getHistoryNamesForClass(MartTabSet.class);
+					while (martMenu.getMenuComponentCount() > firstMartRecentFileEntry)
+						martMenu.remove(martMenu
+								.getMenuComponent(firstMartRecentFileEntry));
+					final Collection names = Settings
+							.getHistoryNamesForClass(MartTabSet.class);
 					int position = 1;
+					if (names.size() > 1)
+						martMenu.addSeparator();
 					for (final Iterator i = names.iterator(); i.hasNext(); position++) {
-						final String name = (String)i.next();
-						final File location = new File((String)Settings.getHistoryProperties(MartTabSet.class, name).get("location"));
-						final JMenuItem file = new JMenuItem(position+" "+name);
-						file.setMnemonic((""+position).charAt(0));
+						final String name = (String) i.next();
+						final File location = new File((String) Settings
+								.getHistoryProperties(MartTabSet.class, name)
+								.get("location"));
+						final JMenuItem file = new JMenuItem(position + " "
+								+ name);
+						file.setMnemonic(("" + position).charAt(0));
 						file.addActionListener(new ActionListener() {
 							public void actionPerformed(final ActionEvent evt) {
 								martBuilder.martTabSet.loadMart(location);
 							}
 						});
-						martMenu.add(file);						
+						martMenu.add(file);
 					}
-					if (names.size()>0)
-						martMenu.addSeparator();
-					martMenu.add(MartBuilderMenuBar.this.exit);
 				}
 			});
 			schemaMenu.addMenuListener(new MenuListener() {
@@ -501,8 +492,9 @@ public class MartBuilder extends BioMartGUI {
 					else
 						schema = null;
 					MartBuilderMenuBar.this.addSchema.setEnabled(hasMart);
-					MartBuilderMenuBar.this.updateAllSchemas.setEnabled(hasMart &&
-							martBuilder.martTabSet.getSelectedMartTab().getSchemaTabSet().getComponentCount()>1);
+					MartBuilderMenuBar.this.updateAllSchemas.setEnabled(hasMart
+							&& martBuilder.martTabSet.getSelectedMartTab()
+									.getSchemaTabSet().getComponentCount() > 1);
 					MartBuilderMenuBar.this.keyguessingSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.keyguessingSchema
@@ -534,10 +526,15 @@ public class MartBuilder extends BioMartGUI {
 					boolean hasMart = true;
 					if (martBuilder.martTabSet.getSelectedMartTab() == null)
 						hasMart = false;
-					MartBuilderMenuBar.this.createDatasets.setEnabled(hasMart &&
-							martBuilder.martTabSet.getSelectedMartTab().getSchemaTabSet().getComponentCount()>1);
-					MartBuilderMenuBar.this.removeAllDatasets.setEnabled(hasMart &&
-							martBuilder.martTabSet.getSelectedMartTab().getDataSetTabSet().getComponentCount()>1);
+					MartBuilderMenuBar.this.createDatasets.setEnabled(hasMart
+							&& martBuilder.martTabSet.getSelectedMartTab()
+									.getSchemaTabSet().getComponentCount() > 1);
+					MartBuilderMenuBar.this.removeAllDatasets
+							.setEnabled(hasMart
+									&& martBuilder.martTabSet
+											.getSelectedMartTab()
+											.getDataSetTabSet()
+											.getComponentCount() > 1);
 					final DataSet ds;
 					if (hasMart)
 						ds = martBuilder.martTabSet.getSelectedMartTab()
@@ -585,9 +582,11 @@ public class MartBuilder extends BioMartGUI {
 					int index = 0;
 					for (final Iterator i = DataSetOptimiserType.getTypes()
 							.values().iterator(); i.hasNext(); index++) {
-						final DataSetOptimiserType value = (DataSetOptimiserType) i.next();
-						if (ds.getDataSetOptimiserType().equals(value)) 
-						((JMenuItem)MartBuilderMenuBar.this.optimiseDatasetSubmenu.getMenuComponent(index)).setSelected(true);
+						final DataSetOptimiserType value = (DataSetOptimiserType) i
+								.next();
+						if (ds.getDataSetOptimiserType().equals(value))
+							((JMenuItem) MartBuilderMenuBar.this.optimiseDatasetSubmenu
+									.getMenuComponent(index)).setSelected(true);
 					}
 				}
 			});
@@ -600,140 +599,141 @@ public class MartBuilder extends BioMartGUI {
 		}
 
 		public void actionPerformed(final ActionEvent e) {
-			// File menu.
-			if (e.getSource() == this.exit)
-				this.martBuilder.requestExitApp();
-			else if (e.getSource() == this.newMart)
-				this.martBuilder.martTabSet.requestNewMart();
+			// Mart menu.
+			if (e.getSource() == this.newMart)
+				this.getMartBuilder().martTabSet.requestNewMart();
 			else if (e.getSource() == this.openMart)
-				this.martBuilder.martTabSet.loadMart();
+				this.getMartBuilder().martTabSet.loadMart();
 			else if (e.getSource() == this.saveMart)
-				this.martBuilder.martTabSet.saveMart();
+				this.getMartBuilder().martTabSet.saveMart();
 			else if (e.getSource() == this.saveMartAs)
-				this.martBuilder.martTabSet.saveMartAs();
+				this.getMartBuilder().martTabSet.saveMartAs();
 			else if (e.getSource() == this.closeMart)
-				this.martBuilder.martTabSet.confirmCloseMart();
+				this.getMartBuilder().martTabSet.confirmCloseMart();
 			// Mart menu.
 			else if (e.getSource() == this.saveDDL)
-				this.martBuilder.martTabSet.requestCreateDDL();
+				this.getMartBuilder().martTabSet.requestCreateDDL();
 			else if (e.getSource() == this.addSchema)
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestAddSchema();
 			else if (e.getSource() == this.updateAllSchemas)
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestSynchroniseAllSchemas();
 			else if (e.getSource() == this.createDatasets)
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestSuggestDataSets(null);
 			else if (e.getSource() == this.removeAllDatasets)
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestRemoveAllDataSets();
 			// Schema menu
 			else if (e.getSource() == this.keyguessingSchema) {
-				final Schema schema = this.martBuilder.martTabSet
+				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
 						.getSelectedSchema();
 				if (this.keyguessingSchema.isSelected())
-					this.martBuilder.martTabSet.getSelectedMartTab()
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getSchemaTabSet().requestEnableKeyGuessing(schema);
 				else
-					this.martBuilder.martTabSet.getSelectedMartTab()
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getSchemaTabSet()
 							.requestDisableKeyGuessing(schema);
 			} else if (e.getSource() == this.partitionedSchema) {
-				final Schema schema = this.martBuilder.martTabSet
+				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
 						.getSelectedSchema();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet()
 						.requestModifySchemaPartitions(schema);
 			} else if (e.getSource() == this.updateSchema) {
-				final Schema schema = this.martBuilder.martTabSet
+				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
 						.getSelectedSchema();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestModifySchema(schema);
 			} else if (e.getSource() == this.renameSchema) {
-				final Schema schema = this.martBuilder.martTabSet
+				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
 						.getSelectedSchema();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestRenameSchema(schema);
 			} else if (e.getSource() == this.replicateSchema) {
-				final Schema schema = this.martBuilder.martTabSet
+				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
 						.getSelectedSchema();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestReplicateSchema(schema);
 			} else if (e.getSource() == this.removeSchema) {
-				final Schema schema = this.martBuilder.martTabSet
+				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
 						.getSelectedSchema();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestRemoveSchema(schema);
 			}
 			// Dataset menu.
 			else if (e.getSource() == this.invisibleDataset) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
 				if (this.invisibleDataset.isSelected())
-					this.martBuilder.martTabSet.getSelectedMartTab()
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestInvisibleDataSet(ds);
 				else
-					this.martBuilder.martTabSet.getSelectedMartTab()
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestVisibleDataSet(ds);
 			} else if (e.getSource() == this.explainDataset) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestExplainDataSet(ds);
 			} else if (e.getSource() == this.saveDatasetDDL) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestCreateDDL(ds);
 			} else if (e.getSource() == this.renameDataset) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestRenameDataSet(ds);
 			} else if (e.getSource() == this.replicateDataset) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestReplicateDataSet(ds);
 			} else if (e.getSource() == this.removeDataset) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestRemoveDataSet(ds);
 			} else if (e.getSource() == this.extendDataset) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				this.martBuilder.martTabSet.getSelectedMartTab()
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestSuggestInvisibleDatasets(ds,
 								ds.getMainTable());
 			} else if (e.getSource() == this.indexOptimiser) {
-				final DataSet ds = this.martBuilder.martTabSet
+				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
 				if (this.indexOptimiser.isSelected())
-					this.martBuilder.martTabSet.getSelectedMartTab()
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestIndexOptimiser(ds);
 				else
-					this.martBuilder.martTabSet.getSelectedMartTab()
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestNoIndexOptimiser(ds);
 			}
 			// Help menu
 			else if (e.getSource() == this.aboutMartBuilder)
-				this.martBuilder.requestShowAbout();
+				this.getMartBuilder().requestShowAbout();
+			// Others
+			else
+				super.actionPerformed(e);
 		}
 	}
 }
