@@ -18,10 +18,8 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
-import java.awt.Color;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
@@ -46,11 +44,6 @@ public class AllSchemasDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * The background colour to use for the diagram.
-	 */
-	public static final Color BACKGROUND_COLOUR = Color.WHITE;
-
-	/**
 	 * The constructor creates the diagram and associates it with a given mart
 	 * tab.
 	 * 
@@ -65,17 +58,9 @@ public class AllSchemasDiagram extends Diagram {
 		this.recalculateDiagram();
 	}
 
-	protected void doUpdateAppearance() {
-		// Set the background.
-		this.setBackground(AllSchemasDiagram.BACKGROUND_COLOUR);
-	}
-
 	public void doRecalculateDiagram() {
 		// Remove all existing components.
 		this.removeAll();
-
-		// Make a set to hold all external relations on this diagram.
-		final Set relations = new HashSet();
 
 		// Add a SchemaComponent for each schema.
 		for (final Iterator i = this.getMartTab().getMart().getSchemas()
@@ -84,24 +69,11 @@ public class AllSchemasDiagram extends Diagram {
 			final SchemaComponent schemaComponent = new SchemaComponent(schema,
 					this);
 			// Count and remember relations.
-			final Set schRels = new HashSet();
-			for (final Iterator j = schema.getRelations().iterator(); j.hasNext();) {
-				final Relation relation = (Relation) j.next();
-				if (!relation.isExternal())
-					continue;
-				schRels.add(relation);
-			}
-			this.add(schemaComponent, new SchemaLayoutConstraint(schRels.size()));
-			// Remember the external relations.
-			relations.addAll(schRels);
-		}
-
-		// Add a RelationComponent for each external relation.
-		for (final Iterator i = relations.iterator(); i.hasNext();) {
-			final Relation relation = (Relation) i.next();
-			final RelationComponent relationComponent = new RelationComponent(
-					relation, this);
-			this.add(relationComponent);
+			final Collection schRels = schema.getExternalRelations();
+			for (final Iterator j = schRels.iterator(); j.hasNext();) 
+				this.add(new RelationComponent(
+						(Relation) j.next(), this), -1);
+			this.add(schemaComponent, new SchemaLayoutConstraint(schRels.size()), 0);
 		}
 
 		// Resize the diagram to fit the components.

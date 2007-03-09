@@ -789,8 +789,7 @@ public class MartTabSet extends JTabbedPane {
 			this.add(this.displayArea, BorderLayout.CENTER);
 
 			// Select the default button (which shows the schema card).
-			// We must physically click on it to make the card show.
-			this.schemaButton.doClick();
+			this.selectSchemaEditor();
 		}
 
 		/**

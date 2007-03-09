@@ -40,6 +40,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
@@ -79,9 +80,9 @@ public class DataSetContext extends SchemaContext {
 		this.dataset = dataset;
 	}
 	
-	private void changeHideMasked(final boolean masked) {
+	private void changeHideMasked(final boolean masked, final Diagram diagram) {
 		this.hideMasked = masked;
-		this.getMartTab().getDataSetTabSet().validate();
+		diagram.repaintDiagram();
 	}
 
 	/**
@@ -458,7 +459,7 @@ public class DataSetContext extends SchemaContext {
 			final Object object) {
 		
 		// Is it the diagram background?
-		if (object==null) {
+		if (object instanceof Diagram) {
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
@@ -471,7 +472,7 @@ public class DataSetContext extends SchemaContext {
 					.charAt(0));
 			showHide.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.changeHideMasked(showHide.isSelected());
+					DataSetContext.this.changeHideMasked(showHide.isSelected(), (Diagram)object);
 				}
 			});
 			contextMenu.add(showHide);

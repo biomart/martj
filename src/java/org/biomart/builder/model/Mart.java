@@ -19,13 +19,11 @@
 package org.biomart.builder.model;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -334,20 +332,12 @@ public class Mart {
 	 * @param schema
 	 *            the schema to remove.
 	 */
-	public void removeSchema(final Schema schema) {
+	public void removeSchema(final Schema schema) throws SQLException, DataModelException {
 		Log.debug("Removing schema " + schema);
-		final List datasets = new ArrayList(this.getDataSets());
-		for (final Iterator i = datasets.iterator(); i.hasNext();) {
-			final DataSet ds = (DataSet) i.next();
-			if (ds.getCentralTable().getSchema().equals(schema))
-				this.removeDataSet(ds);
-		}
-		for (final Iterator i = schema.getRelations().iterator(); i.hasNext();) {
-			final Relation r = (Relation) i.next();
-			if (r.isExternal())
-				r.destroy();
-		}
+		for (final Iterator i = schema.getExternalRelations().iterator(); i.hasNext();) 
+				((Relation) i.next()).destroy();
 		this.schemas.remove(schema.getName());
+		this.synchroniseDataSets(schema);
 	}
 
 	/**
@@ -601,7 +591,7 @@ public class Mart {
 	 * dropped. This is all simply a matter of delegating calls and the routine
 	 * does no real work itself.
 	 */
-	public void synchroniseDataSets() {
+	public void synchroniseDataSets(final Schema affected, final Schema otherAffected) throws SQLException, DataModelException {
 		Log.debug("Synchronising all datasets");
 		for (final Iterator i = this.datasets.values().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
@@ -612,12 +602,18 @@ public class Mart {
 
 			// If not, synchronise it.
 			else
-				try {
+				if ((affected!=null && ds.usesSchema(affected))
+						|| 
+						(otherAffected!=null && ds.usesSchema(otherAffected))
+						|| (affected==null && otherAffected==null))
 					ds.synchronise();
-				} catch (final Throwable t) {
-					throw new BioMartError(t);
-				}
 		}
+	}
+	public void synchroniseDataSets(final Schema affected) throws SQLException, DataModelException {
+		this.synchroniseDataSets(affected, null);
+	}
+	public void synchroniseDataSets() throws SQLException, DataModelException {
+		this.synchroniseDataSets(null, null);
 	}
 
 	/**
@@ -633,10 +629,8 @@ public class Mart {
 	public void synchroniseSchemas() throws SQLException, DataModelException {
 		Log.debug("Synchronising all schemas");
 		// Schemas first
-		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();) {
-			final Schema s = (Schema) i.next();
-			s.synchronise();
-		}
+		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();) 
+			((Schema) i.next()).synchronise();
 		// Then, synchronise datasets.
 		this.synchroniseDataSets();
 	}

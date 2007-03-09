@@ -86,6 +86,8 @@ public class DataSet extends GenericSchema {
 	private final Mart mart;
 
 	private final Collection includedRelations;
+	
+	private final Collection includedSchemas;
 
 	private final SchemaModificationSet schemaMods;
 
@@ -124,6 +126,7 @@ public class DataSet extends GenericSchema {
 		this.schemaMods = new SchemaModificationSet(this);
 		this.dsMods = new DataSetModificationSet(this);
 		this.includedRelations = new HashSet();
+		this.includedSchemas = new HashSet();
 	}
 
 	/**
@@ -266,17 +269,16 @@ public class DataSet extends GenericSchema {
 
 		// How many times are allowed to iterate over each relation?
 		final Map relationCount = new HashMap();
-		final Set allRelations = new HashSet();
 		for (final Iterator i = this.getMart().getSchemas().iterator(); i
-				.hasNext();)
-			allRelations.addAll(((Schema) i.next()).getRelations());
-		for (final Iterator i = allRelations.iterator(); i.hasNext();) {
-			final Relation rel = (Relation) i.next();
-			final int compounded = this.schemaMods.isCompoundRelation(dsTable,
-					rel) ? this.schemaMods.getCompoundRelation(dsTable, rel)
-					: 1;
-			relationCount.put(rel, new Integer(compounded));
-		}
+				.hasNext();) 
+			for (final Iterator j = ((Schema) i.next()).getRelations()
+					.iterator(); j.hasNext();) {
+				final Relation rel = (Relation) j.next();
+				final int compounded = this.schemaMods.isCompoundRelation(
+						dsTable, rel) ? this.schemaMods.getCompoundRelation(
+						dsTable, rel) : 1;
+				relationCount.put(rel, new Integer(compounded));
+			}
 
 		// Process the table. This operation will populate the initial
 		// values in the normal, subclass and dimension queues. We only
@@ -422,11 +424,11 @@ public class DataSet extends GenericSchema {
 			final int relationIteration) {
 		Log.debug("Processing table " + mergeTable);
 
+		// Remember the schema.
+		this.includedSchemas.add(mergeTable.getSchema());
+		
 		// Don't ignore any keys by default.
-		Key ignoreKey = null;
-
-		// By default we didn't land on any key to get here.
-		Key mergeKey = null;
+		final Set ignoreCols = new HashSet();
 
 		final boolean isConcat = this.schemaMods.isConcatRelation(dsTable,
 				sourceRelation, relationIteration);
@@ -437,10 +439,9 @@ public class DataSet extends GenericSchema {
 		if (sourceRelation != null) {
 			// Work out what key to ignore by working out at which end
 			// of the relation we are.
-			ignoreKey = sourceRelation.getFirstKey().getTable().equals(
-					mergeTable) ? sourceRelation.getFirstKey() : sourceRelation
-					.getSecondKey();
-			mergeKey = sourceRelation.getOtherKey(ignoreKey);
+			final Key ignoreKey = sourceRelation.getKeyForTable(mergeTable);
+					ignoreCols.addAll(ignoreKey.getColumns());
+			final Key mergeKey = sourceRelation.getOtherKey(ignoreKey);
 
 			// Add the relation and key to the list that the table depends on.
 			// This list is what defines the path required to construct
@@ -471,10 +472,10 @@ public class DataSet extends GenericSchema {
 		if (includeMergeTablePK && sourceRelation != null)
 			// Only add further PK columns if the relation did NOT
 			// involve our PK and was NOT 1:1.
-			includeMergeTablePK = !sourceRelation.isOneToOne()
+			includeMergeTablePK = dsTablePKCols.isEmpty() 
+					&& !sourceRelation.isOneToOne()
 					&& !sourceRelation.getFirstKey().equals(mergeTablePK)
-					&& !sourceRelation.getSecondKey().equals(mergeTablePK)
-					&& dsTablePKCols.isEmpty();
+					&& !sourceRelation.getSecondKey().equals(mergeTablePK);
 
 		// Add all columns from merge table to dataset table, except those in
 		// the ignore key.
@@ -493,7 +494,7 @@ public class DataSet extends GenericSchema {
 				final Column c = (Column) i.next();
 
 				// Ignore those in the key used to get here.
-				if (ignoreKey != null && ignoreKey.getColumns().contains(c))
+				if (ignoreCols.contains(c))
 					continue;
 
 				// Create a wrapped column for this column.
@@ -511,10 +512,7 @@ public class DataSet extends GenericSchema {
 				// If the column is in any key on this table then it is a
 				// dependency for possible future linking, which must be
 				// flagged.
-				for (final Iterator j = mergeTable.getKeys().iterator(); j
-						.hasNext();)
-					if (((Key) j.next()).getColumns().contains(c))
-						wc.setKeyDependency(true);
+				wc.setKeyDependency(c.isInAnyKey());
 
 				// If the column was in the merge table's PK, and we are
 				// expecting to add the PK to the generated table's PK, then
@@ -532,8 +530,7 @@ public class DataSet extends GenericSchema {
 				final Relation r = (Relation) i.next();
 
 				// Don't repeat relations or go back up relation just followed.
-				if (((Integer) relationCount.get(r)).intValue() <= 0
-						|| r.equals(sourceRelation))
+				if (r.equals(sourceRelation) || ((Integer) relationCount.get(r)).intValue() <= 0)
 					continue;
 
 				// Don't follow masked relations.
@@ -651,9 +648,8 @@ public class DataSet extends GenericSchema {
 				if (followRelation || forceFollowRelation) {
 					this.includedRelations.add(r);
 					dsTable.includedRelations.add(r);
-					final Key targetKey = r.getFirstKey().getTable().equals(
-							mergeTable) ? r.getSecondKey() : r.getFirstKey();
-					final Key sourceKey = r.getOtherKey(targetKey);
+					final Key sourceKey = r.getKeyForTable(mergeTable);
+					final Key targetKey = r.getOtherKey(sourceKey);
 					final List newSourceDSCols = new ArrayList();
 					for (final Iterator j = sourceKey.getColumns().iterator(); j
 							.hasNext();) {
@@ -699,6 +695,28 @@ public class DataSet extends GenericSchema {
 	 */
 	public Table getCentralTable() {
 		return this.centralTable;
+	}
+
+	public Table getRealCentralTable() {
+		Log.debug("Finding actual central table");
+		// Identify main table.
+		final Table realCentralTable = this.getCentralTable();
+		Table centralTable = realCentralTable;
+		// If central table has subclass relations and is at the M key
+		// end, then follow them to the real central table.
+		boolean found;
+		do {
+			found = false;
+			final Set rels = new HashSet(centralTable.getRelations());
+			rels.retainAll(this.schemaMods.getSubclassedRelations());
+			if (rels.size() > 1) {
+				centralTable = ((Relation) rels.iterator().next()).getOneKey()
+						.getTable();
+				found = true;
+			}
+		} while (found && centralTable != realCentralTable);
+		Log.debug("Actual central table is " + centralTable);
+		return centralTable;
 	}
 
 	/**
@@ -836,35 +854,18 @@ public class DataSet extends GenericSchema {
 		// Clear all our tables out as they will all be rebuilt.
 		this.removeAllTables();
 		this.includedRelations.clear();
-
-		Log.debug("Finding actual central table");
-		// Identify main table.
-		final Table realCentralTable = this.getCentralTable();
-		Table centralTable = realCentralTable;
-		// If central table has subclass relations and is at the M key
-		// end, then follow them to the real central table.
-		boolean found;
-		do {
-			found = false;
-			for (final Iterator i = centralTable.getRelations().iterator(); i
-					.hasNext()
-					&& !found;) {
-				final Relation r = (Relation) i.next();
-				if (this.schemaMods.isSubclassedRelation(r)
-						&& r.getManyKey().getTable().equals(centralTable)) {
-					centralTable = r.getOneKey().getTable();
-					found = true;
-				}
-			}
-		} while (found && centralTable != realCentralTable);
-		Log.debug("Actual central table is " + centralTable);
+		this.includedSchemas.clear();
 
 		// Generate the main table. It will recursively generate all the others.
-		this.generateDataSetTable(DataSetTableType.MAIN, null, centralTable,
-				null, null, new HashMap(), 0);
+		this.generateDataSetTable(DataSetTableType.MAIN, null, this
+				.getRealCentralTable(), null, null, new HashMap(), 0);
 
 		// Update the modification sets.
 		this.dsMods.synchronise();
+	}
+	
+	public boolean usesSchema(final Schema schema) {
+		return (this.includedSchemas.isEmpty() || this.includedSchemas.contains(schema));
 	}
 
 	/**

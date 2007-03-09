@@ -40,8 +40,8 @@ import org.biomart.common.resources.Resources;
  * Swing Tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ComponentPrinter implements Printable {
@@ -75,8 +75,7 @@ public class ComponentPrinter implements Printable {
 					} catch (final PrinterException pe) {
 						StackTrace.showStackTrace(pe);
 					} finally {
-						Log
-								.info(Resources.get("donePrintingImage"));
+						Log.info(Resources.get("donePrintingImage"));
 					}
 				}
 			});
@@ -85,51 +84,37 @@ public class ComponentPrinter implements Printable {
 	public int print(final Graphics g, final PageFormat pageFormat,
 			final int pageIndex) {
 		Log.debug("Printing page " + pageIndex);
-		// Work out the printable area.
-		final Rectangle2D printableArea = new Rectangle2D.Double(pageFormat
-				.getImageableX(), pageFormat.getImageableY(), pageFormat
-				.getImageableWidth(), pageFormat.getImageableHeight());
 		// Simple scale to reduce component size.
-		final double xscale = 0.5;
-		final double yscale = 0.5;
+		final double scale = 0.5;
 		// Work out pages required for the component we are drawing.
-		final int pagesAcross = (int) Math.ceil(this.component.getWidth()
-				* xscale / printableArea.getWidth());
-		final int pagesDown = (int) Math.ceil(this.component.getHeight()
-				* yscale / printableArea.getHeight());
+		final int pagesAcross = (int) Math.ceil((this.component.getWidth() * scale)
+				/ pageFormat.getImageableWidth());
+		final int pagesDown = (int) Math.ceil((this.component.getHeight() * scale)
+				/ pageFormat.getImageableHeight());
 		final int numPages = pagesAcross * pagesDown;
 		// If we are beyond the last page, we are done.
 		if (pageIndex >= numPages) {
 			Log.debug("No such page - last page already printed.");
 			return Printable.NO_SUCH_PAGE;
-		} else {
-			// Print the components.
-			final Graphics2D g2d = (Graphics2D) g;
-			// Translate our output to the printable area.
-			g2d.translate(printableArea.getX(), printableArea.getY());
-			// What page are we being asked to print?
-			int pageXNum = pageIndex;
-			while (pageXNum >= pagesAcross)
-				pageXNum -= pagesAcross;
-			int pageYNum = pageIndex - pageXNum;
-			while (pageYNum >= pagesDown)
-				pageYNum -= pagesDown;
-			// Translate our output to focus on the required page.
-			g2d.translate(-printableArea.getWidth() * pageXNum * xscale,
-					-printableArea.getHeight() * pageYNum * yscale);
-			// Scale our output down a bit as otherwise the objects are
-			// huge on paper.
-			g2d.scale(xscale, yscale);
-			// Do the printing.
-			final RepaintManager repaintManager = RepaintManager
-					.currentManager(this.component);
-			final boolean doubleBufferingEnabled = repaintManager
-					.isDoubleBufferingEnabled();
-			repaintManager.setDoubleBufferingEnabled(false);
-			this.component.printAll(g2d);
-			repaintManager.setDoubleBufferingEnabled(doubleBufferingEnabled);
-			Log.debug("Page printed");
-			return Printable.PAGE_EXISTS;
 		}
+
+		// Print the components.
+		final Graphics2D g2d = (Graphics2D) g;
+		// Translate our output to the printable area.
+		g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+		// What page are we being asked to print?
+		int pageXNum = pageIndex % pagesAcross;
+		int pageYNum = pageIndex / pagesAcross;
+		// Translate our output to focus on the required page.	
+		g2d.translate(pageFormat.getImageableWidth() * -pageXNum,
+				pageFormat.getImageableHeight() * -pageYNum);
+		g2d.setClip((int)pageFormat.getImageableWidth() * pageXNum, (int)pageFormat.getImageableHeight() * pageYNum, (int)pageFormat.getImageableWidth(), (int)pageFormat.getImageableHeight());
+		// Scale our output down a bit as otherwise the objects are
+		// huge on paper.
+		g2d.scale(scale, scale);
+		// Do the printing.
+		this.component.print(g2d);
+		Log.debug("Page printed");
+		return Printable.PAGE_EXISTS;
 	}
 }

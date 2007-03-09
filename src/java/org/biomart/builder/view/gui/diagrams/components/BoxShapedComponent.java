@@ -132,11 +132,11 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	private Object object;
 
-	private RenderingHints renderHints;
-
 	private Object state;
 
 	private Stroke stroke;
+
+	private RenderingHints renderHints;
 
 	// OK to use map, as the components are recreated, not changed.
 	private final Map subComponents = new HashMap();
@@ -168,9 +168,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		this.renderHints.put(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
-
-		// Repaint ourselves.
-		this.updateAppearance();
 	}
 
 	/**
@@ -194,6 +191,12 @@ public abstract class BoxShapedComponent extends JPanel implements
 		// Override the stroke so that we get dotted outlines when appropriate.
 		g2d.setStroke(this.stroke);
 		super.paintBorder(g2d);
+	}
+
+	protected void paintComponent(final Graphics g) {
+		final Graphics2D g2d = (Graphics2D) g;
+		g2d.setRenderingHints(this.renderHints);
+		super.paintComponent(g);
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -293,12 +296,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	public Map getSubComponents() {
 		return this.subComponents;
-	}
-
-	public void paintComponent(final Graphics g) {
-		final Graphics2D g2d = (Graphics2D) g;
-		g2d.setRenderingHints(this.renderHints);
-		super.paintComponent(g2d);
 	}
 
 	public abstract void recalculateDiagramComponent();

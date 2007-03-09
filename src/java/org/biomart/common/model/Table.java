@@ -53,6 +53,11 @@ import org.biomart.common.resources.Resources;
  * @since 0.1
  */
 public interface Table extends Comparable {
+	
+	public void addRelation(final Relation relation);
+
+	public void removeRelation(final Relation relation);
+	
 	/**
 	 * Attempts to add a column to this table.
 	 * 
@@ -215,6 +220,12 @@ public interface Table extends Comparable {
 		private PrimaryKey primaryKey;
 
 		private final Schema schema;
+		
+		private final Set relations = new HashSet();
+		
+		private final Set internalRelations = new HashSet();
+		
+		private final Set externalRelations = new HashSet();
 
 		/**
 		 * The constructor sets up an empty table representation with the given
@@ -236,6 +247,24 @@ public interface Table extends Comparable {
 				;
 			Log.debug("Unique name is " + name);
 			this.name = name;
+		}
+		
+		public void addRelation(final Relation relation) {
+			this.relations.add(relation);
+			if (relation.isExternal())
+				this.externalRelations.add(relation);
+			else
+				this.internalRelations.add(relation);
+			this.schema.addRelation(relation);
+		}
+
+		public void removeRelation(final Relation relation) {
+			this.relations.remove(relation);
+			if (relation.isExternal())
+				this.externalRelations.remove(relation);
+			else
+				this.internalRelations.remove(relation);
+			this.schema.removeRelation(relation);
 		}
 
 		public void addColumn(final Column column) {
@@ -277,6 +306,8 @@ public interface Table extends Comparable {
 
 		public void destroy() {
 			Log.debug("Dropping table " + this.getName());
+			for (final Iterator i = this.relations.iterator(); i.hasNext(); ) 
+				this.schema.removeRelation((Relation)i.next());
 			// Remove each column we have. This will recursively cause
 			// keys etc. to be removed.
 			// Must use a copy else we'll get concurrent modification problems.
@@ -307,41 +338,11 @@ public interface Table extends Comparable {
 		}
 
 		public Collection getExternalRelations() {
-			final Set relations = new HashSet(); // enforce uniqueness
-
-			for (final Iterator i = this.getKeys().iterator(); i
-					.hasNext();) {
-				final Key k = (Key) i.next();
-				for (final Iterator j = k.getRelations().iterator(); j
-						.hasNext();) {
-					// Add all where the PK is the same schema as us.
-					final Relation relation = (Relation) j.next();
-					if (relation.isExternal())
-						relations.add(relation);
-				}
-			}
-
-			// Return the complete set.
-			return relations;
+			return this.externalRelations;
 		}
 
 		public Collection getInternalRelations() {
-			final Set relations = new HashSet(); // enforce uniqueness
-
-			for (final Iterator i = this.getKeys().iterator(); i
-					.hasNext();) {
-				final Key k = (Key) i.next();
-				for (final Iterator j = k.getRelations().iterator(); j
-						.hasNext();) {
-					// Add all where the PK is the same schema as us.
-					final Relation relation = (Relation) j.next();
-					if (!relation.isExternal())
-						relations.add(relation);
-				}
-			}
-
-			// Return the complete set.
-			return relations;
+			return this.internalRelations;
 		}
 
 		public Collection getKeys() {
@@ -350,7 +351,7 @@ public interface Table extends Comparable {
 				allKeys.add(this.primaryKey);
 			return allKeys;
 		}
-
+		
 		public String getName() {
 			return this.name;
 		}
@@ -360,12 +361,7 @@ public interface Table extends Comparable {
 		}
 
 		public Collection getRelations() {
-			final Set allRels = new HashSet(); // enforce uniqueness
-			for (final Iterator i = this.getKeys().iterator(); i.hasNext();) {
-				final Key k = (Key) i.next();
-				allRels.addAll(k.getRelations());
-			}
-			return allRels;
+			return this.relations;
 		}
 
 		public Schema getSchema() {

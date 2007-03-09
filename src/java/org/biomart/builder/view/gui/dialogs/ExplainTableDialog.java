@@ -53,6 +53,7 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
 import org.biomart.builder.view.gui.diagrams.contexts.TransformationContext;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
@@ -337,18 +338,20 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.transformation.repaint(this.transformation.getVisibleRect());
 	}
 
-	public void recalculateDialog() {
+	public void recalculateDialog(final Schema changedSchema) {
 		if (this.schemaTabSet != null) {
-			this.schemaTabSet.recalculateAllSchemaDiagrams();
+			 if (changedSchema!=null)
+			this.schemaTabSet.recalculateSchemaDiagram(changedSchema);
 			this.schemaTabSet.recalculateOverviewDiagram();
 		}
 		if (this.transformation != null)
 			this.recalculateTransformation();
 	}
 
-	public void repaintDialog() {
+	public void repaintDialog(final Schema changedSchema) {
 		if (this.schemaTabSet != null) {
-			this.schemaTabSet.repaintAllSchemaDiagrams();
+			 if (changedSchema!=null)
+				 this.schemaTabSet.repaintSchemaDiagram(changedSchema);
 			this.schemaTabSet.repaintOverviewDiagram();
 		}
 		if (this.transformation != null)

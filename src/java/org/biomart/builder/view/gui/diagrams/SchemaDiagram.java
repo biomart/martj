@@ -18,12 +18,9 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
-import java.awt.Color;
 import java.awt.LayoutManager;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
@@ -46,11 +43,6 @@ import org.biomart.common.model.Table;
  */
 public class SchemaDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
-
-	/**
-	 * The background colour to use for this diagram.
-	 */
-	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
 	private Schema schema;
 
@@ -92,36 +84,19 @@ public class SchemaDiagram extends Diagram {
 		this(new SchemaLayoutManager(), martTab, schema);
 	}
 
-	protected void doUpdateAppearance() {
-		// Set the background.
-		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
-	}
-
 	public void doRecalculateDiagram() {
 		// First of all, remove all our existing components.
 		this.removeAll();
-
-		// Relations to add later.
-		final Set relations = new HashSet();
 
 		// Add a TableComponent for each table in the schema.
 		for (final Iterator i = this.getSchema().getTables().iterator(); i
 				.hasNext();) {
 			final Table t = (Table) i.next();
 			final Collection tRels = t.getInternalRelations();
-			this.add(new TableComponent(t, this),
-					new SchemaLayoutConstraint(tRels.size()));
-			relations.addAll(tRels);
-		}
-
-		// Add a RelationComponent for each relation. We only work with
-		// internal relations because we can't correctly display external ones
-		// as they have ends in other schemas.
-		for (final Iterator i = relations.iterator(); i.hasNext();) {
-			final Relation relation = (Relation) i.next();
-			final RelationComponent relationComponent = new RelationComponent(
-					relation, this);
-			this.add(relationComponent);
+			this.add(new TableComponent(t, this), new SchemaLayoutConstraint(
+					tRels.size()), 0);
+			for (final Iterator j = tRels.iterator(); j.hasNext();)
+				this.add(new RelationComponent((Relation) j.next(), this), -1);
 		}
 
 		// Resize the diagram to fit our new components.

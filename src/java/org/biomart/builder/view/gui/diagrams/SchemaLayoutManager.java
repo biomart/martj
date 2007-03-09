@@ -85,23 +85,23 @@ public class SchemaLayoutManager implements LayoutManager2 {
 		this.tableCount = 0;
 	}
 
-	public float getLayoutAlignmentX(Container target) {
+	public float getLayoutAlignmentX(final Container target) {
 		return 0.5f;
 	}
 
-	public float getLayoutAlignmentY(Container target) {
+	public float getLayoutAlignmentY(final Container target) {
 		return 0.5f;
 	}
 
-	public void invalidateLayout(Container target) {
+	public void invalidateLayout(final Container target) {
 		this.sizeKnown = false;
 	}
 
-	public void addLayoutComponent(String name, Component comp) {
+	public void addLayoutComponent(final String name, final Component comp) {
 		this.addLayoutComponent(comp, null);
 	}
 
-	public Dimension maximumLayoutSize(Container target) {
+	public Dimension maximumLayoutSize(final Container target) {
 		return this.minimumLayoutSize(target);
 	}
 
@@ -139,23 +139,23 @@ public class SchemaLayoutManager implements LayoutManager2 {
 			this.prefSizes.clear();
 
 			for (int rowNum = 0; rowNum < this.rows.size(); rowNum++) {
-				List row = (List) this.rows.get(rowNum);
+				final List row = (List) this.rows.get(rowNum);
 
 				int rowHeight = 0;
 				int rowWidth = 0;
 				int rowSpacing = 0;
 
 				for (final Iterator i = row.iterator(); i.hasNext();) {
-					Component comp = (Component) i.next();
-					Dimension prefSize = comp.getPreferredSize();
+					final Component comp = (Component) i.next();
+					final Dimension prefSize = comp.getPreferredSize();
 					this.prefSizes.put(comp, prefSize);
-					int compSpacing = ((SchemaLayoutConstraint) this.constraints
+					final int compSpacing = ((SchemaLayoutConstraint) this.constraints
 							.get(comp)).getRelCount()
 							* SchemaLayoutManager.RELATION_SPACING;
-					rowHeight = (int) Math.max(rowHeight, prefSize.getHeight()
-							+ (compSpacing * 2));
-					rowWidth += prefSize.getWidth() + (compSpacing * 2);
-					rowSpacing = (int) Math.max(rowSpacing, compSpacing);
+					rowHeight = Math.max(rowHeight, prefSize.height
+							+ compSpacing * 2);
+					rowWidth += prefSize.width + compSpacing * 2;
+					rowSpacing = Math.max(rowSpacing, compSpacing);
 				}
 
 				this.rowSpacings.set(rowNum, new Integer(rowSpacing));
@@ -174,12 +174,13 @@ public class SchemaLayoutManager implements LayoutManager2 {
 		}
 	}
 
-	public void addLayoutComponent(Component comp, Object constraints) {
+	public void addLayoutComponent(final Component comp,
+			final Object constraints) {
 		synchronized (comp.getTreeLock()) {
-			if (comp instanceof RelationComponent) {
+			if (comp instanceof RelationComponent)
 				this.relations.add(comp);
-			} else if (comp instanceof DiagramComponent && constraints != null
-					&& (constraints instanceof SchemaLayoutConstraint)) {
+			else if (comp instanceof DiagramComponent && constraints != null
+					&& constraints instanceof SchemaLayoutConstraint) {
 
 				this.constraints.put(comp, constraints);
 				final Dimension prefSize = comp.getPreferredSize();
@@ -206,32 +207,32 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				final int compSpacing = SchemaLayoutManager.RELATION_SPACING
 						* ((SchemaLayoutConstraint) constraints).getRelCount();
 
-				final int oldRowWidth = ((Integer) rowWidths.get(rowNum))
+				final int oldRowWidth = ((Integer) this.rowWidths.get(rowNum))
 						.intValue();
 				int newRowWidth = oldRowWidth;
-				newRowWidth += prefSize.getWidth()
-						+ (SchemaLayoutManager.TABLE_PADDING * 2)
-						+ (compSpacing * 2);
-				rowWidths.set(rowNum, new Integer(newRowWidth));
+				newRowWidth += prefSize.width
+						+ SchemaLayoutManager.TABLE_PADDING * 2 + compSpacing
+						* 2;
+				this.rowWidths.set(rowNum, new Integer(newRowWidth));
 
-				final int oldRowHeight = ((Integer) rowHeights.get(rowNum))
+				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
 						.intValue();
-				int newRowHeight = (int) (Math.max(oldRowHeight, prefSize
-						.getHeight()
-						+ (SchemaLayoutManager.TABLE_PADDING * 2)) + (compSpacing * 2));
-				rowHeights.set(rowNum, new Integer(newRowHeight));
+				final int newRowHeight = (Math
+						.max(oldRowHeight, prefSize.height
+								+ SchemaLayoutManager.TABLE_PADDING * 2) + compSpacing * 2);
+				this.rowHeights.set(rowNum, new Integer(newRowHeight));
 
-				rowSpacings.set(rowNum, new Integer((int) Math.max(
-						((Integer) rowSpacings.get(rowNum)).intValue(),
+				this.rowSpacings.set(rowNum, new Integer(Math.max(
+						((Integer) this.rowSpacings.get(rowNum)).intValue(),
 						compSpacing)));
 
-				this.size.height += (newRowHeight - oldRowHeight);
+				this.size.height += newRowHeight - oldRowHeight;
 				this.size.width = Math.max(this.size.width, newRowWidth);
 			}
 		}
 	}
 
-	public void removeLayoutComponent(Component comp) {
+	public void removeLayoutComponent(final Component comp) {
 		synchronized (comp.getTreeLock()) {
 			if (comp instanceof RelationComponent)
 				this.relations.remove(comp);
@@ -242,37 +243,33 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				this.prefSizes.remove(comp);
 
 				final int compSpacing = SchemaLayoutManager.RELATION_SPACING
-						* ((SchemaLayoutConstraint) constraints).getRelCount();
+						* (constraints).getRelCount();
 
 				this.tableCount--;
 				final int rowNum = constraints.getRow();
 
 				((List) this.rows.get(rowNum)).remove(comp);
 
-				final int oldRowWidth = ((Integer) rowWidths.get(rowNum))
+				final int oldRowWidth = ((Integer) this.rowWidths.get(rowNum))
 						.intValue();
-				final int oldRowHeight = ((Integer) rowHeights.get(rowNum))
+				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
 						.intValue();
 				int newRowWidth = oldRowWidth;
-				newRowWidth -= prefSize.getWidth()
-						+ (SchemaLayoutManager.TABLE_PADDING * 2)
-						+ (compSpacing * 2);
+				newRowWidth -= prefSize.width
+						+ SchemaLayoutManager.TABLE_PADDING * 2 + compSpacing
+						* 2;
 				this.rowWidths.set(rowNum, new Integer(newRowWidth));
 
 				int newRowHeight = 0;
 				for (final Iterator i = ((List) this.rows.get(rowNum))
-						.iterator(); i.hasNext();) {
-					newRowHeight = (int) Math
-							.max(
-									newRowHeight,
-									((Component) i.next()).getPreferredSize()
-											.getHeight()
-											+ (compSpacing * 2));
-				}
+						.iterator(); i.hasNext();)
+					newRowHeight = Math.max(newRowHeight,
+							((Component) i.next()).getPreferredSize().height
+									+ compSpacing * 2);
 				newRowHeight += SchemaLayoutManager.TABLE_PADDING * 2;
 				this.rowHeights.set(rowNum, new Integer(newRowHeight));
 
-				this.size.height -= (oldRowHeight - newRowHeight);
+				this.size.height -= oldRowHeight - newRowHeight;
 
 				// While last row is empty, remove last row.
 				int lastRow = this.rows.size() - 1;
@@ -303,25 +300,23 @@ public class SchemaLayoutManager implements LayoutManager2 {
 			int nextY = SchemaLayoutManager.TABLE_PADDING;
 			for (int rowNum = 0; rowNum < this.rows.size(); rowNum++) {
 				int x = SchemaLayoutManager.TABLE_PADDING;
-				int y = nextY
+				final int y = nextY
 						+ ((Integer) this.rowHeights.get(rowNum)).intValue()
-						- (SchemaLayoutManager.TABLE_PADDING * 2)
+						- SchemaLayoutManager.TABLE_PADDING * 2
 						- ((Integer) this.rowSpacings.get(rowNum)).intValue();
-				for (final Iterator i = ((List) rows.get(rowNum)).iterator(); i
-						.hasNext();) {
+				for (final Iterator i = ((List) this.rows.get(rowNum))
+						.iterator(); i.hasNext();) {
 					final Component comp = (Component) i.next();
 					final Dimension prefSize = (Dimension) this.prefSizes
-					.get(comp);
+							.get(comp);
 					final int compSpacing = ((SchemaLayoutConstraint) this.constraints
 							.get(comp)).getRelCount()
 							* SchemaLayoutManager.RELATION_SPACING;
 					x += compSpacing;
-					comp.setBounds(x, y - (int) prefSize.getHeight(),
-							(int) prefSize.getWidth(), (int) prefSize
-									.getHeight());
+					comp.setBounds(x, y - prefSize.height, prefSize.width,
+							prefSize.height);
 					comp.validate();
-					x += prefSize.getWidth()
-							+ (SchemaLayoutManager.TABLE_PADDING * 2)
+					x += prefSize.width + SchemaLayoutManager.TABLE_PADDING * 2
 							+ compSpacing;
 				}
 				nextY += ((Integer) this.rowHeights.get(rowNum)).intValue();
@@ -332,66 +327,81 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				// Obtain first key and work out position relative to
 				// diagram.
 				int firstRowNum = 0;
-				int firstRowBottom = ((Integer)this.rowHeights.get(firstRowNum)).intValue();
+				int firstRowBottom = ((Integer) this.rowHeights
+						.get(firstRowNum)).intValue();
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
+				if (firstKey==null)
+					continue;
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				int firstKeyInsetX = firstKeyRectangle.x;
-				if (firstKey.getParent().getParent().equals(this))
-					firstKeyInsetX += firstKey.getParent().getBounds().getX();
-				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey.getParent(), firstKeyRectangle, parent);
-				while ((int)firstKeyRectangle.getY() >= firstRowBottom) { firstRowBottom += ((Integer)this.rowHeights.get(++firstRowNum)).intValue(); }
+				if (firstKey.getParent().getParent() instanceof SchemaComponent)
+					firstKeyInsetX += firstKey.getParent().getBounds().x;
+				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey
+						.getParent(), firstKeyRectangle, parent);
+				while (firstKeyRectangle.y >= firstRowBottom)
+					firstRowBottom += ((Integer) this.rowHeights
+							.get(++firstRowNum)).intValue();
 
 				// Do the same for the second key.
 				int secondRowNum = 0;
-				int secondRowBottom = ((Integer)this.rowHeights.get(secondRowNum)).intValue();
+				int secondRowBottom = ((Integer) this.rowHeights
+						.get(secondRowNum)).intValue();
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
+				if (secondKey==null)
+					continue;
 				Rectangle secondKeyRectangle = secondKey.getBounds();
 				int secondKeyInsetX = secondKeyRectangle.x;
-				if (secondKey.getParent().getParent().equals(this))
-					secondKeyInsetX += secondKey.getParent().getBounds().getX();
-				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey.getParent(), secondKeyRectangle, parent);
-				while ((int)secondKeyRectangle.getY() >= secondRowBottom) { secondRowBottom += ((Integer)this.rowHeights.get(++secondRowNum)).intValue(); }
+				if (secondKey.getParent().getParent() instanceof SchemaComponent)
+					secondKeyInsetX += secondKey.getParent().getBounds().x;
+				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey
+						.getParent(), secondKeyRectangle, parent);
+				while (secondKeyRectangle.y >= secondRowBottom)
+					secondRowBottom += ((Integer) this.rowHeights
+							.get(++secondRowNum)).intValue();
 
 				// Work out left/right most.
-				final Rectangle leftKeyRectangle = firstKeyRectangle.getX() <= secondKeyRectangle
-						.getX() ? firstKeyRectangle : secondKeyRectangle;
-				final Rectangle rightKeyRectangle = firstKeyRectangle.getX() > secondKeyRectangle
-						.getX() ? firstKeyRectangle : secondKeyRectangle;
-				final int leftKeyInsetX = leftKeyRectangle==firstKeyRectangle?firstKeyInsetX:secondKeyInsetX;
-				final int rightKeyInsetX = rightKeyRectangle==firstKeyRectangle?firstKeyInsetX:secondKeyInsetX;
+				final Rectangle leftKeyRectangle = firstKeyRectangle.x <= secondKeyRectangle.x ? firstKeyRectangle
+						: secondKeyRectangle;
+				final Rectangle rightKeyRectangle = firstKeyRectangle.x > secondKeyRectangle.x ? firstKeyRectangle
+						: secondKeyRectangle;
+				final int leftKeyInsetX = leftKeyRectangle == firstKeyRectangle ? firstKeyInsetX
+						: secondKeyInsetX;
+				final int rightKeyInsetX = rightKeyRectangle == firstKeyRectangle ? firstKeyInsetX
+						: secondKeyInsetX;
 
 				// Work out Y coord for top of relation.
-				int relTopY = (int) Math.min(leftKeyRectangle.getCenterY(),
-						rightKeyRectangle.getCenterY());
+				final int relTopY = (int) Math.min(leftKeyRectangle
+						.getCenterY(), rightKeyRectangle.getCenterY());
 				int relBottomY, relLeftX, relRightX;
 				int leftX, rightX, leftY, rightY, viaX, viaY;
 				int leftTagX, rightTagX;
 
 				// Both at same X location?
-				if (Math.abs(firstKeyRectangle.getX()-secondKeyRectangle.getX())<100) {
+				if (Math.abs(firstKeyRectangle.x - secondKeyRectangle.x) < 100) {
 					relBottomY = (int) Math.max(leftKeyRectangle.getCenterY(),
 							rightKeyRectangle.getCenterY());
-					relLeftX = (int) (leftKeyRectangle.getX() - SchemaLayoutManager.TABLE_PADDING);
-					relRightX = (int) rightKeyRectangle.getX();
+					relLeftX = (leftKeyRectangle.x - SchemaLayoutManager.TABLE_PADDING);
+					relRightX = rightKeyRectangle.x;
 
-					leftX = (int) leftKeyRectangle.getX() - leftKeyInsetX;
+					leftX = leftKeyRectangle.x - leftKeyInsetX;
 					leftTagX = leftX - SchemaLayoutManager.RELATION_SPACING;
 					leftY = (int) leftKeyRectangle.getCenterY();
-					rightX = (int) rightKeyRectangle.getX() - rightKeyInsetX;
+					rightX = rightKeyRectangle.x - rightKeyInsetX;
 					rightTagX = rightX - SchemaLayoutManager.RELATION_SPACING;
 					rightY = (int) rightKeyRectangle.getCenterY();
-					viaX = leftX
-							- (int) (SchemaLayoutManager.TABLE_PADDING * 2);
-					viaY = ((leftY + rightY) / 2);
+					viaX = leftX - (SchemaLayoutManager.TABLE_PADDING * 2);
+					viaY = (leftY + rightY) / 2;
 				} else {
-					relRightX = (int) Math.max(leftKeyRectangle.getMaxX(), rightKeyRectangle.getX());
-					relLeftX = (int) Math.min(leftKeyRectangle.getMaxX(), rightKeyRectangle.getX());
+					relRightX = (int) Math.max(leftKeyRectangle.getMaxX(),
+							rightKeyRectangle.x);
+					relLeftX = (int) Math.min(leftKeyRectangle.getMaxX(),
+							rightKeyRectangle.x);
 					relBottomY = Math.max(firstRowBottom, secondRowBottom);
 
 					leftX = (int) leftKeyRectangle.getMaxX() + leftKeyInsetX;
 					leftTagX = leftX + SchemaLayoutManager.RELATION_SPACING;
 					leftY = (int) leftKeyRectangle.getCenterY();
-					rightX = (int) rightKeyRectangle.getX() - rightKeyInsetX;
+					rightX = rightKeyRectangle.x - rightKeyInsetX;
 					rightTagX = rightX - SchemaLayoutManager.RELATION_SPACING;
 					rightY = (int) rightKeyRectangle.getCenterY();
 					viaX = (leftX + rightX) / 2;
@@ -400,16 +410,15 @@ public class SchemaLayoutManager implements LayoutManager2 {
 					else if (Math.abs(rightY - leftY) > 100)
 						viaY = (relBottomY + relTopY) / 2;
 					else
-						viaY = relTopY
-								+ (int) ((double) (relBottomY - relTopY) * 1.8);
+						viaY = relTopY + (int) ((relBottomY - relTopY) * 1.8);
 				}
 
 				// Set overall bounds.
 				final Rectangle bounds = new Rectangle(
-						(int) (relLeftX - SchemaLayoutManager.RELATION_SPACING * 4),
-						(int) (relTopY - SchemaLayoutManager.RELATION_SPACING * 4),
-						(int) ((Math.abs(relRightX - relLeftX)) + (SchemaLayoutManager.RELATION_SPACING * 8)),
-						(int) ((Math.abs(relBottomY - relTopY)) + (SchemaLayoutManager.RELATION_SPACING * 8)));
+						(relLeftX - SchemaLayoutManager.RELATION_SPACING * 4),
+						(relTopY - SchemaLayoutManager.RELATION_SPACING * 4),
+						(Math.abs(relRightX - relLeftX) + SchemaLayoutManager.RELATION_SPACING * 8),
+						(Math.abs(relBottomY - relTopY) + SchemaLayoutManager.RELATION_SPACING * 8));
 				comp.setBounds(bounds);
 
 				// Create a path to describe the relation shape. It
@@ -418,22 +427,18 @@ public class SchemaLayoutManager implements LayoutManager2 {
 						GeneralPath.WIND_EVEN_ODD, 4);
 
 				// Move to starting point at primary key.
-				path.moveTo(leftX - (int) bounds.getX(), leftY
-						- (int) bounds.getY());
-				
+				path.moveTo(leftX - bounds.x, leftY - bounds.y);
+
 				// Left tag.
-				path.lineTo(leftTagX - (int)bounds.getX(), leftY
-						- (int) bounds.getY());
-				
+				path.lineTo(leftTagX - bounds.x, leftY - bounds.y);
+
 				// Draw from the first key midpoint across to the vertical
 				// track.
-				path.quadTo(viaX - (int) bounds.getX(), viaY
-						- (int) bounds.getY(), rightTagX - (int) bounds.getX(),
-						rightY - (int) bounds.getY());
-				
+				path.quadTo(viaX - bounds.x, viaY - bounds.y, rightTagX
+						- bounds.x, rightY - bounds.y);
+
 				// Right tag.
-				path.lineTo(rightX - (int)bounds.getX(), rightY
-						- (int) bounds.getY());
+				path.lineTo(rightX - bounds.x, rightY - bounds.y);
 
 				// Set the shape.
 				comp.setLineShape(path);
@@ -456,7 +461,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 			return this.relCount;
 		}
 
-		private void setRow(int row) {
+		private void setRow(final int row) {
 			this.row = row;
 		}
 

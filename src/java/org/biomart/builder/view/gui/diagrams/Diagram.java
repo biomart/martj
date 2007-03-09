@@ -19,10 +19,9 @@
 package org.biomart.builder.view.gui.diagrams;
 
 import java.awt.AWTEvent;
+import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Point;
@@ -44,20 +43,24 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
+import javax.swing.ListCellRenderer;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
@@ -65,6 +68,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.InverseMap;
 import org.biomart.common.view.gui.ComponentImageSaver;
 import org.biomart.common.view.gui.ComponentPrinter;
 
@@ -90,9 +94,14 @@ import org.biomart.common.view.gui.ComponentPrinter;
  *          $Author$
  * @since 0.1
  */
-public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
+public abstract class Diagram extends JLayeredPane implements Scrollable, Autoscroll {
 
 	private static final int AUTOSCROLL_INSET = 12;
+
+	/**
+	 * The background colour to use for this diagram.
+	 */
+	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
 	// OK to use maps as it gets cleared out each time, the keys never change.
 	private final Map componentMap = new HashMap();
@@ -101,7 +110,7 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 
 	private MartTab martTab;
 
-	private List selectedItems = new ArrayList();
+	private final List selectedItems = new ArrayList();
 
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
@@ -153,6 +162,9 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		};
 		final DropTarget dropTarget = new DropTarget(this,
 				DnDConstants.ACTION_COPY, dtListener, true);
+
+		// Set our background.
+		this.setBackground(Diagram.BACKGROUND_COLOUR);
 	}
 
 	/**
@@ -195,7 +207,7 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		for (final Iterator i = this.selectedItems.iterator(); i.hasNext();)
 			((BoxShapedComponent) i.next()).cancelRename();
 		for (final Iterator i = items.iterator(); i.hasNext();) {
-			BoxShapedComponent item = (BoxShapedComponent) i.next();
+			final BoxShapedComponent item = (BoxShapedComponent) i.next();
 			// (De)select this item within existing group.
 			if (this.isSelected(item)) {
 				// Unselect it.
@@ -275,23 +287,51 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		// be in the list.
 
 		// First, work out what tables are in this diagram.
-		final Set tables = new TreeSet();
+		final Map sortedTables = new TreeMap();
 		for (final Iterator i = this.componentMap.keySet().iterator(); i
 				.hasNext();) {
 			final Object o = i.next();
-			if (o instanceof Table)
-				tables.add(o);
+			if (o instanceof DataSetTable)
+				sortedTables.put(((DataSetTable) o).getModifiedName(), o);
+			else if (o instanceof Table)
+				sortedTables.put(((Table) o).getName(), o);
 		}
+		final Map lookup = new InverseMap(sortedTables);
+
+		// Create a combo box of tables.
+		final JComboBox tableChoice = new JComboBox();
+		tableChoice.setRenderer(new ListCellRenderer() {
+			public Component getListCellRendererComponent(final JList list,
+					final Object value, final int index,
+					final boolean isSelected, final boolean cellHasFocus) {
+				final Table tbl = (Table) value;
+				final JLabel label = new JLabel((String) lookup.get(tbl));
+				label.setOpaque(true);
+				label.setFont(list.getFont());
+				if (isSelected) {
+					label.setBackground(list.getSelectionBackground());
+					label.setForeground(list.getSelectionForeground());
+				} else {
+					label.setBackground(list.getBackground());
+					label.setForeground(list.getForeground());
+				}
+				return label;
+			}
+		});
+		for (final Iterator i = sortedTables.values().iterator(); i.hasNext();)
+			tableChoice.addItem(i.next());
 
 		// Now, create the choices box, display it, and return the one
 		// that the user selected. If the user didn't select anything, or
 		// cancelled the choice, this will return null.
-		return (Table) JOptionPane.showInputDialog(null, Resources
-				.get("findTableName"), Resources.get("questionTitle"),
-				JOptionPane.QUESTION_MESSAGE, null, tables.toArray(), null);
+		JOptionPane.showMessageDialog(null, tableChoice, Resources
+				.get("findTableName"), JOptionPane.QUESTION_MESSAGE, null);
+
+		// Return the choice.
+		return (Table) tableChoice.getSelectedItem();
 	}
 
-	private JPopupMenu populateContextMenu(JPopupMenu contextMenu) {
+	private JPopupMenu populateContextMenu(final JPopupMenu contextMenu) {
 		// This is the basic context menu that appears no matter where the user
 		// clicks.
 
@@ -339,8 +379,8 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		contextMenu.add(print);
 
 		// Return the completed context menu.
-		if (this.diagramContext!=null)
-			this.diagramContext.populateContextMenu(contextMenu, null);
+		if (this.diagramContext != null)
+			this.diagramContext.populateContextMenu(contextMenu, this);
 		return contextMenu;
 	}
 
@@ -350,15 +390,6 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 
 	private void saveDiagram() {
 		new ComponentImageSaver(this).save();
-	}
-
-	protected void paintComponent(final Graphics g) {
-		// If the context has changed since last time we
-		// painted anything, update all our components'
-		// appearance first.
-		this.updateAppearance();
-		// Now, repaint as normal.
-		super.paintComponent(g);
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -388,17 +419,8 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 			super.processMouseEvent(evt);
 	}
 
-	/**
-	 * This method is called to make sure the appearance of the diagram is
-	 * up-to-date prior to a repaint. This is called by
-	 * {@link #repaintDiagram()} before the actual repaint is done.
-	 * <p>
-	 * Usually, the only thing this call would do is to set the background
-	 * colour of the diagram.
-	 */
-	protected abstract void doUpdateAppearance();
-
-	protected void addImpl(Component comp, Object constraints, int index) {
+	protected void addImpl(final Component comp, final Object constraints,
+			final int index) {
 		if (comp instanceof DiagramComponent) {
 			this.componentMap.put(((DiagramComponent) comp).getObject(), comp);
 			this.componentMap.putAll(((DiagramComponent) comp)
@@ -407,13 +429,13 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		super.addImpl(comp, constraints, index);
 	}
 
-	public void remove(Component comp) {
+	public void remove(final Component comp) {
 		if (comp instanceof DiagramComponent)
 			this.componentMap.remove(((DiagramComponent) comp).getObject());
 		super.remove(comp);
 	}
 
-	public void remove(int index) {
+	public void remove(final int index) {
 		final Object comp = this.getComponent(index);
 		if (comp instanceof DiagramComponent)
 			this.componentMap.remove(((DiagramComponent) comp).getObject());
@@ -451,63 +473,56 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		if (object == null)
 			return;
 
-		// Ensure the diagram is valid and the correct size.
-		this.resizeDiagram();
-
-		// Obtain the scrollpane view of this diagram.
-		final JViewport viewport = (JViewport) SwingUtilities
-				.getAncestorOfClass(JViewport.class, this);
-		if (viewport == null)
-			return;
-
 		// Look up the diagram component for the model object.
 		final JComponent comp = (JComponent) this.getDiagramComponent(object);
-
 		// If the model object is not in this diagram, don't scroll to it!
 		if (comp == null)
 			return;
 
-		// Work out the location of the diagram component.
-		final Point compLocation = comp.getLocation();
-		final Dimension compSize = comp.getPreferredSize();
+		// Obtain the scrollpane view of this diagram.
+		final JViewport viewport = (JViewport) SwingUtilities
+				.getAncestorOfClass(JViewport.class, this);
 
-		// Recursively add on the parent components to the location, until
-		// the location coordinates become relevant to the diagram itself.
-		Container parent = comp.getParent();
-		while (parent != this) {
-			compLocation.setLocation(compLocation.x + parent.getX(),
-					compLocation.y + parent.getY());
-			parent = parent.getParent();
+		if (viewport != null) {
+			// Work out the location of the diagram component.
+			final Rectangle compLocation = SwingUtilities.convertRectangle(comp
+					.getParent(), comp.getBounds(), this);
+
+			// How big is the scrollpane view we are being seen through?
+			final Dimension viewSize = viewport.getExtentSize();
+			final Dimension ourSize = this.getSize();
+
+			// Work out the top-left coordinate of the area of diagram that
+			// should appear in the scrollpane if this diagram component is to
+			// appear in the absolute centre.
+			int newViewPointX = (int) compLocation.getCenterX()
+					- viewSize.width / 2;
+			int newViewPointY = (int) compLocation.getCenterY()
+					- viewSize.height / 2;
+
+			// Move the scrollpoint if it goes off the bottom-right.
+			if (newViewPointX + viewSize.width > ourSize.width)
+				newViewPointX = ourSize.width - viewSize.width;
+			if (newViewPointY + viewSize.height > ourSize.height)
+				newViewPointY = ourSize.height - viewSize.height;
+
+			// Move the scrollpoint if it goes off the top-left of the diagram
+			// or if the whole diagram can fit without scrolling.
+			if (newViewPointX < 0)
+				newViewPointX = 0;
+			if (newViewPointY < 0)
+				newViewPointY = 0;
+
+			// Scroll to that position.
+			viewport.setViewPosition(new Point(newViewPointX, newViewPointY));
 		}
 
-		// Work out the centre point of the diagram component, based on its
-		// location.
-		final Point compCentre = new Point(compLocation.x + compSize.width / 2,
-				compLocation.y + compSize.height / 2);
-
-		// How big is the scrollpane view we are being seen through?
-		final Dimension viewSize = viewport.getExtentSize();
-
-		// Work out the top-left coordinate of the area of diagram that should
-		// appear in the scrollpane if this diagram component is to appear in
-		// the absolute centre.
-		int newViewPointX = compCentre.x - viewSize.width / 2;
-		int newViewPointY = compCentre.y - viewSize.height / 2;
-
-		// Move the scrollpoint if it goes off the top-left of the diagram.
-		if (newViewPointX - viewSize.width / 2 < 0)
-			newViewPointX = 0;
-		if (newViewPointY - viewSize.height / 2 < 0)
-			newViewPointY = 0;
-
-		// Move the scrollpoint if it goes off the bottom-right.
-		if (newViewPointX + viewSize.width / 2 > parent.getWidth())
-			newViewPointX = parent.getWidth() - viewSize.width;
-		if (newViewPointY + viewSize.height / 2 > parent.getHeight())
-			newViewPointY = parent.getHeight() - viewSize.height;
-
-		// Scroll to that position.
-		viewport.setViewPosition(new Point(newViewPointX, newViewPointY));
+		// Select the object.
+		if (comp instanceof BoxShapedComponent)
+			this.toggleItem((BoxShapedComponent) comp);
+		
+		// Repaint newly visible area.
+		this.repaint(this.getVisibleRect());
 	}
 
 	/**
@@ -589,7 +604,6 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 			if (comp != null)
 				comp.setState(entry.getValue());
 		}
-
 		// Resize the diagram to fit the components.
 		this.repaintDiagram();
 	}
@@ -609,11 +623,9 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	 */
 	public void repaintDiagram() {
 		this.updateAppearance();
-		this.repaint(this.getVisibleRect());
 	}
 
 	private void updateAppearance() {
-		this.doUpdateAppearance();
 		for (final Iterator i = this.componentMap.values().iterator(); i
 				.hasNext();)
 			((DiagramComponent) i.next()).updateAppearance();
@@ -625,9 +637,19 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 	 */
 	public void resizeDiagram() {
 		// Reset our size to the minimum.
-		this.setSize(this.getMinimumSize());
+		this.setSize(this.getPreferredSize());
 		// Update ourselves.
 		this.validate();
+	}
+	
+	public Dimension getPreferredSize() {
+		Dimension pref = this.getLayout().preferredLayoutSize(this);
+		final JViewport viewport = (JViewport) SwingUtilities
+				.getAncestorOfClass(JViewport.class, this);
+		if (viewport != null)
+			pref = new Dimension((int)Math.max(pref.getWidth(), viewport.getWidth()),
+					(int)Math.max(pref.getHeight(), viewport.getHeight()));
+		return pref;
 	}
 
 	/**
@@ -642,43 +664,43 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		// Apply it to ourselves.
 		if (diagramContext != this.diagramContext) {
 			this.diagramContext = diagramContext;
-			this.repaintDiagram();
+			this.updateAppearance();
 		}
 	}
 
-	public void autoscroll(Point cursorLoc) {
-		JViewport viewport = (JViewport) SwingUtilities.getAncestorOfClass(
-				JViewport.class, this);
+	public void autoscroll(final Point cursorLoc) {
+		final JViewport viewport = (JViewport) SwingUtilities
+				.getAncestorOfClass(JViewport.class, this);
 		if (viewport == null)
 			return;
-		Point viewPos = viewport.getViewPosition();
-		int viewHeight = viewport.getExtentSize().height;
-		int viewWidth = viewport.getExtentSize().width;
+		final Point viewPos = viewport.getViewPosition();
+		final int viewHeight = viewport.getExtentSize().height;
+		final int viewWidth = viewport.getExtentSize().width;
 
 		// perform scrolling
-		if ((cursorLoc.y - viewPos.y) < AUTOSCROLL_INSET) { // scroll up
+		if (cursorLoc.y - viewPos.y < Diagram.AUTOSCROLL_INSET)
 			viewport.setViewPosition(new Point(viewPos.x, Math.max(viewPos.y
-					- AUTOSCROLL_INSET, 0)));
-		} else if ((viewPos.y + viewHeight - cursorLoc.y) < AUTOSCROLL_INSET) { // scroll
+					- Diagram.AUTOSCROLL_INSET, 0)));
+		else if (viewPos.y + viewHeight - cursorLoc.y < Diagram.AUTOSCROLL_INSET)
 			// down
-			viewport.setViewPosition(new Point(viewPos.x, Math.min(viewPos.y
-					+ AUTOSCROLL_INSET, this.getHeight() - viewHeight)));
-		} else if ((cursorLoc.x - viewPos.x) < AUTOSCROLL_INSET) { // scroll
+			viewport
+					.setViewPosition(new Point(viewPos.x, Math.min(viewPos.y
+							+ Diagram.AUTOSCROLL_INSET, this.getHeight()
+							- viewHeight)));
+		else if (cursorLoc.x - viewPos.x < Diagram.AUTOSCROLL_INSET)
 			// left
 			viewport.setViewPosition(new Point(Math.max(viewPos.x
-					- AUTOSCROLL_INSET, 0), viewPos.y));
-		} else if ((viewPos.x + viewWidth - cursorLoc.x) < AUTOSCROLL_INSET) { // scroll
+					- Diagram.AUTOSCROLL_INSET, 0), viewPos.y));
+		else if (viewPos.x + viewWidth - cursorLoc.x < Diagram.AUTOSCROLL_INSET)
 			// right
-			viewport
-					.setViewPosition(new Point(Math.min(viewPos.x
-							+ AUTOSCROLL_INSET, this.getWidth() - viewWidth),
-							viewPos.y));
-		}
+			viewport.setViewPosition(new Point(Math.min(viewPos.x
+					+ Diagram.AUTOSCROLL_INSET, this.getWidth() - viewWidth),
+					viewPos.y));
 	}
 
 	public Insets getAutoscrollInsets() {
-		int height = this.getHeight();
-		int width = this.getWidth();
+		final int height = this.getHeight();
+		final int width = this.getWidth();
 		return new Insets(height, width, height, width);
 	}
 
@@ -686,8 +708,8 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		return this.getPreferredSize();
 	}
 
-	public int getScrollableBlockIncrement(Rectangle visibleRect,
-			int orientation, int direction) {
+	public int getScrollableBlockIncrement(final Rectangle visibleRect,
+			final int orientation, final int direction) {
 		return this.getScrollableUnitIncrement(visibleRect, orientation,
 				direction) * 4;
 	}
@@ -700,8 +722,8 @@ public abstract class Diagram extends JPanel implements Scrollable, Autoscroll {
 		return false;
 	}
 
-	public int getScrollableUnitIncrement(Rectangle visibleRect,
-			int orientation, int direction) {
+	public int getScrollableUnitIncrement(final Rectangle visibleRect,
+			final int orientation, final int direction) {
 		return Diagram.AUTOSCROLL_INSET;
 	}
 }

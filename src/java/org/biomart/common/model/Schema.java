@@ -82,6 +82,12 @@ public interface Schema extends Comparable, DataLink {
 	 * @return a set of relations.
 	 */
 	public Collection getRelations();
+	public Collection getInternalRelations();
+	public Collection getExternalRelations();
+	
+	public void addRelation(final Relation relation);
+
+	public void removeRelation(final Relation relation);
 
 	/**
 	 * Checks whether this schema uses key-guessing or not.
@@ -248,6 +254,12 @@ public interface Schema extends Comparable, DataLink {
 		private final Map tables = new TreeMap();
 		
 		private final Map partitions = new TreeMap();
+		
+		private final Set relations = new HashSet();
+		
+		private final Set internalRelations = new HashSet();
+		
+		private final Set externalRelations = new HashSet();
 
 		/**
 		 * The constructor creates a schema with the given name. Keyguessing is
@@ -275,6 +287,22 @@ public interface Schema extends Comparable, DataLink {
 					"" + keyguessing }));
 			this.name = name;
 			this.keyguessing = keyguessing;
+		}
+		
+		public void addRelation(final Relation relation) {
+			this.relations.add(relation);
+			if (relation.isExternal())
+				this.externalRelations.add(relation);
+			else
+				this.internalRelations.add(relation);
+		}
+
+		public void removeRelation(final Relation relation) {
+			this.relations.remove(relation);
+			if (relation.isExternal())
+				this.externalRelations.remove(relation);
+			else
+				this.internalRelations.remove(relation);
 		}
 		
 		public Map getPartitions() {
@@ -316,10 +344,15 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public Collection getRelations() {
-			final Set relations = new HashSet();
-			for (final Iterator i = this.getTables().iterator(); i.hasNext();)
-				relations.addAll(((Table) i.next()).getRelations());
-			return relations;
+			return this.relations;
+		}
+
+		public Collection getExternalRelations() {
+			return this.externalRelations;
+		}
+
+		public Collection getInternalRelations() {
+			return this.internalRelations;
 		}
 
 		public boolean getKeyGuessing() {
@@ -470,9 +503,8 @@ public interface Schema extends Comparable, DataLink {
 				// and which end is not.
 				if (r.isExternal()) {
 					// Which key is external?
-					final Key externalKey = firstKey.getTable().getSchema()
-							.equals(this) ? secondKey : firstKey;
-					final Key internalKey = r.getOtherKey(externalKey);
+					final Key internalKey = r.getKeyForSchema(this);
+					final Key externalKey = r.getOtherKey(internalKey);
 
 					// Find the equivalent keys in the duplicate table
 					// by comparing table names and sets of column names.

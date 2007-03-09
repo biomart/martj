@@ -18,6 +18,7 @@
 
 package org.biomart.builder.controller;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,6 +40,8 @@ import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
+import org.biomart.common.controller.CommonUtils;
+import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
@@ -46,6 +49,10 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.Key.ForeignKey;
+import org.biomart.common.model.Key.GenericForeignKey;
+import org.biomart.common.model.Key.GenericPrimaryKey;
+import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.resources.Log;
@@ -62,6 +69,92 @@ import org.biomart.common.resources.Resources;
  * @since 0.1
  */
 public class MartBuilderUtils {
+	/**
+	 * Attempts to create a foreign key on a table given a set of columns. The
+	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
+	 * 
+	 * @param table
+	 *            the table to create the key on.
+	 * @param columns
+	 *            the colums, in order, to create the key over.
+	 * @throws AssociationException
+	 *             if any of the columns in the key are not part of the
+	 *             specified table.
+	 */
+	public static void createForeignKey(final Mart mart, final Table table, final List columns)
+			throws SQLException, DataModelException, AssociationException {
+		CommonUtils.createForeignKey(table, columns);
+		mart.synchroniseDataSets(table.getSchema());
+	}
+
+	/**
+	 * Attempts to create a primary key on a table given a set of columns. If
+	 * the table already has a primary key, then this one will replace it. The
+	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
+	 * 
+	 * @param table
+	 *            the table to create the key on.
+	 * @param columns
+	 *            the colums, in order, to create the key over.
+	 * @throws AssociationException
+	 *             if any of the columns in the key are not part of the
+	 *             specified table.
+	 */
+	public static void createPrimaryKey(final Mart mart, final Table table, final List columns)
+	throws SQLException, DataModelException, AssociationException {
+		CommonUtils.createPrimaryKey(table, columns);
+		mart.synchroniseDataSets(table.getSchema());
+	}
+
+	/**
+	 * Turns key-guessing off in a given schema.
+	 * 
+	 * @param schema
+	 *            the schema to disable key-guessing in.
+	 * @throws SQLException
+	 *             if after disabling keyguessing the key sync went wrong.
+	 * @throws DataModelException
+	 *             if after disabling keyguessing the key sync went wrong.
+	 */
+	public static void disableKeyGuessing(final Mart mart, final Schema schema)
+			throws SQLException, DataModelException {
+		CommonUtils.disableKeyGuessing(schema);
+		mart.synchroniseDataSets(schema);
+	}
+
+	/**
+	 * Turns key-guessing on in a given schema.
+	 * 
+	 * @param schema
+	 *            the schema to enable key-guessing in.
+	 * @throws SQLException
+	 *             if after keyguessing the key sync went wrong.
+	 * @throws DataModelException
+	 *             if after keyguessing the key sync went wrong.
+	 */
+	public static void enableKeyGuessing(final Mart mart, final Schema schema)
+			throws DataModelException, SQLException {
+		CommonUtils.enableKeyGuessing(schema);
+		mart.synchroniseDataSets(schema);
+	}
+
+	/**
+	 * Synchronises an individual schema against the data source or database it
+	 * represents. Datasets using this schema will also be synchronised.
+	 * 
+	 * @param schema
+	 *            the schema to synchronise.
+	 * @throws SQLException
+	 *             if there was any problem communicating with the data source
+	 *             or database.
+	 * @throws DataModelException
+	 *             if there were any logical problems with synchronisation.
+	 */
+	public static void synchroniseSchema(final Mart mart, final Schema schema)
+			throws SQLException, DataModelException {
+		CommonUtils.synchroniseSchema(schema);
+		mart.synchroniseDataSets(schema);
+	}
 
 	/**
 	 * Sets the output schema on a mart.
@@ -102,10 +195,10 @@ public class MartBuilderUtils {
 	 *            the new status to give the key.
 	 */
 	public static void changeKeyStatus(final Mart mart, final Key key,
-			final ComponentStatus status) {
+			final ComponentStatus status) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqChangeKeyStatus"));
 		key.setStatus(status);
-		mart.synchroniseDataSets();
+		mart.synchroniseDataSets(key.getTable().getSchema());
 	}
 
 	/**
@@ -136,7 +229,7 @@ public class MartBuilderUtils {
 	 *            the new cardinality to give the relation.
 	 */
 	public static void changeRelationCardinality(final Mart mart,
-			final Relation relation, final Cardinality cardinality) {
+			final Relation relation, final Cardinality cardinality) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqChangeCardinality"));
 		// Change the cardinality.
 		relation.setCardinality(cardinality);
@@ -150,7 +243,8 @@ public class MartBuilderUtils {
 			}
 
 		// Synchronise the datasets.
-		mart.synchroniseDataSets();
+		mart.synchroniseDataSets(relation.getFirstKey().getTable().getSchema(),
+				relation.getSecondKey().getTable().getSchema());
 	}
 
 	/**
@@ -170,10 +264,11 @@ public class MartBuilderUtils {
 	 */
 	public static void changeRelationStatus(final Mart mart,
 			final Relation relation, final ComponentStatus status)
-			throws AssociationException {
+	 throws SQLException, DataModelException, AssociationException {
 		Log.info(Resources.get("logReqChangeRelStatus"));
 		relation.setStatus(status);
-		mart.synchroniseDataSets();
+		mart.synchroniseDataSets(relation.getFirstKey().getTable().getSchema(),
+				relation.getSecondKey().getTable().getSchema());
 	}
 
 	/**
@@ -191,7 +286,7 @@ public class MartBuilderUtils {
 	 *             if the relation could not be established.
 	 */
 	public static void createRelation(final Mart mart, final Key from,
-			final Key to) throws AssociationException {
+			final Key to)  throws SQLException, DataModelException, AssociationException {
 		Log.info(Resources.get("logReqRelation"));
 
 		// Create the relation.
@@ -201,7 +296,8 @@ public class MartBuilderUtils {
 		to.addRelation(r);
 
 		// Synchronise the datasets.
-		mart.synchroniseDataSets();
+		mart.synchroniseDataSets(from.getTable().getSchema(),
+				to.getTable().getSchema());
 	}
 
 	/**
@@ -221,11 +317,10 @@ public class MartBuilderUtils {
 	 *             specified table.
 	 */
 	public static void editKeyColumns(final Mart mart, final Key key,
-			final List columns) throws AssociationException {
+			final List columns)  throws SQLException, DataModelException, AssociationException {
 		Log.info(Resources.get("logReqEditKey"));
 		key.setColumns(columns);
 		MartBuilderUtils.changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
-		mart.synchroniseDataSets();
 	}
 
 	/**
@@ -252,10 +347,9 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskTable(final DataSet dataset, final DataSetTable table)
-			throws SQLException, DataModelException, ValidationException {
+			throws ValidationException {
 		Log.info(Resources.get("logReqMaskTable"));
 		dataset.getDataSetModifications().setMaskedTable(table);
-		dataset.synchronise();
 	}
 
 	/**
@@ -271,10 +365,9 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskTable(final DataSet dataset,
-			final DataSetTable table) throws SQLException, DataModelException {
+			final DataSetTable table) {
 		Log.info(Resources.get("logReqUnmaskTable"));
 		dataset.getDataSetModifications().unsetMaskedTable(table);
-		dataset.synchronise();
 	}
 
 	/**
@@ -394,12 +487,10 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */	
 	public static void maskColumns(final DataSet dataset,
-			final Collection columns) throws ValidationException,
-			SQLException, DataModelException {
+			final Collection columns) throws ValidationException {
 		Log.info(Resources.get("logReqMaskColumn"));
 		for (final Iterator i = columns.iterator(); i.hasNext(); )
 		dataset.getDataSetModifications().setMaskedColumn((DataSetColumn)i.next());
-		dataset.synchronise();
 	}
 
 	/**
@@ -887,10 +978,10 @@ public class MartBuilderUtils {
 	 * @param key
 	 *            the key to remove.
 	 */
-	public static void removeKey(final Mart mart, final Key key) {
+	public static void removeKey(final Mart mart, final Key key) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqRemoveKey"));
 		key.destroy();
-		mart.synchroniseDataSets();
+		mart.synchroniseDataSets(key.getTable().getSchema());
 	}
 
 	/**
@@ -903,10 +994,11 @@ public class MartBuilderUtils {
 	 * @param relation
 	 *            the relation to remove.
 	 */
-	public static void removeRelation(final Mart mart, final Relation relation) {
+	public static void removeRelation(final Mart mart, final Relation relation) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqRemoveRelation"));
 		relation.destroy();
-		mart.synchroniseDataSets();
+		mart.synchroniseDataSets(relation.getFirstKey().getTable().getSchema(),
+				relation.getSecondKey().getTable().getSchema());
 	}
 
 	/**
@@ -919,7 +1011,7 @@ public class MartBuilderUtils {
 	 * @param schema
 	 *            the schema to remove from the mart.
 	 */
-	public static void removeSchemaFromMart(final Mart mart, final Schema schema) {
+	public static void removeSchemaFromMart(final Mart mart, final Schema schema) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqRemoveSchemaFromMart"));
 		mart.removeSchema(schema);
 	}
@@ -1352,7 +1444,7 @@ public class MartBuilderUtils {
 	 * @param mart
 	 *            the mart you wish to synchronise all the datasets in.
 	 */
-	public static void synchroniseMartDataSets(final Mart mart) {
+	public static void synchroniseMartDataSets(final Mart mart) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqSyncMartDS"));
 		mart.synchroniseDataSets();
 	}
@@ -1403,11 +1495,10 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskColumns(final DataSet dataset,
-			final Collection columns) throws SQLException, DataModelException {
+			final Collection columns) {
 		Log.info(Resources.get("logReqUnmaskColumn"));
 		for (final Iterator i = columns.iterator(); i.hasNext(); )
 		dataset.getDataSetModifications().unsetMaskedColumn((DataSetColumn)i.next());
-		dataset.synchronise();
 	}
 
 	/**

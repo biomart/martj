@@ -28,6 +28,7 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
+import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -103,16 +104,18 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 		this.setLocationRelativeTo(null);
 	}
 
-	public void recalculateDialog() {
+	public void recalculateDialog(final Schema changedSchema) {
 		if (this.schemaTabSet != null) {
-			this.schemaTabSet.recalculateAllSchemaDiagrams();
+			this.schemaTabSet.recalculateSchemaDiagram(changedSchema);
+			 if (changedSchema!=null)
 			this.schemaTabSet.recalculateOverviewDiagram();
 		}
 	}
 
-	public void repaintDialog() {
-		if (this.schemaTabSet != null) {
-			this.schemaTabSet.repaintAllSchemaDiagrams();
+	public void repaintDialog(final Schema changedSchema) {
+		if (this.schemaTabSet != null)  {
+			 if (changedSchema!=null)
+				this.schemaTabSet.repaintSchemaDiagram(changedSchema);
 			this.schemaTabSet.repaintOverviewDiagram();
 		}
 	}

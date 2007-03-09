@@ -189,27 +189,14 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		// Draw our contents, as we don't have any child classes that
 		// do this for us unfortunately.
 		this.recalculateDiagramComponent();
-
-		// Repaint ourselves.
-		this.updateAppearance();
 	}
 
 	protected void paintComponent(final Graphics g) {
-		final Graphics2D g2d = (Graphics2D) g.create();
+		final Graphics2D g2d = (Graphics2D) g;
 		g2d.setRenderingHints(this.renderHints);
-		// Only bother redrawing if we actually intersect the area being
-		// redrawn.
-		final Shape clippingArea = g2d.getClip();
-		if (this.lineShape == null
-				|| (clippingArea != null && !this.lineShape
-						.intersects(clippingArea.getBounds2D())))
-			return;
-		// Do painting of this component.
 		g2d.setColor(this.getForeground());
 		g2d.setStroke(this.stroke);
 		g2d.draw(this.lineShape);
-		// Clean up.
-		g2d.dispose();
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -369,6 +356,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		if (mod != null)
 			mod.customiseAppearance(this, this.getObject());
 		// Work out what style to draw the relation line.
+		final Stroke oldStroke = this.stroke;
 		if (this.relation.isOneToOne())
 			this.stroke = this.restricted ? (this.compounded ? RelationComponent.ONE_ONE_DOTTED_DASHED
 					: RelationComponent.ONE_ONE_DASHED)
@@ -379,5 +367,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 					: RelationComponent.ONE_MANY_DASHED)
 					: (this.compounded ? RelationComponent.ONE_MANY_DOTTED
 							: RelationComponent.ONE_MANY);
+		// Force repaint if stroke changed.
+		if (oldStroke!=this.stroke)
+			this.repaint();
 	}
 }

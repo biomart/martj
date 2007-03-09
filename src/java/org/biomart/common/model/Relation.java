@@ -170,6 +170,10 @@ public interface Relation extends Comparable {
 	 *         otherwise.
 	 */
 	public boolean isOneToOne();
+	
+	public Key getKeyForTable(final Table table);
+	
+	public Key getKeyForSchema(final Schema schema);
 
 	/**
 	 * Sets the cardinality of the foreign key end of this relation, in a 1:M
@@ -291,6 +295,25 @@ public interface Relation extends Comparable {
 		private final Key firstKey;
 
 		private final Key secondKey;
+		
+		private Key oneKey;
+		
+		private Key manyKey;
+		
+		private boolean oneToManyAllowed;
+		
+		private boolean manyToManyAllowed;
+		
+		private boolean oneToOne;
+		
+		private boolean oneToMany;
+		
+		private boolean manyToMany;
+		
+		private boolean external;
+		
+		private Map tableKeyMap = new HashMap();
+		private Map schemaKeyMap = new HashMap();
 
 		private ComponentStatus status;
 
@@ -328,6 +351,17 @@ public interface Relation extends Comparable {
 			this.secondKey = secondKey;
 			this.setCardinality(cardinality);
 			this.status = ComponentStatus.INFERRED;
+			
+			// Update flags.
+			this.oneToManyAllowed = !this.firstKey.getClass().equals(this.secondKey.getClass());
+			this.manyToManyAllowed = this.firstKey instanceof ForeignKey
+				&& this.secondKey instanceof ForeignKey;
+			this.external = !this.firstKey.getTable().getSchema().equals(
+					this.secondKey.getTable().getSchema());
+			this.tableKeyMap.put(this.firstKey.getTable(), this.firstKey);
+			this.tableKeyMap.put(this.secondKey.getTable(), this.secondKey);
+			this.schemaKeyMap.put(this.firstKey.getTable().getSchema(), this.firstKey);
+			this.schemaKeyMap.put(this.secondKey.getTable().getSchema(), this.secondKey);
 
 			// Check the relation doesn't already exist.
 			if (firstKey.getRelations().contains(this))
@@ -362,11 +396,7 @@ public interface Relation extends Comparable {
 		}
 
 		public Key getManyKey() {
-			if (!this.isOneToMany())
-				return null;
-			// The many end is the foreign key end.
-			return this.firstKey instanceof ForeignKey ? this.firstKey
-					: this.secondKey;
+			return this.manyKey;
 		}
 
 		public String getName() {
@@ -378,20 +408,11 @@ public interface Relation extends Comparable {
 		}
 
 		public Key getOneKey() {
-			if (!this.isOneToMany())
-				return null;
-			// The one end is the primary key end.
-			return this.firstKey instanceof PrimaryKey ? this.firstKey
-					: this.secondKey;
+			return this.oneKey;
 		}
 
 		public Key getOtherKey(final Key key) {
-			if (key.equals(this.firstKey))
-				return this.secondKey;
-			else if (key.equals(this.secondKey))
-				return this.firstKey;
-			else
-				return null;
+			return key==this.firstKey?this.secondKey:key==this.secondKey?this.firstKey:null;
 		}
 
 		public Key getSecondKey() {
@@ -406,32 +427,36 @@ public interface Relation extends Comparable {
 			return this.toString().hashCode();
 		}
 
-		public boolean isExternal() {
-			return !this.firstKey.getTable().getSchema().equals(
-					this.secondKey.getTable().getSchema());
-		}
-
-		public boolean isManyToMany() {
-			return this.cardinality.equals(Cardinality.MANY)
-					&& !(this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
+		public boolean isOneToManyAllowed() {
+			return this.oneToManyAllowed;
 		}
 
 		public boolean isManyToManyAllowed() {
-			return this.firstKey instanceof ForeignKey
-					&& this.secondKey instanceof ForeignKey;
+			return this.manyToManyAllowed;
+		}
+
+		public boolean isManyToMany() {
+			return this.manyToMany;
 		}
 
 		public boolean isOneToMany() {
-			return this.cardinality.equals(Cardinality.MANY)
-					&& (this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
-		}
-
-		public boolean isOneToManyAllowed() {
-			return !this.firstKey.getClass().equals(this.secondKey.getClass());
+			return this.oneToMany;
 		}
 
 		public boolean isOneToOne() {
-			return this.cardinality.equals(Cardinality.ONE);
+			return this.oneToOne;
+		}
+
+		public boolean isExternal() {
+			return this.external;
+		}
+		
+		public Key getKeyForTable(final Table table) {
+			return (Key)this.tableKeyMap.get(table);
+		}
+		
+		public Key getKeyForSchema(final Schema schema) {
+			return (Key)this.schemaKeyMap.get(schema);
 		}
 
 		public void setCardinality(Cardinality cardinality) {
@@ -443,6 +468,27 @@ public interface Relation extends Comparable {
 				cardinality = Cardinality.ONE;
 			}
 			this.cardinality = cardinality;
+			if (this.cardinality.equals(Cardinality.ONE)) {
+				this.oneToOne = true;
+				this.oneToMany = false;
+				this.manyToMany = false;
+				this.oneKey = null;
+				this.manyKey = null;
+			} else {
+				this.oneToOne = false;
+				this.oneToMany = (this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
+				this.manyToMany = !this.oneToMany;
+				if (this.oneToMany) {
+					this.oneKey = this.firstKey instanceof PrimaryKey ? this.firstKey
+						: this.secondKey;
+					this.manyKey = this.firstKey instanceof ForeignKey ? this.firstKey
+							: this.secondKey;;
+				}
+				else {
+					this.oneKey = null;
+					this.manyKey = null;
+				}
+			}
 		}
 
 		public void setStatus(final ComponentStatus status)

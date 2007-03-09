@@ -161,13 +161,10 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Now add any tables with external relations. Loop through the
 		// external keys to identify the tables to do this.
-		for (final Iterator i = this.getSchema().getRelations().iterator(); i
+		for (final Iterator i = this.getSchema().getExternalRelations().iterator(); i
 				.hasNext();) {
 			final Relation rel = (Relation) i.next();
-			if (!rel.isExternal())
-				continue;
-			final Key key = rel.getFirstKey().getTable().getSchema().equals(
-					this.getSchema()) ? rel.getFirstKey() : rel.getSecondKey();
+			final Key key = rel.getKeyForSchema(this.getSchema());
 			final Table table = key.getTable();
 
 			// Only add the table if it's not already added!

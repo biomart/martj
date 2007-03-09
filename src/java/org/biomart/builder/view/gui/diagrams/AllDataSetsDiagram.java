@@ -38,11 +38,6 @@ public class AllDataSetsDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * The background colour to use for the diagram.
-	 */
-	public static final Color BACKGROUND_COLOUR = Color.WHITE;
-
-	/**
 	 * The constructor creates the diagram and associates it with a given mart
 	 * tab.
 	 * 
@@ -55,11 +50,6 @@ public class AllDataSetsDiagram extends Diagram {
 
 		// Calculate the diagram.
 		this.recalculateDiagram();
-	}
-
-	protected void doUpdateAppearance() {
-		// Set the background.
-		this.setBackground(AllDataSetsDiagram.BACKGROUND_COLOUR);
 	}
 
 	public void doRecalculateDiagram() {

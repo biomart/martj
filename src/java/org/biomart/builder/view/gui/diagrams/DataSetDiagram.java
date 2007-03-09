@@ -18,7 +18,6 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -51,11 +50,6 @@ public class DataSetDiagram extends Diagram {
 	private final DataSet dataset;
 
 	/**
-	 * The background colour to use for this diagram.
-	 */
-	public static final Color BACKGROUND_COLOUR = Color.WHITE;
-
-	/**
 	 * Creates a new diagram that displays the tables and relations inside a
 	 * specific dataset.
 	 * 
@@ -76,17 +70,11 @@ public class DataSetDiagram extends Diagram {
 		this.recalculateDiagram();
 	}
 
-	protected void doUpdateAppearance() {
-		// Set the background.
-		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
-	}
-
 	public void doRecalculateDiagram() {
 		// First of all, remove all our existing components.
 		this.removeAll();
 
 		// Add stuff.
-		final List relations = new ArrayList();
 		final List mainTables = new ArrayList();
 		mainTables.add(this.getDataSet().getMainTable());
 		for (int i = 0; i < mainTables.size(); i++) {
@@ -97,10 +85,10 @@ public class DataSetDiagram extends Diagram {
 			// Add main table.
 			this.add(new TableComponent(table, this), constraint);
 			// Add dimension tables.
-			for (final Iterator r = table.getRelations().iterator(); r
-					.hasNext();) {
-				final Relation relation = (Relation) r.next();
-				if (relation.getOneKey().getTable().equals(table)) {
+			if (table.getPrimaryKey() != null)
+				for (final Iterator r = table.getPrimaryKey().getRelations()
+						.iterator(); r.hasNext();) {
+					final Relation relation = (Relation) r.next();
 					final DataSetTable target = (DataSetTable) relation
 							.getManyKey().getTable();
 					if (target.getType().equals(DataSetTableType.DIMENSION)) {
@@ -109,20 +97,14 @@ public class DataSetDiagram extends Diagram {
 								DataSetLayoutConstraint.DIMENSION, i);
 						// Add dimension table.
 						this.add(new TableComponent(target, this),
-								dimConstraint);
+								dimConstraint, 0);
 					} else {
 						mainTables.add(target);
 					}
 					// Add relation.
-					relations.add(relation);
+					this.add(new RelationComponent(relation, this), -1);
 				}
-			}
 		}
-
-		// Add relations. Must be done last otherwise they can't find their
-		// keys.
-		for (final Iterator r = relations.iterator(); r.hasNext();)
-			this.add(new RelationComponent((Relation) r.next(), this));
 
 		// Resize the diagram to fit our new components.
 		this.resizeDiagram();

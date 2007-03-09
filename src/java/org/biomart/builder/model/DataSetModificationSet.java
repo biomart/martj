@@ -76,11 +76,9 @@ public class DataSetModificationSet {
 			if (column instanceof InheritedColumn)
 				throw new ValidationException(Resources
 						.get("cannotMaskInheritedColumn"));
-			for (final Iterator i = column.getTable().getKeys().iterator(); i
-					.hasNext();)
-				if (((Key) i.next()).getColumns().contains(column))
-					throw new ValidationException(Resources
-							.get("cannotMaskNecessaryColumn"));
+			if (column.isInAnyKey())
+				throw new ValidationException(Resources
+						.get("cannotMaskNecessaryColumn"));
 			if (!this.maskedColumns.containsKey(tableKey))
 				this.maskedColumns.put(tableKey, new HashSet());
 			((Collection) this.maskedColumns.get(tableKey)).add(column

@@ -65,13 +65,7 @@ public class ComponentImageSaver {
 		// Render the component onto the image.
 		Log.debug("Rendering graphics for saved image");
 		final Graphics2D g2d = image.createGraphics();
-		final RepaintManager repaintManager = RepaintManager
-				.currentManager(this.component);
-		final boolean doubleBufferingEnabled = 
-			repaintManager.isDoubleBufferingEnabled();
-		repaintManager.setDoubleBufferingEnabled(false);
-		this.component.paintAll(g2d);
-		repaintManager.setDoubleBufferingEnabled(doubleBufferingEnabled);
+		this.component.paint(g2d);
 		// Save the image in the given format to the given filename.
 		Log.debug("Writing saved image file");
 		ImageIO.write(image, format.getFormat(), file);

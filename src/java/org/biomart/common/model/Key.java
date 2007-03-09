@@ -216,6 +216,7 @@ public interface Key extends Comparable {
 		public void addRelation(final Relation relation) {
 			// Add it.
 			this.relations.add(relation);
+			this.table.addRelation(relation);
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {
@@ -234,8 +235,13 @@ public interface Key extends Comparable {
 			final List relationsCopy = new ArrayList(this.relations);
 			for (final Iterator i = relationsCopy.iterator(); i.hasNext();) {
 				final Relation r = (Relation) i.next();
+				this.table.removeRelation(r);
 				r.destroy();
 			}
+			
+			// Remove from cols.
+			for (final Iterator i = this.columns.iterator(); i.hasNext(); )
+				((Column)i.next()).setNotInKey(this);
 
 			// Remove references to us from tables.
 			if (this instanceof PrimaryKey)
@@ -298,6 +304,7 @@ public interface Key extends Comparable {
 
 		public void removeRelation(final Relation relation) {
 			this.relations.remove(relation);
+			this.table.removeRelation(relation);
 		}
 
 		public void setColumns(final List columns) {
@@ -318,6 +325,7 @@ public interface Key extends Comparable {
 				// Add the column.
 				this.columns.add(column);
 				this.columnNames.add(column.getName());
+				column.setInKey(this);
 			}
 
 			// Invalidate all relations associated with this key. This means

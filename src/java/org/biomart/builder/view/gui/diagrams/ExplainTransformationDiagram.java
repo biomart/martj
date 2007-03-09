@@ -82,11 +82,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		this.step = step;
 	}
 
-	protected void doUpdateAppearance() {
-		// Set the background.
-		this.setBackground(ExplainTransformationDiagram.BACKGROUND_COLOUR);
-	}
-
 	/**
 	 * Get which step this diagram is representing.
 	 * 
@@ -104,11 +99,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	public Collection getTableComponents() {
 		return this.tableComponents;
 	}
-
-	/**
-	 * The background colour to use for the diagram.
-	 */
-	public static final Color BACKGROUND_COLOUR = Color.WHITE;
 
 	/**
 	 * This version of the class shows a single table.

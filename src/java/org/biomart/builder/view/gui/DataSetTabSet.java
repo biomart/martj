@@ -18,7 +18,6 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -69,6 +68,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -163,8 +163,6 @@ public class DataSetTabSet extends JTabbedPane {
 		this.datasetToDiagram[0].add(dataset);
 		this.datasetToDiagram[1].add(datasetDiagram);
 
-		this.recalculateOverviewDiagram();
-
 		// Set the current context on the diagram to be the same as the
 		// current context on this dataset tabset.
 		datasetDiagram.setDiagramContext(new DataSetContext(this.martTab,
@@ -174,10 +172,11 @@ public class DataSetTabSet extends JTabbedPane {
 			// Fake a click on the dataset tab.
 			this.setSelectedIndex(this.indexOfTab(dataset.getName()));
 			this.martTab.selectDataSetEditor();
+			this.recalculateOverviewDiagram();
 		} else {
 			// Fake a click on the overview tab.
-			this.setSelectedIndex(0);
-			this.martTab.selectDataSetEditor();
+			//this.setSelectedIndex(0);
+			//this.martTab.selectDataSetEditor();
 		}
 	}
 
@@ -245,7 +244,7 @@ public class DataSetTabSet extends JTabbedPane {
 		return contextMenu;
 	}
 
-	private void removeDataSetTab(final DataSet dataset) {
+	private void removeDataSetTab(final DataSet dataset, final boolean select) {
 		Log.info(Resources.get("logRemoveDatasetTab", "" + dataset));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
@@ -261,12 +260,14 @@ public class DataSetTabSet extends JTabbedPane {
 		this.datasetToDiagram[0].remove(index);
 		this.datasetToDiagram[1].remove(index);
 
+		if (select) {
 		// Update the overview diagram.
 		this.recalculateOverviewDiagram();
 
 		// Fake a click on the last tab before this one to ensure
 		// at least one tab remains visible and up-to-date.
 		this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1, 0));
+		}
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -332,11 +333,22 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 	
 	public void recalculateAllDataSetDiagrams() {
-		for (int index = 0; index < this.datasetToDiagram.length; index++)
-		((Diagram) this.datasetToDiagram[1].get(index)).recalculateDiagram();
+		for (int index = 0; index < this.datasetToDiagram.length; index++) 
+			((Diagram) this.datasetToDiagram[1].get(index)).recalculateDiagram();
 		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
 				.hasNext();)
-			((ExplainDialog) i.next()).recalculateDialog();
+			((ExplainDialog) i.next()).recalculateDialog(null);
+	}
+	
+	public void recalculateAffectedDataSetDiagrams(final Schema schema) {
+		for (int index = 0; index < this.datasetToDiagram.length; index++) {
+			final DataSet ds = ((DataSet) this.datasetToDiagram[0].get(index));
+			if (ds.usesSchema(schema))
+				((Diagram) this.datasetToDiagram[1].get(index)).recalculateDiagram();
+		}
+		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
+				.hasNext();)
+			((ExplainDialog) i.next()).recalculateDialog(schema);
 	}
 
 	/**
@@ -352,7 +364,7 @@ public class DataSetTabSet extends JTabbedPane {
 		((Diagram) this.datasetToDiagram[1].get(index)).recalculateDiagram();
 		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
 				.hasNext();)
-			((ExplainDialog) i.next()).recalculateDialog();
+			((ExplainDialog) i.next()).recalculateDialog(null);
 	}
 
 	/**
@@ -387,9 +399,11 @@ public class DataSetTabSet extends JTabbedPane {
 		final List ourDataSets = new ArrayList(this.datasetToDiagram[0]);
 		for (final Iterator i = ourDataSets.iterator(); i.hasNext();) {
 			final DataSet dataset = (DataSet) i.next();
-			if (!this.martTab.getMart().getDataSets().contains(dataset))
-				this.removeDataSetTab(dataset);
+			if (!this.martTab.getMart().getDataSets().contains(dataset)) 
+				this.removeDataSetTab(dataset, false);
 		}
+
+		this.recalculateOverviewDiagram();
 	}
 
 	private void recalculateOverviewDiagram() {
@@ -420,7 +434,7 @@ public class DataSetTabSet extends JTabbedPane {
 		((Diagram) this.datasetToDiagram[1].get(index)).repaintDiagram();
 		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
 				.hasNext();)
-			((ExplainDialog) i.next()).repaintDialog();
+			((ExplainDialog) i.next()).repaintDialog(null);
 	}
 
 	/**
@@ -1628,8 +1642,9 @@ public class DataSetTabSet extends JTabbedPane {
 								(DataSet) i.next());
 					// Remove the tab.
 					for (final Iterator i = datasets.iterator(); i.hasNext();)
-						DataSetTabSet.this.removeDataSetTab((DataSet) i.next());
-
+						DataSetTabSet.this.removeDataSetTab((DataSet) i.next(),false);
+					DataSetTabSet.this.recalculateOverviewDiagram();
+					
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
 							.setModifiedStatus(true);
@@ -1669,7 +1684,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.removeDataSetFromMart(
 							DataSetTabSet.this.martTab.getMart(), dataset);
 					// Remove the tab.
-					DataSetTabSet.this.removeDataSetTab(dataset);
+					DataSetTabSet.this.removeDataSetTab(dataset, true);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()

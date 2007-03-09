@@ -18,6 +18,9 @@
 
 package org.biomart.common.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -49,6 +52,15 @@ public interface Column extends Comparable {
 	 * @return the parent table of this column.
 	 */
 	public Table getTable();
+	
+	public boolean isInAnyKey();
+
+	public boolean isInKey(final Key inKey);
+	
+	public void setInKey(final Key inKey);
+	
+	public void setNotInKey(final Key inKey);
+	
 
 	/**
 	 * A generic implementation which provides the basic functionality required
@@ -58,6 +70,8 @@ public interface Column extends Comparable {
 		private String name;
 
 		private final Table table;
+		
+		private final Set keySet = new HashSet();
 
 		/**
 		 * This constructor creates a column and remembers the name and parent
@@ -125,6 +139,22 @@ public interface Column extends Comparable {
 		 */
 		public String toString() {
 			return this.getTable().toString() + ":" + this.getName();
+		}
+		
+		public boolean isInAnyKey() {
+			return !this.keySet.isEmpty();
+		}
+
+		public boolean isInKey(final Key inKey) {
+			return this.keySet.contains(inKey);
+		}
+		
+		public void setInKey(final Key inKey) {
+			this.keySet.add(inKey);
+		}
+		
+		public void setNotInKey(final Key inKey) {
+			this.keySet.remove(inKey);
 		}
 	}
 }
