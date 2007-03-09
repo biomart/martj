@@ -27,6 +27,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -216,15 +217,24 @@ public class ViewTextDialog extends JFrame {
 					if (file != null) {
 						LongProcess.run(new Runnable() {
 							public void run() {
+								FileWriter fw = null;
 								try {
-									final FileWriter fw = new FileWriter(file);
+									fw = new FileWriter(file);
 									fw.write(editorPane.getText());
+									fw.flush();
 								} catch (final Throwable t) {
 									SwingUtilities.invokeLater(new Runnable() {
 										public void run() {
 											StackTrace.showStackTrace(t);
 										}
 									});
+								} finally {
+									if (fw!=null) 
+										try {
+											fw.close();
+										} catch (final IOException e) {
+											// Ignore this one.
+										}
 								}
 							}
 						});
