@@ -1032,7 +1032,6 @@ public class MartBuilderXML extends DefaultHandler {
 								xmlWriter);
 						final RestrictedRelationDefinition restrict = (RestrictedRelationDefinition) entry3
 								.getValue();
-						final StringBuffer lrels = new StringBuffer();
 						final StringBuffer lcols = new StringBuffer();
 						final StringBuffer lnames = new StringBuffer();
 						for (final Iterator a = restrict.getLeftAliases()
@@ -1850,8 +1849,6 @@ public class MartBuilderXML extends DefaultHandler {
 						(String) attributes.get("aliasRelationIds"), true);
 				final String[] aliasColumnIds = this.readListAttribute(
 						(String) attributes.get("aliasColumnIds"), false);
-				if (aliasRelationIds.length == 0)
-					aliasRelationIds = new String[aliasColumnIds.length]; // FIXME
 				// Remove
 				final String[] aliasNames = this.readListAttribute(
 						(String) attributes.get("aliasNames"), false);
@@ -1941,8 +1938,6 @@ public class MartBuilderXML extends DefaultHandler {
 						(String) attributes.get("aliasRelationIds"), true);
 				final String[] aliasColumnIds = this.readListAttribute(
 						(String) attributes.get("aliasColumnIds"), false);
-				if (aliasRelationIds.length == 0)
-					aliasRelationIds = new String[aliasColumnIds.length]; // FIXME
 				// Remove
 				final String[] aliasNames = this.readListAttribute(
 						(String) attributes.get("aliasNames"), false);
