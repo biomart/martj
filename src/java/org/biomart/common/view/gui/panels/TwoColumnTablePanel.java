@@ -18,6 +18,7 @@
 package org.biomart.common.view.gui.panels;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -27,6 +28,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -35,9 +37,12 @@ import java.util.Map;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
@@ -102,7 +107,6 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				.getFirstColumnType(), this.getSecondColumnType());
 		final JTable table = new JTable(this.tableModel);
 		table.setGridColor(Color.LIGHT_GRAY); // Mac OSX.
-		table.setPreferredScrollableViewportSize(new Dimension(400, 100));
 		// First column.
 		final JComboBox firstEd = this.getFirstColumnEditor(firstColValues);
 		if (firstEd != null) {
@@ -140,6 +144,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		if (secondRend != null)
 			table.getColumnModel().getColumn(1).setCellRenderer(secondRend);
 		// Buttons.
+		table.setPreferredScrollableViewportSize(new Dimension(table.getColumnModel().getColumn(0).getPreferredWidth() + table.getColumnModel().getColumn(1).getPreferredWidth(), 100));
 		this.insert = new JButton(this.getInsertButtonText());
 		this.remove = new JButton(this.getRemoveButtonText());
 		this.insert.addActionListener(new ActionListener() {
@@ -297,8 +302,8 @@ public abstract class TwoColumnTablePanel extends JPanel {
 			StringStringTablePanel {
 		private JComboBox editor;
 		
-		public ColumnStringTablePanel(final Map values, final Collection columns) {
-			super(values, columns, null);
+		public ColumnStringTablePanel(final Map values, final Collection cols) {
+			super(values, cols, null);
 		}
 
 		protected Collection getSortedColumns(final Collection columns) {
@@ -325,6 +330,97 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				for (final Iterator i = this.getSortedColumns(values).iterator(); i
 						.hasNext();)
 					this.editor.addItem(i.next());
+			}
+			return this.editor;
+		}
+	}
+
+	public abstract static class CRPairStringTablePanel extends
+	StringStringTablePanel {
+		private JComboBox editor;
+		
+		public CRPairStringTablePanel(final Map values, final Collection crPairs) {
+			super(values, crPairs, null);
+		}
+
+		protected Collection getSortedColumns(final Collection crPairs) {
+			final List cols = new ArrayList(crPairs);
+			Collections.sort(cols, new Comparator() {
+				public int compare(final Object a, final Object b) {
+					final String first = ((Object[])a)[1].toString();
+					final String second = ((Object[])b)[1].toString();
+					final int result = first.compareTo(second);
+					return result==0?-1:result;
+				}
+			});
+			return cols;
+		}
+		
+		protected JComboBox getFirstColumnEditor() {
+			return this.editor;
+		}
+
+		public Class getFirstColumnType() {
+			return Object[].class;
+		}
+
+		public Object getNewRowFirstColumn() {
+			return this.editor.getItemAt(0);
+		}
+
+		public TableCellRenderer getFirstColumnRenderer() {
+			return new TableCellRenderer() {
+				public Component getTableCellRendererComponent(JTable table,
+						Object value, boolean isSelected, boolean hasFocus,
+						int row, int column) {
+					final Object[] crPair = (Object[])value;
+					final JLabel label = new JLabel();
+					if (crPair[0]==null)
+						label.setText(crPair[1].toString());
+					else
+						label.setText(crPair[1].toString() + " ["+crPair[0].toString()+"]");
+					label.setOpaque(true);
+					label.setFont(table.getFont());
+					if (isSelected) {
+						label.setBackground(table.getSelectionBackground());
+						label.setForeground(table.getSelectionForeground());
+					} else {
+						label.setBackground(table.getBackground());
+						label.setForeground(table.getForeground());
+					}
+					return label;
+				}
+			};
+		}
+
+		public JComboBox getFirstColumnEditor(final Collection values) {
+			if (this.editor==null) {
+				this.editor = new JComboBox();
+				for (final Iterator i = this.getSortedColumns(values).iterator(); i
+						.hasNext();)
+					this.editor.addItem(i.next());
+				this.editor.setRenderer(new ListCellRenderer() {
+					public Component getListCellRendererComponent(final JList list,
+							final Object value, final int index,
+							final boolean isSelected, final boolean cellHasFocus) {
+						final Object[] crPair = (Object[])value;
+						final JLabel label = new JLabel();
+						if (crPair[0]==null)
+							label.setText(crPair[1].toString());
+						else
+							label.setText(crPair[1].toString() + " ["+crPair[0].toString()+"]");
+						label.setOpaque(true);
+						label.setFont(list.getFont());
+						if (isSelected) {
+							label.setBackground(list.getSelectionBackground());
+							label.setForeground(list.getSelectionForeground());
+						} else {
+							label.setBackground(list.getBackground());
+							label.setForeground(list.getForeground());
+						}
+						return label;
+					}
+				});
 			}
 			return this.editor;
 		}

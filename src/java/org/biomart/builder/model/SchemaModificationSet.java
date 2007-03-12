@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -675,24 +674,26 @@ public class SchemaModificationSet {
 		this.subclassedRelations.remove(relation);
 	}
 
-	public void setCompoundRelation(final Relation relation, final int n)
-			throws ValidationException {
-		this.setCompoundRelation(SchemaModificationSet.DATASET, relation, n);
+	public void setCompoundRelation(final Relation relation,
+			final CompoundRelationDefinition def) throws ValidationException {
+		this.setCompoundRelation(SchemaModificationSet.DATASET, relation, def);
 	}
 
 	public void setCompoundRelation(final DataSetTable table,
-			final Relation relation, final int n) throws ValidationException {
-		this.setCompoundRelation(table.getName(), relation, n);
+			final Relation relation, final CompoundRelationDefinition def)
+			throws ValidationException {
+		this.setCompoundRelation(table.getName(), relation, def);
 	}
 
 	private void setCompoundRelation(final String tableName,
-			final Relation relation, final int n) throws ValidationException {
-		if (this.isConcatRelation(tableName, relation, n))
+			final Relation relation, final CompoundRelationDefinition def)
+			throws ValidationException {
+		if (this.isConcatRelation(tableName, relation))
 			throw new ValidationException(Resources.get("cannotConcatCompound"));
 		if (!this.compoundRelations.containsKey(tableName))
 			this.compoundRelations.put(tableName, new HashMap());
 		final Map masks = (Map) this.compoundRelations.get(tableName);
-		masks.put(relation, new Integer(n));
+		masks.put(relation, def);
 	}
 
 	public void unsetCompoundRelation(final Relation relation) {
@@ -740,22 +741,22 @@ public class SchemaModificationSet {
 				|| globalComps != null && globalComps.containsKey(relation);
 	}
 
-	public int getCompoundRelation(final DataSetTable table,
-			final Relation relation) {
+	public CompoundRelationDefinition getCompoundRelation(
+			final DataSetTable table, final Relation relation) {
 		return this
 				.getCompoundRelation(
 						table == null ? SchemaModificationSet.DATASET : table
 								.getName(), relation);
 	}
 
-	private int getCompoundRelation(final String tableName,
-			final Relation relation) {
+	private CompoundRelationDefinition getCompoundRelation(
+			final String tableName, final Relation relation) {
 		final Map globalComps = (Map) this.compoundRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map comps = (Map) this.compoundRelations.get(tableName);
-		return comps != null && comps.containsKey(relation) ? ((Integer) comps
-				.get(relation)).intValue() : ((Integer) globalComps
-				.get(relation)).intValue();
+		return comps != null && comps.containsKey(relation) ? (CompoundRelationDefinition) comps
+				.get(relation)
+				: (CompoundRelationDefinition) globalComps.get(relation);
 	}
 
 	public Map getCompoundRelations() {
@@ -853,7 +854,7 @@ public class SchemaModificationSet {
 						.get("tblRestrictMissingAliases"));
 
 			// Remember the settings.
-			this.aliases = new TreeMap();
+			this.aliases = new HashMap();
 			this.aliases.putAll(aliases);
 			this.expr = expr;
 			this.hard = hard;
@@ -895,18 +896,39 @@ public class SchemaModificationSet {
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final String tablePrefix) {
+		public String getSubstitutedExpression(final Map additionalRels,
+				final String tablePrefix) {
 			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
-				final Column col = (Column) entry.getKey();
+				final Object[] crPair = (Object[]) entry.getKey();
+				final Relation rel = (Relation) crPair[0];
+				final Column col = (Column) crPair[1];
+				final String tp;
+				if (rel==null)
+					tp = tablePrefix;
+				else 
+					tp = (String)additionalRels.get(rel);
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
+				sub = sub.replaceAll(alias, tp + "." + col.getName());
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
+		}
+
+		public Collection getAdditionalRelations() {
+			final Collection pairs = new HashSet();
+			for (final Iterator i = this.aliases.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final Object[] crPair = (Object[]) entry.getKey();
+				if (crPair[0] == null)
+					continue;
+				pairs.add(crPair[0]);
+			}
+			return pairs;
 		}
 
 		/**
@@ -957,9 +979,9 @@ public class SchemaModificationSet {
 						.get("relRestrictMissingAliases"));
 
 			// Remember the settings.
-			this.leftAliases = new TreeMap();
+			this.leftAliases = new HashMap();
 			this.leftAliases.putAll(leftAliases);
-			this.rightAliases = new TreeMap();
+			this.rightAliases = new HashMap();
 			this.rightAliases.putAll(rightAliases);
 			this.expr = expr;
 			this.hard = hard;
@@ -1011,8 +1033,9 @@ public class SchemaModificationSet {
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final String leftTablePrefix,
-				final String rightTablePrefix, final boolean leftIsDataSet,
+		public String getSubstitutedExpression(
+				final String leftTablePrefix, final String rightTablePrefix,
+				final boolean leftIsDataSet,
 				final TransformationUnit mappingUnit) {
 			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
@@ -1021,8 +1044,7 @@ public class SchemaModificationSet {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, leftTablePrefix
-						+ "."
+				sub = sub.replaceAll(alias, leftTablePrefix + "."
 						+ (leftIsDataSet ? mappingUnit.getDataSetColumnFor(col)
 								.getModifiedName() : col.getName()));
 			}
@@ -1031,11 +1053,9 @@ public class SchemaModificationSet {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, rightTablePrefix
-						+ "."
-						+ (!leftIsDataSet ? mappingUnit
-								.getDataSetColumnFor(col).getModifiedName()
-								: col.getName()));
+				sub = sub.replaceAll(alias, rightTablePrefix + "."
+						+ (!leftIsDataSet ? mappingUnit.getDataSetColumnFor(col)
+								.getModifiedName() : col.getName()));
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
@@ -1121,7 +1141,7 @@ public class SchemaModificationSet {
 			}
 
 			// Remember the settings.
-			this.aliases = new TreeMap();
+			this.aliases = new HashMap();
 			this.aliases.putAll(aliases);
 			this.expr = expr;
 			this.rowSep = rowSep;
@@ -1221,18 +1241,39 @@ public class SchemaModificationSet {
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final String tablePrefix) {
+		public String getSubstitutedExpression(final Map additionalRels,
+				final String tablePrefix) {
 			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
-				final Column col = (Column) entry.getKey();
+				final Object[] crPair = (Object[]) entry.getKey();
+				final Relation rel = (Relation) crPair[0];
+				final Column col = (Column) crPair[1];
+				final String tp;
+				if (rel==null)
+					tp = tablePrefix;
+				else 
+					tp = (String)additionalRels.get(rel);
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
+				sub = sub.replaceAll(alias, tp + "." + col.getName());
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
+		}
+
+		public Collection getAdditionalRelations() {
+			final Collection pairs = new HashSet();
+			for (final Iterator i = this.aliases.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final Object[] crPair = (Object[]) entry.getKey();
+				if (crPair[0] == null)
+					continue;
+				pairs.add(crPair[0]);
+			}
+			return pairs;
 		}
 
 		public static class RecursionType implements Comparable {
@@ -1322,6 +1363,40 @@ public class SchemaModificationSet {
 			public String toString() {
 				return this.getName();
 			}
+		}
+	}
+
+	/**
+	 * Defines the restriction on a table, ie. a where-clause.
+	 */
+	public static class CompoundRelationDefinition {
+
+		private int n;
+
+		private boolean parallel;
+
+		/**
+		 * This constructor gives the restriction an initial expression and a
+		 * set of aliases. The expression may not be empty, and neither can the
+		 * alias map.
+		 * 
+		 * @param expr
+		 *            the expression to define for this restriction.
+		 * @param aliases
+		 *            the aliases to use for columns.
+		 */
+		public CompoundRelationDefinition(final int n, final boolean parallel) {
+			// Remember the settings.
+			this.n = n;
+			this.parallel = parallel;
+		}
+
+		public int getN() {
+			return n;
+		}
+
+		public boolean isParallel() {
+			return parallel;
 		}
 	}
 }

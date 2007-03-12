@@ -24,6 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,7 @@ import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
+import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 
@@ -77,6 +80,20 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final boolean isDoubleRecursive = action
 				.getRecursionSecondFromColumns() != null;
 		final String recursionTempTable = "MART_RECURSE";
+
+		// Work out additional tables to include in this.
+		char additionalTable = 'f';
+		final Map allAdditionalRels = new HashMap();
+		final Map trAdditionalRels = new HashMap();
+		if (action.getTableRestriction() != null)
+			for (final Iterator i = action.getTableRestriction()
+					.getAdditionalRelations().iterator(); i.hasNext();) {
+				trAdditionalRels.put((Relation) i.next(), "" + additionalTable);
+				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
+			}
+		for (final Iterator i = action.getConcatColumnDefinition()
+					.getAdditionalRelations().iterator(); i.hasNext();) 
+				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
 		
 		statements.add("set search_path=" + srcSchemaName + ","
 				+ trgtSchemaName + ",pg_catalog");
@@ -97,7 +114,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				sb.append(",");
 			}
 			sb.append(action.getConcatColumnDefinition()
-					.getSubstitutedExpression("a"));
+					.getSubstitutedExpression(allAdditionalRels, "a"));
 			sb.append(" as ");
 			sb.append(action.getConcatColumnName());
 			sb.append(",1 as finalRow");
@@ -121,11 +138,35 @@ public class PostgreSQLDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null) {
+			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(trAdditionalRels, "a"));
 				sb.append(')');
+			}
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)k.next();
+				final Relation rel = (Relation)entry.getKey();
+				final Table tbl = (Table)rel.getOneKey().getTable();
+				sb.append(" inner join ");
+					sb.append(trgtSchemaName);
+				sb.append(".");
+				sb.append(tbl.getName());
+				sb.append(" as ");
+				sb.append((String)entry.getValue());
+				sb.append(" on ");
+				final List aCols = rel.getManyKey().getColumns();
+				final List joinCols = rel.getOneKey().getColumns();
+				for (int i = 0; i < aCols.size(); i++) {
+					if (i>0)
+						sb.append(" and ");
+					sb.append("a.");
+					sb.append(((Column)aCols.get(i)).getName());
+					sb.append('=');
+					sb.append((String)entry.getValue());
+					sb.append('.');
+					sb.append(((Column)joinCols.get(i)).getName());
+				}
 			}
 			sb.append(" inner join ");
 			if (isDoubleRecursive) {
@@ -165,6 +206,11 @@ public class PostgreSQLDialect extends DatabaseDialect {
 							.getRecursionToColumns().get(i);
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
+			}
+			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+				sb.append(" where ");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression(trAdditionalRels, "a"));
 			}
 			sb.append("; ");
 			// Index rtJoinCols.
@@ -217,10 +263,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 						.replaceAll("'", "\\'"));
 				sb.append("'||");
 				sb.append(action.getConcatColumnDefinition()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(allAdditionalRels, "a"));
 			} else {
 				sb.append(action.getConcatColumnDefinition()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(allAdditionalRels, "a"));
 				sb.append("||'");
 				sb.append(action.getConcatColumnDefinition().getConcSep()
 						.replaceAll("'", "\\'"));
@@ -251,10 +297,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null) {
+			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(trAdditionalRels, "a"));
 				sb.append(')');
 			}
 			sb.append(" inner join ");
@@ -295,6 +341,35 @@ public class PostgreSQLDialect extends DatabaseDialect {
 							.getRecursionToColumns().get(i);
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
+			}
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)k.next();
+				final Relation rel = (Relation)entry.getKey();
+				final Table tbl = (Table)rel.getOneKey().getTable();
+				sb.append(" inner join ");
+					sb.append(trgtSchemaName);
+				sb.append(".");
+				sb.append(tbl.getName());
+				sb.append(" as ");
+				sb.append((String)entry.getValue());
+				sb.append(" on ");
+				final List aCols = rel.getManyKey().getColumns();
+				final List joinCols = rel.getOneKey().getColumns();
+				for (int i = 0; i < aCols.size(); i++) {
+					if (i>0)
+						sb.append(" and ");
+					sb.append("a.");
+					sb.append(((Column)aCols.get(i)).getName());
+					sb.append('=');
+					sb.append((String)entry.getValue());
+					sb.append('.');
+					sb.append(((Column)joinCols.get(i)).getName());
+				}
+			}
+			if (action.getTableRestriction() != null) {
+				sb.append(" where ");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression(trAdditionalRels, "a"));
 			}
 			sb.append("; ");
 			// Delete old rows where old row flag = 1 and parentFromCols
@@ -342,7 +417,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(action.getConcatColumnName());
 		} else {
 			sb.append(action.getConcatColumnDefinition()
-					.getSubstitutedExpression("b"));
+					.getSubstitutedExpression(allAdditionalRels, "b"));
 		}
 		sb.append(" from ");
 		if (isRecursive)
@@ -367,16 +442,48 @@ public class PostgreSQLDialect extends DatabaseDialect {
 							action.isRelationRestrictionLeftIsFirst(),
 							action.getRelationRestrictionPreviousUnit()));
 		}
-		if (!isRecursive && action.getTableRestriction() != null) {
+		if (!isRecursive && action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("b"));
+					.getSubstitutedExpression(trAdditionalRels, "b"));
 			sb.append(')');
 		}
 		sb.append(")) as ");
 		sb.append(action.getConcatColumnName());
 		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " as a group by ");
+				+ " as a");
+		if (!isRecursive) {
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)k.next();
+				final Relation rel = (Relation)entry.getKey();
+				final Table tbl = (Table)rel.getOneKey().getTable();
+				sb.append(" inner join ");
+					sb.append(trgtSchemaName);
+				sb.append(".");
+				sb.append(tbl.getName());
+				sb.append(" as ");
+				sb.append((String)entry.getValue());
+				sb.append(" on ");
+				final List aCols = rel.getManyKey().getColumns();
+				final List joinCols = rel.getOneKey().getColumns();
+				for (int i = 0; i < aCols.size(); i++) {
+					if (i>0)
+						sb.append(" and ");
+					sb.append("a.");
+					sb.append(((Column)aCols.get(i)).getName());
+					sb.append('=');
+					sb.append((String)entry.getValue());
+					sb.append('.');
+					sb.append(((Column)joinCols.get(i)).getName());
+				}
+			}
+		}
+		if (!isRecursive && action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+			sb.append(" where ");
+			sb.append(action.getTableRestriction()
+					.getSubstitutedExpression(trAdditionalRels, "b"));
+		}
+		sb.append(" group by ");
 		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
 				.hasNext();) {
 			final String entry = (String) i.next();
@@ -412,6 +519,14 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String fromTableSchema = action.getSchema();
 		final String fromTableName = action.getTable();
 
+		// Work out additional tables to include in this.
+		char additionalTable = 'f';
+		final Map additionalRels = new HashMap();
+		if (action.getTableRestriction() != null)
+			for (final Iterator i = action.getTableRestriction()
+					.getAdditionalRelations().iterator(); i.hasNext();)
+				additionalRels.put((Relation) i.next(), "" + additionalTable++);
+
 		statements.add("set search_path=" + createTableSchema + ","
 				+ fromTableSchema + ",pg_catalog");
 
@@ -431,10 +546,34 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
+		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)k.next();
+			final Relation rel = (Relation)entry.getKey();
+			final Table tbl = (Table)rel.getOneKey().getTable();
+			sb.append(" inner join ");
+				sb.append(fromTableSchema);
+			sb.append(".");
+			sb.append(tbl.getName());
+			sb.append(" as ");
+			sb.append((String)entry.getValue());
+			sb.append(" on ");
+			final List aCols = rel.getManyKey().getColumns();
+			final List joinCols = rel.getOneKey().getColumns();
+			for (int i = 0; i < aCols.size(); i++) {
+				if (i>0)
+					sb.append(" and ");
+				sb.append("a.");
+				sb.append(((Column)aCols.get(i)).getName());
+				sb.append('=');
+				sb.append((String)entry.getValue());
+				sb.append('.');
+				sb.append(((Column)joinCols.get(i)).getName());
+			}
+		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" where ");
 			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("a"));
+					.getSubstitutedExpression(additionalRels, "a"));
 		}
 		if (action.getPartitionColumn() != null) {
 			if (action.getTableRestriction() != null)
@@ -530,6 +669,14 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
+		// Work out additional tables to include in this.
+		char additionalTable = 'f';
+		final Map additionalRels = new HashMap();
+		if (action.getTableRestriction() != null)
+			for (final Iterator i = action.getTableRestriction()
+					.getAdditionalRelations().iterator(); i.hasNext();)
+				additionalRels.put((Relation) i.next(), "" + additionalTable++);
+
 		final String joinType = (action.getPartitionColumn() != null 
 				|| (action.getRelationRestriction()!=null && action.getRelationRestriction().isHard()) 
 				|| (action.getTableRestriction()!=null && action.getTableRestriction().isHard())) ? "inner"
@@ -571,10 +718,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 							action.isRelationRestrictionLeftIsFirst(),
 							action.getRelationRestrictionPreviousUnit()));
 		}
-		if (action.getTableRestriction() != null) {
+		if (action.getTableRestriction() != null && additionalRels.isEmpty()) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("b"));
+					.getSubstitutedExpression(additionalRels, "b"));
 			sb.append(')');
 		}
 		if (action.getPartitionColumn() != null) {
@@ -596,6 +743,36 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					sb.append('\'');
 				}
 			}
+		}
+		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)k.next();
+			final Relation rel = (Relation)entry.getKey();
+			final Table tbl = (Table)rel.getOneKey().getTable();
+			sb.append(" "+joinType+" join ");
+				sb.append(trgtSchemaName);
+			sb.append(".");
+			sb.append(tbl.getName());
+			sb.append(' ');
+			sb.append((String)entry.getValue());
+			sb.append(" on ");
+			final List aCols = rel.getManyKey().getColumns();
+			final List joinCols = rel.getOneKey().getColumns();
+			for (int i = 0; i < aCols.size(); i++) {
+				if (i>0)
+					sb.append(" and ");
+				sb.append("b.");
+				sb.append('.');
+				sb.append(((Column)aCols.get(i)).getName());
+				sb.append('=');
+				sb.append((String)entry.getValue());
+				sb.append('.');
+				sb.append(((Column)joinCols.get(i)).getName());
+			}
+		}
+		if (action.getTableRestriction() != null && !additionalRels.isEmpty()) {
+			sb.append(" where ");
+			sb.append(action.getTableRestriction()
+					.getSubstitutedExpression(additionalRels,"b"));
 		}
 
 		statements.add(sb.toString());

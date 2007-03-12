@@ -22,6 +22,7 @@ import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Point;
@@ -165,6 +166,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable, Autosc
 
 		// Set our background.
 		this.setBackground(Diagram.BACKGROUND_COLOUR);
+		this.setOpaque(true);
 	}
 
 	/**
@@ -622,13 +624,9 @@ public abstract class Diagram extends JLayeredPane implements Scrollable, Autosc
 	 * on a table). Use {@link #recalculateDiagram()} instead.
 	 */
 	public void repaintDiagram() {
-		this.updateAppearance();
-	}
-
-	private void updateAppearance() {
 		for (final Iterator i = this.componentMap.values().iterator(); i
-				.hasNext();)
-			((DiagramComponent) i.next()).updateAppearance();
+		.hasNext();)
+	((DiagramComponent) i.next()).repaintDiagramComponent();
 	}
 
 	/**
@@ -664,7 +662,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable, Autosc
 		// Apply it to ourselves.
 		if (diagramContext != this.diagramContext) {
 			this.diagramContext = diagramContext;
-			this.updateAppearance();
+			this.repaintDiagram();
 		}
 	}
 

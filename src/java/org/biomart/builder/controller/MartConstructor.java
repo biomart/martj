@@ -261,16 +261,7 @@ public interface MartConstructor {
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 
-			// Work out the progress step size : 1 step = 1 table per source
-			// schema partition.
-			double stepPercent = 100.0
-					/ dataset.getTables().size()
-					/ (templateSchema.getPartitions().isEmpty() ? 1.0
-							: (double) templateSchema.getPartitions().size());
-
-			// Divide the progress step size by the number of datasets.
-			stepPercent /= totalDataSetCount;
-
+			// Is it partitioned?
 			Collection partitions = templateSchema.getPartitions().entrySet();
 			if (partitions.isEmpty()) {
 				partitions = new ArrayList();
@@ -289,6 +280,16 @@ public interface MartConstructor {
 					}
 				});
 			}
+
+			// Work out the progress step size : 1 step = 1 table per source
+			// schema partition.
+			double stepPercent = 100.0
+					/ (double)dataset.getTables().size()
+					/ (double)partitions.size();
+
+			// Divide the progress step size by the number of datasets.
+			stepPercent /= (double)totalDataSetCount;
+			
 			// Process the tables.
 			for (final Iterator s = partitions.iterator(); s.hasNext();) {
 				final Map.Entry partition = (Map.Entry) s.next();

@@ -18,7 +18,6 @@
 
 package org.biomart.builder.controller;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,12 +35,11 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
+import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.controller.CommonUtils;
-import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
@@ -49,10 +47,6 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.Key.ForeignKey;
-import org.biomart.common.model.Key.GenericForeignKey;
-import org.biomart.common.model.Key.GenericPrimaryKey;
-import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.resources.Log;
@@ -614,10 +608,10 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void compoundRelation(final DataSet dataset,
-			final Relation relation, final int n) throws SQLException,
+			final Relation relation, final CompoundRelationDefinition def) throws SQLException,
 			DataModelException, ValidationException {
 		Log.info(Resources.get("logReqCompoundRelation"));
-		dataset.getSchemaModifications().setCompoundRelation(relation, n);
+		dataset.getSchemaModifications().setCompoundRelation(relation, def);
 		dataset.synchronise();
 	}
 
@@ -637,11 +631,11 @@ public class MartBuilderUtils {
 	 *             if the dataset could not be synchronised.
 	 */
 	public static void compoundRelation(final DataSetTable datasetTable,
-			final Relation relation, final int n) throws SQLException,
+			final Relation relation, final CompoundRelationDefinition def) throws SQLException,
 			DataModelException, ValidationException {
 		Log.info(Resources.get("logReqCompoundRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
-				.setCompoundRelation(datasetTable, relation, n);
+				.setCompoundRelation(datasetTable, relation, def);
 		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
@@ -774,16 +768,9 @@ public class MartBuilderUtils {
 	 *             if something went wrong.
 	 */
 	public static void concatRelation(final DataSetTable dsTable,
-			final Relation rel, final int index, final String column,
-			final Map aliases, final String expression, final String rowSep,
-			final RecursionType recursionType, final Key recursionKey,
-			final Relation firstRelation, final Relation secondRelation,
-			final String concSep)
+			final Relation rel, final int index, final ConcatRelationDefinition expr)
 			throws SQLException, DataModelException, ValidationException {
 		Log.info(Resources.get("logReqConcatRelation"));
-		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
-				expression, aliases, rowSep, column,
-				recursionType, recursionKey, firstRelation, secondRelation, concSep);
 		((DataSet) dsTable.getSchema()).getSchemaModifications()
 				.setConcatRelation(dsTable, rel, index, expr);
 		((DataSet) dsTable.getSchema()).synchronise();
@@ -814,16 +801,9 @@ public class MartBuilderUtils {
 	 *             if something went wrong.
 	 */
 	public static void concatRelation(final DataSet ds, final Relation rel,
-			final int index, final String column, final Map aliases,
-			final String expression, final String rowSep,
-			final RecursionType recursionType, final Key recursionKey,
-			final Relation firstRelation, final Relation secondRelation,
-			final String concSep) throws SQLException,
+			final int index, final ConcatRelationDefinition expr) throws SQLException,
 			DataModelException, ValidationException {
 		Log.info(Resources.get("logReqConcatRelation"));
-		final ConcatRelationDefinition expr = new ConcatRelationDefinition(
-				expression, aliases, rowSep, column,
-				recursionType, recursionKey, firstRelation, secondRelation, concSep);
 		ds.getSchemaModifications().setConcatRelation(rel, index, expr);
 		ds.synchronise();
 	}

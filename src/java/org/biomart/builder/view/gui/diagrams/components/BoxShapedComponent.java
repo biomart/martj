@@ -301,8 +301,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	public abstract void recalculateDiagramComponent();
 
 	public void repaintDiagramComponent() {
-		// To speed things up, we only repaint the visible bits.
-		this.repaint(this.getVisibleRect());
+		this.updateAppearance();
 	}
 
 	/**

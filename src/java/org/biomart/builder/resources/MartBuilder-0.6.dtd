@@ -81,6 +81,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST compoundRelation tableKey CDATA #REQUIRED>
 <!ATTLIST compoundRelation relationId IDREF #REQUIRED>
 <!ATTLIST compoundRelation n CDATA #REQUIRED>
+<!ATTLIST compoundRelation parallel (true|false) #REQUIRED>
 
 <!ELEMENT renamedTable EMPTY>
 <!ATTLIST renamedTable tableKey CDATA #REQUIRED>
@@ -130,6 +131,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ELEMENT restrictedTable EMPTY>
 <!ATTLIST restrictedTable tableKey CDATA #REQUIRED>
 <!ATTLIST restrictedTable tableId IDREF #REQUIRED>
+<!ATTLIST restrictedTable aliasRelationIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable expression CDATA #REQUIRED>
@@ -159,6 +161,7 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST concatRelation colKey CDATA #REQUIRED>
 <!ATTLIST concatRelation relationId IDREF #REQUIRED>
 <!ATTLIST concatRelation index CDATA #REQUIRED>
+<!ATTLIST concatRelation aliasRelationIds IDREFS #REQUIRED>
 <!ATTLIST concatRelation aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST concatRelation aliasNames CDATA #REQUIRED>
 <!ATTLIST concatRelation expression CDATA #REQUIRED>

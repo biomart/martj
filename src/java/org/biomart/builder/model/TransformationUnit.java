@@ -163,12 +163,13 @@ public abstract class TransformationUnit {
 						.getFirstKey() : this.schemaRelation.getSecondKey();
 				final Key parentKey = this.schemaRelation.getOtherKey(ourKey);
 				final int pos = ourKey.getColumns().indexOf(column);
-				candidate = this.getPreviousUnit().getDataSetColumnFor(
+				if (pos>=0)
+					candidate = this.getPreviousUnit().getDataSetColumnFor(
 						(Column) parentKey.getColumns().get(pos));
-			}
-			if (candidate == null) 
-				candidate = this.getPreviousUnit().getDataSetColumnFor(
+				if (candidate==null)
+					candidate = this.getPreviousUnit().getDataSetColumnFor(
 						column);
+			}
 			return candidate;
 		}
 	}

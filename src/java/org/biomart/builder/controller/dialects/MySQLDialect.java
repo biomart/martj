@@ -24,6 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,7 @@ import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
+import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 
@@ -79,6 +82,20 @@ public class MySQLDialect extends DatabaseDialect {
 				.getRecursionSecondFromColumns() != null;
 		final String recursionTempTable = "MART_RECURSE";
 
+		// Work out additional tables to include in this.
+		char additionalTable = 'f';
+		final Map allAdditionalRels = new HashMap();
+		final Map trAdditionalRels = new HashMap();
+		if (action.getTableRestriction() != null)
+			for (final Iterator i = action.getTableRestriction()
+					.getAdditionalRelations().iterator(); i.hasNext();) {
+				trAdditionalRels.put((Relation) i.next(), "" + additionalTable);
+				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
+			}
+		for (final Iterator i = action.getConcatColumnDefinition()
+					.getAdditionalRelations().iterator(); i.hasNext();) 
+				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
+
 		// If we haven't defined the group_concat size yet, define it.
 		// Note limitation of total 18446744073709551616 characters for
 		// group_concat result.
@@ -86,13 +103,14 @@ public class MySQLDialect extends DatabaseDialect {
 			statements.add("set group_concat_max_len=18446744073709551616");
 			MySQLDialect.GROUP_CONCAT_SIZED = true;
 		}
-		
+
 		final StringBuffer sb = new StringBuffer();
 
 		if (isRecursive) {
 			// Start block.
 			statements.add("DELIMITER // ");
-			sb.append("CREATE PROCEDURE () mart_recurse MODIFIES SQL DATA BEGIN DECLARE rows_updated INT DEFAULT 1; ");
+			sb
+					.append("CREATE PROCEDURE () mart_recurse MODIFIES SQL DATA BEGIN DECLARE rows_updated INT DEFAULT 1; ");
 			// Create intial temp table
 			sb.append("create table " + action.getDataSetSchemaName() + "."
 					+ recursionTempTable + " as select ");
@@ -104,7 +122,7 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(",");
 			}
 			sb.append(action.getConcatColumnDefinition()
-					.getSubstitutedExpression("a"));
+					.getSubstitutedExpression(allAdditionalRels, "a"));
 			sb.append(" as ");
 			sb.append(action.getConcatColumnName());
 			sb.append(",1 as finalRow");
@@ -128,11 +146,35 @@ public class MySQLDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null) {
+			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(trAdditionalRels, "a"));
 				sb.append(')');
+			}
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)k.next();
+				final Relation rel = (Relation)entry.getKey();
+				final Table tbl = (Table)rel.getOneKey().getTable();
+				sb.append(" inner join ");
+					sb.append(trgtSchemaName);
+				sb.append(".");
+				sb.append(tbl.getName());
+				sb.append(" as ");
+				sb.append((String)entry.getValue());
+				sb.append(" on ");
+				final List aCols = rel.getManyKey().getColumns();
+				final List joinCols = rel.getOneKey().getColumns();
+				for (int i = 0; i < aCols.size(); i++) {
+					if (i>0)
+						sb.append(" and ");
+					sb.append("a.");
+					sb.append(((Column)aCols.get(i)).getName());
+					sb.append('=');
+					sb.append((String)entry.getValue());
+					sb.append('.');
+					sb.append(((Column)joinCols.get(i)).getName());
+				}
 			}
 			sb.append(" inner join ");
 			if (isDoubleRecursive) {
@@ -173,11 +215,17 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
 			}
+			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+				sb.append(" where ");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression(trAdditionalRels, "a"));
+			}
 			sb.append("; ");
 			// Index rtJoinCols.
-			sb.append("create index " + recursionTempTable + "_I_" + this.indexCount++
-				+ " on " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + "(");
+			sb.append("create index " + recursionTempTable + "_I_"
+					+ this.indexCount++ + " on "
+					+ action.getDataSetSchemaName() + "." + recursionTempTable
+					+ "(");
 			for (final Iterator i = action.getRightJoinColumns().iterator(); i
 					.hasNext();) {
 				final String entry = (String) i.next();
@@ -187,9 +235,10 @@ public class MySQLDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index parentFromCols.
-			sb.append("create index " + recursionTempTable + "_I_" + this.indexCount++
-					+ " on " + action.getDataSetSchemaName() + "."
-						+ recursionTempTable + "(");
+			sb.append("create index " + recursionTempTable + "_I_"
+					+ this.indexCount++ + " on "
+					+ action.getDataSetSchemaName() + "." + recursionTempTable
+					+ "(");
 			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
 					.hasNext();) {
 				final String entry = (String) i.next();
@@ -199,9 +248,10 @@ public class MySQLDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index finalRow.
-			sb.append("create index " + recursionTempTable + "_I_" + this.indexCount++
-					+ " on " + action.getDataSetSchemaName() + "."
-						+ recursionTempTable + "(finalRow); ");
+			sb.append("create index " + recursionTempTable + "_I_"
+					+ this.indexCount++ + " on "
+					+ action.getDataSetSchemaName() + "." + recursionTempTable
+					+ "(finalRow); ");
 			// Loop
 			sb.append("WHILE rows_updated > 1 DO ");
 			// Insert into table with flag = 0.
@@ -222,12 +272,12 @@ public class MySQLDialect extends DatabaseDialect {
 						.replaceAll("'", "\\'"));
 				sb.append("',");
 				sb.append(action.getConcatColumnDefinition()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(allAdditionalRels, "a"));
 				sb.append(')');
 			} else {
 				sb.append("concat(");
 				sb.append(action.getConcatColumnDefinition()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(allAdditionalRels, "a"));
 				sb.append(",'");
 				sb.append(action.getConcatColumnDefinition().getConcSep()
 						.replaceAll("'", "\\'"));
@@ -259,10 +309,10 @@ public class MySQLDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null) {
+			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression("a"));
+						.getSubstitutedExpression(trAdditionalRels,"a"));
 				sb.append(')');
 			}
 			sb.append(" inner join ");
@@ -303,6 +353,35 @@ public class MySQLDialect extends DatabaseDialect {
 							.getRecursionToColumns().get(i);
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
+			}
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)k.next();
+				final Relation rel = (Relation)entry.getKey();
+				final Table tbl = (Table)rel.getOneKey().getTable();
+				sb.append(" inner join ");
+					sb.append(trgtSchemaName);
+				sb.append(".");
+				sb.append(tbl.getName());
+				sb.append(" as ");
+				sb.append((String)entry.getValue());
+				sb.append(" on ");
+				final List aCols = rel.getManyKey().getColumns();
+				final List joinCols = rel.getOneKey().getColumns();
+				for (int i = 0; i < aCols.size(); i++) {
+					if (i>0)
+						sb.append(" and ");
+					sb.append("a.");
+					sb.append(((Column)aCols.get(i)).getName());
+					sb.append('=');
+					sb.append((String)entry.getValue());
+					sb.append('.');
+					sb.append(((Column)joinCols.get(i)).getName());
+				}
+			}
+			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+				sb.append(" where ");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression(trAdditionalRels,"a"));
 			}
 			sb.append("; ");
 			// Delete old rows where old row flag = 1 and parentFromCols
@@ -336,7 +415,8 @@ public class MySQLDialect extends DatabaseDialect {
 			statements.add("DROP PROCEDURE mart_recurse;");
 		}
 
-		// Now do the grouping on the nicely recursed (or original if not recursed) table.
+		// Now do the grouping on the nicely recursed (or original if not
+		// recursed) table.
 		sb.append("create table " + action.getDataSetSchemaName() + "."
 				+ mergeTableName + " as select ");
 		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
@@ -352,7 +432,7 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(action.getConcatColumnName());
 		} else {
 			sb.append(action.getConcatColumnDefinition()
-					.getSubstitutedExpression("b"));
+					.getSubstitutedExpression(allAdditionalRels,"b"));
 		}
 		sb.append(" separator '");
 		sb.append(action.getConcatColumnDefinition().getRowSep().replaceAll(
@@ -371,23 +451,54 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(" and ");
 			final String pkColName = (String) action.getLeftJoinColumns()
 					.get(i);
-			final String fkColName = (String) action.getRightJoinColumns()
-					.get(i);
+			final String fkColName = (String) action.getRightJoinColumns().get(
+					i);
 			sb.append("a." + pkColName + "=b." + fkColName + "");
 		}
-		if (!isRecursive && action.getRelationRestriction() != null) {
-			sb.append(" and ");
-			sb.append(action.getRelationRestriction().getSubstitutedExpression(
-					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
-					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
-					action.isRelationRestrictionLeftIsFirst(),
-					action.getRelationRestrictionPreviousUnit()));
-		}
-		if (!isRecursive && action.getTableRestriction() != null) {
-			sb.append(" and (");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("b"));
-			sb.append(')');
+		if (!isRecursive) {
+			if (action.getRelationRestriction() != null) {
+				sb.append(" and ");
+				sb.append(action.getRelationRestriction().getSubstitutedExpression(
+						action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
+						action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
+						action.isRelationRestrictionLeftIsFirst(),
+						action.getRelationRestrictionPreviousUnit()));
+			}
+			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
+				sb.append(" and (");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression(trAdditionalRels, "b"));
+				sb.append(')');
+			}
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
+				final Map.Entry entry = (Map.Entry)k.next();
+				final Relation rel = (Relation)entry.getKey();
+				final Table tbl = (Table)rel.getOneKey().getTable();
+				sb.append(" inner join ");
+					sb.append(trgtSchemaName);
+				sb.append(".");
+				sb.append(tbl.getName());
+				sb.append(" as ");
+				sb.append((String)entry.getValue());
+				sb.append(" on ");
+				final List aCols = rel.getManyKey().getColumns();
+				final List joinCols = rel.getOneKey().getColumns();
+				for (int i = 0; i < aCols.size(); i++) {
+					if (i>0)
+						sb.append(" and ");
+					sb.append("a.");
+					sb.append(((Column)aCols.get(i)).getName());
+					sb.append('=');
+					sb.append((String)entry.getValue());
+					sb.append('.');
+					sb.append(((Column)joinCols.get(i)).getName());
+				}
+			}
+			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+				sb.append(" where ");
+				sb.append(action.getTableRestriction()
+						.getSubstitutedExpression(trAdditionalRels, "b"));
+			}
 		}
 		sb.append(" group by ");
 		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
@@ -400,7 +511,7 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 
 		statements.add(sb.toString());
-		
+
 		if (isRecursive) {
 			statements.add("drop table " + action.getDataSetSchemaName() + "."
 					+ recursionTempTable);
@@ -422,6 +533,14 @@ public class MySQLDialect extends DatabaseDialect {
 		final String fromTableSchema = action.getSchema();
 		final String fromTableName = action.getTable();
 
+		// Work out additional tables to include in this.
+		char additionalTable = 'f';
+		final Map additionalRels = new HashMap();
+		if (action.getTableRestriction() != null)
+			for (final Iterator i = action.getTableRestriction()
+					.getAdditionalRelations().iterator(); i.hasNext();)
+				additionalRels.put((Relation) i.next(), "" + additionalTable++);
+
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
 				+ " as select ");
@@ -438,10 +557,34 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
+		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)k.next();
+			final Relation rel = (Relation)entry.getKey();
+			final Table tbl = (Table)rel.getOneKey().getTable();
+			sb.append(" inner join ");
+			sb.append(fromTableSchema);
+			sb.append(".");
+			sb.append(tbl.getName());
+			sb.append(" as ");
+			sb.append((String)entry.getValue());
+			sb.append(" on ");
+			final List aCols = rel.getManyKey().getColumns();
+			final List joinCols = rel.getOneKey().getColumns();
+			for (int i = 0; i < aCols.size(); i++) {
+				if (i>0)
+					sb.append(" and ");
+				sb.append("a.");
+				sb.append(((Column)aCols.get(i)).getName());
+				sb.append('=');
+				sb.append((String)entry.getValue());
+				sb.append('.');
+				sb.append(((Column)joinCols.get(i)).getName());
+			}
+		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" where ");
 			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("a"));
+					.getSubstitutedExpression(additionalRels, "a"));
 		}
 		if (action.getPartitionColumn() != null) {
 			if (action.getTableRestriction() != null)
@@ -534,10 +677,19 @@ public class MySQLDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		final String joinType = (action.getPartitionColumn() != null 
-				|| (action.getRelationRestriction()!=null && action.getRelationRestriction().isHard()) 
-				|| (action.getTableRestriction()!=null && action.getTableRestriction().isHard())) ? "inner"
-				: "left";
+		// Work out additional tables to include in this.
+		char additionalTable = 'f';
+		final Map additionalRels = new HashMap();
+		if (action.getTableRestriction() != null)
+			for (final Iterator i = action.getTableRestriction()
+					.getAdditionalRelations().iterator(); i.hasNext();)
+				additionalRels.put((Relation) i.next(), "" + additionalTable++);
+
+		final String joinType = (action.getPartitionColumn() != null
+				|| (action.getRelationRestriction() != null && action
+						.getRelationRestriction().isHard()) || (action
+				.getTableRestriction() != null && action.getTableRestriction()
+				.isHard())) ? "inner" : "left";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."
@@ -560,8 +712,8 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(" and ");
 			final String pkColName = (String) action.getLeftJoinColumns()
 					.get(i);
-			final String fkColName = (String) action.getRightJoinColumns()
-					.get(i);
+			final String fkColName = (String) action.getRightJoinColumns().get(
+					i);
 			sb.append("a." + pkColName + "=b." + fkColName + "");
 		}
 		if (action.getRelationRestriction() != null) {
@@ -569,13 +721,13 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
-							action.isRelationRestrictionLeftIsFirst(),
-							action.getRelationRestrictionPreviousUnit()));
+					action.isRelationRestrictionLeftIsFirst(),
+					action.getRelationRestrictionPreviousUnit()));
 		}
-		if (action.getTableRestriction() != null) {
+		if (action.getTableRestriction() != null && additionalRels.isEmpty()) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("b"));
+					.getSubstitutedExpression(additionalRels,"b"));
 			sb.append(')');
 		}
 		if (action.getPartitionColumn() != null) {
@@ -597,6 +749,35 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append('\'');
 				}
 			}
+		}
+		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)k.next();
+			final Relation rel = (Relation)entry.getKey();
+			final Table tbl = (Table)rel.getOneKey().getTable();
+			sb.append(" "+joinType+" join ");
+				sb.append(trgtSchemaName);
+			sb.append(".");
+			sb.append(tbl.getName());
+			sb.append(" as ");
+			sb.append((String)entry.getValue());
+			sb.append(" on ");
+			final List aCols = rel.getManyKey().getColumns();
+			final List joinCols = rel.getOneKey().getColumns();
+			for (int i = 0; i < aCols.size(); i++) {
+				if (i>0)
+					sb.append(" and ");
+				sb.append("b.");
+				sb.append(((Column)aCols.get(i)).getName());
+				sb.append('=');
+				sb.append((String)entry.getValue());
+				sb.append('.');
+				sb.append(((Column)joinCols.get(i)).getName());
+			}
+		}
+		if (action.getTableRestriction() != null && !additionalRels.isEmpty()) {
+			sb.append(" where ");
+			sb.append(action.getTableRestriction()
+					.getSubstitutedExpression(additionalRels,"b"));
 		}
 
 		statements.add(sb.toString());
@@ -795,8 +976,8 @@ public class MySQLDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public Collection executeSelectDistinct(final String schemaName, final Column col)
-			throws SQLException {
+	public Collection executeSelectDistinct(final String schemaName,
+			final Column col) throws SQLException {
 		final String colName = col.getName();
 		final String tableName = col.getTable().getName();
 		final Schema schema = col.getTable().getSchema();

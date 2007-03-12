@@ -143,7 +143,7 @@ public class MartTabSet extends JTabbedPane {
 		this.martXMLFile.put(mart, martXMLFile);
 		this.martModifiedStatus.put(mart, Boolean.FALSE);
 		final MartTab martTab = new MartTab(this, mart);
-		final String martTabName = this.suggestTabName(mart);
+		final String martTabName = this.suggestTabName(mart, true);
 		Log.info(Resources.get("logAddMartTab", martTabName));
 		this.addTab(martTabName, martTab);
 
@@ -232,7 +232,7 @@ public class MartTabSet extends JTabbedPane {
 	 * Suggests a tab name based on a mart's filename. If the mart has no
 	 * filename, "unsaved" is used.
 	 */
-	private String suggestTabName(final Mart mart) {
+	private String suggestTabName(final Mart mart, final boolean includeModified) {
 
 		// Start with "unsaved".
 		String basename = Resources.get("unsavedMart");
@@ -244,8 +244,8 @@ public class MartTabSet extends JTabbedPane {
 
 		// If it's modified, append a "*" to make it obvious.
 		return basename
-				+ (this.martModifiedStatus.get(mart).equals(Boolean.TRUE) ? " *"
-						: "");
+				+ ((includeModified && this.martModifiedStatus.get(mart)
+						.equals(Boolean.TRUE)) ? " *" : "");
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -400,14 +400,15 @@ public class MartTabSet extends JTabbedPane {
 							for (int i = 0; i < loadFiles.length; i++) {
 								final File file = loadFiles[i];
 								final Mart mart = MartBuilderXML.load(file);
-										MartTabSet.this.addMartTab(mart, file);
+								MartTabSet.this.addMartTab(mart, file);
 								// Save XML filename in history of accessed
 								// files.
 								final Properties history = new Properties();
 								history.setProperty("location", file.getPath());
 								Settings.saveHistoryProperties(
 										MartTabSet.class, MartTabSet.this
-												.suggestTabName(mart), history);
+												.suggestTabName(mart, false),
+										history);
 							}
 
 							// Finally, remove the unsaved default tab if
@@ -465,13 +466,14 @@ public class MartTabSet extends JTabbedPane {
 
 					// Load the files.
 					final Mart mart = MartBuilderXML.load(file);
-							MartTabSet.this.addMartTab(mart, file);
+					MartTabSet.this.addMartTab(mart, file);
 					// Save XML filename in history of accessed
 					// files.
 					final Properties history = new Properties();
 					history.setProperty("location", file.getPath());
 					Settings.saveHistoryProperties(MartTabSet.class,
-							MartTabSet.this.suggestTabName(mart), history);
+							MartTabSet.this.suggestTabName(mart, false),
+							history);
 
 					// Finally, remove the unsaved default tab if
 					// we need to.
@@ -655,7 +657,7 @@ public class MartTabSet extends JTabbedPane {
 			final Properties history = new Properties();
 			history.setProperty("location", saveAsFile.getPath());
 			Settings.saveHistoryProperties(MartTabSet.class, this
-					.suggestTabName(currentMart), history);
+					.suggestTabName(currentMart, false), history);
 		}
 	}
 
@@ -678,8 +680,8 @@ public class MartTabSet extends JTabbedPane {
 		this.martModifiedStatus.put(currentMart, Boolean.valueOf(status));
 
 		// Update the tab title to indicate modification status.
-		this.setTitleAt(this.getSelectedIndex(), this
-				.suggestTabName(currentMart));
+		this.setTitleAt(this.getSelectedIndex(), this.suggestTabName(
+				currentMart, true));
 	}
 
 	/**

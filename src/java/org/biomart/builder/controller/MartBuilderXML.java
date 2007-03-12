@@ -49,6 +49,7 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
+import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -342,12 +343,15 @@ public class MartBuilderXML extends DefaultHandler {
 				xmlWriter);
 	}
 
-	private String[] readListAttribute(final String string) {
-		if (string==null || string.length()==0) 
-			return new String[0];
-		final String[] values = string.split("\\s*,\\s*");
-		for (int i = 0; i < values.length; i++)
+	private String[] readListAttribute(final String string, boolean blankIsSingleNull) {
+		if (string == null || string.length() == 0)
+			return blankIsSingleNull ? new String[] { null } : new String[0];
+		final String[] values = string.split("\\s*,\\s*",-1);
+		for (int i = 0; i < values.length; i++) {
 			values[i] = values[i].replaceAll("__COMMA__", ",");
+			if (values[i].length() == 0)
+				values[i] = null;
+		}
 		return values;
 	}
 
@@ -432,10 +436,16 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("name", jdbcSchema.getName(), xmlWriter);
 			this.writeAttribute("keyguessing", Boolean.toString(jdbcSchema
 					.getKeyGuessing()), xmlWriter);
-			
+
 			// Partitions.
-			this.writeListAttribute("partitionSchemas", (String[])jdbcSchema.getPartitions().keySet().toArray(new String[0]), xmlWriter);
-			this.writeListAttribute("partitionPrefixes", (String[])jdbcSchema.getPartitions().values().toArray(new String[0]), xmlWriter);
+			this
+					.writeListAttribute("partitionSchemas",
+							(String[]) jdbcSchema.getPartitions().keySet()
+									.toArray(new String[0]), xmlWriter);
+			this
+					.writeListAttribute("partitionPrefixes",
+							(String[]) jdbcSchema.getPartitions().values()
+									.toArray(new String[0]), xmlWriter);
 		}
 		// Other schema types are not recognised.
 		else
@@ -805,26 +815,34 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("tableId",
 							(String) this.reverseMappedObjects.get(entry2
 									.getKey()), xmlWriter);
+					final StringBuffer rels = new StringBuffer();
 					final StringBuffer cols = new StringBuffer();
 					final StringBuffer names = new StringBuffer();
 					for (final Iterator z = restrict.getAliases().entrySet()
 							.iterator(); z.hasNext();) {
 						Map.Entry entry3 = (Map.Entry) z.next();
+						final Object[] crPair = (Object[]) entry3.getKey();
+						if (crPair[0] != null)
+							rels.append((String) this.reverseMappedObjects
+									.get(crPair[0]));
 						cols.append((String) this.reverseMappedObjects
-								.get(entry3.getKey()));
+								.get(crPair[1]));
 						names.append((String) entry3.getValue());
 						if (z.hasNext()) {
+							rels.append(',');
 							cols.append(',');
 							names.append(',');
 						}
 					}
+					this.writeAttribute("aliasRelationIds", rels.toString(),
+							xmlWriter);
 					this.writeAttribute("aliasColumnIds", cols.toString(),
 							xmlWriter);
 					this.writeAttribute("aliasNames", names.toString(),
 							xmlWriter);
 					this.writeAttribute("expression", restrict.getExpression(),
 							xmlWriter);
-					this.writeAttribute("hard", ""+restrict.isHard(),
+					this.writeAttribute("hard", "" + restrict.isHard(),
 							xmlWriter);
 					this.closeElement("restrictedTable", xmlWriter);
 				}
@@ -850,21 +868,29 @@ public class MartBuilderXML extends DefaultHandler {
 								xmlWriter);
 						final ConcatRelationDefinition restrict = (ConcatRelationDefinition) entry3
 								.getValue();
+						final StringBuffer rels = new StringBuffer();
 						final StringBuffer cols = new StringBuffer();
 						final StringBuffer names = new StringBuffer();
 						for (final Iterator a = restrict.getAliases()
 								.entrySet().iterator(); a.hasNext();) {
 							Map.Entry entry4 = (Map.Entry) a.next();
+							final Object[] crPair = (Object[]) entry4.getKey();
+							if (crPair[0] != null)
+								rels.append((String) this.reverseMappedObjects
+										.get(crPair[0]));
 							cols.append((String) this.reverseMappedObjects
-									.get(entry4.getKey()));
+									.get(crPair[1]));
 							names.append((String) entry4.getValue());
-							if (z.hasNext()) {
+							if (a.hasNext()) {
+								rels.append(',');
 								cols.append(',');
 								names.append(',');
 							}
 						}
 						this.writeAttribute("colKey", restrict.getColKey(),
 								xmlWriter);
+						this.writeAttribute("aliasRelationIds",
+								rels.toString(), xmlWriter);
 						this.writeAttribute("aliasColumnIds", cols.toString(),
 								xmlWriter);
 						this.writeAttribute("aliasNames", names.toString(),
@@ -890,8 +916,8 @@ public class MartBuilderXML extends DefaultHandler {
 												.get(restrict
 														.getSecondRelation()),
 										xmlWriter);
-							this.writeAttribute("concSep", restrict.getConcSep(),
-									xmlWriter);
+							this.writeAttribute("concSep", restrict
+									.getConcSep(), xmlWriter);
 						}
 						this.closeElement("concatRelation", xmlWriter);
 					}
@@ -944,6 +970,8 @@ public class MartBuilderXML extends DefaultHandler {
 				for (final Iterator y = ((Map) entry.getValue()).entrySet()
 						.iterator(); y.hasNext();) {
 					final Map.Entry entry2 = (Map.Entry) y.next();
+					final CompoundRelationDefinition def = (CompoundRelationDefinition) entry2
+							.getValue();
 					this.openElement("compoundRelation", xmlWriter);
 					this.writeAttribute("tableKey", (String) entry.getKey(),
 							xmlWriter);
@@ -952,8 +980,9 @@ public class MartBuilderXML extends DefaultHandler {
 									(String) this.reverseMappedObjects
 											.get((Relation) entry2.getKey()),
 									xmlWriter);
-					this.writeAttribute("n", ((Integer) entry2.getValue())
-							.toString(), xmlWriter);
+					this.writeAttribute("n", "" + def.getN(), xmlWriter);
+					this.writeAttribute("parallel", "" + def.isParallel(),
+							xmlWriter);
 					this.closeElement("compoundRelation", xmlWriter);
 				}
 			}
@@ -978,13 +1007,14 @@ public class MartBuilderXML extends DefaultHandler {
 								xmlWriter);
 						final RestrictedRelationDefinition restrict = (RestrictedRelationDefinition) entry3
 								.getValue();
+						final StringBuffer lrels = new StringBuffer();
 						final StringBuffer lcols = new StringBuffer();
 						final StringBuffer lnames = new StringBuffer();
 						for (final Iterator a = restrict.getLeftAliases()
 								.entrySet().iterator(); a.hasNext();) {
 							Map.Entry entry4 = (Map.Entry) a.next();
 							lcols.append((String) this.reverseMappedObjects
-									.get(entry4.getKey()));
+									.get((Column) entry4.getKey()));
 							lnames.append((String) entry4.getValue());
 							if (a.hasNext()) {
 								lcols.append(',');
@@ -1001,7 +1031,7 @@ public class MartBuilderXML extends DefaultHandler {
 								.entrySet().iterator(); a.hasNext();) {
 							Map.Entry entry4 = (Map.Entry) a.next();
 							rcols.append((String) this.reverseMappedObjects
-									.get(entry4.getKey()));
+									.get((Column)entry4.getKey()));
 							rnames.append((String) entry4.getValue());
 							if (a.hasNext()) {
 								rcols.append(',');
@@ -1014,7 +1044,7 @@ public class MartBuilderXML extends DefaultHandler {
 								.toString(), xmlWriter);
 						this.writeAttribute("expression", restrict
 								.getExpression(), xmlWriter);
-						this.writeAttribute("hard", ""+restrict.isHard(),
+						this.writeAttribute("hard", "" + restrict.isHard(),
 								xmlWriter);
 						this.closeElement("restrictedRelation", xmlWriter);
 					}
@@ -1156,11 +1186,15 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Does it have partitions?
 			final Map partitions = new HashMap();
-			final String[] partSchs = this.readListAttribute((String)attributes.get("partitionSchemas"));
-			final String[] partPres = this.readListAttribute((String)attributes.get("partitionPrefixes"));
-			for (int i = 0; i < partSchs.length; i++) 
+			final String[] partSchs = this
+					.readListAttribute((String) attributes
+							.get("partitionSchemas"), false);
+			final String[] partPres = this
+					.readListAttribute((String) attributes
+							.get("partitionPrefixes"), false);
+			for (int i = 0; i < partSchs.length; i++)
 				partitions.put(partSchs[i], partPres[i]);
-			
+
 			// Construct the JDBC schema.
 			try {
 				final Schema schema = new JDBCSchema(driverClassLocation,
@@ -1284,7 +1318,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Decode the column IDs from the comma-separated list.
 				final String[] pkColIds = this
-						.readListAttribute((String) attributes.get("columnIds"));
+						.readListAttribute((String) attributes.get("columnIds"), false);
 				final List pkCols = new ArrayList();
 				for (int i = 0; i < pkColIds.length; i++)
 					pkCols.add(this.mappedObjects.get(pkColIds[i]));
@@ -1327,7 +1361,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Decode the column IDs from the comma-separated list.
 				final String[] fkColIds = this
-						.readListAttribute((String) attributes.get("columnIds"));
+						.readListAttribute((String) attributes.get("columnIds"), false);
 				final List fkCols = new ArrayList();
 				for (int i = 0; i < fkColIds.length; i++)
 					fkCols.add(this.mappedObjects.get(fkColIds[i]));
@@ -1476,6 +1510,8 @@ public class MartBuilderXML extends DefaultHandler {
 						.get(attributes.get("relationId"));
 				final String tableKey = (String) attributes.get("tableKey");
 				final Integer n = Integer.valueOf((String) attributes.get("n"));
+				final boolean parallel = Boolean.valueOf(
+						(String) attributes.get("parallel")).booleanValue();
 
 				// Compound it.
 				if (rel != null && tableKey != null && n != null) {
@@ -1483,7 +1519,9 @@ public class MartBuilderXML extends DefaultHandler {
 							.getCompoundRelations();
 					if (!compMap.containsKey(tableKey))
 						compMap.put(tableKey, new HashMap());
-					((Map) compMap.get(tableKey)).put(rel, n);
+					((Map) compMap.get(tableKey)).put(rel,
+							new CompoundRelationDefinition(n.intValue(),
+									parallel));
 				}
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -1593,7 +1631,7 @@ public class MartBuilderXML extends DefaultHandler {
 					if (attributes.containsKey("partitionValues"))
 						valueList.addAll(Arrays.asList(this
 								.readListAttribute((String) attributes
-										.get("partitionValues"))));
+										.get("partitionValues"), false)));
 					final boolean includeNull = Boolean.valueOf(
 							(String) attributes.get("partitionUseNull"))
 							.booleanValue();
@@ -1606,11 +1644,11 @@ public class MartBuilderXML extends DefaultHandler {
 					final List rangeNames = new ArrayList();
 					rangeNames.addAll(Arrays.asList(this
 							.readListAttribute((String) attributes
-									.get("rangeNames"))));
+									.get("rangeNames"), false)));
 					final List rangeExpressions = new ArrayList();
 					rangeExpressions.addAll(Arrays.asList(this
 							.readListAttribute((String) attributes
-									.get("rangeExpressions"))));
+									.get("rangeExpressions"), false)));
 					// Make the range collection.
 					final Map ranges = new HashMap();
 					for (int i = 0; i < rangeNames.size(); i++)
@@ -1756,17 +1794,26 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();
+				String[] aliasRelationIds = this
+						.readListAttribute((String) attributes
+								.get("aliasRelationIds"),true);
 				final String[] aliasColumnIds = this
 						.readListAttribute((String) attributes
-								.get("aliasColumnIds"));
+								.get("aliasColumnIds"), false);
+				if (aliasRelationIds.length == 0)
+					aliasRelationIds = new String[aliasColumnIds.length]; // FIXME
+																			// Remove
 				final String[] aliasNames = this
 						.readListAttribute((String) attributes
-								.get("aliasNames"));
+								.get("aliasNames"), false);
 				for (int i = 0; i < aliasColumnIds.length; i++) {
-					final Column wrapped = (Column) this.mappedObjects
+					final Relation wrel = aliasRelationIds[i] != null ? (Relation) this.mappedObjects
+							.get(aliasRelationIds[i])
+							: null;
+					final Column wcol = (Column) this.mappedObjects
 							.get(aliasColumnIds[i]);
-					if (wrapped != null)
-						aliases.put(wrapped, aliasNames[i]);
+					if (wcol != null)
+						aliases.put(new Object[] { wrel, wcol }, aliasNames[i]);
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
@@ -1841,21 +1888,31 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();
+				String[] aliasRelationIds = this
+						.readListAttribute((String) attributes
+								.get("aliasRelationIds"),true);
 				final String[] aliasColumnIds = this
 						.readListAttribute((String) attributes
-								.get("aliasColumnIds"));
+								.get("aliasColumnIds"), false);
+				if (aliasRelationIds.length == 0)
+					aliasRelationIds = new String[aliasColumnIds.length]; // FIXME
+																			// Remove
 				final String[] aliasNames = this
 						.readListAttribute((String) attributes
-								.get("aliasNames"));
+								.get("aliasNames"), false);
 				for (int i = 0; i < aliasColumnIds.length; i++) {
-					final Column wrapped = (Column) this.mappedObjects
+					final Relation wrel = aliasRelationIds[i] != null ? (Relation) this.mappedObjects
+							.get(aliasRelationIds[i])
+							: null;
+					final Column wcol = (Column) this.mappedObjects
 							.get(aliasColumnIds[i]);
-					if (wrapped != null)
-						aliases.put(wrapped, aliasNames[i]);
+					if (wcol != null)
+						aliases.put(new Object[] { wrel, wcol }, aliasNames[i]);
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
-				final boolean hard = Boolean.valueOf((String)attributes.get("hard")).booleanValue();
+				final boolean hard = Boolean.valueOf(
+						(String) attributes.get("hard")).booleanValue();
 
 				// Flag it as restricted
 				if (expr != null && !aliases.isEmpty() && tableKey != null
@@ -1893,10 +1950,10 @@ public class MartBuilderXML extends DefaultHandler {
 				final Map aliases = new HashMap();
 				final String[] aliasColumnNames = this
 						.readListAttribute((String) attributes
-								.get("aliasColumnNames"));
+								.get("aliasColumnNames"),false);
 				final String[] aliasNames = this
 						.readListAttribute((String) attributes
-								.get("aliasNames"));
+								.get("aliasNames"), false);
 				for (int i = 0; i < aliasColumnNames.length; i++)
 					aliases.put(aliasColumnNames[i], aliasNames[i]);
 				// Get the expression to use.
@@ -1944,33 +2001,36 @@ public class MartBuilderXML extends DefaultHandler {
 				final Map laliases = new HashMap();
 				final String[] laliasColumnIds = this
 						.readListAttribute((String) attributes
-								.get("leftAliasColumnIds"));
+								.get("leftAliasColumnIds"), false);
 				final String[] laliasNames = this
 						.readListAttribute((String) attributes
-								.get("leftAliasNames"));
+								.get("leftAliasNames"), false);
 				for (int i = 0; i < laliasColumnIds.length; i++) {
-					final Column wrapped = (Column) this.mappedObjects
+					final Column wcol = (Column) this.mappedObjects
 							.get(laliasColumnIds[i]);
-					if (wrapped != null)
-						laliases.put(wrapped, laliasNames[i]);
+					if (wcol != null)
+						laliases.put(wcol,
+								laliasNames[i]);
 				}
 				// and the second
 				final Map raliases = new HashMap();
 				final String[] raliasColumnIds = this
 						.readListAttribute((String) attributes
-								.get("rightAliasColumnIds"));
+								.get("rightAliasColumnIds"), false);
 				final String[] raliasNames = this
 						.readListAttribute((String) attributes
-								.get("rightAliasNames"));
+								.get("rightAliasNames"), false);
 				for (int i = 0; i < raliasColumnIds.length; i++) {
-					final Column wrapped = (Column) this.mappedObjects
+					final Column wcol = (Column) this.mappedObjects
 							.get(raliasColumnIds[i]);
-					if (wrapped != null)
-						raliases.put(wrapped, raliasNames[i]);
+					if (wcol != null)
+						raliases.put(wcol,
+								raliasNames[i]);
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
-				final boolean hard = Boolean.valueOf((String)attributes.get("hard")).booleanValue();
+				final boolean hard = Boolean.valueOf(
+						(String) attributes.get("hard")).booleanValue();
 
 				// Flag it as restricted
 				if (expr != null && rel != null && tableKey != null

@@ -25,7 +25,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +44,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
+import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -92,7 +92,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 	private AllDataSetsDiagram allDataSetsDiagram;
 
-	private final Collection currentExplanationDialogs = new HashSet();
+	private ExplainDialog currentExplanationDialog;
 
 	// Use double-list to prevent problems with hashcodes changing.
 	private final List[] datasetToDiagram = new List[] { new ArrayList(),
@@ -175,8 +175,8 @@ public class DataSetTabSet extends JTabbedPane {
 			this.recalculateOverviewDiagram();
 		} else {
 			// Fake a click on the overview tab.
-			//this.setSelectedIndex(0);
-			//this.martTab.selectDataSetEditor();
+			// this.setSelectedIndex(0);
+			// this.martTab.selectDataSetEditor();
 		}
 	}
 
@@ -261,12 +261,13 @@ public class DataSetTabSet extends JTabbedPane {
 		this.datasetToDiagram[1].remove(index);
 
 		if (select) {
-		// Update the overview diagram.
-		this.recalculateOverviewDiagram();
+			// Update the overview diagram.
+			this.recalculateOverviewDiagram();
 
-		// Fake a click on the last tab before this one to ensure
-		// at least one tab remains visible and up-to-date.
-		this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1, 0));
+			// Fake a click on the last tab before this one to ensure
+			// at least one tab remains visible and up-to-date.
+			this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1,
+					0));
 		}
 	}
 
@@ -318,8 +319,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dialog
 	 *            the dialog being displayed by a current {@link ExplainDialog}.
 	 */
-	public void addCurrentExplanationDialog(final ExplainDialog dialog) {
-		this.currentExplanationDialogs.add(dialog);
+	public void setCurrentExplanationDialog(final ExplainDialog dialog) {
+		this.currentExplanationDialog = dialog;
 	}
 
 	/**
@@ -331,24 +332,24 @@ public class DataSetTabSet extends JTabbedPane {
 	public MartTab getMartTab() {
 		return this.martTab;
 	}
-	
+
 	public void recalculateAllDataSetDiagrams() {
-		for (int index = 0; index < this.datasetToDiagram.length; index++) 
-			((Diagram) this.datasetToDiagram[1].get(index)).recalculateDiagram();
-		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
-				.hasNext();)
-			((ExplainDialog) i.next()).recalculateDialog(null);
+		for (int index = 0; index < this.datasetToDiagram.length; index++)
+			((Diagram) this.datasetToDiagram[1].get(index))
+					.recalculateDiagram();
+		if (this.currentExplanationDialog != null)
+			this.currentExplanationDialog.recalculateDialog(null);
 	}
-	
+
 	public void recalculateAffectedDataSetDiagrams(final Schema schema) {
 		for (int index = 0; index < this.datasetToDiagram.length; index++) {
 			final DataSet ds = ((DataSet) this.datasetToDiagram[0].get(index));
 			if (ds.usesSchema(schema))
-				((Diagram) this.datasetToDiagram[1].get(index)).recalculateDiagram();
+				((Diagram) this.datasetToDiagram[1].get(index))
+						.recalculateDiagram();
 		}
-		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
-				.hasNext();)
-			((ExplainDialog) i.next()).recalculateDialog(schema);
+		if (this.currentExplanationDialog != null)
+			this.currentExplanationDialog.recalculateDialog(schema);
 	}
 
 	/**
@@ -359,12 +360,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dataset
 	 *            the dataset to recalculate the diagram for.
 	 */
-	public void recalculateDataSetDiagram(final DataSet dataset) {
+	public void recalculateDataSetDiagram(final DataSet dataset,
+			final Object object) {
 		final int index = this.datasetToDiagram[0].indexOf(dataset);
-		((Diagram) this.datasetToDiagram[1].get(index)).recalculateDiagram();
-		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
-				.hasNext();)
-			((ExplainDialog) i.next()).recalculateDialog(null);
+		if (index >= 0)
+			((Diagram) this.datasetToDiagram[1].get(index))
+					.recalculateDiagram();
+		if (this.currentExplanationDialog != null)
+			this.currentExplanationDialog.recalculateDialog(object);
 	}
 
 	/**
@@ -399,7 +402,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final List ourDataSets = new ArrayList(this.datasetToDiagram[0]);
 		for (final Iterator i = ourDataSets.iterator(); i.hasNext();) {
 			final DataSet dataset = (DataSet) i.next();
-			if (!this.martTab.getMart().getDataSets().contains(dataset)) 
+			if (!this.martTab.getMart().getDataSets().contains(dataset))
 				this.removeDataSetTab(dataset, false);
 		}
 
@@ -416,8 +419,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dialog
 	 *            the dialog being closed by a current {@link ExplainDialog}.
 	 */
-	public void removeCurrentExplanationDialog(final ExplainDialog dialog) {
-		this.currentExplanationDialogs.remove(dialog);
+	public void clearCurrentExplanationDialog() {
+		this.currentExplanationDialog = null;
 	}
 
 	/**
@@ -429,12 +432,13 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dataset
 	 *            the dataset to repaint the diagram for.
 	 */
-	private void repaintDataSetDiagram(final DataSet dataset) {
+	private void repaintDataSetDiagram(final DataSet dataset,
+			final Object object) {
 		final int index = this.datasetToDiagram[0].indexOf(dataset);
-		((Diagram) this.datasetToDiagram[1].get(index)).repaintDiagram();
-		for (final Iterator i = this.currentExplanationDialogs.iterator(); i
-				.hasNext();)
-			((ExplainDialog) i.next()).repaintDialog(null);
+		if (index >= 0)
+			((Diagram) this.datasetToDiagram[1].get(index)).repaintDiagram();
+		if (this.currentExplanationDialog != null)
+			this.currentExplanationDialog.repaintDialog(object);
 	}
 
 	/**
@@ -528,21 +532,22 @@ public class DataSetTabSet extends JTabbedPane {
 				try {
 					if (dsTable != null)
 						MartBuilderUtils.concatRelation(dsTable, relation,
-								index, colKey, aliases, expression, rowSep,
-								recursionType, recursionKey, firstRelation,
-								secondRelation, concSep);
+								index, new ConcatRelationDefinition(expression,
+										aliases, rowSep, colKey, recursionType,
+										recursionKey, firstRelation,
+										secondRelation, concSep));
 					else
 						MartBuilderUtils.concatRelation(dataset, relation,
-								index, colKey, aliases, expression, rowSep,
-								recursionType, recursionKey, firstRelation,
-								secondRelation, concSep);
+								index, new ConcatRelationDefinition(expression,
+										aliases, rowSep, colKey, recursionType,
+										recursionKey, firstRelation,
+										secondRelation, concSep));
 
 					// Repaint the dataset diagram based on the modified
 					// dataset.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram(dsTable != null ? (DataSet) dsTable
-									.getSchema()
-									: dataset);
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dsTable != null ? (DataSet) dsTable.getSchema()
+									: dataset, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -654,7 +659,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.nonInheritAllColumns(ds, table);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -687,7 +692,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.nonInheritColumn(ds, column);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -714,6 +719,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestMaskColumn(final DataSet ds, final DataSetColumn column) {
 		this.requestMaskColumns(ds, Collections.singleton(column));
 	}
+
 	public void requestMaskColumns(final DataSet ds, final Collection columns) {
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -722,7 +728,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.maskColumns(ds, columns);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -754,7 +760,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.indexColumn(ds, column);
 
 					// And the overview.
-					DataSetTabSet.this.repaintDataSetDiagram(ds);
+					DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -786,7 +792,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.maskTable(ds, dim);
 
 					// And the overview.
-					DataSetTabSet.this.repaintDataSetDiagram(ds);
+					DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -818,7 +824,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.unmaskTable(ds, dim);
 
 					// And the overview.
-					DataSetTabSet.this.repaintDataSetDiagram(ds);
+					DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -850,7 +856,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.mergeRelation(ds, dst.getFocusRelation());
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -883,7 +889,7 @@ public class DataSetTabSet extends JTabbedPane {
 							.unmergeRelation(ds, dst.getFocusRelation());
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -907,26 +913,28 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dst
 	 *            the table to replicate.
 	 */
-	public void requestRecurseSubclass(final DataSet ds,
-			final DataSetTable dst) {
+	public void requestRecurseSubclass(final DataSet ds, final DataSetTable dst) {
 		// Work out if it is already compounded.
 		final Relation relation = dst.getFocusRelation();
 		if (!ds.getSchemaModifications().isSubclassedRelation(relation))
 			return;
-		int n = 1;
+		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
+				false);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
-			n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
+			def = ds.getSchemaModifications()
+					.getCompoundRelation(dst, relation);
 
 		// Pop up a dialog and update 'compound'.
-		final CompoundRelationDialog dialog = new CompoundRelationDialog(n,
+		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("recurseSubclassDialogTitle"), Resources
 						.get("recurseSubclassNLabel"));
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		final int newN = dialog.getArity();
+		final boolean newParallel = dialog.getParallel();
 
 		// Skip altogether if no change.
-		if (newN == n)
+		if (newN == def.getN())
 			return;
 
 		LongProcess.run(new Runnable() {
@@ -938,11 +946,13 @@ public class DataSetTabSet extends JTabbedPane {
 						MartBuilderUtils.uncompoundRelation(ds, relation);
 					} else {
 						// Compound the relation.
-						MartBuilderUtils.compoundRelation(ds, relation, newN);
+						MartBuilderUtils.compoundRelation(ds, relation,
+								new CompoundRelationDefinition(newN,
+										newParallel));
 					}
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -970,20 +980,23 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dst) {
 		// Work out if it is already compounded.
 		final Relation relation = dst.getFocusRelation();
-		int n = 1;
+		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
+				false);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
-			n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
+			def = ds.getSchemaModifications()
+					.getCompoundRelation(dst, relation);
 
 		// Pop up a dialog and update 'compound'.
-		final CompoundRelationDialog dialog = new CompoundRelationDialog(n,
+		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("replicateDimensionDialogTitle"), Resources
 						.get("replicateDimensionNLabel"));
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		final int newN = dialog.getArity();
+		final boolean newParallel = dialog.getParallel();
 
 		// Skip altogether if no change.
-		if (newN == n)
+		if (newN == def.getN())
 			return;
 
 		LongProcess.run(new Runnable() {
@@ -995,11 +1008,13 @@ public class DataSetTabSet extends JTabbedPane {
 						MartBuilderUtils.uncompoundRelation(ds, relation);
 					} else {
 						// Compound the relation.
-						MartBuilderUtils.compoundRelation(ds, relation, newN);
+						MartBuilderUtils.compoundRelation(ds, relation,
+								new CompoundRelationDefinition(newN,
+										newParallel));
 					}
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1028,20 +1043,23 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestCompoundRelation(final DataSet ds,
 			final DataSetTable dst, final Relation relation) {
 		// Work out if it is already compounded.
-		int n = 1;
+		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
+				false);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
-			n = ds.getSchemaModifications().getCompoundRelation(dst, relation);
+			def = ds.getSchemaModifications()
+					.getCompoundRelation(dst, relation);
 
 		// Pop up a dialog and update 'compound'.
-		final CompoundRelationDialog dialog = new CompoundRelationDialog(n,
+		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("compoundRelationDialogTitle"), Resources
 						.get("compoundRelationNLabel"));
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		final int newN = dialog.getArity();
+		final boolean newParallel = dialog.getParallel();
 
 		// Skip altogether if no change.
-		if (newN == n)
+		if (newN == def.getN())
 			return;
 
 		LongProcess.run(new Runnable() {
@@ -1058,17 +1076,18 @@ public class DataSetTabSet extends JTabbedPane {
 						// Compound the relation.
 						if (dst != null)
 							MartBuilderUtils.compoundRelation(dst, relation,
-									newN);
+									new CompoundRelationDefinition(newN,
+											newParallel));
 						else
 							MartBuilderUtils.compoundRelation(ds, relation,
-									newN);
+									new CompoundRelationDefinition(newN,
+											newParallel));
 					}
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram(dst != null ? (DataSet) dst
-									.getSchema()
-									: ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dst != null ? (DataSet) dst.getSchema() : ds,
+							relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1093,7 +1112,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 		// Work out possible options.
 		int maxIndex = dataset.getSchemaModifications().getCompoundRelation(
-				dsTable, relation);
+				dsTable, relation).getN();
 		final Integer[] options = new Integer[maxIndex];
 		for (int i = 0; i < options.length; i++)
 			options[i] = new Integer(i + 1);
@@ -1163,10 +1182,9 @@ public class DataSetTabSet extends JTabbedPane {
 										hard);
 
 					// And the overview.
-					DataSetTabSet.this
-							.repaintDataSetDiagram(dsTable != null ? (DataSet) dsTable
-									.getSchema()
-									: dataset);
+					DataSetTabSet.this.repaintDataSetDiagram(
+							dsTable != null ? (DataSet) dsTable.getSchema()
+									: dataset, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1216,10 +1234,9 @@ public class DataSetTabSet extends JTabbedPane {
 								index);
 
 					// And the overview.
-					DataSetTabSet.this
-							.repaintDataSetDiagram(dsTable != null ? (DataSet) dsTable
-									.getSchema()
-									: dataset);
+					DataSetTabSet.this.repaintDataSetDiagram(
+							dsTable != null ? (DataSet) dsTable.getSchema()
+									: dataset, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1269,10 +1286,9 @@ public class DataSetTabSet extends JTabbedPane {
 								index);
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram(dsTable != null ? (DataSet) dsTable
-									.getSchema()
-									: dataset);
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dsTable != null ? (DataSet) dsTable.getSchema()
+									: dataset, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1310,10 +1326,9 @@ public class DataSetTabSet extends JTabbedPane {
 						MartBuilderUtils.maskRelation(ds, relation);
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram(dst != null ? (DataSet) dst
-									.getSchema()
-									: ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dst != null ? (DataSet) dst.getSchema() : ds,
+							relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1351,10 +1366,8 @@ public class DataSetTabSet extends JTabbedPane {
 						MartBuilderUtils.forceRelation(ds, relation);
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram(dst != null ? (DataSet) dst
-									.getSchema()
-									: ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dst != null ? (DataSet) dst.getSchema() : ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1393,9 +1406,9 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// And the overview.
 					DataSetTabSet.this
-							.recalculateDataSetDiagram(dst != null ? (DataSet) dst
-									.getSchema()
-									: ds);
+							.recalculateDataSetDiagram(
+									dst != null ? (DataSet) dst.getSchema()
+											: ds, table);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1441,9 +1454,8 @@ public class DataSetTabSet extends JTabbedPane {
 							aliases, expression, groupBy);
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram((DataSet) dsTable
-									.getSchema());
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							(DataSet) dsTable.getSchema(), null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1477,9 +1489,8 @@ public class DataSetTabSet extends JTabbedPane {
 							.getDefinition());
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram((DataSet) dsTable
-									.getSchema());
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							(DataSet) dsTable.getSchema(), null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1531,10 +1542,9 @@ public class DataSetTabSet extends JTabbedPane {
 								expression, aliases, hard);
 
 					// And the overview.
-					DataSetTabSet.this
-							.repaintDataSetDiagram(dsTable != null ? (DataSet) dsTable
-									.getSchema()
-									: dataset);
+					DataSetTabSet.this.repaintDataSetDiagram(
+							dsTable != null ? (DataSet) dsTable.getSchema()
+									: dataset, table);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1599,7 +1609,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.partitionByColumn(dataset, partCol, type);
 
 					// And the overview.
-					DataSetTabSet.this.repaintDataSetDiagram(dataset);
+					DataSetTabSet.this.repaintDataSetDiagram(dataset, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1642,9 +1652,10 @@ public class DataSetTabSet extends JTabbedPane {
 								(DataSet) i.next());
 					// Remove the tab.
 					for (final Iterator i = datasets.iterator(); i.hasNext();)
-						DataSetTabSet.this.removeDataSetTab((DataSet) i.next(),false);
+						DataSetTabSet.this.removeDataSetTab((DataSet) i.next(),
+								false);
 					DataSetTabSet.this.recalculateOverviewDiagram();
-					
+
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
 							.setModifiedStatus(true);
@@ -1723,10 +1734,9 @@ public class DataSetTabSet extends JTabbedPane {
 						MartBuilderUtils.unrestrictTable(dataset, table);
 
 					// And the overview.
-					DataSetTabSet.this
-							.repaintDataSetDiagram(dsTable != null ? (DataSet) dsTable
-									.getSchema()
-									: dataset);
+					DataSetTabSet.this.repaintDataSetDiagram(
+							dsTable != null ? (DataSet) dsTable.getSchema()
+									: dataset, table);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1750,7 +1760,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRenameDataSet(final DataSet dataset) {
 		// Ask user for the new name.
-		this.requestRenameDataSet(dataset,this.askUserForName(Resources
+		this.requestRenameDataSet(dataset, this.askUserForName(Resources
 				.get("requestDataSetName"), dataset.getName()));
 
 	}
@@ -1764,8 +1774,8 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRenameDataSet(final DataSet dataset, final String name) {
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		final String newName = name==null?"":name.trim();
-		if (newName.length()==0 || newName.equals(dataset.getName()))
+		final String newName = name == null ? "" : name.trim();
+		if (newName.length() == 0 || newName.equals(dataset.getName()))
 			return;
 
 		// Work out which tab the dataset is in.
@@ -1782,7 +1792,7 @@ public class DataSetTabSet extends JTabbedPane {
 					DataSetTabSet.this.setTitleAt(idx, dataset.getName());
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(dataset);
+					DataSetTabSet.this.recalculateDataSetDiagram(dataset, null);
 					DataSetTabSet.this.recalculateOverviewDiagram();
 
 					// Update the modified status for this tabset.
@@ -1812,14 +1822,15 @@ public class DataSetTabSet extends JTabbedPane {
 		this.requestRenameDataSetColumn(dsColumn, this.askUserForName(Resources
 				.get("requestDataSetColumnName"), dsColumn.getModifiedName()));
 	}
-	
-	public void requestRenameDataSetColumn(final DataSetColumn dsColumn, final String name) {
+
+	public void requestRenameDataSetColumn(final DataSetColumn dsColumn,
+			final String name) {
 		// Ask user for the new name.
-		final String newName = name==null?"":name.trim();
+		final String newName = name == null ? "" : name.trim();
 
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		if (newName.length()==0 || newName.equals(dsColumn.getModifiedName()))
+		if (newName.length() == 0 || newName.equals(dsColumn.getModifiedName()))
 			return;
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -1828,8 +1839,8 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.renameDataSetColumn(dsColumn, newName);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram((DataSet) dsColumn
-							.getTable().getSchema());
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							(DataSet) dsColumn.getTable().getSchema(), null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1858,6 +1869,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.requestRenameDataSetTable(dsTable, this.askUserForName(Resources
 				.get("requestDataSetTableName"), dsTable.getModifiedName()));
 	}
+
 	/**
 	 * Renames a table, after prompting the user to enter a new name. By
 	 * default, the existing name is used. If the name entered is blank or
@@ -1870,8 +1882,8 @@ public class DataSetTabSet extends JTabbedPane {
 			final String name) {
 		// If the new name is null (user cancelled), or has
 		// not changed, don't rename it.
-		final String newName = name==null?"":name.trim();
-		if (newName.length()==0 || newName.equals(dsTable.getModifiedName()))
+		final String newName = name == null ? "" : name.trim();
+		if (newName.length() == 0 || newName.equals(dsTable.getModifiedName()))
 			return;
 
 		LongProcess.run(new Runnable() {
@@ -1881,8 +1893,8 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.renameDataSetTable(dsTable, newName);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram((DataSet) dsTable
-							.getSchema());
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							(DataSet) dsTable.getSchema(), null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -1959,7 +1971,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.subclassRelation(ds, relation);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2105,7 +2117,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestUnmaskColumn(final DataSet ds, final DataSetColumn column) {
 		this.requestUnmaskColumns(ds, Collections.singleton(column));
 	}
-	
+
 	public void requestUnmaskColumns(final DataSet ds, final Collection columns) {
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -2114,7 +2126,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.unmaskColumns(ds, columns);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2147,7 +2159,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.unindexColumn(ds, column);
 
 					// And the overview.
-					DataSetTabSet.this.repaintDataSetDiagram(ds);
+					DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2180,7 +2192,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.unNonInheritColumn(ds, column);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2213,7 +2225,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.unNonInheritAllColumns(ds, table);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2251,10 +2263,8 @@ public class DataSetTabSet extends JTabbedPane {
 						MartBuilderUtils.unforceRelation(ds, relation);
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram(dst != null ? (DataSet) dst
-									.getSchema()
-									: ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dst != null ? (DataSet) dst.getSchema() : ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2292,10 +2302,9 @@ public class DataSetTabSet extends JTabbedPane {
 						MartBuilderUtils.unmaskRelation(ds, relation);
 
 					// And the overview.
-					DataSetTabSet.this
-							.recalculateDataSetDiagram(dst != null ? (DataSet) dst
-									.getSchema()
-									: ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dst != null ? (DataSet) dst.getSchema() : ds,
+							relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2334,9 +2343,9 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// And the overview.
 					DataSetTabSet.this
-							.recalculateDataSetDiagram(dst != null ? (DataSet) dst
-									.getSchema()
-									: ds);
+							.recalculateDataSetDiagram(
+									dst != null ? (DataSet) dst.getSchema()
+											: ds, table);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2369,7 +2378,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.unpartitionByColumn(dataset, dsTable);
 
 					// And the overview.
-					DataSetTabSet.this.repaintDataSetDiagram(dataset);
+					DataSetTabSet.this.repaintDataSetDiagram(dataset, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2402,7 +2411,7 @@ public class DataSetTabSet extends JTabbedPane {
 					MartBuilderUtils.unsubclassRelation(ds, relation);
 
 					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds);
+					DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()

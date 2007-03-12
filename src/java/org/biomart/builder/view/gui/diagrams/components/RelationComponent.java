@@ -23,6 +23,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
@@ -201,8 +202,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
-		
-		if (evt.getButton()!=0)
+
+		if (evt.getButton() != 0)
 			this.getDiagram().deselectAll();
 
 		// Is it a right-click?
@@ -293,12 +294,12 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	}
 
 	public void recalculateDiagramComponent() {
-		if (this.relation!=null)
+		if (this.relation != null)
 			this.setToolTipText(this.relation.getName());
 	}
 
 	public void repaintDiagramComponent() {
-		this.repaint(this.getVisibleRect());
+		this.updateAppearance();
 	}
 
 	/**
@@ -367,8 +368,11 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 					: RelationComponent.ONE_MANY_DASHED)
 					: (this.compounded ? RelationComponent.ONE_MANY_DOTTED
 							: RelationComponent.ONE_MANY);
-		// Force repaint if stroke changed.
-		if (oldStroke!=this.stroke)
-			this.repaint();
+		// Force repaint of area if stroke changed, which must include
+		// relation background else changed stroke will not show up.
+		if (oldStroke != this.stroke) {
+			this.invalidate();
+			this.repaint(this.getBounds());
+		}
 	}
 }

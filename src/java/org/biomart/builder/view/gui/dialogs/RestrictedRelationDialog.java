@@ -65,7 +65,7 @@ public class RestrictedRelationDialog extends JDialog {
 	private JButton execute;
 
 	private JTextArea expression;
-	
+
 	private JCheckBox hard;
 
 	/**
@@ -120,24 +120,31 @@ public class RestrictedRelationDialog extends JDialog {
 		this.hard = new JCheckBox(Resources.get("hardLabel"));
 
 		// First table aliases.
-		this.lcolumnAliasModel = new ColumnStringTablePanel(template==null?null:template.getLeftAliases(), relation.getFirstKey().getTable().getColumns()) {
+		this.lcolumnAliasModel = new ColumnStringTablePanel(
+				template == null ? null : template.getLeftAliases(), relation
+						.getFirstKey().getTable().getColumns()) {
 			private static final long serialVersionUID = 1L;
+
 			private int alias = 1;
 
 			public String getInsertButtonText() {
 				return Resources.get("insertAliasButton");
 			}
+
 			public String getRemoveButtonText() {
 				return Resources.get("removeAliasButton");
 			}
+
 			public String getFirstColumnHeader() {
 				return Resources.get("columnAliasTableColHeader");
 			}
+
 			public String getSecondColumnHeader() {
 				return Resources.get("columnAliasTableAliasHeader");
 			}
+
 			public Object getNewRowSecondColumn() {
-				return Resources.get("defaultFirstAlias")+this.alias++;
+				return Resources.get("defaultFirstAlias") + this.alias++;
 			}
 		};
 
@@ -149,26 +156,32 @@ public class RestrictedRelationDialog extends JDialog {
 		field.add(this.lcolumnAliasModel);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-
 		// Second table aliases.
-		this.rcolumnAliasModel = new ColumnStringTablePanel(template==null?null:template.getRightAliases(), relation.getSecondKey().getTable().getColumns()) {
+		this.rcolumnAliasModel = new ColumnStringTablePanel(
+				template == null ? null : template.getRightAliases(), relation
+						.getSecondKey().getTable().getColumns()) {
 			private static final long serialVersionUID = 1L;
+
 			private int alias = 1;
 
 			public String getInsertButtonText() {
 				return Resources.get("insertAliasButton");
 			}
+
 			public String getRemoveButtonText() {
 				return Resources.get("removeAliasButton");
 			}
+
 			public String getFirstColumnHeader() {
 				return Resources.get("columnAliasTableColHeader");
 			}
+
 			public String getSecondColumnHeader() {
 				return Resources.get("columnAliasTableAliasHeader");
 			}
+
 			public Object getNewRowSecondColumn() {
-				return Resources.get("defaultSecondAlias")+this.alias++;
+				return Resources.get("defaultSecondAlias") + this.alias++;
 			}
 		};
 
@@ -189,7 +202,7 @@ public class RestrictedRelationDialog extends JDialog {
 		field.add(new JScrollPane(this.expression));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-		
+
 		// Add the hard option.
 		label = new JLabel();
 		gridBag.setConstraints(label, labelConstraints);
@@ -315,7 +328,7 @@ public class RestrictedRelationDialog extends JDialog {
 	public String getExpression() {
 		return this.expression.getText().trim();
 	}
-	
+
 	public boolean getHard() {
 		return this.hard.isSelected();
 	}

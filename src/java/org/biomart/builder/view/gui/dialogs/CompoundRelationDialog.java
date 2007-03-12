@@ -37,6 +37,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -55,6 +56,8 @@ public class CompoundRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private SpinnerNumberModel arity;
+	
+	private JCheckBox parallel;
 
 	/**
 	 * Pop up a dialog to define the arity of a relation.
@@ -66,7 +69,7 @@ public class CompoundRelationDialog extends JDialog {
 	 * @param label
 	 *            the title to give the arity selector.
 	 */
-	public CompoundRelationDialog(final int startvalue, final String title,
+	public CompoundRelationDialog(final CompoundRelationDefinition startvalue, final String title,
 			final String label) {
 		// Create the base dialog.
 		super();
@@ -91,13 +94,16 @@ public class CompoundRelationDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Set up the arity spinner field.
-		this.arity = new SpinnerNumberModel(startvalue, 1, 10, 1);
+		this.arity = new SpinnerNumberModel(startvalue.getN(), 1, 10, 1);
 		final JSpinner spinner = new JSpinner(this.arity);
+		this.parallel = new JCheckBox(Resources.get("parallelLabel"));
 
 		// Set up the check box to turn it on and off.
 		final JCheckBox checkbox = new JCheckBox();
-		if (startvalue > 1)
+		if (startvalue.getN() > 1)
 			checkbox.setSelected(true);
+		this.parallel.setSelected(startvalue.isParallel());
+		this.parallel.setEnabled(startvalue.getN()>1);
 
 		// The close and execute buttons.
 		final JButton close = new JButton(Resources.get("closeButton"));
@@ -111,6 +117,12 @@ public class CompoundRelationDialog extends JDialog {
 		field.add(new JLabel(Resources.get("compoundRelationSpinnerLabel")));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
+		
+		// Parallel button.
+		field = new JPanel();
+		field.add(this.parallel);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);		
 
 		// Close/Execute buttons at the bottom.
 		field = new JPanel();
@@ -122,10 +134,15 @@ public class CompoundRelationDialog extends JDialog {
 		// Intercept the spinner.
 		spinner.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				if (CompoundRelationDialog.this.getArity() <= 1)
+				if (CompoundRelationDialog.this.getArity() <= 1) {
 					checkbox.setSelected(false);
-				else
+					parallel.setSelected(false);
+					parallel.setEnabled(false);
+				}
+				else {
 					checkbox.setSelected(true);
+					parallel.setEnabled(true);
+				}
 			}
 		});
 		// Intercept the checkbox.
@@ -145,7 +162,7 @@ public class CompoundRelationDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
 				CompoundRelationDialog.this.arity.setValue(new Integer(
-						startvalue));
+						startvalue.getN()));
 				CompoundRelationDialog.this.hide();
 			}
 		});
@@ -176,6 +193,10 @@ public class CompoundRelationDialog extends JDialog {
 	 */
 	public int getArity() {
 		return this.arity.getNumber().intValue();
+	}
+	
+	public boolean getParallel() {
+		return this.parallel.isSelected();
 	}
 
 	private boolean validateFields() {

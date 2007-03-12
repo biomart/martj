@@ -34,6 +34,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -276,7 +277,7 @@ public class DataSet extends GenericSchema {
 				final Relation rel = (Relation) j.next();
 				final int compounded = this.schemaMods.isCompoundRelation(
 						dsTable, rel) ? this.schemaMods.getCompoundRelation(
-						dsTable, rel) : 1;
+						dsTable, rel).getN() : 1;
 				relationCount.put(rel, new Integer(compounded));
 			}
 
@@ -585,7 +586,7 @@ public class DataSet extends GenericSchema {
 						// the maximum allowed.
 						final int childCompounded = this.schemaMods
 								.isCompoundRelation(dsTable, r) ? this.schemaMods
-								.getCompoundRelation(dsTable, r)
+								.getCompoundRelation(dsTable, r).getN()
 								: 1;
 						if (nextSC < childCompounded)
 							subclassQ.add(new Object[] { newSourceDSCols, r,
@@ -606,15 +607,12 @@ public class DataSet extends GenericSchema {
 									.getDataSetColumnFor((Column) j.next());
 							newSourceDSCols.add(newCol);
 						}
-						final int parentCompounded = sourceRelation == null ? 1
-								: (this.schemaMods.isCompoundRelation(dsTable,
-										sourceRelation) ? this.schemaMods
-										.getCompoundRelation(dsTable,
-												sourceRelation) : 1);
-						final int childCompounded = parentCompounded > 1 ? 1
-								: (this.schemaMods.isCompoundRelation(dsTable,
-										r) ? this.schemaMods
-										.getCompoundRelation(dsTable, r) : 1);
+						int childCompounded = 1;
+						if (this.schemaMods.isCompoundRelation(dsTable,
+										r) && this.schemaMods
+										.getCompoundRelation(dsTable, r).isParallel())
+							childCompounded = this.schemaMods
+							.getCompoundRelation(dsTable, r).getN();
 						// Follow the relation.
 						for (int k = 0; k < childCompounded; k++)
 							dimensionQ.add(new Object[] { newSourceDSCols, r,
@@ -658,21 +656,12 @@ public class DataSet extends GenericSchema {
 						newSourceDSCols.add(newCol);
 					}
 					// Repeat queueing of relation N times if compounded.
-					// Note that we only spin off one child per parent if
-					// the parent was compounded. If the child compound
-					// value
-					// is less than the parent, this results in only some
-					// nested compounding. If it is greater, only the parent
-					// value number of compounds appears.
-					final int parentCompounded = sourceRelation == null ? 1
-							: (this.schemaMods.isCompoundRelation(dsTable,
-									sourceRelation) ? this.schemaMods
-									.getCompoundRelation(dsTable,
-											sourceRelation) : 1);
-					final int childCompounded = parentCompounded > 1 ? 1
-							: (this.schemaMods.isCompoundRelation(dsTable, r) ? this.schemaMods
-									.getCompoundRelation(dsTable, r)
-									: 1);
+					int childCompounded = 1;
+					if (this.schemaMods.isCompoundRelation(dsTable,
+									r) && this.schemaMods
+									.getCompoundRelation(dsTable, r).isParallel())
+						childCompounded = this.schemaMods
+						.getCompoundRelation(dsTable, r).getN();
 					for (int k = 0; k < childCompounded; k++)
 						normalQ
 								.add(new Object[] {

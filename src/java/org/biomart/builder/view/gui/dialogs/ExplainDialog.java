@@ -33,10 +33,10 @@ public interface ExplainDialog {
 	/**
 	 * Recalculate the currently visible diagram.
 	 */
-	public void recalculateDialog(final Schema changedSchema);
+	public void recalculateDialog(final Object changedObject);
 
 	/**
 	 * Repaint the currently visible diagram.
 	 */
-	public void repaintDialog(final Schema changedSchema);
+	public void repaintDialog(final Object changedObject);
 }

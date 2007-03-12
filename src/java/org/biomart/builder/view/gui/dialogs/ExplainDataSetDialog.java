@@ -28,7 +28,11 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
+import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -57,9 +61,9 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 		final ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab,
 				dataset);
 		dialog.setLocationRelativeTo(null);
-		martTab.getDataSetTabSet().addCurrentExplanationDialog(dialog);
+		martTab.getDataSetTabSet().setCurrentExplanationDialog(dialog);
 		dialog.show();
-		martTab.getDataSetTabSet().removeCurrentExplanationDialog(dialog);
+		martTab.getDataSetTabSet().clearCurrentExplanationDialog();
 	}
 
 	private SchemaTabSet schemaTabSet;
@@ -104,18 +108,44 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 		this.setLocationRelativeTo(null);
 	}
 
-	public void recalculateDialog(final Schema changedSchema) {
+	public void recalculateDialog(final Object changedObject) {
 		if (this.schemaTabSet != null) {
-			this.schemaTabSet.recalculateSchemaDiagram(changedSchema);
-			 if (changedSchema!=null)
+			 if (changedObject!=null) {
+				 if (changedObject instanceof Schema)
+					 this.schemaTabSet.recalculateSchemaDiagram((Schema)changedObject);
+				 else if (changedObject instanceof Table) 
+					 this.schemaTabSet.recalculateSchemaDiagram(((Table)changedObject).getSchema());
+				 else if (changedObject instanceof Key) 
+					 this.schemaTabSet.recalculateSchemaDiagram(((Key)changedObject).getTable().getSchema());
+				 else if (changedObject instanceof Column) 
+					 this.schemaTabSet.recalculateSchemaDiagram(((Column)changedObject).getTable().getSchema());
+				 else if (changedObject instanceof Relation) {
+					 this.schemaTabSet.recalculateSchemaDiagram(((Relation)changedObject).getFirstKey().getTable().getSchema());
+					 if (!((Relation)changedObject).getFirstKey().getTable().getSchema().equals(((Relation)changedObject).getSecondKey().getTable().getSchema()))
+							 this.schemaTabSet.recalculateSchemaDiagram(((Relation)changedObject).getSecondKey().getTable().getSchema());
+				 }
+			 }
 			this.schemaTabSet.recalculateOverviewDiagram();
 		}
 	}
 
-	public void repaintDialog(final Schema changedSchema) {
+	public void repaintDialog(final Object changedObject) {
 		if (this.schemaTabSet != null)  {
-			 if (changedSchema!=null)
-				this.schemaTabSet.repaintSchemaDiagram(changedSchema);
+			 if (changedObject!=null) {
+				 if (changedObject instanceof Schema)
+					 this.schemaTabSet.repaintSchemaDiagram((Schema)changedObject);
+				 else if (changedObject instanceof Table) 
+					 this.schemaTabSet.repaintSchemaDiagram(((Table)changedObject).getSchema());
+				 else if (changedObject instanceof Key) 
+					 this.schemaTabSet.repaintSchemaDiagram(((Key)changedObject).getTable().getSchema());
+				 else if (changedObject instanceof Column) 
+					 this.schemaTabSet.repaintSchemaDiagram(((Column)changedObject).getTable().getSchema());
+				 else if (changedObject instanceof Relation) {
+					 this.schemaTabSet.repaintSchemaDiagram(((Relation)changedObject).getFirstKey().getTable().getSchema());
+					 if (!((Relation)changedObject).getFirstKey().getTable().getSchema().equals(((Relation)changedObject).getSecondKey().getTable().getSchema()))
+							 this.schemaTabSet.repaintSchemaDiagram(((Relation)changedObject).getSecondKey().getTable().getSchema());
+				 }
+			 }
 			this.schemaTabSet.repaintOverviewDiagram();
 		}
 	}

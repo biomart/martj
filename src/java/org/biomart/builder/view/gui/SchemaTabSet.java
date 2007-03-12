@@ -376,7 +376,8 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void recalculateSchemaDiagram(final Schema schema) {
 		final int index = this.schemaToDiagram[0].indexOf(schema);
-		((Diagram) this.schemaToDiagram[1].get(index)).recalculateDiagram();
+		if (index>=0)
+			((Diagram) this.schemaToDiagram[1].get(index)).recalculateDiagram();
 	}
 
 	private void recalculateAllSchemaDiagrams() {
@@ -431,7 +432,8 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void repaintSchemaDiagram(final Schema schema) {
 		final int index = this.schemaToDiagram[0].indexOf(schema);
-		((Diagram) this.schemaToDiagram[1].get(index)).repaintDiagram();
+		if (index>=0)
+			((Diagram) this.schemaToDiagram[1].get(index)).repaintDiagram();
 	}
 
 	/**
