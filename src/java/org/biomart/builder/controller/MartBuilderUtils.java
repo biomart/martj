@@ -593,6 +593,50 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Uncompounds a relation within a dataset. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param dataset
+	 *            the dataset to mask the relation in.
+	 * @param relation
+	 *            the relation to mask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void undirectionalRelation(final DataSet dataset,
+			final Relation relation) throws SQLException, DataModelException {
+		Log.info(Resources.get("logReqUndirectionalRelation"));
+		dataset.getSchemaModifications().unsetDirectionalRelation(relation);
+		dataset.synchronise();
+	}
+
+	/**
+	 * Uncompounds a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to mask the relation in.
+	 * @param relation
+	 *            the relation to mask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 * @throws ValidationException
+	 *             if it could not be uncompounded.
+	 */
+	public static void undirectionalRelation(final DataSetTable datasetTable,
+			final Relation relation) throws SQLException, DataModelException,
+			ValidationException {
+		Log.info(Resources.get("logReqUndirectionalRelation"));
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.unsetDirectionalRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
+	}
+
+	/**
 	 * Compounds a relation within a dataset. The dataset is regenerated
 	 * afterwards.
 	 * 
@@ -636,6 +680,53 @@ public class MartBuilderUtils {
 		Log.info(Resources.get("logReqCompoundRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setCompoundRelation(datasetTable, relation, def);
+		((DataSet) datasetTable.getSchema()).synchronise();
+	}
+
+	/**
+	 * Compounds a relation within a dataset. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param dataset
+	 *            the dataset to mask the relation in.
+	 * @param n
+	 *            the compound arity.
+	 * @param relation
+	 *            the relation to mask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void directionalRelation(final DataSet dataset,
+			final Relation relation, final Key def) throws SQLException,
+			DataModelException, ValidationException {
+		Log.info(Resources.get("logReqDirectionalRelation"));
+		dataset.getSchemaModifications().setDirectionalRelation(relation, def);
+		dataset.synchronise();
+	}
+
+	/**
+	 * Compounds a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to mask the relation in.
+	 * @param relation
+	 *            the relation to mask.
+	 * @param n
+	 *            the compound arity.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void directionalRelation(final DataSetTable datasetTable,
+			final Relation relation, final Key def) throws SQLException,
+			DataModelException, ValidationException {
+		Log.info(Resources.get("logReqDirectionalRelation"));
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.setDirectionalRelation(datasetTable, relation, def);
 		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 

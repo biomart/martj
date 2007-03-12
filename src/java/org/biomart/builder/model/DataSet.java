@@ -537,6 +537,12 @@ public class DataSet extends GenericSchema {
 				// Don't follow masked relations.
 				if (this.schemaMods.isMaskedRelation(dsTable, r))
 					continue;
+				
+				// Don't follow directional relations from the wrong end.
+				if (this.schemaMods.isDirectionalRelation(dsTable, r)
+						&& !r.getFirstKey().getTable().equals(r.getSecondKey().getTable())
+						&& !this.schemaMods.getDirectionalRelation(dsTable, r).equals(r.getKeyForTable(mergeTable)))
+					continue;
 
 				// Don't follow incorrect relations, or relations
 				// between incorrect keys.
@@ -561,7 +567,9 @@ public class DataSet extends GenericSchema {
 				// If so, we may need to make a dimension, a subclass, or
 				// a concat column.
 				if (r.isOneToMany()
-						&& r.getOneKey().getTable().equals(mergeTable)) {
+						&& r.getOneKey().getTable().equals(mergeTable)
+						&& (!this.schemaMods.isDirectionalRelation(dsTable, r)
+						|| this.schemaMods.getDirectionalRelation(dsTable, r).equals(r.getOneKey()))) {
 
 					// Forcibly follow concat relations.
 					if (this.schemaMods.isConcatRelation(dsTable, r))

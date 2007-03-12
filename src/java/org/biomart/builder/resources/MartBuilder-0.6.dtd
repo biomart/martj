@@ -67,7 +67,7 @@ compoundRelation*,subclassRelation*,renamedTable*,
 renamedColumn*,nonInheritedColumn*,maskedColumn*,indexedColumn*,
 partitionedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,forcedRelation*,restrictedTable*,
-restrictedRelation*,expressionColumn*,concatRelation*)>
+restrictedRelation*,expressionColumn*,concatRelation*,directionalRelation*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|NONE) #REQUIRED>
@@ -82,6 +82,11 @@ restrictedRelation*,expressionColumn*,concatRelation*)>
 <!ATTLIST compoundRelation relationId IDREF #REQUIRED>
 <!ATTLIST compoundRelation n CDATA #REQUIRED>
 <!ATTLIST compoundRelation parallel (true|false) #REQUIRED>
+
+<!ELEMENT directionalRelation EMPTY>
+<!ATTLIST directionalRelation tableKey CDATA #REQUIRED>
+<!ATTLIST directionalRelation relationId IDREF #REQUIRED>
+<!ATTLIST directionalRelation keyId IDREF #REQUIRED>
 
 <!ELEMENT renamedTable EMPTY>
 <!ATTLIST renamedTable tableKey CDATA #REQUIRED>

@@ -63,6 +63,8 @@ public class SchemaModificationSet {
 
 	private final Map compoundRelations = new HashMap();
 
+	private final Map directionalRelations = new HashMap();
+
 	private final Map restrictedTables = new HashMap();
 
 	private final Map restrictedRelations = new HashMap();
@@ -674,6 +676,95 @@ public class SchemaModificationSet {
 		this.subclassedRelations.remove(relation);
 	}
 
+	public void setDirectionalRelation(final Relation relation,
+			final Key def) throws ValidationException {
+		this.setDirectionalRelation(SchemaModificationSet.DATASET, relation, def);
+	}
+
+	public void setDirectionalRelation(final DataSetTable table,
+			final Relation relation, final Key def)
+			throws ValidationException {
+		this.setDirectionalRelation(table.getName(), relation, def);
+	}
+
+	private void setDirectionalRelation(final String tableName,
+			final Relation relation, final Key def)
+			throws ValidationException {
+		if (!this.directionalRelations.containsKey(tableName))
+			this.directionalRelations.put(tableName, new HashMap());
+		final Map masks = (Map) this.directionalRelations.get(tableName);
+		masks.put(relation, def);
+	}
+
+	public void unsetDirectionalRelation(final Relation relation) {
+		this.unsetDirectionalRelation(SchemaModificationSet.DATASET, relation);
+	}
+
+	public void unsetDirectionalRelation(final DataSetTable table,
+			final Relation relation) throws ValidationException {
+		// Complain if asked to unmask globally masked relation.
+		final Map globalComps = (Map) this.directionalRelations
+				.get(SchemaModificationSet.DATASET);
+		if (globalComps != null && globalComps.containsKey(relation))
+			throw new ValidationException(Resources
+					.get("relationDirectionaledGlobally"));
+		this.unsetDirectionalRelation(table.getName(), relation);
+	}
+
+	private void unsetDirectionalRelation(final String tableName,
+			final Relation relation) {
+		// Skip already-unmasked relations.
+		if (!this.isDirectionalRelation(tableName, relation))
+			return;
+		if (this.directionalRelations.containsKey(tableName)) {
+			final Map comps = (Map) this.directionalRelations.get(tableName);
+			comps.remove(relation);
+			if (comps.isEmpty())
+				this.directionalRelations.remove(tableName);
+		}
+	}
+
+	public boolean isDirectionalRelation(final DataSetTable table,
+			final Relation relation) {
+		return this
+				.isDirectionalRelation(
+						table == null ? SchemaModificationSet.DATASET : table
+								.getName(), relation);
+	}
+
+	private boolean isDirectionalRelation(final String tableName,
+			final Relation relation) {
+		final Map globalComps = (Map) this.directionalRelations
+				.get(SchemaModificationSet.DATASET);
+		final Map comps = (Map) this.directionalRelations.get(tableName);
+		return comps != null && comps.containsKey(relation)
+				|| globalComps != null && globalComps.containsKey(relation);
+	}
+
+	public Key getDirectionalRelation(
+			final DataSetTable table, final Relation relation) {
+		return this
+				.getDirectionalRelation(
+						table == null ? SchemaModificationSet.DATASET : table
+								.getName(), relation);
+	}
+
+	private Key getDirectionalRelation(
+			final String tableName, final Relation relation) {
+		final Map globalComps = (Map) this.directionalRelations
+				.get(SchemaModificationSet.DATASET);
+		final Map comps = (Map) this.directionalRelations.get(tableName);
+		return comps != null && comps.containsKey(relation) ? (Key) comps
+				.get(relation)
+				: (Key) globalComps.get(relation);
+	}
+
+	public Map getDirectionalRelations() {
+		return this.directionalRelations;
+	}
+	
+
+
 	public void setCompoundRelation(final Relation relation,
 			final CompoundRelationDefinition def) throws ValidationException {
 		this.setCompoundRelation(SchemaModificationSet.DATASET, relation, def);
@@ -774,6 +865,8 @@ public class SchemaModificationSet {
 		target.mergedRelations.addAll(this.mergedRelations);
 		target.compoundRelations.clear();
 		target.compoundRelations.putAll(this.compoundRelations);
+		target.directionalRelations.clear();
+		target.directionalRelations.putAll(this.directionalRelations);
 		target.restrictedTables.clear();
 		// We have to use an iterator because of nested maps.
 		for (final Iterator i = this.restrictedTables.entrySet().iterator(); i

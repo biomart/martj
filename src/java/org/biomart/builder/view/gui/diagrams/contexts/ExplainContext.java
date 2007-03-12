@@ -342,6 +342,9 @@ public class ExplainContext extends SchemaContext {
 			final boolean relationCompounded = this.dataset
 					.getSchemaModifications().isCompoundRelation(
 							this.datasetTable, relation);
+			final boolean relationDirectional = this.dataset
+			.getSchemaModifications().isDirectionalRelation(
+					this.datasetTable, relation);
 			final boolean relationForced = this.dataset
 					.getSchemaModifications().isForceIncludeRelation(
 							this.datasetTable, relation);
@@ -430,6 +433,31 @@ public class ExplainContext extends SchemaContext {
 				compound.setEnabled(false);
 			if (relationCompounded)
 				compound.setSelected(true);
+
+			// The compound option allows the user to compound a relation.
+			final JCheckBoxMenuItem directional = new JCheckBoxMenuItem(Resources
+					.get("directionalRelationTitle"));
+			directional.setMnemonic(Resources.get("directionalRelationMnemonic")
+					.charAt(0));
+			directional.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestDirectionalRelation(
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, relation);
+					directional
+							.setSelected(ExplainContext.this.dataset
+									.getSchemaModifications()
+									.isDirectionalRelation(
+											ExplainContext.this.datasetTable,
+											relation));
+				}
+			});
+			contextMenu.add(directional);
+			if (incorrect || relationMasked)
+				directional.setEnabled(false);
+			if (relationDirectional)
+				directional.setSelected(true);
 
 			// The subclass/unsubclass option allows subclassing, but is
 			// only selectable when the relation is unmasked and not

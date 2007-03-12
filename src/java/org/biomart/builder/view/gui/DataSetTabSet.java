@@ -56,6 +56,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.CompoundRelationDialog;
 import org.biomart.builder.view.gui.dialogs.ConcatRelationDialog;
+import org.biomart.builder.view.gui.dialogs.DirectionalRelationDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
@@ -1015,6 +1016,76 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.setModifiedStatus(true);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks that a relation be compounded.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to work with.
+	 * @param relation
+	 *            the schema relation to mask.
+	 */
+	public void requestDirectionalRelation(final DataSet ds,
+			final DataSetTable dst, final Relation relation) {
+		// Work out if it is already compounded.
+		Key def = null;
+		if (ds.getSchemaModifications().isDirectionalRelation(dst, relation))
+			def = ds.getSchemaModifications().getDirectionalRelation(dst,
+					relation);
+
+		// Pop up a dialog and update 'compound'.
+		final DirectionalRelationDialog dialog = new DirectionalRelationDialog(
+				def, relation);
+		dialog.setLocationRelativeTo(null);
+		dialog.show();
+		final Key newKey = dialog.getChosenKey();
+
+		// Skip altogether if no change.
+		if (newKey == def)
+			return;
+
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do the work.
+					if (newKey == null) {
+						// Uncompound the relation.
+						if (dst != null)
+							MartBuilderUtils.undirectionalRelation(dst,
+									relation);
+						else
+							MartBuilderUtils
+									.undirectionalRelation(ds, relation);
+					} else {
+						// Compound the relation.
+						if (dst != null)
+							MartBuilderUtils.directionalRelation(dst, relation,
+									newKey);
+						else
+							MartBuilderUtils.directionalRelation(ds, relation,
+									newKey);
+					}
+
+					// And the overview.
+					DataSetTabSet.this.recalculateDataSetDiagram(
+							dst != null ? (DataSet) dst.getSchema() : ds,
+							relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
