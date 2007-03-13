@@ -1438,7 +1438,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(
-							dst != null ? (DataSet) dst.getSchema() : ds, null);
+							dst != null ? (DataSet) dst.getSchema() : ds, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2335,7 +2335,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(
-							dst != null ? (DataSet) dst.getSchema() : ds, null);
+							dst != null ? (DataSet) dst.getSchema() : ds, relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
