@@ -427,7 +427,7 @@ public class PartitionColumnDialog extends JDialog {
 				// or start/end in underscores.
 				boolean allOK = true;
 				for (int i = 0; i < values.length && allOK; i++)
-					allOK = values[i].matches("^[^_]\\w+[^_]$");
+					allOK = values[i].matches("^[\\w&&[^_]]\\w*[\\w&&[^_]]*$");
 				// If there any messages, display them.
 				if (allOK
 						|| JOptionPane.showConfirmDialog(null, Resources
@@ -444,7 +444,7 @@ public class PartitionColumnDialog extends JDialog {
 				// or start/end in underscores.
 				boolean allOK = true;
 				for (int i = 0; i < values.length && allOK; i++)
-					allOK = values[i].matches("^[^_]\\w+[^_]$");
+					allOK = values[i].matches("^[\\w&&[^_]]\\w*[\\w&&[^_]]*$");
 				// If there any messages, display them.
 				if (allOK
 						|| JOptionPane.showConfirmDialog(null, Resources
