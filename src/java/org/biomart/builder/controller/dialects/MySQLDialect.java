@@ -30,9 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.biomart.builder.exceptions.ConstructorException;
-import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiserDirect;
@@ -50,9 +48,11 @@ import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
+import org.biomart.common.model.DataLink;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.DataLink.JDBCDataLink;
 
 /**
  * Understands how to create SQL and DDL for a MySQL database.

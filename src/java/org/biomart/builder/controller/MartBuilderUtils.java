@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ValidationException;
-import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -43,6 +42,7 @@ import org.biomart.common.controller.CommonUtils;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
+import org.biomart.common.model.DataLink;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;

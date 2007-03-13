@@ -27,13 +27,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
-import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.model.Column;
+import org.biomart.common.model.DataLink;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.DataLink.JDBCDataLink;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 

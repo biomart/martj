@@ -345,6 +345,10 @@ public interface Relation extends Comparable {
 			if (firstKey.countColumns() != secondKey.countColumns())
 				throw new AssociationException(Resources
 						.get("keyColumnCountMismatch"));
+			// Check the relation doesn't already exist.
+			if (firstKey.getRelations().contains(this))
+				throw new AssociationException(Resources
+						.get("relationAlreadyExists"));
 
 			// Remember the keys etc.
 			this.firstKey = firstKey;
@@ -362,11 +366,6 @@ public interface Relation extends Comparable {
 			this.tableKeyMap.put(this.secondKey.getTable(), this.secondKey);
 			this.schemaKeyMap.put(this.firstKey.getTable().getSchema(), this.firstKey);
 			this.schemaKeyMap.put(this.secondKey.getTable().getSchema(), this.secondKey);
-
-			// Check the relation doesn't already exist.
-			if (firstKey.getRelations().contains(this))
-				throw new AssociationException(Resources
-						.get("relationAlreadyExists"));
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {

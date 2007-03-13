@@ -18,7 +18,6 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -246,8 +245,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempRelation = new GenericRelation(tempSourceKey,
 						tempTargetKey, this.ltu.getSchemaRelation()
 								.getCardinality());
-				tempSourceKey.addRelation(tempRelation);
-				tempTargetKey.addRelation(tempRelation);
+				// DON'T add to keys else it causes trouble with
+				// the caching system!
 			} catch (AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
