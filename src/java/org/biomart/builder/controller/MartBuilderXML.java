@@ -722,11 +722,11 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("partitionType", pcType, xmlWriter);
 					if (pc instanceof ValueList) {
 						this.writeListAttribute("valueNames",
-								(String[]) ((ValueRange) pc).getRanges()
+								(String[]) ((ValueList) pc).getValues()
 										.keySet().toArray(new String[0]),
 								xmlWriter);
 						this.writeListAttribute("valueValues",
-								(String[]) ((ValueRange) pc).getRanges()
+								(String[]) ((ValueList) pc).getValues()
 										.values().toArray(new String[0]),
 								xmlWriter);
 					} else if (pc instanceof ValueRange) {
