@@ -24,6 +24,8 @@ import java.awt.DefaultKeyboardFocusManager;
 
 import javax.swing.SwingUtilities;
 
+import org.biomart.common.view.gui.dialogs.StackTrace;
+
 /**
  * This simple class wraps a thread, and displays an hourglass for as long as
  * that thread is running. It is synchronised so that if multiple threads are

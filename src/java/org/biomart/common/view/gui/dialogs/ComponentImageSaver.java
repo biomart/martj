@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.view.gui;
+package org.biomart.common.view.gui.dialogs;
 
 import java.awt.Component;
 import java.awt.Graphics2D;
@@ -32,6 +32,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.LongProcess;
 
 /**
  * Saves any given component to an image file.

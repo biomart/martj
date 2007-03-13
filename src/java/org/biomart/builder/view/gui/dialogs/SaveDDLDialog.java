@@ -54,7 +54,7 @@ import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
-import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 
 /**

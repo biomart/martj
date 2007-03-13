@@ -45,14 +45,14 @@ import javax.swing.JLabel;
  */
 public class OpenBrowser {
 	public static void openURL(String url) {
-		String osName = System.getProperty("os.name");
+		String osName = System.getProperty("os.name").toLowerCase();
 		try {
-			if (osName.startsWith("Mac OS")) {
+			if (osName.startsWith("mac")) {
 				Class fileMgr = Class.forName("com.apple.eio.FileManager");
 				Method openURL = fileMgr.getDeclaredMethod("openURL",
 						new Class[] { String.class });
 				openURL.invoke(null, new Object[] { url });
-			} else if (osName.startsWith("Windows"))
+			} else if (osName.startsWith("windows"))
 				Runtime.getRuntime().exec(
 						"rundll32 url.dll,FileProtocolHandler " + url);
 			else {

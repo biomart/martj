@@ -58,9 +58,9 @@ import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
-import org.biomart.common.view.gui.StackTrace;
 import org.biomart.common.view.gui.dialogs.SchemaConnectionDialog;
 import org.biomart.common.view.gui.dialogs.SchemaPartitionDialog;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
  * This tabset has one tab for the diagram which represents all schemas, and one

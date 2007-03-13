@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.view.gui;
+package org.biomart.common.view.gui.dialogs;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -31,6 +31,7 @@ import javax.swing.RepaintManager;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.LongProcess;
 
 /**
  * Prints any given component.

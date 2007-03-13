@@ -51,7 +51,7 @@ import org.biomart.common.controller.CommonUtils;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
  * This connection panel implementation allows a user to define some JDBC

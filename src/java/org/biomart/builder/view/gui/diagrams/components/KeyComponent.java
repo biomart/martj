@@ -53,7 +53,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Key.PrimaryKey;
-import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 
 /**

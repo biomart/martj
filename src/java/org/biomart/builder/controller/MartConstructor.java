@@ -419,7 +419,6 @@ public interface MartConstructor {
 							.getColumnByName(dataset.getDataSetModifications()
 									.getPartitionedColumnName(dsTable));
 					if (tu.getNewColumnNameMap().containsValue(partCol))
-						// TODO Make a alias -> real value map instead.
 						delayedTempDrop = this.populatePartitionValues(
 								schemaPartition, pc, partCol, partitionValues,
 								previousTempTables, previousIndexes);
@@ -429,7 +428,6 @@ public interface MartConstructor {
 
 				// Do unit once per partition.
 				for (final Iterator v = partitionValues.iterator(); v.hasNext();) {
-					// TODO Make a alias -> real value iterator instead.
 					final String partitionValue = (String) v.next();
 					final String tempTable = tempName + this.tempNameCount++;
 					previousIndexes.put(tempTable, new HashSet());
@@ -1242,7 +1240,6 @@ public interface MartConstructor {
 		private String getOptimiserColumnName(final DataSetTable parent,
 				final DataSetTable dsTable, final String partitionValue,
 				final DataSetOptimiserType oType) {
-			// TODO Make a alias -> real value map instead.
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
 				uniqueOptCols.put(parent, new HashSet());
@@ -1286,7 +1283,6 @@ public interface MartConstructor {
 
 		private String getFinalName(final String schemaPartitionPrefix,
 				final DataSetTable dsTable, final String partitionValue) {
-			// TODO Make a alias -> real value map instead.
 			final StringBuffer finalName = new StringBuffer();
 			if (schemaPartitionPrefix != null) {
 				finalName.append(schemaPartitionPrefix);
@@ -1416,8 +1412,6 @@ public interface MartConstructor {
 					}
 				}
 			} catch (final ConstructorException e) {
-				this.failure = e;
-			} catch (final ValidationException e) {
 				// This is so the users see a nice message straight away.
 				this.failure = e;
 			} catch (final Throwable t) {

@@ -423,7 +423,7 @@ public class DataSetModificationSet {
 			 *            the set of unique ranges to partition on.
 			 */
 			public ValueRange(final Map ranges) {
-				this.ranges = new HashMap();
+				this.ranges = new TreeMap();
 				this.ranges.putAll(ranges);
 			}
 
@@ -480,7 +480,7 @@ public class DataSetModificationSet {
 			 *            the set of unique ranges to partition on.
 			 */
 			public ValueList(final Map values) {
-				this.values = new HashMap();
+				this.values = new TreeMap();
 				this.values.putAll(values);
 			}
 

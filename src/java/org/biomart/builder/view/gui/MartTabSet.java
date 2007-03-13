@@ -48,7 +48,6 @@ import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.exceptions.ConstructorException;
-import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
@@ -56,7 +55,7 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
-import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
  * Displays a set of tabs, one per mart currently loaded. Each tab keeps track
@@ -213,11 +212,11 @@ public class MartTabSet extends JTabbedPane {
 			progressMonitor.close();
 			// If it failed, show the exception.
 			final Exception failure = constructor.getFailureException();
-			// By singling out ValidationException we can show users useful
+			// By singling out ConstructorException we can show users useful
 			// messages straight away.
 			if (failure != null)
 				StackTrace
-						.showStackTrace(failure instanceof ValidationException ? failure
+						.showStackTrace(failure instanceof ConstructorException ? failure
 								: new ConstructorException(Resources
 										.get("martConstructionFailed"), failure));
 			// Inform user of success, if it succeeded.

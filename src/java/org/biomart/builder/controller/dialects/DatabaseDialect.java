@@ -17,6 +17,7 @@
  */
 package org.biomart.builder.controller.dialects;
 
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -51,6 +52,10 @@ import org.biomart.common.resources.Resources;
 public abstract class DatabaseDialect {
 
 	private static final Set dialects = new HashSet();
+	
+	private int maxTableNameLength = Integer.MAX_VALUE;
+	
+	private int maxColumnNameLength = Integer.MAX_VALUE;
 
 	/**
 	 * Registers all known dialects for use with this system. Each implementing
@@ -84,7 +89,7 @@ public abstract class DatabaseDialect {
 	 * @return the appropriate DatabaseDialect, or <tt>null</tt> if none
 	 *         found.
 	 */
-	public static DatabaseDialect getDialect(final DataLink dataLink) {
+	public static DatabaseDialect getDialect(final DataLink dataLink) throws SQLException {
 		Log.info(Resources.get("logGetDialect", "" + dataLink));
 		for (final Iterator i = DatabaseDialect.dialects.iterator(); i
 				.hasNext();) {
@@ -93,6 +98,11 @@ public abstract class DatabaseDialect {
 				Log
 						.info(Resources.get("logGotDialect", d.getClass()
 								.getName()));
+				if (dataLink instanceof JDBCSchema) {
+					final DatabaseMetaData dmd = ((JDBCSchema)dataLink).getConnection().getMetaData();
+					d.setMaxColumnNameLength(dmd.getMaxColumnNameLength());
+					d.setMaxTableNameLength(dmd.getMaxTableNameLength());
+				}
 				return d;
 			}
 		}
@@ -214,4 +224,22 @@ public abstract class DatabaseDialect {
 	 * @return <tt>true</tt> if it understands it, <tt>false</tt> if not.
 	 */
 	public abstract boolean understandsDataLink(DataLink dataLink);
+	
+	public void setMaxTableNameLength(final int value) {
+		this.maxTableNameLength = value;
+	}
+	
+	public void setMaxColumnNameLength(final int value) {
+		this.maxColumnNameLength = value;
+	}
+	
+	public void checkTableName(final String tableName) throws ConstructorException {
+		if (tableName.length()>this.maxTableNameLength)
+			throw new ConstructorException(Resources.get("nameTooLong", tableName));
+	}
+	
+	public void checkColumnName(final String columnName) throws ConstructorException {
+		if (columnName.length()>this.maxColumnNameLength)
+			throw new ConstructorException(Resources.get("nameTooLong", columnName));
+	}
 }

@@ -50,9 +50,7 @@ import javax.swing.text.DefaultEditorKit;
 
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
-import org.biomart.common.view.gui.ComponentPrinter;
 import org.biomart.common.view.gui.LongProcess;
-import org.biomart.common.view.gui.StackTrace;
 
 /**
  * A dialog which allows the user to choose some options about creating DDL over

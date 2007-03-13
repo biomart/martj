@@ -74,7 +74,7 @@ import org.biomart.common.model.Table;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
-import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
  * This tabset contains most of the core functionality of the entire GUI. It has

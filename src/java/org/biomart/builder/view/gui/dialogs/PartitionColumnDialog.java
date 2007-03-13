@@ -56,7 +56,7 @@ import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.StackTrace;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTablePanel;
 
@@ -171,8 +171,8 @@ public class PartitionColumnDialog extends JDialog {
 		final JLabel valueListLabel = new JLabel(Resources
 				.get("valueListsLabel"));
 		this.valueAliasModel = new StringStringTablePanel(
-				(template != null && template instanceof ValueRange) ? ((ValueRange) template)
-						.getRanges()
+				(template != null && template instanceof ValueList) ? ((ValueList) template)
+						.getValues()
 						: null) {
 			private static final long serialVersionUID = 1L;
 
@@ -236,7 +236,7 @@ public class PartitionColumnDialog extends JDialog {
 		// Create the update-from-database button and holder for it and
 		// the value list table.
 		final JButton updateDB = new JButton(Resources
-				.get("updatePartitionButton"));
+				.get("updatePartitionFromDBButton"));
 		updateDB.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				try {

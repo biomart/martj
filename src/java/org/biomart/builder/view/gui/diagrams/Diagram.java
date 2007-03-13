@@ -70,8 +70,8 @@ import org.biomart.common.model.Table;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.InverseMap;
-import org.biomart.common.view.gui.ComponentImageSaver;
-import org.biomart.common.view.gui.ComponentPrinter;
+import org.biomart.common.view.gui.dialogs.ComponentImageSaver;
+import org.biomart.common.view.gui.dialogs.ComponentPrinter;
 
 /**
  * A diagram represents a collection of database components. It usually contains

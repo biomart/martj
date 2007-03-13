@@ -61,10 +61,13 @@ public abstract class BioMartGUI extends JFrame {
 		super(Resources.get("GUITitle", Resources.BIOMART_VERSION));
 
 		// Set some nice Mac stuff.
-		System.setProperty("apple.awt.showGrowBox", "true");
-		System.setProperty("com.apple.mrj.application.apple.menu.about.name",
-				Resources.get("plainGUITitle"));
-		System.setProperty("apple.laf.useScreenMenuBar", "true");
+		System.setProperty("com.apple.macos.useScreenMenuBar", "true");
+		//System.setProperty("com.apple.macos.use-file-dialog-packages","false"); 
+		System.setProperty("com.apple.macos.smallTabs", "true");
+		//System.setProperty("com.apple.mrj.application.apple.menu.about.name",
+		//		Resources.get("plainGUITitle"));
+		System.setProperty("com.apple.mrj.application.growbox.intrudes", "true");
+		System.setProperty("com.apple.mrj.application.live-resize", "true");
 
 		// Load our cache of settings.
 		Settings.load();

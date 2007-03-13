@@ -703,7 +703,6 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 
 			// Write out partitioned columns.
-			// TODO Make a alias -> real value map instead.
 			for (final Iterator x = dsMods.getPartitionedColumns().entrySet()
 					.iterator(); x.hasNext();) {
 				final Map.Entry entry = (Map.Entry) x.next();
@@ -1421,9 +1420,10 @@ public class MartBuilderXML extends DefaultHandler {
 				// get regenerated automatically. We can tell this is a
 				// dataset table because at least one key ID will not
 				// be found.
-				if (firstKey == null || secondKey == null)
-					return;
-
+				if (firstKey == null || secondKey == null) {
+					// Element must be something.
+					element = null;
+				} else {
 				// Make it
 				final Relation rel = new GenericRelation(firstKey, secondKey,
 						card);
@@ -1433,6 +1433,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Set its status.
 				rel.setStatus(status);
 				element = rel;
+				}
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1656,7 +1657,6 @@ public class MartBuilderXML extends DefaultHandler {
 		}
 
 		// Partitioned Column (inside dataset).
-		// TODO Make a alias -> real value map instead.
 		else if ("partitionedColumn".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
