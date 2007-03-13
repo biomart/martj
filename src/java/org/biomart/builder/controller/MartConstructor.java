@@ -40,12 +40,9 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
@@ -70,7 +67,6 @@ import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
@@ -190,8 +186,6 @@ public interface MartConstructor {
 
 		private Exception failure = null;
 
-		private Helper helper;
-
 		private Collection martConstructorListeners;
 
 		private double percentComplete = 0.0;
@@ -216,15 +210,12 @@ public interface MartConstructor {
 		 *            dataset should be put.
 		 * @param datasets
 		 *            the dataset(s) to transform into a mart.
-		 * @param helper
-		 *            the helper to use in the transformation.
 		 */
 		public GenericConstructorRunnable(final String datasetSchemaName,
-				final Collection datasets, final Helper helper) {
+				final Collection datasets) {
 			super();
 			Log.debug("Created generic constructor runnable");
 			this.datasets = datasets;
-			this.helper = helper;
 			this.martConstructorListeners = new ArrayList();
 			this.datasetSchemaName = datasetSchemaName;
 		}
@@ -857,6 +848,10 @@ public interface MartConstructor {
 										.getPartitionedColumnName(dsTable))));
 				if (pc instanceof ValueRange)
 					action.setPartitionRangeDef((ValueRange) pc);
+				else if (pc instanceof ValueList)
+					action.setPartitionListDef((ValueList) pc);
+				else
+					throw new BioMartError();
 				action.setPartitionValue(partitionValue);
 			}
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
@@ -1053,6 +1048,9 @@ public interface MartConstructor {
 										.getPartitionedColumnName(dsTable))));
 				if (pc instanceof ValueRange)
 					action.setPartitionRangeDef((ValueRange) pc);
+				else if (pc instanceof ValueList)
+					action.setPartitionListDef((ValueList) pc);
+				else throw new BioMartError();
 				action.setPartitionValue(partitionValue);
 			}
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
@@ -1179,21 +1177,13 @@ public interface MartConstructor {
 				final DataSetColumn partCol, final List partitionValues,
 				final Map previousTempTables, final Map previousIndexes)
 				throws SQLException {
-			// TODO Make a alias -> real value map instead.
 			partitionValues.clear();
-			if (pc instanceof ValueCollection) {
-				if (((ValueCollection) pc).getIncludeNull())
-					partitionValues.add(null);
-				partitionValues.addAll(((ValueCollection) pc).getValues());
-			} else if (pc instanceof UniqueValues) {
-				DataSetColumn col = partCol;
-				while (col instanceof InheritedColumn)
-					col = ((InheritedColumn) col).getInheritedColumn();
-				partitionValues.addAll(this.helper.listDistinctValues(
-						schemaPartition, ((WrappedColumn) col)
-								.getWrappedColumn()));
-			} else if (pc instanceof ValueRange)
+			if (pc instanceof ValueRange)
 				partitionValues.addAll(((ValueRange) pc).getRanges().keySet());
+			else if (pc instanceof ValueList)
+				partitionValues.addAll(((ValueList) pc).getValues().keySet());
+			else
+				throw new BioMartError();
 			final String delayedTempDrop = (String) previousTempTables
 					.get(GenericConstructorRunnable.NO_PARTITION);
 			for (final Iterator z = partitionValues.iterator(); z.hasNext();) {
@@ -1445,36 +1435,6 @@ public interface MartConstructor {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Helpers provide methods to give useful information to the constructor as
-	 * it builds the action graph. Helper instances are usually database aware
-	 * and are able to connect to a database to get this information.
-	 */
-	public interface Helper {
-
-		/**
-		 * Generate a new temporary table name.
-		 * 
-		 * @return a new temporary table name.
-		 */
-		public String getNewTempTableName();
-
-		/**
-		 * Lists the distinct values in the given column. This must be a real
-		 * column, not an instance of {@link DataSetColumn}.
-		 * 
-		 * @param schemaPartition
-		 *            the schema to refer to.
-		 * @param col
-		 *            the column to get the distinct values from.
-		 * @return the distinct values in the column.
-		 * @throws SQLException
-		 *             in case of problems.
-		 */
-		public Collection listDistinctValues(final String schemaPartition,
-				Column col) throws SQLException;
 	}
 
 	/**

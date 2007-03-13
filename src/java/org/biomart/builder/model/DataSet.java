@@ -861,6 +861,10 @@ public class DataSet extends GenericSchema {
 		this.dsMods.synchronise();
 	}
 	
+	public Collection getIncludedSchemas() {
+		return this.includedSchemas;
+	}
+	
 	public boolean usesSchema(final Schema schema) {
 		return (this.includedSchemas.isEmpty() || this.includedSchemas.contains(schema));
 	}

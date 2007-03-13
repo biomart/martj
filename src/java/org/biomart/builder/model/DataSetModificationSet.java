@@ -31,7 +31,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.common.model.Key;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -408,91 +407,6 @@ public class DataSetModificationSet {
 	 */
 	public interface PartitionedColumnDefinition {
 		/**
-		 * Use this class to refer to a column partitioned by every unique
-		 * value.
-		 */
-		public static class UniqueValues implements PartitionedColumnDefinition {
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "UniqueValues".
-			 */
-			public String toString() {
-				return "UniqueValues";
-			}
-		}
-
-		/**
-		 * Use this class to partition on a set of values - ie. only columns
-		 * with one of these values will be returned.
-		 */
-		public static class ValueCollection implements
-				PartitionedColumnDefinition {
-			private boolean includeNull;
-
-			private Set values = new HashSet();
-
-			/**
-			 * The constructor specifies the values to partition on. Duplicate
-			 * values will be ignored.
-			 * 
-			 * @param values
-			 *            the set of unique values to partition on.
-			 * @param includeNull
-			 *            whether to include <tt>null</tt> as a partitionable
-			 *            value.
-			 */
-			public ValueCollection(final Collection values,
-					final boolean includeNull) {
-				this.values = new HashSet();
-				this.values.addAll(values);
-				this.includeNull = includeNull;
-			}
-
-			public boolean equals(final Object o) {
-				if (o == null || !(o instanceof ValueCollection))
-					return false;
-				final ValueCollection vc = (ValueCollection) o;
-				return vc.getValues().equals(this.values)
-						&& vc.getIncludeNull() == this.includeNull;
-			}
-
-			/**
-			 * Returns <tt>true</tt> or <tt>false</tt> depending on whether
-			 * <tt>null</tt> is considered a partitionable value or not.
-			 * 
-			 * @return <tt>true</tt> if <tt>null</tt> is included as a
-			 *         partitioned value.
-			 */
-			public boolean getIncludeNull() {
-				return this.includeNull;
-			}
-
-			/**
-			 * Returns the set of values we will partition on. May be empty but
-			 * never null.
-			 * 
-			 * @return the values we will partition on.
-			 */
-			public Set getValues() {
-				return this.values;
-			}
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "ValueCollection:" suffixed with the output of
-			 * {@link #getValues()}.
-			 */
-			public String toString() {
-				return "ValueCollection:"
-						+ (this.values == null ? "<undef>" : this.values
-								.toString());
-			}
-		}
-
-		/**
 		 * Use this class to partition on a range of values - ie. only columns
 		 * which fit one of these ranges will be returned.
 		 */
@@ -545,6 +459,57 @@ public class DataSetModificationSet {
 			public String toString() {
 				return "ValueRange:"
 						+ (this.ranges == null ? "<undef>" : this.ranges
+								.toString());
+			}
+		}
+
+		/**
+		 * Use this class to partition on a range of values - ie. only columns
+		 * which fit one of these ranges will be returned.
+		 */
+		public static class ValueList implements PartitionedColumnDefinition {
+			private Map values = new HashMap();
+
+			/**
+			 * The constructor specifies the ranges to partition on. Duplicate
+			 * values will be ignored. Keys of the range are names for the
+			 * ranges. Values are range expressions where :col represents the
+			 * name of the column.
+			 * 
+			 * @param ranges
+			 *            the set of unique ranges to partition on.
+			 */
+			public ValueList(final Map values) {
+				this.values = new HashMap();
+				this.values.putAll(values);
+			}
+
+			public boolean equals(final Object o) {
+				if (o == null || !(o instanceof ValueList))
+					return false;
+				final ValueList vc = (ValueList) o;
+				return vc.getValues().equals(this.values);
+			}
+
+			/**
+			 * Returns the set of values we will partition on. May be empty but
+			 * never null.
+			 * 
+			 * @return the values we will partition on.
+			 */
+			public Map getValues() {
+				return this.values;
+			}
+
+			/**
+			 * {@inheritDoc}
+			 * <p>
+			 * This will return "ValueList:" suffixed with the output of
+			 * {@link #getLists()}.
+			 */
+			public String toString() {
+				return "ValueList:"
+						+ (this.values == null ? "<undef>" : this.values
 								.toString());
 			}
 		}

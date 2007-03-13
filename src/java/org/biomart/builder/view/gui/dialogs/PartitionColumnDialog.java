@@ -18,7 +18,6 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -26,32 +25,36 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
+import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.ListCellRenderer;
-import javax.swing.border.EtchedBorder;
+import javax.swing.SwingUtilities;
 
+import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
+import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.StackTrace;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
@@ -68,18 +71,11 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTableP
  * @since 0.1
  */
 public class PartitionColumnDialog extends JDialog {
-	// TODO Make a alias -> real value map instead.
 	private static final long serialVersionUID = 1;
 
 	private JButton cancel;
 
 	private JButton execute;
-
-	private JTextArea multiValue;
-
-	private JPanel multiValueHolder;
-
-	private JCheckBox nullable;
 
 	private PartitionedColumnDefinition partitionType;
 
@@ -88,7 +84,9 @@ public class PartitionColumnDialog extends JDialog {
 	private JComboBox columns;
 
 	private TwoColumnTablePanel expressionAliasModel;
-	
+
+	private TwoColumnTablePanel valueAliasModel;
+
 	/**
 	 * Pop up a dialog asking how to partition a table.
 	 * 
@@ -138,43 +136,72 @@ public class PartitionColumnDialog extends JDialog {
 		// Create the fields that will contain the user's choice and any
 		// values they may enter.
 		// The multi-values box.
-		final JLabel valueLabel = new JLabel(Resources.get("valuesLabel"));
-		this.multiValue = new JTextArea(5, 30);
-		this.multiValueHolder = new JPanel(new BorderLayout());
-		this.multiValueHolder.setAlignmentX(LEFT_ALIGNMENT);
-		this.multiValueHolder.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
-		this.multiValueHolder.add(new JScrollPane(this.multiValue),
-				BorderLayout.CENTER);
 		// The ranges box.
 		final JLabel exprLabel = new JLabel(Resources
 				.get("rangeExpressionsLabel"));
 		this.expressionAliasModel = new StringStringTablePanel(
-				(template != null && template instanceof ValueRange) ? ((ValueRange) template).getRanges()
-						: null) {			
+				(template != null && template instanceof ValueRange) ? ((ValueRange) template)
+						.getRanges()
+						: null) {
 			private static final long serialVersionUID = 1L;
+
 			private int alias = 1;
+
 			public String getInsertButtonText() {
 				return Resources.get("insertExprAliasButton");
 			}
+
 			public String getRemoveButtonText() {
 				return Resources.get("removeExprAliasButton");
 			}
+
 			public String getFirstColumnHeader() {
 				return Resources.get("expressionAliasTableAliasHeader");
 			}
+
 			public String getSecondColumnHeader() {
 				return Resources.get("expressionAliasTableExpressionHeader");
 			}
+
 			public Object getNewRowFirstColumn() {
-				return Resources.get("defaultExprName")+this.alias++;
+				return Resources.get("defaultExprName") + this.alias++;
+			}
+		};
+		// The values box.
+		final JLabel valueListLabel = new JLabel(Resources
+				.get("valueListsLabel"));
+		this.valueAliasModel = new StringStringTablePanel(
+				(template != null && template instanceof ValueRange) ? ((ValueRange) template)
+						.getRanges()
+						: null) {
+			private static final long serialVersionUID = 1L;
+
+			private int alias = 1;
+
+			public String getInsertButtonText() {
+				return Resources.get("insertValueAliasButton");
+			}
+
+			public String getRemoveButtonText() {
+				return Resources.get("removeValueAliasButton");
+			}
+
+			public String getFirstColumnHeader() {
+				return Resources.get("valueAliasTableAliasHeader");
+			}
+
+			public String getSecondColumnHeader() {
+				return Resources.get("valueAliasTableValueHeader");
+			}
+
+			public Object getNewRowFirstColumn() {
+				return Resources.get("defaultValueName") + this.alias++;
 			}
 		};
 		// Everything else.
 		this.type = new JComboBox(new String[] {
-				Resources.get("uniquePartitionOption"),
-				Resources.get("collectionPartitionOption"),
+				Resources.get("listPartitionOption"),
 				Resources.get("rangePartitionOption") });
-		this.nullable = new JCheckBox(Resources.get("includeNullLabel"));
 		this.columns = new JComboBox();
 		this.columns.setRenderer(new ListCellRenderer() {
 			public Component getListCellRendererComponent(final JList list,
@@ -206,51 +233,92 @@ public class PartitionColumnDialog extends JDialog {
 		if (dsColumn != null)
 			this.columns.setSelectedItem(dsColumn);
 
+		// Create the update-from-database button and holder for it and
+		// the value list table.
+		final JButton updateDB = new JButton(Resources
+				.get("updatePartitionButton"));
+		updateDB.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				try {
+					// Work out what we've already got.
+					final Map existingValues = PartitionColumnDialog.this.valueAliasModel
+							.getValues();
+					// Read the values from the database.
+					final Set dbValues = new HashSet();
+					// First, make a set of all input schemas. We use a set to
+					// prevent duplicates.
+					DataSetColumn dsCol = PartitionColumnDialog.this
+							.getColumn();
+					while (dsCol instanceof InheritedColumn)
+						dsCol = ((InheritedColumn) dsCol).getInheritedColumn();
+					final Column col = ((WrappedColumn) dsCol)
+							.getWrappedColumn();
+					final Schema schema = col.getTable().getSchema();
+					final DatabaseDialect dd = DatabaseDialect
+							.getDialect(schema);
+					if (dd != null) {
+						if (schema.getPartitions().isEmpty())
+							dbValues.addAll(dd.executeSelectDistinct(
+									((JDBCSchema) schema).getDatabaseSchema(),
+									col));
+						else
+							for (final Iterator i = schema.getPartitions()
+									.keySet().iterator(); i.hasNext();)
+								dbValues.addAll(dd.executeSelectDistinct(
+										(String) i.next(), col));
+					}
+					// Combine the two to create an updated list.
+					final Map newValues = new TreeMap(existingValues);
+					for (final Iterator i = newValues.entrySet().iterator(); i
+							.hasNext();) {
+						final Map.Entry entry = (Map.Entry) i.next();
+						if (!dbValues.contains(entry.getValue()))
+							i.remove();
+					}
+					for (final Iterator i = dbValues.iterator(); i.hasNext();) {
+						final String value = (String) i.next();
+						if (!newValues.containsValue(value))
+							newValues.put(value, value);
+					}
+					// Update the table contents.
+					PartitionColumnDialog.this.valueAliasModel
+							.setValues(newValues);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+		final Box valueListPanel = Box.createVerticalBox();
+		valueListPanel.add(this.valueAliasModel);
+		valueListPanel.add(updateDB);
+
 		// Make the drop-down type choice change which value and nullable
 		// options appear.
 		this.type.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				final String selectedItem = (String) PartitionColumnDialog.this.type
 						.getSelectedItem();
-
-				// Multi-value partitions have a multi value field, with a
-				// nullable
-				// box saying 'include null'.
-				if (selectedItem.equals(Resources
-						.get("collectionPartitionOption"))) {
-					// Visible value.
-					valueLabel.setVisible(true);
-					PartitionColumnDialog.this.multiValueHolder
-							.setVisible(true);
-					PartitionColumnDialog.this.nullable.setVisible(true);
-					// Invisible range.
-					exprLabel.setVisible(false);
-					PartitionColumnDialog.this.expressionAliasModel
-							.setVisible(false);
-				}
-
 				// Range?
-				else if (selectedItem.equals(Resources
-						.get("rangePartitionOption"))) {
+				if (selectedItem.equals(Resources.get("rangePartitionOption"))) {
 					// Visible range.
 					exprLabel.setVisible(true);
 					PartitionColumnDialog.this.expressionAliasModel
 							.setVisible(true);
-					// Invisible value.
-					valueLabel.setVisible(false);
-					PartitionColumnDialog.this.multiValueHolder
-							.setVisible(false);
-					PartitionColumnDialog.this.nullable.setVisible(false);
+					// Invisible list.
+					valueListLabel.setVisible(false);
+					valueListPanel.setVisible(false);
 				}
-
-				// Other kinds of partition have no value or nullable fields.
-				else {
-					// Invisible value.
-					valueLabel.setVisible(false);
-					PartitionColumnDialog.this.multiValueHolder
-							.setVisible(false);
-					PartitionColumnDialog.this.nullable.setVisible(false);
-					// Invisible range.
+				// List?
+				else if (selectedItem.equals(Resources
+						.get("listPartitionOption"))) {
+					// Visible range.
+					valueListLabel.setVisible(true);
+					valueListPanel.setVisible(true);
+					// Invisible list.
 					exprLabel.setVisible(false);
 					PartitionColumnDialog.this.expressionAliasModel
 							.setVisible(false);
@@ -283,11 +351,11 @@ public class PartitionColumnDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the value label and field to the dialog.
-		gridBag.setConstraints(valueLabel, labelConstraints);
-		content.add(valueLabel);
+		// Add the value list label and field to the dialog.
+		gridBag.setConstraints(valueListLabel, labelConstraints);
+		content.add(valueListLabel);
 		field = new JPanel();
-		field.add(this.multiValueHolder);
+		field.add(valueListPanel);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -296,15 +364,6 @@ public class PartitionColumnDialog extends JDialog {
 		content.add(exprLabel);
 		field = new JPanel();
 		field.add(this.expressionAliasModel);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
-		// Add a blank label and the nullable checkbox to the dialog.
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.nullable);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -360,27 +419,8 @@ public class PartitionColumnDialog extends JDialog {
 			// Attempt to create the appropriate type.
 			final String type = (String) this.type.getSelectedItem();
 
-			// Multi-value uses the multi values, and/or nullable.
-			if (type.equals(Resources.get("collectionPartitionOption"))) {
-				final String[] values = this.multiValue.getText().trim().split(
-						System.getProperty("line.separator"));
-				// Check that none of the entries have non-allowable symbols
-				// or start/end in underscores.
-				boolean allOK = true;
-				for (int i = 0; i < values.length && allOK; i++)
-					allOK = values[i].matches("^[^_]\\w+[^_]$");
-				// If there any messages, display them.
-				if (allOK
-						|| JOptionPane.showConfirmDialog(null, Resources
-								.get("partValueWithSpecialChar"), Resources
-								.get("questionTitle"),
-								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
-					return new ValueCollection(Arrays.asList(values),
-							this.nullable.isSelected());
-			}
-
 			// Range?
-			else if (type.equals(Resources.get("rangePartitionOption"))) {
+			if (type.equals(Resources.get("rangePartitionOption"))) {
 				final String[] values = (String[]) this.expressionAliasModel
 						.getValues().keySet().toArray(new String[0]);
 				// Check that none of the range names have non-allowable symbols
@@ -394,13 +434,25 @@ public class PartitionColumnDialog extends JDialog {
 								.get("partValueWithSpecialChar"), Resources
 								.get("questionTitle"),
 								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
-					return new ValueRange(this.expressionAliasModel
-							.getValues());
+					return new ValueRange(this.expressionAliasModel.getValues());
 			}
-
-			// Unique values doesn't require anything.
-			else if (type.equals(Resources.get("uniquePartitionOption")))
-				return new UniqueValues();
+			// List?
+			else if (type.equals(Resources.get("listPartitionOption"))) {
+				final String[] values = (String[]) this.valueAliasModel
+						.getValues().keySet().toArray(new String[0]);
+				// Check that none of the range names have non-allowable symbols
+				// or start/end in underscores.
+				boolean allOK = true;
+				for (int i = 0; i < values.length && allOK; i++)
+					allOK = values[i].matches("^[^_]\\w+[^_]$");
+				// If there any messages, display them.
+				if (allOK
+						|| JOptionPane.showConfirmDialog(null, Resources
+								.get("partValueWithSpecialChar"), Resources
+								.get("questionTitle"),
+								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+					return new ValueList(this.valueAliasModel.getValues());
+			}
 
 			// Eh? Don't know what this is!
 			else
@@ -413,37 +465,15 @@ public class PartitionColumnDialog extends JDialog {
 		return null;
 	}
 
-	private boolean isEmpty(final String string) {
-		// Strings are empty if they are null or all whitespace.
-		return string == null || string.trim().length() == 0;
-	}
-
 	private void copySettingsFromPartitionType(
 			final PartitionedColumnDefinition template) {
-		// Multi value collection? Copy the values out of it.
-		if (template instanceof ValueCollection) {
-			final ValueCollection vc = (ValueCollection) template;
-			if (vc.getIncludeNull())
-				this.nullable.doClick();
-			this.type.setSelectedItem(Resources
-					.get("collectionPartitionOption"));
-			// Values appear one-per-line.
-			final StringBuffer sb = new StringBuffer();
-			for (final Iterator i = vc.getValues().iterator(); i.hasNext();) {
-				sb.append((String) i.next());
-				if (i.hasNext())
-					sb.append(System.getProperty("line.separator"));
-			}
-			this.multiValue.setText(sb.toString());
-		}
-
 		// Range?
-		else if (template instanceof ValueRange)
+		if (template instanceof ValueRange)
 			this.type.setSelectedItem(Resources.get("rangePartitionOption"));
 
-		// Otherwise, select the unique partition option as default.
+		// List is default.
 		else
-			this.type.setSelectedItem(Resources.get("uniquePartitionOption"));
+			this.type.setSelectedItem(Resources.get("listPartitionOption"));
 	}
 
 	private boolean validateFields() {
@@ -457,19 +487,17 @@ public class PartitionColumnDialog extends JDialog {
 		// Work out which partition type is currently selected.
 		final String selectedItem = (String) this.type.getSelectedItem();
 
-		// If it's multi...
-		if (selectedItem.equals(Resources.get("collectionPartitionOption")))
-			// Check we have a value, or nullable is selected.
-			if (this.isEmpty(this.multiValue.getText())
-					&& !this.nullable.isSelected())
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("value")));
-
 		// Validate other fields.
 		if (selectedItem.equals(Resources.get("rangePartitionOption")))
 			// Check we have an expression.
 			if (this.expressionAliasModel.getValues().isEmpty())
 				messages.add(Resources.get("expressionAliasMissing"));
+
+			// Validate other fields.
+			else if (selectedItem.equals(Resources.get("listPartitionOption")))
+				// Check we have an expression.
+				if (this.valueAliasModel.getValues().isEmpty())
+					messages.add(Resources.get("valueAliasMissing"));
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())

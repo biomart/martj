@@ -46,8 +46,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.UniqueValues;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueCollection;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
@@ -713,24 +712,23 @@ public class MartBuilderXML extends DefaultHandler {
 					final Map.Entry entry2 = (Map.Entry) y.next();
 					final PartitionedColumnDefinition pc = (PartitionedColumnDefinition) entry2
 							.getValue();
-					final String pcType = (pc instanceof ValueCollection) ? "valueCollection"
-							: (pc instanceof ValueRange ? "valueRange"
-									: "uniqueValues");
+					final String pcType = (pc instanceof ValueRange ? "valueRange"
+									: "valueList");
 					this.openElement("partitionedColumn", xmlWriter);
 					this.writeAttribute("tableKey", (String) entry.getKey(),
 							xmlWriter);
 					this.writeAttribute("colKey", (String) entry2.getKey(),
 							xmlWriter);
 					this.writeAttribute("partitionType", pcType, xmlWriter);
-					if (pc instanceof ValueCollection) {
-						this.writeAttribute("partitionUseNull", ""
-								+ ((ValueCollection) pc).getIncludeNull(),
+					if (pc instanceof ValueList) {
+						this.writeListAttribute("valueNames",
+								(String[]) ((ValueRange) pc).getRanges()
+										.keySet().toArray(new String[0]),
 								xmlWriter);
-						this.writeListAttribute("partitionValues",
-								(String[]) ((ValueCollection) pc).getValues()
-										.toArray(new String[0]), xmlWriter);
-					} else if (pc instanceof UniqueValues) {
-						// Nothing extra needed for unique values.
+						this.writeListAttribute("valueValues",
+								(String[]) ((ValueRange) pc).getRanges()
+										.values().toArray(new String[0]),
+								xmlWriter);
 					} else if (pc instanceof ValueRange) {
 						this.writeListAttribute("rangeNames",
 								(String[]) ((ValueRange) pc).getRanges()
@@ -1677,21 +1675,20 @@ public class MartBuilderXML extends DefaultHandler {
 				PartitionedColumnDefinition resolvedPartitionType;
 				if (partitionType == null || "null".equals(partitionType))
 					resolvedPartitionType = null;
-				else if ("valueCollection".equals(partitionType)) {
-					// Values are comma-separated.
-					final List valueList = new ArrayList();
-					if (attributes.containsKey("partitionValues"))
-						valueList.addAll(Arrays.asList(this.readListAttribute(
-								(String) attributes.get("partitionValues"),
-								false)));
-					final boolean includeNull = Boolean.valueOf(
-							(String) attributes.get("partitionUseNull"))
-							.booleanValue();
-					// Make the collection.
-					resolvedPartitionType = new ValueCollection(valueList,
-							includeNull);
-				} else if ("uniqueValues".equals(partitionType))
-					resolvedPartitionType = new UniqueValues();
+				else if ("valueList".equals(partitionType)) {
+					final List valueNames = new ArrayList();
+					valueNames.addAll(Arrays.asList(this.readListAttribute(
+							(String) attributes.get("valueNames"), false)));
+					final List valueValues = new ArrayList();
+					valueValues.addAll(Arrays.asList(this
+							.readListAttribute((String) attributes
+									.get("valueValues"), false)));
+					// Make the range collection.
+					final Map values = new HashMap();
+					for (int i = 0; i < valueNames.size(); i++)
+						values.put(valueNames.get(i), valueValues.get(i));
+					resolvedPartitionType = new ValueList(values);
+				}
 				else if ("valueRange".equals(partitionType)) {
 					final List rangeNames = new ArrayList();
 					rangeNames.addAll(Arrays.asList(this.readListAttribute(

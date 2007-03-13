@@ -95,7 +95,8 @@ import org.biomart.common.view.gui.ComponentPrinter;
  *          $Author$
  * @since 0.1
  */
-public abstract class Diagram extends JLayeredPane implements Scrollable, Autoscroll {
+public abstract class Diagram extends JLayeredPane implements Scrollable,
+		Autoscroll {
 
 	private static final int AUTOSCROLL_INSET = 12;
 
@@ -522,7 +523,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable, Autosc
 		// Select the object.
 		if (comp instanceof BoxShapedComponent)
 			this.toggleItem((BoxShapedComponent) comp);
-		
+
 		// Repaint newly visible area.
 		this.repaint(this.getVisibleRect());
 	}
@@ -625,8 +626,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable, Autosc
 	 */
 	public void repaintDiagram() {
 		for (final Iterator i = this.componentMap.values().iterator(); i
-		.hasNext();)
-	((DiagramComponent) i.next()).repaintDiagramComponent();
+				.hasNext();)
+			((DiagramComponent) i.next()).repaintDiagramComponent();
 	}
 
 	/**
@@ -639,14 +640,16 @@ public abstract class Diagram extends JLayeredPane implements Scrollable, Autosc
 		// Update ourselves.
 		this.validate();
 	}
-	
+
 	public Dimension getPreferredSize() {
 		Dimension pref = this.getLayout().preferredLayoutSize(this);
-		final JViewport viewport = (JViewport) SwingUtilities
-				.getAncestorOfClass(JViewport.class, this);
+		final JViewport viewport = this.getParent() instanceof JViewport ? (JViewport) this
+				.getParent()
+				: null;
 		if (viewport != null)
-			pref = new Dimension((int)Math.max(pref.getWidth(), viewport.getWidth()),
-					(int)Math.max(pref.getHeight(), viewport.getHeight()));
+			pref = new Dimension((int) Math.max(pref.getWidth(), viewport
+					.getWidth()), (int) Math.max(pref.getHeight(), viewport
+					.getHeight()));
 		return pref;
 	}
 

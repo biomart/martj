@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
@@ -635,9 +636,11 @@ public abstract class MartConstructorAction {
 
 		private String partitionColumn;
 
-		private String partitionValue;
-
 		private ValueRange partitionRangeDef;
+
+		private ValueList partitionListDef;
+		
+		private String partitionValue;
 		
 		private TransformationUnit relationRestrictionPreviousUnit;
 
@@ -794,21 +797,6 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @return the partitionValue
-		 */
-		public String getPartitionValue() {
-			return partitionValue;
-		}
-
-		/**
-		 * @param partitionValue
-		 *            the partitionValue to set
-		 */
-		public void setPartitionValue(String partitionValue) {
-			this.partitionValue = partitionValue;
-		}
-
-		/**
 		 * @return the relationRestriction
 		 */
 		public RestrictedRelationDefinition getRelationRestriction() {
@@ -868,6 +856,22 @@ public abstract class MartConstructorAction {
 		public void setRelationRestrictionPreviousUnit(
 				TransformationUnit relationRestrictionPreviousUnit) {
 			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
+		}
+
+		public String getPartitionValue() {
+			return partitionValue;
+		}
+
+		public void setPartitionValue(String partitionValue) {
+			this.partitionValue = partitionValue;
+		}
+
+		public ValueList getPartitionListDef() {
+			return partitionListDef;
+		}
+
+		public void setPartitionListDef(ValueList partitionListDef) {
+			this.partitionListDef = partitionListDef;
 		}
 	}
 
@@ -1328,9 +1332,11 @@ public abstract class MartConstructorAction {
 
 		private String partitionColumn;
 
-		private String partitionValue;
-
 		private ValueRange partitionRangeDef;
+
+		private ValueList partitionListDef;
+		
+		private String partitionValue;
 
 		/**
 		 * Creates a new Select action.
@@ -1440,21 +1446,6 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @return the partitionValue
-		 */
-		public String getPartitionValue() {
-			return partitionValue;
-		}
-
-		/**
-		 * @param partitionValue
-		 *            the partitionValue to set
-		 */
-		public void setPartitionValue(String partitionValue) {
-			this.partitionValue = partitionValue;
-		}
-
-		/**
 		 * @return the partitionRangeDef
 		 */
 		public ValueRange getPartitionRangeDef() {
@@ -1467,6 +1458,22 @@ public abstract class MartConstructorAction {
 		 */
 		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
 			this.partitionRangeDef = partitionRangeDef;
+		}
+
+		public String getPartitionValue() {
+			return partitionValue;
+		}
+
+		public void setPartitionValue(String partitionValue) {
+			this.partitionValue = partitionValue;
+		}
+
+		public ValueList getPartitionListDef() {
+			return partitionListDef;
+		}
+
+		public void setPartitionListDef(ValueList partitionListDef) {
+			this.partitionListDef = partitionListDef;
 		}
 	}
 

@@ -27,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -595,19 +594,22 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(action.getPartitionRangeDef()
 						.getSubstitutedExpression(action.getPartitionValue(),
 								"a", action.getPartitionColumn()));
-			else {
+			else if (action.getPartitionListDef() != null) {
+				final String actualValue = (String) action
+						.getPartitionListDef().getValues().get(
+								action.getPartitionValue());
 				sb.append("a.");
 				sb.append(action.getPartitionColumn());
-				if (action.getPartitionValue() == null)
+				if (actualValue == null)
 					sb.append(" is null");
 				else {
 					sb.append("='");
-					sb
-							.append(action.getPartitionValue().replaceAll("'",
-									"\\'"));
+					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
 			}
+			else
+				throw new BioMartError();
 		}
 
 		statements.add(sb.toString());
@@ -737,19 +739,22 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(action.getPartitionRangeDef()
 						.getSubstitutedExpression(action.getPartitionValue(),
 								"b", action.getPartitionColumn()));
-			else {
+			else if (action.getPartitionListDef() != null) {
+				final String actualValue = (String) action
+						.getPartitionListDef().getValues().get(
+								action.getPartitionValue());
 				sb.append("b.");
 				sb.append(action.getPartitionColumn());
-				if (action.getPartitionValue() == null)
+				if (actualValue == null)
 					sb.append(" is null");
 				else {
 					sb.append("='");
-					sb
-							.append(action.getPartitionValue().replaceAll("'",
-									"\\'"));
+					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
 			}
+			else
+				throw new BioMartError();
 		}
 		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
 			final Map.Entry entry = (Map.Entry)k.next();

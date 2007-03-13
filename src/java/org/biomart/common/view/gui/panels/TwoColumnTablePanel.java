@@ -54,8 +54,8 @@ import org.biomart.common.model.Column.GenericColumn;
  * what values to use.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public abstract class TwoColumnTablePanel extends JPanel {
@@ -73,7 +73,8 @@ public abstract class TwoColumnTablePanel extends JPanel {
 	 * @param values
 	 *            initial values to display in the two columns of the table.
 	 */
-	public TwoColumnTablePanel(final Map values, final Collection firstColValues, final Collection secondColValues) {
+	public TwoColumnTablePanel(final Map values,
+			final Collection firstColValues, final Collection secondColValues) {
 		// Creates the basic dialog.
 		super();
 
@@ -116,12 +117,12 @@ public abstract class TwoColumnTablePanel extends JPanel {
 					firstEd.getPreferredSize().width);
 		} else
 			table.getColumnModel().getColumn(0).setPreferredWidth(
-					table.getTableHeader().getDefaultRenderer()
+					Math.max(250, table.getTableHeader().getDefaultRenderer()
 							.getTableCellRendererComponent(
 									null,
 									table.getColumnModel().getColumn(0)
 											.getHeaderValue(), false, false, 0,
-									0).getPreferredSize().width);
+									0).getPreferredSize().width));
 		final TableCellRenderer firstRend = this.getFirstColumnRenderer();
 		if (firstRend != null)
 			table.getColumnModel().getColumn(0).setCellRenderer(firstRend);
@@ -134,17 +135,21 @@ public abstract class TwoColumnTablePanel extends JPanel {
 					secondEd.getPreferredSize().width);
 		} else
 			table.getColumnModel().getColumn(1).setPreferredWidth(
-					table.getTableHeader().getDefaultRenderer()
+					Math.max(250, table.getTableHeader().getDefaultRenderer()
 							.getTableCellRendererComponent(
 									null,
 									table.getColumnModel().getColumn(1)
 											.getHeaderValue(), false, false, 0,
-									0).getPreferredSize().width);
+									0).getPreferredSize().width));
 		final TableCellRenderer secondRend = this.getSecondColumnRenderer();
 		if (secondRend != null)
 			table.getColumnModel().getColumn(1).setCellRenderer(secondRend);
 		// Buttons.
-		table.setPreferredScrollableViewportSize(new Dimension(table.getColumnModel().getColumn(0).getPreferredWidth() + table.getColumnModel().getColumn(1).getPreferredWidth(), 100));
+		table
+				.setPreferredScrollableViewportSize(new Dimension(table
+						.getColumnModel().getColumn(0).getPreferredWidth()
+						+ table.getColumnModel().getColumn(1)
+								.getPreferredWidth(), 250));
 		this.insert = new JButton(this.getInsertButtonText());
 		this.remove = new JButton(this.getRemoveButtonText());
 		this.insert.addActionListener(new ActionListener() {
@@ -203,6 +208,10 @@ public abstract class TwoColumnTablePanel extends JPanel {
 
 	public abstract TableCellRenderer getSecondColumnRenderer();
 
+	public void setValues(final Map values) {
+		this.tableModel.setValues(values);
+	}
+
 	public Map getValues() {
 		return this.tableModel.getValues();
 	}
@@ -228,6 +237,12 @@ public abstract class TwoColumnTablePanel extends JPanel {
 			super(new Object[] { firstColHeader, secondColHeader }, 0);
 			this.colClasses = new Class[] { firstColType, secondColType };
 			// Populate columns, and aliases from template.
+			this.setValues(values);
+		}
+
+		public void setValues(final Map values) {
+			while (this.getRowCount() > 0)
+				this.removeRow(0);
 			if (values != null)
 				for (final Iterator i = values.entrySet().iterator(); i
 						.hasNext();) {
@@ -243,9 +258,10 @@ public abstract class TwoColumnTablePanel extends JPanel {
 			for (int i = 0; i < this.getRowCount(); i++) {
 				final Object alias = this.getValueAt(i, 0);
 				final Object expr = this.getValueAt(i, 1);
-				if (alias != null && alias.toString().trim().length() > 0
-						&& expr != null && expr.toString().trim().length() > 0)
-					aliases.put(alias, expr);
+				if (alias != null && alias.toString().trim().length() > 0)
+					aliases
+							.put(alias, expr != null ? (expr.toString()
+									.length() == 0 ? null : expr) : null);
 			}
 			return aliases;
 		}
@@ -257,10 +273,12 @@ public abstract class TwoColumnTablePanel extends JPanel {
 
 	public abstract static class StringStringTablePanel extends
 			TwoColumnTablePanel {
-		protected StringStringTablePanel(final Map values, final Collection firstColValues, final Collection secondColValues) {
+		protected StringStringTablePanel(final Map values,
+				final Collection firstColValues,
+				final Collection secondColValues) {
 			super(values, firstColValues, secondColValues);
 		}
-		
+
 		public StringStringTablePanel(final Map values) {
 			this(values, null, null);
 		}
@@ -301,7 +319,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 	public abstract static class ColumnStringTablePanel extends
 			StringStringTablePanel {
 		private JComboBox editor;
-		
+
 		public ColumnStringTablePanel(final Map values, final Collection cols) {
 			super(values, cols, null);
 		}
@@ -311,7 +329,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 			Collections.sort(cols);
 			return cols;
 		}
-		
+
 		protected JComboBox getFirstColumnEditor() {
 			return this.editor;
 		}
@@ -325,10 +343,10 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 
 		public JComboBox getFirstColumnEditor(final Collection values) {
-			if (this.editor==null) {
+			if (this.editor == null) {
 				this.editor = new JComboBox();
-				for (final Iterator i = this.getSortedColumns(values).iterator(); i
-						.hasNext();)
+				for (final Iterator i = this.getSortedColumns(values)
+						.iterator(); i.hasNext();)
 					this.editor.addItem(i.next());
 			}
 			return this.editor;
@@ -336,9 +354,9 @@ public abstract class TwoColumnTablePanel extends JPanel {
 	}
 
 	public abstract static class CRPairStringTablePanel extends
-	StringStringTablePanel {
+			StringStringTablePanel {
 		private JComboBox editor;
-		
+
 		public CRPairStringTablePanel(final Map values, final Collection crPairs) {
 			super(values, crPairs, null);
 		}
@@ -347,15 +365,15 @@ public abstract class TwoColumnTablePanel extends JPanel {
 			final List cols = new ArrayList(crPairs);
 			Collections.sort(cols, new Comparator() {
 				public int compare(final Object a, final Object b) {
-					final String first = ((Object[])a)[1].toString();
-					final String second = ((Object[])b)[1].toString();
+					final String first = ((Object[]) a)[1].toString();
+					final String second = ((Object[]) b)[1].toString();
 					final int result = first.compareTo(second);
-					return result==0?-1:result;
+					return result == 0 ? -1 : result;
 				}
 			});
 			return cols;
 		}
-		
+
 		protected JComboBox getFirstColumnEditor() {
 			return this.editor;
 		}
@@ -373,12 +391,13 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				public Component getTableCellRendererComponent(JTable table,
 						Object value, boolean isSelected, boolean hasFocus,
 						int row, int column) {
-					final Object[] crPair = (Object[])value;
+					final Object[] crPair = (Object[]) value;
 					final JLabel label = new JLabel();
-					if (crPair[0]==null)
+					if (crPair[0] == null)
 						label.setText(crPair[1].toString());
 					else
-						label.setText(crPair[1].toString() + " ["+crPair[0].toString()+"]");
+						label.setText(crPair[1].toString() + " ["
+								+ crPair[0].toString() + "]");
 					label.setOpaque(true);
 					label.setFont(table.getFont());
 					if (isSelected) {
@@ -394,21 +413,23 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 
 		public JComboBox getFirstColumnEditor(final Collection values) {
-			if (this.editor==null) {
+			if (this.editor == null) {
 				this.editor = new JComboBox();
-				for (final Iterator i = this.getSortedColumns(values).iterator(); i
-						.hasNext();)
+				for (final Iterator i = this.getSortedColumns(values)
+						.iterator(); i.hasNext();)
 					this.editor.addItem(i.next());
 				this.editor.setRenderer(new ListCellRenderer() {
-					public Component getListCellRendererComponent(final JList list,
-							final Object value, final int index,
-							final boolean isSelected, final boolean cellHasFocus) {
-						final Object[] crPair = (Object[])value;
+					public Component getListCellRendererComponent(
+							final JList list, final Object value,
+							final int index, final boolean isSelected,
+							final boolean cellHasFocus) {
+						final Object[] crPair = (Object[]) value;
 						final JLabel label = new JLabel();
-						if (crPair[0]==null)
+						if (crPair[0] == null)
 							label.setText(crPair[1].toString());
 						else
-							label.setText(crPair[1].toString() + " ["+crPair[0].toString()+"]");
+							label.setText(crPair[1].toString() + " ["
+									+ crPair[0].toString() + "]");
 						label.setOpaque(true);
 						label.setFont(list.getFont());
 						if (isSelected) {
