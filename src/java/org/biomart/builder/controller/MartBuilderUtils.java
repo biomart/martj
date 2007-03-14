@@ -1788,9 +1788,7 @@ public class MartBuilderUtils {
 		dataset.setIndexOptimiser(true);
 	}
 
-	/**
-	 * The tools are static and not intended to be instantiated.
-	 */
+	// The tools are static and not intended to be instantiated.
 	private MartBuilderUtils() {
 	}
 }

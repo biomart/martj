@@ -1,5 +1,19 @@
-/**
- * 
+/*
+ Copyright (C) 2006 EBI
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.biomart.builder.view.gui.panels;
 
@@ -19,13 +33,39 @@ import javax.swing.table.TableCellRenderer;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
+/**
+ * A two-column table model which displays dataset columns as a drop-down on the
+ * left, and strings on the right.
+ * 
+ * @author Richard Holland <holland@ebi.ac.uk>
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
+ */
 public abstract class DataSetColumnStringTablePanel extends
 		ColumnStringTablePanel {
 	private final DataSetColumn dontIncludeThis;
 
+	/**
+	 * Constructs a new two-column table showing the given values and allowing
+	 * the user to choose from the given collection of {@link DataSetColumn}
+	 * objects.
+	 * 
+	 * @param values
+	 *            the initial values to show in the table, or <tt>null</tt> if
+	 *            none.
+	 * @param columns
+	 *            the range of columns to allow as options.
+	 * @param dontIncludeThis
+	 *            the column to exclude from the range shown, e.g. to prevent
+	 *            recursion. Can be <tt>null</tt> in which case no columns are
+	 *            excluded.
+	 */
 	public DataSetColumnStringTablePanel(final Map values,
 			final Collection columns, final DataSetColumn dontIncludeThis) {
 		super(values, columns);
+		// Same as ColumnString except slightly modified to show
+		// the modifiedName instead of the plain name.
 		this.getFirstColumnEditor().setRenderer(new ListCellRenderer() {
 			public Component getListCellRendererComponent(final JList list,
 					final Object value, final int index,
@@ -51,6 +91,8 @@ public abstract class DataSetColumnStringTablePanel extends
 
 	public Collection getSortedColumns(final Collection columns) {
 		final Map sortedCols = new TreeMap();
+		// Sorts on the modified names, and excludes the column
+		// specified in the constructor if required.
 		for (final Iterator i = columns.iterator(); i.hasNext();) {
 			final DataSetColumn col = (DataSetColumn) i.next();
 			if (this.dontIncludeThis == null
@@ -71,6 +113,7 @@ public abstract class DataSetColumnStringTablePanel extends
 					int row, int column) {
 				final DataSetColumn col = (DataSetColumn) value;
 				final JLabel label = new JLabel();
+				// As for ColumnString but uses the modified name.
 				if (col != null)
 					label.setText(col.getModifiedName());
 				label.setOpaque(true);
@@ -89,6 +132,8 @@ public abstract class DataSetColumnStringTablePanel extends
 
 	public Map getValues() {
 		final Map values = new HashMap();
+		// As for ColumnString but uses the modified name as the key
+		// instead of the column object itself.
 		for (final Iterator i = super.getValues().entrySet().iterator(); i
 				.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();

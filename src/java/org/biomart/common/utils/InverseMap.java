@@ -28,9 +28,9 @@ import java.util.Set;
  * This class defines an inverse view of a map.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class InverseMap implements Map {
 

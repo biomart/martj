@@ -27,8 +27,8 @@ import java.lang.reflect.Method;
 import javax.swing.JLabel;
 
 /**
- * This simple tries to find the default system browser then uses it to open a
- * URL.
+ * This simple class tries to find the default system browser then uses it to
+ * open a URL.
  * <p>
  * Based on code from <a
  * href="http://www.centerkey.com/java/browser/">BareBonesBrowser</a>.
@@ -38,11 +38,18 @@ import javax.swing.JLabel;
  * tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class OpenBrowser {
+
+	/**
+	 * Given a URL, find a web browser on the system and open the URL in it.
+	 * 
+	 * @param url
+	 *            the URL to open.
+	 */
 	public static void openURL(String url) {
 		String osName = System.getProperty("os.name").toLowerCase();
 		try {
@@ -72,17 +79,35 @@ public class OpenBrowser {
 		}
 	}
 
+	/**
+	 * A clickable label which, when clicked, opens a browser pointing at the
+	 * URL which is currently being shown inside the label text. The URL itself
+	 * appears in the label in blue text with a {@link Cursor#HAND_CURSOR}
+	 * cursor appearing over it.
+	 */
 	public static class OpenBrowserLabel extends JLabel {
 
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = 1L;
 
+		/**
+		 * Construct a label showing the given URL.
+		 * 
+		 * @param url
+		 *            the URL to show.
+		 */
 		public OpenBrowserLabel(final String url) {
 			this(url, url);
 		}
 
+		/**
+		 * Construct a label showing the given text but when clicked will
+		 * redirect to the given URL.
+		 * 
+		 * @param text
+		 *            the text to show in place of the URL in the label.
+		 * @param url
+		 *            the URL to follow when clicked.
+		 */
 		public OpenBrowserLabel(final String text, final String url) {
 			super(text);
 			this.setToolTipText(url);

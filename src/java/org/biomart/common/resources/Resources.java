@@ -40,7 +40,7 @@ import java.util.ResourceBundle;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
  *          rh4 $
- * @since 0.1
+ * @since 0.5
  */
 public class Resources {
 	/**
@@ -72,6 +72,11 @@ public class Resources {
 		Log.info(Resources.get("doneLoadingResources"));
 	}
 
+	/**
+	 * Obtain a resource value given the key for it.
+	 * @param key the key to lookup.
+	 * @return the value found, or <tt>null</tt> if not found.
+	 */
 	private static String getValue(final String key) {
 		String value = null;
 		if (Resources.bundle != null)
@@ -200,5 +205,9 @@ public class Resources {
 				return resource;
 			}
 		});
+	}
+
+	// Private means that this class is a static singleton.
+	private Resources() {
 	}
 }

@@ -33,8 +33,9 @@ import java.util.Properties;
 /**
  * Manages the on-disk cache of user settings.
  * <p>
- * Settings are contained in a folder called <tt>.martbuilder</tt> in the
- * user's home directory. In there are two files - one called
+ * Settings are contained in a folder called <tt>.biomart</tt> in the
+ * user's home directory, inside which there is a second folder for
+ * each of the BioMart applications. In there are two files - one called
  * <tt>properties</tt> which contains general configuration settings such as
  * look and feel, and the other called <tt>cache</tt> which is a directory
  * containing history settings for various classes.
@@ -43,9 +44,9 @@ import java.util.Properties;
  * <tt>cache</tt> should be left alone.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class Settings {
 
@@ -54,6 +55,8 @@ public class Settings {
 	 */
 	public static final String MARTBUILDER = "martbuilder";
 
+	// Insert more app references as more apps are built.
+	
 	private static final File homeDir = new File(System
 			.getProperty("user.home"), ".biomart");
 
@@ -107,7 +110,7 @@ public class Settings {
 
 	/**
 	 * Saves the current cache of settings to disk as a set of files at
-	 * <tt>~/.martbuilder</tt>.
+	 * <tt>~/.biomart/&lt;appname&gt;</tt>.
 	 */
 	private static void save() {
 		// Don't save if we're still loading.
@@ -212,7 +215,7 @@ public class Settings {
 
 	/**
 	 * Loads the current cache of settings from disk, from the files in
-	 * <tt>~/.martbuilder</tt>.
+	 * <tt>~/.biomart/&lt;appname&gt;</tt>.
 	 */
 	public static synchronized void load() {
 		Log.info(Resources.get("startingLoadSettings"));

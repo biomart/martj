@@ -41,9 +41,9 @@ import org.biomart.common.resources.Resources;
  * manipulating the various objects in the data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class CommonUtils {
 	/**
@@ -214,9 +214,7 @@ public class CommonUtils {
 			schema.getPartitions().putAll(partitions);
 	}
 
-	/**
-	 * The tools are static and not intended to be instantiated.
-	 */
+	//The tools are static and not intended to be instantiated.
 	private CommonUtils() {
 	}
 }

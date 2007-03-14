@@ -82,9 +82,9 @@ import org.biomart.common.resources.Settings;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	private Connection connection;

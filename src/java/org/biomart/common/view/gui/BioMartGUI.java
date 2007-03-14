@@ -42,9 +42,9 @@ import org.biomart.common.view.gui.dialogs.AboutDialog;
  * BioMart Java appliaction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public abstract class BioMartGUI extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -171,7 +171,9 @@ public abstract class BioMartGUI extends JFrame {
 		return true;
 	}
 
-	// This is the main menu bar.
+	/**
+	 * This is the main menubar.
+	 */
 	public static class BioMartMenuBar extends JMenuBar implements
 			ActionListener {
 		private static final long serialVersionUID = 1;
@@ -210,6 +212,11 @@ public abstract class BioMartGUI extends JFrame {
 			}
 		}
 
+		/**
+		 * Obtain the {@link MartBuilder} instance which this menubar
+		 * is attached to.
+		 * @return the instance this is attached to.
+		 */
 		protected MartBuilder getMartBuilder() {
 			return this.martBuilder;
 		}
