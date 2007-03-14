@@ -46,17 +46,19 @@ import javax.swing.ListCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
+import org.biomart.common.model.Column;
 import org.biomart.common.model.Column.GenericColumn;
 
 /**
- * This dialog asks users what kind of partitioning they want to set up on a
- * column. According to the type they select, it asks other questions, such as
- * what values to use.
+ * This panel represents a two-column table which can contain the entries of a
+ * map. The keys go in the left column and the values in the right. It includes
+ * methods to update the contents of the table and to obtain the current
+ * contents, including stripping out rows with blank keys.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public abstract class TwoColumnTablePanel extends JPanel {
 	private static final long serialVersionUID = 1;
@@ -68,17 +70,25 @@ public abstract class TwoColumnTablePanel extends JPanel {
 	private JButton remove;
 
 	/**
-	 * Pop up a dialog asking how to partition a table.
+	 * Creates a two-columned table that displays an initial set of values. It
+	 * optionally restricts input on either column to two further sets of
+	 * values.
 	 * 
 	 * @param values
 	 *            initial values to display in the two columns of the table.
+	 * @param firstColValues
+	 *            the values to restrict entry in the first (left) column with.
+	 *            If <tt>null</tt> then no restriction is made.
+	 * @param secondColValues
+	 *            the values to restrict entry in the second (right) column
+	 *            with. If <tt>null</tt> then no restriction is made.
 	 */
 	public TwoColumnTablePanel(final Map values,
 			final Collection firstColValues, final Collection secondColValues) {
-		// Creates the basic dialog.
+		// Create the basic panel.
 		super();
 
-		// Create the content pane to store the create dialog panel.
+		// Create the layout to display the rest of the panel.
 		final GridBagLayout gridBag = new GridBagLayout();
 		this.setLayout(gridBag);
 
@@ -103,13 +113,16 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
+		// Set up the data model.
 		this.tableModel = new TwoColumnTableModel(values, this
 				.getFirstColumnHeader(), this.getSecondColumnHeader(), this
 				.getFirstColumnType(), this.getSecondColumnType());
 		final JTable table = new JTable(this.tableModel);
 		table.setGridColor(Color.LIGHT_GRAY); // Mac OSX.
 		// First column.
-		final JComboBox firstEd = this.getFirstColumnEditor(firstColValues);
+		final JComboBox firstEd = this
+				.getFirstColumnEditor(firstColValues == null ? Collections.EMPTY_SET
+						: firstColValues);
 		if (firstEd != null) {
 			table.getColumnModel().getColumn(0).setCellEditor(
 					new DefaultCellEditor(firstEd));
@@ -127,7 +140,9 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		if (firstRend != null)
 			table.getColumnModel().getColumn(0).setCellRenderer(firstRend);
 		// Second column.
-		final JComboBox secondEd = this.getSecondColumnEditor(secondColValues);
+		final JComboBox secondEd = this
+				.getSecondColumnEditor(secondColValues == null ? Collections.EMPTY_SET
+						: secondColValues);
 		if (secondEd != null) {
 			table.getColumnModel().getColumn(1).setCellEditor(
 					new DefaultCellEditor(secondEd));
@@ -173,6 +188,8 @@ public abstract class TwoColumnTablePanel extends JPanel {
 					TwoColumnTablePanel.this.tableModel.removeRow(rows[i]);
 			}
 		});
+
+		// Display the table and buttons as two parts of a single panel.
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(table));
 		gridBag.setConstraints(field, fieldConstraints);
@@ -184,40 +201,129 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		this.add(field);
 	}
 
+	/**
+	 * Retrieve the text to display on the 'insert row' button.
+	 * 
+	 * @return the text to display on the 'insert row' button.
+	 */
 	public abstract String getInsertButtonText();
 
+	/**
+	 * Retrieve the text to display on the 'remove row' button.
+	 * 
+	 * @return the text to display on the 'remove row' button.
+	 */
 	public abstract String getRemoveButtonText();
 
+	/**
+	 * Retrieve the header text for the first column.
+	 * 
+	 * @return the header text for the first column.
+	 */
 	public abstract String getFirstColumnHeader();
 
+	/**
+	 * Retrieve the header text for the second column.
+	 * 
+	 * @return the header text for the second column.
+	 */
 	public abstract String getSecondColumnHeader();
 
+	/**
+	 * Retrieve the data type for the first column.
+	 * 
+	 * @return the data type for the first column.
+	 */
 	public abstract Class getFirstColumnType();
 
+	/**
+	 * Retrieve the data type for the second column.
+	 * 
+	 * @return the data type for the second column.
+	 */
 	public abstract Class getSecondColumnType();
 
+	/**
+	 * Retrieve the value to populate the first column for every new row
+	 * created.
+	 * 
+	 * @return the value to use.
+	 */
 	public abstract Object getNewRowFirstColumn();
 
+	/**
+	 * Retrieve the value to populate the second column for every new row
+	 * created.
+	 * 
+	 * @return the value to use.
+	 */
 	public abstract Object getNewRowSecondColumn();
 
+	/**
+	 * Retrieve the editor to use to edit values in the first column.
+	 * 
+	 * @param values
+	 *            the values that can be chosen from. This will never be
+	 *            <tt>null</tt> but may be empty.
+	 * @return the editor to use for this column. Return <tt>null</tt> if the
+	 *         default editor should be used.
+	 */
 	public abstract JComboBox getFirstColumnEditor(final Collection values);
 
+	/**
+	 * Retrieve the editor to use to edit values in the second column.
+	 * 
+	 * @param values
+	 *            the values that can be chosen from. This will never be
+	 *            <tt>null</tt> but may be empty.
+	 * @return the editor to use for this column. Return <tt>null</tt> if the
+	 *         default editor should be used.
+	 */
 	public abstract JComboBox getSecondColumnEditor(final Collection values);
 
+	/**
+	 * Retrieve the renderer to use for the first column.
+	 * 
+	 * @return the renderer to use. Return <tt>null</tt> if the default
+	 *         renderer should be used.
+	 */
 	public abstract TableCellRenderer getFirstColumnRenderer();
 
+	/**
+	 * Retrieve the renderer to use for the second column.
+	 * 
+	 * @return the renderer to use. Return <tt>null</tt> if the default
+	 *         renderer should be used.
+	 */
 	public abstract TableCellRenderer getSecondColumnRenderer();
 
+	/**
+	 * Replace the contents of the displayed table with the given set of values.
+	 * Keys of the map will appear in the left (first) column and values in the
+	 * second (right) column. All existing contents will be removed before these
+	 * new contents are inserted.
+	 * 
+	 * @param values
+	 *            the map of values to display.
+	 */
 	public void setValues(final Map values) {
 		this.tableModel.setValues(values);
 	}
 
+	/**
+	 * Retrieve the currently displayed set of values, with any that have empty
+	 * left columns removed first.
+	 * 
+	 * @return the set of current values. Keys of the map are the left (first)
+	 *         column and values of the map are the right (second) column.
+	 */
 	public Map getValues() {
 		return this.tableModel.getValues();
 	}
 
 	/**
-	 * This internal class represents a map of dataset columns to aliases.
+	 * This internal class represents the data model upon which the two column
+	 * table is based.
 	 */
 	private static class TwoColumnTableModel extends DefaultTableModel {
 		private final Class[] colClasses;
@@ -225,21 +331,38 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		private static final long serialVersionUID = 1;
 
 		/**
-		 * Construct a model of aliases for the given table, and copy any
-		 * existing aliases from the given template.
+		 * Construct a model of data from the given information.
 		 * 
-		 * @param template
-		 *            the existing alises to copy.
+		 * @param values
+		 *            the initial values to display. If <tt>null</tt>, no
+		 *            initial values are displayed. Keys of the map go in the
+		 *            left column (first), values in the right (second).
+		 * @param firstColHeader
+		 *            the header to give the first column.
+		 * @param secondColHeader
+		 *            the header to give the second column.
+		 * @param firstColType
+		 *            the type of data displayed in the first column.
+		 * @param secondColType
+		 *            the type of data displayed in the second column.
 		 */
 		public TwoColumnTableModel(final Map values,
 				final String firstColHeader, final String secondColHeader,
 				final Class firstColType, final Class secondColType) {
 			super(new Object[] { firstColHeader, secondColHeader }, 0);
 			this.colClasses = new Class[] { firstColType, secondColType };
-			// Populate columns, and aliases from template.
 			this.setValues(values);
 		}
 
+		/**
+		 * Overwrite (clear) the existing contents of the table and replace with
+		 * values from the given map.
+		 * 
+		 * @param values
+		 *            the new values to use. If <tt>null</tt> then all
+		 *            existing data is dropped and no new data inserted. Keys of
+		 *            the map go in the left column, values in the right.
+		 */
 		public void setValues(final Map values) {
 			while (this.getRowCount() > 0)
 				this.removeRow(0);
@@ -252,8 +375,16 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				}
 		}
 
+		/**
+		 * Obtain the currently displayed set of values. Any which have empty or
+		 * all-whitespace strings in the left (first) column are not included in
+		 * the results.
+		 * 
+		 * @return a map containing the results. The keys of the map are the
+		 *         entries in the first (left) column and the values are those
+		 *         in the second (right) column.
+		 */
 		public Map getValues() {
-			// Return the map of column to alias.
 			final HashMap aliases = new HashMap();
 			for (int i = 0; i < this.getRowCount(); i++) {
 				final Object alias = this.getValueAt(i, 0);
@@ -271,14 +402,41 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 	}
 
+	/**
+	 * This is a simple two-column base table which allows any string in both
+	 * columns.
+	 */
 	public abstract static class StringStringTablePanel extends
 			TwoColumnTablePanel {
+
+		/**
+		 * Constructs a two-column table which displays simple strings in both
+		 * columns.
+		 * 
+		 * @param values
+		 *            the values to display initially, or <tt>null</tt> if
+		 *            none.
+		 * @param firstColValues
+		 *            the values to restrict the first column to, or
+		 *            <tt>null</tt> if none required.
+		 * @param secondColValues
+		 *            the values to restrict the second column to, or
+		 *            <tt>null</tt> if none required.
+		 */
 		protected StringStringTablePanel(final Map values,
 				final Collection firstColValues,
 				final Collection secondColValues) {
 			super(values, firstColValues, secondColValues);
 		}
 
+		/**
+		 * Constructs a two-column table which displays simple strings in both
+		 * columns.
+		 * 
+		 * @param values
+		 *            the values to display initially, or <tt>null</tt> if
+		 *            none.
+		 */
 		public StringStringTablePanel(final Map values) {
 			this(values, null, null);
 		}
@@ -316,20 +474,49 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 	}
 
+	/**
+	 * This class displays a database column lookup in the first column and a
+	 * simple string in the second column.
+	 */
 	public abstract static class ColumnStringTablePanel extends
 			StringStringTablePanel {
 		private JComboBox editor;
 
+		/**
+		 * Constructs a table with a drop-down for database columns in the first
+		 * column and allows simple string entry in the second column.
+		 * 
+		 * @param values
+		 *            the initial values to display, or <tt>null</tt> if none.
+		 * @param cols
+		 *            the columns to show in the drop-down.
+		 */
 		public ColumnStringTablePanel(final Map values, final Collection cols) {
 			super(values, cols, null);
 		}
 
+		/**
+		 * Given a bunch of columns, sort them into a user-pleasing order. This
+		 * implementation uses the {@link Column#getName()} method to get a name
+		 * for each one then uses {@link String#compareTo(Object)} method to
+		 * sort them.
+		 * 
+		 * @param columns
+		 *            the columns to sort.
+		 * @return the sorted columns.
+		 */
 		protected Collection getSortedColumns(final Collection columns) {
 			final List cols = new ArrayList(columns);
 			Collections.sort(cols);
 			return cols;
 		}
 
+		/**
+		 * Gets a reference to the editor used to display the drop-down in the
+		 * first column.
+		 * 
+		 * @return the editor used.
+		 */
 		protected JComboBox getFirstColumnEditor() {
 			return this.editor;
 		}
@@ -344,6 +531,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 
 		public JComboBox getFirstColumnEditor(final Collection values) {
 			if (this.editor == null) {
+				// Create and store the editor for future reference.
 				this.editor = new JComboBox();
 				for (final Iterator i = this.getSortedColumns(values)
 						.iterator(); i.hasNext();)
@@ -353,14 +541,40 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 	}
 
+	/**
+	 * This class displays a drop-down in the first column of the table which
+	 * consists of a column+relation pair, and a plain string in the second
+	 * column. The column+relation pair is in the form of an array of
+	 * {@link Object}s with 2 elements. The first element is the relation, the
+	 * second is the column.
+	 */
 	public abstract static class CRPairStringTablePanel extends
 			StringStringTablePanel {
 		private JComboBox editor;
 
+		/**
+		 * Constructs the table based on the given values.
+		 * 
+		 * @param values
+		 *            the values to display in the table, or <tt>null</tt> if
+		 *            none.
+		 * @param crPairs
+		 *            the collection of column+relation pairs to display in the
+		 *            drop-down in the first column.
+		 */
 		public CRPairStringTablePanel(final Map values, final Collection crPairs) {
 			super(values, crPairs, null);
 		}
 
+		/**
+		 * Sorts the column-relation pairs by ordering based on the
+		 * {@link Column#getName()} output for the column in each pair, sorted
+		 * using {@link String#compareTo(Object)}.
+		 * 
+		 * @param crPairs
+		 *            the pairs to sort.
+		 * @return the sorted pairs.
+		 */
 		protected Collection getSortedColumns(final Collection crPairs) {
 			final List cols = new ArrayList(crPairs);
 			Collections.sort(cols, new Comparator() {
@@ -374,6 +588,12 @@ public abstract class TwoColumnTablePanel extends JPanel {
 			return cols;
 		}
 
+		/**
+		 * Gets a reference to the editor used to display the drop-down in the
+		 * first column.
+		 * 
+		 * @return the editor used.
+		 */
 		protected JComboBox getFirstColumnEditor() {
 			return this.editor;
 		}
@@ -393,6 +613,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 						int row, int column) {
 					final Object[] crPair = (Object[]) value;
 					final JLabel label = new JLabel();
+					// We only show the relation part if it is not null.
 					if (crPair[0] == null)
 						label.setText(crPair[1].toString());
 					else
@@ -425,6 +646,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 							final boolean cellHasFocus) {
 						final Object[] crPair = (Object[]) value;
 						final JLabel label = new JLabel();
+						// We only show the relation part if it is not null.
 						if (crPair[0] == null)
 							label.setText(crPair[1].toString());
 						else

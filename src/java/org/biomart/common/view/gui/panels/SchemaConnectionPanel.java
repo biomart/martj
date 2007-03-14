@@ -31,9 +31,9 @@ import org.biomart.common.model.Schema;
  * validation of input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public abstract class SchemaConnectionPanel extends JPanel {
 	/**
@@ -41,8 +41,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 * 
 	 * @param schemaName
 	 *            the name of the schema to be created.
-	 * @return the created schema. It will return null if creation failed, eg.
-	 *         the currently field values are not valid.
+	 * @return the created schema. It will return <tt>null</tt> if creation
+	 *         failed, eg. the currently field values are not valid.
 	 */
 	public abstract Schema createSchemaFromSettings(String schemaName);
 
@@ -51,8 +51,9 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 * 
 	 * @param schema
 	 *            the schema to modify.
-	 * @return the modified schema. It will return null if modification failed,
-	 *         eg. the currently field values are not valid.
+	 * @return the modified schema. It will return <tt>null</tt> if
+	 *         modification failed, eg. the currently field values are not
+	 *         valid.
 	 */
 	public abstract Schema copySettingsToExistingSchema(Schema schema);
 

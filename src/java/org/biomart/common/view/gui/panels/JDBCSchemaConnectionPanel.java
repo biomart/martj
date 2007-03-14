@@ -61,9 +61,9 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * {@link JDBCSchema} implementation which represents the connection.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 		DocumentListener {
@@ -73,15 +73,16 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 
 	private static final long serialVersionUID = 1;
 
-	// Please add any more default drivers that we support to this list. The
-	// keys are the driver classnames, and the values are arrays of strings.
-	// The first entry in the array should be the default port number for this
-	// JDBC driver type, and the second entry should be an example JDBC URL.
-	// Within the URL, the keywords <HOSTNAME>, <PORT> and <DATABASE> must all
-	// appear in the order mentioned. Any other order will break the regex
-	// replacement function elsewhere in this class.
+	// NOTE: Please add any more default drivers that we support to this pair
+	// of static lists.
 	static {
 		// JDBC URL formats.
+		// The keys are driver classes, the values are arrays.
+		// The first entry in the array should be the default port number for this
+		// JDBC driver type, and the second entry should be an example JDBC URL.
+		// Within the URL, the keywords <HOSTNAME>, <PORT> and <DATABASE> must all
+		// appear in the order mentioned. Any other order will break the regex
+		// replacement function elsewhere in this class.
 		JDBCSchemaConnectionPanel.DRIVER_MAP
 				.put("com.mysql.jdbc.Driver", new String[] { "3306",
 						"jdbc:mysql://<HOST>:<PORT>/<DATABASE>" });
@@ -92,6 +93,7 @@ public class JDBCSchemaConnectionPanel extends SchemaConnectionPanel implements
 				new String[] { "5432",
 						"jdbc:postgresql://<HOST>:<PORT>/<DATABASE>" });
 		// Names.
+		// The keys are database names, the values are driver classes.
 		JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.put(Resources
 				.get("driverClassMySQL"), "com.mysql.jdbc.Driver");
 		JDBCSchemaConnectionPanel.DRIVER_NAME_MAP.put(Resources

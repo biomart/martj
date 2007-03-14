@@ -45,6 +45,8 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.DefaultEditorKit;
 
@@ -295,6 +297,23 @@ public class ViewTextDialog extends JFrame {
 					editorPane.getCaret().setSelectionVisible(true);
 				} else
 					Toolkit.getDefaultToolkit().beep();
+			}
+		});
+		searchText.getDocument().addDocumentListener(new DocumentListener() {
+			public void changedUpdate(final DocumentEvent e) {
+				this.documentEvent(e);
+			}
+
+			public void insertUpdate(final DocumentEvent e) {
+				this.documentEvent(e);
+			}
+
+			public void removeUpdate(final DocumentEvent e) {
+				this.documentEvent(e);
+			}
+			
+			private void documentEvent(final DocumentEvent e) {
+				searchButton.doClick();
 			}
 		});
 		toolBarPane.add(searchText);
