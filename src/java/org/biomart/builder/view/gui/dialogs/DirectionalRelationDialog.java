@@ -67,7 +67,8 @@ public class DirectionalRelationDialog extends JDialog {
 	 * @param label
 	 *            the title to give the arity selector.
 	 */
-	public DirectionalRelationDialog(final Key initialChoice, final Relation relation) {
+	public DirectionalRelationDialog(final Key initialChoice,
+			final Relation relation) {
 		// Create the base dialog.
 		super();
 		this.setTitle(Resources.get("directionalRelationDialogTitle"));
@@ -97,7 +98,7 @@ public class DirectionalRelationDialog extends JDialog {
 		this.chosenKey.addItem(relation.getFirstKey());
 		this.chosenKey.addItem(relation.getSecondKey());
 		this.chosenKey.setSelectedItem(initialChoice);
-		if (initialChoice!=null)
+		if (initialChoice != null)
 			checkbox.setSelected(true);
 
 		// The close and execute buttons.
@@ -122,9 +123,9 @@ public class DirectionalRelationDialog extends JDialog {
 		// Intercept the spinner.
 		this.chosenKey.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
-				if (DirectionalRelationDialog.this.getChosenKey() == null) 
+				if (DirectionalRelationDialog.this.getChosenKey() == null)
 					checkbox.setSelected(false);
-				else 
+				else
 					checkbox.setSelected(true);
 			}
 		});
@@ -133,9 +134,11 @@ public class DirectionalRelationDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (checkbox.isSelected()
 						&& DirectionalRelationDialog.this.getChosenKey() == null)
-					DirectionalRelationDialog.this.chosenKey.setSelectedItem(relation.getFirstKey());
+					DirectionalRelationDialog.this.chosenKey
+							.setSelectedItem(relation.getFirstKey());
 				else
-					DirectionalRelationDialog.this.chosenKey.setSelectedItem(null);
+					DirectionalRelationDialog.this.chosenKey
+							.setSelectedItem(null);
 			}
 		});
 
@@ -144,7 +147,8 @@ public class DirectionalRelationDialog extends JDialog {
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
-				DirectionalRelationDialog.this.chosenKey.setSelectedItem(initialChoice);
+				DirectionalRelationDialog.this.chosenKey
+						.setSelectedItem(initialChoice);
 				DirectionalRelationDialog.this.hide();
 			}
 		});
@@ -174,13 +178,13 @@ public class DirectionalRelationDialog extends JDialog {
 	 * @return the selected arity.
 	 */
 	public Key getChosenKey() {
-		return (Key)this.chosenKey.getSelectedItem();
+		return (Key) this.chosenKey.getSelectedItem();
 	}
 
 	private boolean validateFields() {
 		// List of messages to display, if any are necessary.
 		final List messages = new ArrayList();
-		
+
 		// Nothing to do here.
 
 		// Any messages to display? Show them.

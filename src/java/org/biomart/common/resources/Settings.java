@@ -43,8 +43,8 @@ import java.util.Properties;
  * <tt>cache</tt> should be left alone.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class Settings {
@@ -241,7 +241,8 @@ public class Settings {
 		} catch (final NumberFormatException e) {
 			// Ignore and use the default.
 			Settings.classCacheSize = 10;
-			Log.debug("Using default class cache size of " + classCacheSize);
+			Log.debug("Using default class cache size of "
+					+ Settings.classCacheSize);
 			Settings
 					.setProperty("classCacheSize", "" + Settings.classCacheSize);
 		}

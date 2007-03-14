@@ -21,6 +21,7 @@ package org.biomart.common.view.gui;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.DefaultKeyboardFocusManager;
+import java.awt.KeyboardFocusManager;
 
 import javax.swing.SwingUtilities;
 
@@ -60,7 +61,7 @@ public abstract class LongProcess {
 	 */
 	public synchronized static void run(final Runnable process) {
 		// Which window needs it?
-		final Component window = DefaultKeyboardFocusManager
+		final Component window = KeyboardFocusManager
 				.getCurrentKeyboardFocusManager().getFocusedWindow();
 
 		// Update the number of processes currently running.

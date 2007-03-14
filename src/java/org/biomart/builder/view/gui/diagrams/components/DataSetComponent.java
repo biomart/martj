@@ -159,9 +159,10 @@ public class DataSetComponent extends BoxShapedComponent {
 	}
 
 	public void performRename(final String newName) {
-		this.getDiagram().getMartTab().getDataSetTabSet().requestRenameDataSet(this.getDataSet(), newName);
+		this.getDiagram().getMartTab().getDataSetTabSet().requestRenameDataSet(
+				this.getDataSet(), newName);
 	}
-	
+
 	public String getName() {
 		return this.getDataSet().getName();
 	}

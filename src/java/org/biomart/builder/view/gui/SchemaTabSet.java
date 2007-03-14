@@ -18,7 +18,6 @@
 
 package org.biomart.builder.view.gui;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -376,7 +375,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void recalculateSchemaDiagram(final Schema schema) {
 		final int index = this.schemaToDiagram[0].indexOf(schema);
-		if (index>=0)
+		if (index >= 0)
 			((Diagram) this.schemaToDiagram[1].get(index)).recalculateDiagram();
 	}
 
@@ -432,7 +431,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void repaintSchemaDiagram(final Schema schema) {
 		final int index = this.schemaToDiagram[0].indexOf(schema);
-		if (index>=0)
+		if (index >= 0)
 			((Diagram) this.schemaToDiagram[1].get(index)).repaintDiagram();
 	}
 
@@ -661,7 +660,8 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Create the key.
-					MartBuilderUtils.createForeignKey(SchemaTabSet.this.martTab.getMart(), table, columns);
+					MartBuilderUtils.createForeignKey(SchemaTabSet.this.martTab
+							.getMart(), table, columns);
 
 					// Repaint the dataset diagram based on the modified
 					// dataset.
@@ -670,7 +670,7 @@ public class SchemaTabSet extends JTabbedPane {
 					SchemaTabSet.this.martTab.getDataSetTabSet()
 							.recalculateAffectedDataSetDiagrams(
 									table.getSchema());
-					if (table.getExternalRelations().size()>0)
+					if (table.getExternalRelations().size() > 0)
 						SchemaTabSet.this.recalculateOverviewDiagram();
 
 					// Update the modified status for this tabset.
@@ -722,7 +722,8 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Create the key.
-					MartBuilderUtils.createPrimaryKey(SchemaTabSet.this.martTab.getMart(), table, columns);
+					MartBuilderUtils.createPrimaryKey(SchemaTabSet.this.martTab
+							.getMart(), table, columns);
 
 					// Repaint the dataset diagram based on the modified
 					// dataset.
@@ -731,7 +732,7 @@ public class SchemaTabSet extends JTabbedPane {
 					SchemaTabSet.this.martTab.getDataSetTabSet()
 							.recalculateAffectedDataSetDiagrams(
 									table.getSchema());
-					if (table.getExternalRelations().size()>0)
+					if (table.getExternalRelations().size() > 0)
 						SchemaTabSet.this.recalculateOverviewDiagram();
 
 					// Update the modified status for this tabset.
@@ -820,7 +821,8 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Create the key.
-					MartBuilderUtils.disableKeyGuessing(SchemaTabSet.this.martTab.getMart(), schema);
+					MartBuilderUtils.disableKeyGuessing(
+							SchemaTabSet.this.martTab.getMart(), schema);
 
 					// Repaint the dataset diagram based on the modified
 					// dataset.
@@ -919,7 +921,8 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Do it.
-					MartBuilderUtils.enableKeyGuessing(SchemaTabSet.this.martTab.getMart(), schema);
+					MartBuilderUtils.enableKeyGuessing(
+							SchemaTabSet.this.martTab.getMart(), schema);
 
 					// Repaint the dataset diagram based on the modified
 					// dataset.
@@ -1098,7 +1101,7 @@ public class SchemaTabSet extends JTabbedPane {
 					SchemaTabSet.this.getMartTab().getDataSetTabSet()
 							.recalculateDataSetTabs();
 					SchemaTabSet.this.martTab.getDataSetTabSet()
-						.recalculateAffectedDataSetDiagrams(schema);
+							.recalculateAffectedDataSetDiagrams(schema);
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
@@ -1320,7 +1323,8 @@ public class SchemaTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Synchronise it.
-					MartBuilderUtils.synchroniseSchema(SchemaTabSet.this.martTab.getMart(), schema);
+					MartBuilderUtils.synchroniseSchema(
+							SchemaTabSet.this.martTab.getMart(), schema);
 
 					SchemaTabSet.this.recalculateSchemaDiagram(schema);
 					SchemaTabSet.this.martTab.getDataSetTabSet()

@@ -259,9 +259,9 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				final Object alias = this.getValueAt(i, 0);
 				final Object expr = this.getValueAt(i, 1);
 				if (alias != null && alias.toString().trim().length() > 0)
-					aliases
-							.put(alias, expr != null ? (expr.toString()
-									.length() == 0 ? null : expr) : null);
+					aliases.put(alias,
+							expr != null ? expr.toString().length() == 0 ? null
+									: expr : null);
 			}
 			return aliases;
 		}

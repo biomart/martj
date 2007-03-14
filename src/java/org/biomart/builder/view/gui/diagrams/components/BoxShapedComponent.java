@@ -245,10 +245,11 @@ public abstract class BoxShapedComponent extends JPanel implements
 						if (currentlySelected.size() > 0) {
 							final BoxShapedComponent previousSelection = (BoxShapedComponent) currentlySelected
 									.get(currentlySelected.size() - 1);
-							final Class clazz = previousSelection.getObject().getClass();
+							final Class clazz = previousSelection.getObject()
+									.getClass();
 							final Collection selection = this.getDiagram()
-							.getComponentsInRegion(previousSelection,
-									this, clazz);
+									.getComponentsInRegion(previousSelection,
+											this, clazz);
 							selection.remove(previousSelection);
 							this.getDiagram().toggleGroupItems(selection);
 						} else

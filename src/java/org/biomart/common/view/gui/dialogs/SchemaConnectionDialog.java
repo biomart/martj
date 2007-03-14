@@ -185,10 +185,9 @@ public class SchemaConnectionDialog extends JDialog {
 						.getSelectedItem();
 
 				// Load the schema settings from our history.
-				final Properties historyProps = Settings
-						.getHistoryProperties(
-								SchemaConnectionDialog.this.connectionPanel
-										.getSchemaClass(), (String) obj);
+				final Properties historyProps = Settings.getHistoryProperties(
+						SchemaConnectionDialog.this.connectionPanel
+								.getSchemaClass(), (String) obj);
 
 				// Copy the settings, if we found any that matched.
 				if (historyProps != null)

@@ -36,8 +36,8 @@ import org.biomart.common.model.Schema;
  * schema component.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.1
  */
 public class AllSchemasDiagram extends Diagram {
@@ -70,10 +70,10 @@ public class AllSchemasDiagram extends Diagram {
 					this);
 			// Count and remember relations.
 			final Collection schRels = schema.getExternalRelations();
-			for (final Iterator j = schRels.iterator(); j.hasNext();) 
-				this.add(new RelationComponent(
-						(Relation) j.next(), this), -1);
-			this.add(schemaComponent, new SchemaLayoutConstraint(schRels.size()), 0);
+			for (final Iterator j = schRels.iterator(); j.hasNext();)
+				this.add(new RelationComponent((Relation) j.next(), this), -1);
+			this.add(schemaComponent,
+					new SchemaLayoutConstraint(schRels.size()), 0);
 		}
 
 		// Resize the diagram to fit the components.

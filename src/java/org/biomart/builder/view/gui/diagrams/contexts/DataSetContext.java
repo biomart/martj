@@ -62,7 +62,7 @@ import org.biomart.common.resources.Resources;
  */
 public class DataSetContext extends SchemaContext {
 	private DataSet dataset;
-	
+
 	private boolean hideMasked = false;
 
 	/**
@@ -79,7 +79,7 @@ public class DataSetContext extends SchemaContext {
 		super(martTab);
 		this.dataset = dataset;
 	}
-	
+
 	private void changeHideMasked(final boolean masked, final Diagram diagram) {
 		this.hideMasked = masked;
 		diagram.repaintDiagram();
@@ -457,22 +457,23 @@ public class DataSetContext extends SchemaContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
-		
+
 		// Is it the diagram background?
 		if (object instanceof Diagram) {
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
-			
+
 			// Do the show/hide masked tables thing.
-			final JCheckBoxMenuItem showHide = new JCheckBoxMenuItem(
-					Resources.get("hideMaskedDimensionsTitle"));
+			final JCheckBoxMenuItem showHide = new JCheckBoxMenuItem(Resources
+					.get("hideMaskedDimensionsTitle"));
 			showHide.setMnemonic(Resources.get("hideMaskedDimensionsMnemonic")
 					.charAt(0));
 			showHide.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.changeHideMasked(showHide.isSelected(), (Diagram)object);
+					DataSetContext.this.changeHideMasked(showHide.isSelected(),
+							(Diagram) object);
 				}
 			});
 			contextMenu.add(showHide);

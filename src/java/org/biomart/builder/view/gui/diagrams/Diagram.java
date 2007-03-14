@@ -22,7 +22,6 @@ import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Point;

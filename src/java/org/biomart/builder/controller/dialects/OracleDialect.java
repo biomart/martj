@@ -83,7 +83,7 @@ public class OracleDialect extends DatabaseDialect {
 		final boolean isDoubleRecursive = action
 				.getRecursionSecondFromColumns() != null;
 		final String recursionTempTable = "MART_RECURSE";
-		
+
 		this.checkColumnName(action.getConcatColumnName());
 
 		// Work out additional tables to include in this.
@@ -94,11 +94,12 @@ public class OracleDialect extends DatabaseDialect {
 			for (final Iterator i = action.getTableRestriction()
 					.getAdditionalRelations().iterator(); i.hasNext();) {
 				trAdditionalRels.put((Relation) i.next(), "" + additionalTable);
-				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
+				allAdditionalRels.put((Relation) i.next(), ""
+						+ additionalTable++);
 			}
 		for (final Iterator i = action.getConcatColumnDefinition()
-					.getAdditionalRelations().iterator(); i.hasNext();) 
-				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
+				.getAdditionalRelations().iterator(); i.hasNext();)
+			allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
 
 		final StringBuffer sb = new StringBuffer();
 
@@ -159,34 +160,36 @@ public class OracleDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "a"));
 				sb.append(')');
 			}
-			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
-				final Map.Entry entry = (Map.Entry)k.next();
-				final Relation rel = (Relation)entry.getKey();
-				final Table tbl = (Table)rel.getOneKey().getTable();
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) k.next();
+				final Relation rel = (Relation) entry.getKey();
+				final Table tbl = (Table) rel.getOneKey().getTable();
 				sb.append(" inner join ");
-					sb.append(trgtSchemaName);
+				sb.append(trgtSchemaName);
 				sb.append(".");
 				sb.append(tbl.getName());
 				sb.append(' ');
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append(" on ");
 				final List aCols = rel.getManyKey().getColumns();
 				final List joinCols = rel.getOneKey().getColumns();
 				for (int i = 0; i < aCols.size(); i++) {
-					if (i>0)
+					if (i > 0)
 						sb.append(" and ");
 					sb.append("a.");
-					sb.append(((Column)aCols.get(i)).getName());
+					sb.append(((Column) aCols.get(i)).getName());
 					sb.append('=');
-					sb.append((String)entry.getValue());
+					sb.append((String) entry.getValue());
 					sb.append('.');
-					sb.append(((Column)joinCols.get(i)).getName());
+					sb.append(((Column) joinCols.get(i)).getName());
 				}
 			}
 			sb.append(" inner join ");
@@ -228,7 +231,8 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
 			}
-			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& !trAdditionalRels.isEmpty()) {
 				sb.append(" where ");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "a"));
@@ -315,7 +319,8 @@ public class OracleDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "a"));
@@ -360,31 +365,33 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
 			}
-			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
-				final Map.Entry entry = (Map.Entry)k.next();
-				final Relation rel = (Relation)entry.getKey();
-				final Table tbl = (Table)rel.getOneKey().getTable();
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) k.next();
+				final Relation rel = (Relation) entry.getKey();
+				final Table tbl = (Table) rel.getOneKey().getTable();
 				sb.append(" inner join ");
-					sb.append(trgtSchemaName);
+				sb.append(trgtSchemaName);
 				sb.append(".");
 				sb.append(tbl.getName());
 				sb.append(' ');
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append(" on ");
 				final List aCols = rel.getManyKey().getColumns();
 				final List joinCols = rel.getOneKey().getColumns();
 				for (int i = 0; i < aCols.size(); i++) {
-					if (i>0)
+					if (i > 0)
 						sb.append(" and ");
 					sb.append("a.");
-					sb.append(((Column)aCols.get(i)).getName());
+					sb.append(((Column) aCols.get(i)).getName());
 					sb.append('=');
-					sb.append((String)entry.getValue());
+					sb.append((String) entry.getValue());
 					sb.append('.');
-					sb.append(((Column)joinCols.get(i)).getName());
+					sb.append(((Column) joinCols.get(i)).getName());
 				}
 			}
-			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& !trAdditionalRels.isEmpty()) {
 				sb.append(" where ");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "a"));
@@ -420,7 +427,8 @@ public class OracleDialect extends DatabaseDialect {
 			sb.setLength(0);
 		}
 
-		// Now do the grouping on the nicely recursed (or original if not recursed) table.
+		// Now do the grouping on the nicely recursed (or original if not
+		// recursed) table.
 		sb.append("create table " + action.getDataSetSchemaName() + "."
 				+ mergeTableName + " as select ");
 		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
@@ -434,10 +442,9 @@ public class OracleDialect extends DatabaseDialect {
 		if (isRecursive) {
 			sb.append("b.");
 			sb.append(action.getConcatColumnName());
-		} else {
+		} else
 			sb.append(action.getConcatColumnDefinition()
 					.getSubstitutedExpression(allAdditionalRels, "b"));
-		}
 		sb.append(",'");
 		sb.append(action.getConcatColumnDefinition().getRowSep().replaceAll(
 				"'", "\\'"));
@@ -455,8 +462,8 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(" and ");
 			final String pkColName = (String) action.getLeftJoinColumns()
 					.get(i);
-			final String fkColName = (String) action.getRightJoinColumns()
-					.get(i);
+			final String fkColName = (String) action.getRightJoinColumns().get(
+					i);
 			sb.append("a." + pkColName + "=b." + fkColName);
 		}
 		if (action.getRelationRestriction() != null) {
@@ -464,43 +471,46 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
-							action.isRelationRestrictionLeftIsFirst(),
-							action.getRelationRestrictionPreviousUnit()));
+					action.isRelationRestrictionLeftIsFirst(),
+					action.getRelationRestrictionPreviousUnit()));
 		}
-		if (!isRecursive && action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
+		if (!isRecursive && action.getTableRestriction() != null
+				&& trAdditionalRels.isEmpty()) {
 			sb.append(" and (");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(trAdditionalRels, "b"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					trAdditionalRels, "b"));
 			sb.append(')');
 		}
-		for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)k.next();
-			final Relation rel = (Relation)entry.getKey();
-			final Table tbl = (Table)rel.getOneKey().getTable();
+		for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) k.next();
+			final Relation rel = (Relation) entry.getKey();
+			final Table tbl = (Table) rel.getOneKey().getTable();
 			sb.append(" inner join ");
 			sb.append(trgtSchemaName);
 			sb.append(".");
 			sb.append(tbl.getName());
 			sb.append(' ');
-			sb.append((String)entry.getValue());
+			sb.append((String) entry.getValue());
 			sb.append(" on ");
 			final List aCols = rel.getManyKey().getColumns();
 			final List joinCols = rel.getOneKey().getColumns();
 			for (int i = 0; i < aCols.size(); i++) {
-				if (i>0)
+				if (i > 0)
 					sb.append(" and ");
 				sb.append("a.");
-				sb.append(((Column)aCols.get(i)).getName());
+				sb.append(((Column) aCols.get(i)).getName());
 				sb.append('=');
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append('.');
-				sb.append(((Column)joinCols.get(i)).getName());
+				sb.append(((Column) joinCols.get(i)).getName());
 			}
 		}
-		if (!isRecursive && action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+		if (!isRecursive && action.getTableRestriction() != null
+				&& !trAdditionalRels.isEmpty()) {
 			sb.append(" where ");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(trAdditionalRels, "b"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					trAdditionalRels, "b"));
 		}
 		sb.append(" group by ");
 		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
@@ -524,14 +534,15 @@ public class OracleDialect extends DatabaseDialect {
 		final String schemaName = action.getDataSetSchemaName();
 		final String oldTableName = action.getFrom();
 		final String newTableName = action.getTo();
-		
+
 		this.checkTableName(newTableName);
-		
+
 		statements.add("alter table " + schemaName + "." + oldTableName
 				+ " rename to " + newTableName + "");
 	}
 
-	public void doSelect(final Select action, final List statements) throws Exception {
+	public void doSelect(final Select action, final List statements)
+			throws Exception {
 		final String createTableSchema = action.getDataSetSchemaName();
 		final String createTableName = action.getResultTable();
 		final String fromTableSchema = action.getSchema();
@@ -554,7 +565,7 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append("a.");
 			sb.append(entry.getKey());
 			if (!entry.getKey().equals(entry.getValue())) {
-				this.checkColumnName((String)entry.getValue());
+				this.checkColumnName((String) entry.getValue());
 				sb.append(" as ");
 				sb.append(entry.getValue());
 			}
@@ -562,34 +573,35 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName + " a");
-		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)k.next();
-			final Relation rel = (Relation)entry.getKey();
-			final Table tbl = (Table)rel.getOneKey().getTable();
+		for (final Iterator k = additionalRels.entrySet().iterator(); k
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) k.next();
+			final Relation rel = (Relation) entry.getKey();
+			final Table tbl = (Table) rel.getOneKey().getTable();
 			sb.append(" inner join ");
 			sb.append(fromTableSchema);
 			sb.append(".");
 			sb.append(tbl.getName());
 			sb.append(' ');
-			sb.append((String)entry.getValue());
+			sb.append((String) entry.getValue());
 			sb.append(" on ");
 			final List aCols = rel.getManyKey().getColumns();
 			final List joinCols = rel.getOneKey().getColumns();
 			for (int i = 0; i < aCols.size(); i++) {
-				if (i>0)
+				if (i > 0)
 					sb.append(" and ");
 				sb.append("a.");
-				sb.append(((Column)aCols.get(i)).getName());
+				sb.append(((Column) aCols.get(i)).getName());
 				sb.append('=');
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append('.');
-				sb.append(((Column)joinCols.get(i)).getName());
+				sb.append(((Column) joinCols.get(i)).getName());
 			}
 		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" where ");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(additionalRels, "a"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					additionalRels, "a"));
 		}
 		if (action.getPartitionColumn() != null) {
 			if (action.getTableRestriction() != null)
@@ -613,8 +625,7 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
-			}
-			else
+			} else
 				throw new BioMartError();
 		}
 
@@ -640,7 +651,7 @@ public class OracleDialect extends DatabaseDialect {
 		for (final Iterator i = action.getExpressionColumns().entrySet()
 				.iterator(); i.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
-			this.checkColumnName((String)entry.getKey());
+			this.checkColumnName((String) entry.getKey());
 			sb.append((String) entry.getValue());
 			sb.append(" as ");
 			sb.append((String) entry.getKey());
@@ -695,11 +706,11 @@ public class OracleDialect extends DatabaseDialect {
 					.getAdditionalRelations().iterator(); i.hasNext();)
 				additionalRels.put((Relation) i.next(), "" + additionalTable++);
 
-		final String joinType = (action.getPartitionColumn() != null
-				|| (action.getRelationRestriction() != null && action
-						.getRelationRestriction().isHard()) || (action
-				.getTableRestriction() != null && action.getTableRestriction()
-				.isHard())) ? "inner" : "left";
+		final String joinType = action.getPartitionColumn() != null
+				|| action.getRelationRestriction() != null
+				&& action.getRelationRestriction().isHard()
+				|| action.getTableRestriction() != null
+				&& action.getTableRestriction().isHard() ? "inner" : "left";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."
@@ -710,7 +721,7 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append(",b.");
 			sb.append(entry.getKey());
 			if (!entry.getKey().equals(entry.getValue())) {
-				this.checkColumnName((String)entry.getValue());
+				this.checkColumnName((String) entry.getValue());
 				sb.append(" as ");
 				sb.append(entry.getValue());
 			}
@@ -723,8 +734,8 @@ public class OracleDialect extends DatabaseDialect {
 				sb.append(" and ");
 			final String pkColName = (String) action.getLeftJoinColumns()
 					.get(i);
-			final String fkColName = (String) action.getRightJoinColumns()
-					.get(i);
+			final String fkColName = (String) action.getRightJoinColumns().get(
+					i);
 			sb.append("a." + pkColName + "=b." + fkColName + "");
 		}
 		if (action.getRelationRestriction() != null) {
@@ -732,13 +743,13 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
-							action.isRelationRestrictionLeftIsFirst(),
-							action.getRelationRestrictionPreviousUnit()));
+					action.isRelationRestrictionLeftIsFirst(),
+					action.getRelationRestrictionPreviousUnit()));
 		}
 		if (action.getTableRestriction() != null && additionalRels.isEmpty()) {
 			sb.append(" and (");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(additionalRels, "b"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					additionalRels, "b"));
 			sb.append(')');
 		}
 		if (action.getPartitionColumn() != null) {
@@ -760,38 +771,38 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
-			}
-			else
+			} else
 				throw new BioMartError();
 		}
-		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)k.next();
-			final Relation rel = (Relation)entry.getKey();
-			final Table tbl = (Table)rel.getOneKey().getTable();
-			sb.append(" "+joinType+" join ");
-				sb.append(trgtSchemaName);
+		for (final Iterator k = additionalRels.entrySet().iterator(); k
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) k.next();
+			final Relation rel = (Relation) entry.getKey();
+			final Table tbl = (Table) rel.getOneKey().getTable();
+			sb.append(" " + joinType + " join ");
+			sb.append(trgtSchemaName);
 			sb.append(".");
 			sb.append(tbl.getName());
 			sb.append(' ');
-			sb.append((String)entry.getValue());
+			sb.append((String) entry.getValue());
 			sb.append(" on ");
 			final List aCols = rel.getManyKey().getColumns();
 			final List joinCols = rel.getOneKey().getColumns();
 			for (int i = 0; i < aCols.size(); i++) {
-				if (i>0)
+				if (i > 0)
 					sb.append(" and ");
 				sb.append("b.");
-				sb.append(((Column)aCols.get(i)).getName());
+				sb.append(((Column) aCols.get(i)).getName());
 				sb.append('=');
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append('.');
-				sb.append(((Column)joinCols.get(i)).getName());
+				sb.append(((Column) joinCols.get(i)).getName());
 			}
 		}
 		if (action.getTableRestriction() != null && !additionalRels.isEmpty()) {
 			sb.append(" where ");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(additionalRels,"b"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					additionalRels, "b"));
 		}
 
 		statements.add(sb.toString());
@@ -868,7 +879,7 @@ public class OracleDialect extends DatabaseDialect {
 		final String optTableName = action.getOptTableName();
 
 		this.checkTableName(optTableName);
-		
+
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + schemaName + "." + optTableName
 				+ " as select distinct ");
@@ -887,7 +898,7 @@ public class OracleDialect extends DatabaseDialect {
 		final String sourceTableName = action.getSourceTableName();
 		final String optTableName = action.getOptTableName();
 		final String optColName = action.getOptColumnName();
-		
+
 		this.checkColumnName(optColName);
 
 		statements.add("alter table " + schemaName + "." + optTableName
@@ -998,8 +1009,8 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public Collection executeSelectDistinct(final String schemaName, final Column col)
-			throws SQLException {
+	public Collection executeSelectDistinct(final String schemaName,
+			final Column col) throws SQLException {
 		final String colName = col.getName();
 		final String tableName = col.getTable().getName();
 		final Schema schema = col.getTable().getSchema();
@@ -1048,13 +1059,10 @@ public class OracleDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public String[] getStatementsForAction(final MartConstructorAction action,
-			final boolean includeComments) throws ConstructorException {
+	public String[] getStatementsForAction(final MartConstructorAction action)
+			throws ConstructorException {
 
 		final List statements = new ArrayList();
-
-		if (includeComments)
-			statements.add("-- " + action.getStatusMessage());
 
 		try {
 			final String className = action.getClass().getName();

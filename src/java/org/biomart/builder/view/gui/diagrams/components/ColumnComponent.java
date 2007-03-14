@@ -143,24 +143,26 @@ public class ColumnComponent extends BoxShapedComponent {
 	}
 
 	public void performRename(final String newName) {
-		this.getDiagram().getMartTab().getDataSetTabSet().requestRenameDataSetColumn((DataSetColumn)this.getColumn(), newName);
+		this.getDiagram().getMartTab().getDataSetTabSet()
+				.requestRenameDataSetColumn((DataSetColumn) this.getColumn(),
+						newName);
 	}
-	
+
 	public String getEditableName() {
-		return (this.getColumn() instanceof DataSetColumn) ? ((DataSetColumn) this
+		return this.getColumn() instanceof DataSetColumn ? ((DataSetColumn) this
 				.getColumn()).getModifiedName()
 				: this.getColumn().getName();
 	}
-	
+
 	public String getName() {
 		String name = this.getEditableName();
-		if (this.getColumn()!=null && this.getColumn() instanceof WrappedColumn) {
-			final String wrappedName = ((WrappedColumn) this
-					.getColumn()).getWrappedColumn().getName();
-			if (!((WrappedColumn) this.getColumn())
-					.getModifiedName().equals(wrappedName)) {
+		if (this.getColumn() != null
+				&& this.getColumn() instanceof WrappedColumn) {
+			final String wrappedName = ((WrappedColumn) this.getColumn())
+					.getWrappedColumn().getName();
+			if (!((WrappedColumn) this.getColumn()).getModifiedName().equals(
+					wrappedName))
 				name += " (" + wrappedName + ")";
-			}
 		}
 		return name;
 	}

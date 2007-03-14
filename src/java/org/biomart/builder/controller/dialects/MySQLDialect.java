@@ -80,7 +80,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final boolean isDoubleRecursive = action
 				.getRecursionSecondFromColumns() != null;
 		final String recursionTempTable = "MART_RECURSE";
-		
+
 		this.checkColumnName(action.getConcatColumnName());
 
 		// Work out additional tables to include in this.
@@ -91,11 +91,12 @@ public class MySQLDialect extends DatabaseDialect {
 			for (final Iterator i = action.getTableRestriction()
 					.getAdditionalRelations().iterator(); i.hasNext();) {
 				trAdditionalRels.put((Relation) i.next(), "" + additionalTable);
-				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
+				allAdditionalRels.put((Relation) i.next(), ""
+						+ additionalTable++);
 			}
 		for (final Iterator i = action.getConcatColumnDefinition()
-					.getAdditionalRelations().iterator(); i.hasNext();) 
-				allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
+				.getAdditionalRelations().iterator(); i.hasNext();)
+			allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
 
 		// If we haven't defined the group_concat size yet, define it.
 		// Note limitation of total 18446744073709551616 characters for
@@ -147,34 +148,36 @@ public class MySQLDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "a"));
 				sb.append(')');
 			}
-			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
-				final Map.Entry entry = (Map.Entry)k.next();
-				final Relation rel = (Relation)entry.getKey();
-				final Table tbl = (Table)rel.getOneKey().getTable();
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) k.next();
+				final Relation rel = (Relation) entry.getKey();
+				final Table tbl = (Table) rel.getOneKey().getTable();
 				sb.append(" inner join ");
-					sb.append(trgtSchemaName);
+				sb.append(trgtSchemaName);
 				sb.append(".");
 				sb.append(tbl.getName());
 				sb.append(" as ");
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append(" on ");
 				final List aCols = rel.getManyKey().getColumns();
 				final List joinCols = rel.getOneKey().getColumns();
 				for (int i = 0; i < aCols.size(); i++) {
-					if (i>0)
+					if (i > 0)
 						sb.append(" and ");
 					sb.append("a.");
-					sb.append(((Column)aCols.get(i)).getName());
+					sb.append(((Column) aCols.get(i)).getName());
 					sb.append('=');
-					sb.append((String)entry.getValue());
+					sb.append((String) entry.getValue());
 					sb.append('.');
-					sb.append(((Column)joinCols.get(i)).getName());
+					sb.append(((Column) joinCols.get(i)).getName());
 				}
 			}
 			sb.append(" inner join ");
@@ -216,7 +219,8 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
 			}
-			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& !trAdditionalRels.isEmpty()) {
 				sb.append(" where ");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "a"));
@@ -310,10 +314,11 @@ public class MySQLDialect extends DatabaseDialect {
 						.get(i);
 				sb.append("x." + pkColName + "=a." + fkColName);
 			}
-			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression(trAdditionalRels,"a"));
+						.getSubstitutedExpression(trAdditionalRels, "a"));
 				sb.append(')');
 			}
 			sb.append(" inner join ");
@@ -355,34 +360,36 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append("a." + pkColName + "=b." + fkColName);
 				}
 			}
-			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
-				final Map.Entry entry = (Map.Entry)k.next();
-				final Relation rel = (Relation)entry.getKey();
-				final Table tbl = (Table)rel.getOneKey().getTable();
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) k.next();
+				final Relation rel = (Relation) entry.getKey();
+				final Table tbl = (Table) rel.getOneKey().getTable();
 				sb.append(" inner join ");
-					sb.append(trgtSchemaName);
+				sb.append(trgtSchemaName);
 				sb.append(".");
 				sb.append(tbl.getName());
 				sb.append(" as ");
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append(" on ");
 				final List aCols = rel.getManyKey().getColumns();
 				final List joinCols = rel.getOneKey().getColumns();
 				for (int i = 0; i < aCols.size(); i++) {
-					if (i>0)
+					if (i > 0)
 						sb.append(" and ");
 					sb.append("a.");
-					sb.append(((Column)aCols.get(i)).getName());
+					sb.append(((Column) aCols.get(i)).getName());
 					sb.append('=');
-					sb.append((String)entry.getValue());
+					sb.append((String) entry.getValue());
 					sb.append('.');
-					sb.append(((Column)joinCols.get(i)).getName());
+					sb.append(((Column) joinCols.get(i)).getName());
 				}
 			}
-			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& !trAdditionalRels.isEmpty()) {
 				sb.append(" where ");
 				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression(trAdditionalRels,"a"));
+						.getSubstitutedExpression(trAdditionalRels, "a"));
 			}
 			sb.append("; ");
 			// Delete old rows where old row flag = 1 and parentFromCols
@@ -431,10 +438,9 @@ public class MySQLDialect extends DatabaseDialect {
 		if (isRecursive) {
 			sb.append("b.");
 			sb.append(action.getConcatColumnName());
-		} else {
+		} else
 			sb.append(action.getConcatColumnDefinition()
-					.getSubstitutedExpression(allAdditionalRels,"b"));
-		}
+					.getSubstitutedExpression(allAdditionalRels, "b"));
 		sb.append(" separator '");
 		sb.append(action.getConcatColumnDefinition().getRowSep().replaceAll(
 				"'", "\\'"));
@@ -459,43 +465,49 @@ public class MySQLDialect extends DatabaseDialect {
 		if (!isRecursive) {
 			if (action.getRelationRestriction() != null) {
 				sb.append(" and ");
-				sb.append(action.getRelationRestriction().getSubstitutedExpression(
-						action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
-						action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
-						action.isRelationRestrictionLeftIsFirst(),
-						action.getRelationRestrictionPreviousUnit()));
+				sb.append(action.getRelationRestriction()
+						.getSubstitutedExpression(
+								action.isRelationRestrictionLeftIsFirst() ? "a"
+										: "b",
+								action.isRelationRestrictionLeftIsFirst() ? "b"
+										: "a",
+								action.isRelationRestrictionLeftIsFirst(),
+								action.getRelationRestrictionPreviousUnit()));
 			}
-			if (action.getTableRestriction() != null && trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& trAdditionalRels.isEmpty()) {
 				sb.append(" and (");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "b"));
 				sb.append(')');
 			}
-			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k.hasNext(); ) {
-				final Map.Entry entry = (Map.Entry)k.next();
-				final Relation rel = (Relation)entry.getKey();
-				final Table tbl = (Table)rel.getOneKey().getTable();
+			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) k.next();
+				final Relation rel = (Relation) entry.getKey();
+				final Table tbl = (Table) rel.getOneKey().getTable();
 				sb.append(" inner join ");
-					sb.append(trgtSchemaName);
+				sb.append(trgtSchemaName);
 				sb.append(".");
 				sb.append(tbl.getName());
 				sb.append(" as ");
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append(" on ");
 				final List aCols = rel.getManyKey().getColumns();
 				final List joinCols = rel.getOneKey().getColumns();
 				for (int i = 0; i < aCols.size(); i++) {
-					if (i>0)
+					if (i > 0)
 						sb.append(" and ");
 					sb.append("a.");
-					sb.append(((Column)aCols.get(i)).getName());
+					sb.append(((Column) aCols.get(i)).getName());
 					sb.append('=');
-					sb.append((String)entry.getValue());
+					sb.append((String) entry.getValue());
 					sb.append('.');
-					sb.append(((Column)joinCols.get(i)).getName());
+					sb.append(((Column) joinCols.get(i)).getName());
 				}
 			}
-			if (action.getTableRestriction() != null && !trAdditionalRels.isEmpty()) {
+			if (action.getTableRestriction() != null
+					&& !trAdditionalRels.isEmpty()) {
 				sb.append(" where ");
 				sb.append(action.getTableRestriction()
 						.getSubstitutedExpression(trAdditionalRels, "b"));
@@ -513,10 +525,9 @@ public class MySQLDialect extends DatabaseDialect {
 
 		statements.add(sb.toString());
 
-		if (isRecursive) {
+		if (isRecursive)
 			statements.add("drop table " + action.getDataSetSchemaName() + "."
 					+ recursionTempTable);
-		}
 	}
 
 	public void doRename(final Rename action, final List statements)
@@ -524,14 +535,15 @@ public class MySQLDialect extends DatabaseDialect {
 		final String schemaName = action.getDataSetSchemaName();
 		final String oldTableName = action.getFrom();
 		final String newTableName = action.getTo();
-		
+
 		this.checkTableName(newTableName);
-		
+
 		statements.add("rename table " + schemaName + "." + oldTableName
 				+ " to " + schemaName + "." + newTableName + "");
 	}
 
-	public void doSelect(final Select action, final List statements) throws Exception {
+	public void doSelect(final Select action, final List statements)
+			throws Exception {
 		final String createTableSchema = action.getDataSetSchemaName();
 		final String createTableName = action.getResultTable();
 		final String fromTableSchema = action.getSchema();
@@ -554,7 +566,7 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append("a.");
 			sb.append(entry.getKey());
 			if (!entry.getKey().equals(entry.getValue())) {
-				this.checkColumnName((String)entry.getValue());
+				this.checkColumnName((String) entry.getValue());
 				sb.append(" as ");
 				sb.append(entry.getValue());
 			}
@@ -562,34 +574,35 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
-		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)k.next();
-			final Relation rel = (Relation)entry.getKey();
-			final Table tbl = (Table)rel.getOneKey().getTable();
+		for (final Iterator k = additionalRels.entrySet().iterator(); k
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) k.next();
+			final Relation rel = (Relation) entry.getKey();
+			final Table tbl = (Table) rel.getOneKey().getTable();
 			sb.append(" inner join ");
 			sb.append(fromTableSchema);
 			sb.append(".");
 			sb.append(tbl.getName());
 			sb.append(" as ");
-			sb.append((String)entry.getValue());
+			sb.append((String) entry.getValue());
 			sb.append(" on ");
 			final List aCols = rel.getManyKey().getColumns();
 			final List joinCols = rel.getOneKey().getColumns();
 			for (int i = 0; i < aCols.size(); i++) {
-				if (i>0)
+				if (i > 0)
 					sb.append(" and ");
 				sb.append("a.");
-				sb.append(((Column)aCols.get(i)).getName());
+				sb.append(((Column) aCols.get(i)).getName());
 				sb.append('=');
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append('.');
-				sb.append(((Column)joinCols.get(i)).getName());
+				sb.append(((Column) joinCols.get(i)).getName());
 			}
 		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" where ");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(additionalRels, "a"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					additionalRels, "a"));
 		}
 		if (action.getPartitionColumn() != null) {
 			if (action.getTableRestriction() != null)
@@ -613,8 +626,7 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
-			}
-			else
+			} else
 				throw new BioMartError();
 		}
 
@@ -640,7 +652,7 @@ public class MySQLDialect extends DatabaseDialect {
 		for (final Iterator i = action.getExpressionColumns().entrySet()
 				.iterator(); i.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
-			this.checkColumnName((String)entry.getKey());
+			this.checkColumnName((String) entry.getKey());
 			sb.append((String) entry.getValue());
 			sb.append(" as ");
 			sb.append((String) entry.getKey());
@@ -694,11 +706,11 @@ public class MySQLDialect extends DatabaseDialect {
 					.getAdditionalRelations().iterator(); i.hasNext();)
 				additionalRels.put((Relation) i.next(), "" + additionalTable++);
 
-		final String joinType = (action.getPartitionColumn() != null
-				|| (action.getRelationRestriction() != null && action
-						.getRelationRestriction().isHard()) || (action
-				.getTableRestriction() != null && action.getTableRestriction()
-				.isHard())) ? "inner" : "left";
+		final String joinType = action.getPartitionColumn() != null
+				|| action.getRelationRestriction() != null
+				&& action.getRelationRestriction().isHard()
+				|| action.getTableRestriction() != null
+				&& action.getTableRestriction().isHard() ? "inner" : "left";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."
@@ -709,7 +721,7 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(",b.");
 			sb.append(entry.getKey());
 			if (!entry.getKey().equals(entry.getValue())) {
-				this.checkColumnName((String)entry.getValue());
+				this.checkColumnName((String) entry.getValue());
 				sb.append(" as ");
 				sb.append(entry.getValue());
 			}
@@ -736,8 +748,8 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 		if (action.getTableRestriction() != null && additionalRels.isEmpty()) {
 			sb.append(" and (");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(additionalRels,"b"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					additionalRels, "b"));
 			sb.append(')');
 		}
 		if (action.getPartitionColumn() != null) {
@@ -759,38 +771,38 @@ public class MySQLDialect extends DatabaseDialect {
 					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
-			}
-			else
+			} else
 				throw new BioMartError();
 		}
-		for (final Iterator k = additionalRels.entrySet().iterator(); k.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)k.next();
-			final Relation rel = (Relation)entry.getKey();
-			final Table tbl = (Table)rel.getOneKey().getTable();
-			sb.append(" "+joinType+" join ");
-				sb.append(trgtSchemaName);
+		for (final Iterator k = additionalRels.entrySet().iterator(); k
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) k.next();
+			final Relation rel = (Relation) entry.getKey();
+			final Table tbl = (Table) rel.getOneKey().getTable();
+			sb.append(" " + joinType + " join ");
+			sb.append(trgtSchemaName);
 			sb.append(".");
 			sb.append(tbl.getName());
 			sb.append(" as ");
-			sb.append((String)entry.getValue());
+			sb.append((String) entry.getValue());
 			sb.append(" on ");
 			final List aCols = rel.getManyKey().getColumns();
 			final List joinCols = rel.getOneKey().getColumns();
 			for (int i = 0; i < aCols.size(); i++) {
-				if (i>0)
+				if (i > 0)
 					sb.append(" and ");
 				sb.append("b.");
-				sb.append(((Column)aCols.get(i)).getName());
+				sb.append(((Column) aCols.get(i)).getName());
 				sb.append('=');
-				sb.append((String)entry.getValue());
+				sb.append((String) entry.getValue());
 				sb.append('.');
-				sb.append(((Column)joinCols.get(i)).getName());
+				sb.append(((Column) joinCols.get(i)).getName());
 			}
 		}
 		if (action.getTableRestriction() != null && !additionalRels.isEmpty()) {
 			sb.append(" where ");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression(additionalRels,"b"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					additionalRels, "b"));
 		}
 
 		statements.add(sb.toString());
@@ -861,7 +873,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final String schemaName = action.getDataSetSchemaName();
 		final String sourceTableName = action.getDataSetTableName();
 		final String optTableName = action.getOptTableName();
-		
+
 		this.checkTableName(optTableName);
 
 		final StringBuffer sb = new StringBuffer();
@@ -884,7 +896,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final String optColName = action.getOptColumnName();
 
 		this.checkColumnName(optColName);
-		
+
 		statements.add("alter table " + schemaName + "." + optTableName
 				+ " add column (" + optColName + " integer default 0)");
 
@@ -1042,13 +1054,10 @@ public class MySQLDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public String[] getStatementsForAction(final MartConstructorAction action,
-			final boolean includeComments) throws ConstructorException {
+	public String[] getStatementsForAction(final MartConstructorAction action)
+			throws ConstructorException {
 
 		final List statements = new ArrayList();
-
-		if (includeComments)
-			statements.add("# " + action.getStatusMessage());
 
 		try {
 			final String className = action.getClass().getName();

@@ -62,11 +62,13 @@ public abstract class BioMartGUI extends JFrame {
 
 		// Set some nice Mac stuff.
 		System.setProperty("com.apple.macos.useScreenMenuBar", "true");
-		//System.setProperty("com.apple.macos.use-file-dialog-packages","false"); 
+		// System.setProperty("com.apple.macos.use-file-dialog-packages","false");
 		System.setProperty("com.apple.macos.smallTabs", "true");
-		//System.setProperty("com.apple.mrj.application.apple.menu.about.name",
-		//		Resources.get("plainGUITitle"));
-		System.setProperty("com.apple.mrj.application.growbox.intrudes", "true");
+		// System.setProperty("com.apple.mrj.application.apple.menu.about.name",
+		// Resources.get("plainGUITitle"));
+		System
+				.setProperty("com.apple.mrj.application.growbox.intrudes",
+						"true");
 		System.setProperty("com.apple.mrj.application.live-resize", "true");
 
 		// Load our cache of settings.
@@ -148,9 +150,8 @@ public abstract class BioMartGUI extends JFrame {
 		if (this.confirmExitApp()) {
 			Log.info(Resources.get("logRequestNormalExitGranted"));
 			System.exit(0);
-		} else {
+		} else
 			Log.info(Resources.get("logRequestNormalExitDenied"));
-		}
 	}
 
 	/**
@@ -191,7 +192,7 @@ public abstract class BioMartGUI extends JFrame {
 			// Remember our parent.
 			this.martBuilder = martBuilder;
 
-			// Don't do this menu on Macs.			
+			// Don't do this menu on Macs.
 			if (System.getProperty("os.name").toLowerCase().indexOf("mac") < 0) {
 				// Exit MartBuilder.
 				this.exit = new JMenuItem(Resources.get("exitTitle"));

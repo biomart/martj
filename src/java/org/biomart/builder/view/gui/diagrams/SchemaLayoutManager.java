@@ -217,9 +217,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
 						.intValue();
-				final int newRowHeight = (Math
-						.max(oldRowHeight, prefSize.height
-								+ SchemaLayoutManager.TABLE_PADDING * 2) + compSpacing * 2);
+				final int newRowHeight = Math.max(oldRowHeight, prefSize.height
+						+ SchemaLayoutManager.TABLE_PADDING * 2)
+						+ compSpacing * 2;
 				this.rowHeights.set(rowNum, new Integer(newRowHeight));
 
 				this.rowSpacings.set(rowNum, new Integer(Math.max(
@@ -243,7 +243,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				this.prefSizes.remove(comp);
 
 				final int compSpacing = SchemaLayoutManager.RELATION_SPACING
-						* (constraints).getRelCount();
+						* constraints.getRelCount();
 
 				this.tableCount--;
 				final int rowNum = constraints.getRow();
@@ -330,7 +330,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				int firstRowBottom = ((Integer) this.rowHeights
 						.get(firstRowNum)).intValue();
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
-				if (firstKey==null)
+				if (firstKey == null)
 					continue;
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				int firstKeyInsetX = firstKeyRectangle.x;
@@ -347,7 +347,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				int secondRowBottom = ((Integer) this.rowHeights
 						.get(secondRowNum)).intValue();
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
-				if (secondKey==null)
+				if (secondKey == null)
 					continue;
 				Rectangle secondKeyRectangle = secondKey.getBounds();
 				int secondKeyInsetX = secondKeyRectangle.x;
@@ -380,7 +380,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				if (Math.abs(firstKeyRectangle.x - secondKeyRectangle.x) < 100) {
 					relBottomY = (int) Math.max(leftKeyRectangle.getCenterY(),
 							rightKeyRectangle.getCenterY());
-					relLeftX = (leftKeyRectangle.x - SchemaLayoutManager.TABLE_PADDING);
+					relLeftX = leftKeyRectangle.x
+							- SchemaLayoutManager.TABLE_PADDING;
 					relRightX = rightKeyRectangle.x;
 
 					leftX = leftKeyRectangle.x - leftKeyInsetX;
@@ -389,7 +390,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 					rightX = rightKeyRectangle.x - rightKeyInsetX;
 					rightTagX = rightX - SchemaLayoutManager.RELATION_SPACING;
 					rightY = (int) rightKeyRectangle.getCenterY();
-					viaX = leftX - (SchemaLayoutManager.TABLE_PADDING * 2);
+					viaX = leftX - SchemaLayoutManager.TABLE_PADDING * 2;
 					viaY = (leftY + rightY) / 2;
 				} else {
 					relRightX = (int) Math.max(leftKeyRectangle.getMaxX(),

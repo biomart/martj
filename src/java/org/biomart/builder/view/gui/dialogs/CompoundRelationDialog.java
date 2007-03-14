@@ -56,7 +56,7 @@ public class CompoundRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private SpinnerNumberModel arity;
-	
+
 	private JCheckBox parallel;
 
 	/**
@@ -69,8 +69,8 @@ public class CompoundRelationDialog extends JDialog {
 	 * @param label
 	 *            the title to give the arity selector.
 	 */
-	public CompoundRelationDialog(final CompoundRelationDefinition startvalue, final String title,
-			final String label) {
+	public CompoundRelationDialog(final CompoundRelationDefinition startvalue,
+			final String title, final String label) {
 		// Create the base dialog.
 		super();
 		this.setTitle(title);
@@ -103,7 +103,7 @@ public class CompoundRelationDialog extends JDialog {
 		if (startvalue.getN() > 1)
 			checkbox.setSelected(true);
 		this.parallel.setSelected(startvalue.isParallel());
-		this.parallel.setEnabled(startvalue.getN()>1);
+		this.parallel.setEnabled(startvalue.getN() > 1);
 
 		// The close and execute buttons.
 		final JButton close = new JButton(Resources.get("closeButton"));
@@ -117,12 +117,12 @@ public class CompoundRelationDialog extends JDialog {
 		field.add(new JLabel(Resources.get("compoundRelationSpinnerLabel")));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-		
+
 		// Parallel button.
 		field = new JPanel();
 		field.add(this.parallel);
 		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);		
+		content.add(field);
 
 		// Close/Execute buttons at the bottom.
 		field = new JPanel();
@@ -136,12 +136,11 @@ public class CompoundRelationDialog extends JDialog {
 			public void stateChanged(ChangeEvent e) {
 				if (CompoundRelationDialog.this.getArity() <= 1) {
 					checkbox.setSelected(false);
-					parallel.setSelected(false);
-					parallel.setEnabled(false);
-				}
-				else {
+					CompoundRelationDialog.this.parallel.setSelected(false);
+					CompoundRelationDialog.this.parallel.setEnabled(false);
+				} else {
 					checkbox.setSelected(true);
-					parallel.setEnabled(true);
+					CompoundRelationDialog.this.parallel.setEnabled(true);
 				}
 			}
 		});
@@ -150,9 +149,9 @@ public class CompoundRelationDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (checkbox.isSelected()
 						&& CompoundRelationDialog.this.getArity() == 1)
-					arity.setValue(new Integer(2));
+					CompoundRelationDialog.this.arity.setValue(new Integer(2));
 				else
-					arity.setValue(new Integer(1));
+					CompoundRelationDialog.this.arity.setValue(new Integer(1));
 			}
 		});
 
@@ -194,7 +193,7 @@ public class CompoundRelationDialog extends JDialog {
 	public int getArity() {
 		return this.arity.getNumber().intValue();
 	}
-	
+
 	public boolean getParallel() {
 		return this.parallel.isSelected();
 	}

@@ -65,7 +65,7 @@ public class RestrictedTableDialog extends JDialog {
 	private JButton execute;
 
 	private JTextArea expression;
-	
+
 	private JCheckBox hard;
 
 	/**
@@ -121,37 +121,47 @@ public class RestrictedTableDialog extends JDialog {
 
 		// Work out what column/relation pairs are available to us.
 		final List colsAvailable = new ArrayList();
-		for (final Iterator j = table.getColumns().iterator(); j.hasNext(); ) 
-			colsAvailable.add(new Object[]{null, j.next()});
-		for (final Iterator i = table.getRelations().iterator(); i.hasNext(); ) {
-			final Relation rel = (Relation)i.next();
-			if (rel.isOneToMany() && rel.getManyKey().getTable().equals(table) && rel.getOneKey().getTable().getSchema().equals(table.getSchema()))
-				for (final Iterator j = rel.getOneKey().getTable().getColumns().iterator(); j.hasNext(); ) 
-					colsAvailable.add(new Object[]{rel, j.next()});
+		for (final Iterator j = table.getColumns().iterator(); j.hasNext();)
+			colsAvailable.add(new Object[] { null, j.next() });
+		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
+			final Relation rel = (Relation) i.next();
+			if (rel.isOneToMany()
+					&& rel.getManyKey().getTable().equals(table)
+					&& rel.getOneKey().getTable().getSchema().equals(
+							table.getSchema()))
+				for (final Iterator j = rel.getOneKey().getTable().getColumns()
+						.iterator(); j.hasNext();)
+					colsAvailable.add(new Object[] { rel, j.next() });
 		}
 
 		// First table aliases.
-		this.columnAliasModel = new CRPairStringTablePanel(template==null?null:template.getAliases(), colsAvailable) {
+		this.columnAliasModel = new CRPairStringTablePanel(
+				template == null ? null : template.getAliases(), colsAvailable) {
 			private static final long serialVersionUID = 1L;
+
 			private int alias = 1;
 
 			public String getInsertButtonText() {
 				return Resources.get("insertAliasButton");
 			}
+
 			public String getRemoveButtonText() {
 				return Resources.get("removeAliasButton");
 			}
+
 			public String getFirstColumnHeader() {
 				return Resources.get("columnAliasTableColHeader");
 			}
+
 			public String getSecondColumnHeader() {
 				return Resources.get("columnAliasTableAliasHeader");
 			}
+
 			public Object getNewRowSecondColumn() {
-				return Resources.get("defaultAlias")+this.alias++;
+				return Resources.get("defaultAlias") + this.alias++;
 			}
 		};
-		
+
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
 		this.execute = template == null ? new JButton(Resources
@@ -174,7 +184,7 @@ public class RestrictedTableDialog extends JDialog {
 		field.add(new JScrollPane(this.expression));
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-		
+
 		// Add the hard option.
 		label = new JLabel();
 		gridBag.setConstraints(label, labelConstraints);
@@ -285,7 +295,7 @@ public class RestrictedTableDialog extends JDialog {
 	public String getExpression() {
 		return this.expression.getText().trim();
 	}
-	
+
 	public boolean getHard() {
 		return this.hard.isSelected();
 	}

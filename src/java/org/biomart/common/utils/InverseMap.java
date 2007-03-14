@@ -28,23 +28,25 @@ import java.util.Set;
  * This class defines an inverse view of a map.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class InverseMap implements Map {
 
 	final private Map map;
-	
+
 	/**
-	 * Defines an inverse view. Only works if the values in the
-	 * viewed map are unique.
-	 * @param map the map to view inversely.
+	 * Defines an inverse view. Only works if the values in the viewed map are
+	 * unique.
+	 * 
+	 * @param map
+	 *            the map to view inversely.
 	 */
 	public InverseMap(final Map map) {
 		this.map = map;
 	}
-	
+
 	public void clear() {
 		this.map.clear();
 	}
@@ -59,8 +61,7 @@ public class InverseMap implements Map {
 
 	public Set entrySet() {
 		final HashSet entries = new HashSet();
-		for (final Iterator i = this.map
-				.entrySet().iterator(); i.hasNext();) {
+		for (final Iterator i = this.map.entrySet().iterator(); i.hasNext();) {
 			final Map.Entry me = (Map.Entry) i.next();
 			entries.add(new Map.Entry() {
 				private final Object key = me.getValue();
@@ -77,8 +78,7 @@ public class InverseMap implements Map {
 
 				public Object setValue(Object value) {
 					final Object oldValue = this.value;
-					InverseMap.this.map.put(me
-							.getKey(), value);
+					InverseMap.this.map.put(me.getKey(), value);
 					this.value = value;
 					return oldValue;
 				}
@@ -88,8 +88,7 @@ public class InverseMap implements Map {
 	}
 
 	public Object get(Object key) {
-		for (final Iterator i = this.map
-				.entrySet().iterator(); i.hasNext();) {
+		for (final Iterator i = this.map.entrySet().iterator(); i.hasNext();) {
 			final Map.Entry me = (Map.Entry) i.next();
 			if (me.getValue().equals(key))
 				return me.getKey();
@@ -102,8 +101,7 @@ public class InverseMap implements Map {
 	}
 
 	public Set keySet() {
-		return new HashSet(this.map
-				.values());
+		return new HashSet(this.map.values());
 	}
 
 	public Object put(Object key, Object value) {
@@ -115,14 +113,12 @@ public class InverseMap implements Map {
 	public void putAll(Map t) {
 		for (final Iterator i = t.entrySet().iterator(); i.hasNext();) {
 			final Map.Entry me = (Map.Entry) i.next();
-			this.map.put(me.getValue(), me
-					.getKey());
+			this.map.put(me.getValue(), me.getKey());
 		}
 	}
 
 	public Object remove(Object key) {
-		for (final Iterator i = this.map
-				.entrySet().iterator(); i.hasNext();) {
+		for (final Iterator i = this.map.entrySet().iterator(); i.hasNext();) {
 			final Map.Entry me = (Map.Entry) i.next();
 			if (me.getValue().equals(key)) {
 				final Object value = me.getKey();

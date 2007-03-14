@@ -154,7 +154,8 @@ public abstract class TransformationUnit {
 				throw new BioMartError();
 		}
 
-		private DataSetColumn getDataSetColumnFor(final Column column, final String name) {
+		private DataSetColumn getDataSetColumnFor(final Column column,
+				final String name) {
 			DataSetColumn candidate = (DataSetColumn) this
 					.getNewColumnNameMap().get(name);
 			if (candidate == null && this.getPreviousUnit() != null) {
@@ -163,12 +164,12 @@ public abstract class TransformationUnit {
 						.getFirstKey() : this.schemaRelation.getSecondKey();
 				final Key parentKey = this.schemaRelation.getOtherKey(ourKey);
 				final int pos = ourKey.getColumns().indexOf(column);
-				if (pos>=0)
+				if (pos >= 0)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
-						(Column) parentKey.getColumns().get(pos));
-				if (candidate==null)
+							(Column) parentKey.getColumns().get(pos));
+				if (candidate == null)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
-						column);
+							column);
 			}
 			return candidate;
 		}
@@ -209,8 +210,7 @@ public abstract class TransformationUnit {
 					final ExpressionColumnDefinition exprB = ((ExpressionColumn) entryB
 							.getValue()).getDefinition();
 					return exprB.getAliases().keySet().contains(colNameA) ? -1
-							: ((exprA.isGroupBy() == exprB.isGroupBy()) ? 1
-									: -1);
+							: exprA.isGroupBy() == exprB.isGroupBy() ? 1 : -1;
 				}
 			});
 			entries.addAll(this.getNewColumnNameMap().entrySet());

@@ -676,20 +676,19 @@ public class SchemaModificationSet {
 		this.subclassedRelations.remove(relation);
 	}
 
-	public void setDirectionalRelation(final Relation relation,
-			final Key def) throws ValidationException {
-		this.setDirectionalRelation(SchemaModificationSet.DATASET, relation, def);
+	public void setDirectionalRelation(final Relation relation, final Key def)
+			throws ValidationException {
+		this.setDirectionalRelation(SchemaModificationSet.DATASET, relation,
+				def);
 	}
 
 	public void setDirectionalRelation(final DataSetTable table,
-			final Relation relation, final Key def)
-			throws ValidationException {
+			final Relation relation, final Key def) throws ValidationException {
 		this.setDirectionalRelation(table.getName(), relation, def);
 	}
 
 	private void setDirectionalRelation(final String tableName,
-			final Relation relation, final Key def)
-			throws ValidationException {
+			final Relation relation, final Key def) throws ValidationException {
 		if (!this.directionalRelations.containsKey(tableName))
 			this.directionalRelations.put(tableName, new HashMap());
 		final Map masks = (Map) this.directionalRelations.get(tableName);
@@ -741,29 +740,26 @@ public class SchemaModificationSet {
 				|| globalComps != null && globalComps.containsKey(relation);
 	}
 
-	public Key getDirectionalRelation(
-			final DataSetTable table, final Relation relation) {
+	public Key getDirectionalRelation(final DataSetTable table,
+			final Relation relation) {
 		return this
 				.getDirectionalRelation(
 						table == null ? SchemaModificationSet.DATASET : table
 								.getName(), relation);
 	}
 
-	private Key getDirectionalRelation(
-			final String tableName, final Relation relation) {
+	private Key getDirectionalRelation(final String tableName,
+			final Relation relation) {
 		final Map globalComps = (Map) this.directionalRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map comps = (Map) this.directionalRelations.get(tableName);
 		return comps != null && comps.containsKey(relation) ? (Key) comps
-				.get(relation)
-				: (Key) globalComps.get(relation);
+				.get(relation) : (Key) globalComps.get(relation);
 	}
 
 	public Map getDirectionalRelations() {
 		return this.directionalRelations;
 	}
-	
-
 
 	public void setCompoundRelation(final Relation relation,
 			final CompoundRelationDefinition def) throws ValidationException {
@@ -1000,10 +996,10 @@ public class SchemaModificationSet {
 				final Relation rel = (Relation) crPair[0];
 				final Column col = (Column) crPair[1];
 				final String tp;
-				if (rel==null)
+				if (rel == null)
 					tp = tablePrefix;
-				else 
-					tp = (String)additionalRels.get(rel);
+				else
+					tp = (String) additionalRels.get(rel);
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, tp + "." + col.getName());
 			}
@@ -1126,9 +1122,8 @@ public class SchemaModificationSet {
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(
-				final String leftTablePrefix, final String rightTablePrefix,
-				final boolean leftIsDataSet,
+		public String getSubstitutedExpression(final String leftTablePrefix,
+				final String rightTablePrefix, final boolean leftIsDataSet,
 				final TransformationUnit mappingUnit) {
 			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
@@ -1137,7 +1132,8 @@ public class SchemaModificationSet {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, leftTablePrefix + "."
+				sub = sub.replaceAll(alias, leftTablePrefix
+						+ "."
 						+ (leftIsDataSet ? mappingUnit.getDataSetColumnFor(col)
 								.getModifiedName() : col.getName()));
 			}
@@ -1146,9 +1142,11 @@ public class SchemaModificationSet {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, rightTablePrefix + "."
-						+ (!leftIsDataSet ? mappingUnit.getDataSetColumnFor(col)
-								.getModifiedName() : col.getName()));
+				sub = sub.replaceAll(alias, rightTablePrefix
+						+ "."
+						+ (!leftIsDataSet ? mappingUnit
+								.getDataSetColumnFor(col).getModifiedName()
+								: col.getName()));
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
@@ -1345,10 +1343,10 @@ public class SchemaModificationSet {
 				final Relation rel = (Relation) crPair[0];
 				final Column col = (Column) crPair[1];
 				final String tp;
-				if (rel==null)
+				if (rel == null)
 					tp = tablePrefix;
-				else 
-					tp = (String)additionalRels.get(rel);
+				else
+					tp = (String) additionalRels.get(rel);
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, tp + "." + col.getName());
 			}
@@ -1485,11 +1483,11 @@ public class SchemaModificationSet {
 		}
 
 		public int getN() {
-			return n;
+			return this.n;
 		}
 
 		public boolean isParallel() {
-			return parallel;
+			return this.parallel;
 		}
 	}
 }

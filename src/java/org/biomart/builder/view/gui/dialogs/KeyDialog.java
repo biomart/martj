@@ -35,6 +35,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicArrowButton;
 
@@ -100,14 +101,14 @@ public class KeyDialog extends JDialog {
 		// Create the table column list, and the buttons
 		// to move columns to/from the selected column list.
 		final JList tabColList = new JList(this.tableColumns);
-		final JButton insertButton = new BasicArrowButton(BasicArrowButton.EAST);
-		final JButton removeButton = new BasicArrowButton(BasicArrowButton.WEST);
+		final JButton insertButton = new BasicArrowButton(SwingConstants.EAST);
+		final JButton removeButton = new BasicArrowButton(SwingConstants.WEST);
 
 		// Create the key column list, and the buttons to
 		// move columns to/from the table columns list.
 		final JList keyColList = new JList(this.selectedColumns);
-		final JButton upButton = new BasicArrowButton(BasicArrowButton.NORTH);
-		final JButton downButton = new BasicArrowButton(BasicArrowButton.SOUTH);
+		final JButton upButton = new BasicArrowButton(SwingConstants.NORTH);
+		final JButton downButton = new BasicArrowButton(SwingConstants.SOUTH);
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		final Box content = Box.createHorizontalBox();

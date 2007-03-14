@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -74,8 +73,6 @@ public class SaveDDLDialog extends JDialog {
 	private Collection datasets;
 
 	private JList datasetsList;
-
-	private JCheckBox includeComments;
 
 	private MartTab martTab;
 
@@ -142,14 +139,10 @@ public class SaveDDLDialog extends JDialog {
 		// Create input fields for target schema name and granularity.
 		this.targetSchemaName = new JTextField(20);
 		this.targetSchemaName.setText(martTab.getMart().getOutputSchema());
-		this.includeComments = new JCheckBox(Resources
-				.get("includeCommentsLabel"));
-		this.includeComments.setSelected(true);
 
 		this.outputFormat = new JComboBox();
 		this.outputFormat.addItem(Resources.get("filePerTableDDL"));
 		this.outputFormat.addItem(Resources.get("viewDDL"));
-		this.outputFormat.setSelectedItem(Resources.get("viewDDL"));
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
@@ -194,6 +187,8 @@ public class SaveDDLDialog extends JDialog {
 				return Resources.get("ZipDDLFileFilterDescription");
 			}
 		});
+		final JLabel outputFileLabel = new JLabel(Resources
+				.get("saveDDLFileLocationLabel"));
 		this.outputFileLocation = new JTextField(20);
 		this.outputFileLocationButton = new JButton(Resources
 				.get("browseButton"));
@@ -222,15 +217,17 @@ public class SaveDDLDialog extends JDialog {
 			public void itemStateChanged(final ItemEvent e) {
 				if (SaveDDLDialog.this.outputFormat.getSelectedItem().equals(
 						Resources.get("viewDDL"))) {
-					SaveDDLDialog.this.outputFileLocation.setText(null);
-					SaveDDLDialog.this.outputFileLocation.setEnabled(false);
+					outputFileLabel.setVisible(false);
+					SaveDDLDialog.this.outputFileLocation.setVisible(false);
 					SaveDDLDialog.this.outputFileLocationButton
-							.setEnabled(false);
+							.setVisible(false);
 				} else {
-					SaveDDLDialog.this.outputFileLocation.setEnabled(true);
+					outputFileLabel.setVisible(true);
+					SaveDDLDialog.this.outputFileLocation.setVisible(true);
 					SaveDDLDialog.this.outputFileLocationButton
-							.setEnabled(true);
+							.setVisible(true);
 				}
+				SaveDDLDialog.this.pack();
 			}
 		});
 
@@ -263,19 +260,9 @@ public class SaveDDLDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the include comments field.
-		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
-		field = new JPanel();
-		field.add(this.includeComments);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-
 		// Add the output location label, field and file chooser button.
-		label = new JLabel(Resources.get("saveDDLFileLocationLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		gridBag.setConstraints(outputFileLabel, labelConstraints);
+		content.add(outputFileLabel);
 		field = new JPanel();
 		field.add(this.outputFileLocation);
 		field.add(this.outputFileLocationButton);
@@ -318,6 +305,10 @@ public class SaveDDLDialog extends JDialog {
 		// Make execute the default button.
 		this.getRootPane().setDefaultButton(execute);
 
+		// Set a default value of View SQL.
+		SaveDDLDialog.this.outputFormat.setSelectedItem(Resources
+				.get("viewDDL"));
+
 		// Set size of window.
 		this.pack();
 
@@ -340,11 +331,9 @@ public class SaveDDLDialog extends JDialog {
 		if (this.outputFormat.getSelectedItem().equals(
 				Resources.get("filePerTableDDL")))
 			constructor = new SaveDDLMartConstructor(new File(
-					this.outputFileLocation.getText()), this.includeComments
-					.isSelected());
+					this.outputFileLocation.getText()));
 		else
-			constructor = new SaveDDLMartConstructor(sb, this.includeComments
-					.isSelected());
+			constructor = new SaveDDLMartConstructor(sb);
 
 		try {
 			// Obtain the DDL generator from the constructor object.

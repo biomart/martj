@@ -41,8 +41,8 @@ import org.biomart.common.resources.Resources;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface Relation extends Comparable {
@@ -170,9 +170,9 @@ public interface Relation extends Comparable {
 	 *         otherwise.
 	 */
 	public boolean isOneToOne();
-	
+
 	public Key getKeyForTable(final Table table);
-	
+
 	public Key getKeyForSchema(final Schema schema);
 
 	/**
@@ -295,24 +295,25 @@ public interface Relation extends Comparable {
 		private final Key firstKey;
 
 		private final Key secondKey;
-		
+
 		private Key oneKey;
-		
+
 		private Key manyKey;
-		
+
 		private boolean oneToManyAllowed;
-		
+
 		private boolean manyToManyAllowed;
-		
+
 		private boolean oneToOne;
-		
+
 		private boolean oneToMany;
-		
+
 		private boolean manyToMany;
-		
+
 		private boolean external;
-		
+
 		private Map tableKeyMap = new HashMap();
+
 		private Map schemaKeyMap = new HashMap();
 
 		private ComponentStatus status;
@@ -339,8 +340,8 @@ public interface Relation extends Comparable {
 		 */
 		public GenericRelation(final Key firstKey, final Key secondKey,
 				final Cardinality cardinality) throws AssociationException {
-			Log.debug("Creating relation between " + firstKey
-					+ " and " + secondKey + " with cardinality " + cardinality);
+			Log.debug("Creating relation between " + firstKey + " and "
+					+ secondKey + " with cardinality " + cardinality);
 			// Check the keys have the same number of columns.
 			if (firstKey.countColumns() != secondKey.countColumns())
 				throw new AssociationException(Resources
@@ -355,17 +356,20 @@ public interface Relation extends Comparable {
 			this.secondKey = secondKey;
 			this.setCardinality(cardinality);
 			this.status = ComponentStatus.INFERRED;
-			
+
 			// Update flags.
-			this.oneToManyAllowed = !this.firstKey.getClass().equals(this.secondKey.getClass());
+			this.oneToManyAllowed = !this.firstKey.getClass().equals(
+					this.secondKey.getClass());
 			this.manyToManyAllowed = this.firstKey instanceof ForeignKey
-				&& this.secondKey instanceof ForeignKey;
+					&& this.secondKey instanceof ForeignKey;
 			this.external = !this.firstKey.getTable().getSchema().equals(
 					this.secondKey.getTable().getSchema());
 			this.tableKeyMap.put(this.firstKey.getTable(), this.firstKey);
 			this.tableKeyMap.put(this.secondKey.getTable(), this.secondKey);
-			this.schemaKeyMap.put(this.firstKey.getTable().getSchema(), this.firstKey);
-			this.schemaKeyMap.put(this.secondKey.getTable().getSchema(), this.secondKey);
+			this.schemaKeyMap.put(this.firstKey.getTable().getSchema(),
+					this.firstKey);
+			this.schemaKeyMap.put(this.secondKey.getTable().getSchema(),
+					this.secondKey);
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {
@@ -400,9 +404,11 @@ public interface Relation extends Comparable {
 
 		public String getName() {
 			final StringBuffer sb = new StringBuffer();
-			sb.append(this.getFirstKey() == null ? "<undef>":this.getFirstKey().toString());
+			sb.append(this.getFirstKey() == null ? "<undef>" : this
+					.getFirstKey().toString());
 			sb.append(":");
-			sb.append(this.getSecondKey()==null?"<undef>":this.getSecondKey().toString());
+			sb.append(this.getSecondKey() == null ? "<undef>" : this
+					.getSecondKey().toString());
 			return sb.toString();
 		}
 
@@ -411,7 +417,8 @@ public interface Relation extends Comparable {
 		}
 
 		public Key getOtherKey(final Key key) {
-			return key==this.firstKey?this.secondKey:key==this.secondKey?this.firstKey:null;
+			return key == this.firstKey ? this.secondKey
+					: key == this.secondKey ? this.firstKey : null;
 		}
 
 		public Key getSecondKey() {
@@ -449,18 +456,18 @@ public interface Relation extends Comparable {
 		public boolean isExternal() {
 			return this.external;
 		}
-		
+
 		public Key getKeyForTable(final Table table) {
-			return (Key)this.tableKeyMap.get(table);
+			return (Key) this.tableKeyMap.get(table);
 		}
-		
+
 		public Key getKeyForSchema(final Schema schema) {
-			return (Key)this.schemaKeyMap.get(schema);
+			return (Key) this.schemaKeyMap.get(schema);
 		}
 
 		public void setCardinality(Cardinality cardinality) {
-			Log.debug("Changing cardinality of " + this.getName()
-					+ " to " + cardinality);
+			Log.debug("Changing cardinality of " + this.getName() + " to "
+					+ cardinality);
 			if (this.firstKey instanceof PrimaryKey
 					&& this.secondKey instanceof PrimaryKey) {
 				Log.debug("Overriding cardinality change to ONE");
@@ -475,15 +482,16 @@ public interface Relation extends Comparable {
 				this.manyKey = null;
 			} else {
 				this.oneToOne = false;
-				this.oneToMany = (this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey);
+				this.oneToMany = this.firstKey instanceof PrimaryKey
+						|| this.secondKey instanceof PrimaryKey;
 				this.manyToMany = !this.oneToMany;
 				if (this.oneToMany) {
 					this.oneKey = this.firstKey instanceof PrimaryKey ? this.firstKey
-						: this.secondKey;
+							: this.secondKey;
 					this.manyKey = this.firstKey instanceof ForeignKey ? this.firstKey
-							: this.secondKey;;
-				}
-				else {
+							: this.secondKey;
+					;
+				} else {
 					this.oneKey = null;
 					this.manyKey = null;
 				}
@@ -492,8 +500,7 @@ public interface Relation extends Comparable {
 
 		public void setStatus(final ComponentStatus status)
 				throws AssociationException {
-			Log.debug("Changing status of " + this.getName()
-					+ " to " + status);
+			Log.debug("Changing status of " + this.getName() + " to " + status);
 			// If the new status is not incorrect, we need to make sure we
 			// can legally do this, ie. the two keys have the same number of
 			// columns each.

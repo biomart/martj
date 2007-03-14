@@ -23,7 +23,6 @@ import java.awt.Cursor;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
-import java.net.URL;
 
 import javax.swing.JLabel;
 
@@ -75,10 +74,15 @@ public class OpenBrowser {
 
 	public static class OpenBrowserLabel extends JLabel {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		public OpenBrowserLabel(final String url) {
 			this(url, url);
 		}
-		
+
 		public OpenBrowserLabel(final String text, final String url) {
 			super(text);
 			this.setToolTipText(url);

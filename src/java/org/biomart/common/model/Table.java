@@ -48,16 +48,16 @@ import org.biomart.common.resources.Resources;
  * but it does not provide any methods that process or analyse these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface Table extends Comparable {
-	
+
 	public void addRelation(final Relation relation);
 
 	public void removeRelation(final Relation relation);
-	
+
 	/**
 	 * Attempts to add a column to this table.
 	 * 
@@ -135,7 +135,7 @@ public interface Table extends Comparable {
 	 * @return the set of internal relations for this table.
 	 */
 	public Collection getInternalRelations();
-	
+
 	public Collection getExternalRelations();
 
 	/**
@@ -220,11 +220,11 @@ public interface Table extends Comparable {
 		private PrimaryKey primaryKey;
 
 		private final Schema schema;
-		
+
 		private final Set relations = new HashSet();
-		
+
 		private final Set internalRelations = new HashSet();
-		
+
 		private final Set externalRelations = new HashSet();
 
 		/**
@@ -248,7 +248,7 @@ public interface Table extends Comparable {
 			Log.debug("Unique name is " + name);
 			this.name = name;
 		}
-		
+
 		public void addRelation(final Relation relation) {
 			this.relations.add(relation);
 			if (relation.isExternal())
@@ -268,8 +268,7 @@ public interface Table extends Comparable {
 		}
 
 		public void addColumn(final Column column) {
-			Log.debug("Adding column " + column + " to "
-					+ this.getName());
+			Log.debug("Adding column " + column + " to " + this.getName());
 			// Add it.
 			this.columns.put(column.getName(), column);
 		}
@@ -288,8 +287,8 @@ public interface Table extends Comparable {
 
 		public void changeColumnMapKey(final String oldName,
 				final String newName) {
-			Log.debug("Remapping column " + oldName + " as "
-					+ newName + " in table " + this.getName());
+			Log.debug("Remapping column " + oldName + " as " + newName
+					+ " in table " + this.getName());
 			// If the names are the same, do nothing.
 			if (oldName.equals(newName))
 				return;
@@ -306,8 +305,8 @@ public interface Table extends Comparable {
 
 		public void destroy() {
 			Log.debug("Dropping table " + this.getName());
-			for (final Iterator i = this.relations.iterator(); i.hasNext(); ) 
-				this.schema.removeRelation((Relation)i.next());
+			for (final Iterator i = this.relations.iterator(); i.hasNext();)
+				this.schema.removeRelation((Relation) i.next());
 			// Remove each column we have. This will recursively cause
 			// keys etc. to be removed.
 			// Must use a copy else we'll get concurrent modification problems.
@@ -351,7 +350,7 @@ public interface Table extends Comparable {
 				allKeys.add(this.primaryKey);
 			return allKeys;
 		}
-		
+
 		public String getName() {
 			return this.name;
 		}
@@ -373,8 +372,7 @@ public interface Table extends Comparable {
 		}
 
 		public void removeColumn(final Column column) {
-			Log.debug("Removing column " + column + " from "
-					+ this.getName());
+			Log.debug("Removing column " + column + " from " + this.getName());
 			// Remove all keys involving this column
 			for (final Iterator i = this.getKeys().iterator(); i.hasNext();) {
 				final Key k = (Key) i.next();
@@ -389,14 +387,14 @@ public interface Table extends Comparable {
 		}
 
 		public void removeForeignKey(final ForeignKey foreignKey) {
-			Log.debug("Removing foreign key " + foreignKey
-					+ " from " + this.getName());
+			Log.debug("Removing foreign key " + foreignKey + " from "
+					+ this.getName());
 			this.foreignKeys.remove(foreignKey);
 		}
 
 		public void setPrimaryKey(final PrimaryKey primaryKey) {
-			Log.debug("Setting primary key on " + this.getName()
-					+ " to " + primaryKey);
+			Log.debug("Setting primary key on " + this.getName() + " to "
+					+ primaryKey);
 			// If the key is the same, do nothing.
 			if (primaryKey != null && this.primaryKey != null
 					&& primaryKey.equals(this.primaryKey))

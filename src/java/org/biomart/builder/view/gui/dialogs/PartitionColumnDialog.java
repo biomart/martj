@@ -139,10 +139,9 @@ public class PartitionColumnDialog extends JDialog {
 		// The ranges box.
 		final JLabel exprLabel = new JLabel(Resources
 				.get("rangeExpressionsLabel"));
-		this.expressionAliasModel = new StringStringTablePanel(
-				(template != null && template instanceof ValueRange) ? ((ValueRange) template)
-						.getRanges()
-						: null) {
+		this.expressionAliasModel = new StringStringTablePanel(template != null
+				&& template instanceof ValueRange ? ((ValueRange) template)
+				.getRanges() : null) {
 			private static final long serialVersionUID = 1L;
 
 			private int alias = 1;
@@ -170,10 +169,9 @@ public class PartitionColumnDialog extends JDialog {
 		// The values box.
 		final JLabel valueListLabel = new JLabel(Resources
 				.get("valueListsLabel"));
-		this.valueAliasModel = new StringStringTablePanel(
-				(template != null && template instanceof ValueList) ? ((ValueList) template)
-						.getValues()
-						: null) {
+		this.valueAliasModel = new StringStringTablePanel(template != null
+				&& template instanceof ValueList ? ((ValueList) template)
+				.getValues() : null) {
 			private static final long serialVersionUID = 1L;
 
 			private int alias = 1;
@@ -256,7 +254,7 @@ public class PartitionColumnDialog extends JDialog {
 					final Schema schema = col.getTable().getSchema();
 					final DatabaseDialect dd = DatabaseDialect
 							.getDialect(schema);
-					if (dd != null) {
+					if (dd != null)
 						if (schema.getPartitions().isEmpty())
 							dbValues.addAll(dd.executeSelectDistinct(
 									((JDBCSchema) schema).getDatabaseSchema(),
@@ -266,7 +264,6 @@ public class PartitionColumnDialog extends JDialog {
 									.keySet().iterator(); i.hasNext();)
 								dbValues.addAll(dd.executeSelectDistinct(
 										(String) i.next(), col));
-					}
 					// Combine the two to create an updated list.
 					final Map newValues = new TreeMap(existingValues);
 					for (final Iterator i = newValues.entrySet().iterator(); i

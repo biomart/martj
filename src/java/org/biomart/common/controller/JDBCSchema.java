@@ -82,8 +82,8 @@ import org.biomart.common.resources.Settings;
  * or keys, or to reinstate any that have previously been marked as incorrect.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class JDBCSchema extends GenericSchema implements JDBCDataLink {
@@ -216,7 +216,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// some previous run. Any relations that are left in this list by
 			// the end of the loop for this table no longer exist in the
 			// database, and will be dropped.
-			final Collection relationsToBeDropped = new HashSet(pk.getRelations());
+			final Collection relationsToBeDropped = new HashSet(pk
+					.getRelations());
 
 			// Identify all foreign keys in the database metadata that refer
 			// to the current primary key.
@@ -245,10 +246,9 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 					dbFKs.put(fkColSeq, new ArrayList());
 				// In Oracle, FKs can be invalid, so we need to check them.
 				final Table fkTbl = this.getTableByName(fkTblName);
-				if (fkTbl!=null) {
-					final Column fkCol = fkTbl
-					.getColumnByName(fkColName);
-					if (fkCol!=null)
+				if (fkTbl != null) {
+					final Column fkCol = fkTbl.getColumnByName(fkColName);
+					if (fkCol != null)
 						((List) dbFKs.get(fkColSeq)).add(fkCol);
 				}
 			}
@@ -514,7 +514,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// some previous run. Any relations that are left in this list by
 			// the end of the loop for this table no longer exist in the
 			// database, and will be dropped.
-			final Collection relationsToBeDropped = new HashSet(pk.getRelations());
+			final Collection relationsToBeDropped = new HashSet(pk
+					.getRelations());
 
 			// Now we know that we can use this PK for certain, look for all
 			// other tables (other than the one the PK itself belongs to), for
@@ -941,8 +942,8 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 	}
 
 	public void setPassword(final String password) {
-		if ((this.password == null && this.password != password)
-				|| (this.password != null && !this.password.equals(password))) {
+		if (this.password == null && this.password != password
+				|| this.password != null && !this.password.equals(password)) {
 			this.password = password;
 			// Reset the cached database connection.
 			try {
@@ -1144,10 +1145,12 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 				// preserve any existing handmade PKs, and don't override any
 				// marked as incorrect.
 				if (existingPK == null
-						|| (existingPK.equals(candidatePK) && existingPK
-								.getStatus().equals(ComponentStatus.HANDMADE))
-						|| (!existingPK.equals(candidatePK) && !existingPK
-								.getStatus().equals(ComponentStatus.HANDMADE)))
+						|| existingPK.equals(candidatePK)
+						&& existingPK.getStatus().equals(
+								ComponentStatus.HANDMADE)
+						|| !existingPK.equals(candidatePK)
+						&& !existingPK.getStatus().equals(
+								ComponentStatus.HANDMADE))
 					try {
 						t.setPrimaryKey(candidatePK);
 					} catch (final Throwable th) {

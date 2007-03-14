@@ -55,7 +55,6 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
-
 /**
  * Represents a key by listing out in a set of labels each column in the key.
  * <p>
@@ -136,17 +135,16 @@ public class KeyComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Mark ourselves as handling 'draggedKey' events, for
-		// drag-and-drop capabilities.		
+		// drag-and-drop capabilities.
 		final DragSource dragSource = DragSource.getDefaultDragSource();
 		final DragSourceListener dsListener = new DragSourceListener() {
 			public void dragEnter(DragSourceDragEvent e) {
 				DragSourceContext context = e.getDragSourceContext();
 				int myaction = e.getDropAction();
-				if ((myaction & DnDConstants.ACTION_COPY) != 0) {
+				if ((myaction & DnDConstants.ACTION_COPY) != 0)
 					context.setCursor(DragSource.DefaultLinkDrop);
-				} else {
+				else
 					context.setCursor(DragSource.DefaultLinkNoDrop);
-				}
 			}
 
 			public void dragDropEnd(DragSourceDropEvent e) {
@@ -167,7 +165,7 @@ public class KeyComponent extends BoxShapedComponent {
 		};
 		final DragGestureListener dgListener = new DragGestureListener() {
 			public void dragGestureRecognized(DragGestureEvent e) {
-				if (KeyComponent.this.isDraggable()) {
+				if (KeyComponent.this.isDraggable())
 					try {
 						Transferable transferable = new KeyTransferable(
 								KeyComponent.this.getKey());
@@ -180,12 +178,11 @@ public class KeyComponent extends BoxShapedComponent {
 							}
 						});
 					}
-				}
 			}
 		};
 		final DropTargetListener dtListener = new DropTargetListener() {
 			public void dragEnter(DropTargetDragEvent e) {
-				if (isDragOk(e) == false) {
+				if (this.isDragOk(e) == false) {
 					e.rejectDrag();
 					return;
 				}
@@ -193,7 +190,7 @@ public class KeyComponent extends BoxShapedComponent {
 			}
 
 			public void dragOver(DropTargetDragEvent e) {
-				if (isDragOk(e) == false) {
+				if (this.isDragOk(e) == false) {
 					e.rejectDrag();
 					return;
 				}
@@ -201,7 +198,7 @@ public class KeyComponent extends BoxShapedComponent {
 			}
 
 			public void dropActionChanged(DropTargetDragEvent e) {
-				if (isDragOk(e) == false) {
+				if (this.isDragOk(e) == false) {
 					e.rejectDrag();
 					return;
 				}
@@ -214,15 +211,13 @@ public class KeyComponent extends BoxShapedComponent {
 			private boolean isDragOk(DropTargetDragEvent e) {
 				DataFlavor[] flavors = KeyTransferable.flavors;
 				DataFlavor chosen = null;
-				for (int i = 0; i < flavors.length; i++) {
+				for (int i = 0; i < flavors.length; i++)
 					if (e.isDataFlavorSupported(flavors[i])) {
 						chosen = flavors[i];
 						break;
 					}
-				}
-				if (chosen == null) {
+				if (chosen == null)
 					return false;
-				}
 				int sa = e.getSourceActions();
 				if ((sa & DnDConstants.ACTION_COPY) == 0)
 					return false;
@@ -232,12 +227,11 @@ public class KeyComponent extends BoxShapedComponent {
 			public void drop(DropTargetDropEvent e) {
 				DataFlavor[] flavors = KeyTransferable.flavors;
 				DataFlavor chosen = null;
-				for (int i = 0; i < flavors.length; i++) {
+				for (int i = 0; i < flavors.length; i++)
 					if (e.isDataFlavorSupported(flavors[i])) {
 						chosen = flavors[i];
 						break;
 					}
-				}
 				if (chosen == null) {
 					e.rejectDrop();
 					return;
@@ -327,18 +321,24 @@ public class KeyComponent extends BoxShapedComponent {
 	public static class KeyTransferable implements Transferable {
 		public static final DataFlavor keyFlavor = new DataFlavor(Key.class,
 				"MartBuilder Schema Key") {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
 		};
 
 		public static final DataFlavor[] flavors = { KeyTransferable.keyFlavor };
 
-		private static final List flavorList = Arrays.asList(flavors);
+		private static final List flavorList = Arrays
+				.asList(KeyTransferable.flavors);
 
 		public synchronized DataFlavor[] getTransferDataFlavors() {
-			return flavors;
+			return KeyTransferable.flavors;
 		}
 
 		public boolean isDataFlavorSupported(DataFlavor flavor) {
-			return (flavorList.contains(flavor));
+			return KeyTransferable.flavorList.contains(flavor);
 		}
 
 		private Key key;
@@ -349,11 +349,10 @@ public class KeyComponent extends BoxShapedComponent {
 
 		public Object getTransferData(DataFlavor flavor)
 				throws UnsupportedFlavorException, IOException {
-			if (KeyTransferable.keyFlavor.equals(flavor)) {
+			if (KeyTransferable.keyFlavor.equals(flavor))
 				return this.key;
-			} else {
+			else
 				throw new UnsupportedFlavorException(flavor);
-			}
 		}
 	}
 }

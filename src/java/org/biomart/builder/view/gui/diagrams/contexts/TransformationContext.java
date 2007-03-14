@@ -96,17 +96,16 @@ public class TransformationContext extends DataSetContext {
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
-			
-			((ColumnComponent)component).setRenameable(true);
-			((ColumnComponent)component).setSelectable(true);
+
+			((ColumnComponent) component).setRenameable(true);
+			((ColumnComponent) component).setSelectable(true);
 		}
-		
+
 		// Key?
-		else if (object instanceof Key) {
+		else if (object instanceof Key)
 			// Remove drag-and-drop from the key as it does not apply in
 			// the window context.
-			((KeyComponent)component).setDraggable(false);
-		}
+			((KeyComponent) component).setDraggable(false);
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
@@ -187,7 +186,7 @@ public class TransformationContext extends DataSetContext {
 								.getDataSetTabSet()
 								.requestPartitionByColumn(
 										TransformationContext.this.getDataSet(),
-										(DataSetTable)column.getTable(),
+										(DataSetTable) column.getTable(),
 										column);
 					}
 				});
@@ -212,7 +211,7 @@ public class TransformationContext extends DataSetContext {
 								.getDataSetTabSet()
 								.requestPartitionByColumn(
 										TransformationContext.this.getDataSet(),
-										(DataSetTable)column.getTable(),
+										(DataSetTable) column.getTable(),
 										column);
 					}
 				});
@@ -232,7 +231,7 @@ public class TransformationContext extends DataSetContext {
 					TransformationContext.this.getMartTab().getDataSetTabSet()
 							.requestUnpartitionByColumn(
 									TransformationContext.this.getDataSet(),
-									(DataSetTable)column.getTable());
+									(DataSetTable) column.getTable());
 				}
 			});
 			contextMenu.add(unpartition);

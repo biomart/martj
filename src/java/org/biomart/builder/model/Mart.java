@@ -332,10 +332,12 @@ public class Mart {
 	 * @param schema
 	 *            the schema to remove.
 	 */
-	public void removeSchema(final Schema schema) throws SQLException, DataModelException {
+	public void removeSchema(final Schema schema) throws SQLException,
+			DataModelException {
 		Log.debug("Removing schema " + schema);
-		for (final Iterator i = schema.getExternalRelations().iterator(); i.hasNext();) 
-				((Relation) i.next()).destroy();
+		for (final Iterator i = schema.getExternalRelations().iterator(); i
+				.hasNext();)
+			((Relation) i.next()).destroy();
 		this.schemas.remove(schema.getName());
 		this.synchroniseDataSets(schema);
 	}
@@ -497,9 +499,8 @@ public class Mart {
 			this
 					.renameDataSet(perfectDS, perfectDS.getCentralTable()
 							.getName());
-		} else {
+		} else
 			Log.debug("No perfect candidate found - retaining all");
-		}
 
 		// Return the final set of suggested datasets.
 		return suggestedDataSets;
@@ -591,7 +592,8 @@ public class Mart {
 	 * dropped. This is all simply a matter of delegating calls and the routine
 	 * does no real work itself.
 	 */
-	public void synchroniseDataSets(final Schema affected, final Schema otherAffected) throws SQLException, DataModelException {
+	public void synchroniseDataSets(final Schema affected,
+			final Schema otherAffected) throws SQLException, DataModelException {
 		Log.debug("Synchronising all datasets");
 		for (final Iterator i = this.datasets.values().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
@@ -601,17 +603,18 @@ public class Mart {
 				i.remove();
 
 			// If not, synchronise it.
-			else
-				if ((affected!=null && ds.usesSchema(affected))
-						|| 
-						(otherAffected!=null && ds.usesSchema(otherAffected))
-						|| (affected==null && otherAffected==null))
-					ds.synchronise();
+			else if (affected != null && ds.usesSchema(affected)
+					|| otherAffected != null && ds.usesSchema(otherAffected)
+					|| affected == null && otherAffected == null)
+				ds.synchronise();
 		}
 	}
-	public void synchroniseDataSets(final Schema affected) throws SQLException, DataModelException {
+
+	public void synchroniseDataSets(final Schema affected) throws SQLException,
+			DataModelException {
 		this.synchroniseDataSets(affected, null);
 	}
+
 	public void synchroniseDataSets() throws SQLException, DataModelException {
 		this.synchroniseDataSets(null, null);
 	}
@@ -629,7 +632,7 @@ public class Mart {
 	public void synchroniseSchemas() throws SQLException, DataModelException {
 		Log.debug("Synchronising all schemas");
 		// Schemas first
-		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();) 
+		for (final Iterator i = this.schemas.values().iterator(); i.hasNext();)
 			((Schema) i.next()).synchronise();
 		// Then, synchronise datasets.
 		this.synchroniseDataSets();

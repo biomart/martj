@@ -45,8 +45,8 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTableP
  * table for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class SchemaPartitionDialog extends JDialog {

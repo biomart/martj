@@ -136,15 +136,19 @@ public class ConcatRelationDialog extends JDialog {
 
 		// Work out what column/relation pairs are available to us.
 		final List colsAvailable = new ArrayList();
-		for (final Iterator j = table.getColumns().iterator(); j.hasNext(); ) 
-			colsAvailable.add(new Object[]{null, j.next()});
-		for (final Iterator i = table.getRelations().iterator(); i.hasNext(); ) {
-			final Relation rel = (Relation)i.next();
-			if (rel.isOneToMany() && rel.getManyKey().getTable().equals(table) && rel.getOneKey().getTable().getSchema().equals(table.getSchema()))
-				for (final Iterator j = rel.getOneKey().getTable().getColumns().iterator(); j.hasNext(); ) 
-					colsAvailable.add(new Object[]{rel, j.next()});
+		for (final Iterator j = table.getColumns().iterator(); j.hasNext();)
+			colsAvailable.add(new Object[] { null, j.next() });
+		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
+			final Relation rel = (Relation) i.next();
+			if (rel.isOneToMany()
+					&& rel.getManyKey().getTable().equals(table)
+					&& rel.getOneKey().getTable().getSchema().equals(
+							table.getSchema()))
+				for (final Iterator j = rel.getOneKey().getTable().getColumns()
+						.iterator(); j.hasNext();)
+					colsAvailable.add(new Object[] { rel, j.next() });
 		}
-		
+
 		// First table aliases.
 		this.columnAliasModel = new CRPairStringTablePanel(
 				template == null ? null : template.getAliases(), colsAvailable) {
@@ -217,7 +221,7 @@ public class ConcatRelationDialog extends JDialog {
 				final Table tbl = key.getTable();
 				final Relation rel = (Relation) ConcatRelationDialog.this.firstRelation
 						.getSelectedItem();
-				if (rel != null) {
+				if (rel != null)
 					if (rel.getFirstKey().getTable().equals(
 							rel.getSecondKey().getTable()))
 						ConcatRelationDialog.this.secondRelation
@@ -239,7 +243,6 @@ public class ConcatRelationDialog extends JDialog {
 								i.remove();
 						}
 					}
-				}
 				ConcatRelationDialog.this.secondRelation.removeAllItems();
 				for (final Iterator i = secondRels.iterator(); i.hasNext();)
 					ConcatRelationDialog.this.secondRelation.addItem(i.next());
@@ -416,8 +419,8 @@ public class ConcatRelationDialog extends JDialog {
 				messages.add(Resources.get("fieldIsEmpty", Resources
 						.get("secondRelation")));
 			if (this.concSep.getText().length() == 0)
-				messages
-						.add(Resources.get("fieldIsEmpty", Resources.get("concSep")));
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("concSep")));
 		}
 
 		// If there any messages, display them.
@@ -466,7 +469,7 @@ public class ConcatRelationDialog extends JDialog {
 	public String getRowSep() {
 		return this.rowSep.getText();
 	}
-	
+
 	public String getConcSep() {
 		return this.concSep.getText();
 	}

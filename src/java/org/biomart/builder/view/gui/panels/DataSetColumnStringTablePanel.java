@@ -17,7 +17,6 @@ import javax.swing.ListCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 public abstract class DataSetColumnStringTablePanel extends

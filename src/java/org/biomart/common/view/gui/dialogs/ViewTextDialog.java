@@ -59,8 +59,8 @@ import org.biomart.common.view.gui.LongProcess;
  * screen.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ViewTextDialog extends JFrame {
@@ -212,7 +212,7 @@ public class ViewTextDialog extends JFrame {
 							.getCurrentDirectory().getPath());
 					final File file = saver.getSelectedFile();
 					// When a file is chosen, save the file.
-					if (file != null) {
+					if (file != null)
 						LongProcess.run(new Runnable() {
 							public void run() {
 								FileWriter fw = null;
@@ -227,7 +227,7 @@ public class ViewTextDialog extends JFrame {
 										}
 									});
 								} finally {
-									if (fw!=null) 
+									if (fw != null)
 										try {
 											fw.close();
 										} catch (final IOException e) {
@@ -236,7 +236,6 @@ public class ViewTextDialog extends JFrame {
 								}
 							}
 						});
-					}
 				}
 			}
 		});
@@ -284,9 +283,9 @@ public class ViewTextDialog extends JFrame {
 				final String search = searchText.getText().trim();
 				if (search.length() == 0)
 					return;
-				if (!currSearch.equals(search)) {
+				if (!this.currSearch.equals(search)) {
 					this.currSearch = search;
-					this.matcher = Pattern.compile(currSearch).matcher(
+					this.matcher = Pattern.compile(this.currSearch).matcher(
 							editorPane.getText());
 					editorPane.setCaretPosition(0);
 				}
@@ -294,7 +293,7 @@ public class ViewTextDialog extends JFrame {
 					editorPane.getCaret().setDot(this.matcher.start());
 					editorPane.getCaret().moveDot(this.matcher.end());
 					editorPane.getCaret().setSelectionVisible(true);
-				} else 
+				} else
 					Toolkit.getDefaultToolkit().beep();
 			}
 		});

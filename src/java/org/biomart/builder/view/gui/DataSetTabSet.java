@@ -344,7 +344,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 	public void recalculateAffectedDataSetDiagrams(final Schema schema) {
 		for (int index = 0; index < this.datasetToDiagram.length; index++) {
-			final DataSet ds = ((DataSet) this.datasetToDiagram[0].get(index));
+			final DataSet ds = (DataSet) this.datasetToDiagram[0].get(index);
 			if (ds.usesSchema(schema))
 				((Diagram) this.datasetToDiagram[1].get(index))
 						.recalculateDiagram();
@@ -942,15 +942,14 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Do the work.
-					if (newN <= 1) {
+					if (newN <= 1)
 						// Uncompound the relation.
 						MartBuilderUtils.uncompoundRelation(ds, relation);
-					} else {
+					else
 						// Compound the relation.
 						MartBuilderUtils.compoundRelation(ds, relation,
 								new CompoundRelationDefinition(newN,
 										newParallel));
-					}
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
@@ -1004,15 +1003,14 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Do the work.
-					if (newN <= 1) {
+					if (newN <= 1)
 						// Uncompound the relation.
 						MartBuilderUtils.uncompoundRelation(ds, relation);
-					} else {
+					else
 						// Compound the relation.
 						MartBuilderUtils.compoundRelation(ds, relation,
 								new CompoundRelationDefinition(newN,
 										newParallel));
-					}
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
@@ -1072,15 +1070,13 @@ public class DataSetTabSet extends JTabbedPane {
 						else
 							MartBuilderUtils
 									.undirectionalRelation(ds, relation);
-					} else {
-						// Compound the relation.
-						if (dst != null)
-							MartBuilderUtils.directionalRelation(dst, relation,
-									newKey);
-						else
-							MartBuilderUtils.directionalRelation(ds, relation,
-									newKey);
-					}
+					} else // Compound the relation.
+					if (dst != null)
+						MartBuilderUtils.directionalRelation(dst, relation,
+								newKey);
+					else
+						MartBuilderUtils.directionalRelation(ds, relation,
+								newKey);
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(
@@ -1143,17 +1139,15 @@ public class DataSetTabSet extends JTabbedPane {
 							MartBuilderUtils.uncompoundRelation(dst, relation);
 						else
 							MartBuilderUtils.uncompoundRelation(ds, relation);
-					} else {
-						// Compound the relation.
-						if (dst != null)
-							MartBuilderUtils.compoundRelation(dst, relation,
-									new CompoundRelationDefinition(newN,
-											newParallel));
-						else
-							MartBuilderUtils.compoundRelation(ds, relation,
-									new CompoundRelationDefinition(newN,
-											newParallel));
-					}
+					} else // Compound the relation.
+					if (dst != null)
+						MartBuilderUtils.compoundRelation(dst, relation,
+								new CompoundRelationDefinition(newN,
+										newParallel));
+					else
+						MartBuilderUtils.compoundRelation(ds, relation,
+								new CompoundRelationDefinition(newN,
+										newParallel));
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(
@@ -1438,7 +1432,8 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(
-							dst != null ? (DataSet) dst.getSchema() : ds, relation);
+							dst != null ? (DataSet) dst.getSchema() : ds,
+							relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
@@ -2152,7 +2147,7 @@ public class DataSetTabSet extends JTabbedPane {
 					} catch (final Throwable t) {
 						throw t;
 					} finally {
-						if (dss != null) {
+						if (dss != null)
 							// For each one suggested, add a dataset tab for
 							// it.
 							for (final Iterator i = dss.iterator(); i.hasNext();) {
@@ -2160,7 +2155,6 @@ public class DataSetTabSet extends JTabbedPane {
 								DataSetTabSet.this
 										.addDataSetTab(dataset, false);
 							}
-						}
 					}
 
 					// Update the modified status for this tabset.
@@ -2335,7 +2329,8 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(
-							dst != null ? (DataSet) dst.getSchema() : ds, relation);
+							dst != null ? (DataSet) dst.getSchema() : ds,
+							relation);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()

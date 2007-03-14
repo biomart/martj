@@ -38,8 +38,8 @@ import org.biomart.common.view.gui.OpenBrowser.OpenBrowserLabel;
  * screen.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class AboutDialog extends JDialog {
@@ -58,9 +58,10 @@ public class AboutDialog extends JDialog {
 	private AboutDialog() {
 		// Create the base dialog.
 		super();
-		this.setTitle(Resources.get("aboutTitle",Resources.get("GUITitle", Resources.BIOMART_VERSION)));
+		this.setTitle(Resources.get("aboutTitle", Resources.get("GUITitle",
+				Resources.BIOMART_VERSION)));
 		this.setModal(false);
-		
+
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
 		final GridBagLayout gridBag = new GridBagLayout();
@@ -80,7 +81,7 @@ public class AboutDialog extends JDialog {
 		logoConstraints.gridwidth = GridBagConstraints.REMAINDER;
 		logoConstraints.fill = GridBagConstraints.HORIZONTAL;
 		logoConstraints.anchor = GridBagConstraints.LINE_START;
-		logoConstraints.insets = new Insets(20,20,20,20);
+		logoConstraints.insets = new Insets(20, 20, 20, 20);
 		// Create some constraints for fields, except those on the last row
 		// of the dialog.
 		final GridBagConstraints fieldConstraints = new GridBagConstraints();
@@ -102,7 +103,7 @@ public class AboutDialog extends JDialog {
 				.getResourceAsURL("biomart-logo.gif")));
 		gridBag.setConstraints(item, logoConstraints);
 		content.add(item);
-		
+
 		// Title: Resources.get("GUITitle")
 		item = new JLabel(Resources.get("aboutAppTitle"));
 		gridBag.setConstraints(item, labelConstraints);
@@ -110,7 +111,7 @@ public class AboutDialog extends JDialog {
 		item = new JLabel(Resources.get("plainGUITitle"));
 		gridBag.setConstraints(item, fieldConstraints);
 		content.add(item);
-		
+
 		// Version: Resources.BIOMART_VERSION
 		item = new JLabel(Resources.get("aboutVersion"));
 		gridBag.setConstraints(item, labelConstraints);
@@ -118,7 +119,7 @@ public class AboutDialog extends JDialog {
 		item = new JLabel(Resources.BIOMART_VERSION);
 		gridBag.setConstraints(item, fieldConstraints);
 		content.add(item);
-		
+
 		// Website: http://www.biomart.org/
 		item = new JLabel(Resources.get("aboutWebsite"));
 		gridBag.setConstraints(item, labelConstraints);
@@ -126,12 +127,13 @@ public class AboutDialog extends JDialog {
 		item = new OpenBrowserLabel(Resources.get("aboutWebsiteAddress"));
 		gridBag.setConstraints(item, fieldConstraints);
 		content.add(item);
-		
+
 		// Contact: mart-dev@ebi.ac.uk
 		item = new JLabel(Resources.get("aboutContact"));
 		gridBag.setConstraints(item, labelLastRowConstraints);
 		content.add(item);
-		item = new OpenBrowserLabel(Resources.get("aboutContactAddress"), "mailto:"+Resources.get("aboutContactAddress"));
+		item = new OpenBrowserLabel(Resources.get("aboutContactAddress"),
+				"mailto:" + Resources.get("aboutContactAddress"));
 		gridBag.setConstraints(item, fieldLastRowConstraints);
 		content.add(item);
 

@@ -110,42 +110,68 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 	public void recalculateDialog(final Object changedObject) {
 		if (this.schemaTabSet != null) {
-			 if (changedObject!=null) {
-				 if (changedObject instanceof Schema)
-					 this.schemaTabSet.recalculateSchemaDiagram((Schema)changedObject);
-				 else if (changedObject instanceof Table) 
-					 this.schemaTabSet.recalculateSchemaDiagram(((Table)changedObject).getSchema());
-				 else if (changedObject instanceof Key) 
-					 this.schemaTabSet.recalculateSchemaDiagram(((Key)changedObject).getTable().getSchema());
-				 else if (changedObject instanceof Column) 
-					 this.schemaTabSet.recalculateSchemaDiagram(((Column)changedObject).getTable().getSchema());
-				 else if (changedObject instanceof Relation) {
-					 this.schemaTabSet.recalculateSchemaDiagram(((Relation)changedObject).getFirstKey().getTable().getSchema());
-					 if (!((Relation)changedObject).getFirstKey().getTable().getSchema().equals(((Relation)changedObject).getSecondKey().getTable().getSchema()))
-							 this.schemaTabSet.recalculateSchemaDiagram(((Relation)changedObject).getSecondKey().getTable().getSchema());
-				 }
-			 }
+			if (changedObject != null)
+				if (changedObject instanceof Schema)
+					this.schemaTabSet
+							.recalculateSchemaDiagram((Schema) changedObject);
+				else if (changedObject instanceof Table)
+					this.schemaTabSet
+							.recalculateSchemaDiagram(((Table) changedObject)
+									.getSchema());
+				else if (changedObject instanceof Key)
+					this.schemaTabSet
+							.recalculateSchemaDiagram(((Key) changedObject)
+									.getTable().getSchema());
+				else if (changedObject instanceof Column)
+					this.schemaTabSet
+							.recalculateSchemaDiagram(((Column) changedObject)
+									.getTable().getSchema());
+				else if (changedObject instanceof Relation) {
+					this.schemaTabSet
+							.recalculateSchemaDiagram(((Relation) changedObject)
+									.getFirstKey().getTable().getSchema());
+					if (!((Relation) changedObject).getFirstKey().getTable()
+							.getSchema().equals(
+									((Relation) changedObject).getSecondKey()
+											.getTable().getSchema()))
+						this.schemaTabSet
+								.recalculateSchemaDiagram(((Relation) changedObject)
+										.getSecondKey().getTable().getSchema());
+				}
 			this.schemaTabSet.recalculateOverviewDiagram();
 		}
 	}
 
 	public void repaintDialog(final Object changedObject) {
-		if (this.schemaTabSet != null)  {
-			 if (changedObject!=null) {
-				 if (changedObject instanceof Schema)
-					 this.schemaTabSet.repaintSchemaDiagram((Schema)changedObject);
-				 else if (changedObject instanceof Table) 
-					 this.schemaTabSet.repaintSchemaDiagram(((Table)changedObject).getSchema());
-				 else if (changedObject instanceof Key) 
-					 this.schemaTabSet.repaintSchemaDiagram(((Key)changedObject).getTable().getSchema());
-				 else if (changedObject instanceof Column) 
-					 this.schemaTabSet.repaintSchemaDiagram(((Column)changedObject).getTable().getSchema());
-				 else if (changedObject instanceof Relation) {
-					 this.schemaTabSet.repaintSchemaDiagram(((Relation)changedObject).getFirstKey().getTable().getSchema());
-					 if (!((Relation)changedObject).getFirstKey().getTable().getSchema().equals(((Relation)changedObject).getSecondKey().getTable().getSchema()))
-							 this.schemaTabSet.repaintSchemaDiagram(((Relation)changedObject).getSecondKey().getTable().getSchema());
-				 }
-			 }
+		if (this.schemaTabSet != null) {
+			if (changedObject != null)
+				if (changedObject instanceof Schema)
+					this.schemaTabSet
+							.repaintSchemaDiagram((Schema) changedObject);
+				else if (changedObject instanceof Table)
+					this.schemaTabSet
+							.repaintSchemaDiagram(((Table) changedObject)
+									.getSchema());
+				else if (changedObject instanceof Key)
+					this.schemaTabSet
+							.repaintSchemaDiagram(((Key) changedObject)
+									.getTable().getSchema());
+				else if (changedObject instanceof Column)
+					this.schemaTabSet
+							.repaintSchemaDiagram(((Column) changedObject)
+									.getTable().getSchema());
+				else if (changedObject instanceof Relation) {
+					this.schemaTabSet
+							.repaintSchemaDiagram(((Relation) changedObject)
+									.getFirstKey().getTable().getSchema());
+					if (!((Relation) changedObject).getFirstKey().getTable()
+							.getSchema().equals(
+									((Relation) changedObject).getSecondKey()
+											.getTable().getSchema()))
+						this.schemaTabSet
+								.repaintSchemaDiagram(((Relation) changedObject)
+										.getSecondKey().getTable().getSchema());
+				}
 			this.schemaTabSet.repaintOverviewDiagram();
 		}
 	}

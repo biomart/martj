@@ -27,7 +27,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
-import javax.swing.RepaintManager;
 import javax.swing.filechooser.FileFilter;
 
 import org.biomart.common.resources.Log;
@@ -38,8 +37,8 @@ import org.biomart.common.view.gui.LongProcess;
  * Saves any given component to an image file.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class ComponentImageSaver {

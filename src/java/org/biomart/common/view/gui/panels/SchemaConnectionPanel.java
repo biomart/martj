@@ -31,8 +31,8 @@ import org.biomart.common.model.Schema;
  * validation of input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public abstract class SchemaConnectionPanel extends JPanel {

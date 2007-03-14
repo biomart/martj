@@ -220,7 +220,7 @@ public class TableComponent extends BoxShapedComponent {
 				.hasNext();) {
 			final Column col = (Column) i.next();
 			sortedColMap.put(
-					(col instanceof DataSetColumn) ? ((DataSetColumn) col)
+					col instanceof DataSetColumn ? ((DataSetColumn) col)
 							.getModifiedName() : col.getName(), col);
 		}
 		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
@@ -261,13 +261,25 @@ public class TableComponent extends BoxShapedComponent {
 	}
 
 	public void performRename(final String newName) {
-		this.getDiagram().getMartTab().getDataSetTabSet().requestRenameDataSetTable((DataSetTable)this.getTable(), newName);
+		this.getDiagram().getMartTab().getDataSetTabSet()
+				.requestRenameDataSetTable((DataSetTable) this.getTable(),
+						newName);
 	}
-	
+
+	public String getEditableName() {
+		return this.getTable() instanceof DataSetTable ? ((DataSetTable) this
+				.getTable()).getModifiedName() : this.getTable().getName();
+	}
+
 	public String getName() {
-		return (this.getTable() instanceof DataSetTable) ? ((DataSetTable) this
-						.getTable()).getModifiedName()
-						: this.getTable().getName();
+		String name = this.getEditableName();
+		if (this.getTable() != null && this.getTable() instanceof DataSetTable) {
+			final String originalName = this.getTable().getName();
+			final String modifiedName = this.getEditableName();
+			if (!modifiedName.equals(originalName))
+				name += " (" + originalName + ")";
+		}
+		return name;
 	}
 
 	public void setState(final Object state) {

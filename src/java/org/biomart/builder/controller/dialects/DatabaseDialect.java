@@ -52,9 +52,9 @@ import org.biomart.common.resources.Resources;
 public abstract class DatabaseDialect {
 
 	private static final Set dialects = new HashSet();
-	
+
 	private int maxTableNameLength = Integer.MAX_VALUE;
-	
+
 	private int maxColumnNameLength = Integer.MAX_VALUE;
 
 	/**
@@ -89,7 +89,8 @@ public abstract class DatabaseDialect {
 	 * @return the appropriate DatabaseDialect, or <tt>null</tt> if none
 	 *         found.
 	 */
-	public static DatabaseDialect getDialect(final DataLink dataLink) throws SQLException {
+	public static DatabaseDialect getDialect(final DataLink dataLink)
+			throws SQLException {
 		Log.info(Resources.get("logGetDialect", "" + dataLink));
 		for (final Iterator i = DatabaseDialect.dialects.iterator(); i
 				.hasNext();) {
@@ -99,7 +100,8 @@ public abstract class DatabaseDialect {
 						.info(Resources.get("logGotDialect", d.getClass()
 								.getName()));
 				if (dataLink instanceof JDBCSchema) {
-					final DatabaseMetaData dmd = ((JDBCSchema)dataLink).getConnection().getMetaData();
+					final DatabaseMetaData dmd = ((JDBCSchema) dataLink)
+							.getConnection().getMetaData();
 					d.setMaxColumnNameLength(dmd.getMaxColumnNameLength());
 					d.setMaxTableNameLength(dmd.getMaxTableNameLength());
 				}
@@ -127,16 +129,16 @@ public abstract class DatabaseDialect {
 	 * use {@link JDBCDataLink#getConnection()} to connect to the database and
 	 * execute the query.
 	 * 
-	 * @param
-	 * 		schemaName the name of the schema to interrogate.
+	 * @param schemaName
+	 *            the name of the schema to interrogate.
 	 * @param col
 	 *            the column to get the distinct values from.
 	 * @return a list of the distinct values in the column.
 	 * @throws SQLException
 	 *             in case of problems.
 	 */
-	public abstract Collection executeSelectDistinct(final String schemaName, Column col)
-			throws SQLException;
+	public abstract Collection executeSelectDistinct(final String schemaName,
+			Column col) throws SQLException;
 
 	/**
 	 * Gets rows from the given table. This method should perform the select and
@@ -204,8 +206,7 @@ public abstract class DatabaseDialect {
 	 *             if the action was not able to be converted into one or more
 	 *             SQL or DDL statements.
 	 */
-	public abstract String[] getStatementsForAction(
-			MartConstructorAction action, boolean includeComments)
+	public abstract String[] getStatementsForAction(MartConstructorAction action)
 			throws ConstructorException;
 
 	/**
@@ -224,22 +225,26 @@ public abstract class DatabaseDialect {
 	 * @return <tt>true</tt> if it understands it, <tt>false</tt> if not.
 	 */
 	public abstract boolean understandsDataLink(DataLink dataLink);
-	
+
 	public void setMaxTableNameLength(final int value) {
 		this.maxTableNameLength = value;
 	}
-	
+
 	public void setMaxColumnNameLength(final int value) {
 		this.maxColumnNameLength = value;
 	}
-	
-	public void checkTableName(final String tableName) throws ConstructorException {
-		if (tableName.length()>this.maxTableNameLength)
-			throw new ConstructorException(Resources.get("nameTooLong", tableName));
+
+	public void checkTableName(final String tableName)
+			throws ConstructorException {
+		if (tableName.length() > this.maxTableNameLength)
+			throw new ConstructorException(Resources.get("nameTooLong",
+					tableName));
 	}
-	
-	public void checkColumnName(final String columnName) throws ConstructorException {
-		if (columnName.length()>this.maxColumnNameLength)
-			throw new ConstructorException(Resources.get("nameTooLong", columnName));
+
+	public void checkColumnName(final String columnName)
+			throws ConstructorException {
+		if (columnName.length() > this.maxColumnNameLength)
+			throw new ConstructorException(Resources.get("nameTooLong",
+					columnName));
 	}
 }

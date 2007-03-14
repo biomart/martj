@@ -22,24 +22,23 @@ package org.biomart.common.exceptions;
  * This is a serious internal error.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class BioMartError extends Error {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Creates a new instance of <tt>BioMartError</tt> without
-	 * detail message.
+	 * Creates a new instance of <tt>BioMartError</tt> without detail message.
 	 */
 	public BioMartError() {
 		super();
 	}
 
 	/**
-	 * Constructs an instance of <tt>BioMartError</tt> with the
-	 * specified detail message.
+	 * Constructs an instance of <tt>BioMartError</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -49,8 +48,8 @@ public class BioMartError extends Error {
 	}
 
 	/**
-	 * Constructs an instance of <tt>BioMartError</tt> with the
-	 * specified detail message and cause.
+	 * Constructs an instance of <tt>BioMartError</tt> with the specified
+	 * detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -62,8 +61,8 @@ public class BioMartError extends Error {
 	}
 
 	/**
-	 * Constructs an instance of <tt>BioMartError</tt> with the
-	 * specified cause.
+	 * Constructs an instance of <tt>BioMartError</tt> with the specified
+	 * cause.
 	 * 
 	 * @param t
 	 *            the underlying cause.

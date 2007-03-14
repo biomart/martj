@@ -80,9 +80,9 @@ public class ExpressionColumnDialog extends JDialog {
 	 *            the table to source columns from.
 	 * @param template
 	 *            the column to use as a template, if any.
-	 * @param skipIncludeCol 
-	 * 			  the column not to include in the
-	 *            selection - to prevent self-recursion.
+	 * @param skipIncludeCol
+	 *            the column not to include in the selection - to prevent
+	 *            self-recursion.
 	 */
 	public ExpressionColumnDialog(final DataSetTable table,
 			final ExpressionColumnDefinition template,
@@ -125,33 +125,41 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// Create the fields that will contain the user's table choices.
 		final Map defaults = new HashMap();
-		if (template!=null) 
-			for (final Iterator i = template.getAliases().entrySet().iterator(); i.hasNext(); ) {
-				final Map.Entry entry = (Map.Entry)i.next();
-				defaults.put(table.getColumnByName((String)entry.getKey()), entry.getValue());
+		if (template != null)
+			for (final Iterator i = template.getAliases().entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				defaults.put(table.getColumnByName((String) entry.getKey()),
+						entry.getValue());
 			}
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
-		this.columnAliasModel = new DataSetColumnStringTablePanel(defaults, table.getColumns(), skipIncludeCol) {
+		this.columnAliasModel = new DataSetColumnStringTablePanel(defaults,
+				table.getColumns(), skipIncludeCol) {
 			private static final long serialVersionUID = 1L;
+
 			private int alias = 1;
 
 			public String getInsertButtonText() {
 				return Resources.get("insertAliasButton");
 			}
+
 			public String getRemoveButtonText() {
 				return Resources.get("removeAliasButton");
 			}
+
 			public String getFirstColumnHeader() {
 				return Resources.get("columnAliasTableColHeader");
 			}
+
 			public String getSecondColumnHeader() {
 				return Resources.get("columnAliasTableAliasHeader");
 			}
+
 			public Object getNewRowSecondColumn() {
-				return Resources.get("defaultAlias")+this.alias++;
+				return Resources.get("defaultAlias") + this.alias++;
 			}
 		};
-		
+
 		this.groupBy = new JCheckBox(Resources.get("groupbyLabel"));
 
 		// Create the buttons.

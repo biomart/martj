@@ -62,9 +62,6 @@ public class SchemaDiagram extends Diagram {
 		// Call the general diagram constructor first.
 		super(layout, martTab);
 
-		// Set up our background colour.
-		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
-
 		// Remember the schema, then lay it out.
 		this.schema = schema;
 		this.recalculateDiagram();

@@ -79,7 +79,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final boolean isDoubleRecursive = action
 				.getRecursionSecondFromColumns() != null;
 		final String recursionTempTable = "MART_RECURSE";
-		
+
 		this.checkColumnName(action.getConcatColumnName());
 
 		// Work out additional tables to include in this.
@@ -426,10 +426,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		if (isRecursive) {
 			sb.append("b.");
 			sb.append(action.getConcatColumnName());
-		} else {
+		} else
 			sb.append(action.getConcatColumnDefinition()
 					.getSubstitutedExpression(allAdditionalRels, "b"));
-		}
 		sb.append(" from ");
 		if (isRecursive)
 			sb.append(action.getDataSetSchemaName() + "." + recursionTempTable);
@@ -463,7 +462,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sb.append(")) as ");
 		sb.append(action.getConcatColumnName());
 		sb.append(" from " + srcSchemaName + "." + srcTableName + " as a");
-		if (!isRecursive) {
+		if (!isRecursive)
 			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
@@ -489,7 +488,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					sb.append(((Column) joinCols.get(i)).getName());
 				}
 			}
-		}
 		if (!isRecursive && action.getTableRestriction() != null
 				&& !trAdditionalRels.isEmpty()) {
 			sb.append(" where ");
@@ -518,7 +516,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String schemaName = action.getDataSetSchemaName();
 		final String oldTableName = action.getFrom();
 		final String newTableName = action.getTo();
-		
+
 		this.checkTableName(newTableName);
 
 		statements.add("set search_path=" + schemaName + "," + schemaName
@@ -528,7 +526,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ " rename to " + newTableName + "");
 	}
 
-	public void doSelect(final Select action, final List statements) throws Exception {
+	public void doSelect(final Select action, final List statements)
+			throws Exception {
 		final String createTableSchema = action.getDataSetSchemaName();
 		final String createTableName = action.getResultTable();
 		final String fromTableSchema = action.getSchema();
@@ -554,7 +553,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append("a.");
 			sb.append(entry.getKey());
 			if (!entry.getKey().equals(entry.getValue())) {
-				this.checkColumnName((String)entry.getValue());
+				this.checkColumnName((String) entry.getValue());
 				sb.append(" as ");
 				sb.append(entry.getValue());
 			}
@@ -614,8 +613,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
-			}
-			else
+			} else
 				throw new BioMartError();
 		}
 
@@ -643,8 +641,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		}
 		for (final Iterator i = action.getExpressionColumns().entrySet()
 				.iterator(); i.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();		
-			this.checkColumnName((String)entry.getKey());
+			final Map.Entry entry = (Map.Entry) i.next();
+			this.checkColumnName((String) entry.getKey());
 			sb.append((String) entry.getValue());
 			sb.append(" as ");
 			sb.append((String) entry.getKey());
@@ -700,11 +698,11 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					.getAdditionalRelations().iterator(); i.hasNext();)
 				additionalRels.put((Relation) i.next(), "" + additionalTable++);
 
-		final String joinType = (action.getPartitionColumn() != null
-				|| (action.getRelationRestriction() != null && action
-						.getRelationRestriction().isHard()) || (action
-				.getTableRestriction() != null && action.getTableRestriction()
-				.isHard())) ? "inner" : "left";
+		final String joinType = action.getPartitionColumn() != null
+				|| action.getRelationRestriction() != null
+				&& action.getRelationRestriction().isHard()
+				|| action.getTableRestriction() != null
+				&& action.getTableRestriction().isHard() ? "inner" : "left";
 
 		statements.add("set search_path=" + srcSchemaName + ","
 				+ trgtSchemaName + ",pg_catalog");
@@ -718,7 +716,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(",b.");
 			sb.append(entry.getKey());
 			if (!entry.getKey().equals(entry.getValue())) {
-				this.checkColumnName((String)entry.getValue());
+				this.checkColumnName((String) entry.getValue());
 				sb.append(" as ");
 				sb.append(entry.getValue());
 			}
@@ -768,8 +766,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					sb.append(actualValue.replaceAll("'", "\\'"));
 					sb.append('\'');
 				}
-			}
-			else
+			} else
 				throw new BioMartError();
 		}
 		for (final Iterator k = additionalRels.entrySet().iterator(); k
@@ -876,7 +873,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String schemaName = action.getDataSetSchemaName();
 		final String sourceTableName = action.getDataSetTableName();
 		final String optTableName = action.getOptTableName();
-		
+
 		this.checkTableName(optTableName);
 
 		statements.add("set search_path=" + schemaName + ",pg_catalog");
@@ -901,7 +898,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String optColName = action.getOptColumnName();
 
 		this.checkColumnName(optColName);
-		
+
 		statements.add("set search_path=" + schemaName + ",pg_catalog");
 
 		statements.add("alter table " + schemaName + "." + optTableName
@@ -1074,8 +1071,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		return results;
 	}
 
-	public String[] getStatementsForAction(final MartConstructorAction action,
-			final boolean includeComments) throws ConstructorException {
+	public String[] getStatementsForAction(final MartConstructorAction action)
+			throws ConstructorException {
 
 		final List statements = new ArrayList();
 
@@ -1083,9 +1080,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		if (this.cleanState)
 			statements.add("create schema " + action.getDataSetSchemaName());
 		this.cleanState = false;
-
-		if (includeComments)
-			statements.add("-- " + action.getStatusMessage());
 
 		try {
 			final String className = action.getClass().getName();

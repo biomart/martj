@@ -214,9 +214,9 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
 						.intValue();
-				final int newRowHeight = (Math.max(oldRowHeight,
-						prefSize.height + DataSetLayoutManager.TABLE_PADDING
-								* 2) + DataSetLayoutManager.RELATION_SPACING);
+				final int newRowHeight = Math.max(oldRowHeight, prefSize.height
+						+ DataSetLayoutManager.TABLE_PADDING * 2)
+						+ DataSetLayoutManager.RELATION_SPACING;
 				this.rowHeights.set(rowNum, new Integer(newRowHeight));
 
 				this.size.height += newRowHeight - oldRowHeight;
@@ -252,9 +252,9 @@ public class DataSetLayoutManager implements LayoutManager2 {
 						+ DataSetLayoutManager.RELATION_SPACING * 2;
 				this.rowWidths.set(rowNum, new Integer(newRowWidth));
 
-				int newRowHeight = (this.mainTables.get(rowNum) != null ? ((Component) this.mainTables
+				int newRowHeight = this.mainTables.get(rowNum) != null ? ((Component) this.mainTables
 						.get(rowNum)).getPreferredSize().height
-						: 0);
+						: 0;
 				for (final Iterator i = ((List) this.dimensionTables
 						.get(rowNum)).iterator(); i.hasNext();)
 					newRowHeight = Math.max(newRowHeight,
@@ -338,7 +338,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 				int rowBottom = ((Integer) this.rowHeights.get(rowNum))
 						.intValue();
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
-				if (firstKey==null || !firstKey.isVisible())
+				if (firstKey == null || !firstKey.isVisible())
 					continue;
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				final int firstKeyInsetX = firstKeyRectangle.x;
@@ -350,7 +350,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 				// Do the same for the second key.
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
-				if (secondKey==null || !secondKey.isVisible())
+				if (secondKey == null || !secondKey.isVisible())
 					continue;
 				Rectangle secondKeyRectangle = secondKey.getBounds();
 				final int secondKeyInsetX = secondKeyRectangle.x;
@@ -379,7 +379,8 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					// Main/Subclass -> Subclass
 					relBottomY = (int) Math.max(leftKeyRectangle.getCenterY(),
 							rightKeyRectangle.getCenterY());
-					relLeftX = (leftKeyRectangle.x - DataSetLayoutManager.TABLE_PADDING);
+					relLeftX = leftKeyRectangle.x
+							- DataSetLayoutManager.TABLE_PADDING;
 					relRightX = rightKeyRectangle.x;
 
 					leftX = leftKeyRectangle.x - leftKeyInsetX;
@@ -388,7 +389,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					rightX = rightKeyRectangle.x - rightKeyInsetX;
 					rightTagX = rightX - DataSetLayoutManager.RELATION_SPACING;
 					rightY = (int) rightKeyRectangle.getCenterY();
-					viaX = leftX - (DataSetLayoutManager.TABLE_PADDING * 2);
+					viaX = leftX - DataSetLayoutManager.TABLE_PADDING * 2;
 					viaY = (leftY + rightY) / 2;
 				} else {
 					// Main/Subclass -> Dimension
@@ -403,8 +404,8 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					rightTagX = rightX - DataSetLayoutManager.RELATION_SPACING;
 					rightY = (int) rightKeyRectangle.getCenterY();
 					viaX = leftX
-							+ (((List) this.dimensionTables.get(rowNum)).size()
-									* DataSetLayoutManager.RELATION_SPACING / 2);
+							+ ((List) this.dimensionTables.get(rowNum)).size()
+							* DataSetLayoutManager.RELATION_SPACING / 2;
 					if (Math.abs(rightY - leftY) > 20)
 						viaY = (relBottomY + relTopY) / 2;
 					else

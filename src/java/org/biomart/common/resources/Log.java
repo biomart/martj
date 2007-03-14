@@ -36,8 +36,8 @@ import org.apache.log4j.RollingFileAppender;
  * {@link Settings#setApplication(String)} method.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class Log {
@@ -45,11 +45,11 @@ public class Log {
 	private static final Level DEFAULT_LOGGER_LEVEL = Level.INFO;
 
 	private static final Layout defaultLayout = new PatternLayout(
-	"%d{ISO8601} %-5p [%t:%F:%L]: %m%n");
-	
-	private static final Appender defaultAppender = 
-		new ConsoleAppender(Log.defaultLayout, ConsoleAppender.SYSTEM_ERR);
-	
+			"%d{ISO8601} %-5p [%t:%F:%L]: %m%n");
+
+	private static final Appender defaultAppender = new ConsoleAppender(
+			Log.defaultLayout, ConsoleAppender.SYSTEM_ERR);
+
 	private static Logger logger;
 	static {
 		// Create the default logger.
@@ -68,8 +68,8 @@ public class Log {
 	 * preference to the defaults. The logger name will be the same as the
 	 * application name in lower-case, eg. <tt>martbuilder</tt>.
 	 * <p>
-	 * Until this method is called, the default root logger is used. 
-	 * The default logging level is {@link Level#INFO} and logs to STDERR.
+	 * Until this method is called, the default root logger is used. The default
+	 * logging level is {@link Level#INFO} and logs to STDERR.
 	 * 
 	 * @param app
 	 *            the name of the application we are logging for.
@@ -87,8 +87,8 @@ public class Log {
 		Log.logger = Logger.getLogger(app);
 		Log.logger.setLevel(Log.DEFAULT_LOGGER_LEVEL);
 		try {
-			Log.logger.addAppender(new RollingFileAppender(Log.defaultLayout, (new File(logDir,
-					"error.log")).getPath(), true));
+			Log.logger.addAppender(new RollingFileAppender(Log.defaultLayout,
+					(new File(logDir, "error.log")).getPath(), true));
 		} catch (Throwable t) {
 			// Fall-back to the defaults if we can't write to file.
 			Log.logger.addAppender(Log.defaultAppender);

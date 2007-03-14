@@ -96,9 +96,9 @@ public class ExplainContext extends SchemaContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
-		
+
 		// Schema objects.
-		if (object instanceof Schema) {			
+		if (object instanceof Schema) {
 			((SchemaComponent) component).setRenameable(false);
 			((SchemaComponent) component).setSelectable(false);
 		}
@@ -151,7 +151,7 @@ public class ExplainContext extends SchemaContext {
 		else if (object instanceof Table) {
 			// Fade out UNINCLUDED tables.
 			final boolean isFocus = this.datasetTable != null
-					&& this.datasetTable.getFocusTable().equals((Table) object);
+					&& this.datasetTable.getFocusTable().equals(object);
 			final Set included = new HashSet(
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedRelations() : this.dataset
@@ -185,7 +185,7 @@ public class ExplainContext extends SchemaContext {
 
 			// Remove drag-and-drop from the key as it does not apply in
 			// the window context.
-			((KeyComponent)component).setDraggable(false);
+			((KeyComponent) component).setDraggable(false);
 		}
 	}
 
@@ -343,8 +343,8 @@ public class ExplainContext extends SchemaContext {
 					.getSchemaModifications().isCompoundRelation(
 							this.datasetTable, relation);
 			final boolean relationDirectional = this.dataset
-			.getSchemaModifications().isDirectionalRelation(
-					this.datasetTable, relation);
+					.getSchemaModifications().isDirectionalRelation(
+							this.datasetTable, relation);
 			final boolean relationForced = this.dataset
 					.getSchemaModifications().isForceIncludeRelation(
 							this.datasetTable, relation);
@@ -374,8 +374,8 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(mask);
-			if (incorrect || relationCompounded
-					|| (!relationMasked && !relationIncluded))
+			if (incorrect || relationCompounded || !relationMasked
+					&& !relationIncluded)
 				mask.setEnabled(false);
 			if (relationMasked)
 				mask.setSelected(true);
@@ -403,8 +403,8 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(force);
-			if (incorrect || relationMasked
-					|| (relationIncluded && !relationForced))
+			if (incorrect || relationMasked || relationIncluded
+					&& !relationForced)
 				force.setEnabled(false);
 			if (relationForced)
 				force.setSelected(true);
@@ -435,10 +435,10 @@ public class ExplainContext extends SchemaContext {
 				compound.setSelected(true);
 
 			// The compound option allows the user to compound a relation.
-			final JCheckBoxMenuItem directional = new JCheckBoxMenuItem(Resources
-					.get("directionalRelationTitle"));
-			directional.setMnemonic(Resources.get("directionalRelationMnemonic")
-					.charAt(0));
+			final JCheckBoxMenuItem directional = new JCheckBoxMenuItem(
+					Resources.get("directionalRelationTitle"));
+			directional.setMnemonic(Resources
+					.get("directionalRelationMnemonic").charAt(0));
 			directional.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()

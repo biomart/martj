@@ -18,8 +18,6 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import org.biomart.common.model.Schema;
-
 /**
  * Explanation dialogs must be able to repaint/redraw themselves on request.
  * 
@@ -29,7 +27,7 @@ import org.biomart.common.model.Schema;
  * @since 0.1
  */
 public interface ExplainDialog {
-	
+
 	/**
 	 * Recalculate the currently visible diagram.
 	 */

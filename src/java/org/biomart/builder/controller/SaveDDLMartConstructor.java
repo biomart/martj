@@ -63,8 +63,6 @@ import org.biomart.common.resources.Resources;
  */
 public class SaveDDLMartConstructor implements MartConstructor {
 
-	private boolean includeComments;
-
 	private File outputFile;
 
 	private StringBuffer outputStringBuffer;
@@ -82,12 +80,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            <tt>true</tt> if comments are to be included in the DDL
 	 *            statements generated, <tt>false</tt> if not.
 	 */
-	public SaveDDLMartConstructor(final File outputFile,
-			final boolean includeComments) {
+	public SaveDDLMartConstructor(final File outputFile) {
 		Log.info(Resources.get("logSaveDDLFile", outputFile.getPath()));
 		// Remember the settings.
 		this.outputFile = outputFile;
-		this.includeComments = includeComments;
 		// This last call is redundant but is included for clarity.
 		this.outputStringBuffer = null;
 	}
@@ -104,12 +100,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            <tt>true</tt> if comments are to be included in the DDL
 	 *            statements generated, <tt>false</tt> if not.
 	 */
-	public SaveDDLMartConstructor(final StringBuffer outputStringBuffer,
-			final boolean includeComments) {
+	public SaveDDLMartConstructor(final StringBuffer outputStringBuffer) {
 		Log.info(Resources.get("logSaveDDLBuffer"));
 		// Remember the settings.
 		this.outputStringBuffer = outputStringBuffer;
-		this.includeComments = includeComments;
 		// This last call is redundant but is included for clarity.
 		this.outputFile = null;
 	}
@@ -123,8 +117,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// First, make a set of all input schemas. We use a set to prevent
 		// duplicates.
 		final Set inputSchemas = new HashSet();
-		for (final Iterator i = datasets.iterator(); i.hasNext();) 
-			inputSchemas.addAll(((DataSet)i.next()).getIncludedSchemas());
+		for (final Iterator i = datasets.iterator(); i.hasNext();)
+			inputSchemas.addAll(((DataSet) i.next()).getIncludedSchemas());
 
 		// Convert the set to a list.
 		final List inputSchemaList = new ArrayList(inputSchemas);
@@ -149,9 +143,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// perform the actual conversion of action to DDL and divide
 		// the results into appropriate files or buffers.
 		final DDLHelper helper = this.outputStringBuffer == null ? (DDLHelper) new TableAsFileHelper(
-				this.outputFile, this.includeComments, dd)
-				: new SingleStringBufferHelper(this.outputStringBuffer,
-						this.includeComments, dd);
+				this.outputFile, dd)
+				: new SingleStringBufferHelper(this.outputStringBuffer, dd);
 		Log.debug("Chose helper " + helper.getClass().getName());
 
 		// Construct and return the runnable that uses the helper
@@ -175,20 +168,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	public abstract static class DDLHelper implements MartConstructorListener {
 		private DatabaseDialect dialect;
 
-		private boolean includeComments;
-
 		private int tempTableSeq = 0;
 
 		/**
 		 * Constructs a DDL helper.
-		 * 
-		 * @param includeComments
-		 *            <tt>true</tt> if comments are to be included,
-		 *            <tt>false</tt> if not.
 		 */
-		protected DDLHelper(final boolean includeComments,
-				final DatabaseDialect dialect) {
-			this.includeComments = includeComments;
+		protected DDLHelper(final DatabaseDialect dialect) {
 			this.dialect = dialect;
 			this.dialect.reset();
 		}
@@ -210,8 +195,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 */
 		protected String[] getStatementsForAction(
 				final MartConstructorAction action) throws ConstructorException {
-			return this.dialect.getStatementsForAction(action,
-					this.includeComments);
+			return this.dialect.getStatementsForAction(action);
 		}
 
 		public String getNewTempTableName() {
@@ -237,8 +221,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>false</tt> if not.
 		 */
 		public SingleStringBufferHelper(final StringBuffer outputStringBuffer,
-				final boolean includeComments, final DatabaseDialect dialect) {
-			super(includeComments, dialect);
+				final DatabaseDialect dialect) {
+			super(dialect);
 			this.outputStringBuffer = outputStringBuffer;
 		}
 
@@ -289,8 +273,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            <tt>false</tt> if not.
 		 */
 		public TableAsFileHelper(final File outputFile,
-				final boolean includeComments, final DatabaseDialect dialect) {
-			super(includeComments, dialect);
+				final DatabaseDialect dialect) {
+			super(dialect);
 			this.actions = new HashMap();
 			this.orderedTables = new ArrayList();
 			this.file = outputFile;

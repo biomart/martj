@@ -100,8 +100,8 @@ public class Resources {
 	}
 
 	/**
-	 * Obtains a string from the messages resource bundle. Substitutes the
-	 * first parameter in the resulting string for the specified value using
+	 * Obtains a string from the messages resource bundle. Substitutes the first
+	 * parameter in the resulting string for the specified value using
 	 * MessageFormat. See {@link ResourceBundle#getString(String)} for full
 	 * description of behaviour.
 	 * 
@@ -147,7 +147,7 @@ public class Resources {
 		final String commonResource = "org/biomart/common/resources/"
 				+ resource;
 		final String locationResource = Resources.location == null ? commonResource
-				: (Resources.location + "/" + resource);
+				: Resources.location + "/" + resource;
 		final ClassLoader cl = Resources.class.getClassLoader();
 		return (InputStream) AccessController
 				.doPrivileged(new PrivilegedAction() {
@@ -182,7 +182,7 @@ public class Resources {
 		final String commonResource = "org/biomart/common/resources/"
 				+ resource;
 		final String locationResource = Resources.location == null ? commonResource
-				: (Resources.location + "/" + resource);
+				: Resources.location + "/" + resource;
 		final ClassLoader cl = Resources.class.getClassLoader();
 		return (URL) AccessController.doPrivileged(new PrivilegedAction() {
 			public Object run() {

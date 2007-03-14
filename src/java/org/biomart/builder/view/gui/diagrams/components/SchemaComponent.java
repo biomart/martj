@@ -28,12 +28,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.Iterator;
 
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 
-import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -161,8 +159,8 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Now add any tables with external relations. Loop through the
 		// external keys to identify the tables to do this.
-		for (final Iterator i = this.getSchema().getExternalRelations().iterator(); i
-				.hasNext();) {
+		for (final Iterator i = this.getSchema().getExternalRelations()
+				.iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
 			final Key key = rel.getKeyForSchema(this.getSchema());
 			final Table table = key.getTable();
@@ -188,9 +186,10 @@ public class SchemaComponent extends BoxShapedComponent {
 	}
 
 	public void performRename(final String newName) {
-		this.getDiagram().getMartTab().getSchemaTabSet().requestRenameSchema(this.getSchema(), newName);
+		this.getDiagram().getMartTab().getSchemaTabSet().requestRenameSchema(
+				this.getSchema(), newName);
 	}
-	
+
 	public String getName() {
 		return this.getSchema().getName();
 	}

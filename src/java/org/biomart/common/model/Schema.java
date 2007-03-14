@@ -81,9 +81,11 @@ public interface Schema extends Comparable, DataLink {
 	 * @return a set of relations.
 	 */
 	public Collection getRelations();
+
 	public Collection getInternalRelations();
+
 	public Collection getExternalRelations();
-	
+
 	public void addRelation(final Relation relation);
 
 	public void removeRelation(final Relation relation);
@@ -251,13 +253,13 @@ public interface Schema extends Comparable, DataLink {
 		private String name;
 
 		private final Map tables = new TreeMap();
-		
+
 		private final Map partitions = new TreeMap();
-		
+
 		private final Set relations = new HashSet();
-		
+
 		private final Set internalRelations = new HashSet();
-		
+
 		private final Set externalRelations = new HashSet();
 
 		/**
@@ -287,7 +289,7 @@ public interface Schema extends Comparable, DataLink {
 			this.name = name;
 			this.keyguessing = keyguessing;
 		}
-		
+
 		public void addRelation(final Relation relation) {
 			this.relations.add(relation);
 			if (relation.isExternal())
@@ -303,7 +305,7 @@ public interface Schema extends Comparable, DataLink {
 			else
 				this.internalRelations.remove(relation);
 		}
-		
+
 		public Map getPartitions() {
 			return this.partitions;
 		}
@@ -404,7 +406,7 @@ public interface Schema extends Comparable, DataLink {
 			// Copy partitions.
 			targetSchema.getPartitions().clear();
 			targetSchema.getPartitions().putAll(this.getPartitions());
-			
+
 			// Drop all tables in target schema.
 			targetSchema.removeAllTables();
 

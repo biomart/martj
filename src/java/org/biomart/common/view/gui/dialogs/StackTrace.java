@@ -34,8 +34,8 @@ import org.biomart.common.resources.Resources;
  * Displays pretty GUI things on demand.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class StackTrace {
@@ -47,11 +47,11 @@ public class StackTrace {
 	 */
 	public static void showStackTrace(final Throwable t) {
 		// Log the error.
-		if (t instanceof Error) 
+		if (t instanceof Error)
 			Log.error(Resources.get("stackTraceTitle"), t);
-		else 
+		else
 			Log.warn(Resources.get("stackTraceTitle"), t);
-		
+
 		// Create the main message.
 		final int messageClass = t instanceof Error ? JOptionPane.ERROR_MESSAGE
 				: JOptionPane.WARNING_MESSAGE;

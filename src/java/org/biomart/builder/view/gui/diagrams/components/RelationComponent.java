@@ -23,7 +23,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
@@ -311,8 +310,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 */
 	public void setLineShape(final Shape shape) {
 		// Only change if the shape has changed.
-		if (this.lineShape != shape
-				|| (this.lineShape != null && !this.lineShape.equals(shape))) {
+		if (this.lineShape != shape || this.lineShape != null
+				&& !this.lineShape.equals(shape)) {
 			this.lineShape = shape;
 			// Update the outline of the relation shape accordingly.
 			if (this.lineShape != null)
@@ -359,15 +358,15 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		// Work out what style to draw the relation line.
 		final Stroke oldStroke = this.stroke;
 		if (this.relation.isOneToOne())
-			this.stroke = this.restricted ? (this.compounded ? RelationComponent.ONE_ONE_DOTTED_DASHED
-					: RelationComponent.ONE_ONE_DASHED)
-					: (this.compounded ? RelationComponent.ONE_ONE_DOTTED
-							: RelationComponent.ONE_ONE);
+			this.stroke = this.restricted ? this.compounded ? RelationComponent.ONE_ONE_DOTTED_DASHED
+					: RelationComponent.ONE_ONE_DASHED
+					: this.compounded ? RelationComponent.ONE_ONE_DOTTED
+							: RelationComponent.ONE_ONE;
 		else
-			this.stroke = this.restricted ? (this.compounded ? RelationComponent.ONE_MANY_DOTTED_DASHED
-					: RelationComponent.ONE_MANY_DASHED)
-					: (this.compounded ? RelationComponent.ONE_MANY_DOTTED
-							: RelationComponent.ONE_MANY);
+			this.stroke = this.restricted ? this.compounded ? RelationComponent.ONE_MANY_DOTTED_DASHED
+					: RelationComponent.ONE_MANY_DASHED
+					: this.compounded ? RelationComponent.ONE_MANY_DOTTED
+							: RelationComponent.ONE_MANY;
 		// Force repaint of area if stroke changed, which must include
 		// relation background else changed stroke will not show up.
 		if (oldStroke != this.stroke) {

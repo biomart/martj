@@ -119,7 +119,7 @@ public abstract class MartConstructorAction {
 		 * @return the fromKeyColumns
 		 */
 		public List getFromKeyColumns() {
-			return fromKeyColumns;
+			return this.fromKeyColumns;
 		}
 
 		/**
@@ -134,7 +134,7 @@ public abstract class MartConstructorAction {
 		 * @return the viaTableName
 		 */
 		public String getViaTableName() {
-			return viaTableName;
+			return this.viaTableName;
 		}
 
 		/**
@@ -184,7 +184,7 @@ public abstract class MartConstructorAction {
 		 * @return the fromOptTableName
 		 */
 		public String getFromOptTableName() {
-			return fromOptTableName;
+			return this.fromOptTableName;
 		}
 
 		/**
@@ -199,7 +199,7 @@ public abstract class MartConstructorAction {
 		 * @return the optColumnName
 		 */
 		public String getFromOptColumnName() {
-			return fromOptColumnName;
+			return this.fromOptColumnName;
 		}
 
 		/**
@@ -214,7 +214,7 @@ public abstract class MartConstructorAction {
 		 * @return the toOptTableName
 		 */
 		public String getToOptTableName() {
-			return toOptTableName;
+			return this.toOptTableName;
 		}
 
 		/**
@@ -229,7 +229,7 @@ public abstract class MartConstructorAction {
 		 * @return the toKeyColumns
 		 */
 		public List getToKeyColumns() {
-			return toKeyColumns;
+			return this.toKeyColumns;
 		}
 
 		/**
@@ -244,7 +244,7 @@ public abstract class MartConstructorAction {
 		 * @return the countNotBool
 		 */
 		public boolean isCountNotBool() {
-			return countNotBool;
+			return this.countNotBool;
 		}
 
 		/**
@@ -259,7 +259,7 @@ public abstract class MartConstructorAction {
 		 * @return the toOptColumnName
 		 */
 		public String getToOptColumnName() {
-			return toOptColumnName;
+			return this.toOptColumnName;
 		}
 
 		/**
@@ -308,7 +308,7 @@ public abstract class MartConstructorAction {
 		 * @return the countNotBool
 		 */
 		public boolean isCountNotBool() {
-			return countNotBool;
+			return this.countNotBool;
 		}
 
 		/**
@@ -323,7 +323,7 @@ public abstract class MartConstructorAction {
 		 * @return the keyColumns
 		 */
 		public Collection getKeyColumns() {
-			return keyColumns;
+			return this.keyColumns;
 		}
 
 		/**
@@ -338,7 +338,7 @@ public abstract class MartConstructorAction {
 		 * @return the nonNullColumns
 		 */
 		public Collection getNonNullColumns() {
-			return nonNullColumns;
+			return this.nonNullColumns;
 		}
 
 		/**
@@ -353,7 +353,7 @@ public abstract class MartConstructorAction {
 		 * @return the optColumnName
 		 */
 		public String getOptColumnName() {
-			return optColumnName;
+			return this.optColumnName;
 		}
 
 		/**
@@ -368,7 +368,7 @@ public abstract class MartConstructorAction {
 		 * @return the optTableName
 		 */
 		public String getOptTableName() {
-			return optTableName;
+			return this.optTableName;
 		}
 
 		/**
@@ -383,7 +383,7 @@ public abstract class MartConstructorAction {
 		 * @return the sourceTableName
 		 */
 		public String getSourceTableName() {
-			return sourceTableName;
+			return this.sourceTableName;
 		}
 
 		/**
@@ -424,7 +424,7 @@ public abstract class MartConstructorAction {
 		 * @return the keyColumns
 		 */
 		public Collection getKeyColumns() {
-			return keyColumns;
+			return this.keyColumns;
 		}
 
 		/**
@@ -439,7 +439,7 @@ public abstract class MartConstructorAction {
 		 * @return the optTableName
 		 */
 		public String getOptTableName() {
-			return optTableName;
+			return this.optTableName;
 		}
 
 		/**
@@ -492,7 +492,7 @@ public abstract class MartConstructorAction {
 		 * @return the leftJoinColumns
 		 */
 		public List getLeftJoinColumns() {
-			return leftJoinColumns;
+			return this.leftJoinColumns;
 		}
 
 		/**
@@ -507,7 +507,7 @@ public abstract class MartConstructorAction {
 		 * @return the leftSelectColumns
 		 */
 		public List getLeftSelectColumns() {
-			return leftSelectColumns;
+			return this.leftSelectColumns;
 		}
 
 		/**
@@ -522,7 +522,7 @@ public abstract class MartConstructorAction {
 		 * @return the leftTable
 		 */
 		public String getLeftTable() {
-			return leftTable;
+			return this.leftTable;
 		}
 
 		/**
@@ -537,7 +537,7 @@ public abstract class MartConstructorAction {
 		 * @return the resultTable
 		 */
 		public String getResultTable() {
-			return resultTable;
+			return this.resultTable;
 		}
 
 		/**
@@ -552,7 +552,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightJoinColumns
 		 */
 		public List getRightJoinColumns() {
-			return rightJoinColumns;
+			return this.rightJoinColumns;
 		}
 
 		/**
@@ -567,7 +567,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightSchema
 		 */
 		public String getRightSchema() {
-			return rightSchema;
+			return this.rightSchema;
 		}
 
 		/**
@@ -582,7 +582,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightSelectColumns
 		 */
 		public List getRightSelectColumns() {
-			return rightSelectColumns;
+			return this.rightSelectColumns;
 		}
 
 		/**
@@ -597,7 +597,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightTable
 		 */
 		public String getRightTable() {
-			return rightTable;
+			return this.rightTable;
 		}
 
 		/**
@@ -639,9 +639,9 @@ public abstract class MartConstructorAction {
 		private ValueRange partitionRangeDef;
 
 		private ValueList partitionListDef;
-		
+
 		private String partitionValue;
-		
+
 		private TransformationUnit relationRestrictionPreviousUnit;
 
 		/**
@@ -664,7 +664,7 @@ public abstract class MartConstructorAction {
 		 * @return the leftJoinColumns
 		 */
 		public List getLeftJoinColumns() {
-			return leftJoinColumns;
+			return this.leftJoinColumns;
 		}
 
 		/**
@@ -679,7 +679,7 @@ public abstract class MartConstructorAction {
 		 * @return the leftTable
 		 */
 		public String getLeftTable() {
-			return leftTable;
+			return this.leftTable;
 		}
 
 		/**
@@ -694,7 +694,7 @@ public abstract class MartConstructorAction {
 		 * @return the resultTable
 		 */
 		public String getResultTable() {
-			return resultTable;
+			return this.resultTable;
 		}
 
 		/**
@@ -709,7 +709,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightJoinColumns
 		 */
 		public List getRightJoinColumns() {
-			return rightJoinColumns;
+			return this.rightJoinColumns;
 		}
 
 		/**
@@ -724,7 +724,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightSchema
 		 */
 		public String getRightSchema() {
-			return rightSchema;
+			return this.rightSchema;
 		}
 
 		/**
@@ -739,7 +739,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightTable
 		 */
 		public String getRightTable() {
-			return rightTable;
+			return this.rightTable;
 		}
 
 		/**
@@ -754,7 +754,7 @@ public abstract class MartConstructorAction {
 		 * @return the selectColumns
 		 */
 		public Map getSelectColumns() {
-			return selectColumns;
+			return this.selectColumns;
 		}
 
 		/**
@@ -769,7 +769,7 @@ public abstract class MartConstructorAction {
 		 * @return the tableRestriction
 		 */
 		public RestrictedTableDefinition getTableRestriction() {
-			return tableRestriction;
+			return this.tableRestriction;
 		}
 
 		/**
@@ -785,7 +785,7 @@ public abstract class MartConstructorAction {
 		 * @return the partitionColumn
 		 */
 		public String getPartitionColumn() {
-			return partitionColumn;
+			return this.partitionColumn;
 		}
 
 		/**
@@ -800,7 +800,7 @@ public abstract class MartConstructorAction {
 		 * @return the relationRestriction
 		 */
 		public RestrictedRelationDefinition getRelationRestriction() {
-			return relationRestriction;
+			return this.relationRestriction;
 		}
 
 		/**
@@ -816,7 +816,7 @@ public abstract class MartConstructorAction {
 		 * @return the relationRestrictionLeftIsFirst
 		 */
 		public boolean isRelationRestrictionLeftIsFirst() {
-			return relationRestrictionLeftIsFirst;
+			return this.relationRestrictionLeftIsFirst;
 		}
 
 		/**
@@ -832,7 +832,7 @@ public abstract class MartConstructorAction {
 		 * @return the partitionRangeDef
 		 */
 		public ValueRange getPartitionRangeDef() {
-			return partitionRangeDef;
+			return this.partitionRangeDef;
 		}
 
 		/**
@@ -847,11 +847,12 @@ public abstract class MartConstructorAction {
 		 * @return the relationRestrictionPreviousUnit
 		 */
 		public TransformationUnit getRelationRestrictionPreviousUnit() {
-			return relationRestrictionPreviousUnit;
+			return this.relationRestrictionPreviousUnit;
 		}
 
 		/**
-		 * @param relationRestrictionPreviousUnit the relationRestrictionPreviousUnit to set
+		 * @param relationRestrictionPreviousUnit
+		 *            the relationRestrictionPreviousUnit to set
 		 */
 		public void setRelationRestrictionPreviousUnit(
 				TransformationUnit relationRestrictionPreviousUnit) {
@@ -859,7 +860,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getPartitionValue() {
-			return partitionValue;
+			return this.partitionValue;
 		}
 
 		public void setPartitionValue(String partitionValue) {
@@ -867,7 +868,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public ValueList getPartitionListDef() {
-			return partitionListDef;
+			return this.partitionListDef;
 		}
 
 		public void setPartitionListDef(ValueList partitionListDef) {
@@ -913,7 +914,7 @@ public abstract class MartConstructorAction {
 		private List recursionSecondFromColumns;
 
 		private List recursionSecondToColumns;
-		
+
 		private TransformationUnit relationRestrictionPreviousUnit;
 
 		/**
@@ -936,7 +937,7 @@ public abstract class MartConstructorAction {
 		 * @return the leftJoinColumns
 		 */
 		public List getLeftJoinColumns() {
-			return leftJoinColumns;
+			return this.leftJoinColumns;
 		}
 
 		/**
@@ -951,7 +952,7 @@ public abstract class MartConstructorAction {
 		 * @return the leftTable
 		 */
 		public String getLeftTable() {
-			return leftTable;
+			return this.leftTable;
 		}
 
 		/**
@@ -966,7 +967,7 @@ public abstract class MartConstructorAction {
 		 * @return the resultTable
 		 */
 		public String getResultTable() {
-			return resultTable;
+			return this.resultTable;
 		}
 
 		/**
@@ -981,7 +982,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightJoinColumns
 		 */
 		public List getRightJoinColumns() {
-			return rightJoinColumns;
+			return this.rightJoinColumns;
 		}
 
 		/**
@@ -996,7 +997,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightSchema
 		 */
 		public String getRightSchema() {
-			return rightSchema;
+			return this.rightSchema;
 		}
 
 		/**
@@ -1011,7 +1012,7 @@ public abstract class MartConstructorAction {
 		 * @return the rightTable
 		 */
 		public String getRightTable() {
-			return rightTable;
+			return this.rightTable;
 		}
 
 		/**
@@ -1026,7 +1027,7 @@ public abstract class MartConstructorAction {
 		 * @return the tableRestriction
 		 */
 		public RestrictedTableDefinition getTableRestriction() {
-			return restrictedTableDefinition;
+			return this.restrictedTableDefinition;
 		}
 
 		/**
@@ -1042,7 +1043,7 @@ public abstract class MartConstructorAction {
 		 * @return the relationRestriction
 		 */
 		public RestrictedRelationDefinition getRelationRestriction() {
-			return restrictedRelationDefinition;
+			return this.restrictedRelationDefinition;
 		}
 
 		/**
@@ -1058,7 +1059,7 @@ public abstract class MartConstructorAction {
 		 * @return the relationRestrictionLeftIsFirst
 		 */
 		public boolean isRelationRestrictionLeftIsFirst() {
-			return relationRestrictionLeftIsFirst;
+			return this.relationRestrictionLeftIsFirst;
 		}
 
 		/**
@@ -1074,7 +1075,7 @@ public abstract class MartConstructorAction {
 		 * @return the concatColumnDefinition
 		 */
 		public ConcatRelationDefinition getConcatColumnDefinition() {
-			return concatColumnDefinition;
+			return this.concatColumnDefinition;
 		}
 
 		/**
@@ -1090,7 +1091,7 @@ public abstract class MartConstructorAction {
 		 * @return the concatColumnName
 		 */
 		public String getConcatColumnName() {
-			return concatColumnName;
+			return this.concatColumnName;
 		}
 
 		/**
@@ -1105,7 +1106,7 @@ public abstract class MartConstructorAction {
 		 * @return the recursionFromColumns
 		 */
 		public List getRecursionFromColumns() {
-			return recursionFromColumns;
+			return this.recursionFromColumns;
 		}
 
 		/**
@@ -1120,7 +1121,7 @@ public abstract class MartConstructorAction {
 		 * @return the recursionSecondFromColumns
 		 */
 		public List getRecursionSecondFromColumns() {
-			return recursionSecondFromColumns;
+			return this.recursionSecondFromColumns;
 		}
 
 		/**
@@ -1136,7 +1137,7 @@ public abstract class MartConstructorAction {
 		 * @return the recursionSecondToColumns
 		 */
 		public List getRecursionSecondToColumns() {
-			return recursionSecondToColumns;
+			return this.recursionSecondToColumns;
 		}
 
 		/**
@@ -1151,7 +1152,7 @@ public abstract class MartConstructorAction {
 		 * @return the recursionTable
 		 */
 		public String getRecursionTable() {
-			return recursionTable;
+			return this.recursionTable;
 		}
 
 		/**
@@ -1166,7 +1167,7 @@ public abstract class MartConstructorAction {
 		 * @return the recursionToColumns
 		 */
 		public List getRecursionToColumns() {
-			return recursionToColumns;
+			return this.recursionToColumns;
 		}
 
 		/**
@@ -1181,7 +1182,7 @@ public abstract class MartConstructorAction {
 		 * @return the recursionType
 		 */
 		public RecursionType getRecursionType() {
-			return recursionType;
+			return this.recursionType;
 		}
 
 		/**
@@ -1196,11 +1197,12 @@ public abstract class MartConstructorAction {
 		 * @return the relationRestrictionPreviousUnit
 		 */
 		public TransformationUnit getRelationRestrictionPreviousUnit() {
-			return relationRestrictionPreviousUnit;
+			return this.relationRestrictionPreviousUnit;
 		}
 
 		/**
-		 * @param relationRestrictionPreviousUnit the relationRestrictionPreviousUnit to set
+		 * @param relationRestrictionPreviousUnit
+		 *            the relationRestrictionPreviousUnit to set
 		 */
 		public void setRelationRestrictionPreviousUnit(
 				TransformationUnit relationRestrictionPreviousUnit) {
@@ -1243,7 +1245,7 @@ public abstract class MartConstructorAction {
 		 * @return the expressionColumns
 		 */
 		public Map getExpressionColumns() {
-			return expressionColumns;
+			return this.expressionColumns;
 		}
 
 		/**
@@ -1258,7 +1260,7 @@ public abstract class MartConstructorAction {
 		 * @return the groupByColumns
 		 */
 		public Collection getGroupByColumns() {
-			return groupByColumns;
+			return this.groupByColumns;
 		}
 
 		/**
@@ -1273,7 +1275,7 @@ public abstract class MartConstructorAction {
 		 * @return the resultTable
 		 */
 		public String getResultTable() {
-			return resultTable;
+			return this.resultTable;
 		}
 
 		/**
@@ -1288,7 +1290,7 @@ public abstract class MartConstructorAction {
 		 * @return the selectColumns
 		 */
 		public Collection getSelectColumns() {
-			return selectColumns;
+			return this.selectColumns;
 		}
 
 		/**
@@ -1303,7 +1305,7 @@ public abstract class MartConstructorAction {
 		 * @return the table
 		 */
 		public String getTable() {
-			return table;
+			return this.table;
 		}
 
 		/**
@@ -1335,7 +1337,7 @@ public abstract class MartConstructorAction {
 		private ValueRange partitionRangeDef;
 
 		private ValueList partitionListDef;
-		
+
 		private String partitionValue;
 
 		/**
@@ -1358,7 +1360,7 @@ public abstract class MartConstructorAction {
 		 * @return the resultTable
 		 */
 		public String getResultTable() {
-			return resultTable;
+			return this.resultTable;
 		}
 
 		/**
@@ -1373,7 +1375,7 @@ public abstract class MartConstructorAction {
 		 * @return the schema
 		 */
 		public String getSchema() {
-			return schema;
+			return this.schema;
 		}
 
 		/**
@@ -1388,7 +1390,7 @@ public abstract class MartConstructorAction {
 		 * @return the selectColumns
 		 */
 		public Map getSelectColumns() {
-			return selectColumns;
+			return this.selectColumns;
 		}
 
 		/**
@@ -1403,7 +1405,7 @@ public abstract class MartConstructorAction {
 		 * @return the table
 		 */
 		public String getTable() {
-			return table;
+			return this.table;
 		}
 
 		/**
@@ -1418,7 +1420,7 @@ public abstract class MartConstructorAction {
 		 * @return the tableRestriction
 		 */
 		public RestrictedTableDefinition getTableRestriction() {
-			return tableRestriction;
+			return this.tableRestriction;
 		}
 
 		/**
@@ -1434,7 +1436,7 @@ public abstract class MartConstructorAction {
 		 * @return the partitionColumn
 		 */
 		public String getPartitionColumn() {
-			return partitionColumn;
+			return this.partitionColumn;
 		}
 
 		/**
@@ -1449,7 +1451,7 @@ public abstract class MartConstructorAction {
 		 * @return the partitionRangeDef
 		 */
 		public ValueRange getPartitionRangeDef() {
-			return partitionRangeDef;
+			return this.partitionRangeDef;
 		}
 
 		/**
@@ -1461,7 +1463,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getPartitionValue() {
-			return partitionValue;
+			return this.partitionValue;
 		}
 
 		public void setPartitionValue(String partitionValue) {
@@ -1469,7 +1471,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public ValueList getPartitionListDef() {
-			return partitionListDef;
+			return this.partitionListDef;
 		}
 
 		public void setPartitionListDef(ValueList partitionListDef) {
@@ -1506,7 +1508,7 @@ public abstract class MartConstructorAction {
 		 * @return the columns
 		 */
 		public Collection getColumns() {
-			return columns;
+			return this.columns;
 		}
 
 		/**
@@ -1521,7 +1523,7 @@ public abstract class MartConstructorAction {
 		 * @return the table
 		 */
 		public String getTable() {
-			return table;
+			return this.table;
 		}
 
 		/**
@@ -1560,7 +1562,7 @@ public abstract class MartConstructorAction {
 		 * @return the table
 		 */
 		public String getTable() {
-			return table;
+			return this.table;
 		}
 
 		/**
@@ -1601,7 +1603,7 @@ public abstract class MartConstructorAction {
 		 * @return the columns
 		 */
 		public List getColumns() {
-			return columns;
+			return this.columns;
 		}
 
 		/**
@@ -1616,7 +1618,7 @@ public abstract class MartConstructorAction {
 		 * @return the table
 		 */
 		public String getTable() {
-			return table;
+			return this.table;
 		}
 
 		/**
@@ -1657,7 +1659,7 @@ public abstract class MartConstructorAction {
 		 * @return the from
 		 */
 		public String getFrom() {
-			return from;
+			return this.from;
 		}
 
 		/**
@@ -1672,7 +1674,7 @@ public abstract class MartConstructorAction {
 		 * @return the to
 		 */
 		public String getTo() {
-			return to;
+			return this.to;
 		}
 
 		/**

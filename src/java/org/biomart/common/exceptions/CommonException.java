@@ -23,8 +23,8 @@ package org.biomart.common.exceptions;
  * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public class CommonException extends BioMartException {

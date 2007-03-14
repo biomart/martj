@@ -711,8 +711,8 @@ public class MartBuilderXML extends DefaultHandler {
 					final Map.Entry entry2 = (Map.Entry) y.next();
 					final PartitionedColumnDefinition pc = (PartitionedColumnDefinition) entry2
 							.getValue();
-					final String pcType = (pc instanceof ValueRange ? "valueRange"
-									: "valueList");
+					final String pcType = pc instanceof ValueRange ? "valueRange"
+							: "valueList";
 					this.openElement("partitionedColumn", xmlWriter);
 					this.writeAttribute("tableKey", (String) entry.getKey(),
 							xmlWriter);
@@ -1254,14 +1254,14 @@ public class MartBuilderXML extends DefaultHandler {
 					throw new SAXException(e);
 				}
 			else if (schema instanceof DataSet
-					&& MartBuilderXML.currentReadingDTDVersion.equals("0.5")) {
+					&& MartBuilderXML.currentReadingDTDVersion.equals("0.5"))
 				// In this case we don't care, because we need this
 				// for backward compatibility with 0.5. So, ignore it
 				// with no warning. We put a dummy DataSetTable on
 				// the stack.
 				element = new DataSetTable(name, (DataSet) schema,
 						DataSetTableType.MAIN, null, null);
-			} else
+			else
 				throw new SAXException(Resources.get("unknownSchemaType",
 						schema.getClass().getName()));
 
@@ -1420,19 +1420,19 @@ public class MartBuilderXML extends DefaultHandler {
 				// get regenerated automatically. We can tell this is a
 				// dataset table because at least one key ID will not
 				// be found.
-				if (firstKey == null || secondKey == null) {
+				if (firstKey == null || secondKey == null)
 					// Element must be something.
 					element = null;
-				} else {
-				// Make it
-				final Relation rel = new GenericRelation(firstKey, secondKey,
-						card);
-				firstKey.addRelation(rel);
-				secondKey.addRelation(rel);
+				else {
+					// Make it
+					final Relation rel = new GenericRelation(firstKey,
+							secondKey, card);
+					firstKey.addRelation(rel);
+					secondKey.addRelation(rel);
 
-				// Set its status.
-				rel.setStatus(status);
-				element = rel;
+					// Set its status.
+					rel.setStatus(status);
+					element = rel;
 				}
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -1680,16 +1680,14 @@ public class MartBuilderXML extends DefaultHandler {
 					valueNames.addAll(Arrays.asList(this.readListAttribute(
 							(String) attributes.get("valueNames"), false)));
 					final List valueValues = new ArrayList();
-					valueValues.addAll(Arrays.asList(this
-							.readListAttribute((String) attributes
-									.get("valueValues"), false)));
+					valueValues.addAll(Arrays.asList(this.readListAttribute(
+							(String) attributes.get("valueValues"), false)));
 					// Make the range collection.
 					final Map values = new HashMap();
 					for (int i = 0; i < valueNames.size(); i++)
 						values.put(valueNames.get(i), valueValues.get(i));
 					resolvedPartitionType = new ValueList(values);
-				}
-				else if ("valueRange".equals(partitionType)) {
+				} else if ("valueRange".equals(partitionType)) {
 					final List rangeNames = new ArrayList();
 					rangeNames.addAll(Arrays.asList(this.readListAttribute(
 							(String) attributes.get("rangeNames"), false)));
@@ -1881,8 +1879,9 @@ public class MartBuilderXML extends DefaultHandler {
 								.get((String) attributes.get("secondRelation"));
 					if (rKey == null
 							|| fRel == null
-							|| (!fRel.getFirstKey().getTable().equals(
-									fRel.getSecondKey().getTable()) && sRel == null))
+							|| !fRel.getFirstKey().getTable().equals(
+									fRel.getSecondKey().getTable())
+							&& sRel == null)
 						rType = RecursionType.NONE;
 					concSep = (String) attributes.get("concSep");
 				}

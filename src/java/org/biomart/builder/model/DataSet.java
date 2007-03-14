@@ -34,7 +34,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
-import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -87,7 +86,7 @@ public class DataSet extends GenericSchema {
 	private final Mart mart;
 
 	private final Collection includedRelations;
-	
+
 	private final Collection includedSchemas;
 
 	private final SchemaModificationSet schemaMods;
@@ -271,7 +270,7 @@ public class DataSet extends GenericSchema {
 		// How many times are allowed to iterate over each relation?
 		final Map relationCount = new HashMap();
 		for (final Iterator i = this.getMart().getSchemas().iterator(); i
-				.hasNext();) 
+				.hasNext();)
 			for (final Iterator j = ((Schema) i.next()).getRelations()
 					.iterator(); j.hasNext();) {
 				final Relation rel = (Relation) j.next();
@@ -427,7 +426,7 @@ public class DataSet extends GenericSchema {
 
 		// Remember the schema.
 		this.includedSchemas.add(mergeTable.getSchema());
-		
+
 		// Don't ignore any keys by default.
 		final Set ignoreCols = new HashSet();
 
@@ -441,7 +440,7 @@ public class DataSet extends GenericSchema {
 			// Work out what key to ignore by working out at which end
 			// of the relation we are.
 			final Key ignoreKey = sourceRelation.getKeyForTable(mergeTable);
-					ignoreCols.addAll(ignoreKey.getColumns());
+			ignoreCols.addAll(ignoreKey.getColumns());
 			final Key mergeKey = sourceRelation.getOtherKey(ignoreKey);
 
 			// Add the relation and key to the list that the table depends on.
@@ -473,7 +472,7 @@ public class DataSet extends GenericSchema {
 		if (includeMergeTablePK && sourceRelation != null)
 			// Only add further PK columns if the relation did NOT
 			// involve our PK and was NOT 1:1.
-			includeMergeTablePK = dsTablePKCols.isEmpty() 
+			includeMergeTablePK = dsTablePKCols.isEmpty()
 					&& !sourceRelation.isOneToOne()
 					&& !sourceRelation.getFirstKey().equals(mergeTablePK)
 					&& !sourceRelation.getSecondKey().equals(mergeTablePK);
@@ -531,17 +530,20 @@ public class DataSet extends GenericSchema {
 				final Relation r = (Relation) i.next();
 
 				// Don't repeat relations or go back up relation just followed.
-				if (r.equals(sourceRelation) || ((Integer) relationCount.get(r)).intValue() <= 0)
+				if (r.equals(sourceRelation)
+						|| ((Integer) relationCount.get(r)).intValue() <= 0)
 					continue;
 
 				// Don't follow masked relations.
 				if (this.schemaMods.isMaskedRelation(dsTable, r))
 					continue;
-				
+
 				// Don't follow directional relations from the wrong end.
 				if (this.schemaMods.isDirectionalRelation(dsTable, r)
-						&& !r.getFirstKey().getTable().equals(r.getSecondKey().getTable())
-						&& !this.schemaMods.getDirectionalRelation(dsTable, r).equals(r.getKeyForTable(mergeTable)))
+						&& !r.getFirstKey().getTable().equals(
+								r.getSecondKey().getTable())
+						&& !this.schemaMods.getDirectionalRelation(dsTable, r)
+								.equals(r.getKeyForTable(mergeTable)))
 					continue;
 
 				// Don't follow incorrect relations, or relations
@@ -550,9 +552,8 @@ public class DataSet extends GenericSchema {
 						|| r.getFirstKey().getStatus().equals(
 								ComponentStatus.INFERRED_INCORRECT)
 						|| r.getSecondKey().getStatus().equals(
-								ComponentStatus.INFERRED_INCORRECT)) {
+								ComponentStatus.INFERRED_INCORRECT))
 					continue;
-				}
 
 				// Decrement the relation counter.
 				relationCount.put(r, new Integer(((Integer) relationCount
@@ -568,8 +569,9 @@ public class DataSet extends GenericSchema {
 				// a concat column.
 				if (r.isOneToMany()
 						&& r.getOneKey().getTable().equals(mergeTable)
-						&& (!this.schemaMods.isDirectionalRelation(dsTable, r)
-						|| this.schemaMods.getDirectionalRelation(dsTable, r).equals(r.getOneKey()))) {
+						&& (!this.schemaMods.isDirectionalRelation(dsTable, r) || this.schemaMods
+								.getDirectionalRelation(dsTable, r).equals(
+										r.getOneKey()))) {
 
 					// Forcibly follow concat relations.
 					if (this.schemaMods.isConcatRelation(dsTable, r))
@@ -616,11 +618,11 @@ public class DataSet extends GenericSchema {
 							newSourceDSCols.add(newCol);
 						}
 						int childCompounded = 1;
-						if (this.schemaMods.isCompoundRelation(dsTable,
-										r) && this.schemaMods
-										.getCompoundRelation(dsTable, r).isParallel())
+						if (this.schemaMods.isCompoundRelation(dsTable, r)
+								&& this.schemaMods.getCompoundRelation(dsTable,
+										r).isParallel())
 							childCompounded = this.schemaMods
-							.getCompoundRelation(dsTable, r).getN();
+									.getCompoundRelation(dsTable, r).getN();
 						// Follow the relation.
 						for (int k = 0; k < childCompounded; k++)
 							dimensionQ.add(new Object[] { newSourceDSCols, r,
@@ -665,11 +667,11 @@ public class DataSet extends GenericSchema {
 					}
 					// Repeat queueing of relation N times if compounded.
 					int childCompounded = 1;
-					if (this.schemaMods.isCompoundRelation(dsTable,
-									r) && this.schemaMods
-									.getCompoundRelation(dsTable, r).isParallel())
-						childCompounded = this.schemaMods
-						.getCompoundRelation(dsTable, r).getN();
+					if (this.schemaMods.isCompoundRelation(dsTable, r)
+							&& this.schemaMods.getCompoundRelation(dsTable, r)
+									.isParallel())
+						childCompounded = this.schemaMods.getCompoundRelation(
+								dsTable, r).getN();
 					for (int k = 0; k < childCompounded; k++)
 						normalQ
 								.add(new Object[] {
@@ -678,7 +680,7 @@ public class DataSet extends GenericSchema {
 										targetKey.getTable(),
 										tu,
 										Boolean.valueOf(makeDimensions
-												&& (r.isOneToOne())
+												&& r.isOneToOne()
 												|| forceFollowRelation),
 										new Integer(k) });
 				}
@@ -860,13 +862,14 @@ public class DataSet extends GenericSchema {
 		// Update the modification sets.
 		this.dsMods.synchronise();
 	}
-	
+
 	public Collection getIncludedSchemas() {
 		return this.includedSchemas;
 	}
-	
+
 	public boolean usesSchema(final Schema schema) {
-		return (this.includedSchemas.isEmpty() || this.includedSchemas.contains(schema));
+		return this.includedSchemas.isEmpty()
+				|| this.includedSchemas.contains(schema);
 	}
 
 	/**
@@ -1148,14 +1151,14 @@ public class DataSet extends GenericSchema {
 					final DataSetTable dsTable,
 					final Relation underlyingRelation) {
 				// Call the parent which will use the alias generator for us.
-				super(dsTable.getColumnByName(colName) != null ? (colName
+				super(dsTable.getColumnByName(colName) != null ? colName
 						.endsWith(Resources.get("keySuffix")) ? colName
 						.substring(0, colName.indexOf(Resources
 								.get("keySuffix")))
 						+ "_"
 						+ column.getTable().getName()
 						+ Resources.get("keySuffix") : colName + "_"
-						+ column.getTable().getName()) : colName, dsTable);
+						+ column.getTable().getName() : colName, dsTable);
 
 				// Remember the wrapped column.
 				this.column = column;

@@ -63,7 +63,7 @@ public class DataSetDiagram extends Diagram {
 		super(new DataSetLayoutManager(), martTab);
 
 		// Set up our background colour.
-		this.setBackground(SchemaDiagram.BACKGROUND_COLOUR);
+		this.setBackground(Diagram.BACKGROUND_COLOUR);
 
 		// Remember the schema, then lay it out.
 		this.dataset = dataset;
@@ -98,9 +98,8 @@ public class DataSetDiagram extends Diagram {
 						// Add dimension table.
 						this.add(new TableComponent(target, this),
 								dimConstraint, 0);
-					} else {
+					} else
 						mainTables.add(target);
-					}
 					// Add relation.
 					this.add(new RelationComponent(relation, this), -1);
 				}

@@ -274,13 +274,12 @@ public interface MartConstructor {
 
 			// Work out the progress step size : 1 step = 1 table per source
 			// schema partition.
-			double stepPercent = 100.0
-					/ (double)dataset.getTables().size()
-					/ (double)partitions.size();
+			double stepPercent = 100.0 / dataset.getTables().size()
+					/ partitions.size();
 
 			// Divide the progress step size by the number of datasets.
-			stepPercent /= (double)totalDataSetCount;
-			
+			stepPercent /= totalDataSetCount;
+
 			// Process the tables.
 			for (final Iterator s = partitions.iterator(); s.hasNext();) {
 				final Map.Entry partition = (Map.Entry) s.next();
@@ -374,15 +373,14 @@ public interface MartConstructor {
 							.getTable();
 					if (!tablesToProcess.contains(dsTab)
 							&& !dataset.getDataSetModifications()
-									.isMaskedTable(dsTab)) {
+									.isMaskedTable(dsTab))
 						if (dsTab.getType().equals(DataSetTableType.DIMENSION))
 							nextDims.add(dsTab);
 						else
 							nextSCs.add(dsTab);
-					}
 				}
-				tablesToProcess.addAll(i+1,nextSCs);
-				tablesToProcess.addAll(i+1,nextDims);
+				tablesToProcess.addAll(i + 1, nextSCs);
+				tablesToProcess.addAll(i + 1, nextDims);
 			}
 			return tablesToProcess;
 		}
@@ -508,18 +506,15 @@ public interface MartConstructor {
 					final DataSetColumn col = (DataSetColumn) x.next();
 					if (col.isRequiredInterim() && !col.isRequiredFinal())
 						dropCols.add(col.getModifiedName());
-					else {
-						// Create index if required.
-						if (dataset.getDataSetModifications().isIndexedColumn(
-								col)) {
-							final Index index = new Index(
-									this.datasetSchemaName, finalCombinedName);
-							index.setTable((String) previousTempTables
-									.get(partitionValue));
-							index.setColumns(Collections.singletonList(col
-									.getModifiedName()));
-							this.issueAction(index);
-						}
+					else // Create index if required.
+					if (dataset.getDataSetModifications().isIndexedColumn(col)) {
+						final Index index = new Index(this.datasetSchemaName,
+								finalCombinedName);
+						index.setTable((String) previousTempTables
+								.get(partitionValue));
+						index.setColumns(Collections.singletonList(col
+								.getModifiedName()));
+						this.issueAction(index);
 					}
 				}
 				if (!dropCols.isEmpty()) {
@@ -591,7 +586,7 @@ public interface MartConstructor {
 			}
 			rightSelectCols.removeAll(rightJoinCols);
 			// Index the left-hand side of the join.
-			if (!((Collection) previousIndexes.get((String) previousTempTables
+			if (!((Collection) previousIndexes.get(previousTempTables
 					.get(partitionValue))).contains(leftJoinCols)) {
 				final String indTbl = (String) previousTempTables
 						.get(partitionValue);
@@ -794,9 +789,9 @@ public interface MartConstructor {
 
 			final Table sourceTable = stu.getTable();
 			final String schema = sourceTable instanceof DataSetTable ? this.datasetSchemaName
-					: (sourceTable.getSchema() == templateSchema ? schemaPartition
+					: sourceTable.getSchema() == templateSchema ? schemaPartition
 							: ((JDBCSchema) sourceTable.getSchema())
-									.getDatabaseSchema());
+									.getDatabaseSchema();
 			// Source tables are always main or subclass and
 			// therefore are never partitioned.
 			final String table = sourceTable instanceof DataSetTable ? this
@@ -886,14 +881,14 @@ public interface MartConstructor {
 			final ConcatRelationDefinition concDef = concCol.getDefinition();
 
 			// Index the left-hand side of the join.
-			if (!((Collection) previousIndexes.get((String) previousTempTables
+			if (!((Collection) previousIndexes.get(previousTempTables
 					.get(partitionValue))).contains(leftJoinCols)) {
 				final Index index = new Index(this.datasetSchemaName,
 						finalCombinedName);
 				index.setTable((String) previousTempTables.get(partitionValue));
 				index.setColumns(leftJoinCols);
 				this.issueAction(index);
-				((Collection) previousIndexes.get((String) previousTempTables
+				((Collection) previousIndexes.get(previousTempTables
 						.get(partitionValue))).add(leftJoinCols);
 			}
 
@@ -917,7 +912,8 @@ public interface MartConstructor {
 			if (dataset.getSchemaModifications()
 					.isRestrictedRelation(dsTable, ljtu.getSchemaRelation(),
 							ljtu.getSchemaRelationIteration())) {
-				action.setRelationRestrictionPreviousUnit(ljtu.getPreviousUnit());
+				action.setRelationRestrictionPreviousUnit(ljtu
+						.getPreviousUnit());
 				action.setRelationRestrictionLeftIsFirst(ljtu
 						.getSchemaRelation().getFirstKey().equals(
 								ljtu.getSchemaSourceKey()));
@@ -1016,14 +1012,14 @@ public interface MartConstructor {
 					selectCols.put(entry.getKey(), col.getModifiedName());
 			}
 			// Index the left-hand side of the join.
-			if (!((Collection) previousIndexes.get((String) previousTempTables
+			if (!((Collection) previousIndexes.get(previousTempTables
 					.get(partitionValue))).contains(leftJoinCols)) {
 				final Index index = new Index(this.datasetSchemaName,
 						finalCombinedName);
 				index.setTable((String) previousTempTables.get(partitionValue));
 				index.setColumns(leftJoinCols);
 				this.issueAction(index);
-				((Collection) previousIndexes.get((String) previousTempTables
+				((Collection) previousIndexes.get(previousTempTables
 						.get(partitionValue))).add(leftJoinCols);
 			}
 			// Make the join.
@@ -1048,7 +1044,8 @@ public interface MartConstructor {
 					action.setPartitionRangeDef((ValueRange) pc);
 				else if (pc instanceof ValueList)
 					action.setPartitionListDef((ValueList) pc);
-				else throw new BioMartError();
+				else
+					throw new BioMartError();
 				action.setPartitionValue(partitionValue);
 			}
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
@@ -1065,8 +1062,9 @@ public interface MartConstructor {
 				final RestrictedRelationDefinition def = dataset
 						.getSchemaModifications().getRestrictedRelation(
 								dsTable, ljtu.getSchemaRelation(),
-								ljtu.getSchemaRelationIteration());		
-				action.setRelationRestrictionPreviousUnit(ljtu.getPreviousUnit());
+								ljtu.getSchemaRelationIteration());
+				action.setRelationRestrictionPreviousUnit(ljtu
+						.getPreviousUnit());
 				action.setRelationRestrictionLeftIsFirst(ljtu
 						.getSchemaRelation().getFirstKey().equals(
 								ljtu.getSchemaSourceKey()));
@@ -1242,7 +1240,7 @@ public interface MartConstructor {
 				final DataSetOptimiserType oType) {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
-				uniqueOptCols.put(parent, new HashSet());
+				this.uniqueOptCols.put(parent, new HashSet());
 			// Make a unique name.
 			int counter = -1;
 			String name;
@@ -1261,18 +1259,20 @@ public interface MartConstructor {
 					sb.append(Resources.get("tablenameSubSep"));
 				}
 				sb
-						.append((oType.equals(DataSetOptimiserType.COLUMN_BOOL)
+						.append(oType.equals(DataSetOptimiserType.COLUMN_BOOL)
 								|| oType
 										.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
 								|| oType
-										.equals(DataSetOptimiserType.TABLE_BOOL) || oType
-								.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) ? Resources
+										.equals(DataSetOptimiserType.TABLE_BOOL)
+								|| oType
+										.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT) ? Resources
 								.get("boolColSuffix")
 								: Resources.get("countColSuffix"));
 				name = sb.toString();
-			} while (((Collection) uniqueOptCols.get(parent)).contains(name));
+			} while (((Collection) this.uniqueOptCols.get(parent))
+					.contains(name));
 			// Store the name above in the unique list for the parent.
-			((Collection) uniqueOptCols.get(parent)).add(name);
+			((Collection) this.uniqueOptCols.get(parent)).add(name);
 			return name;
 		}
 

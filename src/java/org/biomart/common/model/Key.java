@@ -42,8 +42,8 @@ import org.biomart.common.resources.Resources;
  * {@link ComponentStatus#INFERRED}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface Key extends Comparable {
@@ -176,7 +176,7 @@ public interface Key extends Comparable {
 	 */
 	public class GenericKey implements Key {
 		private final List columns = new ArrayList();
-		
+
 		private final List columnNames = new ArrayList();
 
 		private final Collection relations = new HashSet();
@@ -238,10 +238,10 @@ public interface Key extends Comparable {
 				this.table.removeRelation(r);
 				r.destroy();
 			}
-			
+
 			// Remove from cols.
-			for (final Iterator i = this.columns.iterator(); i.hasNext(); )
-				((Column)i.next()).setNotInKey(this);
+			for (final Iterator i = this.columns.iterator(); i.hasNext();)
+				((Column) i.next()).setNotInKey(this);
 
 			// Remove references to us from tables.
 			if (this instanceof PrimaryKey)
@@ -308,8 +308,8 @@ public interface Key extends Comparable {
 		}
 
 		public void setColumns(final List columns) {
-			Log.debug("Changing columns on " + this.getName()
-					+ " to " + columns);
+			Log.debug("Changing columns on " + this.getName() + " to "
+					+ columns);
 			// Remove all existing columns.
 			this.columns.clear();
 			this.columnNames.clear();
@@ -353,8 +353,7 @@ public interface Key extends Comparable {
 		}
 
 		public void setStatus(final ComponentStatus status) {
-			Log.debug("Changing status on " + this.getName()
-					+ " to " + status);
+			Log.debug("Changing status on " + this.getName() + " to " + status);
 			this.status = status;
 
 			// If we are invalidating the key, then we must also

@@ -21,13 +21,10 @@ package org.biomart.common.view.gui.dialogs;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
-
-import javax.swing.RepaintManager;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -88,10 +85,10 @@ public class ComponentPrinter implements Printable {
 		// Simple scale to reduce component size.
 		final double scale = 0.5;
 		// Work out pages required for the component we are drawing.
-		final int pagesAcross = (int) Math.ceil((this.component.getWidth() * scale)
-				/ pageFormat.getImageableWidth());
-		final int pagesDown = (int) Math.ceil((this.component.getHeight() * scale)
-				/ pageFormat.getImageableHeight());
+		final int pagesAcross = (int) Math.ceil(this.component.getWidth()
+				* scale / pageFormat.getImageableWidth());
+		final int pagesDown = (int) Math.ceil(this.component.getHeight()
+				* scale / pageFormat.getImageableHeight());
 		final int numPages = pagesAcross * pagesDown;
 		// If we are beyond the last page, we are done.
 		if (pageIndex >= numPages) {
@@ -106,10 +103,14 @@ public class ComponentPrinter implements Printable {
 		// What page are we being asked to print?
 		int pageXNum = pageIndex % pagesAcross;
 		int pageYNum = pageIndex / pagesAcross;
-		// Translate our output to focus on the required page.	
-		g2d.translate(pageFormat.getImageableWidth() * -pageXNum,
-				pageFormat.getImageableHeight() * -pageYNum);
-		g2d.setClip((int)pageFormat.getImageableWidth() * pageXNum, (int)pageFormat.getImageableHeight() * pageYNum, (int)pageFormat.getImageableWidth(), (int)pageFormat.getImageableHeight());
+		// Translate our output to focus on the required page.
+		g2d.translate(pageFormat.getImageableWidth() * -pageXNum, pageFormat
+				.getImageableHeight()
+				* -pageYNum);
+		g2d.setClip((int) pageFormat.getImageableWidth() * pageXNum,
+				(int) pageFormat.getImageableHeight() * pageYNum,
+				(int) pageFormat.getImageableWidth(), (int) pageFormat
+						.getImageableHeight());
 		// Scale our output down a bit as otherwise the objects are
 		// huge on paper.
 		g2d.scale(scale, scale);

@@ -34,8 +34,8 @@ import org.biomart.common.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.1
  */
 public interface Column extends Comparable {
@@ -52,15 +52,14 @@ public interface Column extends Comparable {
 	 * @return the parent table of this column.
 	 */
 	public Table getTable();
-	
+
 	public boolean isInAnyKey();
 
 	public boolean isInKey(final Key inKey);
-	
+
 	public void setInKey(final Key inKey);
-	
+
 	public void setNotInKey(final Key inKey);
-	
 
 	/**
 	 * A generic implementation which provides the basic functionality required
@@ -70,7 +69,7 @@ public interface Column extends Comparable {
 		private String name;
 
 		private final Table table;
-		
+
 		private final Set keySet = new HashSet();
 
 		/**
@@ -83,7 +82,7 @@ public interface Column extends Comparable {
 		 *            the parent table.
 		 */
 		public GenericColumn(String name, final Table table) {
-			Log.debug("Creating column "+name+" on table "+table);
+			Log.debug("Creating column " + name + " on table " + table);
 			// Remember the values.
 			this.table = table;
 			// First we need to find out the base name, ie. the bit
@@ -102,7 +101,7 @@ public interface Column extends Comparable {
 					+ "_" + i++ + suffix)
 				;
 			// Return it.
-			Log.debug("Unique name is "+name);
+			Log.debug("Unique name is " + name);
 			this.name = name;
 		}
 
@@ -140,7 +139,7 @@ public interface Column extends Comparable {
 		public String toString() {
 			return this.getTable().toString() + ":" + this.getName();
 		}
-		
+
 		public boolean isInAnyKey() {
 			return !this.keySet.isEmpty();
 		}
@@ -148,11 +147,11 @@ public interface Column extends Comparable {
 		public boolean isInKey(final Key inKey) {
 			return this.keySet.contains(inKey);
 		}
-		
+
 		public void setInKey(final Key inKey) {
 			this.keySet.add(inKey);
 		}
-		
+
 		public void setNotInKey(final Key inKey) {
 			this.keySet.remove(inKey);
 		}

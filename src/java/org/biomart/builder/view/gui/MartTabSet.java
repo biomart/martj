@@ -243,8 +243,9 @@ public class MartTabSet extends JTabbedPane {
 
 		// If it's modified, append a "*" to make it obvious.
 		return basename
-				+ ((includeModified && this.martModifiedStatus.get(mart)
-						.equals(Boolean.TRUE)) ? " *" : "");
+				+ (includeModified
+						&& this.martModifiedStatus.get(mart).equals(
+								Boolean.TRUE) ? " *" : "");
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -388,11 +389,12 @@ public class MartTabSet extends JTabbedPane {
 							int defaultIndex = MartTabSet.this
 									.getSelectedIndex();
 							if (MartTabSet.this.getComponentCount() > 1
-									|| (defaultTab != null && !MartTabSet.this
+									|| defaultTab != null
+									&& !MartTabSet.this
 											.getTitleAt(defaultIndex)
 											.equals(
 													Resources
-															.get("unsavedMart"))))
+															.get("unsavedMart")))
 								defaultTab = null;
 
 							// Load the files.
@@ -458,9 +460,9 @@ public class MartTabSet extends JTabbedPane {
 					MartTab defaultTab = MartTabSet.this.getSelectedMartTab();
 					int defaultIndex = MartTabSet.this.getSelectedIndex();
 					if (MartTabSet.this.getComponentCount() > 1
-							|| (defaultTab != null && !MartTabSet.this
-									.getTitleAt(defaultIndex).equals(
-											Resources.get("unsavedMart"))))
+							|| defaultTab != null
+							&& !MartTabSet.this.getTitleAt(defaultIndex)
+									.equals(Resources.get("unsavedMart")))
 						defaultTab = null;
 
 					// Load the files.
