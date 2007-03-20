@@ -181,9 +181,10 @@ public class SchemaLayoutManager implements LayoutManager2 {
 	public void addLayoutComponent(final Component comp,
 			final Object constraints) {
 		synchronized (comp.getTreeLock()) {
-			if (comp instanceof RelationComponent)
+			if (comp instanceof RelationComponent && constraints != null) {
 				this.relations.add(comp);
-			else if (comp instanceof DiagramComponent && constraints != null
+				this.constraints.put(comp, constraints);
+			} else if (comp instanceof DiagramComponent && constraints != null
 					&& constraints instanceof SchemaLayoutConstraint) {
 
 				this.constraints.put(comp, constraints);
@@ -247,9 +248,10 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 	public void removeLayoutComponent(final Component comp) {
 		synchronized (comp.getTreeLock()) {
-			if (comp instanceof RelationComponent)
+			if (comp instanceof RelationComponent) {
 				this.relations.remove(comp);
-			else {
+				this.constraints.remove(comp);
+			} else {
 				final SchemaLayoutConstraint constraints = (SchemaLayoutConstraint) this.constraints
 						.remove(comp);
 				final Dimension prefSize = comp.getPreferredSize();
@@ -435,6 +437,14 @@ public class SchemaLayoutManager implements LayoutManager2 {
 						viaY = relTopY + (int) ((relBottomY - relTopY) * 1.8);
 				}
 
+				// Adjust via points from constraints.
+				final SchemaLayoutConstraint constraint = (SchemaLayoutConstraint) this.constraints
+						.get(comp);
+				viaX += constraint.getRelCount()
+						* SchemaLayoutManager.RELATION_SPACING;
+				viaY += constraint.getRelCount()
+						* SchemaLayoutManager.RELATION_SPACING;
+
 				// Set overall bounds.
 				final Rectangle bounds = new Rectangle(
 						(relLeftX - SchemaLayoutManager.RELATION_SPACING * 4),
@@ -481,6 +491,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 		/**
 		 * Construct a new constraint indicating that the given number of
 		 * relations lead off this component, so that space is left for them.
+		 * Or, if the component is a relation, this indicates the index off the
+		 * table that this relation is so that it bends out of the way of other
+		 * relations accordingly.
 		 * 
 		 * @param relCount
 		 *            the number of relations from this component.

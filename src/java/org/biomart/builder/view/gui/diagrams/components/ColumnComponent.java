@@ -111,6 +111,9 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.constraints.anchor = GridBagConstraints.CENTER;
 		this.constraints.insets = new Insets(0, 1, 0, 2);
 
+		// Set the background colour.
+		this.setBackground(ColumnComponent.NORMAL_COLOUR);
+
 		// Calculate the diagram.
 		this.recalculateDiagramComponent();
 	}

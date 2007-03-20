@@ -20,7 +20,9 @@ package org.biomart.builder.view.gui.diagrams;
 
 import java.awt.LayoutManager;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
@@ -86,14 +88,22 @@ public class SchemaDiagram extends Diagram {
 		this.removeAll();
 
 		// Add a TableComponent for each table in the schema.
+		final Set usedRels = new HashSet();
 		for (final Iterator i = this.getSchema().getTables().iterator(); i
 				.hasNext();) {
 			final Table t = (Table) i.next();
 			final Collection tRels = t.getInternalRelations();
 			this.add(new TableComponent(t, this), new SchemaLayoutConstraint(
 					tRels.size()), 0);
-			for (final Iterator j = tRels.iterator(); j.hasNext();)
-				this.add(new RelationComponent((Relation) j.next(), this), -1);
+			int indent = 0;
+			for (final Iterator j = tRels.iterator(); j.hasNext();) {
+				final Relation rel = (Relation) j.next();
+				if (!usedRels.contains(rel)) {
+					this.add(new RelationComponent(rel, this),
+							new SchemaLayoutConstraint(indent++), -1);
+					usedRels.add(rel);
+				}
+			}
 		}
 
 		// Resize the diagram to fit our new components.

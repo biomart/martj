@@ -18,8 +18,9 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
@@ -63,17 +64,25 @@ public class AllSchemasDiagram extends Diagram {
 		this.removeAll();
 
 		// Add a SchemaComponent for each schema.
+		final Set usedRels = new HashSet();
 		for (final Iterator i = this.getMartTab().getMart().getSchemas()
 				.iterator(); i.hasNext();) {
 			final Schema schema = (Schema) i.next();
 			final SchemaComponent schemaComponent = new SchemaComponent(schema,
 					this);
 			// Count and remember relations.
-			final Collection schRels = schema.getExternalRelations();
-			for (final Iterator j = schRels.iterator(); j.hasNext();)
-				this.add(new RelationComponent((Relation) j.next(), this), -1);
-			this.add(schemaComponent,
-					new SchemaLayoutConstraint(schRels.size()), 0);
+			int indent = 0;
+			for (final Iterator j = schema.getExternalRelations().iterator(); j
+					.hasNext();) {
+				final Relation rel = (Relation) j.next();
+				if (!usedRels.contains(rel)) {
+					this.add(new RelationComponent(rel, this),
+							new SchemaLayoutConstraint(indent++), -1);
+					usedRels.add(rel);
+				}
+			}
+			this.add(schemaComponent, new SchemaLayoutConstraint(schema
+					.getExternalRelations().size()), 0);
 		}
 
 		// Resize the diagram to fit the components.

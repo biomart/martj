@@ -159,13 +159,8 @@ public interface Key extends Comparable {
 			super(columns);
 		}
 
-		/**
-		 * {@inheritDoc}
-		 * <p>
-		 * Always returns FK followed by the output from {@link #getName()}.
-		 */
 		public String getName() {
-			return Resources.get("fkPrefix") + super.getName();
+			return super.getName() + " {"+Resources.get("fkPrefix")+"}";
 		}
 	}
 
@@ -271,18 +266,12 @@ public interface Key extends Comparable {
 		public List getColumns() {
 			return this.columns;
 		}
-
-		/**
-		 * {@inheritDoc}
-		 * <p>
-		 * This will return a string that starts out with
-		 * {@link Table#toString()} followed by {@link #getColumnNames()}.
-		 */
+		
 		public String getName() {
 			final StringBuffer sb = new StringBuffer();
 			sb.append(this.getTable() == null ? "<undef>" : this.getTable()
 					.toString());
-			sb.append(this.getColumnNames().toString());
+			sb.append(" "+this.getColumnNames().toString());
 			return sb.toString();
 		}
 
@@ -407,13 +396,8 @@ public interface Key extends Comparable {
 			super(columns);
 		}
 
-		/**
-		 * {@inheritDoc}
-		 * <p>
-		 * Always returns PK followed by the output from {@link #getName()}.
-		 */
 		public String getName() {
-			return Resources.get("pkPrefix") + super.getName();
+			return super.getName() + " {"+Resources.get("pkPrefix")+"}";
 		}
 	}
 

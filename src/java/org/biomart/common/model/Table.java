@@ -437,14 +437,8 @@ public interface Table extends Comparable {
 			this.primaryKey = primaryKey;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 * <p>
-		 * This will return the contents of {@link Schema#toString()} followed
-		 * by a colon and the output of {@link #getName()}.
-		 */
 		public String toString() {
-			return this.schema.toString() + ":" + this.getName();
+			return this.getName() + " (" +this.schema.toString()+")";
 		}
 	}
 }

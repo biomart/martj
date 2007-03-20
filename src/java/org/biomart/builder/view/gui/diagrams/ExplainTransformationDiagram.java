@@ -140,7 +140,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.add(tc, new SchemaLayoutConstraint(0));
+			this.add(tc, new SchemaLayoutConstraint(0), 0);
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
@@ -254,15 +254,15 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 			// Add source and target tables.
 			final TableComponent tc1 = new TableComponent(tempSource, this);
-			this.add(tc1, new SchemaLayoutConstraint(1));
+			this.add(tc1, new SchemaLayoutConstraint(1), 0);
 			this.getTableComponents().add(tc1);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
-			this.add(tc2, new SchemaLayoutConstraint(1));
+			this.add(tc2, new SchemaLayoutConstraint(1), 0);
 			this.getTableComponents().add(tc2);
 			// Add relation.
 			final RelationComponent relationComponent = new RelationComponent(
 					tempRelation, this);
-			this.add(relationComponent);
+			this.add(relationComponent, new SchemaLayoutConstraint(0), -1);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
 		}
@@ -311,7 +311,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.add(tc, new SchemaLayoutConstraint(0));
+			this.add(tc, new SchemaLayoutConstraint(0), 0);
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();

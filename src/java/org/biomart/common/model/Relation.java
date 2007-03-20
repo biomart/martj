@@ -424,7 +424,7 @@ public interface Relation extends Comparable {
 			final StringBuffer sb = new StringBuffer();
 			sb.append(this.getFirstKey() == null ? "<undef>" : this
 					.getFirstKey().toString());
-			sb.append(":");
+			sb.append(" -> ");
 			sb.append(this.getSecondKey() == null ? "<undef>" : this
 					.getSecondKey().toString());
 			return sb.toString();

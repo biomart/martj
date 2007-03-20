@@ -153,15 +153,8 @@ public interface Column extends Comparable {
 			return this.toString().hashCode();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 * <p>
-		 * The format of the returned string is the output of
-		 * {@link Table#toString()} for the parent table, followed by a colon
-		 * and the output of {@link #getName()}.
-		 */
 		public String toString() {
-			return this.getTable().toString() + ":" + this.getName();
+			return this.getName() + " ["+this.getTable().toString()+"]";
 		}
 
 		public boolean isInAnyKey() {
