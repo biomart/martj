@@ -28,6 +28,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.Iterator;
 
+import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
@@ -47,25 +48,14 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class SchemaComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Constant defining background colour.
-	 */
-	public static Color BACKGROUND_COLOUR = Color.YELLOW;
+	private static Color BACKGROUND_COLOUR = Color.YELLOW;
 
-	/**
-	 * Bold font.
-	 */
-	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
-
-	/**
-	 * Plain font.
-	 */
-	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
+	private static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	private GridBagConstraints constraints;
 
@@ -93,6 +83,9 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.constraints.fill = GridBagConstraints.HORIZONTAL;
 		this.constraints.anchor = GridBagConstraints.CENTER;
 		this.constraints.insets = new Insets(5, 5, 5, 5);
+
+		// Set the background colour.
+		this.setBackground(SchemaComponent.BACKGROUND_COLOUR);
 
 		// Calculate the components and add them to the list.
 		this.recalculateDiagramComponent();
@@ -139,6 +132,50 @@ public class SchemaComponent extends BoxShapedComponent {
 		});
 		contextMenu.add(showTables);
 
+		// Add a separator.
+		contextMenu.addSeparator();
+
+		// Add an option to rename this dataset.
+		final JMenuItem rename = new JMenuItem(Resources
+				.get("renameSchemaTitle"));
+		rename.setMnemonic(Resources.get("renameSchemaMnemonic").charAt(0));
+		rename.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().requestRenameSchema(
+								SchemaComponent.this.getSchema());
+			}
+		});
+		contextMenu.add(rename);
+
+		// Add an option to replicate this dataset.
+		final JMenuItem replicate = new JMenuItem(Resources
+				.get("replicateSchemaTitle"));
+		replicate.setMnemonic(Resources.get("replicateSchemaMnemonic").charAt(
+				0));
+		replicate.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().requestReplicateSchema(
+								SchemaComponent.this.getSchema());
+			}
+		});
+		contextMenu.add(replicate);
+
+		// Option to remove the dataset from the mart.
+		final JMenuItem remove = new JMenuItem(Resources
+				.get("removeSchemaTitle"), new ImageIcon(Resources
+				.getResourceAsURL("cut.gif")));
+		remove.setMnemonic(Resources.get("removeSchemaMnemonic").charAt(0));
+		remove.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().requestRemoveSchema(
+								SchemaComponent.this.getSchema());
+			}
+		});
+		contextMenu.add(remove);
+
 		// Return it. Will be further adapted by a listener elsewhere.
 		return contextMenu;
 	}
@@ -146,9 +183,6 @@ public class SchemaComponent extends BoxShapedComponent {
 	public void recalculateDiagramComponent() {
 		// Remove all our components.
 		this.removeAll();
-
-		// Set the background colour.
-		this.setBackground(SchemaComponent.BACKGROUND_COLOUR);
 
 		// Add the label for the schema name,
 		final JTextField name = new JTextField();

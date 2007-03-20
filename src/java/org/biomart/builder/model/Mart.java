@@ -49,7 +49,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class Mart {
 	// OK to use map, as keys are strings and never change.
@@ -331,6 +331,10 @@ public class Mart {
 	 * 
 	 * @param schema
 	 *            the schema to remove.
+	 * @throws SQLException
+	 *             if anything went wrong with synchronising after removing it.
+	 * @throws DataModelException
+	 *             if anything went wrong with synchronising after removing it.
 	 */
 	public void removeSchema(final Schema schema) throws SQLException,
 			DataModelException {
@@ -591,6 +595,17 @@ public class Mart {
 	 * mart's schema(s). Any datasets that are based on now-missing tables are
 	 * dropped. This is all simply a matter of delegating calls and the routine
 	 * does no real work itself.
+	 * 
+	 * @param affected
+	 *            the schema that was changed which caused this sync to be
+	 *            called. Can be <tt>null</tt>.
+	 * @param otherAffected
+	 *            a second schema that was changed, for instance in an external
+	 *            relation update. Can be <tt>null</tt>.
+	 * @throws SQLException
+	 *             if anything went wrong with synchronising.
+	 * @throws DataModelException
+	 *             if anything went wrong with synchronising.
 	 */
 	public void synchroniseDataSets(final Schema affected,
 			final Schema otherAffected) throws SQLException, DataModelException {
@@ -610,11 +625,29 @@ public class Mart {
 		}
 	}
 
+	/**
+	 * Sync all datasets.
+	 * 
+	 * @param affected
+	 *            the schema that caused the sync to be required.
+	 * @throws SQLException
+	 *             if anything goes wrong.
+	 * @throws DataModelException
+	 *             if anything goes wrong.
+	 */
 	public void synchroniseDataSets(final Schema affected) throws SQLException,
 			DataModelException {
 		this.synchroniseDataSets(affected, null);
 	}
 
+	/**
+	 * Sync all datasets.
+	 * 
+	 * @throws SQLException
+	 *             if anything goes wrong.
+	 * @throws DataModelException
+	 *             if anything goes wrong.
+	 */
 	public void synchroniseDataSets() throws SQLException, DataModelException {
 		this.synchroniseDataSets(null, null);
 	}

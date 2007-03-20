@@ -68,7 +68,7 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTableP
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class PartitionColumnDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -135,8 +135,8 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Create the fields that will contain the user's choice and any
 		// values they may enter.
-		// The multi-values box.
-		// The ranges box.
+
+		// The expression aliases.
 		final JLabel exprLabel = new JLabel(Resources
 				.get("rangeExpressionsLabel"));
 		this.expressionAliasModel = new StringStringTablePanel(template != null
@@ -166,7 +166,8 @@ public class PartitionColumnDialog extends JDialog {
 				return Resources.get("defaultExprName") + this.alias++;
 			}
 		};
-		// The values box.
+		
+		// The value aliases.
 		final JLabel valueListLabel = new JLabel(Resources
 				.get("valueListsLabel"));
 		this.valueAliasModel = new StringStringTablePanel(template != null
@@ -196,6 +197,7 @@ public class PartitionColumnDialog extends JDialog {
 				return Resources.get("defaultValueName") + this.alias++;
 			}
 		};
+		
 		// Everything else.
 		this.type = new JComboBox(new String[] {
 				Resources.get("listPartitionOption"),
@@ -293,7 +295,7 @@ public class PartitionColumnDialog extends JDialog {
 		valueListPanel.add(this.valueAliasModel);
 		valueListPanel.add(updateDB);
 
-		// Make the drop-down type choice change which value and nullable
+		// Make the drop-down type choice change which other 
 		// options appear.
 		this.type.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {

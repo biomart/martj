@@ -46,7 +46,7 @@ import org.biomart.common.model.Relation;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class RelationComponent extends JComponent implements DiagramComponent {
 
@@ -367,8 +367,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 					: RelationComponent.ONE_MANY_DASHED
 					: this.compounded ? RelationComponent.ONE_MANY_DOTTED
 							: RelationComponent.ONE_MANY;
-		// Force repaint of area if stroke changed, which must include
-		// relation background else changed stroke will not show up.
+		// Force repaint of area if stroke changed.
 		if (oldStroke != this.stroke) {
 			this.invalidate();
 			this.repaint(this.getBounds());

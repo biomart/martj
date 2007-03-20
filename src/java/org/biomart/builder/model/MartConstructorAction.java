@@ -42,7 +42,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public abstract class MartConstructorAction {
 
@@ -859,18 +859,32 @@ public abstract class MartConstructorAction {
 			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
 		}
 
+		/**
+		 * @return the partitionValue
+		 */
 		public String getPartitionValue() {
 			return this.partitionValue;
 		}
 
+		/**
+		 * @param partitionValue
+		 *            the partitionValue to set
+		 */
 		public void setPartitionValue(String partitionValue) {
 			this.partitionValue = partitionValue;
 		}
 
+		/**
+		 * @return the partitionListDef
+		 */
 		public ValueList getPartitionListDef() {
 			return this.partitionListDef;
 		}
 
+		/**
+		 * @param partitionListDef
+		 *            the partitionListDef to set
+		 */
 		public void setPartitionListDef(ValueList partitionListDef) {
 			this.partitionListDef = partitionListDef;
 		}
@@ -1461,19 +1475,33 @@ public abstract class MartConstructorAction {
 		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
 			this.partitionRangeDef = partitionRangeDef;
 		}
-
+		
+		/**
+		 * @return the partitionValue
+		 */
 		public String getPartitionValue() {
 			return this.partitionValue;
 		}
 
+		/**
+		 * @param partitionValue
+		 *            the partitionValue to set
+		 */
 		public void setPartitionValue(String partitionValue) {
 			this.partitionValue = partitionValue;
 		}
-
+		
+		/**
+		 * @return the partitionListDef
+		 */
 		public ValueList getPartitionListDef() {
 			return this.partitionListDef;
 		}
 
+		/**
+		 * @param partitionListDef
+		 *            the partitionListDef to set
+		 */
 		public void setPartitionListDef(ValueList partitionListDef) {
 			this.partitionListDef = partitionListDef;
 		}

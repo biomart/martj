@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,14 +49,26 @@ import org.biomart.common.resources.Resources;
  * but it does not provide any methods that process or analyse these.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public interface Table extends Comparable {
 
+	/**
+	 * Adds a relation to the set known by this table.
+	 * 
+	 * @param relation
+	 *            the relation to add.
+	 */
 	public void addRelation(final Relation relation);
 
+	/**
+	 * Removes a relation from the set known by this table.
+	 * 
+	 * @param relation
+	 *            the relation to remove.
+	 */
 	public void removeRelation(final Relation relation);
 
 	/**
@@ -127,20 +140,27 @@ public interface Table extends Comparable {
 	/**
 	 * Returns a set of the relations on all keys in this table that refer to
 	 * other keys in the same schema as this table. It may be empty, indicating
-	 * that the table has no relations. It will never return <tt>null</tt>.
-	 * <p>
-	 * Internal relations are those that link this table to others within the
-	 * same schema.
+	 * that the table has no internal relations. It will never return
+	 * <tt>null</tt>.
 	 * 
 	 * @return the set of internal relations for this table.
 	 */
 	public Collection getInternalRelations();
 
+	/**
+	 * Returns a set of the relations on all keys in this table that refer to
+	 * other keys in tables in other schemas. It may be empty, indicating that
+	 * the table has no external relations. It will never return <tt>null</tt>.
+	 * 
+	 * @return the set of external relations for this table.
+	 */
 	public Collection getExternalRelations();
 
 	/**
 	 * Returns a set of the keys on all columns in this table. It may be empty,
 	 * indicating that the table has no keys. It will never return <tt>null</tt>.
+	 * If the table has a primary key, it will always appear first in the
+	 * iterator obtained from the returned collection.
 	 * 
 	 * @return the set of keys for this table.
 	 */
@@ -345,9 +365,10 @@ public interface Table extends Comparable {
 		}
 
 		public Collection getKeys() {
-			final Collection allKeys = new HashSet(this.foreignKeys);
+			final Collection allKeys = new LinkedHashSet();
 			if (this.primaryKey != null)
 				allKeys.add(this.primaryKey);
+			allKeys.addAll(this.foreignKeys);
 			return allKeys;
 		}
 

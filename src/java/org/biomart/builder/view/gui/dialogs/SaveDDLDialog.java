@@ -59,13 +59,12 @@ import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 /**
  * A dialog which allows the user to choose some options about creating DDL over
  * a given set of datasets, then lets them actually do it. The options include
- * granularity of statements generated, and whether to output to file or to
- * screen.
+ * whether to output to file or to screen.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class SaveDDLDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -212,7 +211,7 @@ public class SaveDDLDialog extends JDialog {
 			}
 		});
 
-		// Add listeners to view DDL and granularity options.
+		// Add listeners to view DDL options which show/hide additional stuff.
 		this.outputFormat.addItemListener(new ItemListener() {
 			public void itemStateChanged(final ItemEvent e) {
 				if (SaveDDLDialog.this.outputFormat.getSelectedItem().equals(

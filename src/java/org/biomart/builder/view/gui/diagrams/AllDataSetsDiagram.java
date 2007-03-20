@@ -31,7 +31,7 @@ import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.6
  */
 public class AllDataSetsDiagram extends Diagram {
 	private static final long serialVersionUID = 1;

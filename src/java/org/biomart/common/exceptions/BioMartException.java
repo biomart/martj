@@ -22,9 +22,9 @@ package org.biomart.common.exceptions;
  * This is a basic {@link Exception} for all non-specific BioMart exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class BioMartException extends Exception {
 	private static final long serialVersionUID = 1;

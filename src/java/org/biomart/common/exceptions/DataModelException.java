@@ -19,15 +19,15 @@
 package org.biomart.common.exceptions;
 
 /**
- * This is a basic {@link Exception} for all non-specific MartBuilder
- * exceptions.
+ * This is a basic {@link Exception} for all exceptions where something
+ * does not fit into the expected data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
-public class DataModelException extends CommonException {
+public class DataModelException extends BioMartException {
 	private static final long serialVersionUID = 1;
 
 	/**

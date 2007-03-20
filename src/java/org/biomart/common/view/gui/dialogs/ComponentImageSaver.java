@@ -37,9 +37,9 @@ import org.biomart.common.view.gui.LongProcess;
  * Saves any given component to an image file.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ *  		$Author$
+ * @since 0.5
  */
 public class ComponentImageSaver {
 

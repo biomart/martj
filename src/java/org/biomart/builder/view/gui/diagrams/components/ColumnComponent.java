@@ -37,58 +37,50 @@ import org.biomart.common.model.Column;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class ColumnComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constant referring to background colour.
-	 */
-	public static Color BACKGROUND_COLOUR = Color.ORANGE;
-
-	/**
-	 * Constant referring to expression column colour.
+	 * Constant referring to expression column background colour.
 	 */
 	public static Color EXPRESSION_COLOUR = Color.MAGENTA;
 
 	/**
-	 * Constant referring to faded column colour.
+	 * Constant referring to masked column background colour.
 	 */
-	public static Color FADED_COLOUR = Color.LIGHT_GRAY;
+	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
 	/**
-	 * Constant referring to inherited column colour.
+	 * Constant referring to inherited column background colour.
 	 */
 	public static Color INHERITED_COLOUR = Color.RED;
 
 	/**
-	 * Constant referring to uninherited column colour.
+	 * Constant referring to uninherited column border colour.
 	 */
 	public static Color NONINHERITED_FG_COLOUR = Color.MAGENTA;
 
 	/**
-	 * Constant referring to inherited column colour.
+	 * Constant referring to normal column border colour.
 	 */
 	public static Color NORMAL_FG_COLOUR = Color.BLACK;
 
-	/**
-	 * Normal font.
-	 */
-	public static Font NORMAL_FONT = Font.decode("SansSerif-PLAIN-10");
+	private static Font NORMAL_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	/**
-	 * Constant referring to normal column colour.
+	 * Constant referring to normal column background colour.
 	 */
 	public static Color NORMAL_COLOUR = Color.ORANGE;
 
 	/**
-	 * Constant referring to partitioned column colour.
+	 * Constant referring to partitioned column background colour.
 	 */
 	public static Color PARTITIONED_COLOUR = Color.CYAN;
 
 	/**
-	 * Constant referring to concat column colour.
+	 * Constant referring to concat column background colour.
 	 */
 	public static Color CONCAT_COLOUR = Color.YELLOW;
 
@@ -130,9 +122,6 @@ public class ColumnComponent extends BoxShapedComponent {
 	public void recalculateDiagramComponent() {
 		// Remove everything.
 		this.removeAll();
-
-		// Set the background.
-		this.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 		// Add the label for the column name.
 		final JTextField name = new JTextField();

@@ -39,7 +39,7 @@ import org.biomart.common.model.Table;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class SchemaDiagram extends Diagram {
 	private static final long serialVersionUID = 1;

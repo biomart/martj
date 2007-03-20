@@ -34,9 +34,9 @@ import org.biomart.common.resources.Resources;
  * Displays pretty GUI things on demand.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class StackTrace {
 	/**

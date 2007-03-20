@@ -46,7 +46,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
  *          rh4 $
- * @since 0.1
+ * @since 0.5
  */
 public class TransformationContext extends DataSetContext {
 	/**
@@ -78,7 +78,7 @@ public class TransformationContext extends DataSetContext {
 			// Fade out all MASKED columns.
 			else if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isMaskedColumn(column))
-				component.setBackground(ColumnComponent.FADED_COLOUR);
+				component.setBackground(ColumnComponent.MASKED_COLOUR);
 
 			// Blue PARTITIONED columns.
 			else if (((DataSet) column.getTable().getSchema())

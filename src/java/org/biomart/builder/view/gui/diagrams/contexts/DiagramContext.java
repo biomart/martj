@@ -32,9 +32,9 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * so anything displayed can be customised.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public interface DiagramContext {
 	/**
@@ -59,6 +59,17 @@ public interface DiagramContext {
 	 */
 	public void populateContextMenu(JPopupMenu contextMenu, Object object);
 
+	/**
+	 * Add items to a context menu for a collection of database objects. Should
+	 * add a separator first if the menu is not empty.
+	 * 
+	 * @param contextMenu
+	 *            the context menu to add parameters to.
+	 * @param selectedItems
+	 *            the database objects we wish to customise this menu to.
+	 * @param clazz
+	 *            the type of objects in the selection.
+	 */
 	public void populateMultiContextMenu(JPopupMenu contextMenu,
 			Collection selectedItems, Class clazz);
 }

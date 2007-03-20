@@ -44,12 +44,12 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTableP
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
- * table for this dataset only.
+ * relation for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.6
  */
 public class RestrictedRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -70,7 +70,7 @@ public class RestrictedRelationDialog extends JDialog {
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
-	 * table.
+	 * relation.
 	 * 
 	 * @param relation
 	 *            the relation to restrict.
@@ -156,6 +156,7 @@ public class RestrictedRelationDialog extends JDialog {
 		field.add(this.lcolumnAliasModel);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
+		
 		// Second table aliases.
 		this.rcolumnAliasModel = new ColumnStringTablePanel(
 				template == null ? null : template.getRightAliases(), relation
@@ -329,6 +330,11 @@ public class RestrictedRelationDialog extends JDialog {
 		return this.expression.getText().trim();
 	}
 
+	/**
+	 * Return <tt>true</tt> if the user ticked the hard restriction box.
+	 * 
+	 * @return <tt>true</tt> if the hard restriction box was ticked.
+	 */
 	public boolean getHard() {
 		return this.hard.isSelected();
 	}

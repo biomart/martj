@@ -56,7 +56,7 @@ import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
- * Represents a key by listing out in a set of labels each column in the key.
+ * Represents a key by listing out in a label each column in the key.
  * <p>
  * Drag-and-drop code courtesy of <a
  * href="http://www.javaworld.com/javaworld/jw-03-1999/jw-03-dragndrop.html?page=1">JavaWorld</a>.
@@ -64,15 +64,14 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class KeyComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Constant referring to foreign key colour.
-	 */
-	public static Color FK_BACKGROUND_COLOUR = Color.YELLOW;
+	private static Color PK_BACKGROUND_COLOUR = Color.CYAN;
+
+	private static Color FK_BACKGROUND_COLOUR = Color.YELLOW;
 
 	/**
 	 * Constant referring to handmade key colour.
@@ -85,24 +84,11 @@ public class KeyComponent extends BoxShapedComponent {
 	public static Color INCORRECT_COLOUR = Color.RED;
 
 	/**
-	 * Constant referring to masked key colour.
-	 */
-	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
-
-	/**
 	 * Constant referring to normal key colour.
 	 */
 	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
 
-	/**
-	 * Constant referring to primary key colour.
-	 */
-	public static Color PK_BACKGROUND_COLOUR = Color.CYAN;
-
-	/**
-	 * Plain font.
-	 */
-	public static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
+	private static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	private GridBagConstraints constraints;
 
@@ -131,11 +117,16 @@ public class KeyComponent extends BoxShapedComponent {
 		this.constraints.anchor = GridBagConstraints.CENTER;
 		this.constraints.insets = new Insets(0, 1, 0, 2);
 
+		// Create the background colour.
+		if (key instanceof PrimaryKey)
+			this.setBackground(KeyComponent.PK_BACKGROUND_COLOUR);
+		else
+			this.setBackground(KeyComponent.FK_BACKGROUND_COLOUR);
+
 		// Calculate the component layout.
 		this.recalculateDiagramComponent();
 
-		// Mark ourselves as handling 'draggedKey' events, for
-		// drag-and-drop capabilities.
+		// Set up drag-and-drop capabilities.
 		final DragSource dragSource = DragSource.getDefaultDragSource();
 		final DragSourceListener dsListener = new DragSourceListener() {
 			public void dragEnter(DragSourceDragEvent e) {
@@ -270,8 +261,7 @@ public class KeyComponent extends BoxShapedComponent {
 				e.dropComplete(false);
 			}
 		};
-		final DropTarget dropTarget = new DropTarget(this,
-				DnDConstants.ACTION_COPY, dtListener, true);
+		new DropTarget(this, DnDConstants.ACTION_COPY, dtListener, true);
 		dragSource.createDefaultDragGestureRecognizer(this,
 				DnDConstants.ACTION_COPY, dgListener);
 	}
@@ -280,27 +270,11 @@ public class KeyComponent extends BoxShapedComponent {
 		return (Key) this.getObject();
 	}
 
-	/**
-	 * For drag-and-drop, this returns the object that will be dropped onto the
-	 * target when drag-and-drop starts from this key.
-	 * 
-	 * @return the key the user 'picked up' with the mouse.
-	 */
-	public Key getDraggedKey() {
-		return this.getKey();
-	}
-
 	public void recalculateDiagramComponent() {
-		// Removes all columns.
+		// Clear first.
 		this.removeAll();
 
-		// Create the background colour.
-		if (this.getKey() instanceof PrimaryKey)
-			this.setBackground(KeyComponent.PK_BACKGROUND_COLOUR);
-		else
-			this.setBackground(KeyComponent.FK_BACKGROUND_COLOUR);
-
-		// Add the labels for each column.
+		// Calculate new label.
 		final StringBuffer sb = new StringBuffer();
 		for (final Iterator i = this.getKey().getColumns().iterator(); i
 				.hasNext();) {
@@ -312,23 +286,23 @@ public class KeyComponent extends BoxShapedComponent {
 			if (i.hasNext())
 				sb.append(", ");
 		}
+
+		// Add the label.
 		final JLabel label = new JLabel(sb.toString());
 		label.setFont(KeyComponent.PLAIN_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
+
 	}
 
-	public static class KeyTransferable implements Transferable {
-		public static final DataFlavor keyFlavor = new DataFlavor(Key.class,
-				"MartBuilder Schema Key") {
+	private static class KeyTransferable implements Transferable {
 
-			/**
-			 * 
-			 */
+		private static final DataFlavor keyFlavor = new DataFlavor(Key.class,
+				"MartBuilder Schema Key") {
 			private static final long serialVersionUID = 1L;
 		};
 
-		public static final DataFlavor[] flavors = { KeyTransferable.keyFlavor };
+		private static final DataFlavor[] flavors = { KeyTransferable.keyFlavor };
 
 		private static final List flavorList = Arrays
 				.asList(KeyTransferable.flavors);
@@ -343,7 +317,7 @@ public class KeyComponent extends BoxShapedComponent {
 
 		private Key key;
 
-		public KeyTransferable(Key key) {
+		private KeyTransferable(Key key) {
 			this.key = key;
 		}
 

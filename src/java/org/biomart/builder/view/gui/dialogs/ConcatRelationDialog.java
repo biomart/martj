@@ -50,13 +50,13 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.CRPairStringTablePanel;
 
 /**
- * This dialog asks users to create or modify a restriction over a particular
- * table for this dataset only.
+ * This dialog asks users to create or modify a concat relation for this dataset
+ * only. They can also specify recursion properties.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class ConcatRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -84,13 +84,14 @@ public class ConcatRelationDialog extends JDialog {
 	private JComboBox secondRelation;
 
 	/**
-	 * Creates (but does not open) a dialog requesting details of a restricted
-	 * table.
+	 * Creates (but does not open) a dialog requesting details of a concat
+	 * relation.
 	 * 
 	 * @param table
-	 *            the table to restrict.
+	 *            the table that the relation runs from. This is used to
+	 *            identify relations that can be concatted.
 	 * @param template
-	 *            the restriction to use as a template, if any.
+	 *            the concat relation to use as a template, if any.
 	 */
 	public ConcatRelationDialog(final Table table,
 			final SchemaModificationSet.ConcatRelationDefinition template) {
@@ -149,7 +150,7 @@ public class ConcatRelationDialog extends JDialog {
 					colsAvailable.add(new Object[] { rel, j.next() });
 		}
 
-		// First table aliases.
+		// Concat table aliases.
 		this.columnAliasModel = new CRPairStringTablePanel(
 				template == null ? null : template.getAliases(), colsAvailable) {
 			private static final long serialVersionUID = 1L;
@@ -462,30 +463,57 @@ public class ConcatRelationDialog extends JDialog {
 	}
 
 	/**
-	 * Return the expression the user selected.
+	 * Return the separator the user selected to go between concated rows.
 	 * 
-	 * @return the expression.
+	 * @return the separator.
 	 */
 	public String getRowSep() {
 		return this.rowSep.getText();
 	}
 
+	/**
+	 * Return the separator the user selected to go between concated values.
+	 * 
+	 * @return the separator.
+	 */
 	public String getConcSep() {
 		return this.concSep.getText();
 	}
 
+	/**
+	 * If the user chose a recursion type, return it.
+	 * 
+	 * @return the recursion type.
+	 */
 	public RecursionType getRecursionType() {
 		return (RecursionType) this.recursionType.getSelectedItem();
 	}
 
+	/**
+	 * Obtain the key the recursion starts from.
+	 * 
+	 * @return the key.
+	 */
 	public Key getRecursionKey() {
 		return (Key) this.recursionKey.getSelectedItem();
 	}
 
+	/**
+	 * Get the first relation involved in the recursion.
+	 * 
+	 * @return the first relation involved.
+	 */
 	public Relation getFirstRelation() {
 		return (Relation) this.firstRelation.getSelectedItem();
 	}
 
+	/**
+	 * Get the (optional) second relation involved in the recursion. This will
+	 * only be non-null if the first relation involved does not have both keys
+	 * on the same table.
+	 * 
+	 * @return the second relation involved.
+	 */
 	public Relation getSecondRelation() {
 		return (Relation) this.secondRelation.getSelectedItem();
 	}

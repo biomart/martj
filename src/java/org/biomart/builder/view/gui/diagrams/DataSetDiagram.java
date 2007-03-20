@@ -40,9 +40,9 @@ import org.biomart.common.model.Schema;
  * {@link SchemaDiagram} can be reused for displaying datasets.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class DataSetDiagram extends Diagram {
 	private static final long serialVersionUID = 1;

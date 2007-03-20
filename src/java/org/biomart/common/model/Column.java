@@ -34,9 +34,9 @@ import org.biomart.common.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public interface Column extends Comparable {
 	/**
@@ -53,12 +53,36 @@ public interface Column extends Comparable {
 	 */
 	public Table getTable();
 
+	/**
+	 * If this column is involved in a key, say so.
+	 * 
+	 * @return <tt>true</tt> if it is in a key.
+	 */
 	public boolean isInAnyKey();
 
+	/**
+	 * If this column is involved in the given key, say so.
+	 * 
+	 * @param inKey
+	 *            the key to check.
+	 * @return <tt>true</tt> if it is in the key.
+	 */
 	public boolean isInKey(final Key inKey);
 
+	/**
+	 * Specify that this column is involved in the given key.
+	 * 
+	 * @param inKey
+	 *            the key that this column is part of.
+	 */
 	public void setInKey(final Key inKey);
 
+	/**
+	 * Specify that this column is not involved in the given key.
+	 * 
+	 * @param inKey
+	 *            the key that this column is not part of.
+	 */
 	public void setNotInKey(final Key inKey);
 
 	/**

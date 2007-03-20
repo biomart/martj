@@ -38,9 +38,9 @@ import org.biomart.common.view.gui.LongProcess;
  * Swing Tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class ComponentPrinter implements Printable {
 

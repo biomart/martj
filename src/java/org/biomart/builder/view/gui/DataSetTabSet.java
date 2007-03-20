@@ -86,7 +86,7 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class DataSetTabSet extends JTabbedPane {
 	private static final long serialVersionUID = 1;
@@ -174,10 +174,6 @@ public class DataSetTabSet extends JTabbedPane {
 			this.setSelectedIndex(this.indexOfTab(dataset.getName()));
 			this.martTab.selectDataSetEditor();
 			this.recalculateOverviewDiagram();
-		} else {
-			// Fake a click on the overview tab.
-			// this.setSelectedIndex(0);
-			// this.martTab.selectDataSetEditor();
 		}
 	}
 
@@ -334,6 +330,9 @@ public class DataSetTabSet extends JTabbedPane {
 		return this.martTab;
 	}
 
+	/**
+	 * Recalculates all dataset diagrams in the current mart.
+	 */
 	public void recalculateAllDataSetDiagrams() {
 		for (int index = 0; index < this.datasetToDiagram.length; index++)
 			((Diagram) this.datasetToDiagram[1].get(index))
@@ -342,6 +341,13 @@ public class DataSetTabSet extends JTabbedPane {
 			this.currentExplanationDialog.recalculateDialog(null);
 	}
 
+	/**
+	 * Recalculates all dataset diagrams in the current mart that would be
+	 * affected by changes in the specified schema.
+	 * 
+	 * @param schema
+	 *            the schema that contains changes.
+	 */
 	public void recalculateAffectedDataSetDiagrams(final Schema schema) {
 		for (int index = 0; index < this.datasetToDiagram.length; index++) {
 			final DataSet ds = (DataSet) this.datasetToDiagram[0].get(index);
@@ -360,6 +366,10 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param dataset
 	 *            the dataset to recalculate the diagram for.
+	 * @param object
+	 *            the changed object which triggered the request. This may
+	 *            dictate which diagrams or parts of diagrams actually decide
+	 *            whether to recalculate or not.
 	 */
 	public void recalculateDataSetDiagram(final DataSet dataset,
 			final Object object) {
@@ -416,9 +426,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 	/**
 	 * This method is called by the {@link ExplainDialog} when it is closed.
-	 * 
-	 * @param dialog
-	 *            the dialog being closed by a current {@link ExplainDialog}.
 	 */
 	public void clearCurrentExplanationDialog() {
 		this.currentExplanationDialog = null;
@@ -469,7 +476,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -482,14 +489,14 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks that a relation be restricted.
+	 * Asks that a relation be concated.
 	 * 
 	 * @param dataset
 	 *            the dataset we are working with.
 	 * @param dsTable
 	 *            the table we are working with.
 	 * @param relation
-	 *            the schema relation to mask.
+	 *            the schema relation to concat.
 	 */
 	public void requestConcatRelation(final DataSet dataset,
 			final DataSetTable dsTable, final Relation relation) {
@@ -552,7 +559,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -631,7 +638,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -664,7 +671,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -697,7 +704,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -721,6 +728,14 @@ public class DataSetTabSet extends JTabbedPane {
 		this.requestMaskColumns(ds, Collections.singleton(column));
 	}
 
+	/**
+	 * Requests that a set of columns be masked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param columns
+	 *            the columns to mask.
+	 */
 	public void requestMaskColumns(final DataSet ds, final Collection columns) {
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -733,7 +748,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -765,7 +780,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -790,14 +805,14 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Mask the column.
-					MartBuilderUtils.maskTable(ds, dim);
+					MartBuilderUtils.maskDimension(ds, dim);
 
 					// And the overview.
 					DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -822,14 +837,14 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				try {
 					// Mask the column.
-					MartBuilderUtils.unmaskTable(ds, dim);
+					MartBuilderUtils.unmaskDimension(ds, dim);
 
 					// And the overview.
 					DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -861,7 +876,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -894,7 +909,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -907,12 +922,12 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks that a relation be compounded.
+	 * Asks that a relation be recursively subclassed.
 	 * 
 	 * @param ds
 	 *            the dataset we are working with.
 	 * @param dst
-	 *            the table to replicate.
+	 *            the table to recursively subclass.
 	 */
 	public void requestRecurseSubclass(final DataSet ds, final DataSetTable dst) {
 		// Work out if it is already compounded.
@@ -956,7 +971,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -969,7 +984,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks that a relation be compounded.
+	 * Asks that a dimension be replicated by compounding a relation.
 	 * 
 	 * @param ds
 	 *            the dataset we are working with.
@@ -1017,7 +1032,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1030,24 +1045,24 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks that a relation be compounded.
+	 * Asks that a relation be made unidirectional.
 	 * 
 	 * @param ds
 	 *            the dataset we are working with.
 	 * @param dst
 	 *            the table to work with.
 	 * @param relation
-	 *            the schema relation to mask.
+	 *            the schema relation to make unidirectional.
 	 */
 	public void requestDirectionalRelation(final DataSet ds,
 			final DataSetTable dst, final Relation relation) {
-		// Work out if it is already compounded.
+		// Work out if it is already directional.
 		Key def = null;
 		if (ds.getSchemaModifications().isDirectionalRelation(dst, relation))
 			def = ds.getSchemaModifications().getDirectionalRelation(dst,
 					relation);
 
-		// Pop up a dialog and update 'compound'.
+		// Pop up a dialog and update 'direction'.
 		final DirectionalRelationDialog dialog = new DirectionalRelationDialog(
 				def, relation);
 		dialog.setLocationRelativeTo(null);
@@ -1063,14 +1078,14 @@ public class DataSetTabSet extends JTabbedPane {
 				try {
 					// Do the work.
 					if (newKey == null) {
-						// Uncompound the relation.
+						// Bidirectional relation.
 						if (dst != null)
 							MartBuilderUtils.undirectionalRelation(dst,
 									relation);
 						else
 							MartBuilderUtils
 									.undirectionalRelation(ds, relation);
-					} else // Compound the relation.
+					} else // Unidirectional the relation.
 					if (dst != null)
 						MartBuilderUtils.directionalRelation(dst, relation,
 								newKey);
@@ -1085,7 +1100,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1105,7 +1120,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dst
 	 *            the table to work with.
 	 * @param relation
-	 *            the schema relation to mask.
+	 *            the schema relation to compound.
 	 */
 	public void requestCompoundRelation(final DataSet ds,
 			final DataSetTable dst, final Relation relation) {
@@ -1156,7 +1171,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1203,7 +1218,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dsTable
 	 *            the table to work with.
 	 * @param relation
-	 *            the schema relation to mask.
+	 *            the schema relation to restrict.
 	 */
 	public void requestRestrictRelation(final DataSet dataset,
 			final DataSetTable dsTable, final Relation relation) {
@@ -1253,7 +1268,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1305,7 +1320,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1318,14 +1333,14 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks for a relation restriction to be removed.
+	 * Asks for a relation concat to be removed.
 	 * 
 	 * @param dataset
 	 *            the dataset we are working with.
 	 * @param dsTable
 	 *            the table to work with.
 	 * @param relation
-	 *            the relation to unrestrict.
+	 *            the relation to unconcat.
 	 */
 	public void requestUnconcatRelation(final DataSet dataset,
 			final DataSetTable dsTable, final Relation relation) {
@@ -1342,7 +1357,7 @@ public class DataSetTabSet extends JTabbedPane {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
-					// Remove the restriction.
+					// Remove the concat.
 					if (dsTable != null)
 						MartBuilderUtils.unconcatRelation(dsTable, relation,
 								index);
@@ -1357,7 +1372,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1397,7 +1412,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1424,7 +1439,7 @@ public class DataSetTabSet extends JTabbedPane {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
-					// Mask the relation.
+					// Force the relation.
 					if (dst != null)
 						MartBuilderUtils.forceRelation(dst, relation);
 					else
@@ -1437,7 +1452,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1459,16 +1474,16 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param table
 	 *            the schema table to mask all relations for.
 	 */
-	public void requestMaskTable(final DataSet ds, final DataSetTable dst,
-			final Table table) {
+	public void requestMaskAllRelations(final DataSet ds,
+			final DataSetTable dst, final Table table) {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Mask all the relations on the table.
 					if (dst != null)
-						MartBuilderUtils.maskTable(dst, table);
+						MartBuilderUtils.maskAllRelations(dst, table);
 					else
-						MartBuilderUtils.maskTable(ds, table);
+						MartBuilderUtils.maskAllRelations(ds, table);
 
 					// And the overview.
 					DataSetTabSet.this
@@ -1478,7 +1493,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1525,7 +1540,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1538,7 +1553,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks for a expression column to be modified.
+	 * Asks for a expression column to be removed.
 	 * 
 	 * @param dsTable
 	 *            the table to work with.
@@ -1560,7 +1575,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1614,7 +1629,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1679,7 +1694,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1724,7 +1739,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1765,7 +1780,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1806,7 +1821,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1836,6 +1851,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param dataset
 	 *            the dataset to rename.
+	 * @param name
+	 *            the new name to give it.
 	 */
 	public void requestRenameDataSet(final DataSet dataset, final String name) {
 		// If the new name is null (user cancelled), or has
@@ -1863,7 +1880,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1889,6 +1906,14 @@ public class DataSetTabSet extends JTabbedPane {
 				.get("requestDataSetColumnName"), dsColumn.getModifiedName()));
 	}
 
+	/**
+	 * Renames a dataset column to have the given name.
+	 * 
+	 * @param dsColumn
+	 *            the column to rename.
+	 * @param name
+	 *            the new name to give it.
+	 */
 	public void requestRenameDataSetColumn(final DataSetColumn dsColumn,
 			final String name) {
 		// Ask user for the new name.
@@ -1910,7 +1935,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1937,12 +1962,12 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Renames a table, after prompting the user to enter a new name. By
-	 * default, the existing name is used. If the name entered is blank or
-	 * matches the existing name, no change is made.
+	 * Renames a table.
 	 * 
 	 * @param dsTable
 	 *            the table to rename.
+	 * @param name
+	 *            the new name to give it.
 	 */
 	public void requestRenameDataSetTable(final DataSetTable dsTable,
 			final String name) {
@@ -1964,7 +1989,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2007,7 +2032,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2041,7 +2066,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2099,7 +2124,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2159,7 +2184,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2183,6 +2208,14 @@ public class DataSetTabSet extends JTabbedPane {
 		this.requestUnmaskColumns(ds, Collections.singleton(column));
 	}
 
+	/**
+	 * Request that a bunch of columns be unmasked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param columns
+	 *            the columns to unmask.
+	 */
 	public void requestUnmaskColumns(final DataSet ds, final Collection columns) {
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -2195,7 +2228,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2228,7 +2261,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2261,7 +2294,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2294,7 +2327,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2334,7 +2367,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2374,7 +2407,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2396,16 +2429,16 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param table
 	 *            the schema table to unmask all relations for.
 	 */
-	public void requestUnmaskTable(final DataSet ds, final DataSetTable dst,
-			final Table table) {
+	public void requestUnmaskAllRelations(final DataSet ds,
+			final DataSetTable dst, final Table table) {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
 					// Mask all the relations on the table.
 					if (dst != null)
-						MartBuilderUtils.unmaskTable(dst, table);
+						MartBuilderUtils.unmaskAllRelations(dst, table);
 					else
-						MartBuilderUtils.unmaskTable(ds, table);
+						MartBuilderUtils.unmaskAllRelations(ds, table);
 
 					// And the overview.
 					DataSetTabSet.this
@@ -2415,7 +2448,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2428,7 +2461,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Requests that partioning be turned off on the given column.
+	 * Requests that partioning be turned off on the given table.
 	 * 
 	 * @param dataset
 	 *            the dataset we are working with.
@@ -2448,7 +2481,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2481,7 +2514,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2508,7 +2541,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2535,7 +2568,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -2565,7 +2598,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {

@@ -91,15 +91,13 @@ import org.xml.sax.helpers.DefaultHandler;
  * situations where this may arise.
  * <p>
  * NOTE: The XML is version-specific. A formal DTD will be included with each
- * official release of MartBuilder, and subsequent releases will include new
- * DTDs (if any aspects have changed) and converter tools to translate your old
- * files. This DTD will be found in the <tt>org.biomart.builder.resources</tt>
- * package.
+ * official release of MartBuilder. This DTD will be found in the
+ * <tt>org.biomart.builder.resources</tt> package.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class MartBuilderXML extends DefaultHandler {
 
@@ -435,7 +433,7 @@ public class MartBuilderXML extends DefaultHandler {
 						xmlWriter);
 			this.writeAttribute("name", jdbcSchema.getName(), xmlWriter);
 			this.writeAttribute("keyguessing", Boolean.toString(jdbcSchema
-					.getKeyGuessing()), xmlWriter);
+					.isKeyGuessing()), xmlWriter);
 
 			// Partitions.
 			this

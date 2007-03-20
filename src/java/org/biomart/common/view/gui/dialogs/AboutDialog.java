@@ -38,23 +38,13 @@ import org.biomart.common.view.gui.OpenBrowser.OpenBrowserLabel;
  * screen.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class AboutDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Creates (but does not display) a dialog centred on the given tab, which
-	 * allows DDL generation for the given datasets. When the OK button is
-	 * chosen, the DDL is generated in the background.
-	 * 
-	 * @param martTab
-	 *            the tab in which this will be displayed.
-	 * @param datasets
-	 *            the datasets to list.
-	 */
 	private AboutDialog() {
 		// Create the base dialog.
 		super();
@@ -144,11 +134,11 @@ public class AboutDialog extends JDialog {
 		this.setLocationRelativeTo(null);
 	}
 
+	/**
+	 * Shows a window displaying details about this app.
+	 */
 	public static void displayAbout() {
-		// Create a window frame.
-		final AboutDialog about = new AboutDialog();
-
-		// Show the frame.
-		about.show();
+		// Create and show a window frame.
+		(new AboutDialog()).show();
 	}
 }

@@ -55,35 +55,22 @@ import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 
 /**
- * A dialog which allows the user to choose some options about creating DDL over
- * a given set of datasets, then lets them actually do it. The options include
- * granularity of statements generated, and whether to output to file or to
- * screen.
+ * A dialog which allows the user to view some text, and optionally print,
+ * search and save it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class ViewTextDialog extends JFrame {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Creates (but does not display) a dialog centred on the given tab, which
-	 * allows DDL generation for the given datasets. When the OK button is
-	 * chosen, the DDL is generated in the background.
-	 * 
-	 * @param martTab
-	 *            the tab in which this will be displayed.
-	 * @param datasets
-	 *            the datasets to list.
-	 */
 	private ViewTextDialog(final String title, final String text) {
 		// Create the base dialog.
 		super(title);
 
-		// Create the content pane for the dialog, ie. the bit that will hold
-		// all the various questions and answers.
+		// Create the content pane for the dialog.
 		final JPanel content = new JPanel(new BorderLayout());
 		this.setContentPane(content);
 
@@ -123,10 +110,8 @@ public class ViewTextDialog extends JFrame {
 				editorPane.setLineWrap(wrap.isSelected());
 			}
 		});
-		wrap.setSelected(true);
+		wrap.setSelected(editorPane.getWrapStyleWord());
 		menu.add(wrap);
-
-		menu.addSeparator();
 
 		// Attach a mouse listener to the editor pane that
 		// will open the menu on demand.
@@ -171,7 +156,7 @@ public class ViewTextDialog extends JFrame {
 		toolBarPane.setFloatable(false);
 		toolBarPane.setRollover(true);
 
-		// Create a file chooser for finding the DDL file we will save.
+		// Create a file chooser for finding the TXT file we will save.
 		final JFileChooser saver = new JFileChooser() {
 			private static final long serialVersionUID = 1L;
 
@@ -179,7 +164,7 @@ public class ViewTextDialog extends JFrame {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
 					final String filename = file.getName();
-					final String extension = Resources.get("ddlExtension");
+					final String extension = Resources.get("txtExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -192,15 +177,15 @@ public class ViewTextDialog extends JFrame {
 		saver.setCurrentDirectory(currentDir == null ? null : new File(
 				currentDir));
 		saver.setFileFilter(new FileFilter() {
-			// Accepts only files ending in ".ddl".
+			// Accepts only files ending in ".txt".
 			public boolean accept(final File f) {
 				return f.isDirectory()
 						|| f.getName().toLowerCase().endsWith(
-								Resources.get("ddlExtension"));
+								Resources.get("txtExtension"));
 			}
 
 			public String getDescription() {
-				return Resources.get("DDLFileFilterDescription");
+				return Resources.get("TXTFileFilterDescription");
 			}
 		});
 
@@ -311,7 +296,7 @@ public class ViewTextDialog extends JFrame {
 			public void removeUpdate(final DocumentEvent e) {
 				this.documentEvent(e);
 			}
-			
+
 			private void documentEvent(final DocumentEvent e) {
 				searchButton.doClick();
 			}
@@ -330,11 +315,17 @@ public class ViewTextDialog extends JFrame {
 		this.setLocationRelativeTo(null);
 	}
 
+	/**
+	 * Displays the given text in a dialog with the given title, allowing the
+	 * user to search/print/save the text but not edit it.
+	 * 
+	 * @param title
+	 *            the title to give the dialog.
+	 * @param textBuffer
+	 *            the text to show.
+	 */
 	public static void displayText(final String title, final String textBuffer) {
-		// Create a window frame.
-		final ViewTextDialog editorFrame = new ViewTextDialog(title, textBuffer);
-
-		// Show the frame.
-		editorFrame.show();
+		// Create and show a window frame.
+		(new ViewTextDialog(title, textBuffer)).show();
 	}
 }

@@ -882,7 +882,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// Make an empty copy.
 		final Schema newSchema = new JDBCSchema(this.driverClassLocation,
 				this.driverClassName, this.url, this.schemaName, this.username,
-				this.password, newName, this.getKeyGuessing());
+				this.password, newName, this.isKeyGuessing());
 
 		// Copy the contents over.
 		this.replicateContents(newSchema);
@@ -1107,7 +1107,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 			// single
 			// column with the same name as the table or with '_id' appended.
 			// Only do this if we are using key-guessing.
-			if (pkCols.isEmpty() && this.getKeyGuessing()) {
+			if (pkCols.isEmpty() && this.isKeyGuessing()) {
 				Log.debug("Found no primary key, so attempting to guess one");
 				// Plain version first.
 				Column candidateCol = t.getColumnByName(t.getName());
@@ -1172,7 +1172,7 @@ public class JDBCSchema extends GenericSchema implements JDBCDataLink {
 		// reference to the list of existing foreign keys. After this call has
 		// completed, the list will contain all those foreign keys which no
 		// longer exist, and can safely be dropped.
-		if (this.getKeyGuessing())
+		if (this.isKeyGuessing())
 			this.synchroniseKeysUsingKeyGuessing(fksToBeDropped);
 		// Otherwise, use DMD to do the same, also passing in the list of
 		// existing foreign keys to be updated as the call progresses. Also pass

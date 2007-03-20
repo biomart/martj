@@ -51,7 +51,7 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.CRPairStringTableP
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.6
  */
 public class RestrictedTableDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -134,7 +134,7 @@ public class RestrictedTableDialog extends JDialog {
 					colsAvailable.add(new Object[] { rel, j.next() });
 		}
 
-		// First table aliases.
+		// Table aliases.
 		this.columnAliasModel = new CRPairStringTablePanel(
 				template == null ? null : template.getAliases(), colsAvailable) {
 			private static final long serialVersionUID = 1L;
@@ -296,6 +296,11 @@ public class RestrictedTableDialog extends JDialog {
 		return this.expression.getText().trim();
 	}
 
+	/**
+	 * Return <tt>true</tt> if the user ticked the hard restriction box.
+	 * 
+	 * @return <tt>true</tt> if the hard restriction box was ticked.
+	 */
 	public boolean getHard() {
 		return this.hard.isSelected();
 	}

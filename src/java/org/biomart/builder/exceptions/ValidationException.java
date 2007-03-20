@@ -23,9 +23,9 @@ package org.biomart.builder.exceptions;
  * incorrect input, or an attempt to set some parameter where it cannot be set.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class ValidationException extends MartBuilderException {
 	private static final long serialVersionUID = 1;

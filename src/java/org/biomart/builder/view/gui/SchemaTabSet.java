@@ -74,7 +74,7 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class SchemaTabSet extends JTabbedPane {
 	private static final long serialVersionUID = 1;
@@ -478,7 +478,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -520,7 +520,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -567,7 +567,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -614,7 +614,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -675,7 +675,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -737,7 +737,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -766,12 +766,12 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Establish a relation between two keys.
+	 * Given a pair of keys, establish a relation between them.
 	 * 
 	 * @param from
-	 *            the key at one end of the relation-to-be.
+	 *            one end of the relation.
 	 * @param to
-	 *            the key at the other end of the relation-to-be.
+	 *            the other end.
 	 */
 	public void requestCreateRelation(final Key from, final Key to) {
 		// Create the relation in the background.
@@ -797,7 +797,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -833,7 +833,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -865,48 +865,36 @@ public class SchemaTabSet extends JTabbedPane {
 		// If they selected any columns, and those columns are not
 		// the same as the ones already in the key, modify the key.
 		if (!cols.isEmpty() && !cols.equals(key.getColumns()))
-			this.requestEditKey(key, cols);
-	}
+			// In the background, make the change.
+			LongProcess.run(new Runnable() {
+				public void run() {
+					try {
+						// Do the changes.
+						MartBuilderUtils.editKeyColumns(
+								SchemaTabSet.this.martTab.getMart(), key, cols);
 
-	/**
-	 * Change the columns that a key uses.
-	 * 
-	 * @param key
-	 *            the key to change.
-	 * @param columns
-	 *            the new set of columns to assign to the key.
-	 */
-	public void requestEditKey(final Key key, final List columns) {
-		// In the background, make the change.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Do the changes.
-					MartBuilderUtils.editKeyColumns(SchemaTabSet.this.martTab
-							.getMart(), key, columns);
+						// Repaint the dataset diagram based on the modified
+						// dataset.
+						SchemaTabSet.this.recalculateSchemaDiagram(key
+								.getTable().getSchema());
+						if (!key.getTable().getExternalRelations().isEmpty())
+							SchemaTabSet.this.recalculateOverviewDiagram();
+						SchemaTabSet.this.martTab.getDataSetTabSet()
+								.recalculateAffectedDataSetDiagrams(
+										key.getTable().getSchema());
 
-					// Repaint the dataset diagram based on the modified
-					// dataset.
-					SchemaTabSet.this.recalculateSchemaDiagram(key.getTable()
-							.getSchema());
-					if (!key.getTable().getExternalRelations().isEmpty())
-						SchemaTabSet.this.recalculateOverviewDiagram();
-					SchemaTabSet.this.martTab.getDataSetTabSet()
-							.recalculateAffectedDataSetDiagrams(
-									key.getTable().getSchema());
-
-					// Update the modified status for this tabset.
-					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
+						// Update the modified status for this tabset.
+						SchemaTabSet.this.martTab.getMartTabSet()
+								.requestChangeModifiedStatus(true);
+					} catch (final Throwable t) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								StackTrace.showStackTrace(t);
+							}
+						});
+					}
 				}
-			}
-		});
+			});
 	}
 
 	/**
@@ -933,7 +921,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -976,8 +964,8 @@ public class SchemaTabSet extends JTabbedPane {
 					.definePartitions(schema);
 			if (!partitions.equals(schema.getPartitions())) {
 				CommonUtils.setSchemaPartitions(schema, partitions);
-				SchemaTabSet.this.martTab.getMartTabSet().setModifiedStatus(
-						true);
+				SchemaTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
 			}
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
@@ -1011,7 +999,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1054,7 +1042,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1105,7 +1093,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1131,6 +1119,15 @@ public class SchemaTabSet extends JTabbedPane {
 				.getName()));
 	}
 
+	/**
+	 * Requests that the schema be given the new name, now, without further
+	 * prompting
+	 * 
+	 * @param schema
+	 *            the schema to rename.
+	 * @param name
+	 *            the new name to give it.
+	 */
 	public void requestRenameSchema(final Schema schema, final String name) {
 		// Ask for a new name, suggesting the schema's existing name
 		// as the default response.
@@ -1161,7 +1158,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1202,7 +1199,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Set the dataset tabset status as modified.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 
 					// Pop up a dialog to ask the user if they
 					// want to change any of the details of the
@@ -1218,7 +1215,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1299,7 +1296,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1332,7 +1329,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 					// Update the modified status for this tabset.
 					SchemaTabSet.this.martTab.getMartTabSet()
-							.setModifiedStatus(true);
+							.requestChangeModifiedStatus(true);
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {

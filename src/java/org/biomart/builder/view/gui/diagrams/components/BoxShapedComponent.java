@@ -53,11 +53,15 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * handles all mouse-clicks and painting problems for them, and keeps track of
  * their sub-components in a map, so that code can reference them by database
  * object rather than exact component.
+ * <p>
+ * This class also handles click-and-rename capabilities by allowing subclasses
+ * to specify a name label. It then calls those classes back when the name is
+ * changed by the user.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public abstract class BoxShapedComponent extends JPanel implements
 		DiagramComponent {
@@ -106,9 +110,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
 
-	public static Color SELECTED_COLOUR = Color.WHITE;
+	private static Color SELECTED_COLOUR = Color.WHITE;
 
-	public static Color SELECTED_BORDER_COLOUR = Color.BLACK;
+	private static Color RENAMING_BORDER_COLOUR = Color.BLACK;
 
 	private Diagram diagram;
 
@@ -346,40 +350,89 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.state = state;
 	}
 
+	/**
+	 * Can the user rename this by double-clicking on it?
+	 * 
+	 * @return <tt>true</tt> if they can.
+	 */
 	public boolean isRenameable() {
 		return this.renameable && this.name != null;
 	}
 
+	/**
+	 * Can the user rename this by double-clicking on it?
+	 * 
+	 * @param renameable
+	 *            <tt>true</tt> if they can.
+	 */
 	public void setRenameable(boolean renameable) {
 		this.renameable = renameable;
 	}
 
+	/**
+	 * Can the user select this by single-clicking on it?
+	 * 
+	 * @return <tt>true</tt> if they can.
+	 */
 	public boolean isSelectable() {
 		return this.selectable && this.name != null;
 	}
 
+	/**
+	 * Can the user select this by single-clicking on it?
+	 * 
+	 * @param selectable
+	 *            <tt>true</tt> if they can.
+	 */
 	public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
 	}
 
+	/**
+	 * Can the user drag this?
+	 * 
+	 * @return <tt>true</tt> if they can.
+	 */
 	public boolean isDraggable() {
 		return this.draggable;
 	}
 
+	/**
+	 * Can the user drag this?
+	 * 
+	 * @param draggable
+	 *            <tt>true</tt> if they can.
+	 */
 	public void setDraggable(boolean draggable) {
 		this.draggable = draggable;
 	}
 
+	/**
+	 * Call this method when the component has become selected.
+	 */
 	public void select() {
 		this.selected = true;
 		this.cancelRename();
 	}
 
+	/**
+	 * Call this method when the component has become deselected.
+	 */
 	public void deselect() {
 		this.selected = false;
 		this.cancelRename();
 	}
 
+	/**
+	 * Sets the text field that will represent the selectable/renameable portion
+	 * of this component. It will gain a mouse listener which will allow the
+	 * user to single-click (select/highlight) and double-click (rename) the
+	 * field. It also gains a keyboard listener to listen for Enter+Escape hits
+	 * whilst renaming.
+	 * 
+	 * @param name
+	 *            the text field to use.
+	 */
 	public void setRenameTextField(final JTextField name) {
 		this.name = name;
 		this.name.setDisabledTextColor(this.name.getForeground());
@@ -387,9 +440,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.name.getInputMap().put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "enterPressed");
 		this.name.getActionMap().put("enterPressed", new AbstractAction() {
-			/**
-			 * 
-			 */
 			private static final long serialVersionUID = 1L;
 
 			public void actionPerformed(ActionEvent e) {
@@ -400,9 +450,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.name.getInputMap().put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "escapePressed");
 		this.name.getActionMap().put("escapePressed", new AbstractAction() {
-			/**
-			 * 
-			 */
 			private static final long serialVersionUID = 1L;
 
 			public void actionPerformed(ActionEvent e) {
@@ -436,17 +483,25 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.deselect();
 	}
 
+	/**
+	 * Call this method to make the component go into rename behaviour state.
+	 */
 	public void startRename() {
 		this.beingRenamed = true;
 		this.name.setText(this.getEditableName());
 		this.name.setBorder(BorderFactory
-				.createLineBorder(BoxShapedComponent.SELECTED_BORDER_COLOUR));
+				.createLineBorder(BoxShapedComponent.RENAMING_BORDER_COLOUR));
 		this.name.setEditable(true);
 		this.name.setEnabled(true);
 		this.name.setOpaque(true);
 		this.name.requestFocus();
 	}
 
+	/**
+	 * Call this method to take the component out of rename behaviour state and
+	 * revert to the state it was before, without accepting any changes the user
+	 * may already have typed.
+	 */
 	public void cancelRename() {
 		this.beingRenamed = false;
 		this.name.setBorder(BorderFactory.createEmptyBorder());
@@ -460,6 +515,12 @@ public abstract class BoxShapedComponent extends JPanel implements
 		return "";
 	}
 
+	/**
+	 * Returns the name the user can edit. This can be different from the name
+	 * that is displayed at other times when the component is not being renamed.
+	 * 
+	 * @return the editable name.
+	 */
 	public String getEditableName() {
 		return this.getName();
 	}
@@ -469,13 +530,30 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.cancelRename();
 	}
 
+	/**
+	 * Override this method to be informed when the user has completed a rename
+	 * and wishes to enforce the new name.
+	 * 
+	 * @param newName
+	 *            the new name entered by the user.
+	 */
 	public void performRename(final String newName) {
 	}
 
+	/**
+	 * Is this component currently in rename behaviour state?
+	 * 
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isBeingRenamed() {
 		return this.beingRenamed;
 	}
 
+	/**
+	 * Is this component currently in select behaviour state?
+	 * 
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isSelected() {
 		return this.selected;
 	}

@@ -41,9 +41,9 @@ import org.biomart.common.resources.Resources;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public interface Relation extends Comparable {
 	/**
@@ -171,8 +171,26 @@ public interface Relation extends Comparable {
 	 */
 	public boolean isOneToOne();
 
+	/**
+	 * Returns the key in this relation associated with the given table. If both
+	 * keys are on that table, returns the first one.
+	 * 
+	 * @param table
+	 *            the table to get the key for.
+	 * @return the key for that table. <tt>null</tt> if neither key is from
+	 *         that table.
+	 */
 	public Key getKeyForTable(final Table table);
 
+	/**
+	 * Returns the key in this relation associated with the given schema. If
+	 * both keys are on tables in that schema, returns the first one.
+	 * 
+	 * @param schema
+	 *            the schema to get the key for.
+	 * @return the key for that schema. <tt>null</tt> if neither key is from
+	 *         that schema.
+	 */
 	public Key getKeyForSchema(final Schema schema);
 
 	/**

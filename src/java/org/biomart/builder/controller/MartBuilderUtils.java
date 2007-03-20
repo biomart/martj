@@ -60,17 +60,25 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.6
  */
 public class MartBuilderUtils {
 	/**
 	 * Attempts to create a foreign key on a table given a set of columns. The
 	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
 	 * 
+	 * @param mart
+	 *            the mart we are working with.
 	 * @param table
 	 *            the table to create the key on.
 	 * @param columns
 	 *            the colums, in order, to create the key over.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 * @throws AssociationException
 	 *             if any of the columns in the key are not part of the
 	 *             specified table.
@@ -87,10 +95,18 @@ public class MartBuilderUtils {
 	 * the table already has a primary key, then this one will replace it. The
 	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
 	 * 
+	 * @param mart
+	 *            the mart we are working with.
 	 * @param table
 	 *            the table to create the key on.
 	 * @param columns
 	 *            the colums, in order, to create the key over.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 * @throws AssociationException
 	 *             if any of the columns in the key are not part of the
 	 *             specified table.
@@ -105,6 +121,8 @@ public class MartBuilderUtils {
 	/**
 	 * Turns key-guessing off in a given schema.
 	 * 
+	 * @param mart
+	 *            the mart we are working with.
 	 * @param schema
 	 *            the schema to disable key-guessing in.
 	 * @throws SQLException
@@ -121,6 +139,8 @@ public class MartBuilderUtils {
 	/**
 	 * Turns key-guessing on in a given schema.
 	 * 
+	 * @param mart
+	 *            the mart we are working with.
 	 * @param schema
 	 *            the schema to enable key-guessing in.
 	 * @throws SQLException
@@ -138,6 +158,8 @@ public class MartBuilderUtils {
 	 * Synchronises an individual schema against the data source or database it
 	 * represents. Datasets using this schema will also be synchronised.
 	 * 
+	 * @param mart
+	 *            the mart we are working with.
 	 * @param schema
 	 *            the schema to synchronise.
 	 * @throws SQLException
@@ -189,6 +211,12 @@ public class MartBuilderUtils {
 	 *            the key to change.
 	 * @param status
 	 *            the new status to give the key.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 */
 	public static void changeKeyStatus(final Mart mart, final Key key,
 			final ComponentStatus status) throws SQLException,
@@ -224,6 +252,12 @@ public class MartBuilderUtils {
 	 *            the relation to change.
 	 * @param cardinality
 	 *            the new cardinality to give the relation.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 */
 	public static void changeRelationCardinality(final Mart mart,
 			final Relation relation, final Cardinality cardinality)
@@ -254,6 +288,12 @@ public class MartBuilderUtils {
 	 *            the relation to change.
 	 * @param status
 	 *            the new status to give it.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 * @throws AssociationException
 	 *             if the relation was previously
 	 *             {@link ComponentStatus#INFERRED_INCORRECT} and the keys at
@@ -271,17 +311,24 @@ public class MartBuilderUtils {
 
 	/**
 	 * Attempts to establish a relation between two keys in a mart. The relation
-	 * will be a 1:M relation. All datasets will subsequently be synchronised.
+	 * will be a 1:M or M:M relation. All datasets will subsequently be
+	 * synchronised.
 	 * 
 	 * @param mart
 	 *            the mart the keys live in. The new relation will be marked as
 	 *            {@link ComponentStatus#HANDMADE}.
 	 * @param from
-	 *            the first key of the relation (the 1 end of a 1:M relation).
+	 *            the first key of the relation.
 	 * @param to
-	 *            the second key of the relation (the M end of a 1:M relation).
+	 *            the second key of the relation.
 	 * @throws AssociationException
 	 *             if the relation could not be established.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 */
 	public static void createRelation(final Mart mart, final Key from,
 			final Key to) throws SQLException, DataModelException,
@@ -311,6 +358,12 @@ public class MartBuilderUtils {
 	 *            the key to alter.
 	 * @param columns
 	 *            the new columns to give the key.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 * @throws AssociationException
 	 *             if any of the columns in the key are not part of the
 	 *             specified table.
@@ -335,48 +388,43 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Masks a dataset table within a dataset.
+	 * Masks a dimension within a dataset.
 	 * 
 	 * @param dataset
-	 *            the dataset to mask the column in.
+	 *            the dataset to mask the dimension in.
 	 * @param table
-	 *            the table to mask.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
+	 *            the dimension to mask.
+	 * @throws ValidationException
+	 *             if the dimension could not be masked.
 	 */
-	public static void maskTable(final DataSet dataset, final DataSetTable table)
-			throws ValidationException {
+	public static void maskDimension(final DataSet dataset,
+			final DataSetTable table) throws ValidationException {
 		Log.info(Resources.get("logReqMaskTable"));
 		dataset.getDataSetModifications().setMaskedTable(table);
 	}
 
 	/**
-	 * Unmasks a dataset table within a dataset.
+	 * Unmasks a dimension within a dataset.
 	 * 
 	 * @param dataset
-	 *            the dataset to mask the column in.
+	 *            the dataset to unmask the dimension in.
 	 * @param table
-	 *            the table to unmask.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
+	 *            the dimension to unmask.
 	 */
-	public static void unmaskTable(final DataSet dataset,
+	public static void unmaskDimension(final DataSet dataset,
 			final DataSetTable table) {
 		Log.info(Resources.get("logReqUnmaskTable"));
 		dataset.getDataSetModifications().unsetMaskedTable(table);
 	}
 
 	/**
-	 * Non-inherits all column within a dataset.
+	 * Non-inherits all columns within a dataset. Any that cannot be
+	 * non-inherited are ignored.
 	 * 
 	 * @param dataset
-	 *            the dataset to uninherit the column in.
+	 *            the dataset to uninherit the columns in.
 	 * @param table
-	 *            the table to uninherit.
+	 *            the table to uninherit columns from.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -438,12 +486,12 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Un-Non-inherits all column within a dataset.
+	 * Un-Non-inherits all columns within a dataset.
 	 * 
 	 * @param dataset
-	 *            the dataset to uninherit the column in.
+	 *            the dataset to uninherit the columns in.
 	 * @param table
-	 *            the table to uninherit.
+	 *            the table to uninherit columns from.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -473,18 +521,14 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Masks a column within a dataset.
+	 * Masks a set of columns within a dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset to mask the column in.
-	 * @param column
-	 *            the column to mask.
+	 * @param columns
+	 *            the columns to mask.
 	 * @throws ValidationException
 	 *             if the column is not maskable.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskColumns(final DataSet dataset,
 			final Collection columns) throws ValidationException {
@@ -560,9 +604,9 @@ public class MartBuilderUtils {
 	 * afterwards.
 	 * 
 	 * @param dataset
-	 *            the dataset to mask the relation in.
+	 *            the dataset to uncompound the relation in.
 	 * @param relation
-	 *            the relation to mask.
+	 *            the relation to uncompound.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -580,9 +624,9 @@ public class MartBuilderUtils {
 	 * afterwards.
 	 * 
 	 * @param datasetTable
-	 *            the dataset table to mask the relation in.
+	 *            the dataset table to uncompound the relation in.
 	 * @param relation
-	 *            the relation to mask.
+	 *            the relation to uncompound.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -600,13 +644,13 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Uncompounds a relation within a dataset. The dataset is regenerated
-	 * afterwards.
+	 * Un-directionalises a relation within a dataset. The dataset is
+	 * regenerated afterwards.
 	 * 
 	 * @param dataset
-	 *            the dataset to mask the relation in.
+	 *            the dataset to un-directionalise the relation in.
 	 * @param relation
-	 *            the relation to mask.
+	 *            the relation to un-directionalise.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -620,19 +664,19 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Uncompounds a relation within a dataset table. The dataset is regenerated
-	 * afterwards.
+	 * Un-directionalises a relation within a dataset table. The dataset is
+	 * regenerated afterwards.
 	 * 
 	 * @param datasetTable
-	 *            the dataset table to mask the relation in.
+	 *            the dataset table to un-directionalise the relation in.
 	 * @param relation
-	 *            the relation to mask.
+	 *            the relation to un-directionalise.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 * @throws ValidationException
-	 *             if it could not be uncompounded.
+	 *             if it could not be un-directionalised.
 	 */
 	public static void undirectionalRelation(final DataSetTable datasetTable,
 			final Relation relation) throws SQLException, DataModelException,
@@ -649,14 +693,16 @@ public class MartBuilderUtils {
 	 * 
 	 * @param dataset
 	 *            the dataset to mask the relation in.
-	 * @param n
-	 *            the compound arity.
+	 * @param def
+	 *            the compound definition.
 	 * @param relation
-	 *            the relation to mask.
+	 *            the relation to compound.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
+	 * @throws ValidationException
+	 *             if it could not be compounded.
 	 */
 	public static void compoundRelation(final DataSet dataset,
 			final Relation relation, final CompoundRelationDefinition def)
@@ -674,12 +720,14 @@ public class MartBuilderUtils {
 	 *            the dataset table to mask the relation in.
 	 * @param relation
 	 *            the relation to mask.
-	 * @param n
-	 *            the compound arity.
+	 * @param def
+	 *            the compound definition.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
+	 * @throws ValidationException
+	 *             if it could not be compounded.
 	 */
 	public static void compoundRelation(final DataSetTable datasetTable,
 			final Relation relation, final CompoundRelationDefinition def)
@@ -691,19 +739,21 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Compounds a relation within a dataset. The dataset is regenerated
+	 * Directionalises a relation within a dataset. The dataset is regenerated
 	 * afterwards.
 	 * 
 	 * @param dataset
-	 *            the dataset to mask the relation in.
-	 * @param n
-	 *            the compound arity.
+	 *            the dataset to directionalise the relation in.
 	 * @param relation
-	 *            the relation to mask.
+	 *            the relation to directionalise.
+	 * @param def
+	 *            the key to mark as the starting point of the relation.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
+	 * @throws ValidationException
+	 *             if the directionalisation is rejected.
 	 */
 	public static void directionalRelation(final DataSet dataset,
 			final Relation relation, final Key def) throws SQLException,
@@ -714,19 +764,21 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Compounds a relation within a dataset table. The dataset is regenerated
-	 * afterwards.
+	 * Directionalises a relation within a dataset table. The dataset is
+	 * regenerated afterwards.
 	 * 
 	 * @param datasetTable
-	 *            the dataset table to mask the relation in.
+	 *            the dataset table to directionalise the relation in.
 	 * @param relation
-	 *            the relation to mask.
-	 * @param n
-	 *            the compound arity.
+	 *            the relation to directionalise.
+	 * @param def
+	 *            the key to mark as the starting point of the relation.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
+	 * @throws ValidationException
+	 *             if the directionalisation is rejected.
 	 */
 	public static void directionalRelation(final DataSetTable datasetTable,
 			final Relation relation, final Key def) throws SQLException,
@@ -782,9 +834,9 @@ public class MartBuilderUtils {
 	 * afterwards.
 	 * 
 	 * @param dataset
-	 *            the dataset to mask the relation in.
+	 *            the dataset to force the relation in.
 	 * @param relation
-	 *            the relation to fprce.
+	 *            the relation to force.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -810,7 +862,7 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskTable(final DataSetTable datasetTable,
+	public static void maskAllRelations(final DataSetTable datasetTable,
 			final Table table) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqMaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
@@ -832,7 +884,7 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void maskTable(final DataSet dataset, final Table table)
+	public static void maskAllRelations(final DataSet dataset, final Table table)
 			throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqMaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
@@ -850,14 +902,8 @@ public class MartBuilderUtils {
 	 *            the relation to concat.
 	 * @param index
 	 *            the index of the relation to concat.
-	 * @param column
-	 *            the name to give the concat column.
-	 * @param aliases
-	 *            the map of columns on the table to labels in the expression.
-	 * @param expression
-	 *            the expression for the column.
-	 * @param rowSep
-	 *            the separator to use between concated rows.
+	 * @param expr
+	 *            the concat definition.
 	 * @throws SQLException
 	 *             if something went wrong.
 	 * @throws DataModelException
@@ -876,7 +922,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * This method asks to modify an expression column.
+	 * This method asks to modify a concat column.
 	 * 
 	 * @param ds
 	 *            the dataset the concat relation is associated with.
@@ -884,14 +930,8 @@ public class MartBuilderUtils {
 	 *            the relation to concat.
 	 * @param index
 	 *            the index of the relation to concat.
-	 * @param column
-	 *            the name to give the concat column.
-	 * @param aliases
-	 *            the map of columns on the table to labels in the expression.
-	 * @param expression
-	 *            the expression for the column.
-	 * @param rowSep
-	 *            the separator to use between concated rows.
+	 * @param expr
+	 *            the concat definition.
 	 * @throws SQLException
 	 *             if something went wrong.
 	 * @throws DataModelException
@@ -913,7 +953,7 @@ public class MartBuilderUtils {
 	 * @param dsTable
 	 *            the table the expression is part of.
 	 * @param def
-	 *            the column to modify.
+	 *            the expression definition.
 	 * @param aliases
 	 *            the map of columns on the table to labels in the expression.
 	 * @param expression
@@ -944,7 +984,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Asks a dataset to partition tables by the values in the specified column.
+	 * Asks a dataset to partition tables on the specified column.
 	 * 
 	 * @param dataset
 	 *            the dataset to turn partitioning on for.
@@ -980,7 +1020,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * This method asks to remove a particular expression column.
+	 * This method asks to remove a particular concat column.
 	 * 
 	 * @param ds
 	 *            the dataset to remove the concat from.
@@ -1004,7 +1044,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * This method asks to remove a particular expression column.
+	 * This method asks to remove a particular concat column.
 	 * 
 	 * @param dsTable
 	 *            the table to remove the concat from.
@@ -1032,7 +1072,7 @@ public class MartBuilderUtils {
 	 * This method asks to remove a particular expression column.
 	 * 
 	 * @param dsTable
-	 *            the table to remove the concat from.
+	 *            the table to remove the expression from.
 	 * @param column
 	 *            the expression to remove.
 	 * @throws SQLException
@@ -1056,6 +1096,12 @@ public class MartBuilderUtils {
 	 *            the mart to remove the key from.
 	 * @param key
 	 *            the key to remove.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 */
 	public static void removeKey(final Mart mart, final Key key)
 			throws SQLException, DataModelException {
@@ -1073,6 +1119,12 @@ public class MartBuilderUtils {
 	 *            the mart to remove the relation from.
 	 * @param relation
 	 *            the relation to remove.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 */
 	public static void removeRelation(final Mart mart, final Relation relation)
 			throws SQLException, DataModelException {
@@ -1091,6 +1143,12 @@ public class MartBuilderUtils {
 	 *            the mart to remove the schema from.
 	 * @param schema
 	 *            the schema to remove from the mart.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 */
 	public static void removeSchemaFromMart(final Mart mart, final Schema schema)
 			throws SQLException, DataModelException {
@@ -1099,8 +1157,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Renames a dataset within a mart. The new name is checked to see if it
-	 * already exists, in which case an exception will be thrown.
+	 * Renames a dataset within a mart.
 	 * 
 	 * @param mart
 	 *            the mart to rename the dataset in.
@@ -1127,6 +1184,12 @@ public class MartBuilderUtils {
 	 *            existing one, no action is taken.
 	 * @throws ValidationException
 	 *             if the column is not allowed to be renamed.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
 	 */
 	public static void renameDataSetColumn(final DataSetColumn col,
 			final String newName) throws ValidationException, SQLException,
@@ -1217,13 +1280,15 @@ public class MartBuilderUtils {
 	 * this updates the existing settings.
 	 * 
 	 * @param datasetTable
-	 *            the dataset table to flag the relation in.
+	 *            the dataset table to flag the table in.
 	 * @param table
 	 *            the table to flag as restricted.
 	 * @param expression
-	 *            the expression to use for the restriction for the relation.
+	 *            the expression to use for the restriction for the table.
 	 * @param aliases
 	 *            the aliases to use for columns.
+	 * @param hard
+	 *            if this is to be a hard restriction.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1242,13 +1307,15 @@ public class MartBuilderUtils {
 	 * updates the existing settings.
 	 * 
 	 * @param dataset
-	 *            the dataset to flag the relation in.
+	 *            the dataset to flag the table in.
 	 * @param table
 	 *            the table to flag as restricted.
 	 * @param expression
-	 *            the expression to use for the restriction for the relation.
+	 *            the expression to use for the restriction for the table.
 	 * @param aliases
 	 *            the aliases to use for columns.
+	 * @param hard
+	 *            if this is to be a hard restriction.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1262,11 +1329,10 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * UnFlags a table as restricted within a dataset table. If already flagged,
-	 * this updates the existing settings.
+	 * UnFlags a table as restricted within a dataset table.
 	 * 
 	 * @param datasetTable
-	 *            the dataset table to unflag the relation in.
+	 *            the dataset table to unflag the table in.
 	 * @param table
 	 *            the table to unflag as restricted.
 	 * @throws ValidationException
@@ -1280,11 +1346,10 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * UnFlags a table as restricted within a dataset. If already flagged, this
-	 * updates the existing settings.
+	 * UnFlags a table as restricted within a dataset.
 	 * 
 	 * @param dataset
-	 *            the dataset to unflag the relation in.
+	 *            the dataset to unflag the table in.
 	 * @param table
 	 *            the table to unflag as restricted.
 	 * @throws ValidationException
@@ -1297,8 +1362,8 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Flags a table as restricted within a dataset table. If already flagged,
-	 * this updates the existing settings.
+	 * Flags a relation as restricted within a dataset table. If already
+	 * flagged, this updates the existing settings.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to flag the relation in.
@@ -1312,6 +1377,8 @@ public class MartBuilderUtils {
 	 *            the aliases to use for columns on the from end.
 	 * @param rhsAliases
 	 *            the aliases to use for columns on the to end.
+	 * @param hard
+	 *            if this is to be a hard restriction.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1328,7 +1395,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Flags a table as restricted within a dataset. If already flagged, this
+	 * Flags a relation as restricted within a dataset. If already flagged, this
 	 * updates the existing settings.
 	 * 
 	 * @param dataset
@@ -1343,6 +1410,8 @@ public class MartBuilderUtils {
 	 *            the aliases to use for columns on the from end.
 	 * @param rhsAliases
 	 *            the aliases to use for columns on the to end.
+	 * @param hard
+	 *            if this is to be a hard restriction.
 	 * @throws ValidationException
 	 *             if this could not be done.
 	 */
@@ -1358,8 +1427,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * UnFlags a table as restricted within a dataset table. If already flagged,
-	 * this updates the existing settings.
+	 * UnFlags a relation as restricted within a dataset table.
 	 * 
 	 * @param datasetTable
 	 *            the dataset table to unflag the relation in.
@@ -1379,8 +1447,7 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * UnFlags a table as restricted within a dataset. If already flagged, this
-	 * updates the existing settings.
+	 * UnFlags a relation as restricted within a dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset to unflag the relation in.
@@ -1405,18 +1472,13 @@ public class MartBuilderUtils {
 	 * another list containing all the column values in the same order as they
 	 * appear in the method {@link Table#getColumns()}.
 	 * <p>
-	 * If the schema is a grouped schema, this method will return <i>n*m</i>
-	 * rows, where <i>n</i> is the number of rows requested and <i>m</i> is
-	 * the number of schemas in the group.
-	 * <p>
-	 * If any schema is unrecognised by
-	 * {@link DatabaseDialect#getDialect(DataLink)} then no rows are returned
-	 * for that schema.
+	 * If the schema is unrecognised by
+	 * {@link DatabaseDialect#getDialect(DataLink)} then no rows are returned.
 	 * 
 	 * @param table
 	 *            the table to get the rows for.
 	 * @param offset
-	 *            the offset to start at.
+	 *            the offset to start at, zero-indexed.
 	 * @param count
 	 *            the number of rows to get.
 	 * @return the rows.
@@ -1524,6 +1586,10 @@ public class MartBuilderUtils {
 	 * 
 	 * @param mart
 	 *            the mart you wish to synchronise all the datasets in.
+	 * @throws SQLException
+	 *             if syncing failed.
+	 * @throws DataModelException
+	 *             if syncing failed.
 	 */
 	public static void synchroniseMartDataSets(final Mart mart)
 			throws SQLException, DataModelException {
@@ -1565,16 +1631,12 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Unmasks a column within a dataset.
+	 * Unmasks a group of columns within a dataset.
 	 * 
 	 * @param dataset
 	 *            the dataset to unmask the column in.
-	 * @param column
-	 *            the column to unmask.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
+	 * @param columns
+	 *            the columns to unmask.
 	 */
 	public static void unmaskColumns(final DataSet dataset,
 			final Collection columns) {
@@ -1599,7 +1661,7 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskTable(final DataSetTable datasetTable,
+	public static void unmaskAllRelations(final DataSetTable datasetTable,
 			final Table table) throws ValidationException, SQLException,
 			DataModelException {
 		Log.info(Resources.get("logReqUnmaskTable"));
@@ -1622,8 +1684,8 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if the dataset could not be synchronised.
 	 */
-	public static void unmaskTable(final DataSet dataset, final Table table)
-			throws SQLException, DataModelException {
+	public static void unmaskAllRelations(final DataSet dataset,
+			final Table table) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqUnmaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.getSchemaModifications().unsetMaskedRelation(
@@ -1720,10 +1782,10 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Turns off partitioning on a given dataset column.
+	 * Turns off partitioning on a given dataset table.
 	 * 
 	 * @param dataset
-	 *            the dataset to turn off partitioning for on this column.
+	 *            the dataset to turn off partitioning for on this table.
 	 * @param table
 	 *            the table to turn off partitioning for.
 	 * @throws ValidationException

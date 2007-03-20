@@ -64,7 +64,7 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class MartTabSet extends JTabbedPane {
 	private static final long serialVersionUID = 1;
@@ -169,62 +169,13 @@ public class MartTabSet extends JTabbedPane {
 		close.setMnemonic(Resources.get("closeMartMnemonic").charAt(0));
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				MartTabSet.this.confirmCloseMart();
+				MartTabSet.this.requestCloseMart();
 			}
 		});
 		contextMenu.add(close);
 
 		// Return the menu.
 		return contextMenu;
-	}
-
-	/**
-	 * This method monitors a {@link ConstructorRunnable} and pops up a progress
-	 * monitor for the user so they can see how it is doing. It notes if the
-	 * process fails and throws up an exception message if necessary, or a
-	 * success message if all goes well.
-	 * 
-	 * @param thread
-	 *            the process to monitor.
-	 * @param timer
-	 *            the timer which triggers events to update the monitor.
-	 * @param progressMonitor
-	 *            the monitor displaying the current status of events.
-	 * @param constructor
-	 *            the {@link ConstructorRunnable} being run inside the thread
-	 *            being monitored.
-	 */
-	private void monitorConstructionProgress(final Thread thread,
-			final Timer timer, final ProgressMonitor progressMonitor,
-			final ConstructorRunnable constructor) {
-		// Did the job complete yet?
-		if (thread.isAlive() && !progressMonitor.isCanceled()) {
-			// If not, update the progress report.
-			progressMonitor.setNote(constructor.getStatusMessage());
-			progressMonitor.setProgress(constructor.getPercentComplete());
-		} else {
-			// If it completed, close the task and tidy up.
-			// Stop the timer.
-			timer.stop();
-			// Stop the thread.
-			constructor.cancel();
-			// Close the progress dialog.
-			progressMonitor.close();
-			// If it failed, show the exception.
-			final Exception failure = constructor.getFailureException();
-			// By singling out ConstructorException we can show users useful
-			// messages straight away.
-			if (failure != null)
-				StackTrace
-						.showStackTrace(failure instanceof ConstructorException ? failure
-								: new ConstructorException(Resources
-										.get("martConstructionFailed"), failure));
-			// Inform user of success, if it succeeded.
-			else
-				JOptionPane.showMessageDialog(null, Resources
-						.get("martConstructionComplete"), Resources
-						.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
-		}
 	}
 
 	/**
@@ -278,7 +229,7 @@ public class MartTabSet extends JTabbedPane {
 	 * @return <tt>true</tt> if its OK to close all the marts, <tt>false</tt>
 	 *         if not.
 	 */
-	public boolean confirmCloseAllMarts() {
+	public boolean requestCloseAllMarts() {
 		for (final Iterator i = this.martModifiedStatus.values().iterator(); i
 				.hasNext();)
 			if (i.next().equals(Boolean.TRUE)) {
@@ -296,7 +247,7 @@ public class MartTabSet extends JTabbedPane {
 	 * it is, ask the user if they're sure they want to close it. If they say
 	 * yes, or if it is not modified, close it.
 	 */
-	public void confirmCloseMart() {
+	public void requestCloseMart() {
 
 		// If nothing is selected, forget it, they can't close!
 		if (this.getSelectedMartTab() == null)
@@ -363,7 +314,7 @@ public class MartTabSet extends JTabbedPane {
 	 * allowing them to choose the file(s). If they choose a file, it is loaded
 	 * and parsed and a new tab is added representing its contents.
 	 */
-	public void loadMart() {
+	public void requestLoadMart() {
 		// Open the file chooser.
 		final String currentDir = Settings.getProperty("currentOpenDir");
 		this.xmlFileChooser.setCurrentDirectory(currentDir == null ? null
@@ -449,7 +400,7 @@ public class MartTabSet extends JTabbedPane {
 	 *            the file to load. If it does not exist, this delegates to the
 	 *            normal load method.
 	 */
-	public void loadMart(final File file) {
+	public void requestLoadMart(final File file) {
 		// Open the file chooser.
 		// In the background, load them in turn.
 		LongProcess.run(new Runnable() {
@@ -533,14 +484,12 @@ public class MartTabSet extends JTabbedPane {
 		if (oldOne == null || !oldOne.equals(outputSchema)) {
 			MartBuilderUtils.setOutputSchema(this.getSelectedMartTab()
 					.getMart(), outputSchema);
-			this.setModifiedStatus(true);
+			this.requestChangeModifiedStatus(true);
 		}
 	}
 
 	/**
 	 * Runs the given {@link ConstructorRunnable} and monitors it's progress.
-	 * See also
-	 * {@link #monitorConstructionProgress(Thread, Timer, ProgressMonitor, ConstructorRunnable)}.
 	 * 
 	 * @param constructor
 	 *            the constructor that will build a mart.
@@ -569,8 +518,41 @@ public class MartTabSet extends JTabbedPane {
 			public void actionPerformed(final ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
-						MartTabSet.this.monitorConstructionProgress(thread,
-								timer, progressMonitor, constructor);
+						// Did the job complete yet?
+						if (thread.isAlive() && !progressMonitor.isCanceled()) {
+							// If not, update the progress report.
+							progressMonitor.setNote(constructor
+									.getStatusMessage());
+							progressMonitor.setProgress(constructor
+									.getPercentComplete());
+						} else {
+							// If it completed, close the task and tidy up.
+							// Stop the timer.
+							timer.stop();
+							// Stop the thread.
+							constructor.cancel();
+							// Close the progress dialog.
+							progressMonitor.close();
+							// If it failed, show the exception.
+							final Exception failure = constructor
+									.getFailureException();
+							// By singling out ConstructorException we can show
+							// users useful
+							// messages straight away.
+							if (failure != null)
+								StackTrace
+										.showStackTrace(failure instanceof ConstructorException ? failure
+												: new ConstructorException(
+														Resources
+																.get("martConstructionFailed"),
+														failure));
+							// Inform user of success, if it succeeded.
+							else
+								JOptionPane.showMessageDialog(null, Resources
+										.get("martConstructionComplete"),
+										Resources.get("messageTitle"),
+										JOptionPane.INFORMATION_MESSAGE);
+						}
 					}
 				});
 			}
@@ -590,7 +572,7 @@ public class MartTabSet extends JTabbedPane {
 	/**
 	 * Saves the current mart to the file currently defined for it.
 	 */
-	public void saveMart() {
+	public void requestSaveMart() {
 		// If nothing selected, refuse.
 		if (this.getSelectedMartTab() == null)
 			return;
@@ -599,7 +581,7 @@ public class MartTabSet extends JTabbedPane {
 		// do a save-as instead.
 		final Mart currentMart = this.getSelectedMartTab().getMart();
 		if (this.martXMLFile.get(currentMart) == null)
-			this.saveMartAs();
+			this.requestSaveMartAs();
 		else
 			// Save it in the background to the existing file.
 			LongProcess.run(new Runnable() {
@@ -612,7 +594,7 @@ public class MartTabSet extends JTabbedPane {
 						// We're not modified any more! But
 						// this shouldn't get executed if save
 						// fails - hence no finally block.
-						MartTabSet.this.setModifiedStatus(false);
+						MartTabSet.this.requestChangeModifiedStatus(false);
 					} catch (final Throwable t) {
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
@@ -627,7 +609,7 @@ public class MartTabSet extends JTabbedPane {
 	/**
 	 * Saves the mart to a user-specified file, by popping up a file-chooser.
 	 */
-	public void saveMartAs() {
+	public void requestSaveMartAs() {
 		// If nothing selected at present, refuse.
 		if (this.getSelectedMartTab() == null)
 			return;
@@ -653,7 +635,7 @@ public class MartTabSet extends JTabbedPane {
 
 			// Save it, and save the reference to the XML file for later.
 			this.martXMLFile.put(currentMart, saveAsFile);
-			this.saveMart();
+			this.requestSaveMart();
 			// Save XML filename in history of accessed files.
 			final Properties history = new Properties();
 			history.setProperty("location", saveAsFile.getPath());
@@ -669,7 +651,7 @@ public class MartTabSet extends JTabbedPane {
 	 * @param status
 	 *            <tt>true</tt> for modified, <tt>false</tt> for unmodified.
 	 */
-	public void setModifiedStatus(final boolean status) {
+	public void requestChangeModifiedStatus(final boolean status) {
 		// If nothing selected, ignore it.
 		if (this.getSelectedMartTab() == null)
 			return;

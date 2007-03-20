@@ -35,12 +35,12 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
 /**
- * This interface defines a set of modifications to a schema.
+ * This class defines a set of modifications to a dataset.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.6
  */
 public class DataSetModificationSet {
 
@@ -64,10 +64,24 @@ public class DataSetModificationSet {
 
 	private final Map expressionColumns = new HashMap();
 
+	/**
+	 * Constructs an empty set of modifications that apply to the given dataset.
+	 * 
+	 * @param ds
+	 *            the dataset these modifications apply to.
+	 */
 	public DataSetModificationSet(final DataSet ds) {
 		this.ds = ds;
 	}
 
+	/**
+	 * Masks a dataset column.
+	 * 
+	 * @param column
+	 *            the column.
+	 * @throws ValidationException
+	 *             if it cannot logically be masked.
+	 */
 	public void setMaskedColumn(final DataSetColumn column)
 			throws ValidationException {
 		final String tableKey = column.getTable().getName();
@@ -85,6 +99,12 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Unasks a dataset column.
+	 * 
+	 * @param column
+	 *            the column.
+	 */
 	public void unsetMaskedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		if (this.maskedColumns.containsKey(tableKey)) {
@@ -95,6 +115,13 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Is the column masked?
+	 * 
+	 * @param column
+	 *            the column.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isMaskedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		return this.maskedColumns.containsKey(tableKey)
@@ -102,10 +129,22 @@ public class DataSetModificationSet {
 						.contains(column.getName());
 	}
 
+	/**
+	 * Get a map of all masked columns. Keys are table names, values are masked
+	 * column names within those tables.
+	 * 
+	 * @return the map.
+	 */
 	public Map getMaskedColumns() {
 		return this.maskedColumns;
 	}
 
+	/**
+	 * Index the given column.
+	 * 
+	 * @param column
+	 *            the column.
+	 */
 	public void setIndexedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		if (!this.isIndexedColumn(column)) {
@@ -116,6 +155,12 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Unindex the given column.
+	 * 
+	 * @param column
+	 *            the column.
+	 */
 	public void unsetIndexedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		if (this.indexedColumns.containsKey(tableKey)) {
@@ -126,6 +171,13 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Is this column indexed?
+	 * 
+	 * @param column
+	 *            the column.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isIndexedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		return this.indexedColumns.containsKey(tableKey)
@@ -133,10 +185,24 @@ public class DataSetModificationSet {
 						.contains(column.getName());
 	}
 
+	/**
+	 * Get a map of all indexed columns. Keys are table names, values are
+	 * indexed column names within those tables.
+	 * 
+	 * @return the map.
+	 */
 	public Map getIndexedColumns() {
 		return this.indexedColumns;
 	}
 
+	/**
+	 * Non-inherit a column.
+	 * 
+	 * @param column
+	 *            the column.
+	 * @throws ValidationException
+	 *             if logically it cannot be done.
+	 */
 	public void setNonInheritedColumn(final DataSetColumn column)
 			throws ValidationException {
 		final String tableKey = column.getTable().getName();
@@ -155,6 +221,12 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Un-non-inherit a column.
+	 * 
+	 * @param column
+	 *            the column.
+	 */
 	public void unsetNonInheritedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		if (this.nonInheritedColumns.containsKey(tableKey)) {
@@ -165,6 +237,13 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Is the column non-inherited?
+	 * 
+	 * @param column
+	 *            the column.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isNonInheritedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		return this.nonInheritedColumns.containsKey(tableKey)
@@ -172,10 +251,25 @@ public class DataSetModificationSet {
 						.contains(column.getName());
 	}
 
+	/**
+	 * Get all non-inherited columns. The keys of the map are table names, and
+	 * the values are non-inherited column names from those tables.
+	 * 
+	 * @return the map.
+	 */
 	public Map getNonInheritedColumns() {
 		return this.nonInheritedColumns;
 	}
 
+	/**
+	 * Rename a table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param name
+	 *            the new name to give it. If it is not unique it will be made
+	 *            so.
+	 */
 	public void setTableRename(final DataSetTable table, String name) {
 		this.renamedTables.remove(table.getName());
 		if (!name.equals(table.getName())
@@ -189,18 +283,46 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Has this table been renamed?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return <tt>true</tt> if it has.
+	 */
 	public boolean isTableRename(final DataSetTable table) {
 		return this.renamedTables.containsKey(table.getName());
 	}
 
+	/**
+	 * Get the new name for the renamed table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return the name.
+	 */
 	public String getTableRename(final DataSetTable table) {
 		return (String) this.renamedTables.get(table.getName());
 	}
 
+	/**
+	 * Get a map of all renamed tables. Keys are original table names and values
+	 * are the new ones.
+	 * 
+	 * @return the map.
+	 */
 	public Map getTableRenames() {
 		return this.renamedTables;
 	}
 
+	/**
+	 * Mask the table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @throws ValidationException
+	 *             if logically it cannot be masked.
+	 */
 	public void setMaskedTable(final DataSetTable table)
 			throws ValidationException {
 		if (!table.getType().equals(DataSetTableType.DIMENSION))
@@ -209,18 +331,47 @@ public class DataSetModificationSet {
 		this.maskedTables.add(table.getName());
 	}
 
+	/**
+	 * Unmask the table.
+	 * 
+	 * @param table
+	 *            the table.
+	 */
 	public void unsetMaskedTable(final DataSetTable table) {
 		this.maskedTables.remove(table.getName());
 	}
 
+	/**
+	 * Is the table masked?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isMaskedTable(final DataSetTable table) {
 		return this.maskedTables.contains(table.getName());
 	}
 
+	/**
+	 * Get a collection of all masked table names.
+	 * 
+	 * @return the collection.
+	 */
 	public Collection getMaskedTables() {
 		return this.maskedTables;
 	}
 
+	/**
+	 * Renames the column.
+	 * 
+	 * @param col
+	 *            the column.
+	 * @param name
+	 *            the new name to give it, which will be made unique if it is
+	 *            not already so.
+	 * @throws ValidationException
+	 *             if it cannot be renamed for logical reasons.
+	 */
 	public void setColumnRename(final DataSetColumn col, String name)
 			throws ValidationException {
 		if (col instanceof InheritedColumn)
@@ -254,6 +405,13 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Has this column been renamed?
+	 * 
+	 * @param col
+	 *            the column.
+	 * @return <tt>true</tt> if it has.
+	 */
 	public boolean isColumnRename(final DataSetColumn col) {
 		final String tableKey = col.getTable().getName();
 		return this.renamedColumns.containsKey(tableKey)
@@ -261,6 +419,13 @@ public class DataSetModificationSet {
 						.getName());
 	}
 
+	/**
+	 * Find the new name for the column.
+	 * 
+	 * @param col
+	 *            the column.
+	 * @return the new name for it.
+	 */
 	public String getColumnRename(final DataSetColumn col) {
 		final String tableKey = col.getTable().getName();
 		return this.renamedColumns.containsKey(tableKey) ? (String) ((Map) this.renamedColumns
@@ -268,14 +433,29 @@ public class DataSetModificationSet {
 				: null;
 	}
 
+	/**
+	 * Get the map of renamed columns. Keys are table names. Values are maps,
+	 * where the keys are old column names and the values are the new names.
+	 * 
+	 * @return the map.
+	 */
 	public Map getColumnRenames() {
 		return this.renamedColumns;
 	}
 
+	/**
+	 * Mark the column as partitioned.
+	 * 
+	 * @param column
+	 *            the column.
+	 * @param restriction
+	 *            the partition definition.
+	 * @throws ValidationException
+	 *             if it logically cannot be partitioned.
+	 */
 	public void setPartitionedColumn(final DataSetColumn column,
 			final PartitionedColumnDefinition restriction)
 			throws ValidationException {
-		// TODO Make a alias -> real value map instead.
 		final String tableKey = column.getTable().getName();
 		// Refuse to partition subclass tables.
 		if (!((DataSetTable) column.getTable()).getType().equals(
@@ -292,41 +472,84 @@ public class DataSetModificationSet {
 		restrictions.put(column.getName(), restriction);
 	}
 
+	/**
+	 * Remove the partitioned column from the given table.
+	 * 
+	 * @param table
+	 *            the table to unpartition.
+	 */
 	public void unsetPartitionedColumn(final DataSetTable table) {
 		final String tableKey = table.getName();
 		this.partitionedColumns.remove(tableKey);
 	}
 
+	/**
+	 * Does this table have a partitioned column?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return <tt>true</tt> if it has.
+	 */
 	public boolean isPartitionedTable(final DataSetTable table) {
 		return this.partitionedColumns.containsKey(table.getName());
 	}
 
+	/**
+	 * Is this column partitioned?
+	 * 
+	 * @param column
+	 *            the column.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isPartitionedColumn(final DataSetColumn column) {
 		final String tableKey = column.getTable().getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
 		return pcs != null && pcs.containsKey(column.getName());
 	}
 
+	/**
+	 * Get the name of the partitioned column in the given table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return the name.
+	 */
 	public String getPartitionedColumnName(final DataSetTable table) {
-		// TODO Make a alias -> real value map instead.
 		final String tableKey = table.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
 		return (String) ((Map.Entry) pcs.entrySet().iterator().next()).getKey();
 	}
 
+	/**
+	 * Get the partitioned column definition for the given table.
+	 * 
+	 * @param dsTable
+	 *            the table.
+	 * @return the definition.
+	 */
 	public PartitionedColumnDefinition getPartitionedColumnDef(
 			final DataSetTable dsTable) {
-		// TODO Make a alias -> real value map instead.
 		final String tableKey = dsTable.getName();
 		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
 		return (PartitionedColumnDefinition) pcs.get(this
 				.getPartitionedColumnName(dsTable));
 	}
 
+	/**
+	 * Get a map of all partitioned columns. Keys are table names. Values are
+	 * maps, where the keys are column names and the values are the definitions.
+	 * 
+	 * @return the map.
+	 */
 	public Map getPartitionedColumns() {
 		return this.partitionedColumns;
 	}
 
+	/**
+	 * Get a unique name for the next expression column to be added.
+	 * 
+	 * @return the name.
+	 */
 	public String nextExpressionColumn() {
 		final Set used = new HashSet();
 		for (final Iterator j = this.expressionColumns.values().iterator(); j
@@ -340,6 +563,15 @@ public class DataSetModificationSet {
 		return Resources.get("expressionColumnPrefix") + i;
 	}
 
+	/**
+	 * Add an expression column to the given table. This is in addition to
+	 * adding an actual column to the actual table object.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param expr
+	 *            the definition of the expression.
+	 */
 	public void setExpressionColumn(final DataSetTable table,
 			final ExpressionColumnDefinition expr) {
 		final String tableKey = table.getName();
@@ -348,6 +580,15 @@ public class DataSetModificationSet {
 		((Collection) this.expressionColumns.get(tableKey)).add(expr);
 	}
 
+	/**
+	 * Remove the expression definition for the given table. This is in addition
+	 * to removing the actual column from the actual table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param expr
+	 *            the definition.
+	 */
 	public void unsetExpressionColumn(final DataSetTable table,
 			final ExpressionColumnDefinition expr) {
 		final String tableKey = table.getName();
@@ -358,15 +599,36 @@ public class DataSetModificationSet {
 		}
 	}
 
+	/**
+	 * Does this table have any expression columns?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return <tt>true</tt> if it does.
+	 */
 	public boolean hasExpressionColumn(final DataSetTable table) {
 		final String tableKey = table.getName();
 		return this.expressionColumns.containsKey(tableKey);
 	}
 
+	/**
+	 * Get all the expression columns for the table. The map has keys which are
+	 * table names, and values which are collections of expression column
+	 * definitions.
+	 * 
+	 * @return the map.
+	 */
 	public Map getExpressionColumns() {
 		return this.expressionColumns;
 	}
 
+	/**
+	 * Replicates this set of modifications so that the target contains the same
+	 * set.
+	 * 
+	 * @param target
+	 *            the target to receive the replicated copies.
+	 */
 	public void replicate(final DataSetModificationSet target) {
 		target.renamedTables.clear();
 		target.renamedTables.putAll(this.renamedTables);
@@ -415,7 +677,7 @@ public class DataSetModificationSet {
 
 			/**
 			 * The constructor specifies the ranges to partition on. Duplicate
-			 * values will be ignored. Keys of the range are names for the
+			 * ranges will be ignored. Keys of the range are names for the
 			 * ranges. Values are range expressions where :col represents the
 			 * name of the column.
 			 * 
@@ -435,15 +697,27 @@ public class DataSetModificationSet {
 			}
 
 			/**
-			 * Returns the set of values we will partition on. May be empty but
-			 * never null.
+			 * Returns the set of ranges we will partition on. May be empty but
+			 * never <tt>null</tt>.
 			 * 
-			 * @return the values we will partition on.
+			 * @return the ranges we will partition on.
 			 */
 			public Map getRanges() {
 				return this.ranges;
 			}
 
+			/**
+			 * For the given range name, return the range definition after
+			 * substituing column names for aliases.
+			 * 
+			 * @param name
+			 *            the name of the range to obtain.
+			 * @param alias
+			 *            the table prefix to use.
+			 * @param colName
+			 *            the column name to use.
+			 * @return the substituted expression.
+			 */
 			public String getSubstitutedExpression(final String name,
 					final String alias, final String colName) {
 				return ((String) this.ranges.get(name)).replaceAll(":col",
@@ -464,20 +738,19 @@ public class DataSetModificationSet {
 		}
 
 		/**
-		 * Use this class to partition on a range of values - ie. only columns
-		 * which fit one of these ranges will be returned.
+		 * Use this class to partition on a list of values - ie. only columns
+		 * which match one of these values will be returned.
 		 */
 		public static class ValueList implements PartitionedColumnDefinition {
 			private Map values = new HashMap();
 
 			/**
-			 * The constructor specifies the ranges to partition on. Duplicate
-			 * values will be ignored. Keys of the range are names for the
-			 * ranges. Values are range expressions where :col represents the
-			 * name of the column.
+			 * The constructor specifies the values to partition on. Duplicate
+			 * values will be ignored. Keys of the map are short names for the
+			 * values
 			 * 
-			 * @param ranges
-			 *            the set of unique ranges to partition on.
+			 * @param values
+			 *            the set of unique values to partition on.
 			 */
 			public ValueList(final Map values) {
 				this.values = new TreeMap();
@@ -493,7 +766,7 @@ public class DataSetModificationSet {
 
 			/**
 			 * Returns the set of values we will partition on. May be empty but
-			 * never null.
+			 * never <tt>null</tt>.
 			 * 
 			 * @return the values we will partition on.
 			 */
@@ -505,7 +778,7 @@ public class DataSetModificationSet {
 			 * {@inheritDoc}
 			 * <p>
 			 * This will return "ValueList:" suffixed with the output of
-			 * {@link #getLists()}.
+			 * {@link #getValues()}.
 			 */
 			public String toString() {
 				return "ValueList:"
@@ -516,7 +789,7 @@ public class DataSetModificationSet {
 	}
 
 	/**
-	 * Defines the restriction on a table, ie. a where-clause.
+	 * Defines an expression column for a table.
 	 */
 	public static class ExpressionColumnDefinition {
 
@@ -529,14 +802,18 @@ public class DataSetModificationSet {
 		private String colKey;
 
 		/**
-		 * This constructor gives the restriction an initial expression and a
-		 * set of aliases. The expression may not be empty, and neither can the
-		 * alias map.
+		 * This constructor makes a new expression definition based on the given
+		 * expression and a set of column aliases.
 		 * 
 		 * @param expr
 		 *            the expression to define for this restriction.
 		 * @param aliases
 		 *            the aliases to use for columns.
+		 * @param groupBy
+		 *            if this expression requires a group-by statement to be
+		 *            used on all columns not included in the expression.
+		 * @param colKey
+		 *            the name of the expression column that will be created.
 		 */
 		public ExpressionColumnDefinition(final String expr, final Map aliases,
 				final boolean groupBy, final String colKey) {
@@ -576,24 +853,31 @@ public class DataSetModificationSet {
 			return this.expr;
 		}
 
+		/**
+		 * Get the name of the expression column.
+		 * 
+		 * @return the name.
+		 */
 		public String getColKey() {
 			return this.colKey;
 		}
 
+		/**
+		 * Does this expression require a group-by on all columns other than
+		 * those included in the expression?
+		 * 
+		 * @return <tt>true</tt> if it does.
+		 */
 		public boolean isGroupBy() {
 			return this.groupBy;
 		}
 
 		/**
 		 * Returns the expression, <i>with</i> substitution. This value is
-		 * RDBMS-specific. The prefix map must contain two entries. Each entry
-		 * relates to one of the keys of a relation. The key of the map is the
-		 * key of the relation, and the value is the prefix to use in the
-		 * substituion, eg. "a" if columns for the table for that key should be
-		 * prefixed as "a.mycolumn".
+		 * RDBMS-specific.
 		 * 
-		 * @param tablePrefix
-		 *            the prefix to use for the table in the expression.
+		 * @param dsTable
+		 *            the table to use to look up column names from.
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final DataSetTable dsTable) {

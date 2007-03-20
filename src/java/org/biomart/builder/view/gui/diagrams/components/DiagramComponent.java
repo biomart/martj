@@ -29,12 +29,12 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * An element that can be drawn on a diagram. It can provide a context menu for
  * itself, the diagram it belongs to, its current state (and allow its state to
  * be set), and a map of any components it may contain inside that are of
- * interest to the diagram.
+ * interest to the diagram (for instance keys for relations).
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public interface DiagramComponent {
 	/**
@@ -45,7 +45,8 @@ public interface DiagramComponent {
 	public JPopupMenu getContextMenu();
 
 	/**
-	 * Construct a context menu for the model object.
+	 * Construct a context menu for the model object to be used when
+	 * multiple items are selected at once.
 	 * 
 	 * @return the popup menu.
 	 */

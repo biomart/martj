@@ -51,9 +51,9 @@ import org.biomart.common.resources.Resources;
  * the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public class ExplainContext extends SchemaContext {
 	private DataSet dataset;
@@ -120,14 +120,12 @@ public class ExplainContext extends SchemaContext {
 					.getSchemaModifications().isCompoundRelation(
 							this.datasetTable, relation));
 
-			// Fade out all UNINCLUDED, INFERRED_INCORRECT and MASKED relations.
+			// Fade out all UNINCLUDED and MASKED relations.
 			final boolean included = this.datasetTable == null ? this.dataset
 					.getIncludedRelations().contains(relation)
 					: this.datasetTable.getIncludedRelations().contains(
 							relation);
 			if (!included
-					|| relation.getStatus().equals(
-							ComponentStatus.INFERRED_INCORRECT)
 					|| this.dataset.getSchemaModifications().isMaskedRelation(
 							this.datasetTable, relation))
 				component.setForeground(RelationComponent.MASKED_COLOUR);
@@ -170,18 +168,9 @@ public class ExplainContext extends SchemaContext {
 
 		// This section customises the appearance of key objects within
 		// table objects in the diagram.
-		else if (object instanceof Key) {
-
-			// Work out what key we are dealing with.
-			final Key key = (Key) object;
-
-			// Fade out all INFERRED_INCORRECT keys.
-			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				component.setForeground(KeyComponent.MASKED_COLOUR);
-
-			// All others are normal.
-			else
-				component.setForeground(KeyComponent.NORMAL_COLOUR);
+		else if (object instanceof Key) {			
+			// All are normal.
+			component.setForeground(KeyComponent.NORMAL_COLOUR);
 
 			// Remove drag-and-drop from the key as it does not apply in
 			// the window context.
@@ -233,7 +222,7 @@ public class ExplainContext extends SchemaContext {
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestMaskTable(ExplainContext.this.dataset,
+							.requestMaskAllRelations(ExplainContext.this.dataset,
 									ExplainContext.this.datasetTable, table);
 				}
 			});
@@ -247,7 +236,7 @@ public class ExplainContext extends SchemaContext {
 			unmask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestUnmaskTable(ExplainContext.this.dataset,
+							.requestUnmaskAllRelations(ExplainContext.this.dataset,
 									ExplainContext.this.datasetTable, table);
 				}
 			});
@@ -434,7 +423,7 @@ public class ExplainContext extends SchemaContext {
 			if (relationCompounded)
 				compound.setSelected(true);
 
-			// The compound option allows the user to compound a relation.
+			// The compound option allows the user to direction a relation.
 			final JCheckBoxMenuItem directional = new JCheckBoxMenuItem(
 					Resources.get("directionalRelationTitle"));
 			directional.setMnemonic(Resources

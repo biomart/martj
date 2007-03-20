@@ -39,12 +39,12 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 
 /**
- * This layout manager lays out components in grouped lines.
+ * This layout manager lays out components in rows of a square block.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class SchemaLayoutManager implements LayoutManager2 {
 	private static final int RELATION_SPACING = 5; // 72 = 1 inch
@@ -106,7 +106,6 @@ public class SchemaLayoutManager implements LayoutManager2 {
 	}
 
 	public Dimension preferredLayoutSize(final Container parent) {
-		// Our preferred size is our minimum size.
 		return this.minimumLayoutSize(parent);
 	}
 
@@ -145,6 +144,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				int rowWidth = 0;
 				int rowSpacing = 0;
 
+				// For each component, allow space plus padding either
+				// side equivalent to the number of relations from that
+				// component.
 				for (final Iterator i = row.iterator(); i.hasNext();) {
 					final Component comp = (Component) i.next();
 					final Dimension prefSize = comp.getPreferredSize();
@@ -160,10 +162,12 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 				this.rowSpacings.set(rowNum, new Integer(rowSpacing));
 
+				// Add a bit of padding above and below each row.
 				rowHeight += SchemaLayoutManager.TABLE_PADDING * 2;
 				this.rowHeights.set(rowNum, new Integer(rowHeight));
 				this.size.height += rowHeight;
 
+				// Add a bit of padding at each end of each row.
 				rowWidth += (row.size() + 1)
 						* SchemaLayoutManager.TABLE_PADDING * 2;
 				this.rowWidths.set(rowNum, new Integer(rowWidth));
@@ -186,6 +190,9 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				final Dimension prefSize = comp.getPreferredSize();
 				this.prefSizes.put(comp, prefSize);
 
+				// Work out how many components per row we need to make
+				// a square, and therefore which row has space on to
+				// put this component.
 				final int rowLength = (int) Math.ceil(Math
 						.sqrt(++this.tableCount));
 				int rowNum = 0;
@@ -204,9 +211,11 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 				((List) this.rows.get(rowNum)).add(comp);
 
+				// The component needs space for its relations.
 				final int compSpacing = SchemaLayoutManager.RELATION_SPACING
 						* ((SchemaLayoutConstraint) constraints).getRelCount();
 
+				// Update the row to accommodate the new component.
 				final int oldRowWidth = ((Integer) this.rowWidths.get(rowNum))
 						.intValue();
 				int newRowWidth = oldRowWidth;
@@ -215,6 +224,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 						* 2;
 				this.rowWidths.set(rowNum, new Integer(newRowWidth));
 
+				// Update the row height if the new component plus spacing
+				// is higher than the old row.
 				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
 						.intValue();
 				final int newRowHeight = Math.max(oldRowHeight, prefSize.height
@@ -222,6 +233,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 						+ compSpacing * 2;
 				this.rowHeights.set(rowNum, new Integer(newRowHeight));
 
+				// Increase the space to the next row to accommodate the
+				// relations from this new component, if necessary.
 				this.rowSpacings.set(rowNum, new Integer(Math.max(
 						((Integer) this.rowSpacings.get(rowNum)).intValue(),
 						compSpacing)));
@@ -242,6 +255,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				final Dimension prefSize = comp.getPreferredSize();
 				this.prefSizes.remove(comp);
 
+				// How much padding was this component given?
 				final int compSpacing = SchemaLayoutManager.RELATION_SPACING
 						* constraints.getRelCount();
 
@@ -250,6 +264,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 				((List) this.rows.get(rowNum)).remove(comp);
 
+				// Reduce the row width and height accordingly.
 				final int oldRowWidth = ((Integer) this.rowWidths.get(rowNum))
 						.intValue();
 				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
@@ -298,12 +313,16 @@ public class SchemaLayoutManager implements LayoutManager2 {
 		this.calculateSize(parent);
 		synchronized (parent.getTreeLock()) {
 			int nextY = SchemaLayoutManager.TABLE_PADDING;
+
+			// Layout each row in turn.
 			for (int rowNum = 0; rowNum < this.rows.size(); rowNum++) {
 				int x = SchemaLayoutManager.TABLE_PADDING;
 				final int y = nextY
 						+ ((Integer) this.rowHeights.get(rowNum)).intValue()
 						- SchemaLayoutManager.TABLE_PADDING * 2
 						- ((Integer) this.rowSpacings.get(rowNum)).intValue();
+
+				// Layout each component in the row.
 				for (final Iterator i = ((List) this.rows.get(rowNum))
 						.iterator(); i.hasNext();) {
 					final Component comp = (Component) i.next();
@@ -322,8 +341,10 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				nextY += ((Integer) this.rowHeights.get(rowNum)).intValue();
 			}
 
+			// Work out how the relations are going to join things up.
 			for (final Iterator i = this.relations.iterator(); i.hasNext();) {
 				final RelationComponent comp = (RelationComponent) i.next();
+
 				// Obtain first key and work out position relative to
 				// diagram.
 				int firstRowNum = 0;
@@ -447,18 +468,29 @@ public class SchemaLayoutManager implements LayoutManager2 {
 		}
 	}
 
+	/**
+	 * Use this constraint to indicate to the layout manager how much spacing to
+	 * give each component.
+	 */
 	public static class SchemaLayoutConstraint {
 
 		private final int relCount;
 
 		private int row;
 
+		/**
+		 * Construct a new constraint indicating that the given number of
+		 * relations lead off this component, so that space is left for them.
+		 * 
+		 * @param relCount
+		 *            the number of relations from this component.
+		 */
 		public SchemaLayoutConstraint(final int relCount) {
 			this.relCount = relCount;
 			this.row = 0;
 		}
 
-		public int getRelCount() {
+		private int getRelCount() {
 			return this.relCount;
 		}
 

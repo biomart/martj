@@ -76,7 +76,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class DataSet extends GenericSchema {
 	private final Table centralTable;
@@ -696,6 +696,12 @@ public class DataSet extends GenericSchema {
 		return this.centralTable;
 	}
 
+	/**
+	 * Follows subclassed relations to find where transformation should really
+	 * start for this dataset.
+	 * 
+	 * @return the real central table.
+	 */
 	public Table getRealCentralTable() {
 		Log.debug("Finding actual central table");
 		// Identify main table.
@@ -863,10 +869,23 @@ public class DataSet extends GenericSchema {
 		this.dsMods.synchronise();
 	}
 
+	/**
+	 * Find out what schemas are used in this dataset.
+	 * 
+	 * @return the set of schemas used.
+	 */
 	public Collection getIncludedSchemas() {
 		return this.includedSchemas;
 	}
 
+	/**
+	 * See if the given schema is used in this dataset.
+	 * 
+	 * @param schema
+	 *            the schema to check for.
+	 * @return <tt>true</tt> if this dataset uses the given schema, or if it
+	 *         is unsure.
+	 */
 	public boolean usesSchema(final Schema schema) {
 		return this.includedSchemas.isEmpty()
 				|| this.includedSchemas.contains(schema);
@@ -1345,6 +1364,12 @@ public class DataSet extends GenericSchema {
 			return this.getName();
 		}
 
+		/**
+		 * Return the types of optimiser column available.
+		 * 
+		 * @return the types available. Keys are internal names for the types,
+		 *         values are the actual type instances.
+		 */
 		public static Map getTypes() {
 			final Map optimiserTypes = new LinkedHashMap();
 			optimiserTypes.put("None", DataSetOptimiserType.NONE);

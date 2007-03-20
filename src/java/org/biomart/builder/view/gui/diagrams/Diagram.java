@@ -92,7 +92,7 @@ import org.biomart.common.view.gui.dialogs.ComponentPrinter;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public abstract class Diagram extends JLayeredPane implements Scrollable,
 		Autoscroll {
@@ -121,7 +121,9 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * diagram.
 	 * 
 	 * @param layout
-	 *            the layout manager to use to layout the diagram.
+	 *            the layout manager to use to layout the diagram. If
+	 *            <tt>null</tt>, a default manager will be used that does not
+	 *            recognise the distinction between relations and tables.
 	 * @param martTab
 	 *            the mart tab this diagram will use to discover which mart is
 	 *            currently visible when working out where to send events.
@@ -161,8 +163,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				e.rejectDrop();
 			}
 		};
-		final DropTarget dropTarget = new DropTarget(this,
-				DnDConstants.ACTION_COPY, dtListener, true);
+		new DropTarget(this, DnDConstants.ACTION_COPY, dtListener, true);
 
 		// Set our background.
 		this.setBackground(Diagram.BACKGROUND_COLOUR);
@@ -171,13 +172,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
-	 * the given layout manager. The {@link MartTab#getMart()} method will be
+	 * the default layout manager. The {@link MartTab#getMart()} method will be
 	 * used to work out which mart is being interacted with when the user
 	 * selects items in the context menus attached to components in this
 	 * diagram.
 	 * <p>
-	 * This constructor is the same as the other one, but defaults to an
-	 * instance of {@link LinearLayout} to handle layout of the diagram.
+	 * See {@link #Diagram(LayoutManager, MartTab)} with a null first param.
 	 * 
 	 * @param martTab
 	 *            the mart tab this diagram will use to discover which mart is
@@ -187,13 +187,25 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this(null, martTab);
 	}
 
+	/**
+	 * Highlight the given item and dehighlight all others.
+	 * 
+	 * @param item
+	 *            the item to highlight.
+	 */
 	public void selectOnlyItem(final BoxShapedComponent item) {
-		// (De)select this item only and clear rest of group.
+		// Select this item only and clear rest of group.
 		this.deselectAll();
 		this.selectedItems.add(item);
 		item.select();
 	}
 
+	/**
+	 * Toggle the given item highlight on/off and dehighlight all others.
+	 * 
+	 * @param item
+	 *            the item to toggle.
+	 */
 	public void toggleItem(final BoxShapedComponent item) {
 		// (De)select this item only and clear rest of group.
 		boolean selected = this.isSelected(item);
@@ -204,6 +216,14 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		}
 	}
 
+	/**
+	 * For each item in the collection, toggle it on/off, whilst preserving the
+	 * other selected items not mentioned.
+	 * 
+	 * @param items
+	 *            the collection of items to toggle. Can be empty but never
+	 *            <tt>null</tt>.
+	 */
 	public void toggleGroupItems(final Collection items) {
 		// Cancel all renames first.
 		for (final Iterator i = this.selectedItems.iterator(); i.hasNext();)
@@ -227,6 +247,13 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		}
 	}
 
+	/**
+	 * For this item only, toggle it on/off, whilst preserving the other
+	 * selected items.
+	 * 
+	 * @param item
+	 *            the item to toggle.
+	 */
 	public void toggleGroupItem(final BoxShapedComponent item) {
 		// Cancel all renames first.
 		for (final Iterator i = this.selectedItems.iterator(); i.hasNext();)
@@ -247,20 +274,51 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		}
 	}
 
+	/**
+	 * Dehighlights all items.
+	 */
 	public void deselectAll() {
 		for (final Iterator i = this.selectedItems.iterator(); i.hasNext();)
 			((BoxShapedComponent) i.next()).deselect();
 		this.selectedItems.clear();
 	}
 
+	/**
+	 * Check to see if the given item is highlighted in this diagram.
+	 * 
+	 * @param item
+	 *            the item to check.
+	 * @return <tt>true</tt> if it is highlighted.
+	 */
 	public boolean isSelected(final BoxShapedComponent item) {
 		return this.selectedItems.contains(item);
 	}
 
+	/**
+	 * Return all currently selected items in this diagram.
+	 * 
+	 * @return the currently selected items. May be empty but never
+	 *         <tt>null</tt>.
+	 */
 	public Collection getSelectedItems() {
 		return this.selectedItems;
 	}
 
+	/**
+	 * Return all components that intersect a region. The region is defined by
+	 * the smallest box possible that contains the entire bounding boxes of the
+	 * two components specified.
+	 * 
+	 * @param oneCorner
+	 *            one of the two components that specify the region.
+	 * @param otherCorner
+	 *            the other component that specifies the region.
+	 * @param componentClass
+	 *            the type of components to search for within the region.
+	 * @return the components found in that region. May be empty but never
+	 *         <tt>null</tt>. Will include the two components used to specify
+	 *         the region if they are of the correct class.
+	 */
 	public Collection getComponentsInRegion(final Component oneCorner,
 			final Component otherCorner, final Class componentClass) {
 		final Rectangle firstCorner = SwingUtilities.convertRectangle(oneCorner
@@ -611,13 +669,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	}
 
 	/**
-	 * This method first calls {@link #doUpdateAppearance()} on this diagram,
-	 * then walks through the components in the diagram, and calls
-	 * {@link DiagramComponent#updateAppearance()} on each in turn. This has the
-	 * effect of updating the appearance of every component and causing it to
-	 * redraw. It does not recalculate the location of any of these components,
-	 * neither does it recalculate which components are displayed in the diagram
-	 * at present.
+	 * This method walks through the components in the diagram, and calls
+	 * {@link DiagramComponent#repaintDiagramComponent()} on each in turn. This
+	 * has the effect of updating the appearance of every component and causing
+	 * it to redraw. It does not recalculate the location of any of these
+	 * components, neither does it recalculate which components are displayed in
+	 * the diagram at present.
 	 * <p>
 	 * This method does not resize the diagram to fit components, so do not use
 	 * it if the component size is likely to have changed (eg. show/hide columns
@@ -641,6 +698,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	}
 
 	public Dimension getPreferredSize() {
+		// Stretch ourselves to fill the viewport if we are smaller than it.
 		Dimension pref = this.getLayout().preferredLayoutSize(this);
 		final JViewport viewport = this.getParent() instanceof JViewport ? (JViewport) this
 				.getParent()

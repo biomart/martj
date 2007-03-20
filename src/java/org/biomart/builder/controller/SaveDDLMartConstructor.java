@@ -59,7 +59,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class SaveDDLMartConstructor implements MartConstructor {
 
@@ -76,9 +76,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            write this file in plain text. Multi-file granularity will
 	 *            write this file as a gzipped tar archive containing many plain
 	 *            text files.
-	 * @param includeComments
-	 *            <tt>true</tt> if comments are to be included in the DDL
-	 *            statements generated, <tt>false</tt> if not.
 	 */
 	public SaveDDLMartConstructor(final File outputFile) {
 		Log.info(Resources.get("logSaveDDLFile", outputFile.getPath()));
@@ -96,9 +93,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            the string buffer to write the DDL to. This parameter can only
 	 *            be used if writing to a single file for all DDL. Any other
 	 *            granularity will cause an exception.
-	 * @param includeComments
-	 *            <tt>true</tt> if comments are to be included in the DDL
-	 *            statements generated, <tt>false</tt> if not.
 	 */
 	public SaveDDLMartConstructor(final StringBuffer outputStringBuffer) {
 		Log.info(Resources.get("logSaveDDLBuffer"));
@@ -160,10 +154,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	/**
-	 * Note that after construction,
-	 * {@link DDLHelper#setDialect(DatabaseDialect)} must be called before
-	 * construction begins, else the instance will not know what kind of
-	 * database it is supposed to be using.
+	 * This abstract class is the base for all DDL helpers.
 	 */
 	public abstract static class DDLHelper implements MartConstructorListener {
 		private DatabaseDialect dialect;
@@ -172,6 +163,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		/**
 		 * Constructs a DDL helper.
+		 * 
+		 * @param dialect
+		 *            the language that this DDL helper will speak.
 		 */
 		protected DDLHelper(final DatabaseDialect dialect) {
 			this.dialect = dialect;
@@ -180,7 +174,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		/**
 		 * Translates an action into commands, using
-		 * {@link DatabaseDialect#getStatementsForAction(MartConstructorAction, boolean)}
+		 * {@link DatabaseDialect#getStatementsForAction(MartConstructorAction)}
 		 * 
 		 * @param action
 		 *            the action to translate.
@@ -198,6 +192,11 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			return this.dialect.getStatementsForAction(action);
 		}
 
+		/**
+		 * Obtain a unique temp table name to use.
+		 * 
+		 * @return a unique temp table name. Different on every call!
+		 */
 		public String getNewTempTableName() {
 			return "TEMP__" + this.tempTableSeq++;
 		}
@@ -216,9 +215,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 * 
 		 * @param outputStringBuffer
 		 *            the string buffer to write the DDL into.
-		 * @param includeComments
-		 *            <tt>true</tt> if comments are to be included,
-		 *            <tt>false</tt> if not.
+		 * @param dialect
+		 *            the type of SQL the buffer should present.
 		 */
 		public SingleStringBufferHelper(final StringBuffer outputStringBuffer,
 				final DatabaseDialect dialect) {
@@ -268,9 +266,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 * 
 		 * @param outputFile
 		 *            the zip file to write the DDL into.
-		 * @param includeComments
-		 *            <tt>true</tt> if comments are to be included,
-		 *            <tt>false</tt> if not.
+		 * @param dialect
+		 *            the type of SQL the file should contain.
 		 */
 		public TableAsFileHelper(final File outputFile,
 				final DatabaseDialect dialect) {

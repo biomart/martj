@@ -23,7 +23,6 @@ import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -40,7 +39,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.6
  */
 public class AllDataSetsContext implements DiagramContext {
 	private MartTab martTab;
@@ -69,12 +68,13 @@ public class AllDataSetsContext implements DiagramContext {
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
 		if (object instanceof DataSet) {
+
 			// Set the background colour.
-			if (((DataSet) object).getInvisible())
+			if (((DataSet)object).getInvisible())
 				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else
 				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
-
+			
 			((DataSetComponent) component).setRenameable(true);
 			((DataSetComponent) component).setSelectable(true);
 		}
@@ -84,7 +84,7 @@ public class AllDataSetsContext implements DiagramContext {
 			final Collection selectedItems, final Class clazz) {
 		// Menu for multiple dataset objects.
 		if (DataSet.class.isAssignableFrom(clazz)) {
-			// Visible/invisible
+			// Visible.
 			final JMenuItem visible = new JMenuItem(Resources
 					.get("uninvisibleGroupDataSetTitle"));
 			visible.setMnemonic(Resources
@@ -101,6 +101,7 @@ public class AllDataSetsContext implements DiagramContext {
 			});
 			contextMenu.add(visible);
 
+			// Invisible.
 			final JMenuItem invisible = new JMenuItem(Resources
 					.get("invisibleGroupDataSetTitle"));
 			invisible.setMnemonic(Resources
@@ -121,58 +122,6 @@ public class AllDataSetsContext implements DiagramContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
-
-		// DataSet objects have different menus to the background.
-		if (object instanceof DataSet) {
-
-			// Add a separator if the menu is not already empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// What schema is this?
-			final DataSet dataset = (DataSet) object;
-
-			// Add an option to rename this dataset.
-			final JMenuItem rename = new JMenuItem(Resources
-					.get("renameDataSetTitle"));
-			rename
-					.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(
-							0));
-			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.martTab.getDataSetTabSet()
-							.requestRenameDataSet(dataset);
-				}
-			});
-			contextMenu.add(rename);
-
-			// Add an option to replicate this dataset.
-			final JMenuItem replicate = new JMenuItem(Resources
-					.get("replicateDataSetTitle"));
-			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
-					.charAt(0));
-			replicate.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.martTab.getDataSetTabSet()
-							.requestReplicateDataSet(dataset);
-				}
-			});
-			contextMenu.add(replicate);
-
-			// Option to remove the dataset from the mart.
-			final JMenuItem remove = new JMenuItem(Resources
-					.get("removeDataSetTitle"), new ImageIcon(Resources
-					.getResourceAsURL("cut.gif")));
-			remove
-					.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(
-							0));
-			remove.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					AllDataSetsContext.this.martTab.getDataSetTabSet()
-							.requestRemoveDataSet(dataset);
-				}
-			});
-			contextMenu.add(remove);
-		}
+		// Nothing extra to do.
 	}
 }

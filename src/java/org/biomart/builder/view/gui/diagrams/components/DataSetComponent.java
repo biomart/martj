@@ -27,6 +27,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
@@ -42,24 +44,21 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class DataSetComponent extends BoxShapedComponent {
 
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Bold font.
-	 */
-	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
+	private static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
-	 * This color is the one used for the background of invisible datasets.
+	 * Background for invisible datasets.
 	 */
 	public static Color INVISIBLE_BACKGROUND = Color.LIGHT_GRAY;
 
 	/**
-	 * This color is the one used for the background of visible datasets.
+	 * Background for visible datasets.
 	 */
 	public static Color VISIBLE_BACKGROUND = Color.YELLOW;
 
@@ -139,6 +138,73 @@ public class DataSetComponent extends BoxShapedComponent {
 		});
 		contextMenu.add(showTables);
 
+		// Add a separator.
+		contextMenu.addSeparator();
+
+		// Add an option to rename this dataset.
+		final JMenuItem rename = new JMenuItem(Resources
+				.get("renameDataSetTitle"));
+		rename.setMnemonic(Resources.get("renameDataSetMnemonic").charAt(0));
+		rename.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				DataSetComponent.this.getDiagram().getMartTab()
+						.getDataSetTabSet().requestRenameDataSet(
+								DataSetComponent.this.getDataSet());
+			}
+		});
+		contextMenu.add(rename);
+
+		// Add an option to replicate this dataset.
+		final JMenuItem replicate = new JMenuItem(Resources
+				.get("replicateDataSetTitle"));
+		replicate.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
+				0));
+		replicate.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				DataSetComponent.this.getDiagram().getMartTab()
+						.getDataSetTabSet().requestReplicateDataSet(
+								DataSetComponent.this.getDataSet());
+			}
+		});
+		contextMenu.add(replicate);
+
+		// Option to remove the dataset from the mart.
+		final JMenuItem remove = new JMenuItem(Resources
+				.get("removeDataSetTitle"), new ImageIcon(Resources
+				.getResourceAsURL("cut.gif")));
+		remove.setMnemonic(Resources.get("removeDataSetMnemonic").charAt(0));
+		remove.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				DataSetComponent.this.getDiagram().getMartTab()
+						.getDataSetTabSet().requestRemoveDataSet(
+								DataSetComponent.this.getDataSet());
+			}
+		});
+		contextMenu.add(remove);
+
+		// Separator
+		contextMenu.addSeparator();
+
+		// Invisible menu option.
+		final JMenuItem invisible = new JCheckBoxMenuItem(Resources
+				.get("invisibleDataSetTitle"));
+		invisible.setMnemonic(Resources.get("invisibleDataSetMnemonic").charAt(
+				0));
+		invisible.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				if (invisible.isSelected())
+					DataSetComponent.this.getDiagram().getMartTab()
+							.getDataSetTabSet().requestInvisibleDataSet(
+									DataSetComponent.this.getDataSet());
+				else
+					DataSetComponent.this.getDiagram().getMartTab()
+							.getDataSetTabSet().requestVisibleDataSet(
+									DataSetComponent.this.getDataSet());
+			}
+		});
+		invisible.setSelected(this.getDataSet().getInvisible());
+		contextMenu.add(invisible);
+
 		// Return it. Will be further adapted by a listener elsewhere.
 		return contextMenu;
 	}
@@ -146,9 +212,6 @@ public class DataSetComponent extends BoxShapedComponent {
 	public void recalculateDiagramComponent() {
 		// Remove all our components.
 		this.removeAll();
-
-		// Set the background colour.
-		this.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 		// Add the label for the dataset name,
 		final JTextField name = new JTextField();

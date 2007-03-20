@@ -41,16 +41,13 @@ import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinitio
 import org.biomart.common.resources.Resources;
 
 /**
- * A dialog which lists all the columns in a concat relation, and all the
- * columns in the table which are available to put in that relation. It can then
- * allow the user to move those columns around, thus e diting the relation. It
- * also allows the user to specify the separators to use during the
- * concatenation operation.
+ * A dialog which allows the user to specify how many times a relation will be
+ * followed by the transformation process.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class CompoundRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -194,6 +191,13 @@ public class CompoundRelationDialog extends JDialog {
 		return this.arity.getNumber().intValue();
 	}
 
+	/**
+	 * If the user ticked the parallel relation box, indicating that this
+	 * relation should be treated as a fork point, this will return
+	 * <tt>true</tt>.
+	 * 
+	 * @return <tt>true</tt> if the user ticked the parallel box.
+	 */
 	public boolean getParallel() {
 		return this.parallel.isSelected();
 	}

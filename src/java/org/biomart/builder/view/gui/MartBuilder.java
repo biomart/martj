@@ -49,7 +49,7 @@ import org.biomart.common.view.gui.BioMartGUI;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class MartBuilder extends BioMartGUI {
 	private static final long serialVersionUID = 1L;
@@ -88,11 +88,11 @@ public class MartBuilder extends BioMartGUI {
 	 * Exits the application, but only with permission from the mart tabset.
 	 */
 	public boolean confirmExitApp() {
-		return this.martTabSet.confirmCloseAllMarts();
+		return this.martTabSet.requestCloseAllMarts();
 	}
 
 	// This is the main menu bar.
-	public static class MartBuilderMenuBar extends BioMartMenuBar {
+	private static class MartBuilderMenuBar extends BioMartMenuBar {
 		private static final long serialVersionUID = 1;
 
 		private JMenuItem closeMart;
@@ -419,7 +419,6 @@ public class MartBuilder extends BioMartGUI {
 			// Construct the help menu.
 			final JMenu helpMenu = new JMenu(Resources.get("helpMenuTitle"));
 			helpMenu.setMnemonic(Resources.get("helpMenuMnemonic").charAt(0));
-			// TODO A link to help docs
 			helpMenu.add(this.aboutMartBuilder);
 
 			// Add a listener which checks which options to enable each time the
@@ -444,8 +443,8 @@ public class MartBuilder extends BioMartGUI {
 							&& martBuilder.martTabSet.getSelectedMartTab()
 									.getMart().getDataSets().size() > 0);
 					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
-					// Wipe from the separator before the Exit
-					// entry to the last non-separator/non-numbered entry.
+					// Wipe from the separator to the last non-separator/
+					// non-numbered entry.
 					// Then, insert after the separator a numbered list
 					// of recent files, followed by another separator if
 					// the list was not empty.
@@ -467,7 +466,7 @@ public class MartBuilder extends BioMartGUI {
 						file.setMnemonic(("" + position).charAt(0));
 						file.addActionListener(new ActionListener() {
 							public void actionPerformed(final ActionEvent evt) {
-								martBuilder.martTabSet.loadMart(location);
+								martBuilder.martTabSet.requestLoadMart(location);
 							}
 						});
 						martMenu.add(file);
@@ -499,7 +498,7 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.keyguessingSchema
 							.setSelected(schema != null
-									&& schema.getKeyGuessing());
+									&& schema.isKeyGuessing());
 					MartBuilderMenuBar.this.partitionedSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.partitionedSchema
@@ -603,16 +602,16 @@ public class MartBuilder extends BioMartGUI {
 			if (e.getSource() == this.newMart)
 				this.getMartBuilder().martTabSet.requestNewMart();
 			else if (e.getSource() == this.openMart)
-				this.getMartBuilder().martTabSet.loadMart();
+				this.getMartBuilder().martTabSet.requestLoadMart();
 			else if (e.getSource() == this.saveMart)
-				this.getMartBuilder().martTabSet.saveMart();
+				this.getMartBuilder().martTabSet.requestSaveMart();
 			else if (e.getSource() == this.saveMartAs)
-				this.getMartBuilder().martTabSet.saveMartAs();
+				this.getMartBuilder().martTabSet.requestSaveMartAs();
 			else if (e.getSource() == this.closeMart)
-				this.getMartBuilder().martTabSet.confirmCloseMart();
-			// Mart menu.
+				this.getMartBuilder().martTabSet.requestCloseMart();
 			else if (e.getSource() == this.saveDDL)
 				this.getMartBuilder().martTabSet.requestCreateDDL();
+			// Schema menu.
 			else if (e.getSource() == this.addSchema)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestAddSchema();
@@ -625,7 +624,6 @@ public class MartBuilder extends BioMartGUI {
 			else if (e.getSource() == this.removeAllDatasets)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestRemoveAllDataSets();
-			// Schema menu
 			else if (e.getSource() == this.keyguessingSchema) {
 				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()

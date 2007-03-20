@@ -58,7 +58,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class DataSetContext extends SchemaContext {
 	private DataSet dataset;
@@ -153,17 +153,13 @@ public class DataSetContext extends SchemaContext {
 							((DataSetTable) object).getFocusRelation()))
 				component.setForeground(TableComponent.MASKED_COLOUR);
 
-			// Highlight SUBCLASS tables.
-			else if (tableType.equals(DataSetTableType.MAIN_SUBCLASS))
-				component.setForeground(TableComponent.SUBCLASS_COLOUR);
-
 			// Highlight DIMENSION tables.
 			else if (tableType.equals(DataSetTableType.DIMENSION)) {
+				if (this.getDataSet()
+						.getDataSetModifications().isPartitionedTable(
+								(DataSetTable) object))
 				component
-						.setForeground(this.getDataSet()
-								.getDataSetModifications().isPartitionedTable(
-										(DataSetTable) object) ? TableComponent.DIMENSION_PARTITIONED_COLOUR
-								: TableComponent.DIMENSION_COLOUR);
+						.setForeground(TableComponent.PARTITIONED_COLOUR);
 
 				// Is it compounded?
 				((TableComponent) component).setCompounded(this.dataset
@@ -188,7 +184,7 @@ public class DataSetContext extends SchemaContext {
 			// Fade out all MASKED columns.
 			if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isMaskedColumn(column))
-				component.setBackground(ColumnComponent.FADED_COLOUR);
+				component.setBackground(ColumnComponent.MASKED_COLOUR);
 			// Blue PARTITIONED columns.
 			else if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isPartitionedColumn(column))
@@ -278,6 +274,7 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(removeDM);
 
+				// Unmask the dimensions.
 				final JMenuItem reinstateDM = new JMenuItem(Resources
 						.get("unmaskGroupDimensionTitle"));
 				reinstateDM.setMnemonic(Resources.get(
@@ -342,6 +339,7 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 
+			// Unmask the columns.
 			final JMenuItem unmask = new JMenuItem(Resources
 					.get("unmaskGroupColumnTitle"));
 			unmask.setMnemonic(Resources.get("unmaskGroupColumnMnemonic")
@@ -367,7 +365,7 @@ public class DataSetContext extends SchemaContext {
 
 			contextMenu.addSeparator();
 
-			// Index/Non-index
+			// Index cols.
 			final JMenuItem index = new JMenuItem(Resources
 					.get("indexGroupColumnTitle"));
 			index.setMnemonic(Resources.get("indexGroupColumnMnemonic").charAt(
@@ -386,6 +384,7 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(index);
 
+			// Un-index cols.
 			final JMenuItem unindex = new JMenuItem(Resources
 					.get("unindexGroupColumnTitle"));
 			unindex.setMnemonic(Resources.get("unindexGroupColumnMnemonic")
@@ -414,7 +413,7 @@ public class DataSetContext extends SchemaContext {
 
 				contextMenu.addSeparator();
 
-				// (Un)non-inherit all columns on this table.
+				// Non-inherit all columns on this table.
 				final JMenuItem non = new JMenuItem(Resources
 						.get("nonInheritGroupTitle"));
 				non.setMnemonic(Resources.get("nonInheritGroupMnemonic")
@@ -433,6 +432,8 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(non);
+				
+				// Re-inherit all columns on this table.
 				final JMenuItem unnon = new JMenuItem(Resources
 						.get("unNonInheritGroupTitle"));
 				unnon.setMnemonic(Resources.get("unNonInheritGroupMnemonic")
@@ -617,7 +618,7 @@ public class DataSetContext extends SchemaContext {
 					subclass.setEnabled(false);
 				contextMenu.add(subclass);
 
-				// The compound option allows the user to compound a relation.
+				// The compound option allows the user to replicate a dimension.
 				final JCheckBoxMenuItem compound = new JCheckBoxMenuItem(
 						Resources.get("replicateDimensionTitle"));
 				compound.setMnemonic(Resources
@@ -706,7 +707,7 @@ public class DataSetContext extends SchemaContext {
 			}
 			// Special stuff for all non-dimension tables.
 			else {
-				// (Un)non-inherit all columns on this table.
+				// Non-inherit all columns on this table.
 				final JMenuItem non = new JMenuItem(Resources
 						.get("nonInheritAllTitle"));
 				non.setMnemonic(Resources.get("nonInheritAllMnemonic")
@@ -721,6 +722,8 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(non);
+				
+				// Re-inherit all columns on this table.
 				final JMenuItem unnon = new JMenuItem(Resources
 						.get("unNonInheritAllTitle"));
 				unnon.setMnemonic(Resources.get("unNonInheritAllMnemonic")
@@ -758,7 +761,7 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(unsubclass);
 
-				// The compound option allows the user to compound a relation.
+				// The compound option allows the user to recurse a subclass.
 				final JCheckBoxMenuItem compound = new JCheckBoxMenuItem(
 						Resources.get("recurseSubclassTitle"));
 				compound.setMnemonic(Resources.get("recurseSubclassMnemonic")

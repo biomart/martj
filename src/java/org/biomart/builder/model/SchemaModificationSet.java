@@ -36,12 +36,12 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
 /**
- * This interface defines a set of modifications to a schema.
+ * This class defines a set of modifications to a schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.6
  */
 public class SchemaModificationSet {
 
@@ -71,14 +71,34 @@ public class SchemaModificationSet {
 
 	private final Map concatRelations = new HashMap();
 
+	/**
+	 * Create a new empty set of modifications related to the given dataset.
+	 * 
+	 * @param ds
+	 *            the dataset these modifications are for.
+	 */
 	public SchemaModificationSet(final DataSet ds) {
 		this.ds = ds;
 	}
 
+	/**
+	 * Mask a relation across the whole dataset.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 */
 	public void setMaskedRelation(final Relation relation) {
 		this.setMaskedRelation(SchemaModificationSet.DATASET, relation);
 	}
 
+	/**
+	 * Mask a relation for this dataset table only.
+	 * 
+	 * @param table
+	 *            the table this affects.
+	 * @param relation
+	 *            the relation.
+	 */
 	public void setMaskedRelation(final DataSetTable table,
 			final Relation relation) {
 		this.setMaskedRelation(table.getName(), relation);
@@ -93,10 +113,26 @@ public class SchemaModificationSet {
 		masks.add(relation);
 	}
 
+	/**
+	 * Unmask a relation across the whole dataset.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 */
 	public void unsetMaskedRelation(final Relation relation) {
 		this.unsetMaskedRelation(SchemaModificationSet.DATASET, relation);
 	}
 
+	/**
+	 * Unmasks a relation for this dataset table only.
+	 * 
+	 * @param table
+	 *            the table this affects.
+	 * @param relation
+	 *            the relation.
+	 * @throws ValidationException
+	 *             if it cannot be done for logical reasons.
+	 */
 	public void unsetMaskedRelation(final DataSetTable table,
 			final Relation relation) throws ValidationException {
 		// Complain if asked to unmask globally masked relation.
@@ -122,6 +158,15 @@ public class SchemaModificationSet {
 		}
 	}
 
+	/**
+	 * Check to see if the relation is masked for the given table.
+	 * 
+	 * @param table
+	 *            the table to check for.
+	 * @param relation
+	 *            the relation to check.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isMaskedRelation(final DataSetTable table,
 			final Relation relation) {
 		return this
@@ -139,32 +184,82 @@ public class SchemaModificationSet {
 				&& globalMasks.contains(relation);
 	}
 
+	/**
+	 * Get a map of masked relations, where the keys are table names or the
+	 * {@link #DATASET} constant, and the values are collections of relations.
+	 * 
+	 * @return the map.
+	 */
 	public Map getMaskedRelations() {
 		return this.maskedRelations;
 	}
 
+	/**
+	 * Mark the given relation as merged (ie. treat as 1:1) across the whole
+	 * dataset.
+	 * 
+	 * @param rel
+	 *            the relation.
+	 */
 	public void setMergedRelation(final Relation rel) {
 		this.mergedRelations.add(rel);
 	}
 
+	/**
+	 * Unmark the given relation as merged (ie. treat as 1:1) across the whole
+	 * dataset.
+	 * 
+	 * @param rel
+	 *            the relation.
+	 */
 	public void unsetMergedRelation(final Relation rel) {
 		this.mergedRelations.remove(rel);
 	}
 
+	/**
+	 * Check to see if the given relation has been merged.
+	 * 
+	 * @param rel
+	 *            the relation.
+	 * @return <tt>true</tt> if it has.
+	 */
 	public boolean isMergedRelation(final Relation rel) {
 		return this.mergedRelations.contains(rel);
 	}
 
+	/**
+	 * Return the collection of merged relations.
+	 * 
+	 * @return the collection.
+	 */
 	public Collection getMergedRelations() {
 		return this.mergedRelations;
 	}
 
+	/**
+	 * Restrict the given table across the whole dataset.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param restriction
+	 *            the restriction.
+	 */
 	public void setRestrictedTable(final Table table,
 			final RestrictedTableDefinition restriction) {
 		this.setRestrictedTable(SchemaModificationSet.DATASET, table,
 				restriction);
 	}
 
+	/**
+	 * Restrict the given table for the specified dataset table only.
+	 * 
+	 * @param dsTable
+	 *            the dataset table this affects.
+	 * @param table
+	 *            the table to restrict.
+	 * @param restriction
+	 *            the restriction.
+	 */
 	public void setRestrictedTable(final DataSetTable dsTable,
 			final Table table, final RestrictedTableDefinition restriction) {
 		this.setRestrictedTable(dsTable.getName(), table, restriction);
@@ -178,10 +273,26 @@ public class SchemaModificationSet {
 		restrictions.put(table, restriction);
 	}
 
+	/**
+	 * Unrestrict the given table across the whole dataset.
+	 * 
+	 * @param table
+	 *            the table.
+	 */
 	public void unsetRestrictedTable(final Table table) {
 		this.unsetRestrictedTable(SchemaModificationSet.DATASET, table);
 	}
 
+	/**
+	 * Unrestrict the given table for the specified dataset table only.
+	 * 
+	 * @param dsTable
+	 *            the dataset table this affects.
+	 * @param table
+	 *            the table.
+	 * @throws ValidationException
+	 *             if it cannot be done for logical reasons.
+	 */
 	public void unsetRestrictedTable(final DataSetTable dsTable,
 			final Table table) throws ValidationException {
 		// Complain if asked to unmask globally masked relation.
@@ -206,6 +317,15 @@ public class SchemaModificationSet {
 		}
 	}
 
+	/**
+	 * See if the table is restricted for the given dataset table.
+	 * 
+	 * @param dsTable
+	 *            the dataset table to check in.
+	 * @param table
+	 *            the table to check.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isRestrictedTable(final DataSetTable dsTable,
 			final Table table) {
 		return this.isRestrictedTable(
@@ -222,6 +342,16 @@ public class SchemaModificationSet {
 				&& globalRests.containsKey(table);
 	}
 
+	/**
+	 * Obtain the definition for the given restricted table within the given
+	 * dataset table.
+	 * 
+	 * @param dsTable
+	 *            the dataset table to look in.
+	 * @param table
+	 *            the restricted table.
+	 * @return the definition of the restriction.
+	 */
 	public RestrictedTableDefinition getRestrictedTable(
 			final DataSetTable dsTable, final Table table) {
 		return this.getRestrictedTable(
@@ -241,10 +371,29 @@ public class SchemaModificationSet {
 				: (RestrictedTableDefinition) globalRests.get(table);
 	}
 
+	/**
+	 * Return a map containing all table restrictions. Keys are dataset table
+	 * names or the {@link #DATASET} constant. Values are also maps where the
+	 * keys are table names and the values are restriction definitions.
+	 * 
+	 * @return the map.
+	 */
 	public Map getRestrictedTables() {
 		return this.restrictedTables;
 	}
 
+	/**
+	 * Mark the relation as restricted for the whole dataset.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to mark.
+	 * @param restriction
+	 *            the restriction definition.
+	 * @throws ValidationException
+	 *             if it could not be marked.
+	 */
 	public void setRestrictedRelation(final Relation relation, final int index,
 			final RestrictedRelationDefinition restriction)
 			throws ValidationException {
@@ -252,6 +401,20 @@ public class SchemaModificationSet {
 				index, restriction);
 	}
 
+	/**
+	 * Mark the relation as restricted for the given dataset table only.
+	 * 
+	 * @param dsTable
+	 *            the dataset table this affects.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to mark.
+	 * @param restriction
+	 *            the restriction definition.
+	 * @throws ValidationException
+	 *             if it could not be marked.
+	 */
 	public void setRestrictedRelation(final DataSetTable dsTable,
 			final Relation relation, final int index,
 			final RestrictedRelationDefinition restriction)
@@ -278,11 +441,31 @@ public class SchemaModificationSet {
 		((Map) restrictions.get(relation)).put(new Integer(index), restriction);
 	}
 
+	/**
+	 * Unmark the relation as restricted for the whole dataset.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to mark.
+	 */
 	public void unsetRestrictedRelation(final Relation relation, final int index) {
 		this.unsetRestrictedRelation(SchemaModificationSet.DATASET, relation,
 				index);
 	}
 
+	/**
+	 * Unmark the relation as restricted for the given dataset table only.
+	 * 
+	 * @param dsTable
+	 *            the dataset table this affects.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to unmark.
+	 * @throws ValidationException
+	 *             if it could not be unmarked.
+	 */
 	public void unsetRestrictedRelation(final DataSetTable dsTable,
 			final Relation relation, final int index)
 			throws ValidationException {
@@ -312,6 +495,16 @@ public class SchemaModificationSet {
 		}
 	}
 
+	/**
+	 * Is this relation restricted in the given dataset table, on any of the
+	 * compounded parts of the relation?
+	 * 
+	 * @param dsTable
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isRestrictedRelation(final DataSetTable dsTable,
 			final Relation relation) {
 		return this.isRestrictedRelation(
@@ -328,6 +521,18 @@ public class SchemaModificationSet {
 				|| globalRests != null && globalRests.containsKey(relation);
 	}
 
+	/**
+	 * Is this relation restricted in the given dataset table on the given
+	 * compound iteration?
+	 * 
+	 * @param dsTable
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the compound index.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isRestrictedRelation(final DataSetTable dsTable,
 			final Relation relation, final int index) {
 		return this.isRestrictedRelation(
@@ -349,6 +554,17 @@ public class SchemaModificationSet {
 						index));
 	}
 
+	/**
+	 * Get the restriction definition.
+	 * 
+	 * @param dsTable
+	 *            the dataset table to look in.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the compound relation index to check for.
+	 * @return the definition.
+	 */
 	public RestrictedRelationDefinition getRestrictedRelation(
 			final DataSetTable dsTable, final Relation relation, final int index) {
 		return this.getRestrictedRelation(
@@ -370,10 +586,24 @@ public class SchemaModificationSet {
 						.get(relation)).get(new Integer(index));
 	}
 
+	/**
+	 * Obtain all the restricted relation definitions. The keys of the map are
+	 * dataset table names or the {@link #DATASET} constant. Values are also
+	 * maps, where the keys are relations, and the values are more maps. These
+	 * last maps have keys of compound relation index integers, and values of
+	 * the restriction definitions.
+	 * 
+	 * @return the map.
+	 */
 	public Map getRestrictedRelations() {
 		return this.restrictedRelations;
 	}
 
+	/**
+	 * Get a unique name to use for the next concat column to be created.
+	 * 
+	 * @return the next concat column name.
+	 */
 	public String nextConcatColumn() {
 		final Set used = new HashSet();
 		for (final Iterator j = this.concatRelations.values().iterator(); j
@@ -389,6 +619,18 @@ public class SchemaModificationSet {
 		return Resources.get("concatColumnPrefix") + i;
 	}
 
+	/**
+	 * Mark the relation as concated for the whole dataset.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to mark.
+	 * @param restriction
+	 *            the concat definition.
+	 * @throws ValidationException
+	 *             if it could not be marked.
+	 */
 	public void setConcatRelation(final Relation relation, final int index,
 			final ConcatRelationDefinition restriction)
 			throws ValidationException {
@@ -396,6 +638,20 @@ public class SchemaModificationSet {
 				restriction);
 	}
 
+	/**
+	 * Mark the relation as concated for the given dataset table only.
+	 * 
+	 * @param dsTable
+	 *            the dataset table this affects.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to mark.
+	 * @param restriction
+	 *            the concat definition.
+	 * @throws ValidationException
+	 *             if it could not be marked.
+	 */
 	public void setConcatRelation(final DataSetTable dsTable,
 			final Relation relation, final int index,
 			final ConcatRelationDefinition restriction)
@@ -424,12 +680,32 @@ public class SchemaModificationSet {
 		((Map) restrictions.get(relation)).put(new Integer(index), restriction);
 	}
 
+	/**
+	 * Unmark the relation as concated for the whole dataset.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to unmark.
+	 */
 	public void unsetConcatRelation(final Relation relation, final int index) {
 		this
 				.unsetConcatRelation(SchemaModificationSet.DATASET, relation,
 						index);
 	}
 
+	/**
+	 * Unmark the relation as concated for the given dataset table only.
+	 * 
+	 * @param dsTable
+	 *            the dataset table this affects.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the index of a compounded relation to unmark.
+	 * @throws ValidationException
+	 *             if it could not be unmarked.
+	 */
 	public void unsetConcatRelation(final DataSetTable dsTable,
 			final Relation relation, final int index)
 			throws ValidationException {
@@ -459,6 +735,16 @@ public class SchemaModificationSet {
 		}
 	}
 
+	/**
+	 * Is this relation restricted in the given dataset table on any compound
+	 * iteration?
+	 * 
+	 * @param dsTable
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isConcatRelation(final DataSetTable dsTable,
 			final Relation relation) {
 		return this.isConcatRelation(
@@ -475,6 +761,18 @@ public class SchemaModificationSet {
 				|| globalRests != null && globalRests.containsKey(relation);
 	}
 
+	/**
+	 * Is this relation concated in the given dataset table on the given
+	 * compound iteration?
+	 * 
+	 * @param dsTable
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the compound index.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isConcatRelation(final DataSetTable dsTable,
 			final Relation relation, final int index) {
 		return this.isConcatRelation(
@@ -496,6 +794,17 @@ public class SchemaModificationSet {
 						index));
 	}
 
+	/**
+	 * Get the concat definition.
+	 * 
+	 * @param dsTable
+	 *            the dataset table to look in.
+	 * @param relation
+	 *            the relation.
+	 * @param index
+	 *            the compound relation index to check for.
+	 * @return the definition.
+	 */
 	public ConcatRelationDefinition getConcatRelation(
 			final DataSetTable dsTable, final Relation relation, final int index) {
 		return this.getConcatRelation(
@@ -517,14 +826,38 @@ public class SchemaModificationSet {
 						.get(new Integer(index));
 	}
 
+	/**
+	 * Obtain all the concated relation definitions. The keys of the map are
+	 * dataset table names or the {@link #DATASET} constant. Values are also
+	 * maps, where the keys are relations, and the values are more maps. These
+	 * last maps have keys of compound relation index integers, and values of
+	 * the restriction definitions.
+	 * 
+	 * @return the map.
+	 */
 	public Map getConcatRelations() {
 		return this.concatRelations;
 	}
 
+	/**
+	 * Force the transformation to include the given relation.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 */
 	public void setForceIncludeRelation(final Relation relation) {
 		this.setForceIncludeRelation(SchemaModificationSet.DATASET, relation);
 	}
 
+	/**
+	 * Force the transformation to include the given relation, but only as part
+	 * of the given dataset table.
+	 * 
+	 * @param table
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation.
+	 */
 	public void setForceIncludeRelation(final DataSetTable table,
 			final Relation relation) {
 		this.setForceIncludeRelation(table.getName(), relation);
@@ -539,10 +872,26 @@ public class SchemaModificationSet {
 		masks.add(relation);
 	}
 
+	/**
+	 * Unforce the relation dataset-wide.
+	 * 
+	 * @param relation
+	 *            the relation to unforce.
+	 */
 	public void unsetForceIncludeRelation(final Relation relation) {
 		this.unsetForceIncludeRelation(SchemaModificationSet.DATASET, relation);
 	}
 
+	/**
+	 * Unforce the relation for the specific dataset table.
+	 * 
+	 * @param table
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation to unforce.
+	 * @throws ValidationException
+	 *             if it cannot do it for logical reasons.
+	 */
 	public void unsetForceIncludeRelation(final DataSetTable table,
 			final Relation relation) throws ValidationException {
 		// Complain if asked to unmask globally masked relation.
@@ -568,6 +917,15 @@ public class SchemaModificationSet {
 		}
 	}
 
+	/**
+	 * Is ths relation forced for the given dataset table?
+	 * 
+	 * @param table
+	 *            the dataset table to check.
+	 * @param relation
+	 *            the relation.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isForceIncludeRelation(final DataSetTable table,
 			final Relation relation) {
 		return this
@@ -586,10 +944,24 @@ public class SchemaModificationSet {
 				&& globalIncs.contains(relation);
 	}
 
+	/**
+	 * Get the map of forced relations. Keys are dataset table names or the
+	 * {@link #DATASET} constant. Values are relations.
+	 * 
+	 * @return the map.
+	 */
 	public Map getForceIncludeRelations() {
 		return this.forceIncludeRelations;
 	}
 
+	/**
+	 * Subclass the given relation.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @throws ValidationException
+	 *             if it cannot be subclassed.
+	 */
 	public void setSubclassedRelation(final Relation relation)
 			throws ValidationException {
 		Log.debug("Flagging subclassed relation " + relation + " in "
@@ -646,14 +1018,32 @@ public class SchemaModificationSet {
 		this.subclassedRelations.add(relation);
 	}
 
+	/**
+	 * Check to see if the relation is subclassed.
+	 * 
+	 * @param r
+	 *            the relation.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isSubclassedRelation(final Relation r) {
 		return this.subclassedRelations.contains(r);
 	}
 
+	/**
+	 * Get a collection of all subclassed relations.
+	 * 
+	 * @return the collection.
+	 */
 	public Collection getSubclassedRelations() {
 		return this.subclassedRelations;
 	}
 
+	/**
+	 * Unsubclass a relation.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 */
 	public void unsetSubclassedRelation(final Relation relation) {
 		Log.debug("Unflagging subclass relation " + relation + " in "
 				+ this.ds.getName());
@@ -676,12 +1066,35 @@ public class SchemaModificationSet {
 		this.subclassedRelations.remove(relation);
 	}
 
+	/**
+	 * Set the relation to only be followed from a given key dataset-wide.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @param def
+	 *            the key to follow from.
+	 * @throws ValidationException
+	 *             if this cannot be done for logical reasons.
+	 */
 	public void setDirectionalRelation(final Relation relation, final Key def)
 			throws ValidationException {
 		this.setDirectionalRelation(SchemaModificationSet.DATASET, relation,
 				def);
 	}
 
+	/**
+	 * Set the relation to only be followed from a given key for the dataset
+	 * table shown.
+	 * 
+	 * @param table
+	 *            the table this affects.
+	 * @param relation
+	 *            the relation.
+	 * @param def
+	 *            the key to follow from.
+	 * @throws ValidationException
+	 *             if this cannot be done for logical reasons.
+	 */
 	public void setDirectionalRelation(final DataSetTable table,
 			final Relation relation, final Key def) throws ValidationException {
 		this.setDirectionalRelation(table.getName(), relation, def);
@@ -695,10 +1108,26 @@ public class SchemaModificationSet {
 		masks.put(relation, def);
 	}
 
+	/**
+	 * Make the relation bidirectional again dataset-wide.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 */
 	public void unsetDirectionalRelation(final Relation relation) {
 		this.unsetDirectionalRelation(SchemaModificationSet.DATASET, relation);
 	}
 
+	/**
+	 * Make the relation bidirectional for the given dataset table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param relation
+	 *            the relation.
+	 * @throws ValidationException
+	 *             if logically this cannot be done.
+	 */
 	public void unsetDirectionalRelation(final DataSetTable table,
 			final Relation relation) throws ValidationException {
 		// Complain if asked to unmask globally masked relation.
@@ -723,6 +1152,15 @@ public class SchemaModificationSet {
 		}
 	}
 
+	/**
+	 * Check to see if the relation is directional in the given table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param relation
+	 *            the relation.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isDirectionalRelation(final DataSetTable table,
 			final Relation relation) {
 		return this
@@ -740,6 +1178,16 @@ public class SchemaModificationSet {
 				|| globalComps != null && globalComps.containsKey(relation);
 	}
 
+	/**
+	 * Get the starting key for the directional relation in the given dataset
+	 * table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param relation
+	 *            the relation.
+	 * @return the starting key.
+	 */
 	public Key getDirectionalRelation(final DataSetTable table,
 			final Relation relation) {
 		return this
@@ -757,15 +1205,44 @@ public class SchemaModificationSet {
 				.get(relation) : (Key) globalComps.get(relation);
 	}
 
+	/**
+	 * Get the map of all directional relations. Keys of the map are dataset
+	 * table names or the {@link #DATASET} constant. Values are maps too, where
+	 * the keys are relations, and the values are the starting keys.
+	 * 
+	 * @return the map.
+	 */
 	public Map getDirectionalRelations() {
 		return this.directionalRelations;
 	}
 
+	/**
+	 * Mark the relation as compound dataset-wide.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @param def
+	 *            the compound definition.
+	 * @throws ValidationException
+	 *             if it cannot be done logically.
+	 */
 	public void setCompoundRelation(final Relation relation,
 			final CompoundRelationDefinition def) throws ValidationException {
 		this.setCompoundRelation(SchemaModificationSet.DATASET, relation, def);
 	}
 
+	/**
+	 * Mark the relation as compound for the dataset table given.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param relation
+	 *            the relation.
+	 * @param def
+	 *            the compound definition.
+	 * @throws ValidationException
+	 *             if it cannot be done logically.
+	 */
 	public void setCompoundRelation(final DataSetTable table,
 			final Relation relation, final CompoundRelationDefinition def)
 			throws ValidationException {
@@ -783,10 +1260,26 @@ public class SchemaModificationSet {
 		masks.put(relation, def);
 	}
 
+	/**
+	 * Unmark the relation as compound dataset-wide.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 */
 	public void unsetCompoundRelation(final Relation relation) {
 		this.unsetCompoundRelation(SchemaModificationSet.DATASET, relation);
 	}
 
+	/**
+	 * Unmark the relation as compound for the given table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param relation
+	 *            the relation.
+	 * @throws ValidationException
+	 *             if logically it cannot be done.
+	 */
 	public void unsetCompoundRelation(final DataSetTable table,
 			final Relation relation) throws ValidationException {
 		// Complain if asked to unmask globally masked relation.
@@ -811,6 +1304,15 @@ public class SchemaModificationSet {
 		}
 	}
 
+	/**
+	 * Is the relation compound for the given table?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param relation
+	 *            the relation.
+	 * @return <tt>true</tt> if it is.
+	 */
 	public boolean isCompoundRelation(final DataSetTable table,
 			final Relation relation) {
 		return this
@@ -828,6 +1330,15 @@ public class SchemaModificationSet {
 				|| globalComps != null && globalComps.containsKey(relation);
 	}
 
+	/**
+	 * Get the compound definition for this relation.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @param relation
+	 *            the relation.
+	 * @return the definition.
+	 */
 	public CompoundRelationDefinition getCompoundRelation(
 			final DataSetTable table, final Relation relation) {
 		return this
@@ -846,10 +1357,23 @@ public class SchemaModificationSet {
 				: (CompoundRelationDefinition) globalComps.get(relation);
 	}
 
+	/**
+	 * Get a map of all compound relations. Keys are dataset table names or the
+	 * {@link #DATASET} constant. Values are maps, where the keys are relations
+	 * and the values are the definitions.
+	 * 
+	 * @return the map.
+	 */
 	public Map getCompoundRelations() {
 		return this.compoundRelations;
 	}
 
+	/**
+	 * Replicate this set of modifications into the target set.
+	 * 
+	 * @param target
+	 *            the set to receive copies of all this set's modifications.
+	 */
 	public void replicate(final SchemaModificationSet target) {
 		target.subclassedRelations.clear();
 		target.subclassedRelations.addAll(this.subclassedRelations);
@@ -928,9 +1452,9 @@ public class SchemaModificationSet {
 		 *            the expression to define for this restriction.
 		 * @param aliases
 		 *            the aliases to use for columns.
-		 * @param onceOnly
-		 *            if this is to happen only the first time the table is
-		 *            passed over.
+		 * @param hard
+		 *            if this restriction is a hard restriction (inner join) as
+		 *            opposed to a soft one (left join).
 		 */
 		public RestrictedTableDefinition(final String expr, final Map aliases,
 				final boolean hard) {
@@ -959,6 +1483,11 @@ public class SchemaModificationSet {
 			return this.aliases;
 		}
 
+		/**
+		 * Is this a hard restriction?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
 		public boolean isHard() {
 			return this.hard;
 		}
@@ -981,6 +1510,9 @@ public class SchemaModificationSet {
 		 * substituion, eg. "a" if columns for the table for that key should be
 		 * prefixed as "a.mycolumn".
 		 * 
+		 * @param additionalRels
+		 *            contains the map of table prefixes to use for tables
+		 *            joined by relations off the primary table involved.
 		 * @param tablePrefix
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
@@ -1007,6 +1539,11 @@ public class SchemaModificationSet {
 			return sub;
 		}
 
+		/**
+		 * Return the set of additional relations involved in this expression.
+		 * 
+		 * @return the set of relations.
+		 */
 		public Collection getAdditionalRelations() {
 			final Collection pairs = new HashSet();
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
@@ -1052,8 +1589,13 @@ public class SchemaModificationSet {
 		 * 
 		 * @param expr
 		 *            the expression to define for this restriction.
-		 * @param aliases
-		 *            the aliases to use for columns.
+		 * @param leftAliases
+		 *            the aliases to use for columns on the LHS of the join.
+		 * @param rightAliases
+		 *            the aliases to use for columns on the RHS of the join.
+		 * @param hard
+		 *            <tt>true</tt> if this is a hard (inner) join as opposed
+		 *            to a soft (left) join.
 		 */
 		public RestrictedRelationDefinition(final String expr,
 				final Map leftAliases, final Map rightAliases,
@@ -1106,6 +1648,11 @@ public class SchemaModificationSet {
 			return this.expr;
 		}
 
+		/**
+		 * Is this a hard-restriction?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
 		public boolean isHard() {
 			return this.hard;
 		}
@@ -1118,8 +1665,15 @@ public class SchemaModificationSet {
 		 * substituion, eg. "a" if columns for the table for that key should be
 		 * prefixed as "a.mycolumn".
 		 * 
-		 * @param tablePrefix
-		 *            the prefix to use for the table in the expression.
+		 * @param leftTablePrefix
+		 *            the prefix to use for the LHS table in the expression.
+		 * @param rightTablePrefix
+		 *            the prefix to use for the LHS table in the expression.
+		 * @param leftIsDataSet
+		 *            if the LHS side is a dataset table.
+		 * @param mappingUnit
+		 *            the transformation unit this restriction will use to
+		 *            translate columns into dataset column equivalents.
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final String leftTablePrefix,
@@ -1196,6 +1750,20 @@ public class SchemaModificationSet {
 		 *            the expression to define for this restriction.
 		 * @param aliases
 		 *            the aliases to use for columns.
+		 * @param rowSep
+		 *            the row separator to put between concated rows.
+		 * @param colKey
+		 *            the name of the concated column.
+		 * @param recursionType
+		 *            the type of recursion to use, if any.
+		 * @param recursionKey
+		 *            the key to start recursing from.
+		 * @param firstRelation
+		 *            the first relation to recurse.
+		 * @param secondRelation
+		 *            the second relation to recurse (optional).
+		 * @param concSep
+		 *            the separator to put between recursed values.
 		 */
 		public ConcatRelationDefinition(final String expr, final Map aliases,
 				final String rowSep, final String colKey,
@@ -1265,57 +1833,57 @@ public class SchemaModificationSet {
 		}
 
 		/**
-		 * @return the expr
+		 * @return the column name.
 		 */
 		public String getColKey() {
 			return this.colKey;
 		}
 
 		/**
-		 * @return the expr
+		 * @return the expression.
 		 */
 		public String getExpr() {
 			return this.expr;
 		}
 
 		/**
-		 * @return the firstRelation
+		 * @return the first recursion relation.
 		 */
 		public Relation getFirstRelation() {
 			return this.firstRelation;
 		}
 
 		/**
-		 * @return the recursionKey
+		 * @return the recursion key.
 		 */
 		public Key getRecursionKey() {
 			return this.recursionKey;
 		}
 
 		/**
-		 * @return the recursionType
+		 * @return the recursion type.
 		 */
 		public RecursionType getRecursionType() {
 			return this.recursionType;
 		}
 
 		/**
-		 * @return the secondRelation
+		 * @return the second recursion relation.
 		 */
 		public Relation getSecondRelation() {
 			return this.secondRelation;
 		}
 
 		/**
-		 * Returns the expression, <i>without</i> substitution. This value is
-		 * RDBMS-specific.
-		 * 
-		 * @return the unsubstituted expression.
+		 * @return the row separator.
 		 */
 		public String getRowSep() {
 			return this.rowSep;
 		}
 
+		/**
+		 * @return the separator to use between recursed rows.
+		 */
 		public String getConcSep() {
 			return this.concSep;
 		}
@@ -1328,6 +1896,9 @@ public class SchemaModificationSet {
 		 * substituion, eg. "a" if columns for the table for that key should be
 		 * prefixed as "a.mycolumn".
 		 * 
+		 * @param additionalRels
+		 *            the prefixes to use for each table involved through an
+		 *            additional relation.
 		 * @param tablePrefix
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
@@ -1354,6 +1925,11 @@ public class SchemaModificationSet {
 			return sub;
 		}
 
+		/**
+		 * Get all the additional relations involved with this.
+		 * 
+		 * @return the additional relations.
+		 */
 		public Collection getAdditionalRelations() {
 			final Collection pairs = new HashSet();
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
@@ -1367,6 +1943,9 @@ public class SchemaModificationSet {
 			return pairs;
 		}
 
+		/**
+		 * Defines types of concat relation recursion.
+		 */
 		public static class RecursionType implements Comparable {
 			private static final Map singletons = new HashMap();
 
@@ -1388,13 +1967,14 @@ public class SchemaModificationSet {
 			public static final RecursionType NONE = RecursionType.get("NONE");
 
 			/**
-			 * The static factory method creates and returns a cardinality with
-			 * the given name. It ensures the object returned is a singleton.
-			 * Note that the names of cardinality objects are case-sensitive.
+			 * The static factory method creates and returns a recursion type
+			 * with the given name. It ensures the object returned is a
+			 * singleton. Note that the names of recursion type objects are
+			 * case-sensitive.
 			 * 
 			 * @param name
-			 *            the name of the cardinality object.
-			 * @return the cardinality object.
+			 *            the name of the recursion type object.
+			 * @return the recursion type object.
 			 */
 			public static RecursionType get(final String name) {
 				// Do we already have this one?
@@ -1414,10 +1994,10 @@ public class SchemaModificationSet {
 
 			/**
 			 * The private constructor takes a single parameter, which defines
-			 * the name this cardinality object will display when printed.
+			 * the name this recursion type object will display when printed.
 			 * 
 			 * @param name
-			 *            the name of the cardinality.
+			 *            the name of the recursion type.
 			 */
 			private RecursionType(final String name) {
 				this.name = name;
@@ -1434,9 +2014,9 @@ public class SchemaModificationSet {
 			}
 
 			/**
-			 * Displays the name of this cardinality object.
+			 * Displays the name of this recursion type object.
 			 * 
-			 * @return the name of this cardinality object.
+			 * @return the name of this recursion type object.
 			 */
 			public String getName() {
 				return this.name;
@@ -1449,7 +2029,7 @@ public class SchemaModificationSet {
 			/**
 			 * {@inheritDoc}
 			 * <p>
-			 * Always returns the name of this cardinality.
+			 * Always returns the name of this recursion type.
 			 */
 			public String toString() {
 				return this.getName();
@@ -1458,7 +2038,7 @@ public class SchemaModificationSet {
 	}
 
 	/**
-	 * Defines the restriction on a table, ie. a where-clause.
+	 * Defines a compound relation.
 	 */
 	public static class CompoundRelationDefinition {
 
@@ -1467,14 +2047,16 @@ public class SchemaModificationSet {
 		private boolean parallel;
 
 		/**
-		 * This constructor gives the restriction an initial expression and a
-		 * set of aliases. The expression may not be empty, and neither can the
-		 * alias map.
+		 * This constructor gives the compound relation an arity and a flag
+		 * indicating whether to follow the multiple copies in parallel or
+		 * serial.
 		 * 
-		 * @param expr
-		 *            the expression to define for this restriction.
-		 * @param aliases
-		 *            the aliases to use for columns.
+		 * @param n
+		 *            the number of times this relation has been compounded (the
+		 *            arity).
+		 * @param parallel
+		 *            whether this is a parallel (<tt>true</tt>) or serial (<tt>false</tt>)
+		 *            compounding.
 		 */
 		public CompoundRelationDefinition(final int n, final boolean parallel) {
 			// Remember the settings.
@@ -1482,10 +2064,20 @@ public class SchemaModificationSet {
 			this.parallel = parallel;
 		}
 
+		/**
+		 * Get the arity of this compound relation.
+		 * 
+		 * @return the arity.
+		 */
 		public int getN() {
 			return this.n;
 		}
 
+		/**
+		 * Is this compound relation parallel?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
 		public boolean isParallel() {
 			return this.parallel;
 		}

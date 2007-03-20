@@ -34,6 +34,11 @@ of {@link Table}s is all that is required to define a {@link
 DataSetTable}, as the {@link Column}s to include can be inferred by
 following the {@link Relation}s and checking for masked ones in the
 {@link DataSet}.</p>
+<p>Modifications to datasets and schemas are represented by the two 
+modification set classes {@link DataSetModificationSet} and 
+{@link SchemaModificationSet}. It is possible to reconstruct a dataset
+entirely by using schema definitions and the contents of these
+modification sets.</p>
 <p>The final piece of the puzzle is the {@link MartConstructor}.
 Like the {@link Schema} it is data source aware. The {@link
 MartConstructor} takes a {@link DataSet} and generates the final mart

@@ -64,7 +64,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class OracleDialect extends DatabaseDialect {
 	// Check we only make the aggregate functions once.
@@ -72,6 +72,16 @@ public class OracleDialect extends DatabaseDialect {
 
 	private int indexCount;
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doConcatJoin(final ConcatJoin action, final List statements)
 			throws Exception {
 		final String srcSchemaName = action.getDataSetSchemaName();
@@ -529,6 +539,16 @@ public class OracleDialect extends DatabaseDialect {
 					+ recursionTempTable);
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doRename(final Rename action, final List statements)
 			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
@@ -541,6 +561,16 @@ public class OracleDialect extends DatabaseDialect {
 				+ " rename to " + newTableName + "");
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doSelect(final Select action, final List statements)
 			throws Exception {
 		final String createTableSchema = action.getDataSetSchemaName();
@@ -632,6 +662,16 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doAddExpression(final AddExpression action,
 			final List statements) throws Exception {
 		final String createTableSchema = action.getDataSetSchemaName();
@@ -672,7 +712,18 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
-	public void doIndex(final Index action, final List statements) {
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
+	public void doIndex(final Index action, final List statements)
+			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
 		final String tableName = action.getTable();
 		final StringBuffer sb = new StringBuffer();
@@ -690,6 +741,16 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doJoin(final Join action, final List statements)
 			throws Exception {
 		final String srcSchemaName = action.getDataSetSchemaName();
@@ -808,6 +869,16 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doLeftJoin(final LeftJoin action, final List statements)
 			throws Exception {
 		final String srcSchemaName = action.getDataSetSchemaName();
@@ -850,6 +921,16 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doDropColumns(final DropColumns action, final List statements)
 			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
@@ -864,6 +945,16 @@ public class OracleDialect extends DatabaseDialect {
 				+ " drop unused columns");
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doDrop(final Drop action, final List statements)
 			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
@@ -872,6 +963,16 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add("drop table " + schemaName + "." + tableName + "");
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doCreateOptimiser(final CreateOptimiser action,
 			final List statements) throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
@@ -892,6 +993,16 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doUpdateOptimiser(final UpdateOptimiser action,
 			final List statements) throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
@@ -932,8 +1043,18 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doCopyOptimiserVia(final CopyOptimiserVia action,
-			final List statements) {
+			final List statements) throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
 		final String toOptTableName = action.getToOptTableName();
 		final String fromOptTableName = action.getFromOptTableName();
@@ -977,8 +1098,18 @@ public class OracleDialect extends DatabaseDialect {
 		statements.add(sb.toString());
 	}
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
 	public void doCopyOptimiserDirect(final CopyOptimiserDirect action,
-			final List statements) {
+			final List statements) throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
 		final String toOptTableName = action.getToOptTableName();
 		final String fromOptTableName = action.getFromOptTableName();

@@ -38,12 +38,14 @@ import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 
 /**
- * This layout manager lays out components in grouped lines.
+ * This layout manager lays out components in rows, grouped by the main dataset
+ * table they are associated with. The main table itself is always first on each
+ * row.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class DataSetLayoutManager implements LayoutManager2 {
 	private static final int RELATION_SPACING = 5; // 72 = 1 inch
@@ -102,7 +104,6 @@ public class DataSetLayoutManager implements LayoutManager2 {
 	}
 
 	public Dimension preferredLayoutSize(final Container parent) {
-		// Our preferred size is our minimum size.
 		return this.minimumLayoutSize(parent);
 	}
 
@@ -134,11 +135,14 @@ public class DataSetLayoutManager implements LayoutManager2 {
 			this.size.width = 0;
 			this.prefSizes.clear();
 
+			// We have the same number of rows as main/subclass tables.
 			for (int rowNum = 0; rowNum < this.mainTables.size(); rowNum++) {
 				int rowHeight = 0;
 				int rowWidth = 0;
 				Component comp = (Component) this.mainTables.get(rowNum);
 
+				// Start each row by working out space required for
+				// the main/subclass table that begins it.
 				if (comp != null) {
 					final Dimension prefSize = comp.getPreferredSize();
 					this.prefSizes.put(comp, prefSize);
@@ -146,6 +150,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					rowWidth = prefSize.width;
 				}
 
+				// Update the row width to accommodate the dimensions too.
 				for (final Iterator i = ((List) this.dimensionTables
 						.get(rowNum)).iterator(); i.hasNext();) {
 					comp = (Component) i.next();
@@ -157,12 +162,14 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					rowWidth += prefSize.width;
 				}
 
+				// Pad the row with space for relations.
 				rowHeight += DataSetLayoutManager.TABLE_PADDING * 2;
 				rowHeight += ((List) this.dimensionTables.get(rowNum)).size()
 						* DataSetLayoutManager.RELATION_SPACING;
 				this.rowHeights.set(rowNum, new Integer(rowHeight));
 				this.size.height += rowHeight;
 
+				// Allow horizontal space for relations between each dimension.
 				rowWidth += DataSetLayoutManager.TABLE_PADDING * 2;
 				rowWidth += (((List) this.dimensionTables.get(rowNum)).size() + 1)
 						* DataSetLayoutManager.TABLE_PADDING * 2;
@@ -199,11 +206,13 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					this.dimensionTables.add(new ArrayList());
 				}
 
+				// Work out where to put it.
 				if (((DataSetLayoutConstraint) constraints).getType() == DataSetLayoutConstraint.MAIN)
 					this.mainTables.set(rowNum, comp);
 				else
 					((List) this.dimensionTables.get(rowNum)).add(comp);
 
+				// Update the row width to accommodate it.
 				final int oldRowWidth = ((Integer) this.rowWidths.get(rowNum))
 						.intValue();
 				int newRowWidth = oldRowWidth;
@@ -212,6 +221,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 						+ DataSetLayoutManager.RELATION_SPACING * 2;
 				this.rowWidths.set(rowNum, new Integer(newRowWidth));
 
+				// Increase the row height if necessary.
 				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
 						.intValue();
 				final int newRowHeight = Math.max(oldRowHeight, prefSize.height
@@ -237,11 +247,13 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 				final int rowNum = constraints.getRow();
 
+				// Work out where to remove it from.
 				if (constraints.getType() == DataSetLayoutConstraint.MAIN)
 					this.mainTables.set(rowNum, null);
 				else
 					((List) this.dimensionTables.get(rowNum)).remove(comp);
 
+				// Reduce the row width accordingly.
 				final int oldRowWidth = ((Integer) this.rowWidths.get(rowNum))
 						.intValue();
 				final int oldRowHeight = ((Integer) this.rowHeights.get(rowNum))
@@ -252,6 +264,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 						+ DataSetLayoutManager.RELATION_SPACING * 2;
 				this.rowWidths.set(rowNum, new Integer(newRowWidth));
 
+				// If the row maximum height is now too big, reduce it.
 				int newRowHeight = this.mainTables.get(rowNum) != null ? ((Component) this.mainTables
 						.get(rowNum)).getPreferredSize().height
 						: 0;
@@ -293,6 +306,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 		this.calculateSize(parent);
 		synchronized (parent.getTreeLock()) {
 
+			// Lay out each row at a time.
 			int nextY = DataSetLayoutManager.TABLE_PADDING;
 			for (int rowNum = 0; rowNum < this.mainTables.size(); rowNum++) {
 				int x = DataSetLayoutManager.TABLE_PADDING * 3;
@@ -301,6 +315,8 @@ public class DataSetLayoutManager implements LayoutManager2 {
 						- ((List) this.dimensionTables.get(rowNum)).size()
 						* DataSetLayoutManager.RELATION_SPACING
 						- DataSetLayoutManager.TABLE_PADDING;
+
+				// First of all print the main/subclass table.
 				if (this.mainTables.get(rowNum) != null) {
 					final Component comp = (Component) this.mainTables
 							.get(rowNum);
@@ -314,6 +330,8 @@ public class DataSetLayoutManager implements LayoutManager2 {
 							+ ((List) this.dimensionTables.get(rowNum)).size()
 							* DataSetLayoutManager.RELATION_SPACING;
 				}
+
+				// Then all the dimensions for that table.
 				for (final Iterator i = ((List) this.dimensionTables
 						.get(rowNum)).iterator(); i.hasNext();) {
 					final Component comp = (Component) i.next();
@@ -330,8 +348,10 @@ public class DataSetLayoutManager implements LayoutManager2 {
 				nextY += ((Integer) this.rowHeights.get(rowNum)).intValue();
 			}
 
+			// Finally print all relations.
 			for (final Iterator i = this.relations.iterator(); i.hasNext();) {
 				final RelationComponent comp = (RelationComponent) i.next();
+
 				// Obtain first key and work out position relative to
 				// diagram.
 				int rowNum = 0;
@@ -445,25 +465,44 @@ public class DataSetLayoutManager implements LayoutManager2 {
 		}
 	}
 
+	/**
+	 * Use this class to specify which row and what type each table should be.
+	 */
 	public static class DataSetLayoutConstraint {
+		/**
+		 * This component is a main/subclass table.
+		 */
 		public static final int MAIN = 1;
 
+		/**
+		 * This component is a dimension table.
+		 */
 		public static final int DIMENSION = 2;
 
 		private final int type;
 
 		private final int row;
 
+		/**
+		 * Construct a constraint indicating which row the component should go
+		 * on, and what type it is.
+		 * 
+		 * @param type
+		 *            the type of component (see {@link #MAIN} and
+		 *            {@link #DIMENSION}).
+		 * @param row
+		 *            the row to put it on (zero-indexed).
+		 */
 		public DataSetLayoutConstraint(final int type, final int row) {
 			this.type = type;
 			this.row = row;
 		}
 
-		public int getType() {
+		private int getType() {
 			return this.type;
 		}
 
-		public int getRow() {
+		private int getRow() {
 			return this.row;
 		}
 	}

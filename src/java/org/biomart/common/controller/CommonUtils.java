@@ -36,7 +36,7 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
 /**
- * Tools for working with the mart from a GUI or CLI. These wrapper methods
+ * Tools for working with BioMart apps from a GUI or CLI. These wrapper methods
  * exist to prevent the GUI or CLI having to know about the exact details of
  * manipulating the various objects in the data model.
  * 

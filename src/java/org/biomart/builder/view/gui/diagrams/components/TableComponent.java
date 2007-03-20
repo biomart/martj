@@ -52,51 +52,31 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	/**
-	 * Colour for background.
-	 */
-	public static Color BACKGROUND_COLOUR = Color.PINK;
+	private static Color BACKGROUND_COLOUR = Color.PINK;
 
 	/**
-	 * Constant referring to masked table colour.
-	 */
-	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
-
-	/**
-	 * Bold font.
-	 */
-	public static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
-
-	/**
-	 * Colour for dimension tables (in the dataset context).
-	 */
-	public static Color DIMENSION_COLOUR = Color.BLUE;
-
-	/**
-	 * Colour for dimension tables (in the dataset context).
-	 */
-	public static Color DIMENSION_PARTITIONED_COLOUR = Color.CYAN;
-
-	/**
-	 * Colour for main tables (in the dataset context) and all tables in other
-	 * contexts.
+	 * Border colour for all unpartitioned tables.
 	 */
 	public static Color NORMAL_COLOUR = Color.BLACK;
 
 	/**
-	 * Italic font.
+	 * Border colour for masked tables.
 	 */
-	public static Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
+	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
 	/**
-	 * Colour for subclassed tables (in the dataset context).
+	 * Border colour for partitioned tables.
 	 */
-	public static Color SUBCLASS_COLOUR = Color.RED;
+	public static Color PARTITIONED_COLOUR = Color.CYAN;
+
+	private static Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
+
+	private static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	private JComponent columnsListPanel;
 
@@ -131,6 +111,9 @@ public class TableComponent extends BoxShapedComponent {
 		this.constraints.anchor = GridBagConstraints.CENTER;
 		this.constraints.insets = new Insets(0, 2, 0, 2);
 
+		// Set the background colour.
+		this.setBackground(TableComponent.BACKGROUND_COLOUR);
+
 		// Draw our contents.
 		this.recalculateDiagramComponent();
 	}
@@ -144,23 +127,9 @@ public class TableComponent extends BoxShapedComponent {
 		return (Table) this.getObject();
 	}
 
-	/**
-	 * Count the internal relations attached to our table. Internal relations
-	 * are those that refer at both ends to tables in the same schema as each
-	 * other. Delegates to {@link Table#getInternalRelations()}.
-	 * 
-	 * @return the number of internal relations linked to this table.
-	 */
-	public int countInternalRelations() {
-		return this.getTable().getInternalRelations().size();
-	}
-
 	public void recalculateDiagramComponent() {
 		// Remove all our existing components.
 		this.removeAll();
-
-		// Set the background colour.
-		this.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 		// Add the table name label.
 		final JTextField name = new JTextField();
@@ -176,24 +145,8 @@ public class TableComponent extends BoxShapedComponent {
 		this.add(label);
 
 		// Add a key component as a sub-component of this table,
-		// for the primary key in the table.
-		if (this.getTable().getPrimaryKey() != null) {
-			final Key key = this.getTable().getPrimaryKey();
-			final KeyComponent keyComponent = new KeyComponent(key, this
-					.getDiagram());
-
-			// Add it as a sub-component (internal representation only).
-			this.addSubComponent(key, keyComponent);
-			this.getSubComponents().putAll(keyComponent.getSubComponents());
-
-			// Physically add it to the table component layout.
-			this.layout.setConstraints(keyComponent, this.constraints);
-			this.add(keyComponent);
-		}
-
-		// Add a key component as a sub-component of this table,
 		// for each of the foreign keys in the table.
-		for (final Iterator i = this.getTable().getForeignKeys().iterator(); i
+		for (final Iterator i = this.getTable().getKeys().iterator(); i
 				.hasNext();) {
 			final Key key = (Key) i.next();
 			final KeyComponent keyComponent = new KeyComponent(key, this
@@ -213,7 +166,6 @@ public class TableComponent extends BoxShapedComponent {
 		final GridBagLayout columnsListPanelLayout = new GridBagLayout();
 		this.columnsListPanel.setLayout(columnsListPanelLayout);
 
-		// Add columns to the list one by one, as column sub-components.
 		// Do a bit of sorting to make them alphabetical first.
 		final Map sortedColMap = new TreeMap();
 		for (final Iterator i = this.getTable().getColumns().iterator(); i
@@ -223,6 +175,8 @@ public class TableComponent extends BoxShapedComponent {
 					col instanceof DataSetColumn ? ((DataSetColumn) col)
 							.getModifiedName() : col.getName(), col);
 		}
+
+		// Add columns to the list one by one, as column sub-components.
 		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
 			final Column col = (Column) i.next();
 			final ColumnComponent colComponent = new ColumnComponent(col, this

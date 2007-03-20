@@ -41,16 +41,14 @@ import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
 
 /**
- * A dialog which lists all the columns in a concat relation, and all the
- * columns in the table which are available to put in that relation. It can then
- * allow the user to move those columns around, thus e diting the relation. It
- * also allows the user to specify the separators to use during the
- * concatenation operation.
+ * A dialog which allows the user to choose which end of a relation it must
+ * be followed from. The transformation will then always follow this relation
+ * from that end and ignore it from the other.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class DirectionalRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -58,14 +56,12 @@ public class DirectionalRelationDialog extends JDialog {
 	private JComboBox chosenKey;
 
 	/**
-	 * Pop up a dialog to define the arity of a relation.
+	 * Pop up a dialog to define the direction of a relation.
 	 * 
-	 * @param startvalue
-	 *            the initial preselected arity.
-	 * @param title
-	 *            the title to give the dialog.
-	 * @param label
-	 *            the title to give the arity selector.
+	 * @param initialChoice
+	 *            the initial preselected key.
+	 * @param relation
+	 *            the relation we are working with.
 	 */
 	public DirectionalRelationDialog(final Key initialChoice,
 			final Relation relation) {
@@ -105,7 +101,7 @@ public class DirectionalRelationDialog extends JDialog {
 		final JButton close = new JButton(Resources.get("closeButton"));
 		final JButton execute = new JButton(Resources.get("updateButton"));
 
-		// Input fields.
+		// Key field.
 		JPanel field = new JPanel();
 		field.add(checkbox);
 		field.add(new JLabel(Resources.get("directionalRelationKeyLabel")));
@@ -120,7 +116,7 @@ public class DirectionalRelationDialog extends JDialog {
 		gridBag.setConstraints(field, fieldLastRowConstraints);
 		content.add(field);
 
-		// Intercept the spinner.
+		// Intercept the drop-down.
 		this.chosenKey.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (DirectionalRelationDialog.this.getChosenKey() == null)
@@ -173,9 +169,9 @@ public class DirectionalRelationDialog extends JDialog {
 	}
 
 	/**
-	 * Get the arity the user selected.
+	 * Get the key the user selected.
 	 * 
-	 * @return the selected arity.
+	 * @return the selected key.
 	 */
 	public Key getChosenKey() {
 		return (Key) this.chosenKey.getSelectedItem();

@@ -50,9 +50,9 @@ import org.biomart.common.resources.Resources;
  * keeping track of the tables a schema provides.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.5
  */
 public interface Schema extends Comparable, DataLink {
 	/**
@@ -82,12 +82,32 @@ public interface Schema extends Comparable, DataLink {
 	 */
 	public Collection getRelations();
 
+	/**
+	 * Returns a collection of all the internal relations in this schema,
+	 * ie. those that link two tables in the same schema.
+	 * 
+	 * @return a set of internal relations.
+	 */
 	public Collection getInternalRelations();
 
+	/**
+	 * Returns a collection of all the external relations in this schema,
+	 * ie. those that link two tables in different schemas.
+	 * 
+	 * @return a set of external relations.
+	 */
 	public Collection getExternalRelations();
 
+	/**
+	 * Adds a relation to the set known about by this schema.
+	 * @param relation the relation to add.
+	 */
 	public void addRelation(final Relation relation);
 
+	/**
+	 * Removes a relation from the set known about by this schema.
+	 * @param relation the relation to remove.
+	 */
 	public void removeRelation(final Relation relation);
 
 	/**
@@ -95,7 +115,7 @@ public interface Schema extends Comparable, DataLink {
 	 * 
 	 * @return <tt>true</tt> if it does, <tt>false</tt> if it doesn't.
 	 */
-	public boolean getKeyGuessing();
+	public boolean isKeyGuessing();
 
 	/**
 	 * Returns the name of this schema.
@@ -356,7 +376,7 @@ public interface Schema extends Comparable, DataLink {
 			return this.internalRelations;
 		}
 
-		public boolean getKeyGuessing() {
+		public boolean isKeyGuessing() {
 			return this.keyguessing;
 		}
 

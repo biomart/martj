@@ -45,9 +45,9 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTableP
  * table for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.1
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.6
  */
 public class SchemaPartitionDialog extends JDialog {
 	private static final long serialVersionUID = 1;
@@ -60,6 +60,14 @@ public class SchemaPartitionDialog extends JDialog {
 
 	private JButton execute;
 
+	/**
+	 * Pops up a dialog to manage the internal partitions of the given schema.
+	 * 
+	 * @param schema
+	 *            the schema to manage the partitions for.
+	 * @return the updated partition map. Keys are actual schema names, and
+	 *         values are the aliases to use in dataset table names.
+	 */
 	public static Map definePartitions(final Schema schema) {
 		final SchemaPartitionDialog dialog = new SchemaPartitionDialog(schema);
 		dialog.setLocationRelativeTo(null);
@@ -70,14 +78,7 @@ public class SchemaPartitionDialog extends JDialog {
 			return dialog.getPartitions();
 	}
 
-	/**
-	 * Creates (but does not open) a dialog requesting details of a restricted
-	 * table.
-	 * 
-	 * @param template
-	 *            the restriction to use as a template, if any.
-	 */
-	public SchemaPartitionDialog(final Schema template) {
+	private SchemaPartitionDialog(final Schema template) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(Resources.get("schemaPartitionDialogTitle"));

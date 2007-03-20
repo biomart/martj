@@ -83,7 +83,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public interface MartConstructor {
 
@@ -359,11 +359,7 @@ public interface MartConstructor {
 										missingCols.toString() }));
 					}
 				}
-				// Expand the table. We need to insert each one directly
-				// after its parent table and before any subsequent
-				// subclass table. This ensures that by the time the subclass
-				// table is created, the parent table will have all its
-				// columns in place and complete already.
+				// Expand the table.
 				final Collection nextSCs = new HashSet();
 				final Collection nextDims = new HashSet();
 				for (final Iterator j = tbl.getRelations().iterator(); j
@@ -379,6 +375,11 @@ public interface MartConstructor {
 						else
 							nextSCs.add(dsTab);
 				}
+				// We need to insert each one directly
+				// after its parent table and before any subsequent
+				// subclass table. This ensures that by the time the subclass
+				// table is created, the parent table will have all its
+				// columns in place and complete already.
 				tablesToProcess.addAll(i + 1, nextSCs);
 				tablesToProcess.addAll(i + 1, nextDims);
 			}

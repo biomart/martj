@@ -57,7 +57,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public abstract class ExplainTransformationDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
@@ -269,7 +269,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	}
 
 	/**
-	 * This version of the class shows a single table.
+	 * This version of the class shows a bunch of additional columns added
+	 * in the last transformation steps.
 	 */
 	public static class AdditionalColumns extends ExplainTransformationDiagram {
 		private static final long serialVersionUID = 1;

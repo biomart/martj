@@ -47,7 +47,7 @@ import org.biomart.common.resources.Resources;
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
  *          $Author$
- * @since 0.1
+ * @since 0.5
  */
 public abstract class DatabaseDialect {
 
@@ -83,11 +83,18 @@ public abstract class DatabaseDialect {
 	 * {@link DatabaseDialect#understandsDataLink(DataLink)} method returns
 	 * <tt>true</tt> for that data link. It returns the first one that returns
 	 * <tt>true</tt>, ignoring any subsequent ones.
+	 * <p>
+	 * Note that it must be able to open the connection provided by
+	 * <tt>dataLink</tt> in order to get some basic attributes from it that
+	 * determine compatibility, such as maximum table and column name lengths.
 	 * 
 	 * @param dataLink
 	 *            the data link to work out the dialect for.
 	 * @return the appropriate DatabaseDialect, or <tt>null</tt> if none
 	 *         found.
+	 * @throws SQLException
+	 *             if it was unable to determine basic attributes from the
+	 *             connection provided.
 	 */
 	public static DatabaseDialect getDialect(final DataLink dataLink)
 			throws SQLException {
@@ -99,6 +106,7 @@ public abstract class DatabaseDialect {
 				Log
 						.info(Resources.get("logGotDialect", d.getClass()
 								.getName()));
+				// Get maximum table/col name lengths.
 				if (dataLink instanceof JDBCSchema) {
 					final DatabaseMetaData dmd = ((JDBCSchema) dataLink)
 							.getConnection().getMetaData();
@@ -118,16 +126,18 @@ public abstract class DatabaseDialect {
 	 * list will be empty, but it will never be <tt>null</tt>.
 	 * <p>
 	 * The method will use the {@link Column#getTable()} method to discover
-	 * which table to use, then call {@link Table#getSchema()} to find out what
-	 * schema that table is in. It will use the {@link Column#getName()},
-	 * {@link Table#getName()} and {@link Schema#getName()} methods to work out
-	 * the names to use in the query. It is expected that the method will be
-	 * able to work out from the type of {@link Schema} object it finds exactly
-	 * how to connect to the database in question and use this information. For
-	 * instance, if it finds a {@link JDBCSchema}, it knows that this will
-	 * implement {@link JDBCDataLink} and therefore will be able to discover and
-	 * use {@link JDBCDataLink#getConnection()} to connect to the database and
-	 * execute the query.
+	 * which table to use. It will use the {@link Column#getName()},
+	 * {@link Table#getName()} methods to work out the names to use in the
+	 * query. It is expected that the method will be able to work out from the
+	 * type of {@link Schema} object returned by {@link Table#getSchema()}
+	 * exactly how to connect to the database in question and use this
+	 * information. For instance, if it finds a {@link JDBCSchema}, it knows
+	 * that this will implement {@link JDBCDataLink} and therefore will be able
+	 * to discover and use {@link JDBCDataLink#getConnection()} to connect to
+	 * the database and execute the query.
+	 * <p>
+	 * The actual schema interrogated is given by <tt>schemaName</tt> and NOT
+	 * by {@link JDBCSchema#getDatabaseSchema()}.
 	 * 
 	 * @param schemaName
 	 *            the name of the schema to interrogate.
@@ -154,19 +164,20 @@ public abstract class DatabaseDialect {
 	 * determines how many rows to return from that point. The offset is
 	 * 0-indexed, such that the first row in a table is row 0.
 	 * <p>
-	 * The method will use {@link Table#getSchema()} to find out what schema
-	 * that table is in. It will use the {@link Table#getName()} and
-	 * {@link Schema#getName()} methods to work out the names to use in the
-	 * query. It is expected that the method will be able to work out from the
-	 * type of {@link Schema} object it finds exactly how to connect to the
-	 * database in question and use this information. For instance, if it finds
-	 * a {@link JDBCSchema}, it knows that this will implement
-	 * {@link JDBCDataLink} and therefore will be able to discover and use
-	 * {@link JDBCDataLink#getConnection()} to connect to the database and
-	 * execute the query.
 	 * <p>
-	 * Note that if the table belongs to a grouped schema, this function is
-	 * undefined.
+	 * The method will use the {@link Column#getTable()} method to discover
+	 * which table to use. It will use the {@link Column#getName()},
+	 * {@link Table#getName()} methods to work out the names to use in the
+	 * query. It is expected that the method will be able to work out from the
+	 * type of {@link Schema} object returned by {@link Table#getSchema()}
+	 * exactly how to connect to the database in question and use this
+	 * information. For instance, if it finds a {@link JDBCSchema}, it knows
+	 * that this will implement {@link JDBCDataLink} and therefore will be able
+	 * to discover and use {@link JDBCDataLink#getConnection()} to connect to
+	 * the database and execute the query.
+	 * <p>
+	 * The actual schema interrogated is given by <tt>schemaName</tt> and NOT
+	 * by {@link JDBCSchema#getDatabaseSchema()}.
 	 * 
 	 * @param table
 	 *            the table to get the rows from.
@@ -197,10 +208,6 @@ public abstract class DatabaseDialect {
 	 * 
 	 * @param action
 	 *            the action to translate into SQL or DDL.
-	 * @param includeComments
-	 *            <tt>true</tt> if comments exlaining the process should be
-	 *            embedded into the generated statements, <tt>false</tt> if
-	 *            not.
 	 * @return the statement(s) that represent the action.
 	 * @throws ConstructorException
 	 *             if the action was not able to be converted into one or more
@@ -226,22 +233,42 @@ public abstract class DatabaseDialect {
 	 */
 	public abstract boolean understandsDataLink(DataLink dataLink);
 
-	public void setMaxTableNameLength(final int value) {
+	private void setMaxTableNameLength(final int value) {
 		this.maxTableNameLength = value;
 	}
 
-	public void setMaxColumnNameLength(final int value) {
+	private void setMaxColumnNameLength(final int value) {
 		this.maxColumnNameLength = value;
 	}
 
-	public void checkTableName(final String tableName)
+	/**
+	 * Use this method to check if the given table name is acceptable to this
+	 * database dialect. Throws an exception if it is not, otherwise does
+	 * nothing.
+	 * 
+	 * @param tableName
+	 *            the table name to check.
+	 * @throws ConstructorException
+	 *             if the name is not acceptable.
+	 */
+	protected void checkTableName(final String tableName)
 			throws ConstructorException {
 		if (tableName.length() > this.maxTableNameLength)
 			throw new ConstructorException(Resources.get("nameTooLong",
 					tableName));
 	}
 
-	public void checkColumnName(final String columnName)
+	/**
+	 * Use this method to check if the given column name is acceptable to this
+	 * database dialect. Throws an exception if it is not, otherwise does
+	 * nothing.
+	 * 
+	 * @param columnName
+	 *            the table name to check.
+	 * @throws ConstructorException
+	 *             if the name is not acceptable.
+	 */
+	protected void checkColumnName(final String columnName)
 			throws ConstructorException {
 		if (columnName.length() > this.maxColumnNameLength)
 			throw new ConstructorException(Resources.get("nameTooLong",
