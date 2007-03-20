@@ -468,6 +468,8 @@ public class DataSet extends GenericSchema {
 		// inherited PK, if this is a subclass. Dimensions dont get
 		// merged at all.
 		boolean includeMergeTablePK = mergeTablePK != null
+				&& !mergeTablePK.getStatus().equals(
+						ComponentStatus.INFERRED_INCORRECT)
 				&& !dsTable.getType().equals(DataSetTableType.DIMENSION);
 		if (includeMergeTablePK && sourceRelation != null)
 			// Only add further PK columns if the relation did NOT
