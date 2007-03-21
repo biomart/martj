@@ -17,6 +17,7 @@
  */
 package org.biomart.builder.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -47,7 +48,7 @@ import org.biomart.common.utils.InverseMap;
  * 			$Author$
  * @since 0.6
  */
-public abstract class TransformationUnit {
+public abstract class TransformationUnit implements Serializable {
 	/**
 	 * A map of source schema column names to dataset column objects.
 	 */
@@ -114,6 +115,8 @@ public abstract class TransformationUnit {
 	 * This type of transformation selects columns from a single table.
 	 */
 	public static class SelectFromTable extends TransformationUnit {
+		private static final long serialVersionUID = 1L;
+		
 		private final Table table;
 
 		private SelectFromTable(final TransformationUnit previousUnit,
@@ -159,6 +162,8 @@ public abstract class TransformationUnit {
 	 * This unit joins an existing dataset table to a schema table.
 	 */
 	public static class JoinTable extends SelectFromTable {
+		private static final long serialVersionUID = 1L;
+
 		private List sourceDataSetColumns;
 
 		private Key schemaSourceKey;
@@ -272,7 +277,8 @@ public abstract class TransformationUnit {
 	 * already defined in the table as {@link ExpressionColumn}s.
 	 */
 	public static class Expression extends TransformationUnit {
-
+		private static final long serialVersionUID = 1L;
+		
 		private DataSetTable dsTable;
 
 		/**
@@ -357,6 +363,7 @@ public abstract class TransformationUnit {
 	 * This transformation joins two tables by mean of a concatenation.
 	 */
 	public static class Concat extends JoinTable {
+		private static final long serialVersionUID = 1L;
 
 		/**
 		 * Joins two tables by means of a concatenation.

@@ -36,13 +36,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.biomart.common.controller.CommonUtils;
-import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Schema;
+import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
-import org.biomart.common.view.gui.panels.JDBCSchemaConnectionPanel;
 import org.biomart.common.view.gui.panels.SchemaConnectionPanel;
+import org.biomart.common.view.gui.panels.SchemaConnectionPanel.JDBCSchemaConnectionPanel;
 
 /**
  * This dialog box allows the user to define or modify a schema, by giving it a

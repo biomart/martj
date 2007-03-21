@@ -65,12 +65,12 @@ import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
-import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 

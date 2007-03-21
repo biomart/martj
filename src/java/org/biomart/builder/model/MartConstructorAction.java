@@ -18,6 +18,7 @@
 
 package org.biomart.builder.model;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.5
  */
-public abstract class MartConstructorAction {
+public abstract class MartConstructorAction implements Serializable {
 
 	private String datasetTableName;
 
@@ -97,6 +98,7 @@ public abstract class MartConstructorAction {
 	 * Copy optimiser table actions.
 	 */
 	public static class CopyOptimiserVia extends CopyOptimiserDirect {
+		private static final long serialVersionUID = 1L;
 
 		private List fromKeyColumns;
 
@@ -150,6 +152,7 @@ public abstract class MartConstructorAction {
 	 * Copy optimiser table actions.
 	 */
 	public static class CopyOptimiserDirect extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String fromOptTableName;
 
@@ -275,6 +278,7 @@ public abstract class MartConstructorAction {
 	 * Update optimiser table actions.
 	 */
 	public static class UpdateOptimiser extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private Collection keyColumns;
 
@@ -400,6 +404,7 @@ public abstract class MartConstructorAction {
 	 * Create optimiser table actions.
 	 */
 	public static class CreateOptimiser extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private Collection keyColumns;
 
@@ -456,6 +461,7 @@ public abstract class MartConstructorAction {
 	 * LeftJoin actions.
 	 */
 	public static class LeftJoin extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String leftTable;
 
@@ -615,6 +621,7 @@ public abstract class MartConstructorAction {
 	 * Join actions.
 	 */
 	public static class Join extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String leftTable;
 
@@ -897,6 +904,7 @@ public abstract class MartConstructorAction {
 	 * ConcatJoin actions.
 	 */
 	public static class ConcatJoin extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String leftTable;
 
@@ -1231,6 +1239,7 @@ public abstract class MartConstructorAction {
 	 * AddExpression actions.
 	 */
 	public static class AddExpression extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String table;
 
@@ -1339,6 +1348,7 @@ public abstract class MartConstructorAction {
 	 * Select actions.
 	 */
 	public static class Select extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String schema;
 
@@ -1516,6 +1526,7 @@ public abstract class MartConstructorAction {
 	 * Drop column actions.
 	 */
 	public static class DropColumns extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private Collection columns;
 
@@ -1572,6 +1583,7 @@ public abstract class MartConstructorAction {
 	 * Drop actions.
 	 */
 	public static class Drop extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String table;
 
@@ -1611,6 +1623,7 @@ public abstract class MartConstructorAction {
 	 * Index actions.
 	 */
 	public static class Index extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String table;
 
@@ -1668,6 +1681,7 @@ public abstract class MartConstructorAction {
 	 * Rename actions.
 	 */
 	public static class Rename extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
 
 		private String from;
 

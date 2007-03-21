@@ -18,6 +18,7 @@
 
 package org.biomart.common.model;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,7 +39,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Column extends Comparable {
+public interface Column extends Comparable, Serializable {
 	/**
 	 * Retrieve the name of this column.
 	 * 
@@ -90,6 +91,8 @@ public interface Column extends Comparable {
 	 * for a column to function.
 	 */
 	public class GenericColumn implements Column {
+		private static final long serialVersionUID = 1L;
+
 		private String name;
 
 		private final Table table;

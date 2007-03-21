@@ -20,6 +20,7 @@ package org.biomart.common.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -34,7 +35,7 @@ import java.sql.SQLException;
  * 			$Author$
  * @since 0.5
  */
-public interface DataLink {
+public interface DataLink extends Serializable {
 	/**
 	 * Checks to see if this datalink 'cohabits' with another one. Cohabitation
 	 * means that it would be possible to write a single SQL statement that

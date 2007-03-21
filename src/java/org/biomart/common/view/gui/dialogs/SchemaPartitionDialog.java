@@ -34,8 +34,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.model.Schema;
+import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTablePanel;

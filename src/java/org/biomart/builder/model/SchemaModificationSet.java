@@ -17,6 +17,7 @@
  */
 package org.biomart.builder.model;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +44,8 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.6
  */
-public class SchemaModificationSet {
+public class SchemaModificationSet implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * The name to use for dataset-wide modifications.
@@ -1435,7 +1437,8 @@ public class SchemaModificationSet {
 	/**
 	 * Defines the restriction on a table, ie. a where-clause.
 	 */
-	public static class RestrictedTableDefinition {
+	public static class RestrictedTableDefinition implements Serializable {
+		private static final long serialVersionUID = 1L;
 
 		private Map aliases;
 
@@ -1572,7 +1575,8 @@ public class SchemaModificationSet {
 	/**
 	 * Defines the restriction on a table, ie. a where-clause.
 	 */
-	public static class RestrictedRelationDefinition {
+	public static class RestrictedRelationDefinition implements Serializable {
+		private static final long serialVersionUID = 1L;
 
 		private Map leftAliases;
 
@@ -1721,7 +1725,8 @@ public class SchemaModificationSet {
 	/**
 	 * Defines the restriction on a table, ie. a where-clause.
 	 */
-	public static class ConcatRelationDefinition {
+	public static class ConcatRelationDefinition implements Serializable {
+		private static final long serialVersionUID = 1L;
 
 		private Map aliases;
 
@@ -1946,7 +1951,9 @@ public class SchemaModificationSet {
 		/**
 		 * Defines types of concat relation recursion.
 		 */
-		public static class RecursionType implements Comparable {
+		public static class RecursionType implements Comparable, Serializable {
+			private static final long serialVersionUID = 1L;
+
 			private static final Map singletons = new HashMap();
 
 			/**
@@ -2040,7 +2047,8 @@ public class SchemaModificationSet {
 	/**
 	 * Defines a compound relation.
 	 */
-	public static class CompoundRelationDefinition {
+	public static class CompoundRelationDefinition implements Serializable {
+		private static final long serialVersionUID = 1L;
 
 		private int n;
 

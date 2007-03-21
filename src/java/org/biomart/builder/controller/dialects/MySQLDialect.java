@@ -45,7 +45,6 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
-import org.biomart.common.controller.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.DataLink;
@@ -53,6 +52,7 @@ import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.DataLink.JDBCDataLink;
+import org.biomart.common.model.Schema.JDBCSchema;
 
 /**
  * Understands how to create SQL and DDL for a MySQL database.

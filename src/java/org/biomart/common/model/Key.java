@@ -18,6 +18,7 @@
 
 package org.biomart.common.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,7 +47,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Key extends Comparable {
+public interface Key extends Comparable, Serializable {
 	/**
 	 * Adds a particular relation to the set this key is involved in.
 	 * 
@@ -147,6 +148,8 @@ public interface Key extends Comparable {
 	 * This implementation is a simple foreign key.
 	 */
 	public class GenericForeignKey extends GenericKey implements ForeignKey {
+		private static final long serialVersionUID = 1L;
+
 		/**
 		 * The constructor passes on all its work to the {@link GenericKey}
 		 * constructor. It then adds itself to the set of foreign keys on the
@@ -170,6 +173,8 @@ public interface Key extends Comparable {
 	 * are involved.
 	 */
 	public class GenericKey implements Key {
+		private static final long serialVersionUID = 1L;
+
 		private final List columns = new ArrayList();
 
 		private final List columnNames = new ArrayList();
@@ -385,6 +390,8 @@ public interface Key extends Comparable {
 	 * This implementation is a simple primary key.
 	 */
 	public class GenericPrimaryKey extends GenericKey implements PrimaryKey {
+		private static final long serialVersionUID = 1L;
+
 		/**
 		 * The constructor passes on all its work to the {@link GenericKey}
 		 * constructor.

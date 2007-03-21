@@ -18,6 +18,7 @@
 
 package org.biomart.builder.model;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,6 +80,8 @@ import org.biomart.common.resources.Resources;
  * @since 0.5
  */
 public class DataSet extends GenericSchema {
+	private static final long serialVersionUID = 1L;
+
 	private final Table centralTable;
 
 	private boolean invisible;
@@ -899,6 +902,8 @@ public class DataSet extends GenericSchema {
 	 */
 	public static class DataSetColumn extends
 			org.biomart.common.model.Column.GenericColumn {
+		private static final long serialVersionUID = 1L;
+
 		private boolean keyDependency;
 
 		private boolean expressionDependency;
@@ -1032,7 +1037,8 @@ public class DataSet extends GenericSchema {
 		 * Note that all expression columns should be added in a single step.
 		 */
 		public static class ExpressionColumn extends DataSetColumn {
-
+			private static final long serialVersionUID = 1L;
+			
 			private final ExpressionColumnDefinition definition;
 
 			/**
@@ -1074,7 +1080,8 @@ public class DataSet extends GenericSchema {
 		 * Note that all expression columns should be added in a single step.
 		 */
 		public static class ConcatColumn extends DataSetColumn {
-
+			private static final long serialVersionUID = 1L;
+			
 			private final ConcatRelationDefinition definition;
 
 			/**
@@ -1111,6 +1118,8 @@ public class DataSet extends GenericSchema {
 		 * table.
 		 */
 		public static class InheritedColumn extends DataSetColumn {
+			private static final long serialVersionUID = 1L;
+			
 			private DataSetColumn dsColumn;
 
 			/**
@@ -1150,6 +1159,8 @@ public class DataSet extends GenericSchema {
 		 * the original name is already used in the dataset table.
 		 */
 		public static class WrappedColumn extends DataSetColumn {
+			private static final long serialVersionUID = 1L;
+			
 			private final Column column;
 
 			/**
@@ -1200,7 +1211,8 @@ public class DataSet extends GenericSchema {
 	 * This class defines the various different ways of optimising a dataset
 	 * after it has been constructed, eg. adding boolean columns.
 	 */
-	public static class DataSetOptimiserType implements Comparable {
+	public static class DataSetOptimiserType implements Comparable, Serializable {
+		private static final long serialVersionUID = 1L;
 
 		/**
 		 * Use this constant to refer to no optimisation.
@@ -1399,6 +1411,8 @@ public class DataSet extends GenericSchema {
 	 */
 	public static class DataSetTable extends
 			org.biomart.common.model.Table.GenericTable {
+		private static final long serialVersionUID = 1L;
+
 		private final List transformationUnits;
 
 		private final DataSetTableType type;
@@ -1527,7 +1541,9 @@ public class DataSet extends GenericSchema {
 	/**
 	 * This class defines the various different types of DataSetTable there are.
 	 */
-	public static class DataSetTableType implements Comparable {
+	public static class DataSetTableType implements Comparable, Serializable {
+		private static final long serialVersionUID = 1L;
+
 		/**
 		 * Use this constant to refer to a dimension table.
 		 */

@@ -18,6 +18,7 @@
 
 package org.biomart.common.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +31,9 @@ import java.util.Map;
  * 		    $Author$
  * @since 0.5
  */
-public class ComponentStatus implements Comparable {
+public class ComponentStatus implements Comparable, Serializable {
+	private static final long serialVersionUID = 1L;
+
 	private static final Map singletons = new HashMap();
 
 	/**

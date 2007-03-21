@@ -32,6 +32,7 @@ import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.GenericForeignKey;
 import org.biomart.common.model.Key.GenericPrimaryKey;
 import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 

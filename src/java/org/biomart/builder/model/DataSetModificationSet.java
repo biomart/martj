@@ -17,6 +17,7 @@
  */
 package org.biomart.builder.model;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,7 +43,8 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.6
  */
-public class DataSetModificationSet {
+public class DataSetModificationSet implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	private final DataSet ds;
 
@@ -667,12 +669,14 @@ public class DataSetModificationSet {
 	 * Actual logic to divide up by column is left to the mart constructor to
 	 * decide.
 	 */
-	public interface PartitionedColumnDefinition {
+	public interface PartitionedColumnDefinition extends Serializable {
 		/**
 		 * Use this class to partition on a range of values - ie. only columns
 		 * which fit one of these ranges will be returned.
 		 */
 		public static class ValueRange implements PartitionedColumnDefinition {
+			private static final long serialVersionUID = 1L;
+			
 			private Map ranges = new HashMap();
 
 			/**
@@ -742,6 +746,8 @@ public class DataSetModificationSet {
 		 * which match one of these values will be returned.
 		 */
 		public static class ValueList implements PartitionedColumnDefinition {
+			private static final long serialVersionUID = 1L;
+			
 			private Map values = new HashMap();
 
 			/**
@@ -791,7 +797,8 @@ public class DataSetModificationSet {
 	/**
 	 * Defines an expression column for a table.
 	 */
-	public static class ExpressionColumnDefinition {
+	public static class ExpressionColumnDefinition implements Serializable {
+		private static final long serialVersionUID = 1L;
 
 		private Map aliases;
 

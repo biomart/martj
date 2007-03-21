@@ -18,6 +18,7 @@
 
 package org.biomart.common.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Relation extends Comparable {
+public interface Relation extends Comparable, Serializable {
 	/**
 	 * Deconstructs the relation by removing references to itself from the keys
 	 * at both ends.
@@ -308,6 +309,8 @@ public interface Relation extends Comparable {
 	 * keys at both ends have the same number of columns.
 	 */
 	public class GenericRelation implements Relation {
+		private static final long serialVersionUID = 1L;
+
 		private Cardinality cardinality;
 
 		private final Key firstKey;

@@ -23,6 +23,7 @@
 
 package org.biomart.common.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Table extends Comparable {
+public interface Table extends Comparable, Serializable {
 
 	/**
 	 * Adds a relation to the set known by this table.
@@ -230,6 +231,8 @@ public interface Table extends Comparable {
 	 * column and check for conflicts with existing columns.
 	 */
 	public class GenericTable implements Table {
+		private static final long serialVersionUID = 1L;
+
 		private final Map columns = new HashMap();
 
 		// We must use a list as key hash codes can change.
