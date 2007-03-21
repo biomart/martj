@@ -415,7 +415,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append("exit when rows_updated = 0; ");
 			sb.append("end loop; ");
 			// Finish up.
-			sb.append(" END;");
+			sb.append(" END");
 			// Reset the statement buffer.
 			statements.add(sb.toString());
 			sb.setLength(0);

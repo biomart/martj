@@ -429,8 +429,8 @@ public class MySQLDialect extends DatabaseDialect {
 			statements.add(sb.toString());
 			sb.setLength(0);
 			statements.add("DELIMITER ; ");
-			statements.add("CALL mart_recurse();");
-			statements.add("DROP PROCEDURE mart_recurse;");
+			statements.add("CALL mart_recurse()");
+			statements.add("DROP PROCEDURE mart_recurse");
 		}
 
 		// Now do the grouping on the nicely recursed (or original if not
