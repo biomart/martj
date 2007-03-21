@@ -374,6 +374,7 @@ public class MartBuilderUtils {
 		Log.info(Resources.get("logReqEditKey"));
 		key.setColumns(columns);
 		MartBuilderUtils.changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
+		mart.synchroniseDataSets(key.getTable().getSchema());
 	}
 
 	/**
