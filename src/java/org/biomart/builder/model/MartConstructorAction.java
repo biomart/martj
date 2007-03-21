@@ -177,7 +177,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcCopyOpt");
+			return Resources.get("mcCopyOpt", this.getFromOptColumnName());
 		}
 
 		/**
@@ -301,7 +301,8 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcUpdateOpt");
+			return Resources.get("mcUpdateOpt", new String[] {
+					this.getOptTableName(), this.getOptColumnName() });
 		}
 
 		/**
@@ -417,7 +418,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcCreateOpt");
+			return Resources.get("mcCreateOpt", this.getOptTableName());
 		}
 
 		/**
@@ -485,7 +486,8 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcMerge");
+			return Resources.get("mcMerge", new String[] { this.getLeftTable(),
+					this.getRightTable(), this.getResultTable() });
 		}
 
 		/**
@@ -657,7 +659,8 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcMerge");
+			return Resources.get("mcMerge", new String[] { this.getLeftTable(),
+					this.getRightTable(), this.getResultTable() });
 		}
 
 		/**
@@ -944,7 +947,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcConcat");
+			return Resources.get("mcConcat", this.getConcatColumnName());
 		}
 
 		/**
@@ -1252,7 +1255,8 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcExpressionAdd");
+			return Resources.get("mcExpressionAdd", this.getExpressionColumns()
+					.keySet().toString());
 		}
 
 		/**
@@ -1367,7 +1371,8 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcCreate");
+			return Resources.get("mcCreate", new String[] {
+					this.getResultTable(), this.getTable() });
 		}
 
 		/**
@@ -1475,7 +1480,7 @@ public abstract class MartConstructorAction {
 		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
 			this.partitionRangeDef = partitionRangeDef;
 		}
-		
+
 		/**
 		 * @return the partitionValue
 		 */
@@ -1490,7 +1495,7 @@ public abstract class MartConstructorAction {
 		public void setPartitionValue(String partitionValue) {
 			this.partitionValue = partitionValue;
 		}
-		
+
 		/**
 		 * @return the partitionListDef
 		 */
@@ -1529,7 +1534,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcDropCols");
+			return Resources.get("mcDropCols", this.getColumns().toString());
 		}
 
 		/**
@@ -1583,7 +1588,7 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcDrop");
+			return Resources.get("mcDrop", this.getTable());
 		}
 
 		/**
@@ -1624,7 +1629,8 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcIndex");
+			return Resources.get("mcIndex", new String[] { this.getTable(),
+					this.getColumns().toString() });
 		}
 
 		/**
@@ -1680,7 +1686,8 @@ public abstract class MartConstructorAction {
 		}
 
 		public String getStatusMessage() {
-			return Resources.get("mcRename");
+			return Resources.get("mcRename", new String[] { this.getFrom(),
+					this.getTo() });
 		}
 
 		/**
