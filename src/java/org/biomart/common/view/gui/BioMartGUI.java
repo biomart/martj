@@ -38,8 +38,8 @@ import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.dialogs.AboutDialog;
 
 /**
- * This abstract class provides some useful common stuff for launcing any
- * BioMart Java appliaction.
+ * This abstract class provides some useful common stuff for launching any
+ * BioMart Java GUI appliaction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 

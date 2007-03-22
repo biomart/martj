@@ -1,0 +1,170 @@
+/*
+ Copyright (C) 2006 EBI
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package org.biomart.builder.view.cli;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import org.biomart.builder.exceptions.ValidationException;
+import org.biomart.common.resources.Log;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
+import org.biomart.common.view.cli.BioMartCLI;
+
+/**
+ * The main app housing the MartBuilder CLI. The {@link #main(String[])} method
+ * starts the CLI.
+ * <p>
+ * The CLI syntax is
+ * 
+ * <pre>
+ *  java org.biomart.builder.view.cli.MartBuilder &lt;port&gt;
+ * </pre>
+ * 
+ * where <tt>&lt;port&gt;</tt> is the port that this server should listen on.
+ * 
+ * @author Richard Holland <holland@ebi.ac.uk>
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
+ * @since 0.6
+ */
+public class MartBuilder extends BioMartCLI {
+	private static final long serialVersionUID = 1L;
+
+	private final String[] args;
+
+	private final Collection workers = new HashSet();
+
+	private ServerSocket serverSocket = null;
+
+	/**
+	 * Run this application and open the main window. The window stays open and
+	 * the application keeps running until the window is closed.
+	 * 
+	 * @param args
+	 *            any command line arguments that the user specified will be in
+	 *            this array.
+	 */
+	public static void main(final String[] args) {
+		// Initialise resources.
+		Settings.setApplication(Settings.MARTBUILDER);
+		Resources.setResourceLocation("org/biomart/builder/resources");
+		// Start the application.
+		new MartBuilder(args).launch();
+	}
+
+	/**
+	 * Start a MartBuilder CLI server listening using the given command line
+	 * parameters.
+	 * 
+	 * @param args
+	 *            the arguments from the command line.
+	 */
+	public MartBuilder(final String[] args) {
+		super();
+		this.args = args;
+	}
+
+	private void processArgs() throws ValidationException {
+		if (this.args.length < 1)
+			throw new ValidationException(Resources.get("serverPortMissing"));
+		try {
+			final int port = Integer.parseInt(this.args[0]);
+			this.serverSocket = new ServerSocket(port);
+			Log.info(Resources.get("serverListening",""+port));
+		} catch (final IOException e) {
+			throw new ValidationException(Resources.get("serverPortBroken",
+					this.args[0]), e);
+		} catch (final NumberFormatException e) {
+			throw new ValidationException(Resources.get("serverPortInvalid",
+					this.args[0]), e);
+		}
+	}
+
+	public boolean poll() throws Throwable {
+		// First time round - read port from args and start listening on it.
+		if (this.serverSocket == null)
+			this.processArgs();
+		// Remaining times - carry on with the job.
+		else {
+			final Socket clientSocket = this.serverSocket.accept();
+			final Runnable worker = new Runnable() {
+				public void run() {
+					final ClientWorker worker = new ClientWorker(clientSocket);
+					MartBuilder.this.workers.add(worker);
+					worker.handleClient();
+					MartBuilder.this.workers.remove(worker);
+					worker.close();
+				}
+			};
+			worker.run();
+		}
+		// We never have cause to exit.
+		return true;
+	}
+	
+	public void finalize() {
+		// In case the user ctrl-C's us we can tidy up nicely.
+		this.requestExitApp();
+	}
+
+	public boolean confirmExitApp() {
+		try {
+			for (final Iterator i = this.workers.iterator(); i.hasNext();)
+				((ClientWorker) i.next()).close();
+			this.serverSocket.close();
+		} catch (final IOException e) {
+			// We don't really care. We're exiting anyway.
+		}
+		return true;
+	}
+
+	private static class ClientWorker {
+		private Socket clientSocket;
+
+		private ClientWorker(final Socket clientSocket) {
+			this.clientSocket = clientSocket;
+			Log.info(Resources.get("clientConnected",""+this.clientSocket.getInetAddress()));
+		}
+
+		/**
+		 * Listen to the client and do what they ask.
+		 */
+		public void handleClient() {
+			// TODO Handle client communication.
+		}
+
+		/**
+		 * Tell this client worker to shut down and close the socket.
+		 */
+		public void close() {
+			try {
+				this.clientSocket.close();
+			} catch (final IOException e) {
+				// We don't really care. We're exiting anyway.
+			} finally {
+				Log.info(Resources.get("clientDisconnected",""+this.clientSocket.getInetAddress()));
+			}
+		}
+	}
+}
