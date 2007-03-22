@@ -64,6 +64,10 @@ public class Mart implements Serializable {
 	private final Map schemas = new TreeMap();
 
 	private String outputSchema = null;
+	
+	private String outputHost = null;
+	
+	private String outputPort = null;
 
 	/**
 	 * This constructor does nothing except log a message saying the mart has
@@ -92,6 +96,48 @@ public class Mart implements Serializable {
 	 */
 	public String getOutputSchema() {
 		return this.outputSchema;
+	}
+
+	/**
+	 * Optional, sets the default target host this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @param outputHost
+	 *            the target host.
+	 */
+	public void setOutputHost(final String outputHost) {
+		this.outputHost = outputHost;
+	}
+
+	/**
+	 * Optional, gets the default target host this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @return the target host.
+	 */
+	public String getOutputHost() {
+		return this.outputHost;
+	}
+
+	/**
+	 * Optional, sets the default target port this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @param outputPort
+	 *            the target port.
+	 */
+	public void setOutputPort(final String outputPort) {
+		this.outputPort = outputPort;
+	}
+
+	/**
+	 * Optional, gets the default target port this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @return the target port.
+	 */
+	public String getOutputPort() {
+		return this.outputPort;
 	}
 
 	/**

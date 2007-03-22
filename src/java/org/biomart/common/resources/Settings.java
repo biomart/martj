@@ -270,6 +270,9 @@ public class Settings {
 						Settings
 								.saveHistoryProperties(clazz, entries[j], props);
 					}
+				} catch (final ClassNotFoundException e) {
+					// Ignore. We don't care as these settings are
+					// now irrelevant if the class no longer exists.
 				} catch (final Throwable t) {
 					Log.error(Resources.get("settingsCacheLoadFailed"), t);
 				}

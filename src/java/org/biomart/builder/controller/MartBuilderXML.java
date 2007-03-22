@@ -586,6 +586,8 @@ public class MartBuilderXML extends DefaultHandler {
 		Log.debug("Writing mart: " + mart);
 		this.openElement("mart", xmlWriter);
 		this.writeAttribute("outputSchema", mart.getOutputSchema(), xmlWriter);
+		this.writeAttribute("outputHost", mart.getOutputHost(), xmlWriter);
+		this.writeAttribute("outputPort", mart.getOutputPort(), xmlWriter);
 
 		// Write out each schema.
 		final Set externalRelations = new HashSet();
@@ -1175,6 +1177,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// will override the earlier ones.
 			final Mart mart = new Mart();
 			mart.setOutputSchema((String) attributes.get("outputSchema"));
+			mart.setOutputHost((String) attributes.get("outputHost"));
+			mart.setOutputPort((String) attributes.get("outputPort"));
 			element = this.constructedMart = mart;
 		}
 

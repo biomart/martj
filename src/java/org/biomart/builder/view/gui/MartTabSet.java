@@ -50,6 +50,8 @@ import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
+import org.biomart.builder.view.gui.dialogs.MonitorRemoteHostDialog;
+import org.biomart.builder.view.gui.dialogs.RemoteHostConnectionDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -489,6 +491,38 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Sets the output host on the currently selected mart.
+	 * 
+	 * @param host
+	 *            the new output host.
+	 */
+	public void requestSetOutputHost(final String host) {
+		final String oldOne = this.getSelectedMartTab().getMart()
+				.getOutputHost();
+		if (oldOne == null || !oldOne.equals(host)) {
+			MartBuilderUtils.setOutputHost(this.getSelectedMartTab().getMart(),
+					host);
+			this.requestChangeModifiedStatus(true);
+		}
+	}
+
+	/**
+	 * Sets the output port on the currently selected mart.
+	 * 
+	 * @param port
+	 *            the new output port.
+	 */
+	public void requestSetOutputPort(final String port) {
+		final String oldOne = this.getSelectedMartTab().getMart()
+				.getOutputPort();
+		if (oldOne == null || !oldOne.equals(port)) {
+			MartBuilderUtils.setOutputPort(this.getSelectedMartTab().getMart(),
+					port);
+			this.requestChangeModifiedStatus(true);
+		}
+	}
+
+	/**
 	 * Runs the given {@link ConstructorRunnable} and monitors it's progress.
 	 * 
 	 * @param constructor
@@ -560,6 +594,36 @@ public class MartTabSet extends JTabbedPane {
 
 		// Start the timer.
 		timer.start();
+	}
+
+	/**
+	 * Ask the user which remote host to monitor, then open the dialog box that
+	 * monitors that host.
+	 */
+	public void requestMonitorRemoteHost() {
+		RemoteHostConnectionDialog d = new RemoteHostConnectionDialog(
+				this.getSelectedMartTab()==null?null:this.getSelectedMartTab().getMart());
+		d.show();
+		// Cancelled by user?
+		if (d.getHost() == null)
+			return;
+		else
+			this.requestMonitorRemoteHost(d.getHost(), d.getPort());
+	}
+
+	/**
+	 * Opens the dialog box to monitor the specified remote host and port.
+	 * 
+	 * @param host
+	 *            the host to connect to.
+	 * @param port
+	 *            the port the host is listening on.
+	 */
+	public void requestMonitorRemoteHost(final String host, final String port) {
+		this.requestSetOutputHost(host);
+		this.requestSetOutputPort(port);
+		// Open remote host monitor dialog.
+		MonitorRemoteHostDialog.monitor(host,port);
 	}
 
 	/**

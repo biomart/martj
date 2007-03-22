@@ -89,7 +89,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	public static void showTableExplanation(final MartTab martTab,
 			final DataSetTable table) {
 		final ExplainTableDialog dialog = new ExplainTableDialog(martTab, table);
-		dialog.setLocationRelativeTo(null);
 		martTab.getDataSetTabSet().setCurrentExplanationDialog(dialog);
 		dialog.show();
 		// We don't get here until the dialog is closed.

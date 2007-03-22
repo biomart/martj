@@ -85,6 +85,10 @@ public class SaveDDLDialog extends JDialog {
 
 	private JButton outputFileLocationButton;
 
+	private JTextField runDDLHost;
+
+	private JTextField runDDLPort;
+
 	/**
 	 * Creates (but does not display) a dialog centred on the given tab, which
 	 * allows DDL generation for the given datasets. When the OK button is
@@ -135,13 +139,15 @@ public class SaveDDLDialog extends JDialog {
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
-		// Create input fields for target schema name and granularity.
+		// Create input fields for target schema name and granularity,
+		// and for run ddl host/port.
 		this.targetSchemaName = new JTextField(20);
 		this.targetSchemaName.setText(martTab.getMart().getOutputSchema());
 
 		this.outputFormat = new JComboBox();
 		this.outputFormat.addItem(Resources.get("filePerTableDDL"));
 		this.outputFormat.addItem(Resources.get("viewDDL"));
+		this.outputFormat.addItem(Resources.get("runDDL"));
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
@@ -211,20 +217,42 @@ public class SaveDDLDialog extends JDialog {
 			}
 		});
 
+		// Create the host/port label/fields.
+		final JLabel outputHostLabel = new JLabel(Resources
+				.get("runDDLHostLabel"));
+		this.runDDLHost = new JTextField(20);
+		this.runDDLHost.setText(martTab.getMart().getOutputHost());
+		final JLabel outputPortLabel = new JLabel(Resources
+				.get("runDDLPortLabel"));
+		this.runDDLPort = new JTextField(20);
+		this.runDDLPort.setText(martTab.getMart().getOutputPort());
+
 		// Add listeners to view DDL options which show/hide additional stuff.
 		this.outputFormat.addItemListener(new ItemListener() {
 			public void itemStateChanged(final ItemEvent e) {
 				if (SaveDDLDialog.this.outputFormat.getSelectedItem().equals(
-						Resources.get("viewDDL"))) {
-					outputFileLabel.setVisible(false);
-					SaveDDLDialog.this.outputFileLocation.setVisible(false);
-					SaveDDLDialog.this.outputFileLocationButton
-							.setVisible(false);
-				} else {
+						Resources.get("filePerTableDDL"))) {
 					outputFileLabel.setVisible(true);
 					SaveDDLDialog.this.outputFileLocation.setVisible(true);
 					SaveDDLDialog.this.outputFileLocationButton
 							.setVisible(true);
+				} else {
+					outputFileLabel.setVisible(false);
+					SaveDDLDialog.this.outputFileLocation.setVisible(false);
+					SaveDDLDialog.this.outputFileLocationButton
+							.setVisible(false);
+				}
+				if (SaveDDLDialog.this.outputFormat.getSelectedItem().equals(
+						Resources.get("runDDL"))) {
+					outputHostLabel.setVisible(true);
+					outputPortLabel.setVisible(true);
+					SaveDDLDialog.this.runDDLHost.setVisible(true);
+					SaveDDLDialog.this.runDDLPort.setVisible(true);
+				} else {
+					outputHostLabel.setVisible(false);
+					outputPortLabel.setVisible(false);
+					SaveDDLDialog.this.runDDLHost.setVisible(false);
+					SaveDDLDialog.this.runDDLPort.setVisible(false);
 				}
 				SaveDDLDialog.this.pack();
 			}
@@ -265,6 +293,20 @@ public class SaveDDLDialog extends JDialog {
 		field = new JPanel();
 		field.add(this.outputFileLocation);
 		field.add(this.outputFileLocationButton);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Add the output host/port etc..
+		gridBag.setConstraints(outputHostLabel, labelConstraints);
+		content.add(outputHostLabel);
+		field = new JPanel();
+		field.add(this.runDDLHost);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+		gridBag.setConstraints(outputPortLabel, labelConstraints);
+		content.add(outputPortLabel);
+		field = new JPanel();
+		field.add(this.runDDLPort);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -331,11 +373,19 @@ public class SaveDDLDialog extends JDialog {
 				Resources.get("filePerTableDDL")))
 			constructor = new SaveDDLMartConstructor(new File(
 					this.outputFileLocation.getText()));
+		else if (this.outputFormat.getSelectedItem().equals(
+				Resources.get("runDDL")))
+			constructor = new SaveDDLMartConstructor(this.runDDLHost.getText(),
+					this.runDDLPort.getText());
 		else
 			constructor = new SaveDDLMartConstructor(sb);
 
 		try {
 			// Obtain the DDL generator from the constructor object.
+			this.martTab.getMartTabSet().requestSetOutputHost(
+					this.runDDLHost.getText());
+			this.martTab.getMartTabSet().requestSetOutputPort(
+					this.runDDLPort.getText());
 			final String outputSchema = this.targetSchemaName.getText();
 			this.martTab.getMartTabSet().requestSetOutputSchema(outputSchema);
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(
@@ -343,22 +393,32 @@ public class SaveDDLDialog extends JDialog {
 			// If we want screen output, add a listener that listens for
 			// completion of construction. When completed, use the
 			// stringbuffer, which will contain the DDL, to pop up a simple
-			// text dialog for the user to view it with.
-			if (this.outputFormat.getSelectedItem().equals(
-					Resources.get("viewDDL")))
-				cr.addMartConstructorListener(new MartConstructorListener() {
-					public void martConstructorEventOccurred(final int event,
-							final Object data,
-							final MartConstructorAction action)
-							throws Exception {
-						if (event == MartConstructorListener.CONSTRUCTION_ENDED
-								&& cr.getFailureException() == null)
+			// text dialog for the user to view it with. Also if we want
+			// remote host output, a remote host monitor dialog pops up instead.
+			cr.addMartConstructorListener(new MartConstructorListener() {
+				public void martConstructorEventOccurred(final int event,
+						final Object data, final MartConstructorAction action)
+						throws Exception {
+					if (event == MartConstructorListener.CONSTRUCTION_ENDED
+							&& cr.getFailureException() == null) {
+						if (SaveDDLDialog.this.outputFormat.getSelectedItem()
+								.equals(Resources.get("viewDDL")))
 							ViewTextDialog
 									.displayText(Resources
 											.get("mcViewDDLWindowTitle"), sb
 											.toString());
+						else if (SaveDDLDialog.this.outputFormat
+								.getSelectedItem().equals(
+										Resources.get("runDDL")))
+							SaveDDLDialog.this.martTab.getMartTabSet()
+									.requestMonitorRemoteHost(
+											SaveDDLDialog.this.runDDLHost
+													.getText(),
+											SaveDDLDialog.this.runDDLPort
+													.getText());
 					}
-				});
+				}
+			});
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
@@ -383,11 +443,21 @@ public class SaveDDLDialog extends JDialog {
 					.get("targetSchema")));
 
 		// Must have an output file.
-		if (!this.outputFormat.getSelectedItem().equals(
-				Resources.get("viewDDL"))
+		if (this.outputFormat.getSelectedItem().equals(
+				Resources.get("filePerTableDDL"))
 				&& this.isEmpty(this.outputFileLocation.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("saveDDLFileLocation")));
+
+		// Must have an output host/port.
+		if (this.outputFormat.getSelectedItem().equals(Resources.get("runDDL"))) {
+			if (this.isEmpty(this.runDDLHost.getText()))
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("runDDLHost")));
+			if (this.isEmpty(this.runDDLPort.getText()))
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("runDDLPort")));
+		}
 
 		// Must have at least one dataset selected.
 		if (this.datasetsList.getSelectedValues().length == 0)

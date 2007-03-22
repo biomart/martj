@@ -23,7 +23,9 @@
 -->
 
 <!ELEMENT mart (jdbcSchema+,relation*,dataset*)>
-<!ATTLIST jdbcSchema outputSchema CDATA #IMPLIED>
+<!ATTLIST mart outputSchema CDATA #IMPLIED>
+<!ATTLIST mart outputHost CDATA #IMPLIED>
+<!ATTLIST mart outputPort CDATA #IMPLIED>
 
 <!ELEMENT jdbcSchema (table+,relation*)>
 <!ATTLIST jdbcSchema driverClassLocation CDATA #IMPLIED>

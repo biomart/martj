@@ -20,6 +20,7 @@ package org.biomart.builder.controller;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -67,6 +68,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 	private StringBuffer outputStringBuffer;
 
+	private String outputHost;
+
+	private String outputPort;
+
 	/**
 	 * Creates a constructor that, when requested, will begin constructing a
 	 * mart and outputting DDL to a file.
@@ -83,6 +88,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		this.outputFile = outputFile;
 		// This last call is redundant but is included for clarity.
 		this.outputStringBuffer = null;
+		this.outputHost = null;
+		this.outputPort = null;
 	}
 
 	/**
@@ -100,6 +107,28 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		this.outputStringBuffer = outputStringBuffer;
 		// This last call is redundant but is included for clarity.
 		this.outputFile = null;
+		this.outputHost = null;
+		this.outputPort = null;
+	}
+
+	/**
+	 * Creates a constructor that, when requested, will begin constructing a
+	 * mart and outputting actions to the given host.
+	 * 
+	 * @param outputHost
+	 *            the host to receive actions.
+	 * @param outputPort
+	 *            the port the host is listening on.
+	 */
+	public SaveDDLMartConstructor(final String outputHost,
+			final String outputPort) {
+		Log.info(Resources.get("logSaveDDLHost"));
+		// Remember the settings.
+		this.outputHost = outputHost;
+		this.outputPort = outputPort;
+		// Redundant but included for clarity.
+		this.outputFile = null;
+		this.outputStringBuffer = null;
 	}
 
 	public ConstructorRunnable getConstructorRunnable(
@@ -136,8 +165,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// Work out what kind of helper to use. The helper will
 		// perform the actual conversion of action to DDL and divide
 		// the results into appropriate files or buffers.
-		final DDLHelper helper = this.outputStringBuffer == null ? (DDLHelper) new TableAsFileHelper(
-				this.outputFile, dd)
+		final DDLHelper helper = this.outputStringBuffer == null ? this.outputHost != null ? (DDLHelper) new RemoteHostHelper(
+				this.outputHost, this.outputPort, dd)
+				: (DDLHelper) new TableAsFileHelper(this.outputFile, dd)
 				: new SingleStringBufferHelper(this.outputStringBuffer, dd);
 		Log.debug("Chose helper " + helper.getClass().getName());
 
@@ -376,6 +406,59 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				if (!this.actions.containsKey(dsTableName))
 					this.actions.put(dsTableName, new ArrayList());
 				((List) this.actions.get(dsTableName)).add(action);
+			}
+		}
+	}
+
+	/**
+	 * Statements are transmitted to a remote host for execution.
+	 */
+	public static class RemoteHostHelper extends DDLHelper {
+
+		private String outputHost;
+
+		private String outputPort;
+
+		private Socket socket;
+
+		/**
+		 * Constructs a helper which will output all actions directly to the
+		 * given host for interpretation.
+		 * 
+		 * @param outputHost
+		 *            the host to send actions to.
+		 * @param outputPort
+		 *            the port the host is listening on.
+		 * @param dialect
+		 *            the type of SQL the actions should contain.
+		 */
+		public RemoteHostHelper(final String outputHost,
+				final String outputPort, final DatabaseDialect dialect) {
+			super(dialect);
+			this.outputHost = outputHost;
+			this.outputPort = outputPort;
+		}
+
+		public void martConstructorEventOccurred(final int event,
+				final Object data, final MartConstructorAction action)
+				throws Exception {
+			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				// Open the host socket.
+				this.socket = new Socket(this.outputHost, Integer
+						.parseInt(this.outputPort));
+				// TODO Write the opening message to the socket.
+			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				// TODO Write the closing message to the socket.
+				// Close the socket to the host.
+				this.socket.close();
+			} else if (event == MartConstructorListener.MART_STARTED) {
+				// TODO Inform the host.
+			} else if (event == MartConstructorListener.DATASET_STARTED) {
+				// TODO Inform the host.
+			} else if (event == MartConstructorListener.PARTITION_STARTED) {
+				// TODO Inform the host.
+			} else if (event == MartConstructorListener.ACTION_EVENT) {
+				// TODO Inform the host.
 			}
 		}
 	}

@@ -107,6 +107,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem saveMartAs;
 
+		private JMenuItem monitorHost;
+
 		private JMenuItem addSchema;
 
 		private JMenuItem updateAllSchemas;
@@ -190,6 +192,12 @@ public class MartBuilder extends BioMartGUI {
 			this.saveDDL
 					.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			this.saveDDL.addActionListener(this);
+
+			// Monitor remote host.
+			this.monitorHost = new JMenuItem(Resources.get("monitorHostTitle"));
+			this.monitorHost.setMnemonic(Resources.get("monitorHostMnemonic")
+					.charAt(0));
+			this.monitorHost.addActionListener(this);
 
 			// Close current mart.
 			this.closeMart = new JMenuItem(Resources.get("closeMartTitle"));
@@ -377,6 +385,8 @@ public class MartBuilder extends BioMartGUI {
 			martMenu.add(this.saveMart);
 			martMenu.add(this.saveMartAs);
 			martMenu.add(this.saveDDL);
+			martMenu.addSeparator();
+			martMenu.add(this.monitorHost);
 			final int firstMartRecentFileEntry = martMenu
 					.getMenuComponentCount();
 
@@ -466,7 +476,8 @@ public class MartBuilder extends BioMartGUI {
 						file.setMnemonic(("" + position).charAt(0));
 						file.addActionListener(new ActionListener() {
 							public void actionPerformed(final ActionEvent evt) {
-								martBuilder.martTabSet.requestLoadMart(location);
+								martBuilder.martTabSet
+										.requestLoadMart(location);
 							}
 						});
 						martMenu.add(file);
@@ -611,6 +622,8 @@ public class MartBuilder extends BioMartGUI {
 				this.getMartBuilder().martTabSet.requestCloseMart();
 			else if (e.getSource() == this.saveDDL)
 				this.getMartBuilder().martTabSet.requestCreateDDL();
+			else if (e.getSource() == this.monitorHost)
+				this.getMartBuilder().martTabSet.requestMonitorRemoteHost();
 			// Schema menu.
 			else if (e.getSource() == this.addSchema)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()

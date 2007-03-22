@@ -189,6 +189,34 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Sets the output host on a mart.
+	 * 
+	 * @param mart
+	 *            the mart to change.
+	 * @param outputHost
+	 *            the new output host value.
+	 */
+	public static void setOutputHost(final Mart mart,
+			final String outputHost) {
+		Log.info(Resources.get("logReqOutputHost"));
+		mart.setOutputHost(outputHost);
+	}
+
+	/**
+	 * Sets the output port on a mart.
+	 * 
+	 * @param mart
+	 *            the mart to change.
+	 * @param outputPort
+	 *            the new output port value.
+	 */
+	public static void setOutputPort(final Mart mart,
+			final String outputPort) {
+		Log.info(Resources.get("logReqOutputPort"));
+		mart.setOutputPort(outputPort);
+	}
+
+	/**
 	 * Adds a schema to a mart.
 	 * 
 	 * @param mart
