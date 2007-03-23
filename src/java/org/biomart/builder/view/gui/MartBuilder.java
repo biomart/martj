@@ -345,8 +345,6 @@ public class MartBuilder extends BioMartGUI {
 						.getValue();
 				final JRadioButtonMenuItem opt = new JRadioButtonMenuItem(
 						Resources.get("optimiser" + name + "Title"));
-				opt.setMnemonic(Resources.get("optimiser" + name + "Mnemonic")
-						.charAt(0));
 				opt.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						final DataSet ds = martBuilder.martTabSet

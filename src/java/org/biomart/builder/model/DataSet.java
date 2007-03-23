@@ -254,7 +254,7 @@ public class DataSet extends GenericSchema {
 				if (parentDSTablePK.getColumns().contains(parentDSCol))
 					dsTableFKCols.add(dsCol);
 			}
-
+			
 			try {
 				// Create the child FK.
 				final ForeignKey dsTableFK = new GenericForeignKey(
@@ -318,6 +318,34 @@ public class DataSet extends GenericSchema {
 			// Create the key.
 			dsTable.setPrimaryKey(new GenericPrimaryKey(dsTablePKCols));
 
+		// Insert Expression Column Transformation Unit
+		// containing all expression columns defined on this table.
+		if (this.dsMods.hasExpressionColumn(dsTable)) {
+			final Collection aliases = new HashSet();
+			final Expression tu = new Expression((TransformationUnit) dsTable
+					.getTransformationUnits().get(
+							dsTable.getTransformationUnits().size() - 1),
+					dsTable);
+			dsTable.addTransformationUnit(tu);
+			for (final Iterator i = ((Collection) this.dsMods
+					.getExpressionColumns().get(dsTable.getName())).iterator(); i
+					.hasNext();) {
+				final ExpressionColumnDefinition expr = (ExpressionColumnDefinition) i
+						.next();
+				// Save up the aliases to make dependents later.
+				aliases.addAll(expr.getAliases().keySet());
+				final String expColName = expr.getColKey();
+				final ExpressionColumn expCol = new ExpressionColumn(
+						expColName, dsTable, expr);
+				dsTable.addColumn(expCol);
+				tu.getNewColumnNameMap().put(expColName, expCol);
+			}
+			// Mark all aliased columns as dependents
+			for (final Iterator j = aliases.iterator(); j.hasNext();)
+				((DataSetColumn) dsTable.getColumnByName((String) j.next()))
+						.setExpressionDependency(true);
+		}
+
 		// Process the subclass relations of this table.
 		for (int i = 0; i < subclassQ.size(); i++) {
 			final Object[] triple = (Object[]) subclassQ.get(i);
@@ -349,34 +377,6 @@ public class DataSet extends GenericSchema {
 								.getTable() : dimensionRelation.getFirstKey()
 								.getTable(), newSourceDSCols,
 						dimensionRelation, subclassCount, iteration);
-		}
-
-		// Insert Expression Column Transformation Unit
-		// containing all expression columns defined on this table.
-		if (this.dsMods.hasExpressionColumn(dsTable)) {
-			final Collection aliases = new HashSet();
-			final Expression tu = new Expression((TransformationUnit) dsTable
-					.getTransformationUnits().get(
-							dsTable.getTransformationUnits().size() - 1),
-					dsTable);
-			dsTable.addTransformationUnit(tu);
-			for (final Iterator i = ((Collection) this.dsMods
-					.getExpressionColumns().get(dsTable.getName())).iterator(); i
-					.hasNext();) {
-				final ExpressionColumnDefinition expr = (ExpressionColumnDefinition) i
-						.next();
-				// Save up the aliases to make dependents later.
-				aliases.addAll(expr.getAliases().keySet());
-				final String expColName = expr.getColKey();
-				final ExpressionColumn expCol = new ExpressionColumn(
-						expColName, dsTable, expr);
-				dsTable.addColumn(expCol);
-				tu.getNewColumnNameMap().put(expColName, expCol);
-			}
-			// Mark all aliased columns as dependents
-			for (final Iterator j = aliases.iterator(); j.hasNext();)
-				((DataSetColumn) dsTable.getColumnByName((String) j.next()))
-						.setExpressionDependency(true);
 		}
 	}
 
@@ -1038,7 +1038,7 @@ public class DataSet extends GenericSchema {
 		 */
 		public static class ExpressionColumn extends DataSetColumn {
 			private static final long serialVersionUID = 1L;
-			
+
 			private final ExpressionColumnDefinition definition;
 
 			/**
@@ -1081,7 +1081,7 @@ public class DataSet extends GenericSchema {
 		 */
 		public static class ConcatColumn extends DataSetColumn {
 			private static final long serialVersionUID = 1L;
-			
+
 			private final ConcatRelationDefinition definition;
 
 			/**
@@ -1119,7 +1119,7 @@ public class DataSet extends GenericSchema {
 		 */
 		public static class InheritedColumn extends DataSetColumn {
 			private static final long serialVersionUID = 1L;
-			
+
 			private DataSetColumn dsColumn;
 
 			/**
@@ -1160,7 +1160,7 @@ public class DataSet extends GenericSchema {
 		 */
 		public static class WrappedColumn extends DataSetColumn {
 			private static final long serialVersionUID = 1L;
-			
+
 			private final Column column;
 
 			/**
@@ -1211,14 +1211,15 @@ public class DataSet extends GenericSchema {
 	 * This class defines the various different ways of optimising a dataset
 	 * after it has been constructed, eg. adding boolean columns.
 	 */
-	public static class DataSetOptimiserType implements Comparable, Serializable {
+	public static class DataSetOptimiserType implements Comparable,
+			Serializable {
 		private static final long serialVersionUID = 1L;
 
 		/**
 		 * Use this constant to refer to no optimisation.
 		 */
 		public static final DataSetOptimiserType NONE = new DataSetOptimiserType(
-				"NONE", false, false, false);
+				"NONE", false, false, false, false);
 
 		/**
 		 * Use this constant to refer to optimising by including an extra column
@@ -1226,7 +1227,7 @@ public class DataSet extends GenericSchema {
 		 * number of matching rows in that dimension.
 		 */
 		public static final DataSetOptimiserType COLUMN = new DataSetOptimiserType(
-				"COLUMN", false, false, false);
+				"COLUMN", false, false, false, false);
 
 		/**
 		 * Use this constant to refer to no optimising by creating a separate
@@ -1235,7 +1236,7 @@ public class DataSet extends GenericSchema {
 		 * dimension.
 		 */
 		public static final DataSetOptimiserType TABLE = new DataSetOptimiserType(
-				"TABLE", false, true, false);
+				"TABLE", false, true, false, false);
 
 		/**
 		 * Use this constant to refer to optimising by including an extra column
@@ -1243,7 +1244,7 @@ public class DataSet extends GenericSchema {
 		 * depending whether matching rows exist in that dimension.
 		 */
 		public static final DataSetOptimiserType COLUMN_BOOL = new DataSetOptimiserType(
-				"COLUMN_BOOL", true, false, false);
+				"COLUMN_BOOL", true, false, false, false);
 
 		/**
 		 * Use this constant to refer to no optimising by creating a separate
@@ -1252,35 +1253,66 @@ public class DataSet extends GenericSchema {
 		 * in that dimension.
 		 */
 		public static final DataSetOptimiserType TABLE_BOOL = new DataSetOptimiserType(
-				"TABLE_BOOL", true, true, false);
+				"TABLE_BOOL", true, true, false, false);
+
+		/**
+		 * Use this constant to refer to optimising by including an extra column
+		 * on the main table for each dimension and populating it with 1 or null
+		 * depending whether matching rows exist in that dimension.
+		 */
+		public static final DataSetOptimiserType COLUMN_BOOL_NULL = new DataSetOptimiserType(
+				"COLUMN_BOOL_NULL", true, false, false, true);
+
+		/**
+		 * Use this constant to refer to no optimising by creating a separate
+		 * table linked on a 1:1 basis with the main table, with one column per
+		 * dimension populated with 1 or null depending whether matching rows
+		 * exist in that dimension.
+		 */
+		public static final DataSetOptimiserType TABLE_BOOL_NULL = new DataSetOptimiserType(
+				"TABLE_BOOL_NULL", true, true, false, true);
 
 		/**
 		 * See {@link #COLUMN} but parent tables will inherit copies of count
 		 * columns from child tables.
 		 */
 		public static final DataSetOptimiserType COLUMN_INHERIT = new DataSetOptimiserType(
-				"COLUMN_INHERIT", false, false, true);
+				"COLUMN_INHERIT", false, false, true, false);
 
 		/**
 		 * See {@link #TABLE} but parent tables will inherit copies of count
 		 * tables from child tables.
 		 */
 		public static final DataSetOptimiserType TABLE_INHERIT = new DataSetOptimiserType(
-				"TABLE_INHERIT", false, true, true);
+				"TABLE_INHERIT", false, true, true, false);
 
 		/**
 		 * See {@link #COLUMN_BOOL} but parent tables will inherit copies of
 		 * bool columns from child tables.
 		 */
 		public static final DataSetOptimiserType COLUMN_BOOL_INHERIT = new DataSetOptimiserType(
-				"COLUMN_BOOL_INHERIT", true, false, true);
+				"COLUMN_BOOL_INHERIT", true, false, true, false);
 
 		/**
 		 * See {@link #TABLE_BOOL} but parent tables will inherit copies of bool
 		 * tables from child tables.
 		 */
 		public static final DataSetOptimiserType TABLE_BOOL_INHERIT = new DataSetOptimiserType(
-				"TABLE_BOOL_INHERIT", true, true, true);
+				"TABLE_BOOL_INHERIT", true, true, true, false);
+
+		/**
+		 * See {@link #COLUMN_BOOL_NULL} but parent tables will inherit copies
+		 * of bool columns from child tables.
+		 */
+		public static final DataSetOptimiserType COLUMN_BOOL_NULL_INHERIT = new DataSetOptimiserType(
+				"COLUMN_BOOL_NULL_INHERIT", true, false, true, true);
+
+		/**
+		 * See {@link #TABLE_BOOL_NULL} but parent tables will inherit copies of
+		 * bool tables from child tables.
+		 */
+		public static final DataSetOptimiserType TABLE_BOOL_NULL_INHERIT = new DataSetOptimiserType(
+				"TABLE_BOOL_NULL_INHERIT", true, true, true, true);
 
 		private final String name;
 
@@ -1289,6 +1321,8 @@ public class DataSet extends GenericSchema {
 		private final boolean table;
 
 		private final boolean inherit;
+
+		private final boolean useNull;
 
 		/**
 		 * The private constructor takes a single parameter, which defines the
@@ -1306,13 +1340,17 @@ public class DataSet extends GenericSchema {
 		 *            <tt>true</tt> if parent main tables of a subclass table
 		 *            should also inherit the column and/or table of this
 		 *            optimiser type.
+		 * @param useNull
+		 *            if this is a bool column, use null/1 instead of 0/1.
 		 */
 		private DataSetOptimiserType(final String name, final boolean bool,
-				final boolean table, final boolean inherit) {
+				final boolean table, final boolean inherit,
+				final boolean useNull) {
 			this.name = name;
 			this.bool = bool;
 			this.table = table;
 			this.inherit = inherit;
+			this.useNull = useNull;
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {
@@ -1338,11 +1376,22 @@ public class DataSet extends GenericSchema {
 		 * Return <tt>true</tt> if columns counts should be replaced by 0/1
 		 * boolean-style values.
 		 * 
-		 * @return <tt>true</tt> if if columns counts should be replaced by
-		 *         0/1 boolean-style values.
+		 * @return <tt>true</tt> if columns counts should be replaced by 0/1
+		 *         boolean-style values.
 		 */
 		public boolean isBool() {
 			return this.bool;
+		}
+
+		/**
+		 * Return <tt>true</tt> if columns 0/1 values should be replaced by
+		 * null/1 equivalents.
+		 * 
+		 * @return <tt>true</tt> if columns 0/1 values should be replaced by
+		 *         null/1 equivalents.
+		 */
+		public boolean isUseNull() {
+			return this.useNull;
 		}
 
 		/**
@@ -1393,12 +1442,20 @@ public class DataSet extends GenericSchema {
 			optimiserTypes.put("ColumnBool", DataSetOptimiserType.COLUMN_BOOL);
 			optimiserTypes.put("ColumnBoolInherit",
 					DataSetOptimiserType.COLUMN_BOOL_INHERIT);
+			optimiserTypes.put("ColumnBoolNull",
+					DataSetOptimiserType.COLUMN_BOOL_NULL);
+			optimiserTypes.put("ColumnBoolNullInherit",
+					DataSetOptimiserType.COLUMN_BOOL_NULL_INHERIT);
 			optimiserTypes.put("Table", DataSetOptimiserType.TABLE);
 			optimiserTypes.put("TableInherit",
 					DataSetOptimiserType.TABLE_INHERIT);
 			optimiserTypes.put("TableBool", DataSetOptimiserType.TABLE_BOOL);
 			optimiserTypes.put("TableBoolInherit",
 					DataSetOptimiserType.TABLE_BOOL_INHERIT);
+			optimiserTypes.put("TableBoolNull",
+					DataSetOptimiserType.TABLE_BOOL_NULL);
+			optimiserTypes.put("TableBoolNullInherit",
+					DataSetOptimiserType.TABLE_BOOL_NULL_INHERIT);
 			return optimiserTypes;
 		}
 	}

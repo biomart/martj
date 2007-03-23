@@ -1016,7 +1016,8 @@ public class OracleDialect extends DatabaseDialect {
 				+ " add (" + optColName + " number default 0)");
 
 		final String countStmt = action.isCountNotBool() ? "count(1)"
-				: "decode(count(1),0,0,1)";
+				: "decode(count(1),0,"
+						+ (action.isNullNotZero() ? "null" : "0") + ",1)";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("update " + schemaName + "." + optTableName + " a set "

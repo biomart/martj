@@ -166,7 +166,7 @@ public class PartitionColumnDialog extends JDialog {
 				return Resources.get("defaultExprName") + this.alias++;
 			}
 		};
-		
+
 		// The value aliases.
 		final JLabel valueListLabel = new JLabel(Resources
 				.get("valueListsLabel"));
@@ -197,7 +197,7 @@ public class PartitionColumnDialog extends JDialog {
 				return Resources.get("defaultValueName") + this.alias++;
 			}
 		};
-		
+
 		// Everything else.
 		this.type = new JComboBox(new String[] {
 				Resources.get("listPartitionOption"),
@@ -225,7 +225,11 @@ public class PartitionColumnDialog extends JDialog {
 		});
 		final Map sortedCols = new TreeMap();
 		for (final Iterator i = dsTable.getColumns().iterator(); i.hasNext();) {
-			final DataSetColumn col = (DataSetColumn) i.next();
+			DataSetColumn col = (DataSetColumn) i.next();
+			while (col instanceof InheritedColumn)
+				col = ((InheritedColumn) col).getInheritedColumn();
+			if (!(col instanceof WrappedColumn))
+				continue;
 			sortedCols.put(col.getModifiedName(), col);
 		}
 		for (final Iterator i = sortedCols.values().iterator(); i.hasNext();)
@@ -295,7 +299,7 @@ public class PartitionColumnDialog extends JDialog {
 		valueListPanel.add(this.valueAliasModel);
 		valueListPanel.add(updateDB);
 
-		// Make the drop-down type choice change which other 
+		// Make the drop-down type choice change which other
 		// options appear.
 		this.type.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {

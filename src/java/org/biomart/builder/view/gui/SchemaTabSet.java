@@ -465,8 +465,6 @@ public class SchemaTabSet extends JTabbedPane {
 						// schema after turning it on.
 						if (schema.getRelations().size() == 0)
 							CommonUtils.enableKeyGuessing(schema);
-					} catch (final Throwable t) {
-						throw t;
 					} finally {
 						// Must use a finally in case the schema gets created
 						// but won't sync. We still want to add it so that the
@@ -474,11 +472,11 @@ public class SchemaTabSet extends JTabbedPane {
 						// having to add it all over again.
 						// Create and add the tab representing this schema.
 						SchemaTabSet.this.addSchemaTab(schema, true);
-					}
 
-					// Update the modified status for this tabset.
-					SchemaTabSet.this.martTab.getMartTabSet()
-							.requestChangeModifiedStatus(true);
+						// Update the modified status for this tabset.
+						SchemaTabSet.this.martTab.getMartTabSet()
+								.requestChangeModifiedStatus(true);
+					}
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1074,13 +1072,9 @@ public class SchemaTabSet extends JTabbedPane {
 		LongProcess.run(new Runnable() {
 			public void run() {
 				try {
-					try {
-						// Remove the schema from the mart.
-						MartBuilderUtils.removeSchemaFromMart(
-								SchemaTabSet.this.martTab.getMart(), schema);
-					} catch (final Throwable t) {
-						throw t;
-					}
+					// Remove the schema from the mart.
+					MartBuilderUtils.removeSchemaFromMart(
+							SchemaTabSet.this.martTab.getMart(), schema);
 
 					// Remove the schema tab from the schema tabset.
 					SchemaTabSet.this.removeSchemaTab(schema, true);

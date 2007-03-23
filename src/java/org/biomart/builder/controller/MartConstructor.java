@@ -332,9 +332,8 @@ public interface MartConstructor {
 					for (final Iterator j = parentTable.getColumns().iterator(); j
 							.hasNext();) {
 						final DataSetColumn col = (DataSetColumn) j.next();
-						if (!(col instanceof ExpressionColumn)
-								&& !dataset.getDataSetModifications()
-										.isMaskedColumn(col))
+						if (!dataset.getDataSetModifications().isMaskedColumn(
+								col))
 							parentColNames.add(col.getModifiedName());
 					}
 					final Collection ourColNames = new HashSet();
@@ -552,8 +551,11 @@ public interface MartConstructor {
 
 				// Create optimiser columns - either count or bool,
 				// or none if not required.
-				final DataSetOptimiserType oType = dataset
-						.getDataSetOptimiserType();
+				// If this is a subclass table, then the optimiser
+				// type is always COUNT_INHERIT.
+				final DataSetOptimiserType oType = dsTable.getType().equals(
+						DataSetTableType.MAIN_SUBCLASS) ? DataSetOptimiserType.COLUMN_INHERIT
+						: dataset.getDataSetOptimiserType();
 				if (!oType.equals(DataSetOptimiserType.NONE))
 					this.doOptimiseTable(templateSchema, schemaPartition,
 							schemaPrefix, dataset, dsTable, oType,
@@ -656,11 +658,12 @@ public interface MartConstructor {
 					index.setColumns(keyCols);
 					this.issueAction(index);
 				}
-			} else {
-				// Work out the dimension parent.
-				final DataSetTable parent = (DataSetTable) ((Relation) dsTable
-						.getRelations().iterator().next()).getOneKey()
-						.getTable();
+			}
+			if (!dsTable.getType().equals(DataSetTableType.MAIN)) {
+				// Work out the dimension/subclass parent.
+				final DataSetTable parent = (DataSetTable) ((Relation) ((Key) dsTable
+						.getForeignKeys().iterator().next()).getRelations()
+						.iterator().next()).getOneKey().getTable();
 				// Set up the column on the dimension parent.
 				final String optTable = this.getOptimiserTableName(
 						schemaPrefix, parent, oType);
@@ -694,6 +697,7 @@ public interface MartConstructor {
 				update.setOptTableName(optTable);
 				update.setOptColumnName(optCol);
 				update.setCountNotBool(!oType.isBool());
+				update.setNullNotZero(!oType.isUseNull());
 				this.issueAction(update);
 
 				// Index the column if required.
@@ -800,7 +804,7 @@ public interface MartConstructor {
 							GenericConstructorRunnable.NO_PARTITION) : stu
 					.getTable().getName();
 			final Map selectCols = new HashMap();
-			// Populate vars.
+			// Select columns from parent table.
 			for (final Iterator k = stu.getNewColumnNameMap().entrySet()
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();

@@ -292,6 +292,8 @@ public abstract class MartConstructorAction implements Serializable {
 
 		private boolean countNotBool;
 
+		private boolean nullNotZero;
+
 		/**
 		 * Creates a new UpdateOptimiser action.
 		 * 
@@ -322,6 +324,21 @@ public abstract class MartConstructorAction implements Serializable {
 		 */
 		public void setCountNotBool(boolean countNotBool) {
 			this.countNotBool = countNotBool;
+		}
+
+		/**
+		 * @return the nullNotZero
+		 */
+		public boolean isNullNotZero() {
+			return this.nullNotZero;
+		}
+
+		/**
+		 * @param nullNotZero
+		 *            the nullNotZero to set
+		 */
+		public void setNullNotZero(boolean nullNotZero) {
+			this.nullNotZero = nullNotZero;
 		}
 
 		/**

@@ -68,14 +68,22 @@ public abstract class LongProcess {
 		synchronized (LongProcess.lockObject) {
 			// If this is the first process to start, open the
 			// hourglass.
-			if (++LongProcess.longProcessCount == 1)
+			if (LongProcess.longProcessCount++ == 0)
 				try {
-					final Cursor normalCursor = new Cursor(Cursor.WAIT_CURSOR);
-					window.setCursor(normalCursor);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							final Cursor normalCursor = new Cursor(
+									Cursor.WAIT_CURSOR);
+							window.setCursor(normalCursor);
+						}
+					});
 				} catch (final Throwable t) {
 					LongProcess.longProcessCount = 0;
-					StackTrace.showStackTrace(t);
-					return;
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
 				}
 		}
 		new Thread(new Runnable() {

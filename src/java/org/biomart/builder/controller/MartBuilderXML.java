@@ -2118,6 +2118,10 @@ public class MartBuilderXML extends DefaultHandler {
 					opt = DataSetOptimiserType.COLUMN_BOOL;
 				else if ("COLUMN_BOOL_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.COLUMN_BOOL_INHERIT;
+				else if ("COLUMN_BOOL_NULL".equals(optType))
+					opt = DataSetOptimiserType.COLUMN_BOOL_NULL;
+				else if ("COLUMN_BOOL_NULL_INHERIT".equals(optType))
+					opt = DataSetOptimiserType.COLUMN_BOOL_NULL_INHERIT;
 				else if ("TABLE".equals(optType))
 					opt = DataSetOptimiserType.TABLE;
 				else if ("TABLE_INHERIT".equals(optType))
@@ -2126,6 +2130,10 @@ public class MartBuilderXML extends DefaultHandler {
 					opt = DataSetOptimiserType.TABLE_BOOL;
 				else if ("TABLE_BOOL_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.TABLE_BOOL_INHERIT;
+				else if ("TABLE_BOOL_NULL".equals(optType))
+					opt = DataSetOptimiserType.TABLE_BOOL_NULL;
+				else if ("TABLE_BOOL_NULL_INHERIT".equals(optType))
+					opt = DataSetOptimiserType.TABLE_BOOL_NULL_INHERIT;
 				else
 					throw new SAXException(Resources.get(
 							"unknownOptimiserType", optType));

@@ -1016,7 +1016,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ " add " + optColName + " integer default 0");
 
 		final String countStmt = action.isCountNotBool() ? "count(1)"
-				: "case count(1) when 0 then 0 else 1 end";
+				: "case count(1) when 0 then "
+						+ (action.isNullNotZero() ? "null" : "0")
+						+ " else 1 end";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("update " + schemaName + "." + optTableName + " set "
