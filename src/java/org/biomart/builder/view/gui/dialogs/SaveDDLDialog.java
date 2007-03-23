@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,6 +36,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -224,7 +226,8 @@ public class SaveDDLDialog extends JDialog {
 		this.runDDLHost.setText(martTab.getMart().getOutputHost());
 		final JLabel outputPortLabel = new JLabel(Resources
 				.get("runDDLPortLabel"));
-		this.runDDLPort = new JTextField(20);
+		this.runDDLPort = new JFormattedTextField(new DecimalFormat("0"));
+		this.runDDLPort.setColumns(5);
 		this.runDDLPort.setText(martTab.getMart().getOutputPort());
 
 		// Add listeners to view DDL options which show/hide additional stuff.

@@ -23,11 +23,13 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -98,7 +100,8 @@ public class RemoteHostConnectionDialog extends JDialog {
 		// Create the host/port fields.
 		this.runDDLHost = new JTextField(20);
 		this.runDDLHost.setText(mart == null ? null : mart.getOutputHost());
-		this.runDDLPort = new JTextField(20);
+		this.runDDLPort = new JFormattedTextField(new DecimalFormat("0"));
+		this.runDDLPort.setColumns(5);
 		this.runDDLPort.setText(mart == null ? null : mart.getOutputPort());
 
 		// Add the output host/port etc..
