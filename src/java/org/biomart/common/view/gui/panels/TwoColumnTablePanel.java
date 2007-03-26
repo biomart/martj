@@ -617,8 +617,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 					if (crPair[0] == null)
 						label.setText(crPair[1].toString());
 					else
-						label.setText(crPair[1].toString() + " ["
-								+ crPair[0].toString() + "]");
+						label.setText(crPair[1].toString());
 					label.setOpaque(true);
 					label.setFont(table.getFont());
 					if (isSelected) {
@@ -650,8 +649,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 						if (crPair[0] == null)
 							label.setText(crPair[1].toString());
 						else
-							label.setText(crPair[1].toString() + " ["
-									+ crPair[0].toString() + "]");
+							label.setText(crPair[1].toString());
 						label.setOpaque(true);
 						label.setFont(list.getFont());
 						if (isSelected) {
