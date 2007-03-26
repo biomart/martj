@@ -1525,6 +1525,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliases = dialog.getColumnAliases();
 		final String expression = dialog.getExpression();
 		final boolean groupBy = dialog.getGroupBy();
+		final boolean optimiser = dialog.getOptimiser();
 		// Do this in the background.
 		LongProcess.run(new Runnable() {
 			public void run() {
@@ -1532,7 +1533,7 @@ public class DataSetTabSet extends JTabbedPane {
 					// Update the restriction.
 					MartBuilderUtils.setExpressionColumn(dsTable,
 							column == null ? null : column.getDefinition(),
-							aliases, expression, groupBy);
+							aliases, expression, groupBy, optimiser);
 
 					// And the overview.
 					DataSetTabSet.this.recalculateDataSetDiagram(
@@ -2530,7 +2531,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Requests that the dataset be unindex optimised.
 	 * 
 	 * @param dataset
-	 *            the dataset to make visible.
+	 *            the dataset to do this to.
 	 */
 	public void requestNoIndexOptimiser(final DataSet dataset) {
 		LongProcess.run(new Runnable() {
@@ -2557,7 +2558,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Requests that the dataset be index optimised.
 	 * 
 	 * @param dataset
-	 *            the dataset to make visible.
+	 *            the dataset to do this to.
 	 */
 	public void requestIndexOptimiser(final DataSet dataset) {
 		LongProcess.run(new Runnable() {
@@ -2565,6 +2566,60 @@ public class DataSetTabSet extends JTabbedPane {
 				try {
 					// Do the visibility.
 					MartBuilderUtils.indexOptimiserDataSet(dataset);
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.requestChangeModifiedStatus(true);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Requests that the dataset be un-subclass optimised.
+	 * 
+	 * @param dataset
+	 *            the dataset to do this to.
+	 */
+	public void requestNoSubclassOptimiser(final DataSet dataset) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do the visibility.
+					MartBuilderUtils.noSubclassOptimiserDataSet(dataset);
+
+					// Update the modified status for this tabset.
+					DataSetTabSet.this.martTab.getMartTabSet()
+							.requestChangeModifiedStatus(true);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
+			}
+		});
+	}
+
+	/**
+	 * Requests that the dataset be subclass optimised.
+	 * 
+	 * @param dataset
+	 *            the dataset to do this to.
+	 */
+	public void requestSubclassOptimiser(final DataSet dataset) {
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Do the visibility.
+					MartBuilderUtils.subclassOptimiserDataSet(dataset);
 
 					// Update the modified status for this tabset.
 					DataSetTabSet.this.martTab.getMartTabSet()

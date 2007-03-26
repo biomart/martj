@@ -100,6 +100,8 @@ public class DataSet extends GenericSchema {
 
 	private boolean indexOptimiser;
 
+	private boolean subclassOptimiser;
+
 	/**
 	 * The constructor creates a dataset around one central table and gives the
 	 * dataset a name. It adds itself to the specified mart automatically.
@@ -254,7 +256,7 @@ public class DataSet extends GenericSchema {
 				if (parentDSTablePK.getColumns().contains(parentDSCol))
 					dsTableFKCols.add(dsCol);
 			}
-			
+
 			try {
 				// Create the child FK.
 				final ForeignKey dsTableFK = new GenericForeignKey(
@@ -763,6 +765,15 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
+	 * Sees if the optimiser will count subclasses.
+	 * 
+	 * @return <tt>true</tt> if it will.
+	 */
+	public boolean isSubclassOptimiser() {
+		return this.subclassOptimiser;
+	}
+
+	/**
 	 * Test to see if this dataset is invisible.
 	 * 
 	 * @return <tt>true</tt> if it is invisible, <tt>false</tt> otherwise.
@@ -828,6 +839,18 @@ public class DataSet extends GenericSchema {
 		Log.debug("Setting optimiser index in " + this.getName());
 		// Do it.
 		this.indexOptimiser = index;
+	}
+
+	/**
+	 * Sets the subclass count optimiser type.
+	 * 
+	 * @param subclassCount
+	 *            the subclass optimiser if <tt>true</tt>.
+	 */
+	public void setSubclassOptimiser(final boolean subclassCount) {
+		Log.debug("Setting subclass optimiser in " + this.getName());
+		// Do it.
+		this.subclassOptimiser = subclassCount;
 	}
 
 	/**

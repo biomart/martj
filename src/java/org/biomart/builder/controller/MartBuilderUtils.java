@@ -196,8 +196,7 @@ public class MartBuilderUtils {
 	 * @param outputHost
 	 *            the new output host value.
 	 */
-	public static void setOutputHost(final Mart mart,
-			final String outputHost) {
+	public static void setOutputHost(final Mart mart, final String outputHost) {
 		Log.info(Resources.get("logReqOutputHost"));
 		mart.setOutputHost(outputHost);
 	}
@@ -210,8 +209,7 @@ public class MartBuilderUtils {
 	 * @param outputPort
 	 *            the new output port value.
 	 */
-	public static void setOutputPort(final Mart mart,
-			final String outputPort) {
+	public static void setOutputPort(final Mart mart, final String outputPort) {
 		Log.info(Resources.get("logReqOutputPort"));
 		mart.setOutputPort(outputPort);
 	}
@@ -991,6 +989,9 @@ public class MartBuilderUtils {
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
 	 *            automatically.
+	 * @param optimiser
+	 *            whether this column is to be used as an optimiser column
+	 *            instead.
 	 * @throws SQLException
 	 *             if something went wrong.
 	 * @throws DataModelException
@@ -998,15 +999,16 @@ public class MartBuilderUtils {
 	 */
 	public static void setExpressionColumn(final DataSetTable dsTable,
 			final ExpressionColumnDefinition def, final Map aliases,
-			final String expression, final boolean groupBy)
-			throws SQLException, DataModelException {
+			final String expression, final boolean groupBy,
+			final boolean optimiser) throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqChangeExprCol"));
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.unsetExpressionColumn(dsTable, def);
 		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(
-				expression, aliases, groupBy, def == null ? ((DataSet) dsTable
-						.getSchema()).getDataSetModifications()
-						.nextExpressionColumn() : def.getColKey());
+				expression, aliases, groupBy, optimiser,
+				def == null ? ((DataSet) dsTable.getSchema())
+						.getDataSetModifications().nextExpressionColumn() : def
+						.getColKey());
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.setExpressionColumn(dsTable, expr);
 		((DataSet) dsTable.getSchema()).synchronise();
@@ -1855,6 +1857,28 @@ public class MartBuilderUtils {
 	public static void visibleDataSet(final DataSet dataset) {
 		Log.info(Resources.get("logReqVisibleDataset"));
 		dataset.setInvisible(false);
+	}
+
+	/**
+	 * Turns subclass optimiser off in a given dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to disable subclass optimiser in.
+	 */
+	public static void noSubclassOptimiserDataSet(final DataSet dataset) {
+		Log.info(Resources.get("logReqNoSCOptDataset"));
+		dataset.setSubclassOptimiser(false);
+	}
+
+	/**
+	 * Turns subclass optimiser on in a given dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to enable subclass optimiser in.
+	 */
+	public static void subclassOptimiserDataSet(final DataSet dataset) {
+		Log.info(Resources.get("logReqSCOptDataset"));
+		dataset.setSubclassOptimiser(true);
 	}
 
 	/**

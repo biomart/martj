@@ -31,6 +31,8 @@ import java.util.TreeSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
@@ -44,8 +46,8 @@ import org.biomart.common.utils.InverseMap;
  * This interface defines a unit of transformation for mart construction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public abstract class TransformationUnit implements Serializable {
@@ -116,7 +118,7 @@ public abstract class TransformationUnit implements Serializable {
 	 */
 	public static class SelectFromTable extends TransformationUnit {
 		private static final long serialVersionUID = 1L;
-		
+
 		private final Table table;
 
 		private SelectFromTable(final TransformationUnit previousUnit,
@@ -150,6 +152,24 @@ public abstract class TransformationUnit implements Serializable {
 			if (candidate == null)
 				candidate = (DataSetColumn) this.getNewColumnNameMap().get(
 						column.getName() + Resources.get("keySuffix"));
+			if (candidate == null)
+				// We need to check each of our columns to see if they
+				// are dataset columns, and if so, if they point to
+				// the appropriate real column.
+				for (final Iterator i = this.getNewColumnNameMap().values()
+						.iterator(); i.hasNext() && candidate == null;) {
+					final Column entry = (Column) i.next();
+					if (entry instanceof DataSetColumn) {
+						DataSetColumn dsCol = (DataSetColumn) entry;
+						while (dsCol instanceof InheritedColumn)
+							dsCol = ((InheritedColumn) dsCol)
+									.getInheritedColumn();
+						if (dsCol instanceof WrappedColumn
+								&& ((WrappedColumn) dsCol).getWrappedColumn()
+										.equals(column))
+							candidate = dsCol;
+					}
+				}
 			if (candidate != null)
 				return candidate;
 			else
@@ -278,7 +298,7 @@ public abstract class TransformationUnit implements Serializable {
 	 */
 	public static class Expression extends TransformationUnit {
 		private static final long serialVersionUID = 1L;
-		
+
 		private DataSetTable dsTable;
 
 		/**

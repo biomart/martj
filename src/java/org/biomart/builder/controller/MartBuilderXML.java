@@ -597,9 +597,6 @@ public class MartBuilderXML extends DefaultHandler {
 			externalRelations.addAll(schema.getRelations());
 		}
 
-		// Write out relations.
-		this.writeRelations(externalRelations, true, xmlWriter);
-
 		// Write out datasets.
 		for (final Iterator dsi = mart.getDataSets().iterator(); dsi.hasNext();) {
 			final DataSet ds = (DataSet) dsi.next();
@@ -615,6 +612,8 @@ public class MartBuilderXML extends DefaultHandler {
 					.toString(ds.getInvisible()), xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
+			this.writeAttribute("subclassOptimiser", Boolean.toString(ds
+					.isSubclassOptimiser()), xmlWriter);
 
 			// Get schema and dataset mods.
 			final SchemaModificationSet schemaMods = ds
@@ -956,6 +955,8 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					this.writeAttribute("groupBy", "" + expcol.isGroupBy(),
 							xmlWriter);
+					this.writeAttribute("optimiser", "" + expcol.isOptimiser(),
+							xmlWriter);
 					this.closeElement("expressionColumn", xmlWriter);
 				}
 			}
@@ -1075,6 +1076,11 @@ public class MartBuilderXML extends DefaultHandler {
 			// Finish dataset.
 			this.closeElement("dataset", xmlWriter);
 		}
+
+		// Write out relations. Must come last as datasets themselves
+		// can have relations, and the datasets would not be defined until
+		// this point has been reached.
+		this.writeRelations(externalRelations, true, xmlWriter);
 
 		// Finished! Close the mart tag.
 		this.closeElement("mart", xmlWriter);
@@ -1997,12 +2003,14 @@ public class MartBuilderXML extends DefaultHandler {
 				final String expr = (String) attributes.get("expression");
 				final boolean groupBy = Boolean.valueOf(
 						(String) attributes.get("groupBy")).booleanValue();
+				final boolean optimiser = Boolean.valueOf(
+						(String) attributes.get("optimiser")).booleanValue();
 
 				// Flag it as restricted
 				if (expr != null && !aliases.isEmpty() && tableKey != null
 						&& colKey != null) {
 					final ExpressionColumnDefinition expcol = new ExpressionColumnDefinition(
-							expr, aliases, groupBy, colKey);
+							expr, aliases, groupBy, optimiser, colKey);
 					final Map expMap = w.getDataSetModifications()
 							.getExpressionColumns();
 					if (!expMap.containsKey(tableKey))
@@ -2100,6 +2108,9 @@ public class MartBuilderXML extends DefaultHandler {
 				final boolean index = Boolean.valueOf(
 						(String) attributes.get("indexOptimiser"))
 						.booleanValue();
+				final boolean subclass = Boolean.valueOf(
+						(String) attributes.get("subclassOptimiser"))
+						.booleanValue();
 
 				// Construct the dataset.
 				final DataSet ds = new DataSet(this.constructedMart,
@@ -2143,6 +2154,7 @@ public class MartBuilderXML extends DefaultHandler {
 				ds.setDataSetOptimiserType(opt);
 				ds.setInvisible(invisible);
 				ds.setIndexOptimiser(index);
+				ds.setSubclassOptimiser(subclass);
 				element = ds;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)

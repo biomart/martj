@@ -147,6 +147,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem indexOptimiser;
 
+		private JMenuItem subclassOptimiser;
+
 		private JMenuItem aboutMartBuilder;
 
 		/**
@@ -365,6 +367,12 @@ public class MartBuilder extends BioMartGUI {
 					"indexOptimiserMnemonic").charAt(0));
 			this.indexOptimiser.addActionListener(this);
 			this.optimiseDatasetSubmenu.add(this.indexOptimiser);
+			this.subclassOptimiser = new JCheckBoxMenuItem(Resources
+					.get("subclassOptimiserTitle"));
+			this.subclassOptimiser.setMnemonic(Resources.get(
+					"subclassOptimiserMnemonic").charAt(0));
+			this.subclassOptimiser.addActionListener(this);
+			this.optimiseDatasetSubmenu.add(this.subclassOptimiser);
 
 			// About.
 			this.aboutMartBuilder = new JMenuItem(Resources
@@ -587,6 +595,10 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.indexOptimiser
 							.setSelected(ds != null && ds.isIndexOptimiser());
+					MartBuilderMenuBar.this.subclassOptimiser
+							.setEnabled(ds != null);
+					MartBuilderMenuBar.this.subclassOptimiser
+							.setSelected(ds != null && ds.isSubclassOptimiser());
 					int index = 0;
 					for (final Iterator i = DataSetOptimiserType.getTypes()
 							.values().iterator(); i.hasNext(); index++) {
@@ -736,6 +748,16 @@ public class MartBuilder extends BioMartGUI {
 				else
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestNoIndexOptimiser(ds);
+			} else if (e.getSource() == this.subclassOptimiser) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				if (this.subclassOptimiser.isSelected())
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
+							.getDataSetTabSet().requestSubclassOptimiser(ds);
+				else
+					this.getMartBuilder().martTabSet.getSelectedMartTab()
+							.getDataSetTabSet().requestNoSubclassOptimiser(ds);
 			}
 			// Help menu
 			else if (e.getSource() == this.aboutMartBuilder)

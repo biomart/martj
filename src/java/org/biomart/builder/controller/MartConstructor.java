@@ -395,6 +395,8 @@ public interface MartConstructor {
 			final Map previousTempTables = new HashMap();
 			final Map previousIndexes = new HashMap();
 			final List partitionValues = new ArrayList();
+			final List optimisers = new ArrayList();
+			optimisers.add(null); // No-expression default column.
 			partitionValues.add(GenericConstructorRunnable.NO_PARTITION);
 			previousTempTables.put(GenericConstructorRunnable.NO_PARTITION,
 					null);
@@ -436,7 +438,8 @@ public interface MartConstructor {
 						this.doExpression(templateSchema, schemaPartition,
 								schemaPrefix, dataset, dsTable,
 								(Expression) tu, previousTempTables,
-								previousIndexes, partitionValue, tempTable);
+								previousIndexes, partitionValue, tempTable,
+								optimisers);
 					// Concat?
 					else if (tu instanceof Concat)
 						this.doConcat(templateSchema, schemaPartition,
@@ -554,12 +557,13 @@ public interface MartConstructor {
 				// If this is a subclass table, then the optimiser
 				// type is always COUNT_INHERIT.
 				final DataSetOptimiserType oType = dsTable.getType().equals(
-						DataSetTableType.MAIN_SUBCLASS) ? DataSetOptimiserType.COLUMN_INHERIT
+						DataSetTableType.MAIN_SUBCLASS) ? (((DataSet) dsTable
+								.getSchema()).isSubclassOptimiser() ? DataSetOptimiserType.COLUMN_INHERIT : DataSetOptimiserType.NONE)
 						: dataset.getDataSetOptimiserType();
 				if (!oType.equals(DataSetOptimiserType.NONE))
 					this.doOptimiseTable(templateSchema, schemaPartition,
 							schemaPrefix, dataset, dsTable, oType,
-							partitionValue);
+							partitionValue, optimisers);
 			}
 		}
 
@@ -626,7 +630,8 @@ public interface MartConstructor {
 		private void doOptimiseTable(final Schema templateSchema,
 				final String schemaPartition, final String schemaPrefix,
 				final DataSet dataset, final DataSetTable dsTable,
-				final DataSetOptimiserType oType, final String partitionValue)
+				final DataSetOptimiserType oType, final String partitionValue,
+				final Collection optimisers)
 				throws Exception {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
@@ -658,7 +663,7 @@ public interface MartConstructor {
 					index.setColumns(keyCols);
 					this.issueAction(index);
 				}
-			}
+			}			
 			if (!dsTable.getType().equals(DataSetTableType.MAIN)) {
 				// Work out the dimension/subclass parent.
 				final DataSetTable parent = (DataSetTable) ((Relation) ((Key) dsTable
@@ -667,13 +672,9 @@ public interface MartConstructor {
 				// Set up the column on the dimension parent.
 				final String optTable = this.getOptimiserTableName(
 						schemaPrefix, parent, oType);
-				// Columns are dimension table names with '_bool' or
-				// '_count' appended.
-				final String optCol = this.getOptimiserColumnName(parent,
-						dsTable, partitionValue, oType);
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
-				// where all child non-key cols are non-null.
+				// where at least one child non-key col is non-null.
 				final List keyCols = new ArrayList();
 				for (final Iterator y = parent.getPrimaryKey().getColumns()
 						.iterator(); y.hasNext();)
@@ -682,10 +683,21 @@ public interface MartConstructor {
 				for (final Iterator y = dsTable.getColumns().iterator(); y
 						.hasNext();) {
 					final DataSetColumn col = (DataSetColumn) y.next();
-					if (!dataset.getDataSetModifications().isMaskedColumn(col))
+					// We won't select masked cols as they won't be in
+					// the final table, and we won't select expression
+					// columns as they can genuinely be null.
+					if (!dataset.getDataSetModifications().isMaskedColumn(col)
+							&& !(col instanceof ExpressionColumn))
 						nonNullCols.add(col.getModifiedName());
 				}
 				nonNullCols.removeAll(keyCols);
+				// Create all optimiser cols.
+				for (final Iterator x = optimisers.iterator(); x.hasNext(); ) {
+					final ExpressionColumn optExprCol = (ExpressionColumn)x.next();
+				// Columns are dimension table names with '_bool' or
+				// '_count' appended.
+				final String optCol = this.getOptimiserColumnName(parent,
+						dsTable, partitionValue, oType, optExprCol);
 
 				// Do the bool/count update.
 				final UpdateOptimiser update = new UpdateOptimiser(
@@ -698,6 +710,10 @@ public interface MartConstructor {
 				update.setOptColumnName(optCol);
 				update.setCountNotBool(!oType.isBool());
 				update.setNullNotZero(!oType.isUseNull());
+				if (optExprCol!=null) {
+					update.setExpressionDSTable((DataSetTable)optExprCol.getTable());
+					update.setExpression(optExprCol.getDefinition());
+				}
 				this.issueAction(update);
 
 				// Index the column if required.
@@ -763,7 +779,8 @@ public interface MartConstructor {
 							schemaPrefix, toParent, oType));
 					copy.setFromOptColumnName(optCol);
 					copy.setToOptColumnName(this.getOptimiserColumnName(
-							toParent, dsTable, partitionValue, oType));
+							toParent, dsTable, partitionValue, oType,
+							optExprCol));
 					copy.setCountNotBool(!oType.isBool());
 					this.issueAction(copy);
 
@@ -776,6 +793,7 @@ public interface MartConstructor {
 						index.setColumns(Collections.singletonList(optCol));
 						this.issueAction(index);
 					}
+				}
 				}
 			}
 		}
@@ -1085,7 +1103,7 @@ public interface MartConstructor {
 				final DataSet dataset, final DataSetTable dsTable,
 				final Expression etu, final Map previousTempTables,
 				final Map previousIndexes, final String partitionValue,
-				final String tempTable) throws Exception {
+				final String tempTable, final Collection optimisers) throws Exception {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
@@ -1117,6 +1135,12 @@ public interface MartConstructor {
 					final ExpressionColumn expCol = (ExpressionColumn) j.next();
 					final ExpressionColumnDefinition expr = expCol
 							.getDefinition();
+					// We don't actually calculate optimiser columns.
+					if (expr.isOptimiser()) {
+						optimisers.add(expCol);
+						continue;
+					}
+					// Otherwise, work out group-by stuff.
 					if (expr.isGroupBy())
 						for (final Iterator x = dsTable.getColumns().iterator(); x
 								.hasNext();) {
@@ -1128,8 +1152,9 @@ public interface MartConstructor {
 								continue;
 							groupByCols.add(col.getModifiedName());
 						}
+					// Add the column to the list to be generated.
 					exprCols.put(expCol.getModifiedName(), expr
-							.getSubstitutedExpression(dsTable));
+							.getSubstitutedExpression(dsTable, null));
 				}
 
 				// Select only columns from all group bys in this group.
@@ -1172,7 +1197,7 @@ public interface MartConstructor {
 				}
 			}
 		}
-
+			
 		private String populatePartitionValues(final String schemaPartition,
 				final PartitionedColumnDefinition pc,
 				final DataSetColumn partCol, final List partitionValues,
@@ -1242,7 +1267,7 @@ public interface MartConstructor {
 
 		private String getOptimiserColumnName(final DataSetTable parent,
 				final DataSetTable dsTable, final String partitionValue,
-				final DataSetOptimiserType oType) {
+				final DataSetOptimiserType oType, final ExpressionColumn optExprCol) {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
 				this.uniqueOptCols.put(parent, new HashSet());
@@ -1257,6 +1282,10 @@ public interface MartConstructor {
 						|| !partitionValue
 								.equals(GenericConstructorRunnable.NO_PARTITION)) {
 					sb.append(this.getSanitizedPartitionValue(partitionValue));
+					sb.append(Resources.get("tablenameSubSep"));
+				}
+				if (optExprCol!=null) {
+					sb.append(optExprCol.getModifiedName());
 					sb.append(Resources.get("tablenameSubSep"));
 				}
 				if (++counter > 0) {

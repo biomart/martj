@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
@@ -293,6 +295,10 @@ public abstract class MartConstructorAction implements Serializable {
 		private boolean countNotBool;
 
 		private boolean nullNotZero;
+		
+		private ExpressionColumnDefinition expression;
+		
+		private DataSetTable expressionDSTable;
 
 		/**
 		 * Creates a new UpdateOptimiser action.
@@ -414,6 +420,34 @@ public abstract class MartConstructorAction implements Serializable {
 		 */
 		public void setSourceTableName(String sourceTableName) {
 			this.sourceTableName = sourceTableName;
+		}
+
+		/**
+		 * @return the expression
+		 */
+		public ExpressionColumnDefinition getExpression() {
+			return expression;
+		}
+
+		/**
+		 * @param expression the expression to set
+		 */
+		public void setExpression(ExpressionColumnDefinition expression) {
+			this.expression = expression;
+		}
+
+		/**
+		 * @return the expressionDSTable
+		 */
+		public DataSetTable getExpressionDSTable() {
+			return expressionDSTable;
+		}
+
+		/**
+		 * @param expressionDSTable the expressionDSTable to set
+		 */
+		public void setExpressionDSTable(DataSetTable expressionDSTable) {
+			this.expressionDSTable = expressionDSTable;
 		}
 	}
 

@@ -1035,14 +1035,20 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(keyCol);
 			sb.append(" and ");
 		}
-		sb.append("not (");
-		for (final Iterator i = action.getNonNullColumns().iterator(); i
-				.hasNext();) {
-			sb.append("b.");
-			sb.append((String) i.next());
-			sb.append(" is null");
-			if (i.hasNext())
-				sb.append(" and ");
+		if (action.getExpression() != null)
+			sb.append("("
+					+ action.getExpression().getSubstitutedExpression(
+							action.getExpressionDSTable(), "b"));
+		else {
+			sb.append("not (");
+			for (final Iterator i = action.getNonNullColumns().iterator(); i
+					.hasNext();) {
+				sb.append("b.");
+				sb.append((String) i.next());
+				sb.append(" is null");
+				if (i.hasNext())
+					sb.append(" and ");
+			}
 		}
 		sb.append("))");
 		statements.add(sb.toString());

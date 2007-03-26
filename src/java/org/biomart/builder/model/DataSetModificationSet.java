@@ -676,7 +676,7 @@ public class DataSetModificationSet implements Serializable {
 		 */
 		public static class ValueRange implements PartitionedColumnDefinition {
 			private static final long serialVersionUID = 1L;
-			
+
 			private Map ranges = new HashMap();
 
 			/**
@@ -747,7 +747,7 @@ public class DataSetModificationSet implements Serializable {
 		 */
 		public static class ValueList implements PartitionedColumnDefinition {
 			private static final long serialVersionUID = 1L;
-			
+
 			private Map values = new HashMap();
 
 			/**
@@ -806,6 +806,8 @@ public class DataSetModificationSet implements Serializable {
 
 		private boolean groupBy;
 
+		private boolean optimiser;
+
 		private String colKey;
 
 		/**
@@ -819,11 +821,15 @@ public class DataSetModificationSet implements Serializable {
 		 * @param groupBy
 		 *            if this expression requires a group-by statement to be
 		 *            used on all columns not included in the expression.
+		 * @param optimiser
+		 *            if this expression should be used as an optimiser column
+		 *            and not as an expression.
 		 * @param colKey
 		 *            the name of the expression column that will be created.
 		 */
 		public ExpressionColumnDefinition(final String expr, final Map aliases,
-				final boolean groupBy, final String colKey) {
+				final boolean groupBy, final boolean optimiser,
+				final String colKey) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -837,6 +843,7 @@ public class DataSetModificationSet implements Serializable {
 			this.aliases.putAll(aliases);
 			this.expr = expr;
 			this.groupBy = groupBy;
+			this.optimiser = optimiser;
 			this.colKey = colKey;
 		}
 
@@ -870,6 +877,16 @@ public class DataSetModificationSet implements Serializable {
 		}
 
 		/**
+		 * Does this expression need to be ignored and used only as an optimiser
+		 * column?
+		 * 
+		 * @return <tt>true</tt> if it does.
+		 */
+		public boolean isOptimiser() {
+			return this.optimiser;
+		}
+
+		/**
 		 * Does this expression require a group-by on all columns other than
 		 * those included in the expression?
 		 * 
@@ -885,9 +902,13 @@ public class DataSetModificationSet implements Serializable {
 		 * 
 		 * @param dsTable
 		 *            the table to use to look up column names from.
+		 * @param prefix
+		 *            the prefix to use for each column. If <tt>null</tt>,
+         *            no prefix is used.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final DataSetTable dsTable) {
+		public String getSubstitutedExpression(final DataSetTable dsTable,
+				final String prefix) {
 			Log.debug("Calculating expression column expression");
 			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
@@ -895,7 +916,9 @@ public class DataSetModificationSet implements Serializable {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final String col = (String) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, dsTable.getModifiedName(col));
+				sub = sub.replaceAll(alias, prefix != null ? prefix + "."
+						+ dsTable.getModifiedName(col) : dsTable
+						.getModifiedName(col));
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
