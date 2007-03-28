@@ -220,13 +220,15 @@ public class ExpressionColumnDialog extends JDialog {
 		this.groupBy.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				ExpressionColumnDialog.this.optimiser.setEnabled(!ExpressionColumnDialog.this.groupBy.isSelected());
-				ExpressionColumnDialog.this.optimiser.setSelected(!ExpressionColumnDialog.this.groupBy.isSelected());
+				if (ExpressionColumnDialog.this.groupBy.isSelected())
+					ExpressionColumnDialog.this.optimiser.setSelected(false);
 			}
 		});
 		this.optimiser.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				ExpressionColumnDialog.this.groupBy.setEnabled(!ExpressionColumnDialog.this.optimiser.isSelected());
-				ExpressionColumnDialog.this.groupBy.setSelected(!ExpressionColumnDialog.this.optimiser.isSelected());
+				if (ExpressionColumnDialog.this.optimiser.isSelected())
+					ExpressionColumnDialog.this.groupBy.setSelected(false);
 			}
 		});
 
