@@ -18,7 +18,6 @@
 
 package org.biomart.common.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,7 +46,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Key extends Comparable, Serializable {
+public interface Key extends Comparable {
 	/**
 	 * Adds a particular relation to the set this key is involved in.
 	 * 
@@ -276,7 +275,7 @@ public interface Key extends Comparable, Serializable {
 			final StringBuffer sb = new StringBuffer();
 			sb.append(this.getTable() == null ? "<undef>" : this.getTable()
 					.toString());
-			sb.append(" "+this.getColumnNames().toString());
+			sb.append(" "+this.getColumnNames());
 			return sb.toString();
 		}
 
@@ -382,7 +381,7 @@ public interface Key extends Comparable, Serializable {
 		 * Always returns the output from {@link #getName()}.
 		 */
 		public String toString() {
-			return this.getName();
+			return ""+this.getName();
 		}
 	}
 

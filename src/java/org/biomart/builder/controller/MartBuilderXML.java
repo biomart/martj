@@ -21,6 +21,8 @@ package org.biomart.builder.controller;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +38,11 @@ import java.util.Stack;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSetModificationSet;
@@ -114,6 +121,10 @@ public class MartBuilderXML extends DefaultHandler {
 
 	private static final String DTD_URL_END = ".dtd";
 
+	private static final String DTD_REPORT_START = "MartBuilder-";
+
+	private static final String DTD_REPORT_END = "-report.xslt";
+
 	private static String currentReadingDTDVersion;
 
 	/**
@@ -178,7 +189,7 @@ public class MartBuilderXML extends DefaultHandler {
 		final FileWriter fw = new FileWriter(file);
 		try {
 			// Write it out.
-			(new MartBuilderXML()).writeXML(mart, fw);
+			(new MartBuilderXML()).writeXML(mart, fw, true);
 		} catch (final IOException e) {
 			throw e;
 		} catch (final DataModelException e) {
@@ -188,6 +199,54 @@ public class MartBuilderXML extends DefaultHandler {
 			fw.close();
 		}
 		Log.info(Resources.get("logDoneSavingXMLFile"));
+	}
+
+	/**
+	 * The save method takes a {@link Mart} object and first creates an internal
+	 * XML document describing it, then uses XSLT to transform that into a
+	 * human-readable report.
+	 * 
+	 * @param mart
+	 *            {@link Mart} object containing the data for the report.
+	 * @return the report in a single String.
+	 * @throws IOException
+	 *             if there was any problem writing the file.
+	 * @throws DataModelException
+	 *             if it encounters an object not writable under the current
+	 *             DTD.
+	 * @throws TransformerException
+	 *             if the transformation into a report failed.
+	 */
+	public static String saveReport(final Mart mart) throws IOException,
+			DataModelException, TransformerException {
+		Log.info(Resources.get("logMartReportStart"));
+		// Open the file.
+		final StringWriter sw = new StringWriter();
+		try {
+			// Write it out.
+			(new MartBuilderXML()).writeXML(mart, sw, false);
+		} catch (final IOException e) {
+			throw e;
+		} catch (final DataModelException e) {
+			throw e;
+		} finally {
+			// Close the output stream.
+			sw.close();
+		}
+		final String xml = sw.getBuffer().toString();
+		// Convert to string and return.
+		final StringWriter rsw = new StringWriter();
+		final TransformerFactory tFactory = TransformerFactory.newInstance();
+		final Transformer transformer = tFactory
+				.newTransformer(new StreamSource(Resources
+						.getResourceAsStream(MartBuilderXML.DTD_REPORT_START
+								+ MartBuilderXML.CURRENT_DTD_VERSION
+								+ MartBuilderXML.DTD_REPORT_END)));
+		transformer.transform(new StreamSource(new StringReader(xml)),
+				new StreamResult(rsw));
+		rsw.close();
+		Log.info(Resources.get("logMartReportEnd"));
+		return rsw.getBuffer().toString();
 	}
 
 	private Mart constructedMart;
@@ -561,23 +620,27 @@ public class MartBuilderXML extends DefaultHandler {
 	 *            the mart to write.
 	 * @param xmlWriter
 	 *            the Writer to write the XML to.
+	 * @param writeDTD
+	 *            <tt>true</tt> if a DTD header line is to be included.
 	 * @throws IOException
 	 *             if a write error occurs.
 	 * @throws DataModelException
 	 *             if it encounters an object not writable under the current
 	 *             DTD.
 	 */
-	private void writeXML(final Mart mart, final Writer xmlWriter)
-			throws IOException, DataModelException {
+	private void writeXML(final Mart mart, final Writer xmlWriter,
+			final boolean writeDTD) throws IOException, DataModelException {
 		// Write the headers.
 		xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-		xmlWriter.write("<!DOCTYPE mart PUBLIC \""
-				+ MartBuilderXML.DTD_PUBLIC_ID_START
-				+ MartBuilderXML.CURRENT_DTD_VERSION
-				+ MartBuilderXML.DTD_PUBLIC_ID_START + "\" \""
-				+ MartBuilderXML.DTD_URL_START
-				+ MartBuilderXML.CURRENT_DTD_VERSION
-				+ MartBuilderXML.DTD_URL_END + "\">\n");
+		if (writeDTD) {
+			xmlWriter.write("<!DOCTYPE mart PUBLIC \""
+					+ MartBuilderXML.DTD_PUBLIC_ID_START
+					+ MartBuilderXML.CURRENT_DTD_VERSION
+					+ MartBuilderXML.DTD_PUBLIC_ID_START + "\" \""
+					+ MartBuilderXML.DTD_URL_START
+					+ MartBuilderXML.CURRENT_DTD_VERSION
+					+ MartBuilderXML.DTD_URL_END + "\">\n");
+		}
 
 		// Initialise the ID counter.
 		this.reverseMappedObjects = new HashMap();
@@ -630,35 +693,6 @@ public class MartBuilderXML extends DefaultHandler {
 						(String) this.reverseMappedObjects.get(r), xmlWriter);
 				this.closeElement("subclassRelation", xmlWriter);
 			}
-
-			// Write out renamed columns and tables.
-			for (final Iterator x = dsMods.getTableRenames().entrySet()
-					.iterator(); x.hasNext();) {
-				final Map.Entry entry = (Map.Entry) x.next();
-				this.openElement("renamedTable", xmlWriter);
-				this.writeAttribute("tableKey", (String) entry.getKey(),
-						xmlWriter);
-				this.writeAttribute("newName", (String) entry.getValue(),
-						xmlWriter);
-				this.closeElement("renamedTable", xmlWriter);
-			}
-			for (final Iterator x = dsMods.getColumnRenames().entrySet()
-					.iterator(); x.hasNext();) {
-				final Map.Entry entry = (Map.Entry) x.next();
-				for (final Iterator y = ((Map) entry.getValue()).entrySet()
-						.iterator(); y.hasNext();) {
-					final Map.Entry entry2 = (Map.Entry) y.next();
-					this.openElement("renamedColumn", xmlWriter);
-					this.writeAttribute("tableKey", (String) entry.getKey(),
-							xmlWriter);
-					this.writeAttribute("colKey", (String) entry2.getKey(),
-							xmlWriter);
-					this.writeAttribute("newName", (String) entry2.getValue(),
-							xmlWriter);
-					this.closeElement("renamedColumn", xmlWriter);
-				}
-			}
-
 			// Write out non-inherited columns and tables.
 			for (final Iterator x = dsMods.getNonInheritedColumns().entrySet()
 					.iterator(); x.hasNext();) {
@@ -1070,6 +1104,34 @@ public class MartBuilderXML extends DefaultHandler {
 								xmlWriter);
 						this.closeElement("restrictedRelation", xmlWriter);
 					}
+				}
+			}
+
+			// Write out renamed columns and tables.
+			for (final Iterator x = dsMods.getTableRenames().entrySet()
+					.iterator(); x.hasNext();) {
+				final Map.Entry entry = (Map.Entry) x.next();
+				this.openElement("renamedTable", xmlWriter);
+				this.writeAttribute("tableKey", (String) entry.getKey(),
+						xmlWriter);
+				this.writeAttribute("newName", (String) entry.getValue(),
+						xmlWriter);
+				this.closeElement("renamedTable", xmlWriter);
+			}
+			for (final Iterator x = dsMods.getColumnRenames().entrySet()
+					.iterator(); x.hasNext();) {
+				final Map.Entry entry = (Map.Entry) x.next();
+				for (final Iterator y = ((Map) entry.getValue()).entrySet()
+						.iterator(); y.hasNext();) {
+					final Map.Entry entry2 = (Map.Entry) y.next();
+					this.openElement("renamedColumn", xmlWriter);
+					this.writeAttribute("tableKey", (String) entry.getKey(),
+							xmlWriter);
+					this.writeAttribute("colKey", (String) entry2.getKey(),
+							xmlWriter);
+					this.writeAttribute("newName", (String) entry2.getValue(),
+							xmlWriter);
+					this.closeElement("renamedColumn", xmlWriter);
 				}
 			}
 

@@ -65,11 +65,11 @@
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
 <!ELEMENT dataset (
-compoundRelation*,subclassRelation*,renamedTable*,
-renamedColumn*,nonInheritedColumn*,maskedColumn*,indexedColumn*,
-partitionedColumn*,maskedRelation*,maskedTable*,
-mergedRelation*,forcedRelation*,restrictedTable*,
-restrictedRelation*,expressionColumn*,concatRelation*,directionalRelation*)>
+compoundRelation*,subclassRelation*,nonInheritedColumn*,maskedColumn*,
+indexedColumn*,partitionedColumn*,maskedRelation*,maskedTable*,
+mergedRelation*,forcedRelation*,restrictedTable*,restrictedRelation*,
+expressionColumn*,concatRelation*,directionalRelation*,renamedTable*,
+renamedColumn*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL|COLUMN_BOOL_NULL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>

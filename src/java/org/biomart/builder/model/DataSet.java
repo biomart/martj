@@ -18,7 +18,6 @@
 
 package org.biomart.builder.model;
 
-import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1234,8 +1233,7 @@ public class DataSet extends GenericSchema {
 	 * This class defines the various different ways of optimising a dataset
 	 * after it has been constructed, eg. adding boolean columns.
 	 */
-	public static class DataSetOptimiserType implements Comparable,
-			Serializable {
+	public static class DataSetOptimiserType implements Comparable {
 		private static final long serialVersionUID = 1L;
 
 		/**
@@ -1621,7 +1619,7 @@ public class DataSet extends GenericSchema {
 	/**
 	 * This class defines the various different types of DataSetTable there are.
 	 */
-	public static class DataSetTableType implements Comparable, Serializable {
+	public static class DataSetTableType implements Comparable {
 		private static final long serialVersionUID = 1L;
 
 		/**

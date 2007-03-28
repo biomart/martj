@@ -58,6 +58,7 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
+import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 
 /**
  * Displays a set of tabs, one per mart currently loaded. Each tab keeps track
@@ -475,6 +476,28 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * On a request to create report for the current mart, create the report and
+	 * show it in a text editor.
+	 */
+	public void requestReport() {
+
+		// If nothing is selected, forget it, they can't close!
+		if (this.getSelectedMartTab() == null)
+			return;
+
+		// Work out the current selected mart.
+		final MartTab currentMartTab = this.getSelectedMartTab();
+
+		// Open the DDL creation dialog and let it do it's stuff.
+		try {
+			ViewTextDialog.displayText(Resources.get("martReportWindowTitle"),
+					MartBuilderXML.saveReport(currentMartTab.getMart()));
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		}
+	}
+
+	/**
 	 * Sets the output schema on the currently selected mart.
 	 * 
 	 * @param outputSchema
@@ -601,8 +624,9 @@ public class MartTabSet extends JTabbedPane {
 	 * monitors that host.
 	 */
 	public void requestMonitorRemoteHost() {
-		RemoteHostConnectionDialog d = new RemoteHostConnectionDialog(
-				this.getSelectedMartTab()==null?null:this.getSelectedMartTab().getMart());
+		RemoteHostConnectionDialog d = new RemoteHostConnectionDialog(this
+				.getSelectedMartTab() == null ? null : this
+				.getSelectedMartTab().getMart());
 		d.show();
 		// Cancelled by user?
 		if (d.getHost() == null)
@@ -623,7 +647,7 @@ public class MartTabSet extends JTabbedPane {
 		this.requestSetOutputHost(host);
 		this.requestSetOutputPort(port);
 		// Open remote host monitor dialog.
-		MonitorRemoteHostDialog.monitor(host,port);
+		MonitorRemoteHostDialog.monitor(host, port);
 	}
 
 	/**

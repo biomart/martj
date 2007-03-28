@@ -18,7 +18,6 @@
 
 package org.biomart.builder.model;
 
-import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,7 +51,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.5
  */
-public class Mart implements Serializable {
+public class Mart {
 	private static final long serialVersionUID = 1L;
 
 	// OK to use map, as keys are strings and never change.

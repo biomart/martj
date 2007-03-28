@@ -18,7 +18,6 @@
 
 package org.biomart.common.model;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +45,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Relation extends Comparable, Serializable {
+public interface Relation extends Comparable {
 	/**
 	 * Deconstructs the relation by removing references to itself from the keys
 	 * at both ends.
@@ -223,6 +222,8 @@ public interface Relation extends Comparable, Serializable {
 	 * case-sensitive.
 	 */
 	public class Cardinality implements Comparable {
+		private static final long serialVersionUID = 1L;
+
 		private static final Map singletons = new HashMap();
 
 		/**
@@ -300,7 +301,7 @@ public interface Relation extends Comparable, Serializable {
 		 * Always returns the name of this cardinality.
 		 */
 		public String toString() {
-			return this.getName();
+			return ""+this.getName();
 		}
 	}
 
@@ -542,7 +543,7 @@ public interface Relation extends Comparable, Serializable {
 		 * Always returns the output of {@link #getName()}.
 		 */
 		public String toString() {
-			return this.getName();
+			return ""+this.getName();
 		}
 	}
 }

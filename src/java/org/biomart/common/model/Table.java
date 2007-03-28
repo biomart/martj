@@ -23,7 +23,6 @@
 
 package org.biomart.common.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,7 +53,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Table extends Comparable, Serializable {
+public interface Table extends Comparable {
 
 	/**
 	 * Adds a relation to the set known by this table.
@@ -441,7 +440,7 @@ public interface Table extends Comparable, Serializable {
 		}
 
 		public String toString() {
-			return this.getName() + " (" +this.schema.toString()+")";
+			return this.getName() + " (" + this.schema + ")";
 		}
 	}
 }

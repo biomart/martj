@@ -18,7 +18,6 @@
 
 package org.biomart.common.model;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +38,7 @@ import org.biomart.common.resources.Resources;
  * 			$Author$
  * @since 0.5
  */
-public interface Column extends Comparable, Serializable {
+public interface Column extends Comparable {
 	/**
 	 * Retrieve the name of this column.
 	 * 
@@ -157,7 +156,7 @@ public interface Column extends Comparable, Serializable {
 		}
 
 		public String toString() {
-			return this.getName() + " ["+this.getTable().toString()+"]";
+			return this.getName() + " [" + this.getTable() + "]";
 		}
 
 		public boolean isInAnyKey() {

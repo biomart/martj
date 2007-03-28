@@ -18,7 +18,6 @@
 
 package org.biomart.builder.model;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +46,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.5
  */
-public abstract class MartConstructorAction implements Serializable {
+public abstract class MartConstructorAction {
 
 	private String datasetTableName;
 

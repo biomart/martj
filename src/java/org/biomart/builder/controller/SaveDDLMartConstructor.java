@@ -420,6 +420,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		private String outputPort;
 
 		private Socket socket;
+		
+		private int job;
 
 		/**
 		 * Constructs a helper which will output all actions directly to the
@@ -446,9 +448,12 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				// Open the host socket.
 				this.socket = new Socket(this.outputHost, Integer
 						.parseInt(this.outputPort));
-				// TODO Write the opening message to the socket.
+				// Write the opening message to the socket.
+				this.job = MartRunnerProtocol.Client.requestNewJob(this.socket);
+				MartRunnerProtocol.Client.beginJob(this.socket, this.job);
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
-				// TODO Write the closing message to the socket.
+				// Write the closing message to the socket.
+				MartRunnerProtocol.Client.endJob(this.socket, this.job);
 				// Close the socket to the host.
 				this.socket.close();
 			} else if (event == MartConstructorListener.MART_STARTED) {

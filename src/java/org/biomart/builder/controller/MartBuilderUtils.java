@@ -62,7 +62,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.6
  */
-public class MartBuilderUtils {
+public class MartBuilderUtils {	
 	/**
 	 * Attempts to create a foreign key on a table given a set of columns. The
 	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
@@ -270,7 +270,7 @@ public class MartBuilderUtils {
 	 * Changes the cardinality of a relation. If the relation is going to become
 	 * 1:1, it will also remove any flags from the relation that indicate
 	 * subclassing or concat-only. This is because 1:1 relations cannot be used
-	 * for those purposes.
+	 * for those purposes. Also this method changes it to HANDMADE.
 	 * 
 	 * @param mart
 	 *            the mart to change the relation in.
@@ -284,13 +284,17 @@ public class MartBuilderUtils {
 	 * @throws DataModelException
 	 *             if anything goes wrong when trying to resync datasets after
 	 *             the change.
+	 * @throws AssociationException
+	 *             if it cannot make the change.
 	 */
 	public static void changeRelationCardinality(final Mart mart,
 			final Relation relation, final Cardinality cardinality)
-			throws SQLException, DataModelException {
+			throws SQLException, DataModelException, AssociationException {
 		Log.info(Resources.get("logReqChangeCardinality"));
 		// Change the cardinality.
 		relation.setCardinality(cardinality);
+		// Change it to handmade to make it obvious.
+		relation.setStatus(ComponentStatus.HANDMADE);
 
 		// If 1:1, make sure it isn't used as a subclass relation
 		// in any dataset.

@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.biomart.builder.controller.MartRunnerProtocol;
+import org.biomart.builder.exceptions.ProtocolException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -35,17 +37,17 @@ import org.biomart.common.view.cli.BioMartCLI;
  * The main app housing the MartBuilder CLI. The {@link #main(String[])} method
  * starts the CLI.
  * <p>
- * The CLI syntax is
+ * The CLI syntax is:
  * 
  * <pre>
- *  java org.biomart.builder.view.cli.MartBuilder &lt;port&gt;
+ *     java org.biomart.builder.view.cli.MartBuilder &lt;port&gt;
  * </pre>
  * 
  * where <tt>&lt;port&gt;</tt> is the port that this server should listen on.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class MartBuilder extends BioMartCLI {
@@ -91,7 +93,7 @@ public class MartBuilder extends BioMartCLI {
 		try {
 			final int port = Integer.parseInt(this.args[0]);
 			this.serverSocket = new ServerSocket(port);
-			Log.info(Resources.get("serverListening",""+port));
+			Log.info(Resources.get("serverListening", "" + port));
 		} catch (final IOException e) {
 			throw new ValidationException(Resources.get("serverPortBroken",
 					this.args[0]), e);
@@ -111,18 +113,30 @@ public class MartBuilder extends BioMartCLI {
 			final Runnable worker = new Runnable() {
 				public void run() {
 					final ClientWorker worker = new ClientWorker(clientSocket);
-					MartBuilder.this.workers.add(worker);
-					worker.handleClient();
-					MartBuilder.this.workers.remove(worker);
+					synchronized (MartBuilder.this.workers) {
+						MartBuilder.this.workers.add(worker);
+					}
+					try {
+						worker.handleClient();
+					} catch (final ProtocolException e) {
+						throw new RuntimeException(e);
+					}
+					synchronized (MartBuilder.this.workers) {
+						MartBuilder.this.workers.remove(worker);
+					}
 					worker.close();
 				}
 			};
-			worker.run();
+			try {
+				worker.run();
+			} catch (final RuntimeException e) {
+				throw e.getCause();
+			}
 		}
 		// We never have cause to exit.
 		return true;
 	}
-	
+
 	public void finalize() {
 		// In case the user ctrl-C's us we can tidy up nicely.
 		this.requestExitApp();
@@ -130,8 +144,10 @@ public class MartBuilder extends BioMartCLI {
 
 	public boolean confirmExitApp() {
 		try {
-			for (final Iterator i = this.workers.iterator(); i.hasNext();)
-				((ClientWorker) i.next()).close();
+			synchronized (MartBuilder.this.workers) {
+				for (final Iterator i = this.workers.iterator(); i.hasNext();)
+					((ClientWorker) i.next()).close();
+			}
 			this.serverSocket.close();
 		} catch (final IOException e) {
 			// We don't really care. We're exiting anyway.
@@ -144,14 +160,22 @@ public class MartBuilder extends BioMartCLI {
 
 		private ClientWorker(final Socket clientSocket) {
 			this.clientSocket = clientSocket;
-			Log.info(Resources.get("clientConnected",""+this.clientSocket.getInetAddress()));
+			Log.info(Resources.get("clientConnected", ""
+					+ this.clientSocket.getInetAddress()));
 		}
 
 		/**
 		 * Listen to the client and do what they ask.
+		 * 
+		 * @throws ProtocolException
+		 *             if anything went wrong.
 		 */
-		public void handleClient() {
-			// TODO Handle client communication.
+		public void handleClient() throws ProtocolException {
+			try {
+				MartRunnerProtocol.handleClient(this.clientSocket);
+			} finally {
+				this.close();
+			}
 		}
 
 		/**
@@ -163,7 +187,8 @@ public class MartBuilder extends BioMartCLI {
 			} catch (final IOException e) {
 				// We don't really care. We're exiting anyway.
 			} finally {
-				Log.info(Resources.get("clientDisconnected",""+this.clientSocket.getInetAddress()));
+				Log.info(Resources.get("clientDisconnected", ""
+						+ this.clientSocket.getInetAddress()));
 			}
 		}
 	}

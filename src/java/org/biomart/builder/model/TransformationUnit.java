@@ -17,7 +17,6 @@
  */
 package org.biomart.builder.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -50,7 +49,7 @@ import org.biomart.common.utils.InverseMap;
  *          $Author$
  * @since 0.6
  */
-public abstract class TransformationUnit implements Serializable {
+public abstract class TransformationUnit {
 	/**
 	 * A map of source schema column names to dataset column objects.
 	 */
