@@ -558,7 +558,8 @@ public interface MartConstructor {
 				// type is always COUNT_INHERIT.
 				final DataSetOptimiserType oType = dsTable.getType().equals(
 						DataSetTableType.MAIN_SUBCLASS) ? (((DataSet) dsTable
-								.getSchema()).isSubclassOptimiser() ? DataSetOptimiserType.COLUMN_INHERIT : DataSetOptimiserType.NONE)
+						.getSchema()).isSubclassOptimiser() ? DataSetOptimiserType.COLUMN_INHERIT
+						: DataSetOptimiserType.NONE)
 						: dataset.getDataSetOptimiserType();
 				if (!oType.equals(DataSetOptimiserType.NONE))
 					this.doOptimiseTable(templateSchema, schemaPartition,
@@ -631,8 +632,7 @@ public interface MartConstructor {
 				final String schemaPartition, final String schemaPrefix,
 				final DataSet dataset, final DataSetTable dsTable,
 				final DataSetOptimiserType oType, final String partitionValue,
-				final Collection optimisers)
-				throws Exception {
+				final Collection optimisers) throws Exception {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 			if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
@@ -663,7 +663,7 @@ public interface MartConstructor {
 					index.setColumns(keyCols);
 					this.issueAction(index);
 				}
-			}			
+			}
 			if (!dsTable.getType().equals(DataSetTableType.MAIN)) {
 				// Work out the dimension/subclass parent.
 				final DataSetTable parent = (DataSetTable) ((Relation) ((Key) dsTable
@@ -692,108 +692,114 @@ public interface MartConstructor {
 				}
 				nonNullCols.removeAll(keyCols);
 				// Create all optimiser cols.
-				for (final Iterator x = optimisers.iterator(); x.hasNext(); ) {
-					final ExpressionColumn optExprCol = (ExpressionColumn)x.next();
-				// Columns are dimension table names with '_bool' or
-				// '_count' appended.
-				final String optCol = this.getOptimiserColumnName(parent,
-						dsTable, partitionValue, oType, optExprCol);
+				for (final Iterator x = optimisers.iterator(); x.hasNext();) {
+					final ExpressionColumn optExprCol = (ExpressionColumn) x
+							.next();
+					// Columns are dimension table names with '_bool' or
+					// '_count' appended.
+					final String optCol = this.getOptimiserColumnName(parent,
+							dsTable, partitionValue, oType, optExprCol);
 
-				// Do the bool/count update.
-				final UpdateOptimiser update = new UpdateOptimiser(
-						this.datasetSchemaName, finalCombinedName);
-				update.setKeyColumns(keyCols);
-				update.setNonNullColumns(nonNullCols);
-				update.setSourceTableName(this.getFinalName(schemaPrefix,
-						dsTable, partitionValue));
-				update.setOptTableName(optTable);
-				update.setOptColumnName(optCol);
-				update.setCountNotBool(!oType.isBool());
-				update.setNullNotZero(!oType.isUseNull());
-				if (optExprCol!=null) {
-					update.setExpressionDSTable((DataSetTable)optExprCol.getTable());
-					update.setExpression(optExprCol.getDefinition());
-				}
-				this.issueAction(update);
-
-				// Index the column if required.
-				if (dataset.isIndexOptimiser()) {
-					final Index index = new Index(this.datasetSchemaName,
-							finalCombinedName);
-					index.setTable(optTable);
-					index.setColumns(Collections.singletonList(optCol));
-					this.issueAction(index);
-				}
-
-				// Work out the inherited parents.
-				final List parents = new ArrayList();
-				parents.add(parent);
-				if (oType.isInherit())
-					for (int z = 0; z < parents.size(); z++) {
-						final DataSetTable child = (DataSetTable) parents
-								.get(z);
-						final Iterator fks = child.getForeignKeys().iterator();
-						if (fks.hasNext())
-							parents.add(((Relation) ((Key) fks.next())
-									.getRelations().iterator().next())
-									.getOneKey().getTable());
+					// Do the bool/count update.
+					final UpdateOptimiser update = new UpdateOptimiser(
+							this.datasetSchemaName, finalCombinedName);
+					update.setKeyColumns(keyCols);
+					update.setNonNullColumns(nonNullCols);
+					update.setSourceTableName(this.getFinalName(schemaPrefix,
+							dsTable, partitionValue));
+					update.setOptTableName(optTable);
+					update.setOptColumnName(optCol);
+					update.setCountNotBool(!oType.isBool());
+					update.setNullNotZero(!oType.isUseNull());
+					if (optExprCol != null) {
+						update.setExpressionDSTable((DataSetTable) optExprCol
+								.getTable());
+						update.setExpression(optExprCol.getDefinition());
 					}
+					this.issueAction(update);
 
-				// Copy the column to the inherited parents by following pairs.
-				for (int i = 0; i < parents.size() - 1; i++) {
-					final DataSetTable fromParent = (DataSetTable) parents
-							.get(i);
-					final DataSetTable toParent = (DataSetTable) parents
-							.get(i + 1);
-					final List fromKeyCols = new ArrayList();
-					for (final Iterator y = fromParent.getPrimaryKey()
-							.getColumns().iterator(); y.hasNext();)
-						fromKeyCols.add(((DataSetColumn) y.next())
-								.getModifiedName());
-					final List toKeyCols = new ArrayList();
-					for (final Iterator y = toParent.getPrimaryKey()
-							.getColumns().iterator(); y.hasNext();)
-						toKeyCols.add(((DataSetColumn) y.next())
-								.getModifiedName());
-
-					// Copy the column.
-					final String fromTableName = this.getOptimiserTableName(
-							schemaPrefix, fromParent, oType);
-					final String viaTableName = this
-							.getFinalName(schemaPrefix, fromParent,
-									GenericConstructorRunnable.NO_PARTITION);
-					final CopyOptimiserDirect copy;
-					if (fromTableName.equals(viaTableName))
-						copy = new CopyOptimiserDirect(this.datasetSchemaName,
-								finalCombinedName);
-					else {
-						copy = new CopyOptimiserVia(this.datasetSchemaName,
-								finalCombinedName);
-						((CopyOptimiserVia) copy)
-								.setFromKeyColumns(fromKeyCols);
-						((CopyOptimiserVia) copy).setViaTableName(viaTableName);
-					}
-					copy.setFromOptTableName(fromTableName);
-					copy.setToKeyColumns(toKeyCols);
-					copy.setToOptTableName(this.getOptimiserTableName(
-							schemaPrefix, toParent, oType));
-					copy.setFromOptColumnName(optCol);
-					copy.setToOptColumnName(this.getOptimiserColumnName(
-							toParent, dsTable, partitionValue, oType,
-							optExprCol));
-					copy.setCountNotBool(!oType.isBool());
-					this.issueAction(copy);
-
-					// Index the copied column if required.
+					// Index the column if required.
 					if (dataset.isIndexOptimiser()) {
 						final Index index = new Index(this.datasetSchemaName,
 								finalCombinedName);
-						index.setTable(this.getOptimiserTableName(schemaPrefix,
-								toParent, oType));
+						index.setTable(optTable);
 						index.setColumns(Collections.singletonList(optCol));
 						this.issueAction(index);
 					}
-				}
+
+					// Work out the inherited parents.
+					final List parents = new ArrayList();
+					parents.add(parent);
+					if (oType.isInherit())
+						for (int z = 0; z < parents.size(); z++) {
+							final DataSetTable child = (DataSetTable) parents
+									.get(z);
+							final Iterator fks = child.getForeignKeys()
+									.iterator();
+							if (fks.hasNext())
+								parents.add(((Relation) ((Key) fks.next())
+										.getRelations().iterator().next())
+										.getOneKey().getTable());
+						}
+
+					// Copy the column to the inherited parents by following
+					// pairs.
+					for (int i = 0; i < parents.size() - 1; i++) {
+						final DataSetTable fromParent = (DataSetTable) parents
+								.get(i);
+						final DataSetTable toParent = (DataSetTable) parents
+								.get(i + 1);
+						final List fromKeyCols = new ArrayList();
+						for (final Iterator y = fromParent.getPrimaryKey()
+								.getColumns().iterator(); y.hasNext();)
+							fromKeyCols.add(((DataSetColumn) y.next())
+									.getModifiedName());
+						final List toKeyCols = new ArrayList();
+						for (final Iterator y = toParent.getPrimaryKey()
+								.getColumns().iterator(); y.hasNext();)
+							toKeyCols.add(((DataSetColumn) y.next())
+									.getModifiedName());
+
+						// Copy the column.
+						final String fromTableName = this
+								.getOptimiserTableName(schemaPrefix,
+										fromParent, oType);
+						final String viaTableName = this.getFinalName(
+								schemaPrefix, fromParent,
+								GenericConstructorRunnable.NO_PARTITION);
+						final CopyOptimiserDirect copy;
+						if (fromTableName.equals(viaTableName))
+							copy = new CopyOptimiserDirect(
+									this.datasetSchemaName, finalCombinedName);
+						else {
+							copy = new CopyOptimiserVia(this.datasetSchemaName,
+									finalCombinedName);
+							((CopyOptimiserVia) copy)
+									.setFromKeyColumns(fromKeyCols);
+							((CopyOptimiserVia) copy)
+									.setViaTableName(viaTableName);
+						}
+						copy.setFromOptTableName(fromTableName);
+						copy.setToKeyColumns(toKeyCols);
+						copy.setToOptTableName(this.getOptimiserTableName(
+								schemaPrefix, toParent, oType));
+						copy.setFromOptColumnName(optCol);
+						copy.setToOptColumnName(this.getOptimiserColumnName(
+								toParent, dsTable, partitionValue, oType,
+								optExprCol));
+						copy.setCountNotBool(!oType.isBool());
+						this.issueAction(copy);
+
+						// Index the copied column if required.
+						if (dataset.isIndexOptimiser()) {
+							final Index index = new Index(
+									this.datasetSchemaName, finalCombinedName);
+							index.setTable(this.getOptimiserTableName(
+									schemaPrefix, toParent, oType));
+							index.setColumns(Collections.singletonList(optCol));
+							this.issueAction(index);
+						}
+					}
 				}
 			}
 		}
@@ -811,10 +817,25 @@ public interface MartConstructor {
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 
 			final Table sourceTable = stu.getTable();
-			final String schema = sourceTable instanceof DataSetTable ? this.datasetSchemaName
-					: sourceTable.getSchema() == templateSchema ? schemaPartition
-							: ((JDBCSchema) sourceTable.getSchema())
-									.getDatabaseSchema();
+			// Make sure that we use the same partition on the RHS
+			// if it exists, otherwise use the default partition.
+			String schema = null;
+			if (sourceTable instanceof DataSetTable)
+				schema = this.datasetSchemaName;
+			else if (sourceTable.getSchema() == templateSchema)
+				schema = schemaPartition;
+			else {
+				for (final Iterator i = ((JDBCSchema) sourceTable.getSchema())
+						.getPartitions().entrySet().iterator(); i.hasNext()
+						&& schema == null;) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					if (entry.getValue().equals(schemaPrefix))
+						schema = (String) entry.getKey();
+				}
+				if (schema == null)
+					schema = ((JDBCSchema) sourceTable.getSchema())
+							.getDatabaseSchema();
+			}
 			// Source tables are always main or subclass and
 			// therefore are never partitioned.
 			final String table = sourceTable instanceof DataSetTable ? this
@@ -887,9 +908,23 @@ public interface MartConstructor {
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 			final String tempJoinTable = tempTable + "C";
 
-			final String rightSchema = ljtu.getTable().getSchema() == templateSchema ? schemaPartition
-					: ((JDBCSchema) ljtu.getTable().getSchema())
+			// Make sure that we use the same partition on the RHS
+			// if it exists, otherwise use the default partition.
+			String rightSchema = null;
+			if (ljtu.getTable().getSchema() == templateSchema)
+				rightSchema = schemaPartition;
+			else {
+				for (final Iterator i = ((JDBCSchema) ljtu.getTable().getSchema())
+						.getPartitions().entrySet().iterator(); i.hasNext()
+						&& rightSchema == null;) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					if (entry.getValue().equals(schemaPrefix))
+						rightSchema = (String) entry.getKey();
+				}
+				if (rightSchema == null)
+					rightSchema = ((JDBCSchema) ljtu.getTable().getSchema())
 							.getDatabaseSchema();
+			}
 			final String rightTable = ljtu.getTable().getName();
 			final List leftJoinCols = new ArrayList();
 			final List rightJoinCols = ljtu.getSchemaRelation().getOtherKey(
@@ -1015,9 +1050,23 @@ public interface MartConstructor {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 
-			final String rightSchema = ljtu.getTable().getSchema() == templateSchema ? schemaPartition
-					: ((JDBCSchema) ljtu.getTable().getSchema())
+			// Make sure that we use the same partition on the RHS
+			// if it exists, otherwise use the default partition.
+			String rightSchema = null;
+			if (ljtu.getTable().getSchema() == templateSchema)
+				rightSchema = schemaPartition;
+			else {
+				for (final Iterator i = ((JDBCSchema) ljtu.getTable().getSchema())
+						.getPartitions().entrySet().iterator(); i.hasNext()
+						&& rightSchema == null;) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					if (entry.getValue().equals(schemaPrefix))
+						rightSchema = (String) entry.getKey();
+				}
+				if (rightSchema == null)
+					rightSchema = ((JDBCSchema) ljtu.getTable().getSchema())
 							.getDatabaseSchema();
+			}
 			final String rightTable = ljtu.getTable().getName();
 			final List leftJoinCols = new ArrayList();
 			final List rightJoinCols = ljtu.getSchemaRelation().getOtherKey(
@@ -1103,7 +1152,8 @@ public interface MartConstructor {
 				final DataSet dataset, final DataSetTable dsTable,
 				final Expression etu, final Map previousTempTables,
 				final Map previousIndexes, final String partitionValue,
-				final String tempTable, final Collection optimisers) throws Exception {
+				final String tempTable, final Collection optimisers)
+				throws Exception {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
@@ -1197,7 +1247,7 @@ public interface MartConstructor {
 				}
 			}
 		}
-			
+
 		private String populatePartitionValues(final String schemaPartition,
 				final PartitionedColumnDefinition pc,
 				final DataSetColumn partCol, final List partitionValues,
@@ -1267,7 +1317,8 @@ public interface MartConstructor {
 
 		private String getOptimiserColumnName(final DataSetTable parent,
 				final DataSetTable dsTable, final String partitionValue,
-				final DataSetOptimiserType oType, final ExpressionColumn optExprCol) {
+				final DataSetOptimiserType oType,
+				final ExpressionColumn optExprCol) {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
 				this.uniqueOptCols.put(parent, new HashSet());
@@ -1284,7 +1335,7 @@ public interface MartConstructor {
 					sb.append(this.getSanitizedPartitionValue(partitionValue));
 					sb.append(Resources.get("tablenameSubSep"));
 				}
-				if (optExprCol!=null) {
+				if (optExprCol != null) {
 					sb.append(optExprCol.getModifiedName());
 					sb.append(Resources.get("tablenameSubSep"));
 				}
