@@ -347,37 +347,43 @@ public class DataSet extends GenericSchema {
 						.setExpressionDependency(true);
 		}
 
-		// Process the subclass relations of this table.
-		for (int i = 0; i < subclassQ.size(); i++) {
-			final Object[] triple = (Object[]) subclassQ.get(i);
-			final List newSourceDSCols = (List) triple[0];
-			final Relation subclassRelation = (Relation) triple[1];
-			final int iteration = ((Integer) triple[2]).intValue();
-			this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS, dsTable,
-					subclassRelation.getManyKey().getTable(), newSourceDSCols,
-					subclassRelation, subclassCount, iteration);
-		}
-
-		// Process the dimension relations of this table. For 1:M it's easy.
-		// For M:M, we have to work out which end is connected to the real
-		// table, then process the table at the other end of the relation.
-		for (int i = 0; i < dimensionQ.size(); i++) {
-			final Object[] triple = (Object[]) dimensionQ.get(i);
-			final List newSourceDSCols = (List) triple[0];
-			final Relation dimensionRelation = (Relation) triple[1];
-			final int iteration = ((Integer) triple[2]).intValue();
-			if (dimensionRelation.isOneToMany())
-				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
-						dimensionRelation.getManyKey().getTable(),
-						newSourceDSCols, dimensionRelation, subclassCount,
+		// Only dataset tables with primary keys can have subclasses
+		// or dimensions.
+		if (dsTable.getPrimaryKey() != null) {
+			// Process the subclass relations of this table.
+			for (int i = 0; i < subclassQ.size(); i++) {
+				final Object[] triple = (Object[]) subclassQ.get(i);
+				final List newSourceDSCols = (List) triple[0];
+				final Relation subclassRelation = (Relation) triple[1];
+				final int iteration = ((Integer) triple[2]).intValue();
+				this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS,
+						dsTable, subclassRelation.getManyKey().getTable(),
+						newSourceDSCols, subclassRelation, subclassCount,
 						iteration);
-			else
-				this.generateDataSetTable(DataSetTableType.DIMENSION, dsTable,
-						dimensionRelation.getFirstKey().getTable().equals(
-								realTable) ? dimensionRelation.getSecondKey()
-								.getTable() : dimensionRelation.getFirstKey()
-								.getTable(), newSourceDSCols,
-						dimensionRelation, subclassCount, iteration);
+			}
+
+			// Process the dimension relations of this table. For 1:M it's easy.
+			// For M:M, we have to work out which end is connected to the real
+			// table, then process the table at the other end of the relation.
+			for (int i = 0; i < dimensionQ.size(); i++) {
+				final Object[] triple = (Object[]) dimensionQ.get(i);
+				final List newSourceDSCols = (List) triple[0];
+				final Relation dimensionRelation = (Relation) triple[1];
+				final int iteration = ((Integer) triple[2]).intValue();
+				if (dimensionRelation.isOneToMany())
+					this.generateDataSetTable(DataSetTableType.DIMENSION,
+							dsTable, dimensionRelation.getManyKey().getTable(),
+							newSourceDSCols, dimensionRelation, subclassCount,
+							iteration);
+				else
+					this.generateDataSetTable(DataSetTableType.DIMENSION,
+							dsTable, dimensionRelation.getFirstKey().getTable()
+									.equals(realTable) ? dimensionRelation
+									.getSecondKey().getTable()
+									: dimensionRelation.getFirstKey()
+											.getTable(), newSourceDSCols,
+							dimensionRelation, subclassCount, iteration);
+			}
 		}
 	}
 
