@@ -47,6 +47,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import org.biomart.common.model.Column;
+import org.biomart.common.model.Key;
+import org.biomart.common.model.Relation;
 import org.biomart.common.model.Column.GenericColumn;
 
 /**
@@ -56,8 +58,8 @@ import org.biomart.common.model.Column.GenericColumn;
  * contents, including stripping out rows with blank keys.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public abstract class TwoColumnTablePanel extends JPanel {
@@ -616,8 +618,12 @@ public abstract class TwoColumnTablePanel extends JPanel {
 					// We only show the relation part if it is not null.
 					if (crPair[0] == null)
 						label.setText(crPair[1].toString());
-					else
-						label.setText(crPair[1].toString());
+					else {
+						final Key key = ((Relation) crPair[0])
+								.getKeyForTable(((Column) crPair[0]).getTable());
+						label.setText(crPair[1].toString() + "["
+								+ key.getColumnNames() + "]");
+					}
 					label.setOpaque(true);
 					label.setFont(table.getFont());
 					if (isSelected) {
@@ -648,8 +654,13 @@ public abstract class TwoColumnTablePanel extends JPanel {
 						// We only show the relation part if it is not null.
 						if (crPair[0] == null)
 							label.setText(crPair[1].toString());
-						else
-							label.setText(crPair[1].toString());
+						else {
+							final Key key = ((Relation) crPair[0])
+									.getKeyForTable(((Column) crPair[0])
+											.getTable());
+							label.setText(crPair[1].toString() + "["
+									+ key.getColumnNames() + "]");
+						}
 						label.setOpaque(true);
 						label.setFont(list.getFont());
 						if (isSelected) {

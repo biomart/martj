@@ -488,13 +488,25 @@ public class MartTabSet extends JTabbedPane {
 		// Work out the current selected mart.
 		final MartTab currentMartTab = this.getSelectedMartTab();
 
-		// Open the DDL creation dialog and let it do it's stuff.
-		try {
-			ViewTextDialog.displayText(Resources.get("martReportWindowTitle"),
-					MartBuilderXML.saveReport(currentMartTab.getMart()));
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+		LongProcess.run(new Runnable() {
+			public void run() {
+				try {
+					// Write the report.
+					final String report = MartBuilderXML
+							.saveReport(currentMartTab.getMart());
+					// Open the DDL creation dialog and let it do it's stuff.
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							ViewTextDialog.displayText(Resources
+									.get("martReportWindowTitle"), report);
+						}
+					});
+				} catch (final Throwable t) {
+					StackTrace.showStackTrace(t);
+					return;
+				}
+			}
+		});
 	}
 
 	/**

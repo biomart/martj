@@ -29,7 +29,7 @@
   <xsl:choose>
     <xsl:when test="contains($str1,',')">
       <xsl:value-of select="substring-before($str1,',')"/> => <xsl:value-of select="substring-before($str2,',')"/>
-<xsl:text>
+<xsl:text><!-- This prints a blank line -->
 </xsl:text>
       <xsl:call-template name="twoColumnPrintout">
         <xsl:with-param name="str1" select="substring-after($str1,',')"/>
@@ -42,11 +42,57 @@
   </xsl:choose>
 </xsl:template>
 
+<xsl:template name="twoColumnPrintoutWithOneId">
+  <xsl:param name="str1"/>
+  <xsl:param name="str2"/>
+  <xsl:choose>
+    <xsl:when test="contains($str1,',')">
+      <xsl:value-of select="key('ids',substring-before($str1,','))/@name"/> => <xsl:value-of select="substring-before($str2,',')"/>
+<xsl:text><!-- This prints a blank line -->
+</xsl:text>
+      <xsl:call-template name="twoColumnPrintout">
+        <xsl:with-param name="str1" select="substring-after($str1,',')"/>
+        <xsl:with-param name="str2" select="substring-after($str2,',')"/>
+      </xsl:call-template>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="key('ids',$str1)/@name"/> => <xsl:value-of select="$str2"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+<xsl:template name="threeColumnPrintoutWithTwoIds">
+  <xsl:param name="str1"/>
+  <xsl:param name="str2"/>
+  <xsl:param name="str3"/>
+  <xsl:choose>
+    <xsl:when test="contains($str1,',')">
+      <xsl:value-of select="key('ids',substring-before($str1,','))/@name"/> [<xsl:apply-templates select="key('ids',substring-before($str2,','))"/>] => <xsl:value-of select="substring-before($str3,',')"/>
+<xsl:text><!-- This prints a blank line -->
+</xsl:text>
+      <xsl:call-template name="twoColumnPrintout">
+        <xsl:with-param name="str1" select="substring-after($str1,',')"/>
+        <xsl:with-param name="str2" select="substring-after($str2,',')"/>
+        <xsl:with-param name="str3" select="substring-after($str3,',')"/>
+      </xsl:call-template>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="key('ids',$str1)/@name"/> [<xsl:apply-templates select="key('ids',$str2)"/>] => <xsl:value-of select="$str3"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
 
 <!-- MART -->
 <xsl:template match="/mart">
 Mart report
 ===========
+
+IMPORTANT NOTE: If you are running this report against a 
+mart XML file that you created BEFORE this report feature was 
+added to MartBuilder, then any changes of relation cardinality 
+you have made will NOT appear in this report, unless they have
+been changed again SINCE this report feature was added. 
 
 Default target schema for SQL output: <xsl:choose><xsl:when test="@outputSchema"><xsl:value-of select="@outputSchema"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 Default host/port for remote host output: <xsl:choose><xsl:when test="@outputHost"><xsl:value-of select="@outputHost"/>/<xsl:value-of select="@outputPort"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
@@ -62,11 +108,17 @@ Inter-schema (external) relations (if any)
 Datasets
 ========
 <xsl:apply-templates select="./dataset"/> 
+
+
+=============
+END OF REPORT
+=============
 </xsl:template>
 
 
 <!-- JDBC SCHEMA -->
 <xsl:template match="/mart/jdbcSchema">
+
 JDBC Schema
 +++++++++++
 
@@ -94,6 +146,7 @@ Additional/modified keys and relations (if any)
 <xsl:apply-templates select="./table/primaryKey[@status='INFERRED_INCORRECT']"/> 
 <xsl:apply-templates select="./table/foreignKey[@status='INFERRED_INCORRECT']"/> 
 <xsl:apply-templates select="./relation[@status='INFERRED_INCORRECT']"/> 
+
 </xsl:template>
 
 
@@ -107,20 +160,20 @@ Additional/modified keys and relations (if any)
 <xsl:template name="key">
 Key: 
   Table: <xsl:value-of select="../@name"/> 
-  Columns: [<xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@columnIds"/></xsl:call-template>]
-</xsl:template>
+  Columns: [<xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@columnIds"/></xsl:call-template>]</xsl:template>
 
 
 <!-- RELATIONS -->
 <xsl:template match="relation">
 Relation:
          Type: <xsl:value-of select="@cardinality"/>
-         From: <xsl:apply-templates select="key('ids',@firstKeyId)"/>           To: <xsl:apply-templates select="key('ids',@secondKeyId)"/>
-</xsl:template>
+         From: <xsl:apply-templates select="key('ids',@firstKeyId)"/>           
+         To: <xsl:apply-templates select="key('ids',@secondKeyId)"/></xsl:template>
 
 
 <!-- DATASETS -->
 <xsl:template match="/mart/dataset">
+
 Dataset
 +++++++
 
@@ -135,11 +188,11 @@ Invisible?: <xsl:value-of select="@invisible"/>
 
 Dataset-wide modifications (if-any)
 ------------------------------------
-<xsl:apply-templates select="./*[not(@tableKey) or @tableKey='__DATASET__WIDE__']"/>
+<xsl:apply-templates select="./*[not(@tableKey) or @tableKey='__DATASET_WIDE__']"/>
 
 Table-level modifications (if any)
 ----------------------------------
-<xsl:apply-templates select="./*[@tableKey and not(@tableKey='__DATASET__WIDE__')]"/>
+<xsl:apply-templates select="./*[@tableKey and not(@tableKey='__DATASET_WIDE__')]"/>
 
 </xsl:template>
 
@@ -154,16 +207,18 @@ Subclass relation: <xsl:apply-templates select="key('ids',@relationId)"/>
 <xsl:template match="compoundRelation">
 
 Compound relation: <xsl:apply-templates select="key('ids',@relationId)"/>
-<xsl:if test="not(@tableKey='__DATASET__WIDE__')">Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 Number of times compounded (arity): <xsl:value-of select="@n"/>
 Compound in parallel?: <xsl:value-of select="@parallel"/>
+<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
+Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>
 
-<xsl:template match="compoundRelation">
+<xsl:template match="directionalRelation">
 
 Directional relation: <xsl:apply-templates select="key('ids',@relationId)"/>
-<xsl:if test="not(@tableKey='__DATASET__WIDE__')">Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
-Starting key: <xsl:apply-templates select="key('ids',@keyId)"/>
+Starting key: <xsl:apply-templates select="key('ids',@keyId)"/> 
+<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
+Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>
 
 <xsl:template match="renamedTable">
@@ -194,7 +249,8 @@ Indexed column <xsl:value-of select="@colKey"/> on table <xsl:value-of select="@
 <xsl:template match="maskedRelation">
 
 Masked relation: <xsl:apply-templates select="key('ids',@relationId)"/>
-<xsl:if test="not(@tableKey='__DATASET__WIDE__')">Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
+Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>
 
 <xsl:template match="maskedTable">
@@ -210,7 +266,8 @@ Merged relation: <xsl:apply-templates select="key('ids',@relationId)"/>
 <xsl:template match="forcedRelation">
 
 Forced relation: <xsl:apply-templates select="key('ids',@relationId)"/>
-<xsl:if test="not(@tableKey='__DATASET__WIDE__')">Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
+Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>
 
 <xsl:template match="partitionedColumn">
@@ -232,51 +289,65 @@ Range list:
 </xsl:choose>
 </xsl:template>
 
-<!--
-<!ELEMENT restrictedTable EMPTY>
-<!ATTLIST restrictedTable tableKey CDATA #REQUIRED>
-<!ATTLIST restrictedTable tableId IDREF #REQUIRED>
-<!ATTLIST restrictedTable aliasRelationIds IDREFS #REQUIRED>
-<!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedTable aliasNames CDATA #REQUIRED>
-<!ATTLIST restrictedTable expression CDATA #REQUIRED>
-<!ATTLIST restrictedTable hard (true|false) #REQUIRED>
+<xsl:template match="expressionColumn">
 
-<!ELEMENT restrictedRelation EMPTY>
-<!ATTLIST restrictedRelation tableKey CDATA #REQUIRED>
-<!ATTLIST restrictedRelation relationId IDREF #REQUIRED>
-<!ATTLIST restrictedRelation index CDATA #REQUIRED>
-<!ATTLIST restrictedRelation leftAliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedRelation leftAliasNames CDATA #REQUIRED>
-<!ATTLIST restrictedRelation rightAliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST restrictedRelation rightAliasNames CDATA #REQUIRED>
-<!ATTLIST restrictedRelation expression CDATA #REQUIRED>
-<!ATTLIST restrictedRelation hard (true|false) #IMPLIED>
+Expression column <xsl:value-of select="@colKey"/> on table <xsl:value-of select="@tableKey"/>
+Aliases:
+<xsl:call-template name="twoColumnPrintout"><xsl:with-param name="str1" select="@aliasColumnNames"/><xsl:with-param name="str2" select="@aliasNames"/></xsl:call-template>
+Expression:
+<xsl:value-of select="@expression"/>
+Requires group-by?: <xsl:value-of select="@groupBy"/>
+Is really an optimiser?: <xsl:value-of select="@optimiser"/>
+</xsl:template>
 
-<!ELEMENT expressionColumn EMPTY>
-<!ATTLIST expressionColumn tableKey CDATA #REQUIRED>
-<!ATTLIST expressionColumn colKey CDATA #REQUIRED>
-<!ATTLIST expressionColumn aliasColumnNames CDATA #REQUIRED>
-<!ATTLIST expressionColumn aliasNames CDATA #REQUIRED>
-<!ATTLIST expressionColumn expression CDATA #REQUIRED>
-<!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>
-<!ATTLIST expressionColumn optimiser  (true|false) #REQUIRED>
+<xsl:template match="restrictedTable">
 
-<!ELEMENT concatRelation EMPTY>
-<!ATTLIST concatRelation tableKey CDATA #REQUIRED>
-<!ATTLIST concatRelation colKey CDATA #REQUIRED>
-<!ATTLIST concatRelation relationId IDREF #REQUIRED>
-<!ATTLIST concatRelation index CDATA #REQUIRED>
-<!ATTLIST concatRelation aliasRelationIds IDREFS #REQUIRED>
-<!ATTLIST concatRelation aliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST concatRelation aliasNames CDATA #REQUIRED>
-<!ATTLIST concatRelation expression CDATA #REQUIRED>
-<!ATTLIST concatRelation rowSep CDATA #REQUIRED>
-<!ATTLIST concatRelation recursionType (NONE|PREPEND|APPEND) #REQUIRED>
-<!ATTLIST concatRelation recursionKey IDREF #IMPLIED>
-<!ATTLIST concatRelation firstRelation IDREF #IMPLIED>
-<!ATTLIST concatRelation secondRelation IDREF #IMPLIED>
-<!ATTLIST concatRelation concSep CDATA #IMPLIED>
--->
+Restricted table: 
+         Schema: <xsl:value-of select="key('ids',@tableId)/../@name"/>
+          Table: <xsl:value-of select="key('ids',@tableId)/@name"/>
+Aliases:
+<xsl:call-template name="threeColumnPrintoutWithTwoIds"><xsl:with-param name="str1" select="@aliasColumnIds"/><xsl:with-param name="str2" select="@aliasRelationIds"/><xsl:with-param name="str3" select="@aliasNames"/></xsl:call-template>
+Expression:
+<xsl:value-of select="@expression"/>
+Hard restriction?: <xsl:value-of select="@hard"/>
+<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
+Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+</xsl:template>
+
+<xsl:template match="concatRelation">
+
+Concat relation, creating column <xsl:value-of select="@colKey"/>
+Relation: <xsl:apply-templates select="key('ids',@relationId)"/>
+Compound relation index: <xsl:value-of select="@index"/>
+Aliases:
+<xsl:call-template name="threeColumnPrintoutWithTwoIds"><xsl:with-param name="str1" select="@aliasColumnIds"/><xsl:with-param name="str2" select="@aliasRelationIds"/><xsl:with-param name="str3" select="@aliasNames"/></xsl:call-template>
+Expression:
+<xsl:value-of select="@expression"/>
+Row separator: <xsl:value-of select="@rowSep"/>
+Recursion type: <xsl:value-of select="@recursionType"/>
+<xsl:if test="not(@recursionType='NONE')">
+Recursive row separator: <xsl:value-of select="@concSep"/>
+Recursion key: <xsl:apply-templates select="key('ids',@recursionKey)"/>
+First relation: <xsl:apply-templates select="key('ids',@firstRelation)"/>
+Second relation: <xsl:apply-templates select="key('ids',@secondRelation)"/>
+</xsl:if>
+<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
+Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+</xsl:template>
+
+<xsl:template match="restrictedRelation">
+
+Restricted relation: <xsl:apply-templates select="key('ids',@relationId)"/>
+Compound relation index: <xsl:value-of select="@index"/>
+LHS Aliases:
+<xsl:call-template name="twoColumnPrintoutWithOneId"><xsl:with-param name="str1" select="@leftAliasColumnIds"/><xsl:with-param name="str2" select="@leftAliasNames"/></xsl:call-template>
+RHS Aliases:
+<xsl:call-template name="twoColumnPrintoutWithOneId"><xsl:with-param name="str1" select="@rightAliasColumnIds"/><xsl:with-param name="str2" select="@rightAliasNames"/></xsl:call-template>
+Expression:
+<xsl:value-of select="@expression"/>
+Hard restriction?: <xsl:value-of select="@hard"/>
+<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
+Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+</xsl:template>
 
 </xsl:stylesheet>

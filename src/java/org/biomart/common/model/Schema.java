@@ -39,6 +39,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column.GenericColumn;
@@ -641,7 +642,7 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public String toString() {
-			return ""+this.getName();
+			return "" + this.getName();
 		}
 	}
 
@@ -801,8 +802,8 @@ public interface Schema extends Comparable, DataLink {
 				Log.debug("Processing primary key " + pk);
 
 				// Make a list of relations that already exist in this schema,
-				// from some previous run. Any relations that are left in this 
-				// list by the end of the loop for this table no longer exist in 
+				// from some previous run. Any relations that are left in this
+				// list by the end of the loop for this table no longer exist in
 				// the database, and will be dropped.
 				final Collection relationsToBeDropped = new HashSet(pk
 						.getRelations());
@@ -814,15 +815,15 @@ public interface Schema extends Comparable, DataLink {
 						schema, pkTable.getName());
 
 				// Loop through the results. There will be one result row per
-				// column per key, so we need to build up a set of key columns 
+				// column per key, so we need to build up a set of key columns
 				// in a map.
 				// The map keys represent the column position within a key. Each
 				// map value is a list of columns. In essence the map is a 2-D
 				// representation of the foreign keys which refer to this PK,
-				// with the keys of the map (Y-axis) representing the column 
-				// position in the FK, and the values of the map (X-axis) 
-				// representing each individual FK. In all cases, FK columns are 
-				// assumed to be in the same order as the PK columns. The map is 
+				// with the keys of the map (Y-axis) representing the column
+				// position in the FK, and the values of the map (X-axis)
+				// representing each individual FK. In all cases, FK columns are
+				// assumed to be in the same order as the PK columns. The map is
 				// sorted by key column position.
 				final TreeMap dbFKs = new TreeMap();
 				while (dbTblFKCols.next()) {
@@ -928,9 +929,9 @@ public interface Schema extends Comparable, DataLink {
 							}
 
 							// Work out whether the relation from the FK to the
-							// PK should be 1:M or 1:1. The rule is that it will 
-							// be 1:M in all cases except where the FK table has 
-							// a PK with identical columns to the FK, in which 
+							// PK should be 1:M or 1:1. The rule is that it will
+							// be 1:M in all cases except where the FK table has
+							// a PK with identical columns to the FK, in which
 							// case it is 1:1, as the FK is unique.
 							Cardinality card = Cardinality.MANY;
 							final PrimaryKey fkPK = fkTable.getPrimaryKey();
@@ -978,7 +979,7 @@ public interface Schema extends Comparable, DataLink {
 								}
 
 								// b.i) an incorrect relation exists somewhere
-								// else, which we should drop now because the 
+								// else, which we should drop now because the
 								// database no longer infers it, so in fact we
 								// need do nothing here.
 
@@ -988,20 +989,29 @@ public interface Schema extends Comparable, DataLink {
 								}
 
 								// b.ii) an inferred or handmade relation exists
-								// somewhere else, which we can leave intact.
+								// somewhere else, which we can leave intact
+								// but make it handmade.
 								else {
 									// Don't drop it at the end of the loop.
 									relationsToBeDropped.remove(candidateRel);
+									// Change it to handmade.
+									try {
+										candidateRel
+												.setStatus(ComponentStatus.HANDMADE);
+									} catch (final AssociationException e) {
+										// Should never happen.
+										throw new BioMartError(e);
+									}
 								}
 							}
 
 							// If relation did not already exist, create it.
 							if (!relationExists) {
 								// Work out whether the relation from the FK to
-								// the PK should be 1:M or 1:1. The rule is that 
+								// the PK should be 1:M or 1:1. The rule is that
 								// it will be 1:M in all cases except where the
-								// FK table has a PK with identical columns to 
-								// the FK, in which case it is 1:1, as the FK 
+								// FK table has a PK with identical columns to
+								// the FK, in which case it is 1:1, as the FK
 								// is unique.
 								Cardinality card = Cardinality.MANY;
 								final PrimaryKey fkPK = fkTable.getPrimaryKey();
@@ -1074,11 +1084,12 @@ public interface Schema extends Comparable, DataLink {
 				Log.debug("Processing primary key " + pk);
 
 				// If an FK exists on the PK table with the same columns as the
-				// PK, then we cannot use this PK to make relations to other 
+				// PK, then we cannot use this PK to make relations to other
 				// tables.
 				// This is because the FK shows that this table is not the
-				// original source of the data in those columns. Some other 
-				// table is the original source, so we assume that relations will
+				// original source of the data in those columns. Some other
+				// table is the original source, so we assume that relations
+				// will
 				// have been established from that other table instead. So, we
 				// skip this table.
 				boolean pkIsAlsoAnFK = false;
@@ -1093,10 +1104,13 @@ public interface Schema extends Comparable, DataLink {
 					continue;
 
 				// To maintain some degree of sanity here, we assume that a PK
-				// is the original source of data (and not a copy of data sourced
-				// from some other table) if the first column in the PK has the 
-				// same name as the table it is in, or with '_id' appended, or is 
-				// just 'id' on its own. Any PK which does not have this property 
+				// is the original source of data (and not a copy of data
+				// sourced
+				// from some other table) if the first column in the PK has the
+				// same name as the table it is in, or with '_id' appended, or
+				// is
+				// just 'id' on its own. Any PK which does not have this
+				// property
 				// is skipped.
 				final Column firstPKCol = (Column) pk.getColumns().get(0);
 				String firstPKColName = firstPKCol.getName();
@@ -1109,8 +1123,8 @@ public interface Schema extends Comparable, DataLink {
 					continue;
 
 				// Make a list of relations that already exist in this schema,
-				// from some previous run. Any relations that are left in this 
-				// list by the end of the loop for this table no longer exist in 
+				// from some previous run. Any relations that are left in this
+				// list by the end of the loop for this table no longer exist in
 				// the database, and will be dropped.
 				final Collection relationsToBeDropped = new HashSet(pk
 						.getRelations());
@@ -1118,7 +1132,7 @@ public interface Schema extends Comparable, DataLink {
 				// Now we know that we can use this PK for certain, look for all
 				// other tables (other than the one the PK itself belongs to),
 				// for sets of columns with identical names, or with '_key'
-				// appended. Any set that we find is going to be an FK with a 
+				// appended. Any set that we find is going to be an FK with a
 				// relation back to this PK.
 				Log.debug("Searching for possible referring foreign keys");
 				for (final Iterator l = this.getTables().iterator(); l
@@ -1220,9 +1234,9 @@ public interface Schema extends Comparable, DataLink {
 							}
 
 							// Work out whether the relation from the FK to the
-							// PK should be 1:M or 1:1. The rule is that it will 
-							// be 1:M in all cases except where the FK table has 
-							// a PK with identical columns to the FK, in which 
+							// PK should be 1:M or 1:1. The rule is that it will
+							// be 1:M in all cases except where the FK table has
+							// a PK with identical columns to the FK, in which
 							// case it is 1:1, as the FK is unique.
 							Cardinality card = Cardinality.MANY;
 							final PrimaryKey fkPK = fkTable.getPrimaryKey();
@@ -1271,8 +1285,8 @@ public interface Schema extends Comparable, DataLink {
 								}
 
 								// b.i) an incorrect relation exists somewhere
-								// else, which we should drop now because the 
-								// database no longer infers it, so in fact we 
+								// else, which we should drop now because the
+								// database no longer infers it, so in fact we
 								// need do nothing here.
 
 								else if (candidateRel.getStatus().equals(
@@ -1281,19 +1295,28 @@ public interface Schema extends Comparable, DataLink {
 								}
 
 								// b.ii) an inferred or handmade relation exists
-								// somewhere else, in which case we leave it.
-								else {									
+								// somewhere else, which we can leave intact
+								// but make it handmade.
+								else {
 									// Don't drop it at the end of the loop.
 									relationsToBeDropped.remove(candidateRel);
+									// Change it to handmade.
+									try {
+										candidateRel
+												.setStatus(ComponentStatus.HANDMADE);
+									} catch (final AssociationException e) {
+										// Should never happen.
+										throw new BioMartError(e);
+									}
 								}
 							}
 
 							// If relation did not already exist, create it.
 							if (!relationExists) {
 								// Work out whether the relation from the FK to
-								// the PK should be 1:M or 1:1. The rule is that 
+								// the PK should be 1:M or 1:1. The rule is that
 								// it will be 1:M in all cases except where the
-								// FK table has a PK with identical columns to 
+								// FK table has a PK with identical columns to
 								// the FK, in which case it is 1:1, as the FK
 								// is unique.
 								Cardinality card = Cardinality.MANY;
