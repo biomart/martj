@@ -687,17 +687,17 @@ public class MySQLDialect extends DatabaseDialect {
 				.hasNext();) {
 			final String entry = (String) i.next();
 			sb.append(entry);
-			sb.append(',');
+			if (i.hasNext())
+				sb.append(',');
 		}
 		for (final Iterator i = action.getExpressionColumns().entrySet()
 				.iterator(); i.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
+			sb.append(',');
 			this.checkColumnName((String) entry.getKey());
 			sb.append((String) entry.getValue());
 			sb.append(" as ");
 			sb.append((String) entry.getKey());
-			if (i.hasNext())
-				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName);
 		if (action.getGroupByColumns() != null) {

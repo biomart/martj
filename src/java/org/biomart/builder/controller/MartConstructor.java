@@ -1158,7 +1158,7 @@ public interface MartConstructor {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 			// Some useful stuff.
-			boolean createdXTable = false;
+			boolean useXTable = false;
 			final String xTableName = tempTable + "X";
 			final String firstTable = (String) previousTempTables
 					.get(partitionValue);
@@ -1206,6 +1206,19 @@ public interface MartConstructor {
 					exprCols.put(expCol.getModifiedName(), expr
 							.getSubstitutedExpression(dsTable, null));
 				}
+				
+				// None left to do here? Don't do any then!
+				if (exprCols.isEmpty())
+					continue;
+
+				// Rename temp to X table if required.
+				if (useXTable) {
+					final Rename rename = new Rename(this.datasetSchemaName,
+							finalCombinedName);
+					rename.setFrom(tempTable);
+					rename.setTo(xTableName);
+					this.issueAction(rename);
+				}
 
 				// Select only columns from all group bys in this group.
 				if (!groupByCols.isEmpty())
@@ -1214,7 +1227,7 @@ public interface MartConstructor {
 				// Issue an AddExpression for the group.
 				final AddExpression action = new AddExpression(
 						this.datasetSchemaName, finalCombinedName);
-				action.setTable(createdXTable ? xTableName : firstTable);
+				action.setTable(useXTable ? xTableName : firstTable);
 				// We use a set to prevent post-modification problems.
 				action.setSelectColumns(new HashSet(selectCols));
 				action.setExpressionColumns(exprCols);
@@ -1228,23 +1241,14 @@ public interface MartConstructor {
 					selectCols.add(((ExpressionColumn) j.next())
 							.getModifiedName());
 
-				// Drop the previous X table if it exists.
-				if (createdXTable) {
+				// Drop the X table if it was used.
+				if (useXTable) {
 					final Drop drop = new Drop(this.datasetSchemaName,
 							finalCombinedName);
 					drop.setTable(xTableName);
 					this.issueAction(drop);
-				}
-
-				// Rename temp to X table if there will be another in the loop.
-				if (i.hasNext()) {
-					createdXTable = true;
-					final Rename rename = new Rename(this.datasetSchemaName,
-							finalCombinedName);
-					rename.setFrom(tempTable);
-					rename.setTo(xTableName);
-					this.issueAction(rename);
-				}
+				} else
+					useXTable = true;
 			}
 		}
 
