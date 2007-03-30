@@ -84,6 +84,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
    */
   public void update() throws ConfigurationException {
     try {
+	dscutils.setFullyLoadMode(true);
       dsv = dscutils.getDatasetConfigForXMLStream(InputSourceUtil.getStreamForURL(dsvurl));
     } catch (Exception e) {
       throw new ConfigurationException(
