@@ -507,9 +507,11 @@ public interface MartConstructor {
 				for (final Iterator x = dsTable.getColumns().iterator(); x
 						.hasNext();) {
 					final DataSetColumn col = (DataSetColumn) x.next();
-					if (col.isRequiredInterim() && !col.isRequiredFinal())
-						dropCols.add(col.getModifiedName());
-					else // Create index if required.
+					if (col.isRequiredInterim() && !col.isRequiredFinal()) {
+						if (!(col instanceof ExpressionColumn && (((ExpressionColumn) col)
+								.getDefinition().isOptimiser())))
+							dropCols.add(col.getModifiedName());
+					} else // Create index if required.
 					if (dataset.getDataSetModifications().isIndexedColumn(col)) {
 						final Index index = new Index(this.datasetSchemaName,
 								finalCombinedName);
@@ -914,8 +916,9 @@ public interface MartConstructor {
 			if (ljtu.getTable().getSchema() == templateSchema)
 				rightSchema = schemaPartition;
 			else {
-				for (final Iterator i = ((JDBCSchema) ljtu.getTable().getSchema())
-						.getPartitions().entrySet().iterator(); i.hasNext()
+				for (final Iterator i = ((JDBCSchema) ljtu.getTable()
+						.getSchema()).getPartitions().entrySet().iterator(); i
+						.hasNext()
 						&& rightSchema == null;) {
 					final Map.Entry entry = (Map.Entry) i.next();
 					if (entry.getValue().equals(schemaPrefix))
@@ -1056,8 +1059,9 @@ public interface MartConstructor {
 			if (ljtu.getTable().getSchema() == templateSchema)
 				rightSchema = schemaPartition;
 			else {
-				for (final Iterator i = ((JDBCSchema) ljtu.getTable().getSchema())
-						.getPartitions().entrySet().iterator(); i.hasNext()
+				for (final Iterator i = ((JDBCSchema) ljtu.getTable()
+						.getSchema()).getPartitions().entrySet().iterator(); i
+						.hasNext()
 						&& rightSchema == null;) {
 					final Map.Entry entry = (Map.Entry) i.next();
 					if (entry.getValue().equals(schemaPrefix))
@@ -1206,7 +1210,7 @@ public interface MartConstructor {
 					exprCols.put(expCol.getModifiedName(), expr
 							.getSubstitutedExpression(dsTable, null));
 				}
-				
+
 				// None left to do here? Don't do any then!
 				if (exprCols.isEmpty())
 					continue;
