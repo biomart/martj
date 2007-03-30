@@ -982,7 +982,8 @@ public class DataSet extends GenericSchema {
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
 			// If appears in aliases on any group-by expression column
-			// then is not required final.
+			// then is not required final. Also if it is an optimiser
+			// column then it is not required final either.
 			final Collection exprCols = (Collection) mods
 					.getExpressionColumns().get(this.getTable().getName());
 			if (exprCols != null)
@@ -1095,6 +1096,14 @@ public class DataSet extends GenericSchema {
 			 */
 			public ExpressionColumnDefinition getDefinition() {
 				return this.definition;
+			}
+
+			public boolean isRequiredInterim() {
+				return !this.definition.isOptimiser() || super.isRequiredInterim();
+			}
+
+			public boolean isRequiredFinal() {
+				return !this.definition.isOptimiser() || super.isRequiredFinal();
 			}
 		}
 

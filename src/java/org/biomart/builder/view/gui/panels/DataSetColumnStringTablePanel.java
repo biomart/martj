@@ -31,6 +31,7 @@ import javax.swing.ListCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 /**
@@ -38,8 +39,8 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTableP
  * left, and strings on the right.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public abstract class DataSetColumnStringTablePanel extends
@@ -92,11 +93,14 @@ public abstract class DataSetColumnStringTablePanel extends
 	public Collection getSortedColumns(final Collection columns) {
 		final Map sortedCols = new TreeMap();
 		// Sorts on the modified names, and excludes the column
-		// specified in the constructor if required.
+		// specified in the constructor if required. Also
+		// excludes optimiser columns.
 		for (final Iterator i = columns.iterator(); i.hasNext();) {
 			final DataSetColumn col = (DataSetColumn) i.next();
-			if (this.dontIncludeThis == null
-					|| !col.equals(this.dontIncludeThis))
+			if ((this.dontIncludeThis == null || !col
+					.equals(this.dontIncludeThis))
+					&& !(col instanceof ExpressionColumn && ((ExpressionColumn) col)
+							.getDefinition().isOptimiser()))
 				sortedCols.put(col.getModifiedName(), col);
 		}
 		return sortedCols.values();
@@ -137,8 +141,8 @@ public abstract class DataSetColumnStringTablePanel extends
 		for (final Iterator i = super.getValues().entrySet().iterator(); i
 				.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
-			values.put(((DataSetColumn) entry.getKey()).getModifiedName(),
-					entry.getValue());
+			final DataSetColumn dsCol = (DataSetColumn) entry.getKey();
+			values.put(dsCol.getModifiedName(), entry.getValue());
 		}
 		return values;
 	}

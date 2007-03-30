@@ -429,7 +429,7 @@ public interface MartConstructor {
 				// Do unit once per partition.
 				for (final Iterator v = partitionValues.iterator(); v.hasNext();) {
 					final String partitionValue = (String) v.next();
-					String tempTable = tempName + this.tempNameCount++;
+					final String tempTable = tempName + this.tempNameCount++;
 					previousIndexes.put(tempTable, new HashSet());
 
 					// Translate TU to Action.
@@ -439,10 +439,11 @@ public interface MartConstructor {
 								schemaPrefix, dataset, dsTable,
 								(Expression) tu, previousTempTables,
 								previousIndexes, partitionValue, tempTable,
-								optimisers))
-							// If no expressions actually added we need
-							// to move the temp table back one.
-							tempTable = tempName + --this.tempNameCount;
+								optimisers)) {
+							// Skip to next action to prevent non-existent
+							// new temp table from getting dropped.
+							continue;
+						}
 					}
 					// Concat?
 					else if (tu instanceof Concat)
@@ -511,10 +512,9 @@ public interface MartConstructor {
 				for (final Iterator x = dsTable.getColumns().iterator(); x
 						.hasNext();) {
 					final DataSetColumn col = (DataSetColumn) x.next();
-					if (col.isRequiredInterim() && !col.isRequiredFinal()) {
-						if (!optimisers.contains(col))
-							dropCols.add(col.getModifiedName());
-					} else // Create index if required.
+					if (col.isRequiredInterim() && !col.isRequiredFinal())
+						dropCols.add(col.getModifiedName());
+					else // Create index if required.
 					if (dataset.getDataSetModifications().isIndexedColumn(col)) {
 						final Index index = new Index(this.datasetSchemaName,
 								finalCombinedName);
