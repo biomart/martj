@@ -190,7 +190,7 @@ public interface MartConstructor {
 
 		private double percentComplete = 0.0;
 
-		private Map uniqueOptCols = new HashMap();
+		private final Map uniqueOptCols = new HashMap();
 
 		private String statusMessage = Resources.get("mcCreatingGraph");
 
@@ -266,7 +266,7 @@ public interface MartConstructor {
 						return null;
 					}
 
-					public Object setValue(Object value) {
+					public Object setValue(final Object value) {
 						return null;
 					}
 				});
@@ -429,17 +429,21 @@ public interface MartConstructor {
 				// Do unit once per partition.
 				for (final Iterator v = partitionValues.iterator(); v.hasNext();) {
 					final String partitionValue = (String) v.next();
-					final String tempTable = tempName + this.tempNameCount++;
+					String tempTable = tempName + this.tempNameCount++;
 					previousIndexes.put(tempTable, new HashSet());
 
 					// Translate TU to Action.
 					// Expression?
-					if (tu instanceof Expression)
-						this.doExpression(templateSchema, schemaPartition,
+					if (tu instanceof Expression) {
+						if (!this.doExpression(templateSchema, schemaPartition,
 								schemaPrefix, dataset, dsTable,
 								(Expression) tu, previousTempTables,
 								previousIndexes, partitionValue, tempTable,
-								optimisers);
+								optimisers))
+							// If no expressions actually added we need
+							// to move the temp table back one.
+							tempTable = tempName + --this.tempNameCount;
+					}
 					// Concat?
 					else if (tu instanceof Concat)
 						this.doConcat(templateSchema, schemaPartition,
@@ -508,8 +512,7 @@ public interface MartConstructor {
 						.hasNext();) {
 					final DataSetColumn col = (DataSetColumn) x.next();
 					if (col.isRequiredInterim() && !col.isRequiredFinal()) {
-						if (!(col instanceof ExpressionColumn && (((ExpressionColumn) col)
-								.getDefinition().isOptimiser())))
+						if (!optimisers.contains(col))
 							dropCols.add(col.getModifiedName());
 					} else // Create index if required.
 					if (dataset.getDataSetModifications().isIndexedColumn(col)) {
@@ -559,9 +562,9 @@ public interface MartConstructor {
 				// If this is a subclass table, then the optimiser
 				// type is always COUNT_INHERIT.
 				final DataSetOptimiserType oType = dsTable.getType().equals(
-						DataSetTableType.MAIN_SUBCLASS) ? (((DataSet) dsTable
+						DataSetTableType.MAIN_SUBCLASS) ? ((DataSet) dsTable
 						.getSchema()).isSubclassOptimiser() ? DataSetOptimiserType.COLUMN_INHERIT
-						: DataSetOptimiserType.NONE)
+						: DataSetOptimiserType.NONE
 						: dataset.getDataSetOptimiserType();
 				if (!oType.equals(DataSetOptimiserType.NONE))
 					this.doOptimiseTable(templateSchema, schemaPartition,
@@ -1151,7 +1154,7 @@ public interface MartConstructor {
 			return requiresFinalLeftJoin;
 		}
 
-		private void doExpression(final Schema templateSchema,
+		private boolean doExpression(final Schema templateSchema,
 				final String schemaPartition, final String schemaPrefix,
 				final DataSet dataset, final DataSetTable dsTable,
 				final Expression etu, final Map previousTempTables,
@@ -1254,6 +1257,8 @@ public interface MartConstructor {
 				} else
 					useXTable = true;
 			}
+
+			return useXTable;
 		}
 
 		private String populatePartitionValues(final String schemaPartition,
@@ -1271,7 +1276,7 @@ public interface MartConstructor {
 			final String delayedTempDrop = (String) previousTempTables
 					.get(GenericConstructorRunnable.NO_PARTITION);
 			for (final Iterator z = partitionValues.iterator(); z.hasNext();) {
-				Object partitionValue = z.next();
+				final Object partitionValue = z.next();
 				previousTempTables.put(partitionValue, delayedTempDrop);
 				previousIndexes.put(delayedTempDrop, new HashSet());
 			}
