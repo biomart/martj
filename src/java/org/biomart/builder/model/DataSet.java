@@ -982,15 +982,15 @@ public class DataSet extends GenericSchema {
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
 			// If appears in aliases on any group-by expression column
-			// then is not required final. Also if it is an optimiser
-			// column then it is not required final either.
+			// then is not required final.
 			final Collection exprCols = (Collection) mods
 					.getExpressionColumns().get(this.getTable().getName());
 			if (exprCols != null)
 				for (final Iterator i = exprCols.iterator(); i.hasNext();) {
 					final ExpressionColumnDefinition entry = (ExpressionColumnDefinition) i
 							.next();
-					if (entry.getAliases().containsKey(this.getName()))
+					if (entry.isGroupBy() && 
+							entry.getAliases().containsKey(this.getName()))
 						return false;
 				}
 			return !mods.isMaskedColumn(this);
