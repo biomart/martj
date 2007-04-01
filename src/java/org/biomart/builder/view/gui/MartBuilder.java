@@ -624,8 +624,8 @@ public class MartBuilder extends BioMartGUI {
 			});
 
 			// Adds the menus to the menu bar.
-			this.add(schemaMenu);
 			this.add(martMenu);
+			this.add(schemaMenu);
 			this.add(datasetMenu);
 			this.add(helpMenu);
 		}
