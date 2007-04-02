@@ -620,7 +620,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 						label.setText(crPair[1].toString());
 					else {
 						final Key key = ((Relation) crPair[0])
-								.getKeyForTable(((Column) crPair[0]).getTable());
+								.getKeyForTable(((Column) crPair[1]).getTable());
 						label.setText(crPair[1].toString() + "["
 								+ key.getColumnNames() + "]");
 					}
@@ -656,7 +656,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 							label.setText(crPair[1].toString());
 						else {
 							final Key key = ((Relation) crPair[0])
-									.getKeyForTable(((Column) crPair[0])
+									.getKeyForTable(((Column) crPair[1])
 											.getTable());
 							label.setText(crPair[1].toString() + "["
 									+ key.getColumnNames() + "]");
