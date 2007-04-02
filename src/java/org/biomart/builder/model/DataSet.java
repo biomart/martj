@@ -668,15 +668,19 @@ public class DataSet extends GenericSchema {
 				if (followRelation || forceFollowRelation) {
 					this.includedRelations.add(r);
 					dsTable.includedRelations.add(r);
-					final Key sourceKey = r.getKeyForTable(mergeTable);
+
+					final Key sourceKey = (this.schemaMods
+							.isDirectionalRelation(dsTable, r) && r
+							.getFirstKey().getTable().equals(
+									r.getSecondKey().getTable())) ? this.schemaMods
+							.getDirectionalRelation(dsTable, r)
+							: r.getKeyForTable(mergeTable);
 					final Key targetKey = r.getOtherKey(sourceKey);
 					final List newSourceDSCols = new ArrayList();
 					for (final Iterator j = sourceKey.getColumns().iterator(); j
-							.hasNext();) {
-						final DataSetColumn newCol = tu
-								.getDataSetColumnFor((Column) j.next());
-						newSourceDSCols.add(newCol);
-					}
+							.hasNext();)
+						newSourceDSCols.add(tu.getDataSetColumnFor((Column) j
+								.next()));
 					// Repeat queueing of relation N times if compounded.
 					int childCompounded = 1;
 					if (this.schemaMods.isCompoundRelation(dsTable, r)
@@ -989,8 +993,8 @@ public class DataSet extends GenericSchema {
 				for (final Iterator i = exprCols.iterator(); i.hasNext();) {
 					final ExpressionColumnDefinition entry = (ExpressionColumnDefinition) i
 							.next();
-					if (entry.isGroupBy() && 
-							entry.getAliases().containsKey(this.getName()))
+					if (entry.isGroupBy()
+							&& entry.getAliases().containsKey(this.getName()))
 						return false;
 				}
 			return !mods.isMaskedColumn(this);
@@ -1099,11 +1103,13 @@ public class DataSet extends GenericSchema {
 			}
 
 			public boolean isRequiredInterim() {
-				return !this.definition.isOptimiser() || super.isRequiredInterim();
+				return !this.definition.isOptimiser()
+						|| super.isRequiredInterim();
 			}
 
 			public boolean isRequiredFinal() {
-				return !this.definition.isOptimiser() || super.isRequiredFinal();
+				return !this.definition.isOptimiser()
+						|| super.isRequiredFinal();
 			}
 		}
 

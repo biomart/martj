@@ -41,8 +41,8 @@ import org.biomart.common.resources.Resources;
  * outlined above.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public interface Relation extends Comparable {
@@ -173,7 +173,8 @@ public interface Relation extends Comparable {
 
 	/**
 	 * Returns the key in this relation associated with the given table. If both
-	 * keys are on that table, returns the first one.
+	 * keys are on that table, returns the one that is a PK, or the first one if
+	 * both are FKs.
 	 * 
 	 * @param table
 	 *            the table to get the key for.
@@ -301,7 +302,7 @@ public interface Relation extends Comparable {
 		 * Always returns the name of this cardinality.
 		 */
 		public String toString() {
-			return ""+this.getName();
+			return "" + this.getName();
 		}
 	}
 
@@ -333,10 +334,6 @@ public interface Relation extends Comparable {
 		private boolean manyToMany;
 
 		private boolean external;
-
-		private Map tableKeyMap = new HashMap();
-
-		private Map schemaKeyMap = new HashMap();
 
 		private ComponentStatus status;
 
@@ -372,7 +369,23 @@ public interface Relation extends Comparable {
 			if (firstKey.getRelations().contains(this))
 				throw new AssociationException(Resources
 						.get("relationAlreadyExists"));
-
+			// Cannot place a relation on an FK to this table if it
+			// already has relations.
+			if (firstKey.getTable().equals(secondKey.getTable())
+					&& ((firstKey instanceof ForeignKey && firstKey
+							.getRelations().size() > 0) || (secondKey instanceof ForeignKey && secondKey
+							.getRelations().size() > 0)))
+				throw new AssociationException(Resources
+						.get("fkToThisOnceOrOthers"));
+			// Cannot place a relation on an FK to another table if
+			// it already has a relation to this table (it will have
+			// only one due to previous check).
+			if ((!firstKey.getTable().equals(secondKey.getTable()))
+					&& (firstKey.getRelations().size() == 1 && ((Relation) firstKey
+							.getRelations().iterator().next()).getOtherKey(
+							firstKey).getTable().equals(firstKey.getTable())))
+				throw new AssociationException(Resources
+						.get("fkToThisOnceOrOthers"));
 			// Remember the keys etc.
 			this.firstKey = firstKey;
 			this.secondKey = secondKey;
@@ -386,12 +399,6 @@ public interface Relation extends Comparable {
 					&& this.secondKey instanceof ForeignKey;
 			this.external = !this.firstKey.getTable().getSchema().equals(
 					this.secondKey.getTable().getSchema());
-			this.tableKeyMap.put(this.firstKey.getTable(), this.firstKey);
-			this.tableKeyMap.put(this.secondKey.getTable(), this.secondKey);
-			this.schemaKeyMap.put(this.firstKey.getTable().getSchema(),
-					this.firstKey);
-			this.schemaKeyMap.put(this.secondKey.getTable().getSchema(),
-					this.secondKey);
 		}
 
 		public int compareTo(final Object o) throws ClassCastException {
@@ -480,11 +487,13 @@ public interface Relation extends Comparable {
 		}
 
 		public Key getKeyForTable(final Table table) {
-			return (Key) this.tableKeyMap.get(table);
+			return (this.firstKey.getTable().equals(table)) ? this.firstKey
+					: this.secondKey;
 		}
 
 		public Key getKeyForSchema(final Schema schema) {
-			return (Key) this.schemaKeyMap.get(schema);
+			return (this.firstKey.getTable().getSchema().equals(schema)) ? this.firstKey
+					: this.secondKey;
 		}
 
 		public void setCardinality(Cardinality cardinality) {
@@ -543,7 +552,7 @@ public interface Relation extends Comparable {
 		 * Always returns the output of {@link #getName()}.
 		 */
 		public String toString() {
-			return ""+this.getName();
+			return "" + this.getName();
 		}
 	}
 }
