@@ -50,6 +50,7 @@ import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Column.GenericColumn;
+import org.biomart.common.resources.Resources;
 
 /**
  * This panel represents a two-column table which can contain the entries of a
@@ -621,8 +622,9 @@ public abstract class TwoColumnTablePanel extends JPanel {
 					else {
 						final Key key = ((Relation) crPair[0])
 								.getKeyForTable(((Column) crPair[1]).getTable());
-						label.setText(crPair[1].toString() + "["
-								+ key.getColumnNames() + "]");
+						label.setText(crPair[1].toString() + "("
+								+ Resources.get("via") + " "
+								+ key.getColumnNames() + ")");
 					}
 					label.setOpaque(true);
 					label.setFont(table.getFont());
@@ -658,8 +660,9 @@ public abstract class TwoColumnTablePanel extends JPanel {
 							final Key key = ((Relation) crPair[0])
 									.getKeyForTable(((Column) crPair[1])
 											.getTable());
-							label.setText(crPair[1].toString() + "["
-									+ key.getColumnNames() + "]");
+							label.setText(crPair[1].toString() + "("
+									+ Resources.get("via") + " "
+									+ key.getColumnNames() + ")");
 						}
 						label.setOpaque(true);
 						label.setFont(list.getFont());
