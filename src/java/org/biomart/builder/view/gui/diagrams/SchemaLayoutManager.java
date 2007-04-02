@@ -42,8 +42,8 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
  * This layout manager lays out components in rows of a square block.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class SchemaLayoutManager implements LayoutManager2 {
@@ -437,20 +437,14 @@ public class SchemaLayoutManager implements LayoutManager2 {
 						viaY = relTopY + (int) ((relBottomY - relTopY) * 1.8);
 				}
 
-				// Adjust via points from constraints.
-				final SchemaLayoutConstraint constraint = (SchemaLayoutConstraint) this.constraints
-						.get(comp);
-				viaX += constraint.getRelCount()
-						* SchemaLayoutManager.RELATION_SPACING;
-				viaY += constraint.getRelCount()
-						* SchemaLayoutManager.RELATION_SPACING;
-
 				// Set overall bounds.
 				final Rectangle bounds = new Rectangle(
-						(relLeftX - SchemaLayoutManager.RELATION_SPACING * 4),
-						(relTopY - SchemaLayoutManager.RELATION_SPACING * 4),
-						(Math.abs(relRightX - relLeftX) + SchemaLayoutManager.RELATION_SPACING * 8),
-						(Math.abs(relBottomY - relTopY) + SchemaLayoutManager.RELATION_SPACING * 8));
+						(Math.min(relLeftX, viaX) - SchemaLayoutManager.RELATION_SPACING * 4),
+						(Math.min(relTopY, viaY) - SchemaLayoutManager.RELATION_SPACING * 4),
+						(Math.abs(Math.max(relRightX, viaX)
+								- Math.min(relLeftX, viaX)) + SchemaLayoutManager.RELATION_SPACING * 8),
+						(Math.abs(Math.max(relBottomY, viaY)
+								- Math.min(relTopY, viaY)) + SchemaLayoutManager.RELATION_SPACING * 8));
 				comp.setBounds(bounds);
 
 				// Create a path to describe the relation shape. It

@@ -43,8 +43,8 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * row.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class DataSetLayoutManager implements LayoutManager2 {
@@ -434,10 +434,12 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 				// Set overall bounds.
 				final Rectangle bounds = new Rectangle(
-						(relLeftX - DataSetLayoutManager.RELATION_SPACING * 2),
-						(relTopY - DataSetLayoutManager.RELATION_SPACING * 2),
-						(relRightX - relLeftX + DataSetLayoutManager.RELATION_SPACING * 4),
-						(relBottomY - relTopY + DataSetLayoutManager.RELATION_SPACING * 4));
+						(Math.min(relLeftX, viaX) - DataSetLayoutManager.RELATION_SPACING * 4),
+						(Math.min(relTopY, viaY) - DataSetLayoutManager.RELATION_SPACING * 4),
+						(Math.abs(Math.max(relRightX, viaX)
+								- Math.min(relLeftX, viaX)) + DataSetLayoutManager.RELATION_SPACING * 8),
+						(Math.abs(Math.max(relBottomY, viaY)
+								- Math.min(relTopY, viaY)) + DataSetLayoutManager.RELATION_SPACING * 8));
 				comp.setBounds(bounds);
 
 				// Create a path to describe the relation shape. It
