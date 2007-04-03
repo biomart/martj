@@ -45,8 +45,8 @@ import org.biomart.common.resources.Resources;
  * followed by the transformation process.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class CompoundRelationDialog extends JDialog {
@@ -65,9 +65,11 @@ public class CompoundRelationDialog extends JDialog {
 	 *            the title to give the dialog.
 	 * @param label
 	 *            the title to give the arity selector.
+	 * @param forceParallel
+	 *            <tt>true</tt> if parallelism is not optional.
 	 */
 	public CompoundRelationDialog(final CompoundRelationDefinition startvalue,
-			final String title, final String label) {
+			final String title, final String label, final boolean forceParallel) {
 		// Create the base dialog.
 		super();
 		this.setTitle(title);
@@ -100,7 +102,7 @@ public class CompoundRelationDialog extends JDialog {
 		if (startvalue.getN() > 1)
 			checkbox.setSelected(true);
 		this.parallel.setSelected(startvalue.isParallel());
-		this.parallel.setEnabled(startvalue.getN() > 1);
+		this.parallel.setEnabled(!forceParallel && startvalue.getN() > 1);
 
 		// The close and execute buttons.
 		final JButton close = new JButton(Resources.get("closeButton"));
@@ -137,7 +139,10 @@ public class CompoundRelationDialog extends JDialog {
 					CompoundRelationDialog.this.parallel.setEnabled(false);
 				} else {
 					checkbox.setSelected(true);
-					CompoundRelationDialog.this.parallel.setEnabled(true);
+					if (forceParallel)
+						CompoundRelationDialog.this.parallel.setSelected(true);
+					CompoundRelationDialog.this.parallel
+							.setEnabled(!forceParallel);
 				}
 			}
 		});

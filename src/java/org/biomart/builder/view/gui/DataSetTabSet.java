@@ -943,7 +943,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("recurseSubclassDialogTitle"), Resources
-						.get("recurseSubclassNLabel"));
+						.get("recurseSubclassNLabel"), true);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		final int newN = dialog.getArity();
@@ -1004,14 +1004,14 @@ public class DataSetTabSet extends JTabbedPane {
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("replicateDimensionDialogTitle"), Resources
-						.get("replicateDimensionNLabel"));
+						.get("replicateDimensionNLabel"), true);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
 
 		// Skip altogether if no change.
-		if (newN == def.getN())
+		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
 		LongProcess.run(new Runnable() {
@@ -1134,14 +1134,14 @@ public class DataSetTabSet extends JTabbedPane {
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("compoundRelationDialogTitle"), Resources
-						.get("compoundRelationNLabel"));
+						.get("compoundRelationNLabel"), false);
 		dialog.setLocationRelativeTo(null);
 		dialog.show();
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
 
 		// Skip altogether if no change.
-		if (newN == def.getN())
+		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
 		LongProcess.run(new Runnable() {
