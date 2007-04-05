@@ -136,7 +136,7 @@ public class SchemaTabSet extends JTabbedPane {
 		return selectedDiagram.getSchema();
 	}
 
-	private void addSchemaTab(final Schema schema, final boolean selectNewSchema) {
+	private synchronized void addSchemaTab(final Schema schema, final boolean selectNewSchema) {
 		Log.info(Resources.get("logAddSchemaTab", "" + schema));
 		// Create the diagram to represent this schema.
 		final SchemaDiagram schemaDiagram = new SchemaDiagram(this.martTab,
@@ -162,13 +162,10 @@ public class SchemaTabSet extends JTabbedPane {
 			// that selects the schema editor in the current mart tabset.
 			this.setSelectedIndex(this.indexOfTab(schema.getName()));
 			this.martTab.selectSchemaEditor();
-			this.recalculateOverviewDiagram();
-		} else {
-			// Fake a click on the all-schemas tab and on the button
-			// that selects the schema editor in the current mart tabset.
-			// this.setSelectedIndex(0);
-			// this.martTab.selectSchemaEditor();
 		}
+		
+		// Recalculate the overview diagram.
+		this.recalculateOverviewDiagram();
 	}
 
 	private String askUserForSchemaName(final String defaultResponse) {
@@ -266,7 +263,7 @@ public class SchemaTabSet extends JTabbedPane {
 		return contextMenu;
 	}
 
-	private void removeSchemaTab(final Schema schema, final boolean select) {
+	private synchronized void removeSchemaTab(final Schema schema, final boolean select) {
 		Log.info(Resources.get("logRemoveSchemaTab", "" + schema));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
@@ -362,7 +359,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 * Causes {@link Diagram#recalculateDiagram()} to be called on the tab which
 	 * represents all the schemas in the mart.
 	 */
-	public void recalculateOverviewDiagram() {
+	public synchronized void recalculateOverviewDiagram() {
 		this.allSchemasDiagram.recalculateDiagram();
 	}
 
@@ -373,14 +370,14 @@ public class SchemaTabSet extends JTabbedPane {
 	 * @param schema
 	 *            the schema to recalculate the diagram of.
 	 */
-	public void recalculateSchemaDiagram(final Schema schema) {
+	public synchronized void recalculateSchemaDiagram(final Schema schema) {
 		final int index = this.schemaToDiagram[0].indexOf(schema);
 		if (index >= 0)
 			((Diagram) this.schemaToDiagram[1].get(index)).recalculateDiagram();
 	}
 
-	private void recalculateAllSchemaDiagrams() {
-		for (int index = 0; index < this.schemaToDiagram.length; index++)
+	private synchronized void recalculateAllSchemaDiagrams() {
+		for (int index = 0; index < this.schemaToDiagram[0].size(); index++)
 			((Diagram) this.schemaToDiagram[1].get(index)).recalculateDiagram();
 	}
 
@@ -389,7 +386,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 * tabs that represent the individual schemas to make sure that they show
 	 * the same list. Also updates the overview diagram.
 	 */
-	public void recalculateSchemaTabs() {
+	public synchronized void recalculateSchemaTabs() {
 		Log.info(Resources.get("logRecalcSchemaTabs"));
 		// Add all schemas in the mart that we don't have yet.
 		// We work with a copy of the list of schemas else we get
@@ -418,7 +415,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 * Causes {@link Diagram#repaintDiagram()} to be called on the tab which
 	 * represents all the schemas in the mart.
 	 */
-	public void repaintOverviewDiagram() {
+	public synchronized void repaintOverviewDiagram() {
 		this.allSchemasDiagram.repaintDiagram();
 	}
 
@@ -429,7 +426,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 * @param schema
 	 *            the schema to repaint the diagram of.
 	 */
-	public void repaintSchemaDiagram(final Schema schema) {
+	public synchronized void repaintSchemaDiagram(final Schema schema) {
 		final int index = this.schemaToDiagram[0].indexOf(schema);
 		if (index >= 0)
 			((Diagram) this.schemaToDiagram[1].get(index)).repaintDiagram();

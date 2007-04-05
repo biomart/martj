@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
@@ -48,8 +49,8 @@ import org.biomart.common.resources.Resources;
  * move those columns around, thus editing the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.5
  */
 public class KeyDialog extends JDialog {
@@ -80,7 +81,8 @@ public class KeyDialog extends JDialog {
 
 		// The list of table columns is populated with the names of columns.
 		this.tableColumns = new DefaultListModel();
-		for (final Iterator i = table.getColumns().iterator(); i.hasNext();)
+		for (final Iterator i = new TreeSet(table.getColumns()).iterator(); i
+				.hasNext();)
 			this.tableColumns.addElement(i.next());
 
 		// The list of selected columns is populated with the columns from

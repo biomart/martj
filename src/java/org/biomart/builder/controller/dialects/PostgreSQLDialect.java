@@ -229,7 +229,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			}
 			sb.append("; ");
 			// Index rtJoinCols.
-			sb.append("create index " + recursionTempTable + "_I_"
+			sb.append("create index I_"
 					+ this.indexCount++ + " on "
 					+ action.getDataSetSchemaName() + "." + recursionTempTable
 					+ "(");
@@ -242,7 +242,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index parentFromCols.
-			sb.append("create index " + recursionTempTable + "_I_"
+			sb.append("create index I_"
 					+ this.indexCount++ + " on "
 					+ action.getDataSetSchemaName() + "." + recursionTempTable
 					+ "(");
@@ -255,7 +255,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index finalRow.
-			sb.append("create index " + recursionTempTable + "_I_"
+			sb.append("create index I_"
 					+ this.indexCount++ + " on "
 					+ action.getDataSetSchemaName() + "." + recursionTempTable
 					+ "(finalRow); ");
@@ -721,7 +721,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 		statements.add("set search_path=" + schemaName + ",pg_catalog");
 
-		sb.append("create index " + tableName + "_I_" + this.indexCount++
+		sb.append("create index I_" + this.indexCount++
 				+ " on " + schemaName + "." + tableName + "(");
 		for (final Iterator i = action.getColumns().iterator(); i.hasNext();) {
 			sb.append(i.next());

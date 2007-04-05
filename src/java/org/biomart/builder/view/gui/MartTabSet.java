@@ -141,7 +141,7 @@ public class MartTabSet extends JTabbedPane {
 	 *            the file the mart came from. May be <tt>null</tt> if the
 	 *            mart is new.
 	 */
-	private void addMartTab(final Mart mart, final File martXMLFile) {
+	private synchronized void addMartTab(final Mart mart, final File martXMLFile) {
 		this.martXMLFile.put(mart, martXMLFile);
 		this.martModifiedStatus.put(mart, Boolean.FALSE);
 		final MartTab martTab = new MartTab(this, mart);

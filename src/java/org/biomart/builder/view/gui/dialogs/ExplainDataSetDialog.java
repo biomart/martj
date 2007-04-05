@@ -69,6 +69,8 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 	private DataSet dataset;
 
+	private MartTab martTab;
+	
 	private ExplainDataSetDialog(final MartTab martTab, final DataSet dataset) {
 		// Create the blank dialog, and give it an appropriate title.
 		super();
@@ -77,6 +79,7 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 		this.setModal(true);
 		this.dataset = dataset;
 		this.schemaTabSet = martTab.getSchemaTabSet();
+		this.martTab = martTab;
 
 		// Make a content pane.
 		final JPanel content = new JPanel(new BorderLayout());
@@ -109,6 +112,9 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 	public void recalculateDialog(final Object changedObject) {
 		if (this.schemaTabSet != null) {
+			// Update explain context.
+			final ExplainContext context = new ExplainContext(martTab, this.dataset);
+			this.schemaTabSet.setDiagramContext(context);
 			if (changedObject != null)
 				if (changedObject instanceof Schema)
 					this.schemaTabSet
@@ -143,6 +149,9 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 	public void repaintDialog(final Object changedObject) {
 		if (this.schemaTabSet != null) {
+			// Update explain context.
+			final ExplainContext context = new ExplainContext(martTab, this.dataset);
+			this.schemaTabSet.setDiagramContext(context);
 			if (changedObject != null)
 				if (changedObject instanceof Schema)
 					this.schemaTabSet

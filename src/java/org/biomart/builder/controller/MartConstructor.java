@@ -283,6 +283,9 @@ public interface MartConstructor {
 			// Process the tables.
 			for (final Iterator s = partitions.iterator(); s.hasNext();) {
 				final Map.Entry partition = (Map.Entry) s.next();
+				// Clear out optimiser col names so that they start
+				// again on this partition.
+				this.uniqueOptCols.clear();
 				this.issueListenerEvent(
 						MartConstructorListener.PARTITION_STARTED, partition
 								.getKey());
@@ -418,7 +421,8 @@ public interface MartConstructor {
 					final DataSetColumn partCol = (DataSetColumn) dsTable
 							.getColumnByName(dataset.getDataSetModifications()
 									.getPartitionedColumnName(dsTable));
-					if (tu.getNewColumnNameMap().containsValue(partCol))
+					if (partCol != null
+							&& tu.getNewColumnNameMap().containsValue(partCol))
 						delayedTempDrop = this.populatePartitionValues(
 								schemaPartition, pc, partCol, partitionValues,
 								previousTempTables, previousIndexes);
@@ -1114,18 +1118,27 @@ public interface MartConstructor {
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
 			if (pc != null) {
-				action.setPartitionColumn((String) ljtu
-						.getReverseNewColumnNameMap().get(
-								dsTable.getColumnByName(dataset
-										.getDataSetModifications()
-										.getPartitionedColumnName(dsTable))));
-				if (pc instanceof ValueRange)
-					action.setPartitionRangeDef((ValueRange) pc);
-				else if (pc instanceof ValueList)
-					action.setPartitionListDef((ValueList) pc);
-				else
-					throw new BioMartError();
-				action.setPartitionValue(partitionValue);
+				final DataSetColumn dsCol = (DataSetColumn) dsTable
+						.getColumnByName(dataset.getDataSetModifications()
+								.getPartitionedColumnName(dsTable));
+				// We do a null check in case the partition refers to a
+				// non-existent column.
+				if (dsCol != null) {
+					action
+							.setPartitionColumn((String) ljtu
+									.getReverseNewColumnNameMap().get(
+											dsTable.getColumnByName(dataset
+													.getDataSetModifications()
+													.getPartitionedColumnName(
+															dsTable))));
+					if (pc instanceof ValueRange)
+						action.setPartitionRangeDef((ValueRange) pc);
+					else if (pc instanceof ValueList)
+						action.setPartitionListDef((ValueList) pc);
+					else
+						throw new BioMartError();
+					action.setPartitionValue(partitionValue);
+				}
 			}
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
 					ljtu.getTable())) {

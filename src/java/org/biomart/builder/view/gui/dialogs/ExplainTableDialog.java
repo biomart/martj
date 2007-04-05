@@ -133,7 +133,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
 
-		// Compute the overview diagram, and assign it the appropriate context.
+		// Compute the overview diagram, and assign it the
+		// appropriate context.
 		final ExplainContext context = new ExplainContext(martTab, dsTable);
 		this.schemaTabSet.setDiagramContext(context);
 		// Must be set visible as previous display location is invisible.
@@ -338,6 +339,10 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	public void recalculateDialog(final Object changedObject) {
 		if (this.schemaTabSet != null) {
+			// Update explain context.
+			final ExplainContext context = new ExplainContext(this.martTab,
+					(DataSetTable) this.ds.getTableByName(this.tableName));
+			this.schemaTabSet.setDiagramContext(context);
 			if (changedObject != null)
 				if (changedObject instanceof Schema)
 					this.schemaTabSet
@@ -374,6 +379,10 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	public void repaintDialog(final Object changedObject) {
 		if (this.schemaTabSet != null) {
+			// Update explain context.
+			final ExplainContext context = new ExplainContext(this.martTab,
+					(DataSetTable) this.ds.getTableByName(this.tableName));
+			this.schemaTabSet.setDiagramContext(context);
 			if (changedObject != null)
 				if (changedObject instanceof Schema)
 					this.schemaTabSet

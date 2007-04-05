@@ -159,7 +159,7 @@ public class KeyComponent extends BoxShapedComponent {
 				if (KeyComponent.this.isDraggable())
 					try {
 						Transferable transferable = new KeyTransferable(
-								KeyComponent.this.getKey());
+								((KeyComponent)e.getComponent()).getKey());
 						e.startDrag(DragSource.DefaultLinkNoDrop, transferable,
 								dsListener);
 					} catch (final Throwable t) {
@@ -234,10 +234,18 @@ public class KeyComponent extends BoxShapedComponent {
 				}
 				Object data = null;
 				try {
-					e.acceptDrop(DnDConstants.ACTION_COPY);
 					data = e.getTransferable().getTransferData(chosen);
-					if (data == null)
-						throw new NullPointerException();
+					if (data instanceof Key) {
+						final Key sourceKey = (Key) data;
+						final Key targetKey = KeyComponent.this.getKey();
+						if (!sourceKey.equals(targetKey)) {
+							KeyComponent.this.getDiagram().getMartTab()
+									.getSchemaTabSet().requestCreateRelation(
+											sourceKey, targetKey);
+							e.acceptDrop(DnDConstants.ACTION_COPY);
+							e.dropComplete(true);
+						}
+					}
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -245,20 +253,8 @@ public class KeyComponent extends BoxShapedComponent {
 						}
 					});
 					e.rejectDrop();
-					return;
+					e.dropComplete(false);
 				}
-				if (data instanceof Key) {
-					final Key sourceKey = (Key) data;
-					final Key targetKey = KeyComponent.this.getKey();
-					if (!sourceKey.equals(targetKey)) {
-						KeyComponent.this.getDiagram().getMartTab()
-								.getSchemaTabSet().requestCreateRelation(
-										sourceKey, targetKey);
-						e.dropComplete(true);
-						return;
-					}
-				}
-				e.dropComplete(false);
 			}
 		};
 		new DropTarget(this, DnDConstants.ACTION_COPY, dtListener, true);

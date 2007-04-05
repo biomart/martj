@@ -43,6 +43,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.view.gui.panels.DataSetColumnStringTablePanel;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
@@ -131,8 +132,10 @@ public class ExpressionColumnDialog extends JDialog {
 			for (final Iterator i = template.getAliases().entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
-				defaults.put(table.getColumnByName((String) entry.getKey()),
-						entry.getValue());
+				final Column col = table.getColumnByName((String) entry
+						.getKey());
+				if (col != null)
+					defaults.put(col, entry.getValue());
 			}
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 		this.columnAliasModel = new DataSetColumnStringTablePanel(defaults,
@@ -215,18 +218,22 @@ public class ExpressionColumnDialog extends JDialog {
 		field.add(this.execute);
 		gridBag.setConstraints(field, fieldLastRowConstraints);
 		content.add(field);
-		
+
 		// Make sure group-by and optimiser are mutually exclusive.
 		this.groupBy.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				ExpressionColumnDialog.this.optimiser.setEnabled(!ExpressionColumnDialog.this.groupBy.isSelected());
+				ExpressionColumnDialog.this.optimiser
+						.setEnabled(!ExpressionColumnDialog.this.groupBy
+								.isSelected());
 				if (ExpressionColumnDialog.this.groupBy.isSelected())
 					ExpressionColumnDialog.this.optimiser.setSelected(false);
 			}
 		});
 		this.optimiser.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				ExpressionColumnDialog.this.groupBy.setEnabled(!ExpressionColumnDialog.this.optimiser.isSelected());
+				ExpressionColumnDialog.this.groupBy
+						.setEnabled(!ExpressionColumnDialog.this.optimiser
+								.isSelected());
 				if (ExpressionColumnDialog.this.optimiser.isSelected())
 					ExpressionColumnDialog.this.groupBy.setSelected(false);
 			}

@@ -146,7 +146,7 @@ public class DataSetTabSet extends JTabbedPane {
 		return selectedDiagram.getDataSet();
 	}
 
-	private void addDataSetTab(final DataSet dataset,
+	private synchronized void addDataSetTab(final DataSet dataset,
 			final boolean selectDataset) {
 		Log.info(Resources.get("logAddDatasetTab", "" + dataset));
 		// Create the diagram to represent this dataset.
@@ -173,8 +173,10 @@ public class DataSetTabSet extends JTabbedPane {
 			// Fake a click on the dataset tab.
 			this.setSelectedIndex(this.indexOfTab(dataset.getName()));
 			this.martTab.selectDataSetEditor();
-			this.recalculateOverviewDiagram();
 		}
+		
+		// Update the overview diagram.
+		this.recalculateOverviewDiagram();
 	}
 
 	private String askUserForName(final String message,
@@ -241,7 +243,7 @@ public class DataSetTabSet extends JTabbedPane {
 		return contextMenu;
 	}
 
-	private void removeDataSetTab(final DataSet dataset, final boolean select) {
+	private synchronized void removeDataSetTab(final DataSet dataset, final boolean select) {
 		Log.info(Resources.get("logRemoveDatasetTab", "" + dataset));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
@@ -333,8 +335,8 @@ public class DataSetTabSet extends JTabbedPane {
 	/**
 	 * Recalculates all dataset diagrams in the current mart.
 	 */
-	public void recalculateAllDataSetDiagrams() {
-		for (int index = 0; index < this.datasetToDiagram.length; index++)
+	public synchronized void recalculateAllDataSetDiagrams() {
+		for (int index = 0; index < this.datasetToDiagram[0].size(); index++)
 			((Diagram) this.datasetToDiagram[1].get(index))
 					.recalculateDiagram();
 		if (this.currentExplanationDialog != null)
@@ -348,8 +350,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param schema
 	 *            the schema that contains changes.
 	 */
-	public void recalculateAffectedDataSetDiagrams(final Schema schema) {
-		for (int index = 0; index < this.datasetToDiagram.length; index++) {
+	public synchronized void recalculateAffectedDataSetDiagrams(final Schema schema) {
+		for (int index = 0; index < this.datasetToDiagram[0].size(); index++) {
 			final DataSet ds = (DataSet) this.datasetToDiagram[0].get(index);
 			if (ds.usesSchema(schema))
 				((Diagram) this.datasetToDiagram[1].get(index))
@@ -371,7 +373,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            dictate which diagrams or parts of diagrams actually decide
 	 *            whether to recalculate or not.
 	 */
-	public void recalculateDataSetDiagram(final DataSet dataset,
+	public synchronized void recalculateDataSetDiagram(final DataSet dataset,
 			final Object object) {
 		final int index = this.datasetToDiagram[0].indexOf(dataset);
 		if (index >= 0)
@@ -387,7 +389,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * tabs which are no longer in the mart, and adds new tabs for those which
 	 * are in the mart but not yet displayed.
 	 */
-	public void recalculateDataSetTabs() {
+	public synchronized void recalculateDataSetTabs() {
 		Log.info(Resources.get("logRecalcDatasetTabs"));
 		// Synchronise the datasets first.
 		try {
@@ -420,7 +422,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.recalculateOverviewDiagram();
 	}
 
-	private void recalculateOverviewDiagram() {
+	private synchronized void recalculateOverviewDiagram() {
 		this.allDataSetsDiagram.recalculateDiagram();
 	}
 
@@ -440,7 +442,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param dataset
 	 *            the dataset to repaint the diagram for.
 	 */
-	private void repaintDataSetDiagram(final DataSet dataset,
+	private synchronized void repaintDataSetDiagram(final DataSet dataset,
 			final Object object) {
 		final int index = this.datasetToDiagram[0].indexOf(dataset);
 		if (index >= 0)
@@ -453,7 +455,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Causes {@link Diagram#repaintDiagram()} to be called on the tab which
 	 * represents all the datasets in the mart.
 	 */
-	private void repaintOverviewDiagram() {
+	private synchronized void repaintOverviewDiagram() {
 		this.allDataSetsDiagram.repaintDiagram();
 	}
 

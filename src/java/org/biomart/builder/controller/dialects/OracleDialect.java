@@ -68,7 +68,7 @@ import org.biomart.common.resources.Resources;
  */
 public class OracleDialect extends DatabaseDialect {
 	// Check we only make the aggregate functions once.
-	private static boolean GROUP_CONCAT_CREATED;
+	private boolean GROUP_CONCAT_CREATED;
 
 	private int indexCount;
 
@@ -115,7 +115,7 @@ public class OracleDialect extends DatabaseDialect {
 
 		// If we haven't defined the group_concat function yet, define it.
 		// Note limitation of total 32767 characters for group_concat result.
-		if (!OracleDialect.GROUP_CONCAT_CREATED) {
+		if (!this.GROUP_CONCAT_CREATED) {
 			final BufferedReader br = new BufferedReader(new InputStreamReader(
 					Resources.getResourceAsStream("ora_group_concat.sql")));
 			try {
@@ -129,7 +129,7 @@ public class OracleDialect extends DatabaseDialect {
 			}
 			statements.add(sb.toString());
 			sb.setLength(0);
-			OracleDialect.GROUP_CONCAT_CREATED = true;
+			this.GROUP_CONCAT_CREATED = true;
 		}
 
 		if (isRecursive) {
@@ -249,7 +249,7 @@ public class OracleDialect extends DatabaseDialect {
 			}
 			sb.append("; ");
 			// Index rtJoinCols.
-			sb.append("create index on " + action.getDataSetSchemaName() + "."
+			sb.append("create index I_"+this.indexCount+++" on " + action.getDataSetSchemaName() + "."
 					+ recursionTempTable + "(");
 			for (final Iterator i = action.getRightJoinColumns().iterator(); i
 					.hasNext();) {
@@ -260,7 +260,7 @@ public class OracleDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index parentFromCols.
-			sb.append("create index on " + action.getDataSetSchemaName() + "."
+			sb.append("create index I_"+this.indexCount+++" on " + action.getDataSetSchemaName() + "."
 					+ recursionTempTable + "(");
 			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
 					.hasNext();) {
@@ -271,7 +271,7 @@ public class OracleDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index finalRow.
-			sb.append("create index on " + action.getDataSetSchemaName() + "."
+			sb.append("create index I_"+this.indexCount+++" on " + action.getDataSetSchemaName() + "."
 					+ recursionTempTable + "(finalRow); ");
 			// Initialise rows updated
 			sb.append("rows_updated := 0; ");
@@ -728,8 +728,7 @@ public class OracleDialect extends DatabaseDialect {
 		final String tableName = action.getTable();
 		final StringBuffer sb = new StringBuffer();
 
-		sb.append("create index " + schemaName + "." + tableName + "_I_"
-				+ this.indexCount++ + " on " + schemaName + "." + tableName
+		sb.append("create index I_"+this.indexCount+++" on " + schemaName + "." + tableName
 				+ "(");
 		for (final Iterator i = action.getColumns().iterator(); i.hasNext();) {
 			sb.append(i.next());
@@ -1226,7 +1225,8 @@ public class OracleDialect extends DatabaseDialect {
 	}
 
 	public void reset() {
-		OracleDialect.GROUP_CONCAT_CREATED = false;
+		this.GROUP_CONCAT_CREATED = false;
+		this.indexCount = 0;
 	}
 
 	public boolean understandsDataLink(final DataLink dataLink) {

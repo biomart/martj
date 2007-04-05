@@ -68,7 +68,7 @@ public abstract class BioMartGUI extends JFrame {
 		// Resources.get("plainGUITitle"));
 		System
 				.setProperty("com.apple.mrj.application.growbox.intrudes",
-						"true");
+						"false");
 		System.setProperty("com.apple.mrj.application.live-resize", "true");
 
 		// Load our cache of settings.

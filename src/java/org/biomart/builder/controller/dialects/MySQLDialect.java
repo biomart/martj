@@ -65,7 +65,7 @@ import org.biomart.common.model.Schema.JDBCSchema;
 public class MySQLDialect extends DatabaseDialect {
 
 	// Check we only set the group concat size once.
-	private static boolean GROUP_CONCAT_SIZED;
+	private boolean GROUP_CONCAT_SIZED;
 
 	private int indexCount;
 
@@ -111,9 +111,9 @@ public class MySQLDialect extends DatabaseDialect {
 		// If we haven't defined the group_concat size yet, define it.
 		// Note limitation of total 18446744073709551616 characters for
 		// group_concat result.
-		if (!MySQLDialect.GROUP_CONCAT_SIZED) {
+		if (!this.GROUP_CONCAT_SIZED) {
 			statements.add("set group_concat_max_len=18446744073709551616");
-			MySQLDialect.GROUP_CONCAT_SIZED = true;
+			this.GROUP_CONCAT_SIZED = true;
 		}
 
 		final StringBuffer sb = new StringBuffer();
@@ -237,7 +237,7 @@ public class MySQLDialect extends DatabaseDialect {
 			}
 			sb.append("; ");
 			// Index rtJoinCols.
-			sb.append("create index " + recursionTempTable + "_I_"
+			sb.append("create index I_"
 					+ this.indexCount++ + " on "
 					+ action.getDataSetSchemaName() + "." + recursionTempTable
 					+ "(");
@@ -250,7 +250,7 @@ public class MySQLDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index parentFromCols.
-			sb.append("create index " + recursionTempTable + "_I_"
+			sb.append("create index I_"
 					+ this.indexCount++ + " on "
 					+ action.getDataSetSchemaName() + "." + recursionTempTable
 					+ "(");
@@ -263,7 +263,7 @@ public class MySQLDialect extends DatabaseDialect {
 			}
 			sb.append("); ");
 			// Index finalRow.
-			sb.append("create index " + recursionTempTable + "_I_"
+			sb.append("create index I_"
 					+ this.indexCount++ + " on "
 					+ action.getDataSetSchemaName() + "." + recursionTempTable
 					+ "(finalRow); ");
@@ -729,7 +729,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final String tableName = action.getTable();
 		final StringBuffer sb = new StringBuffer();
 
-		sb.append("create index " + tableName + "_I_" + this.indexCount++
+		sb.append("create index I_" + this.indexCount++
 				+ " on " + schemaName + "." + tableName + "(");
 		for (final Iterator i = action.getColumns().iterator(); i.hasNext();) {
 			sb.append(i.next());
@@ -1222,7 +1222,8 @@ public class MySQLDialect extends DatabaseDialect {
 	}
 
 	public void reset() {
-		MySQLDialect.GROUP_CONCAT_SIZED = false;
+		this.GROUP_CONCAT_SIZED = false;
+		this.indexCount = 0;
 	}
 
 	public boolean understandsDataLink(final DataLink dataLink) {
