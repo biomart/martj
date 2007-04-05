@@ -593,8 +593,7 @@ public class DataSet extends GenericSchema {
 								ComponentStatus.INFERRED_INCORRECT)
 								&& !this.schemaMods.isMaskedRelation(dsTable,
 										rel))
-							;
-						unmaskedRels++;
+							unmaskedRels++;
 					}
 
 				// Are we at the 1 end of a 1:M?
