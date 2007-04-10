@@ -59,8 +59,8 @@ import org.biomart.common.resources.Resources;
  * contents, including stripping out rows with blank keys.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public abstract class TwoColumnTablePanel extends JPanel {
@@ -168,55 +168,71 @@ public abstract class TwoColumnTablePanel extends JPanel {
 						.getColumnModel().getColumn(0).getPreferredWidth()
 						+ table.getColumnModel().getColumn(1)
 								.getPreferredWidth(), 250));
-		this.insert = new JButton(this.getInsertButtonText());
-		this.remove = new JButton(this.getRemoveButtonText());
-		this.insert.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				TwoColumnTablePanel.this.tableModel
-						.insertRow(TwoColumnTablePanel.this.tableModel
-								.getRowCount(),
-								new Object[] {
-										TwoColumnTablePanel.this
-												.getNewRowFirstColumn(),
-										TwoColumnTablePanel.this
-												.getNewRowSecondColumn() });
-			}
-		});
-		this.remove.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				final int rows[] = table.getSelectedRows();
-				// Reverse order, so we don't end up with changing
-				// indices along the way.
-				for (int i = rows.length - 1; i >= 0; i--)
-					TwoColumnTablePanel.this.tableModel.removeRow(rows[i]);
-			}
-		});
+		if (this.getInsertButtonText() != null) {
+			this.insert = new JButton(this.getInsertButtonText());
+			this.insert.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					TwoColumnTablePanel.this.tableModel.insertRow(
+							TwoColumnTablePanel.this.tableModel.getRowCount(),
+							new Object[] {
+									TwoColumnTablePanel.this
+											.getNewRowFirstColumn(),
+									TwoColumnTablePanel.this
+											.getNewRowSecondColumn() });
+				}
+			});
+		}
+		if (this.getRemoveButtonText() != null) {
+			this.remove = new JButton(this.getRemoveButtonText());
+			this.remove.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					final int rows[] = table.getSelectedRows();
+					// Reverse order, so we don't end up with changing
+					// indices along the way.
+					for (int i = rows.length - 1; i >= 0; i--)
+						TwoColumnTablePanel.this.tableModel.removeRow(rows[i]);
+				}
+			});
+		}
 
 		// Display the table and buttons as two parts of a single panel.
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(table));
 		gridBag.setConstraints(field, fieldConstraints);
 		this.add(field);
-		field = new JPanel();
-		field.add(this.insert);
-		field.add(this.remove);
-		gridBag.setConstraints(field, fieldConstraints);
-		this.add(field);
+		if (this.insert != null || this.remove != null) {
+			field = new JPanel();
+			if (this.insert != null)
+				field.add(this.insert);
+			if (this.remove != null)
+				field.add(this.remove);
+			gridBag.setConstraints(field, fieldConstraints);
+			this.add(field);
+		} 
+		// If cannot insert/remove then also cannot change.
+		else 
+			table.setEnabled(false);
 	}
 
 	/**
-	 * Retrieve the text to display on the 'insert row' button.
+	 * Retrieve the text to display on the 'insert row' button. Return
+	 * <tt>null</tt> if this button is to be disabled.
 	 * 
 	 * @return the text to display on the 'insert row' button.
 	 */
-	public abstract String getInsertButtonText();
+	public String getInsertButtonText() {
+		return null;
+	}
 
 	/**
-	 * Retrieve the text to display on the 'remove row' button.
+	 * Retrieve the text to display on the 'remove row' button. Return
+	 * <tt>null</tt> if this button is to be disabled.
 	 * 
 	 * @return the text to display on the 'remove row' button.
 	 */
-	public abstract String getRemoveButtonText();
+	public String getRemoveButtonText() {
+		return null;
+	}
 
 	/**
 	 * Retrieve the header text for the first column.

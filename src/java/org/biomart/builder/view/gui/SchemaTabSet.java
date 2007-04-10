@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.ImageIcon;
@@ -57,8 +56,8 @@ import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.dialogs.PartitionSchemaDialog;
 import org.biomart.common.view.gui.dialogs.SchemaConnectionDialog;
-import org.biomart.common.view.gui.dialogs.SchemaPartitionDialog;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
@@ -136,7 +135,8 @@ public class SchemaTabSet extends JTabbedPane {
 		return selectedDiagram.getSchema();
 	}
 
-	private synchronized void addSchemaTab(final Schema schema, final boolean selectNewSchema) {
+	private synchronized void addSchemaTab(final Schema schema,
+			final boolean selectNewSchema) {
 		Log.info(Resources.get("logAddSchemaTab", "" + schema));
 		// Create the diagram to represent this schema.
 		final SchemaDiagram schemaDiagram = new SchemaDiagram(this.martTab,
@@ -163,7 +163,7 @@ public class SchemaTabSet extends JTabbedPane {
 			this.setSelectedIndex(this.indexOfTab(schema.getName()));
 			this.martTab.selectSchemaEditor();
 		}
-		
+
 		// Recalculate the overview diagram.
 		this.recalculateOverviewDiagram();
 	}
@@ -263,7 +263,8 @@ public class SchemaTabSet extends JTabbedPane {
 		return contextMenu;
 	}
 
-	private synchronized void removeSchemaTab(final Schema schema, final boolean select) {
+	private synchronized void removeSchemaTab(final Schema schema,
+			final boolean select) {
 		Log.info(Resources.get("logRemoveSchemaTab", "" + schema));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
@@ -954,17 +955,42 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to modify partitions for.
 	 */
 	public void requestModifySchemaPartitions(final Schema schema) {
-		try {
-			final Map partitions = SchemaPartitionDialog
-					.definePartitions(schema);
-			if (!partitions.equals(schema.getPartitions())) {
-				CommonUtils.setSchemaPartitions(schema, partitions);
-				SchemaTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		}
+		final PartitionSchemaDialog dialog = new PartitionSchemaDialog(schema);
+		if (dialog.definePartitions())
+			LongProcess.run(new Runnable() {
+				public void run() {
+					try {
+						try {
+							// Do the work.
+							CommonUtils.setSchemaPartition(schema, dialog
+									.getRegex(), dialog.getExpression());
+							MartBuilderUtils.updatePartitionColumns(
+									SchemaTabSet.this.getMartTab().getMart(),
+									schema);
+						} finally {
+							// Must use a finally in case the schema gets
+							// created
+							// but won't sync. We still want to add it so that
+							// the
+							// user can edit it and retry syncing it, rather
+							// than
+							// having to add it all over again.
+							// Create and add the tab representing this schema.
+							SchemaTabSet.this.addSchemaTab(schema, true);
+
+							// Update the modified status for this tabset.
+							SchemaTabSet.this.martTab.getMartTabSet()
+									.requestChangeModifiedStatus(true);
+						}
+					} catch (final Throwable t) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								StackTrace.showStackTrace(t);
+							}
+						});
+					}
+				}
+			});
 	}
 
 	/**

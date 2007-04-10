@@ -42,8 +42,8 @@ import org.biomart.common.resources.Resources;
  * manipulating the various objects in the data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class CommonUtils {
@@ -199,23 +199,27 @@ public class CommonUtils {
 	}
 
 	/**
-	 * Updates the schema partitions. If the map is empty, then it clears all
-	 * partitioning.
+	 * Updates the schema partition regex and naming expression.
 	 * 
 	 * @param schema
-	 *            the schema to update.
-	 * @param partitions
-	 *            the new partitions to use. If <tt>null</tt>, it is treated
-	 *            the same as an empty map.
+	 *            the schema to update partitions on.
+	 * @param regex
+	 *            the new regex. <tt>null</tt> to turn it off altogether.
+	 * @param expr
+	 *            the new expression. Will be ignored if regex is <tt>null</tt>.
 	 */
-	public static void setSchemaPartitions(final Schema schema,
-			final Map partitions) {
-		schema.getPartitions().clear();
-		if (partitions != null)
-			schema.getPartitions().putAll(partitions);
+	public static void setSchemaPartition(final Schema schema,
+			final String regex, final String expr) {
+		if (regex == null) {
+			schema.setPartitionRegex(null);
+			schema.setPartitionNameExpression(null);
+		} else {
+			schema.setPartitionRegex(regex);
+			schema.setPartitionNameExpression(expr);
+		}
 	}
 
-	//The tools are static and not intended to be instantiated.
+	// The tools are static and not intended to be instantiated.
 	private CommonUtils() {
 	}
 }

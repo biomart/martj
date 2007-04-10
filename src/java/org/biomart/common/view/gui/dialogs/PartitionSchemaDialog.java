@@ -23,7 +23,9 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -33,11 +35,12 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTablePanel;
 
 /**
@@ -45,40 +48,50 @@ import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTableP
  * table for this dataset only.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
-public class SchemaPartitionDialog extends JDialog {
+public class PartitionSchemaDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private JButton cancel;
 
 	private boolean cancelled;
 
-	private TwoColumnTablePanel partitionModel;
+	private JTextField regex;
+
+	private JTextField expression;
 
 	private JButton execute;
+
+	private StringStringTablePanel preview;
 
 	/**
 	 * Pops up a dialog to manage the internal partitions of the given schema.
 	 * 
-	 * @param schema
-	 *            the schema to manage the partitions for.
-	 * @return the updated partition map. Keys are actual schema names, and
-	 *         values are the aliases to use in dataset table names.
+	 * @return <tt>true</tt> if the user's actions led to a change in the
+	 *         partitioning method.
 	 */
-	public static Map definePartitions(final Schema schema) {
-		final SchemaPartitionDialog dialog = new SchemaPartitionDialog(schema);
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		if (dialog.cancelled)
-			return schema.getPartitions();
-		else
-			return dialog.getPartitions();
+	public boolean definePartitions() {
+		// Centre the dialog.
+		this.setLocationRelativeTo(null);
+
+		// Show the dialog.
+		this.show();
+
+		// Return true if not cancelled - ie. values changed.
+		return !this.cancelled;
 	}
 
-	private SchemaPartitionDialog(final Schema template) {
+	/**
+	 * Creates but does not show a schema partition dialog populated with the
+	 * partition regex of the specified schema template.
+	 * 
+	 * @param template
+	 *            the existing schema to copy partition regexes from.
+	 */
+	public PartitionSchemaDialog(final Schema template) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(Resources.get("schemaPartitionDialogTitle"));
@@ -113,18 +126,27 @@ public class SchemaPartitionDialog extends JDialog {
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
-		// First table aliases.
-		this.partitionModel = new StringStringTablePanel(template
-				.getPartitions()) {
+		// Create the template name.
+		final JTextField templateName = new JTextField(((JDBCSchema) template)
+				.getDatabaseSchema());
+		templateName.setEnabled(false);
+
+		// Create the regex and expression fields.
+		this.regex = new JTextField(50);
+		this.regex.setText(template.getPartitionRegex());
+		this.expression = new JTextField(20);
+		this.expression.setText(template.getPartitionNameExpression());
+
+		// Two-column string/string panel of matches
+		Map partitions;
+		try {
+			partitions = template.getPartitions();
+		} catch (final SQLException e) {
+			StackTrace.showStackTrace(e);
+			partitions = Collections.EMPTY_MAP;
+		}
+		this.preview = new StringStringTablePanel(partitions) {
 			private static final long serialVersionUID = 1L;
-
-			public String getInsertButtonText() {
-				return Resources.get("insertPartitionButton");
-			}
-
-			public String getRemoveButtonText() {
-				return Resources.get("removePartitionButton");
-			}
 
 			public String getFirstColumnHeader() {
 				return Resources.get("partitionedSchemaHeader");
@@ -133,16 +155,55 @@ public class SchemaPartitionDialog extends JDialog {
 			public String getSecondColumnHeader() {
 				return Resources.get("partitionedSchemaPrefixHeader");
 			}
-
-			public Object getNewRowSecondColumn() {
-				return "";
-			}
 		};
 
-		// Create the template name.
-		final JTextField templateName = new JTextField(((JDBCSchema) template)
-				.getDatabaseSchema());
-		templateName.setEnabled(false);
+		// On-change listener for regex+expression to update panel of matches
+		// by creating a temporary dummy schema with the specified regexes and
+		// seeing what it produces. Alerts if nothing produced.
+		final DocumentListener dl = new DocumentListener() {
+			public void changedUpdate(DocumentEvent e) {
+				this.changed();
+			}
+
+			public void insertUpdate(DocumentEvent e) {
+				this.changed();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				this.changed();
+			}
+
+			private void changed() {
+				final String oldRegex = template.getPartitionRegex();
+				final String oldExpr = template.getPartitionNameExpression();
+				final String newRegex = PartitionSchemaDialog.this.getRegex();
+				final String newExpr = PartitionSchemaDialog.this
+						.getExpression();
+				if (newRegex != null && newExpr != null) {
+					try {
+						template.setPartitionRegex(newRegex);
+						template.setPartitionNameExpression(newExpr);
+						Map partitions;
+						try {
+							partitions = template.getPartitions();
+						} catch (final SQLException e) {
+							StackTrace.showStackTrace(e);
+							partitions = Collections.EMPTY_MAP;
+						}
+						PartitionSchemaDialog.this.preview
+								.setValues(partitions);
+						PartitionSchemaDialog.this.pack();
+					} catch (final Throwable t) {
+						StackTrace.showStackTrace(t);
+					} finally {
+						template.setPartitionRegex(oldRegex);
+						template.setPartitionNameExpression(oldExpr);
+					}
+				}
+			}
+		};
+		this.regex.getDocument().addDocumentListener(dl);
+		this.expression.getDocument().addDocumentListener(dl);
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
@@ -158,12 +219,28 @@ public class SchemaPartitionDialog extends JDialog {
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
-		// Add the partitions.
+		// Fields for the regex and expression
+		label = new JLabel(Resources.get("schemaRegexLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.regex);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+		label = new JLabel(Resources.get("schemaExprLabel"));
+		gridBag.setConstraints(label, labelConstraints);
+		content.add(label);
+		field = new JPanel();
+		field.add(this.expression);
+		gridBag.setConstraints(field, fieldConstraints);
+		content.add(field);
+
+		// Two-column string/string panel of matches
 		label = new JLabel(Resources.get("partitionedSchemasLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
-		field.add(this.partitionModel);
+		field.add(this.preview);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
 
@@ -181,7 +258,7 @@ public class SchemaPartitionDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				SchemaPartitionDialog.this.hide();
+				PartitionSchemaDialog.this.hide();
 			}
 		});
 
@@ -189,9 +266,9 @@ public class SchemaPartitionDialog extends JDialog {
 		// the appropriate partition type, then close the dialog.
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (SchemaPartitionDialog.this.validateFields()) {
-					SchemaPartitionDialog.this.cancelled = false;
-					SchemaPartitionDialog.this.hide();
+				if (PartitionSchemaDialog.this.validateFields()) {
+					PartitionSchemaDialog.this.cancelled = false;
+					PartitionSchemaDialog.this.hide();
 				}
 			}
 		});
@@ -212,7 +289,15 @@ public class SchemaPartitionDialog extends JDialog {
 		// A placeholder to hold the validation messages, if any.
 		final List messages = new ArrayList();
 
-		// (There is no validation in this box.)
+		// Check regex+expression are both missing or both present (EOR).
+		if (this.isEmpty(this.regex.getText())
+				^ this.isEmpty(this.expression.getText()))
+			messages.add(Resources.get("schemaRegexExprEmpty"));
+
+		// Check that it generated any at all.
+		if (!this.isEmpty(this.regex.getText())
+				&& this.preview.getValues().isEmpty())
+			messages.add(Resources.get("schemaRegexExprNoMatch"));
 
 		// If there any messages, display them.
 		if (!messages.isEmpty())
@@ -225,7 +310,30 @@ public class SchemaPartitionDialog extends JDialog {
 		return messages.isEmpty();
 	}
 
-	private Map getPartitions() {
-		return this.partitionModel.getValues();
+	private boolean isEmpty(final String string) {
+		// Strings are empty if they are null or all whitespace.
+		return string == null || string.trim().length() == 0;
+	}
+
+	/**
+	 * Find out what regex the user wants. If null, then no partitioning is
+	 * required.
+	 * 
+	 * @return the regex, or null.
+	 */
+	public String getRegex() {
+		return this.isEmpty(this.regex.getText()) ? null : this.regex.getText()
+				.trim();
+	}
+
+	/**
+	 * Find out what expression the user typed. Even if they typed something, if
+	 * regex is null then this will be too.
+	 * 
+	 * @return the expression, or null if no regex is being used.
+	 */
+	public String getExpression() {
+		return this.getRegex() == null ? null : this.expression.getText()
+				.trim();
 	}
 }

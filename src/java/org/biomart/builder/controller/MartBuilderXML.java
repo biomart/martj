@@ -495,14 +495,8 @@ public class MartBuilderXML extends DefaultHandler {
 					.isKeyGuessing()), xmlWriter);
 
 			// Partitions.
-			this
-					.writeListAttribute("partitionSchemas",
-							(String[]) jdbcSchema.getPartitions().keySet()
-									.toArray(new String[0]), xmlWriter);
-			this
-					.writeListAttribute("partitionPrefixes",
-							(String[]) jdbcSchema.getPartitions().values()
-									.toArray(new String[0]), xmlWriter);
+			this.writeAttribute("partitionRegex", jdbcSchema.getPartitionRegex(), xmlWriter);
+			this.writeAttribute("partitionExpression", jdbcSchema.getPartitionNameExpression(), xmlWriter);
 		}
 		// Other schema types are not recognised.
 		else
@@ -1276,20 +1270,16 @@ public class MartBuilderXML extends DefaultHandler {
 					(String) attributes.get("keyguessing")).booleanValue();
 
 			// Does it have partitions?
-			final Map partitions = new HashMap();
-			final String[] partSchs = this.readListAttribute(
-					(String) attributes.get("partitionSchemas"), false);
-			final String[] partPres = this.readListAttribute(
-					(String) attributes.get("partitionPrefixes"), false);
-			for (int i = 0; i < partSchs.length; i++)
-				partitions.put(partSchs[i], partPres[i]);
-
+			final String partitionRegex = (String) attributes.get("partitionRegex");
+			final String partitionExpression = (String) attributes.get("partitionExpression");
+			
 			// Construct the JDBC schema.
 			try {
 				final Schema schema = new JDBCSchema(driverClassLocation,
 						driverClassName, url, schemaName, username, password,
 						name, keyguessing);
-				schema.getPartitions().putAll(partitions);
+				schema.setPartitionRegex(partitionRegex);
+				schema.setPartitionNameExpression(partitionExpression);
 				schema.storeInHistory();
 				// Add the schema directly to the mart if outside a group.
 				this.constructedMart.addSchema(schema);

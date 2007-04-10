@@ -532,7 +532,7 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.partitionedSchema
 							.setSelected(schema != null
-									&& !schema.getPartitions().isEmpty());
+									&& schema.getPartitionRegex()!=null);
 					MartBuilderMenuBar.this.updateSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.renameSchema

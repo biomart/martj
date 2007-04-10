@@ -36,8 +36,8 @@
 <!ATTLIST jdbcSchema password CDATA #IMPLIED>
 <!ATTLIST jdbcSchema name CDATA #REQUIRED>
 <!ATTLIST jdbcSchema keyguessing (true|false) #REQUIRED>
-<!ATTLIST jdbcSchema partitionSchemas CDATA #IMPLIED>
-<!ATTLIST jdbcSchema partitionPrefixes CDATA #IMPLIED>
+<!ATTLIST jdbcSchema partitionRegex CDATA #IMPLIED>
+<!ATTLIST jdbcSchema partitionExpression CDATA #IMPLIED>
 
 <!ELEMENT relation EMPTY>
 <!ATTLIST relation id ID #REQUIRED>

@@ -405,7 +405,7 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Reset the fields to their default values.
 		this.copySettingsFromPartitionType(template);
-
+		
 		// Set the size of the dialog.
 		this.pack();
 

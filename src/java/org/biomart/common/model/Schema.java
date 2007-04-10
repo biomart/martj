@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -38,6 +39,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
@@ -268,11 +272,57 @@ public interface Schema extends Comparable, DataLink {
 	 * according to whether this is a JDBC schema, an XML schema, etc. The
 	 * values are the prefix to stick on table names in datasets generated from
 	 * this schema.
+	 * <p>
+	 * The entries in the map are the result of applying a combination of
+	 * {@link #getPartitionRegex()} and {@link #getPartitionNameExpression()} to
+	 * the list of available schemas in the database, as determined by the
+	 * appropriate database driver.
 	 * 
 	 * @return the map of partitions. If empty, then partitioning is not
 	 *         required. It will never be <tt>null</tt>.
+	 * @throws SQLException
+	 *             if the partitions could not be retrieved.
 	 */
-	public Map getPartitions();
+	public Map getPartitions() throws SQLException;
+
+	/**
+	 * Retrieve the regex used to work out schema partitions. If this regex is
+	 * <tt>null</tt> then no partitioning will be done.
+	 * 
+	 * @return the regex used. Groups from this regex will be used to populate
+	 *         values in the name expression. See
+	 *         {@link #getPartitionNameExpression()}.
+	 */
+	public String getPartitionRegex();
+
+	/**
+	 * Retrieve the expression used to reformat groups from the partition regex
+	 * into schema partition names.
+	 * 
+	 * @return the expression used. See also {@link #getPartitionRegex()}.
+	 */
+	public String getPartitionNameExpression();
+
+	/**
+	 * Set the regex used to work out schema partitions. If this regex is
+	 * <tt>null</tt> then no partitioning will be done.
+	 * 
+	 * @param regex
+	 *            the regex used. Groups from this regex will be used to
+	 *            populate values in the name expression. See
+	 *            {@link #setPartitionNameExpression(String)}.
+	 */
+	public void setPartitionRegex(final String regex);
+
+	/**
+	 * Set the expression used to reformat groups from the partition regex into
+	 * schema partition names.
+	 * 
+	 * @param expr
+	 *            the expression used. See also
+	 *            {@link #setPartitionRegex(String)}.
+	 */
+	public void setPartitionNameExpression(final String expr);
 
 	/**
 	 * The generic implementation should suffice as the ground for most complex
@@ -291,15 +341,33 @@ public interface Schema extends Comparable, DataLink {
 
 		private String name;
 
-		private final Map tables = new TreeMap();
+		private String partitionRegex;
 
-		private final Map partitions = new TreeMap();
+		private String partitionExpression;
+
+		private final Map tables = new TreeMap();
 
 		private final Set relations = new HashSet();
 
 		private final Set internalRelations = new HashSet();
 
 		private final Set externalRelations = new HashSet();
+
+		public String getPartitionRegex() {
+			return this.partitionRegex;
+		}
+
+		public String getPartitionNameExpression() {
+			return this.partitionExpression;
+		}
+
+		public void setPartitionRegex(final String regex) {
+			this.partitionRegex = regex;
+		}
+
+		public void setPartitionNameExpression(final String expr) {
+			this.partitionExpression = expr;
+		}
 
 		/**
 		 * The constructor creates a schema with the given name. Keyguessing is
@@ -345,8 +413,8 @@ public interface Schema extends Comparable, DataLink {
 				this.internalRelations.remove(relation);
 		}
 
-		public Map getPartitions() {
-			return this.partitions;
+		public Map getPartitions() throws SQLException {
+			return Collections.EMPTY_MAP;
 		}
 
 		public void addTable(final Table table) {
@@ -443,8 +511,9 @@ public interface Schema extends Comparable, DataLink {
 			Log.debug("Replicating contents from " + this.getName() + " to "
 					+ targetSchema);
 			// Copy partitions.
-			targetSchema.getPartitions().clear();
-			targetSchema.getPartitions().putAll(this.getPartitions());
+			targetSchema.setPartitionRegex(this.getPartitionRegex());
+			targetSchema.setPartitionNameExpression(this
+					.getPartitionNameExpression());
 
 			// Drop all tables in target schema.
 			targetSchema.removeAllTables();
@@ -762,6 +831,69 @@ public interface Schema extends Comparable, DataLink {
 			} finally {
 				super.finalize();
 			}
+		}
+
+		public Map getPartitions() throws SQLException {
+			if (this.getPartitionRegex() == null)
+				return Collections.EMPTY_MAP;
+			// Valid regex?
+			Pattern p;
+			try {
+				p = Pattern.compile(this.getPartitionRegex());
+			} catch (final PatternSyntaxException e) {
+				// Ignore and return if invalid.
+				return Collections.EMPTY_MAP;
+			}
+			// Use regex and friends to work out partitions.
+			final Map partitions = new TreeMap();
+			final Connection conn = this.getConnection();
+			// List out all catalogs available.
+			ResultSet rs = conn.getMetaData().getCatalogs();
+			try {
+				while (rs.next()) {
+					final String schema = rs.getString(1);
+					// Match them against the regex, retaining those
+					// that match and using the name expression to name them.
+					final Matcher m = p.matcher(schema);
+					if (m.matches())
+						try {
+							partitions.put(schema, m.replaceAll(this
+									.getPartitionNameExpression()));
+						} catch (final IndexOutOfBoundsException e) {
+							// We don't care if the expression is invalid.
+						}
+				}
+			} catch (final SQLException e) {
+				throw e;
+			} finally {
+				rs.close();
+			}
+			if (partitions.isEmpty()) {
+				// Did we get no catalogs? Try schemas instead.
+				rs = conn.getMetaData().getSchemas();
+				try {
+					while (rs.next()) {
+						final String schema = rs.getString(1);
+						// Match them against the regex, retaining those
+						// that match and using the name expression to name
+						// them.
+						final Matcher m = p.matcher(schema);
+						if (m.matches())
+							try {
+								partitions.put(schema, m.replaceAll(this
+										.getPartitionNameExpression()));
+							} catch (final IndexOutOfBoundsException e) {
+								// We don't care if the expression is invalid.
+							}
+					}
+				} catch (final SQLException e) {
+					throw e;
+				} finally {
+					rs.close();
+				}
+			}
+			// Return the results.
+			return partitions;
 		}
 
 		/**

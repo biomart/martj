@@ -21,9 +21,12 @@ package org.biomart.builder.controller;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ValidationException;
@@ -32,8 +35,11 @@ import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
+import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
@@ -41,6 +47,7 @@ import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition
 import org.biomart.common.controller.CommonUtils;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.DataLink;
 import org.biomart.common.model.Key;
@@ -49,6 +56,7 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
+import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -62,7 +70,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.6
  */
-public class MartBuilderUtils {	
+public class MartBuilderUtils {
 	/**
 	 * Attempts to create a foreign key on a table given a set of columns. The
 	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
@@ -1861,6 +1869,80 @@ public class MartBuilderUtils {
 	public static void visibleDataSet(final DataSet dataset) {
 		Log.info(Resources.get("logReqVisibleDataset"));
 		dataset.setInvisible(false);
+	}
+
+	/**
+	 * Works out which datasets reference the given schema, then updates any
+	 * list-based partition values in those datasets to reflect the correct set
+	 * of distinct values.
+	 * 
+	 * @param mart
+	 *            the mart we are working in.
+	 * @param schema
+	 *            the schema that recently changed.
+	 * @throws SQLException
+	 *             if it could not connect to the db to do the lookup.
+	 */
+	public static void updatePartitionColumns(final Mart mart,
+			final Schema schema) throws SQLException {
+		for (final Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
+			if (!ds.usesSchema(schema)) 
+				continue;
+			for (final Iterator pi = ds.getDataSetModifications()
+					.getPartitionedColumns().entrySet().iterator(); pi
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) pi.next();
+				final Map colDef = (Map) entry.getValue();
+				for (final Iterator ci = colDef.entrySet().iterator(); ci
+						.hasNext();) {
+					final Map.Entry subEntry = (Map.Entry) ci.next();
+					if (!(subEntry.getValue() instanceof ValueList))
+						continue;
+					// Work out what we've already got.
+					final Map existingValues = ((ValueList) subEntry.getValue()).getValues();
+					// Read the values from the database.
+					final Set dbValues = new HashSet();
+					// First, make a set of all input schemas. We use a set to
+					// prevent duplicates.
+					DataSetColumn dsCol = (DataSetColumn) subEntry.getKey();
+					while (dsCol instanceof InheritedColumn)
+						dsCol = ((InheritedColumn) dsCol).getInheritedColumn();
+					final Column col = ((WrappedColumn) dsCol)
+							.getWrappedColumn();
+					if (!col.getTable().getSchema().equals(schema))
+						continue;
+					final DatabaseDialect dd = DatabaseDialect
+							.getDialect(schema);
+					if (dd != null)
+						if (schema.getPartitions().isEmpty())
+							dbValues.addAll(dd.executeSelectDistinct(
+									((JDBCSchema) schema).getDatabaseSchema(),
+									col));
+						else
+							for (final Iterator si = schema.getPartitions()
+									.keySet().iterator(); si.hasNext();)
+								dbValues.addAll(dd.executeSelectDistinct(
+										(String) si.next(), col));
+					// Combine the two to create an updated list.
+					final Map newValues = new TreeMap(existingValues);
+					for (final Iterator vi = newValues.entrySet().iterator(); vi
+							.hasNext();) {
+						final Map.Entry oldEntry = (Map.Entry) vi.next();
+						if (!dbValues.contains(oldEntry.getValue()))
+							i.remove();
+					}
+					for (final Iterator vi = dbValues.iterator(); vi.hasNext();) {
+						final String value = (String) vi.next();
+						if (!newValues.containsValue(value))
+							newValues.put(value, value);
+					}
+					// Update the table contents.
+					existingValues.clear();
+					existingValues.putAll(newValues);
+				}
+			}
+		}
 	}
 
 	/**
