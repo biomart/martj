@@ -132,8 +132,7 @@ Username: <xsl:value-of select="@username"/>
 Password: <xsl:value-of select="@password"/>
 
 Uses keyguessing?: <xsl:value-of select="@keyguessing"/>
-Schema partitions: 
-<xsl:choose><xsl:when test="@partitionSchemas"><xsl:call-template name="twoColumnPrintout"><xsl:with-param name="str1" select="@partitionSchemas"/><xsl:with-param name="str2" select="@partitionPrefixes"/></xsl:call-template></xsl:when><xsl:otherwise>-- none specified --</xsl:otherwise></xsl:choose>
+Schema partitions: <xsl:choose><xsl:when test="@partitionRegex">Regex: <xsl:value-of select="@partitionRegex"/> with naming expression: <xsl:value-of select="@partitionExpression"/></xsl:when><xsl:otherwise>-- none specified --</xsl:otherwise></xsl:choose>
 
 Incorrect keys and relations (if any)
 -------------------------------------
@@ -219,6 +218,16 @@ Directional relation: <xsl:apply-templates select="key('ids',@relationId)"/>
 Starting key: <xsl:apply-templates select="key('ids',@keyId)"/> 
 <xsl:if test="not(@tableKey='__DATASET_WIDE__')">
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+</xsl:template>
+
+<xsl:template match="distinctRows">
+
+Distinct rows only for table: <xsl:value-of select="@tableKey"/>
+</xsl:template>
+
+<xsl:template match="noOptimiserColumns">
+
+No optimiser columns for table: <xsl:value-of select="@tableKey"/>
 </xsl:template>
 
 <xsl:template match="renamedTable">

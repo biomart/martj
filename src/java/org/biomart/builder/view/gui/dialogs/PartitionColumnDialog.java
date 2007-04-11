@@ -405,7 +405,7 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Reset the fields to their default values.
 		this.copySettingsFromPartitionType(template);
-		
+
 		// Set the size of the dialog.
 		this.pack();
 
@@ -430,7 +430,9 @@ public class PartitionColumnDialog extends JDialog {
 				// or start/end in underscores.
 				boolean allOK = true;
 				for (int i = 0; i < values.length && allOK; i++)
-					allOK = values[i].matches("^[\\w&&[^_]]\\w*[\\w&&[^_]]*$");
+					allOK = values[i].matches("^\\w+$")
+							&& !values[i].startsWith("_")
+							&& !values[i].endsWith("_");
 				// If there any messages, display them.
 				if (allOK
 						|| JOptionPane.showConfirmDialog(null, Resources
@@ -447,7 +449,9 @@ public class PartitionColumnDialog extends JDialog {
 				// or start/end in underscores.
 				boolean allOK = true;
 				for (int i = 0; i < values.length && allOK; i++)
-					allOK = values[i].matches("^[\\w&&[^_]]\\w*[\\w&&[^_]]*$");
+					allOK = values[i].matches("^\\w+$")
+							&& !values[i].startsWith("_")
+							&& !values[i].endsWith("_");
 				// If there any messages, display them.
 				if (allOK
 						|| JOptionPane.showConfirmDialog(null, Resources

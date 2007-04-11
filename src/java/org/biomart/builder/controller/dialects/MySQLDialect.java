@@ -36,6 +36,7 @@ import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiserDirect;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiserVia;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
+import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
 import org.biomart.builder.model.MartConstructorAction.Index;
@@ -660,6 +661,30 @@ public class MySQLDialect extends DatabaseDialect {
 				throw new BioMartError();
 		}
 
+		statements.add(sb.toString());
+	}
+
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
+	public void doDistinct(final Distinct action, final List statements)
+			throws Exception {
+		final String createTableSchema = action.getDataSetSchemaName();
+		final String createTableName = action.getResultTable();
+		final String fromTableSchema = action.getSchema();
+		final String fromTableName = action.getTable();
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("create table " + createTableSchema + "." + createTableName
+				+ " as select distinct * from " + fromTableSchema + "." + fromTableName);
+		
 		statements.add(sb.toString());
 	}
 

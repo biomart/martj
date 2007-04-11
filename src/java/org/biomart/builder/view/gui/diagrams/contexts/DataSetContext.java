@@ -538,6 +538,56 @@ public class DataSetContext extends SchemaContext {
 
 			contextMenu.addSeparator();
 
+			// The table can be distincted by using this option.
+			final JCheckBoxMenuItem distinct = new JCheckBoxMenuItem(
+					Resources.get("distinctTableTitle"));
+			distinct.setMnemonic(Resources.get("distinctTableMnemonic")
+					.charAt(0));
+			distinct.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					if (distinct.isSelected())
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestDistinctTable(
+										DataSetContext.this.getDataSet(),
+										table);
+					else
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUndistinctTable(
+										DataSetContext.this.getDataSet(),
+										table);
+				}
+			});
+			contextMenu.add(distinct);
+			if (dataset.getDataSetModifications().isDistinctTable(table))
+				distinct.setSelected(true);
+			
+			// Special stuff for non-main tables.
+			if (!table.getType().equals(DataSetTableType.MAIN)) {
+				
+				// The table can be unoptimised by using this option.
+				final JCheckBoxMenuItem unoptimise = new JCheckBoxMenuItem(
+						Resources.get("noOptimiserTableTitle"));
+				unoptimise.setMnemonic(Resources.get("noOptimiserTableMnemonic")
+						.charAt(0));
+				unoptimise.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						if (unoptimise.isSelected())
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestUnoptimiseTable(
+											DataSetContext.this.getDataSet(),
+											table);
+						else
+							DataSetContext.this.getMartTab().getDataSetTabSet()
+									.requestReoptimiseTable(
+											DataSetContext.this.getDataSet(),
+											table);
+					}
+				});
+				contextMenu.add(unoptimise);
+				if (dataset.getDataSetModifications().isNoOptimiserTable(table))
+					unoptimise.setSelected(true);
+			}
+
 			final boolean isMasked = this.getDataSet()
 					.getDataSetModifications().isMaskedTable(table);
 			final boolean isMerged = this.getDataSet().getSchemaModifications()

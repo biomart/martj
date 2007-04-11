@@ -21,7 +21,6 @@ package org.biomart.common.controller;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;

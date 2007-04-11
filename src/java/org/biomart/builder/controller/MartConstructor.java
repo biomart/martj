@@ -49,6 +49,7 @@ import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiserDirect;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiserVia;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
+import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
 import org.biomart.builder.model.MartConstructorAction.Index;
@@ -377,7 +378,7 @@ public interface MartConstructor {
 						else
 							nextSCs.add(dsTab);
 				}
-				// We need to insert each one directly
+				// We need to insert each dimension directly
 				// after its parent table and before any subsequent
 				// subclass table. This ensures that by the time the subclass
 				// table is created, the parent table will have all its
@@ -501,12 +502,17 @@ public interface MartConstructor {
 						dsTable, partitionValue);
 
 				// Do a final left-join against the parent to reinstate
-				// any potentially missing rows. This isn't always necessary
-				// but sometimes it is, and it is safer to err on the side
-				// of doing it every time.
+				// any potentially missing rows.
 				if (requiresFinalLeftJoin
 						&& !dsTable.getType().equals(DataSetTableType.MAIN))
 					this.doParentLeftJoin(templateSchema, schemaPartition,
+							schemaPrefix, dataset, dsTable, finalCombinedName,
+							partitionValue, previousTempTables,
+							previousIndexes, tempName + this.tempNameCount++);
+
+				// Does it need a final distinct?
+				if (dataset.getDataSetModifications().isDistinctTable(dsTable))
+					this.doDistinct(templateSchema, schemaPartition,
 							schemaPrefix, dataset, dsTable, finalCombinedName,
 							partitionValue, previousTempTables,
 							previousIndexes, tempName + this.tempNameCount++);
@@ -565,11 +571,13 @@ public interface MartConstructor {
 				// or none if not required.
 				// If this is a subclass table, then the optimiser
 				// type is always COUNT_INHERIT.
-				final DataSetOptimiserType oType = dsTable.getType().equals(
-						DataSetTableType.MAIN_SUBCLASS) ? ((DataSet) dsTable
-						.getSchema()).isSubclassOptimiser() ? DataSetOptimiserType.COLUMN_INHERIT
-						: DataSetOptimiserType.NONE
-						: dataset.getDataSetOptimiserType();
+				final DataSetOptimiserType oType = dataset
+						.getDataSetModifications().isNoOptimiserTable(dsTable) ? DataSetOptimiserType.NONE
+						: dsTable.getType().equals(
+								DataSetTableType.MAIN_SUBCLASS) ? ((DataSet) dsTable
+								.getSchema()).isSubclassOptimiser() ? DataSetOptimiserType.COLUMN_INHERIT
+								: DataSetOptimiserType.NONE
+								: dataset.getDataSetOptimiserType();
 				if (!oType.equals(DataSetOptimiserType.NONE))
 					this.doOptimiseTable(templateSchema, schemaPartition,
 							schemaPrefix, dataset, dsTable, oType,
@@ -626,6 +634,28 @@ public interface MartConstructor {
 			action.setRightJoinColumns(rightJoinCols);
 			action.setLeftSelectColumns(leftSelectCols);
 			action.setRightSelectColumns(rightSelectCols);
+			action.setResultTable(tempTable);
+			this.issueAction(action);
+			// Drop the old one.
+			final Drop drop = new Drop(this.datasetSchemaName,
+					finalCombinedName);
+			drop.setTable((String) previousTempTables.get(partitionValue));
+			this.issueAction(drop);
+			// Update the previous temp table.
+			previousTempTables.put(partitionValue, tempTable);
+		}
+
+		private void doDistinct(final Schema templateSchema,
+				final String schemaPartition, final String schemaPrefix,
+				final DataSet dataset, final DataSetTable dsTable,
+				final String finalCombinedName, final String partitionValue,
+				final Map previousTempTables, final Map previousIndexes,
+				final String tempTable) throws Exception {
+			// Make the join.
+			final Distinct action = new Distinct(this.datasetSchemaName,
+					finalCombinedName);
+			action.setSchema(this.datasetSchemaName);
+			action.setTable((String) previousTempTables.get(partitionValue));
 			action.setResultTable(tempTable);
 			this.issueAction(action);
 			// Drop the old one.

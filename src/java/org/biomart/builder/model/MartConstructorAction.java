@@ -1395,6 +1395,81 @@ public abstract class MartConstructorAction {
 	}
 
 	/**
+	 * Select distinct * actions.
+	 */
+	public static class Distinct extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
+
+		private String schema;
+
+		private String table;
+
+		private String resultTable;
+		
+		/**
+		 * Creates a new Distinct action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public Distinct(String datasetSchemaName, String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcDistinct", new String[] {
+					this.getResultTable(), this.getTable() });
+		}
+
+		/**
+		 * @return the resultTable
+		 */
+		public String getResultTable() {
+			return this.resultTable;
+		}
+
+		/**
+		 * @param resultTable
+		 *            the resultTable to set
+		 */
+		public void setResultTable(String resultTable) {
+			this.resultTable = resultTable;
+		}
+
+		/**
+		 * @return the schema
+		 */
+		public String getSchema() {
+			return this.schema;
+		}
+
+		/**
+		 * @param schema
+		 *            the schema to set
+		 */
+		public void setSchema(String schema) {
+			this.schema = schema;
+		}
+
+		/**
+		 * @return the table
+		 */
+		public String getTable() {
+			return this.table;
+		}
+
+		/**
+		 * @param table
+		 *            the table to set
+		 */
+		public void setTable(String table) {
+			this.table = table;
+		}
+	}
+
+	/**
 	 * Select actions.
 	 */
 	public static class Select extends MartConstructorAction {

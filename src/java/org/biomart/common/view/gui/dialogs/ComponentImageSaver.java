@@ -105,20 +105,18 @@ public class ComponentImageSaver {
 						Resources.get("jpegExtension") }));
 		if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION)
 			// Call save() with the filename and format.
-			LongProcess.run(new Runnable() {
-				public void run() {
+			new LongProcess() {
+				public void run() throws Exception {
 					try {
 						Log.info(Resources.get("savingImage"));
 						ComponentImageSaver.this.save(fileChooser
 								.getSelectedFile(),
 								(ImageSaverFilter) fileChooser.getFileFilter());
-					} catch (final IOException e) {
-						StackTrace.showStackTrace(e);
 					} finally {
 						Log.info(Resources.get("doneSavingImage"));
 					}
 				}
-			});
+			}.start();
 	}
 
 	/**

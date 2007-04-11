@@ -23,7 +23,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
-import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 
 import org.biomart.common.resources.Log;
@@ -65,18 +64,16 @@ public class ComponentPrinter implements Printable {
 		final PrinterJob printJob = PrinterJob.getPrinterJob();
 		printJob.setPrintable(this);
 		if (printJob.printDialog())
-			LongProcess.run(new Runnable() {
-				public void run() {
+			new LongProcess() {
+				public void run() throws Exception {
 					try {
 						Log.info(Resources.get("printingImage"));
 						printJob.print();
-					} catch (final PrinterException pe) {
-						StackTrace.showStackTrace(pe);
 					} finally {
 						Log.info(Resources.get("donePrintingImage"));
 					}
 				}
-			});
+			}.start();
 	}
 
 	public int print(final Graphics g, final PageFormat pageFormat,

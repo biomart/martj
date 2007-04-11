@@ -457,6 +457,66 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Distincts a table within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to distinct the table in.
+	 * @param table
+	 *            the table to make distinct.
+	 * @throws ValidationException
+	 *             if the table could not be made distinct.
+	 */
+	public static void distinctTable(final DataSet dataset,
+			final DataSetTable table) throws ValidationException {
+		Log.info(Resources.get("logReqDistinctTable"));
+		dataset.getDataSetModifications().setDistinctTable(table);
+	}
+
+	/**
+	 * Undistincts a table within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to undistinct the table in.
+	 * @param table
+	 *            the table to undistinct.
+	 */
+	public static void undistinctTable(final DataSet dataset,
+			final DataSetTable table) {
+		Log.info(Resources.get("logReqUndistinctTable"));
+		dataset.getDataSetModifications().unsetDistinctTable(table);
+	}
+
+	/**
+	 * Removes optimisers for a given table within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to unoptimise the table in.
+	 * @param dst
+	 *            the table to unoptimise.
+	 * @throws ValidationException
+	 *             if the table could not be unoptimise.
+	 */
+	public static void unoptimiseTable(final DataSet dataset,
+			final DataSetTable dst) throws ValidationException {
+		Log.info(Resources.get("logReqUnoptimiseTable"));
+		dataset.getDataSetModifications().setNoOptimiserTable(dst);
+	}
+
+	/**
+	 * Re-optimises a table within a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to undistinct the table in.
+	 * @param dst
+	 *            the table to undistinct.
+	 */
+	public static void reoptimiseTable(final DataSet dataset,
+			final DataSetTable dst) {
+		Log.info(Resources.get("logReqReoptimiseTable"));
+		dataset.getDataSetModifications().unsetNoOptimiserTable(dst);
+	}
+
+	/**
 	 * Non-inherits all columns within a dataset. Any that cannot be
 	 * non-inherited are ignored.
 	 * 

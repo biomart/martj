@@ -18,30 +18,26 @@
 
 package org.biomart.builder.view.gui.diagrams.contexts;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Collection;
 
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
-import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
-import org.biomart.common.model.Key;
-import org.biomart.common.resources.Resources;
+import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeSchema;
+import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTable;
+import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
+import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
+import org.biomart.common.model.Column;
+import org.biomart.common.model.Relation;
+import org.biomart.common.model.Table;
 
 /**
- * This context is basically the same as {@link DataSetContext}, except it only
- * provides context menus and adaptations for {@link DataSetColumn} instances.
+ * This context is basically the same as {@link TransformationContext}, except
+ * it only provides context menus and adaptations for {@link DataSetColumn}
+ * instances.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
@@ -49,6 +45,7 @@ import org.biomart.common.resources.Resources;
  * @since 0.5
  */
 public class TransformationContext extends DataSetContext {
+
 	/**
 	 * Creates a new context that will adapt objects according to the settings
 	 * in the specified dataset.
@@ -63,218 +60,66 @@ public class TransformationContext extends DataSetContext {
 		super(martTab, dataset);
 	}
 
-	public void customiseAppearance(final JComponent component,
-			final Object object) {
+	public void customiseAppearance(final JComponent component, Object object) {
+		// Don't process fake tables.
+		if (object instanceof FakeTable || object instanceof FakeSchema)
+			return;
 
-		// Columns.
-		if (object instanceof DataSetColumn) {
-
-			// Which column is it?
-			final DataSetColumn column = (DataSetColumn) object;
-
-			// Magenta EXPRESSION columns.
-			if (column instanceof InheritedColumn)
-				component.setBackground(ColumnComponent.INHERITED_COLOUR);
-			// Fade out all MASKED columns.
-			else if (((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isMaskedColumn(column))
-				component.setBackground(ColumnComponent.MASKED_COLOUR);
-
-			// Blue PARTITIONED columns.
-			else if (((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isPartitionedColumn(column))
-				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
-
-			// Magenta EXPRESSION columns.
-			else if (column instanceof ExpressionColumn)
-				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
-
-			// Magenta CONCAT columns.
-			else if (column instanceof ConcatColumn)
-				component.setBackground(ColumnComponent.CONCAT_COLOUR);
-
-			// All others are normal.
-			else
-				component.setBackground(ColumnComponent.NORMAL_COLOUR);
-
-			((ColumnComponent) component).setRenameable(true);
-			((ColumnComponent) component).setSelectable(true);
+		// Convert tables to real tables then process.
+		else if (object instanceof RealisedTable) {
+			final Table actualTbl = ((RealisedTable)object).getTable();
+			final ExplainContext explCon = ((RealisedTable)object).getExplainContext();
+			// Call the ExplainContext method for this table.
+			explCon.customiseAppearance(component, actualTbl);
 		}
 
-		// Key?
-		else if (object instanceof Key)
-			// Remove drag-and-drop from the key as it does not apply in
-			// the window context.
-			((KeyComponent) component).setDraggable(false);
-	}
-
-	public void populateContextMenu(final JPopupMenu contextMenu,
-			final Object object) {
-
-		// Column menu goes here.
-		if (object instanceof DataSetColumn) {
-			// Add separator if the menu is not empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// Work out which column has been clicked.
-			final DataSetColumn column = (DataSetColumn) object;
-
-			// Rename the column.
-			final JMenuItem rename = new JMenuItem(Resources
-					.get("renameColumnTitle"));
-			rename.setMnemonic(Resources.get("renameColumnMnemonic").charAt(0));
-			rename.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					TransformationContext.this.getMartTab().getDataSetTabSet()
-							.requestRenameDataSetColumn(column);
-				}
-			});
-			contextMenu.add(rename);
-
-			contextMenu.addSeparator();
-
-			// Mask the column.
-			final boolean isMasked = ((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isMaskedColumn(column);
-			final boolean isPartitioned = ((DataSet) column.getTable()
-					.getSchema()).getDataSetModifications()
-					.isPartitionedColumn(column);
-			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
-					.get("maskColumnTitle"));
-			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
-			mask.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (mask.isSelected())
-						TransformationContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestMaskColumn(
-										TransformationContext.this.getDataSet(),
-										column);
-					else
-						TransformationContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestUnmaskColumn(
-										TransformationContext.this.getDataSet(),
-										column);
-				}
-			});
-			contextMenu.add(mask);
-			mask.setSelected(isMasked);
-			if (isPartitioned || column instanceof ConcatColumn
-					|| column instanceof ExpressionColumn)
-				mask.setEnabled(false);
-
-			contextMenu.addSeparator();
-
-			// If it is partitioned, make a submenu to change the partition
-			// type.
-			if (isPartitioned) {
-
-				// The option to change the partition type.
-				final JMenuItem changepartition = new JMenuItem(Resources
-						.get("changePartitionColumnTitle"), new ImageIcon(
-						Resources.getResourceAsURL("expandAll.gif")));
-				changepartition.setMnemonic(Resources.get(
-						"changePartitionColumnMnemonic").charAt(0));
-				changepartition.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						TransformationContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestPartitionByColumn(
-										TransformationContext.this.getDataSet(),
-										(DataSetTable) column.getTable(),
-										column);
-					}
-				});
-				contextMenu.add(changepartition);
-
-			}
-
-			// If it is not partitioned, allow the user to turn partitioning
-			// on.
-			else {
-
-				// Option to enable partitioning.
-				final JMenuItem partition = new JMenuItem(Resources
-						.get("partitionColumnTitle"), new ImageIcon(Resources
-						.getResourceAsURL("expandAll.gif")));
-				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
-						.charAt(0));
-				partition.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						TransformationContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestPartitionByColumn(
-										TransformationContext.this.getDataSet(),
-										(DataSetTable) column.getTable(),
-										column);
-					}
-				});
-				contextMenu.add(partition);
-				if (isMasked || column instanceof ConcatColumn
-						|| column instanceof ExpressionColumn)
-					partition.setEnabled(false);
-			}
-
-			// The option to turn off partitioning.
-			final JMenuItem unpartition = new JMenuItem(Resources
-					.get("unpartitionColumnTitle"));
-			unpartition.setMnemonic(Resources.get("unpartitionColumnMnemonic")
-					.charAt(0));
-			unpartition.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					TransformationContext.this.getMartTab().getDataSetTabSet()
-							.requestUnpartitionByColumn(
-									TransformationContext.this.getDataSet(),
-									(DataSetTable) column.getTable());
-				}
-			});
-			contextMenu.add(unpartition);
-			if (!isPartitioned)
-				unpartition.setEnabled(false);
-
-			// Else, if it's an expression column...
-			if (column instanceof ExpressionColumn) {
-
-				contextMenu.addSeparator();
-
-				// Option to modify column.
-				final JMenuItem modify = new JMenuItem(Resources
-						.get("modifyExpressionColumnTitle"));
-				modify.setMnemonic(Resources.get(
-						"modifyExpressionColumnMnemonic").charAt(0));
-				modify.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						TransformationContext.this.getMartTab()
-								.getDataSetTabSet().requestExpressionColumn(
-										(DataSetTable) column.getTable(),
-										(ExpressionColumn) column);
-					}
-				});
-				contextMenu.add(modify);
-
-				// Option to remove column.
-				final JMenuItem remove = new JMenuItem(Resources
-						.get("removeExpressionColumnTitle"));
-				remove.setMnemonic(Resources.get(
-						"removeExpressionColumnMnemonic").charAt(0));
-				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						TransformationContext.this.getMartTab()
-								.getDataSetTabSet()
-								.requestRemoveExpressionColumn(
-										(DataSetTable) column.getTable(),
-										(ExpressionColumn) column);
-					}
-				});
-				contextMenu.add(remove);
-
-			}
+		// Convert relations to real relations then process.
+		else if (object instanceof RealisedRelation) {
+			final Relation actualRel = ((RealisedRelation)object).getRelation();
+			final int actualRelIt = ((RealisedRelation)object).getRelationIteration();
+			final ExplainContext explCon = ((RealisedRelation)object).getExplainContext();
+			// Call the ExplainContext method for this relation.
+			explCon.customiseRelationAppearance(component, actualRel, actualRelIt);
 		}
+
+		// Just process everything else.
+		else
+			super.customiseAppearance(component, object);
 	}
+	
+	public void populateContextMenu(final JPopupMenu contextMenu, Object object) {
+		// Don't process fake tables.
+		if (object instanceof FakeTable || object instanceof FakeSchema)
+			return;
+
+		// Convert tables to real tables then process.
+		else if (object instanceof RealisedTable) {
+			final Table actualTbl = ((RealisedTable)object).getTable();
+			final ExplainContext explCon = ((RealisedTable)object).getExplainContext();
+			// Call the ExplainContext method for this table.
+			explCon.populateContextMenu(contextMenu, actualTbl);
+		}
+
+		// Convert relations to real relations then process.
+		else if (object instanceof RealisedRelation) {
+			final Relation actualRel = ((RealisedRelation)object).getRelation();
+			final int actualRelIt = ((RealisedRelation)object).getRelationIteration();
+			final ExplainContext explCon = ((RealisedRelation)object).getExplainContext();
+			// Call the ExplainContext method for this relation.
+			explCon.populateRelationContextMenu(contextMenu, actualRel, actualRelIt);
+		}
+
+		// Just process everything else.
+		else
+			super.populateContextMenu(contextMenu, object);
+	}
+
+	public void populateMultiContextMenu(final JPopupMenu contextMenu,
+			final Collection selectedItems, final Class clazz) {
+
+		// Don't process anything except columns.
+		if (Column.class.isAssignableFrom(clazz))
+			super.populateMultiContextMenu(contextMenu, selectedItems, clazz);
+	}
+
 }

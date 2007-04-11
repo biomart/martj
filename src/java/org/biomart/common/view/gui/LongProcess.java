@@ -20,7 +20,6 @@ package org.biomart.common.view.gui;
 
 import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.DefaultKeyboardFocusManager;
 import java.awt.KeyboardFocusManager;
 
 import javax.swing.SwingUtilities;
@@ -40,57 +39,70 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * avoid concurrent modification problems.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public abstract class LongProcess {
+
+	private static Component mainWindow;
 
 	private static final Object lockObject = "My Hourglass Lock";
 
 	private static int longProcessCount = 0;
 
-	/**
-	 * Runs the given task in the background, in a Swing-thread-safe
-	 * environment. Whilst the task is running, the hourglass is shown over the
-	 * currently active window, as specified by
-	 * {@link DefaultKeyboardFocusManager#getActiveWindow()}.
-	 * 
-	 * @param process
-	 *            the process to run.
-	 */
-	public synchronized static void run(final Runnable process) {
-		// Which window needs it?
-		final Component window = KeyboardFocusManager
-				.getCurrentKeyboardFocusManager().getFocusedWindow();
+	private static final Cursor HOURGLASS_CURSOR = new Cursor(
+			Cursor.WAIT_CURSOR);
 
-		// Update the number of processes currently running.
-		synchronized (LongProcess.lockObject) {
-			// If this is the first process to start, open the
-			// hourglass.
-			if (LongProcess.longProcessCount++ == 0)
-				try {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							final Cursor normalCursor = new Cursor(
-									Cursor.WAIT_CURSOR);
-							window.setCursor(normalCursor);
-						}
-					});
-				} catch (final Throwable t) {
-					LongProcess.longProcessCount = 0;
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
-				}
-		}
+	private static final Cursor NORMAL_CURSOR = new Cursor(
+			Cursor.DEFAULT_CURSOR);
+
+	/**
+	 * Tell the hourglass which window is the main window.
+	 * 
+	 * @param mainWindow
+	 *            the main window.
+	 */
+	public static void setMainWindow(final Component mainWindow) {
+		LongProcess.mainWindow = mainWindow;
+	}
+
+	/**
+	 * Runs the current background task as defined by {@link #run()}. Whilst
+	 * the task is running, the hourglass is shown over the currently active
+	 * window.
+	 */
+	public void start() {
+		// Which window needs the hourglass?
+		final Component visibleWindow = KeyboardFocusManager
+				.getCurrentKeyboardFocusManager().getFocusedWindow();
+		final Component window = (visibleWindow != null && visibleWindow
+				.isVisible()) ? visibleWindow : LongProcess.mainWindow;
+
 		new Thread(new Runnable() {
 			public void run() {
 				try {
-					// Let the process run.
-					SwingUtilities.invokeAndWait(process);
+					SwingUtilities.invokeAndWait(new Runnable() {
+						public void run() {
+							synchronized (LongProcess.lockObject) {
+								// If this is the first process to start, open
+								// the hourglass.
+								if (LongProcess.longProcessCount++ == 0)
+									window
+											.setCursor(LongProcess.HOURGLASS_CURSOR);
+							}
+							try {
+								// Let the process run.
+								LongProcess.this.run();
+							} catch (final Throwable t) {
+								SwingUtilities.invokeLater(new Runnable() {
+									public void run() {
+										StackTrace.showStackTrace(t);
+									}
+								});
+							}
+						}
+					});
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -99,27 +111,35 @@ public abstract class LongProcess {
 					});
 				} finally {
 					// Decrease the number of processes currently running.
-					synchronized (LongProcess.lockObject) {
-						// If that was the last one, stop the hourglass.
-						if (--LongProcess.longProcessCount == 0)
-							try {
-								SwingUtilities.invokeAndWait(new Runnable() {
-									public void run() {
-										final Cursor normalCursor = new Cursor(
-												Cursor.DEFAULT_CURSOR);
-										window.setCursor(normalCursor);
-									}
-								});
-							} catch (final Throwable t) {
-								SwingUtilities.invokeLater(new Runnable() {
-									public void run() {
-										StackTrace.showStackTrace(t);
-									}
-								});
+					try {
+						SwingUtilities.invokeAndWait(new Runnable() {
+							public void run() {
+								synchronized (LongProcess.lockObject) {
+									// If that was the last one, stop the
+									// hourglass.
+									if (--LongProcess.longProcessCount == 0)
+										window
+												.setCursor(LongProcess.NORMAL_CURSOR);
+								}
 							}
+						});
+					} catch (final Throwable t) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								StackTrace.showStackTrace(t);
+							}
+						});
 					}
 				}
 			}
 		}).start();
 	}
+
+	/**
+	 * Override this method to provide the long-process background behaviour.
+	 * 
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
+	public abstract void run() throws Exception;
 }

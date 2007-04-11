@@ -44,7 +44,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
@@ -59,8 +58,8 @@ import org.biomart.common.view.gui.LongProcess;
  * search and save it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class ViewTextDialog extends JFrame {
@@ -200,19 +199,13 @@ public class ViewTextDialog extends JFrame {
 					final File file = saver.getSelectedFile();
 					// When a file is chosen, save the file.
 					if (file != null)
-						LongProcess.run(new Runnable() {
-							public void run() {
+						new LongProcess() {
+							public void run() throws Exception {
 								FileWriter fw = null;
 								try {
 									fw = new FileWriter(file);
 									fw.write(editorPane.getText());
 									fw.flush();
-								} catch (final Throwable t) {
-									SwingUtilities.invokeLater(new Runnable() {
-										public void run() {
-											StackTrace.showStackTrace(t);
-										}
-									});
 								} finally {
 									if (fw != null)
 										try {
@@ -222,7 +215,7 @@ public class ViewTextDialog extends JFrame {
 										}
 								}
 							}
-						});
+						}.start();
 				}
 			}
 		});
@@ -235,19 +228,11 @@ public class ViewTextDialog extends JFrame {
 				.getResourceAsURL("print.gif")));
 		printButton.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				LongProcess.run(new Runnable() {
-					public void run() {
-						try {
-							(new ComponentPrinter(editorPane)).print();
-						} catch (final Throwable t) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									StackTrace.showStackTrace(t);
-								}
-							});
-						}
+				new LongProcess() {
+					public void run() throws Exception {
+						(new ComponentPrinter(editorPane)).print();
 					}
-				});
+				}.start();
 			}
 		});
 		toolBarPane.add(printButton);

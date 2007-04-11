@@ -787,6 +787,24 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 			}
 
+			// Write out distinct tables inside dataset. Can go before or
+			// after.
+			for (final Iterator x = dsMods.getDistinctTables().iterator(); x
+					.hasNext();) {
+				this.openElement("distinctRows", xmlWriter);
+				this.writeAttribute("tableKey", (String) x.next(), xmlWriter);
+				this.closeElement("distinctRows", xmlWriter);
+			}
+
+			// Write out optimiserless tables inside dataset. Can go before or
+			// after.
+			for (final Iterator x = dsMods.getNoOptimiserTables().iterator(); x
+					.hasNext();) {
+				this.openElement("noOptimiserColumns", xmlWriter);
+				this.writeAttribute("tableKey", (String) x.next(), xmlWriter);
+				this.closeElement("noOptimiserColumns", xmlWriter);
+			}
+
 			// Write out masked tables inside dataset. Can go before or
 			// after.
 			for (final Iterator x = dsMods.getMaskedTables().iterator(); x
@@ -1519,6 +1537,48 @@ public class MartBuilderXML extends DefaultHandler {
 				// Mask it.
 				if (rel != null)
 					w.getSchemaModifications().getMergedRelations().add(rel);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Distinct Table (inside dataset).
+		else if ("distinctRows".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("distinctRowsOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Mask it.
+				if (tableKey != null)
+					w.getDataSetModifications().getDistinctTables().add(tableKey);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Optimiserless Table (inside dataset).
+		else if ("noOptimiserColumns".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("noOptColsOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Mask it.
+				if (tableKey != null)
+					w.getDataSetModifications().getNoOptimiserTables().add(tableKey);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

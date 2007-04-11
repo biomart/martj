@@ -70,6 +70,9 @@ public abstract class BioMartGUI extends JFrame {
 				.setProperty("com.apple.mrj.application.growbox.intrudes",
 						"false");
 		System.setProperty("com.apple.mrj.application.live-resize", "true");
+		
+		// Attach ourselves as the main window for hourglass use.
+		LongProcess.setMainWindow(this);
 
 		// Load our cache of settings.
 		Settings.load();

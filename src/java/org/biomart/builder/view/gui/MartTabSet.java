@@ -333,64 +333,52 @@ public class MartTabSet extends JTabbedPane {
 			// If they selected any at all, load them in turn.
 			if (loadFiles != null)
 				// In the background, load them in turn.
-				LongProcess.run(new Runnable() {
-					public void run() {
-						try {
-							// Do we need to close the existing unsaved
-							// unmodified default tab?
-							MartTab defaultTab = MartTabSet.this
-									.getSelectedMartTab();
-							int defaultIndex = MartTabSet.this
-									.getSelectedIndex();
-							if (MartTabSet.this.getComponentCount() > 1
-									|| defaultTab != null
-									&& !MartTabSet.this
-											.getTitleAt(defaultIndex)
-											.equals(
-													Resources
-															.get("unsavedMart")))
-								defaultTab = null;
+				new LongProcess() {
+					public void run() throws Exception {
+						// Do we need to close the existing unsaved
+						// unmodified default tab?
+						MartTab defaultTab = MartTabSet.this
+								.getSelectedMartTab();
+						int defaultIndex = MartTabSet.this.getSelectedIndex();
+						if (MartTabSet.this.getComponentCount() > 1
+								|| defaultTab != null
+								&& !MartTabSet.this.getTitleAt(defaultIndex)
+										.equals(Resources.get("unsavedMart")))
+							defaultTab = null;
 
-							// Load the files.
-							for (int i = 0; i < loadFiles.length; i++) {
-								final File file = loadFiles[i];
-								final Mart mart = MartBuilderXML.load(file);
-								MartTabSet.this.addMartTab(mart, file);
-								// Save XML filename in history of accessed
-								// files.
-								final Properties history = new Properties();
-								history.setProperty("location", file.getPath());
-								Settings.saveHistoryProperties(
-										MartTabSet.class, MartTabSet.this
-												.suggestTabName(mart, false),
-										history);
-							}
+						// Load the files.
+						for (int i = 0; i < loadFiles.length; i++) {
+							final File file = loadFiles[i];
+							final Mart mart = MartBuilderXML.load(file);
+							MartTabSet.this.addMartTab(mart, file);
+							// Save XML filename in history of accessed
+							// files.
+							final Properties history = new Properties();
+							history.setProperty("location", file.getPath());
+							Settings
+									.saveHistoryProperties(MartTabSet.class,
+											MartTabSet.this.suggestTabName(
+													mart, false), history);
+						}
 
-							// Finally, remove the unsaved default tab if
-							// we need to.
-							if (defaultTab != null) {
-								// Remove the tab.
-								MartTabSet.this.removeTabAt(defaultIndex);
+						// Finally, remove the unsaved default tab if
+						// we need to.
+						if (defaultTab != null) {
+							// Remove the tab.
+							MartTabSet.this.removeTabAt(defaultIndex);
 
-								// Remove the mart from the modified map.
-								MartTabSet.this.martModifiedStatus
-										.remove(defaultTab.getMart());
+							// Remove the mart from the modified map.
+							MartTabSet.this.martModifiedStatus
+									.remove(defaultTab.getMart());
 
-								// Remove the XML file the mart came from from
-								// the file map.
-								MartTabSet.this.martXMLFile.remove(defaultTab
-										.getMart());
+							// Remove the XML file the mart came from from
+							// the file map.
+							MartTabSet.this.martXMLFile.remove(defaultTab
+									.getMart());
 
-							}
-						} catch (final Throwable t) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									StackTrace.showStackTrace(t);
-								}
-							});
 						}
 					}
-				});
+				}.start();
 		}
 	}
 
@@ -406,55 +394,45 @@ public class MartTabSet extends JTabbedPane {
 	public void requestLoadMart(final File file) {
 		// Open the file chooser.
 		// In the background, load them in turn.
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Do we need to close the existing unsaved
-					// unmodified default tab?
-					MartTab defaultTab = MartTabSet.this.getSelectedMartTab();
-					int defaultIndex = MartTabSet.this.getSelectedIndex();
-					if (MartTabSet.this.getComponentCount() > 1
-							|| defaultTab != null
-							&& !MartTabSet.this.getTitleAt(defaultIndex)
-									.equals(Resources.get("unsavedMart")))
-						defaultTab = null;
+		new LongProcess() {
+			public void run() throws Exception {
+				// Do we need to close the existing unsaved
+				// unmodified default tab?
+				MartTab defaultTab = MartTabSet.this.getSelectedMartTab();
+				int defaultIndex = MartTabSet.this.getSelectedIndex();
+				if (MartTabSet.this.getComponentCount() > 1
+						|| defaultTab != null
+						&& !MartTabSet.this.getTitleAt(defaultIndex).equals(
+								Resources.get("unsavedMart")))
+					defaultTab = null;
 
-					// Load the files.
-					final Mart mart = MartBuilderXML.load(file);
-					MartTabSet.this.addMartTab(mart, file);
-					// Save XML filename in history of accessed
-					// files.
-					final Properties history = new Properties();
-					history.setProperty("location", file.getPath());
-					Settings.saveHistoryProperties(MartTabSet.class,
-							MartTabSet.this.suggestTabName(mart, false),
-							history);
+				// Load the files.
+				final Mart mart = MartBuilderXML.load(file);
+				MartTabSet.this.addMartTab(mart, file);
+				// Save XML filename in history of accessed
+				// files.
+				final Properties history = new Properties();
+				history.setProperty("location", file.getPath());
+				Settings.saveHistoryProperties(MartTabSet.class,
+						MartTabSet.this.suggestTabName(mart, false), history);
 
-					// Finally, remove the unsaved default tab if
-					// we need to.
-					if (defaultTab != null) {
-						// Remove the tab.
-						MartTabSet.this.removeTabAt(defaultIndex);
+				// Finally, remove the unsaved default tab if
+				// we need to.
+				if (defaultTab != null) {
+					// Remove the tab.
+					MartTabSet.this.removeTabAt(defaultIndex);
 
-						// Remove the mart from the modified map.
-						MartTabSet.this.martModifiedStatus.remove(defaultTab
-								.getMart());
+					// Remove the mart from the modified map.
+					MartTabSet.this.martModifiedStatus.remove(defaultTab
+							.getMart());
 
-						// Remove the XML file the mart came from from
-						// the file map.
-						MartTabSet.this.martXMLFile
-								.remove(defaultTab.getMart());
+					// Remove the XML file the mart came from from
+					// the file map.
+					MartTabSet.this.martXMLFile.remove(defaultTab.getMart());
 
-					}
-				} catch (final Throwable t) {
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							StackTrace.showStackTrace(t);
-						}
-					});
 				}
 			}
-		});
+		}.start();
 	}
 
 	/**
@@ -488,25 +466,20 @@ public class MartTabSet extends JTabbedPane {
 		// Work out the current selected mart.
 		final MartTab currentMartTab = this.getSelectedMartTab();
 
-		LongProcess.run(new Runnable() {
-			public void run() {
-				try {
-					// Write the report.
-					final String report = MartBuilderXML
-							.saveReport(currentMartTab.getMart());
-					// Open the DDL creation dialog and let it do it's stuff.
-					SwingUtilities.invokeLater(new Runnable() {
-						public void run() {
-							ViewTextDialog.displayText(Resources
-									.get("martReportWindowTitle"), report);
-						}
-					});
-				} catch (final Throwable t) {
-					StackTrace.showStackTrace(t);
-					return;
-				}
+		new LongProcess() {
+			public void run() throws Exception {
+				// Write the report.
+				final String report = MartBuilderXML.saveReport(currentMartTab
+						.getMart());
+				// Open the DDL creation dialog and let it do it's stuff.
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						ViewTextDialog.displayText(Resources
+								.get("martReportWindowTitle"), report);
+					}
+				});
 			}
-		});
+		}.start();
 	}
 
 	/**
@@ -684,26 +657,19 @@ public class MartTabSet extends JTabbedPane {
 			this.requestSaveMartAs();
 		else
 			// Save it in the background to the existing file.
-			LongProcess.run(new Runnable() {
-				public void run() {
-					try {
-						// Save it.
-						MartBuilderXML.save(currentMart,
-								(File) MartTabSet.this.martXMLFile
-										.get(currentMart));
-						// We're not modified any more! But
-						// this shouldn't get executed if save
-						// fails - hence no finally block.
-						MartTabSet.this.requestChangeModifiedStatus(false);
-					} catch (final Throwable t) {
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								StackTrace.showStackTrace(t);
-							}
-						});
-					}
+			new LongProcess() {
+				public void run() throws Exception {
+					// Save it.
+					MartBuilderXML
+							.save(currentMart,
+									(File) MartTabSet.this.martXMLFile
+											.get(currentMart));
+					// We're not modified any more! But
+					// this shouldn't get executed if save
+					// fails - hence no finally block.
+					MartTabSet.this.requestChangeModifiedStatus(false);
 				}
-			});
+			}.start();
 	}
 
 	/**

@@ -53,6 +53,10 @@ public class DataSetModificationSet {
 
 	private final Map renamedColumns = new HashMap();
 
+	private final Collection distinctTables = new HashSet();
+
+	private final Collection noOptimiserTables = new HashSet();
+
 	private final Collection maskedTables = new HashSet();
 
 	private final Map maskedColumns = new HashMap();
@@ -363,6 +367,86 @@ public class DataSetModificationSet {
 	}
 
 	/**
+	 * Distinct the table.
+	 * 
+	 * @param table
+	 *            the table.
+	 */
+	public void setDistinctTable(final DataSetTable table) {
+		this.distinctTables.add(table.getName());
+	}
+
+	/**
+	 * Undistinct the table.
+	 * 
+	 * @param table
+	 *            the table.
+	 */
+	public void unsetDistinctTable(final DataSetTable table) {
+		this.distinctTables.remove(table.getName());
+	}
+
+	/**
+	 * Is the table distinct?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isDistinctTable(final DataSetTable table) {
+		return this.distinctTables.contains(table.getName());
+	}
+
+	/**
+	 * Get a collection of all distinct table names.
+	 * 
+	 * @return the collection.
+	 */
+	public Collection getDistinctTables() {
+		return this.distinctTables;
+	}
+
+	/**
+	 * Unoptimise the table.
+	 * 
+	 * @param table
+	 *            the table.
+	 */
+	public void setNoOptimiserTable(final DataSetTable table) {
+		this.noOptimiserTables.add(table.getName());
+	}
+
+	/**
+	 * Reoptimise the table.
+	 * 
+	 * @param table
+	 *            the table.
+	 */
+	public void unsetNoOptimiserTable(final DataSetTable table) {
+		this.noOptimiserTables.remove(table.getName());
+	}
+
+	/**
+	 * Is the table unoptimised?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isNoOptimiserTable(final DataSetTable table) {
+		return this.noOptimiserTables.contains(table.getName());
+	}
+
+	/**
+	 * Get a collection of all unoptimised table names.
+	 * 
+	 * @return the collection.
+	 */
+	public Collection getNoOptimiserTables() {
+		return this.noOptimiserTables;
+	}
+
+	/**
 	 * Renames the column.
 	 * 
 	 * @param col
@@ -648,6 +732,10 @@ public class DataSetModificationSet {
 		target.indexedColumns.putAll(this.indexedColumns);
 		target.maskedTables.clear();
 		target.maskedTables.addAll(this.maskedTables);
+		target.distinctTables.clear();
+		target.distinctTables.addAll(this.distinctTables);
+		target.noOptimiserTables.clear();
+		target.noOptimiserTables.addAll(this.noOptimiserTables);
 		target.expressionColumns.clear();
 		target.expressionColumns.putAll(this.expressionColumns);
 		target.nonInheritedColumns.clear();
@@ -949,6 +1037,16 @@ public class DataSetModificationSet {
 				.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
 			if (this.ds.getTableByName((String) entry.getKey()) == null)
+				i.remove();
+		}
+		for (final Iterator i = this.distinctTables.iterator(); i.hasNext();) {
+			final String tbl = (String) i.next();
+			if (this.ds.getTableByName(tbl) == null)
+				i.remove();
+		}
+		for (final Iterator i = this.noOptimiserTables.iterator(); i.hasNext();) {
+			final String tbl = (String) i.next();
+			if (this.ds.getTableByName(tbl) == null)
 				i.remove();
 		}
 		for (final Iterator i = this.maskedTables.iterator(); i.hasNext();) {
