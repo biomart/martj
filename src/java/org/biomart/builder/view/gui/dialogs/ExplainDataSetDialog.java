@@ -85,8 +85,6 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 		final JPanel content = new JPanel(new BorderLayout());
 
 		// The content pane is the schema tab set with an explain context.
-		final ExplainContext context = new ExplainContext(martTab, this.dataset);
-		this.schemaTabSet.setDiagramContext(context);
 		content.add(this.schemaTabSet, BorderLayout.CENTER);
 		// Must be set visible as previous display location is invisible.
 		this.schemaTabSet.setVisible(true);
@@ -108,6 +106,9 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 		// Move ourselves.
 		this.setLocationRelativeTo(null);
+		
+		// Calculate the schema tabset.
+		this.recalculateDialog(null);
 	}
 
 	public void recalculateDialog(final Object changedObject) {

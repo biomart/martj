@@ -73,23 +73,25 @@ public abstract class LongProcess {
 	 * window.
 	 */
 	public void start() {
-		// Which window needs the hourglass?
-		final Component visibleWindow = KeyboardFocusManager
-				.getCurrentKeyboardFocusManager().getFocusedWindow();
-		final Component window = (visibleWindow != null && visibleWindow
-				.isVisible()) ? visibleWindow : LongProcess.mainWindow;
 
 		new Thread(new Runnable() {
 			public void run() {
+				// Which window needs the hourglass?
+				final Component window = KeyboardFocusManager
+						.getCurrentKeyboardFocusManager().getFocusedWindow();
 				try {
 					SwingUtilities.invokeAndWait(new Runnable() {
 						public void run() {
 							synchronized (LongProcess.lockObject) {
-								// If this is the first process to start, open
-								// the hourglass.
-								if (LongProcess.longProcessCount++ == 0)
-									window
-											.setCursor(LongProcess.HOURGLASS_CURSOR);
+								// Open the hourglass.
+								if (LongProcess.longProcessCount++ == 0) {
+									if (window != null)
+										window
+												.setCursor(LongProcess.HOURGLASS_CURSOR);
+									if (!LongProcess.mainWindow.equals(window))
+										LongProcess.mainWindow
+												.setCursor(LongProcess.HOURGLASS_CURSOR);
+								}
 							}
 							try {
 								// Let the process run.
@@ -117,9 +119,15 @@ public abstract class LongProcess {
 								synchronized (LongProcess.lockObject) {
 									// If that was the last one, stop the
 									// hourglass.
-									if (--LongProcess.longProcessCount == 0)
-										window
-												.setCursor(LongProcess.NORMAL_CURSOR);
+									if (--LongProcess.longProcessCount <= 0) {
+										if (window != null)
+											window
+													.setCursor(LongProcess.NORMAL_CURSOR);
+										if (!LongProcess.mainWindow
+												.equals(window))
+											LongProcess.mainWindow
+													.setCursor(LongProcess.NORMAL_CURSOR);
+									}
 								}
 							}
 						});

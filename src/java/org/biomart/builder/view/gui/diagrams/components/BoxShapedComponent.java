@@ -193,7 +193,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	protected void paintBorder(final Graphics g) {
 		final Graphics2D g2d = (Graphics2D) g;
 		// Override the stroke so that we get dotted outlines when appropriate.
-		g2d.setStroke(this.stroke);
+		if (this.stroke!=null)
+			g2d.setStroke(this.stroke);
 		super.paintBorder(g2d);
 	}
 

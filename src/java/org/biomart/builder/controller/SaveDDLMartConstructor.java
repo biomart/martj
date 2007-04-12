@@ -445,6 +445,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				final Object data, final MartConstructorAction action)
 				throws Exception {
 			if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
+				Log.debug("Starting MartRunner job definition");
 				// Open the host socket.
 				this.socket = new Socket(this.outputHost, Integer
 						.parseInt(this.outputPort));
@@ -452,6 +453,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.job = MartRunnerProtocol.Client.requestNewJob(this.socket);
 				MartRunnerProtocol.Client.beginJob(this.socket, this.job);
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
+				Log.debug("Finished MartRunner job definition");
 				// Write the closing message to the socket.
 				MartRunnerProtocol.Client.endJob(this.socket, this.job);
 				// Close the socket to the host.

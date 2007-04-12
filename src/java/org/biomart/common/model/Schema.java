@@ -834,6 +834,7 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public Map getPartitions() throws SQLException {
+			Log.debug("Looking up JDBC catalogs");
 			if (this.getPartitionRegex() == null)
 				return Collections.EMPTY_MAP;
 			// Valid regex?
@@ -868,7 +869,8 @@ public interface Schema extends Comparable, DataLink {
 			} finally {
 				rs.close();
 			}
-			if (partitions.isEmpty()) {
+			if (partitions.isEmpty()) {			
+				Log.debug("Looking up JDBC schemas instead");
 				// Did we get no catalogs? Try schemas instead.
 				rs = conn.getMetaData().getSchemas();
 				try {

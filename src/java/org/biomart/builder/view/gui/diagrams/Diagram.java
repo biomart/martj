@@ -69,6 +69,7 @@ import org.biomart.common.model.Table;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.InverseMap;
+import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.ComponentImageSaver;
 import org.biomart.common.view.gui.dialogs.ComponentPrinter;
 
@@ -630,42 +631,48 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	public void recalculateDiagram() {
 		Log.debug("Recalculating diagram");
-		this.deselectAll();
-		// Remember all the existing diagram component states.
-		final Map states = new HashMap();
-		for (final Iterator i = this.componentMap.entrySet().iterator(); i
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			final Object object = entry.getKey();
-			final DiagramComponent comp = (DiagramComponent) entry.getValue();
+		new LongProcess() {
+			public void run() throws Exception {
+				Diagram.this.deselectAll();
+				// Remember all the existing diagram component states.
+				final Map states = new HashMap();
+				for (final Iterator i = Diagram.this.componentMap.entrySet()
+						.iterator(); i.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					final Object object = entry.getKey();
+					final DiagramComponent comp = (DiagramComponent) entry
+							.getValue();
 
-			// If the component actually exists, which it may not if the
-			// diagram has been dynamically updated elsewhere, remember the
-			// state, else remove the current component because it is not
-			// relevant.
-			if (comp != null)
-				states.put(object, comp.getState());
-			else
-				i.remove();
-		}
+					// If the component actually exists, which it may not if the
+					// diagram has been dynamically updated elsewhere, remember
+					// the state, else remove the current component because it is
+					// not relevant.
+					if (comp != null)
+						states.put(object, comp.getState());
+					else
+						i.remove();
+				}
 
-		// Delegate to do the actual diagram clear-and-repopulate.
-		this.doRecalculateDiagram();
+				// Delegate to do the actual diagram clear-and-repopulate.
+				Diagram.this.doRecalculateDiagram();
 
-		// Reapply all the states. The methods of the Map interface use equals()
-		// to compare objects, so any objects in the new diagram which match
-		// the old objects in the old diagram will inherit the state from the
-		// old objects.
-		for (final Iterator i = states.entrySet().iterator(); i.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			final Object object = entry.getKey();
-			final DiagramComponent comp = (DiagramComponent) this.componentMap
-					.get(object);
-			if (comp != null)
-				comp.setState(entry.getValue());
-		}
-		// Resize the diagram to fit the components.
-		this.repaintDiagram();
+				// Reapply all the states. The methods of the Map interface use
+				// equals() to compare objects, so any objects in the new diagram
+				// which match the old objects in the old diagram will inherit
+				// the state from the old objects.
+				for (final Iterator i = states.entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					final Object object = entry.getKey();
+					final DiagramComponent comp = (DiagramComponent) Diagram.this.componentMap
+							.get(object);
+					if (comp != null)
+						comp.setState(entry.getValue());
+				}
+				// Resize the diagram to fit the components.
+				Diagram.this.repaintDiagram();
+			}
+		}.start();
 	}
 
 	/**
@@ -681,9 +688,13 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * on a table). Use {@link #recalculateDiagram()} instead.
 	 */
 	public void repaintDiagram() {
-		for (final Iterator i = this.componentMap.values().iterator(); i
-				.hasNext();)
-			((DiagramComponent) i.next()).repaintDiagramComponent();
+		new LongProcess() {
+			public void run() throws Exception {
+				for (final Iterator i = Diagram.this.componentMap.values()
+						.iterator(); i.hasNext();)
+					((DiagramComponent) i.next()).repaintDiagramComponent();
+			}
+		}.start();
 	}
 
 	/**

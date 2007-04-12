@@ -247,6 +247,7 @@ public interface MartConstructor {
 		 */
 		private void makeActionsForDataset(final DataSet dataset,
 				final int totalDataSetCount) throws Exception {
+			Log.debug("Making actions for dataset " + dataset);
 			// Check not cancelled.
 			this.checkCancelled();
 
@@ -256,6 +257,7 @@ public interface MartConstructor {
 			// Is it partitioned?
 			Collection partitions = templateSchema.getPartitions().entrySet();
 			if (partitions.isEmpty()) {
+				Log.debug("Using dummy empty partition");
 				partitions = new ArrayList();
 				partitions.add(new Map.Entry() {
 					public Object getKey() {
@@ -287,6 +289,7 @@ public interface MartConstructor {
 				// Clear out optimiser col names so that they start
 				// again on this partition.
 				this.uniqueOptCols.clear();
+				Log.debug("Starting partition " + partition);
 				this.issueListenerEvent(
 						MartConstructorListener.PARTITION_STARTED, partition
 								.getKey());
@@ -307,10 +310,12 @@ public interface MartConstructor {
 						MartConstructorListener.PARTITION_ENDED, partition
 								.getKey());
 			}
+			Log.debug("Finished dataset " + dataset);
 		}
 
 		private List getTablesToProcess(final DataSet dataset)
 				throws ValidationException {
+			Log.debug("Creating ordered list of tables for dataset " + dataset);
 			// Create a list in the order by which we want to process tables.
 			final List tablesToProcess = new ArrayList();
 			// Main table first.
@@ -393,6 +398,7 @@ public interface MartConstructor {
 				final String schemaPartition, final String schemaPrefix,
 				final DataSet dataset, final DataSetTable dsTable)
 				throws Exception {
+			Log.debug("Creating actions for table " + dsTable);
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsTable, GenericConstructorRunnable.NO_PARTITION);
 			final String tempName = "TEMP";
@@ -1468,6 +1474,8 @@ public interface MartConstructor {
 
 		private void issueListenerEvent(final int event, final Object data,
 				final MartConstructorAction action) throws Exception {
+			Log.debug("Event issued: event:" + event + " data:" + data
+					+ " action:" + action);
 			for (final Iterator i = this.martConstructorListeners.iterator(); i
 					.hasNext();)
 				((MartConstructorListener) i.next())
@@ -1511,6 +1519,7 @@ public interface MartConstructor {
 				}
 
 				// Begin.
+				Log.debug("Construction started");
 				this
 						.issueListenerEvent(MartConstructorListener.CONSTRUCTION_STARTED);
 
@@ -1520,14 +1529,15 @@ public interface MartConstructor {
 				// Loop over each mart.
 				for (final Iterator j = martDataSets.values().iterator(); j
 						.hasNext();) {
+					final Collection dsGroup = (Collection) j.next();
 					this
 							.issueListenerEvent(MartConstructorListener.MART_STARTED);
 
 					try {
 						// Loop over all the datasets we want included from this
 						// mart. Build actions for each one.
-						for (final Iterator i = ((Collection) j.next())
-								.iterator(); i.hasNext();) {
+						Log.debug("Dataset group started: " + dsGroup);
+						for (final Iterator i = dsGroup.iterator(); i.hasNext();) {
 							final DataSet ds = (DataSet) i.next();
 							try {
 								this
@@ -1548,6 +1558,7 @@ public interface MartConstructor {
 							}
 						}
 					} finally {
+						Log.debug("All done");
 						this
 								.issueListenerEvent(MartConstructorListener.MART_ENDED);
 					}

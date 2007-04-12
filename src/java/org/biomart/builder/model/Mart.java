@@ -63,9 +63,9 @@ public class Mart {
 	private final Map schemas = new TreeMap();
 
 	private String outputSchema = null;
-	
+
 	private String outputHost = null;
-	
+
 	private String outputPort = null;
 
 	/**
@@ -98,8 +98,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, sets the default target host this mart will output dataset
-	 * DDL to later.
+	 * Optional, sets the default target host this mart will output dataset DDL
+	 * to later.
 	 * 
 	 * @param outputHost
 	 *            the target host.
@@ -109,8 +109,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, gets the default target host this mart will output dataset
-	 * DDL to later.
+	 * Optional, gets the default target host this mart will output dataset DDL
+	 * to later.
 	 * 
 	 * @return the target host.
 	 */
@@ -119,8 +119,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, sets the default target port this mart will output dataset
-	 * DDL to later.
+	 * Optional, sets the default target port this mart will output dataset DDL
+	 * to later.
 	 * 
 	 * @param outputPort
 	 *            the target port.
@@ -130,8 +130,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, gets the default target port this mart will output dataset
-	 * DDL to later.
+	 * Optional, gets the default target port this mart will output dataset DDL
+	 * to later.
 	 * 
 	 * @return the target port.
 	 */
@@ -530,11 +530,34 @@ public class Mart {
 			for (final Iterator j = candidate.getSchemaModifications()
 					.getSubclassedRelations().iterator(); j.hasNext();) {
 				final Relation r = (Relation) j.next();
-				scTables.add(r.getFirstKey().getTable());
-				scTables.add(r.getSecondKey().getTable());
+				final Table t1 = r.getFirstKey().getTable();
+				final Table t2 = r.getSecondKey().getTable();
+				// Expand this to include all tables included by M:1/1:1/M:M
+				// relations from the actual subclassed tables. This will bring
+				// in all those available via 1:M:1 relations.
+				if (scTables.add(t1))
+					for (final Iterator k = t1.getRelations().iterator(); k
+							.hasNext();) {
+						final Relation r1 = (Relation) k.next();
+						if (r1.isOneToMany()
+								&& r1.getOneKey().getTable().equals(t1))
+							continue;
+						scTables.add(r1.getOtherKey(r1.getKeyForTable(t1))
+								.getTable());
+					}
+				if (scTables.add(t2))
+					for (final Iterator k = t2.getRelations().iterator(); k
+							.hasNext();) {
+						final Relation r2 = (Relation) k.next();
+						if (r2.isOneToMany()
+								&& r2.getOneKey().getTable().equals(t2))
+							continue;
+						scTables.add(r2.getOtherKey(r2.getKeyForTable(t2))
+								.getTable());
+					}
 			}
-			if (scTables.size() == includeTables.size()
-					&& scTables.containsAll(includeTables))
+			// Finally perform the check to see if we have them all.
+			if (scTables.containsAll(includeTables))
 				perfectDS = candidate;
 		}
 		if (perfectDS != null) {

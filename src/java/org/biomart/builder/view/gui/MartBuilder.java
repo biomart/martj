@@ -151,8 +151,6 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem subclassOptimiser;
 
-		private JMenuItem aboutMartBuilder;
-
 		/**
 		 * Constructor calls super then sets up our menu items.
 		 * 
@@ -161,7 +159,9 @@ public class MartBuilder extends BioMartGUI {
 		 */
 		public MartBuilderMenuBar(final MartBuilder martBuilder) {
 			super(martBuilder);
-
+		}
+		
+		protected void buildMenus() {
 			// New mart.
 			this.newMart = new JMenuItem(Resources.get("newMartTitle"),
 					new ImageIcon(Resources.getResourceAsURL("new.gif")));
@@ -357,10 +357,10 @@ public class MartBuilder extends BioMartGUI {
 						Resources.get("optimiser" + name + "Title"));
 				opt.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						final DataSet ds = martBuilder.martTabSet
+						final DataSet ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet
 								.getSelectedMartTab().getDataSetTabSet()
 								.getSelectedDataSet();
-						martBuilder.martTabSet.getSelectedMartTab()
+						MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 								.getDataSetTabSet().requestChangeOptimiserType(
 										ds, value);
 					}
@@ -381,13 +381,6 @@ public class MartBuilder extends BioMartGUI {
 					"subclassOptimiserMnemonic").charAt(0));
 			this.subclassOptimiser.addActionListener(this);
 			this.optimiseDatasetSubmenu.add(this.subclassOptimiser);
-
-			// About.
-			this.aboutMartBuilder = new JMenuItem(Resources
-					.get("aboutMartBuilderTitle"));
-			this.aboutMartBuilder.setMnemonic(Resources.get(
-					"aboutMartBuilderMnemonic").charAt(0));
-			this.aboutMartBuilder.addActionListener(this);
 
 			// Construct the mart menu.
 			final JMenu martMenu = new JMenu(Resources.get("martMenuTitle"));
@@ -441,11 +434,6 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.extendDataset);
 
-			// Construct the help menu.
-			final JMenu helpMenu = new JMenu(Resources.get("helpMenuTitle"));
-			helpMenu.setMnemonic(Resources.get("helpMenuMnemonic").charAt(0));
-			helpMenu.add(this.aboutMartBuilder);
-
 			// Add a listener which checks which options to enable each time the
 			// menu is opened. This mean that if no mart is currently selected,
 			// save and close will be disabled, and if the current mart is not
@@ -459,16 +447,16 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
-					if (martBuilder.martTabSet.getSelectedMartTab() == null)
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() == null)
 						hasMart = false;
 					MartBuilderMenuBar.this.saveMart.setEnabled(hasMart
-							&& martBuilder.martTabSet.getModifiedStatus());
+							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getModifiedStatus());
 					MartBuilderMenuBar.this.saveMartAs.setEnabled(hasMart);
 					MartBuilderMenuBar.this.saveDDL.setEnabled(hasMart
-							&& martBuilder.martTabSet.getSelectedMartTab()
+							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 									.getMart().getDataSets().size() > 0);
 					MartBuilderMenuBar.this.martReport.setEnabled(hasMart
-							&& martBuilder.martTabSet.getSelectedMartTab()
+							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 									.getMart().getDataSets().size() > 0);
 					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
 					// Wipe from the separator to the last non-separator/
@@ -494,7 +482,7 @@ public class MartBuilder extends BioMartGUI {
 						file.setMnemonic(("" + position).charAt(0));
 						file.addActionListener(new ActionListener() {
 							public void actionPerformed(final ActionEvent evt) {
-								martBuilder.martTabSet
+								MartBuilderMenuBar.this.getMartBuilder().martTabSet
 										.requestLoadMart(location);
 							}
 						});
@@ -511,17 +499,17 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
-					if (martBuilder.martTabSet.getSelectedMartTab() == null)
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() == null)
 						hasMart = false;
 					final Schema schema;
 					if (hasMart)
-						schema = martBuilder.martTabSet.getSelectedMartTab()
+						schema = MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 								.getSchemaTabSet().getSelectedSchema();
 					else
 						schema = null;
 					MartBuilderMenuBar.this.addSchema.setEnabled(hasMart);
 					MartBuilderMenuBar.this.updateAllSchemas.setEnabled(hasMart
-							&& martBuilder.martTabSet.getSelectedMartTab()
+							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 									.getSchemaTabSet().getComponentCount() > 1);
 					MartBuilderMenuBar.this.keyguessingSchema
 							.setEnabled(schema != null);
@@ -552,20 +540,20 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
-					if (martBuilder.martTabSet.getSelectedMartTab() == null)
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() == null)
 						hasMart = false;
 					MartBuilderMenuBar.this.createDatasets.setEnabled(hasMart
-							&& martBuilder.martTabSet.getSelectedMartTab()
+							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 									.getSchemaTabSet().getComponentCount() > 1);
 					MartBuilderMenuBar.this.removeAllDatasets
 							.setEnabled(hasMart
-									&& martBuilder.martTabSet
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab()
 											.getDataSetTabSet()
 											.getComponentCount() > 1);
 					final DataSet ds;
 					if (hasMart)
-						ds = martBuilder.martTabSet.getSelectedMartTab()
+						ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 								.getDataSetTabSet().getSelectedDataSet();
 					else
 						ds = null;
@@ -598,8 +586,8 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					final DataSet ds;
-					if (martBuilder.martTabSet.getSelectedMartTab() != null)
-						ds = martBuilder.martTabSet.getSelectedMartTab()
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() != null)
+						ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
 								.getDataSetTabSet().getSelectedDataSet();
 					else
 						ds = null;
@@ -627,7 +615,10 @@ public class MartBuilder extends BioMartGUI {
 			this.add(martMenu);
 			this.add(schemaMenu);
 			this.add(datasetMenu);
-			this.add(helpMenu);
+		}
+		
+		private MartBuilder getMartBuilder() {
+			return (MartBuilder)this.getBioMartGUI();
 		}
 
 		public void actionPerformed(final ActionEvent e) {
@@ -773,9 +764,6 @@ public class MartBuilder extends BioMartGUI {
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestNoSubclassOptimiser(ds);
 			}
-			// Help menu
-			else if (e.getSource() == this.aboutMartBuilder)
-				this.getMartBuilder().requestShowAbout();
 			// Others
 			else
 				super.actionPerformed(e);

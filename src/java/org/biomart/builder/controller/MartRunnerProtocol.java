@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 import org.biomart.builder.exceptions.ProtocolException;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -64,6 +65,7 @@ public class MartRunnerProtocol {
 		} catch (final IOException e) {
 			throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 		}
+		Log.debug("Received command: "+command);
 		// What do they want us to do?
 		if (command.equals(MartRunnerProtocol.REQUEST_NEW_JOB))
 			MartRunnerProtocol.handleRequestNewJob(clientSocket, bis);
@@ -72,6 +74,8 @@ public class MartRunnerProtocol {
 		else if (command.equals(MartRunnerProtocol.END_JOB))
 			MartRunnerProtocol.handleEndJob(clientSocket, bis);
 		// TODO The rest of the protocol!
+		else
+			Log.debug("Command unrecognised, ignoring");
 	}
 
 	private static void handleRequestNewJob(final Socket clientSocket,

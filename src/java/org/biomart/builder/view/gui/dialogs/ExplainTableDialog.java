@@ -59,6 +59,7 @@ import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.LongProcess;
 
 /**
  * This simple dialog explains a table by drawing a series of diagrams of the
@@ -119,8 +120,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	private TransformationContext transformationContext;
 
-	private ExplainContext explainContext;
-
 	private ExplainTableDialog(final MartTab martTab, final DataSetTable dsTable) {
 		// Create the blank dialog, and give it an appropriate title.
 		super();
@@ -135,10 +134,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
 
-		// Compute the overview diagram, and assign it the
-		// appropriate context.
-		this.explainContext = new ExplainContext(martTab, dsTable);
-		this.schemaTabSet.setDiagramContext(this.explainContext);
 		// Must be set visible as previous display location is invisible.
 		this.schemaTabSet.setVisible(true);
 		displayArea.add(this.schemaTabSet, "WINDOW_CARD");
@@ -233,109 +228,124 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.transformationContext = new TransformationContext(this.martTab,
 				(DataSet) dsTable.getSchema());
 
-		// Calculate the transform.
-		this.recalculateTransformation();
-
 		// Pack the window.
 		this.pack();
 
 		// Move ourselves.
 		this.setLocationRelativeTo(null);
 
+		// Calculate the transformation.
+		this.recalculateDialog(null);
+
 		// Select the default button (which shows the transformation card).
 		// We must physically click on it to make the card show.
 		transformationButton.doClick();
 	}
 
-	private void recalculateTransformation() {
-		// Keep a note of shown tables.
-		final Map shownTables = new HashMap();
-		for (final Iterator i = this.transformationTableComponents.iterator(); i
-				.hasNext();) {
-			final TableComponent comp = (TableComponent) i.next();
-			shownTables.put(((Table) comp.getObject()).getName(), comp
-					.getState());
-		}
+	private void recalculateTransformation(final ExplainContext explainContext) {
+		new LongProcess() {
+			public void run() throws Exception {
+				// Keep a note of shown tables.
+				final Map shownTables = new HashMap();
+				for (final Iterator i = ExplainTableDialog.this.transformationTableComponents
+						.iterator(); i.hasNext();) {
+					final TableComponent comp = (TableComponent) i.next();
+					shownTables.put(((Table) comp.getObject()).getName(), comp
+							.getState());
+				}
 
-		// Clear the transformation box.
-		this.transformation.removeAll();
-		this.transformationTableComponents.clear();
+				// Clear the transformation box.
+				ExplainTableDialog.this.transformation.removeAll();
+				ExplainTableDialog.this.transformationTableComponents.clear();
 
-		// Keep track of columns counted so far.
-		List columnsSoFar = new ArrayList();
+				// Keep track of columns counted so far.
+				List columnsSoFar = new ArrayList();
 
-		// Count our steps.
-		int stepNumber = 1;
+				// Count our steps.
+				int stepNumber = 1;
 
-		// Iterate over transformation units.
-		for (final Iterator i = ((DataSetTable) this.ds
-				.getTableByName(this.tableName)).getTransformationUnits()
-				.iterator(); i.hasNext();) {
-			final TransformationUnit tu = (TransformationUnit) i.next();
-			// Holders for our stuff.
-			final JLabel label;
-			final ExplainTransformationDiagram diagram;
-			// Draw the unit.
-			if (tu instanceof Expression) {
-				// Do an expression column list.
-				label = new JLabel(Resources.get("stepTableLabel",
-						new String[] { "" + stepNumber,
-								Resources.get("explainExpressionLabel") }));
-				diagram = new ExplainTransformationDiagram.AdditionalColumns(
-						this.martTab, tu, stepNumber, this.explainContext);
-			} else if (tu instanceof Concat) {
-				// Do an expression column list.
-				label = new JLabel(Resources.get("stepTableLabel",
-						new String[] { "" + stepNumber,
-								Resources.get("explainConcatLabel") }));
-				diagram = new ExplainTransformationDiagram.TempReal(
-						this.martTab, (Concat) tu, columnsSoFar, stepNumber,
-						this.explainContext);
-			} else if (tu instanceof JoinTable) {
-				// Temp table to schema table join.
-				label = new JLabel(Resources.get("stepTableLabel",
-						new String[] { "" + stepNumber,
-								Resources.get("explainMergeLabel") }));
-				diagram = new ExplainTransformationDiagram.TempReal(
-						this.martTab, (JoinTable) tu, columnsSoFar, stepNumber,
-						this.explainContext);
-			} else if (tu instanceof SelectFromTable) {
-				// Do a single-step select.
-				label = new JLabel(Resources.get("stepTableLabel",
-						new String[] { "" + stepNumber,
-								Resources.get("explainSelectLabel") }));
-				diagram = new ExplainTransformationDiagram.SingleTable(
-						this.martTab, (SelectFromTable) tu, stepNumber,
-						this.explainContext);
-			} else
-				throw new BioMartError();
-			this.transformationTableComponents.addAll(diagram
-					.getTableComponents());
-			// Display the diagram.
-			this.gridBag.setConstraints(label, this.labelConstraints);
-			this.transformation.add(label);
-			diagram.setDiagramContext(this.transformationContext);
-			JPanel field = new JPanel();
-			field.add(diagram);
-			this.gridBag.setConstraints(field, this.fieldConstraints);
-			this.transformation.add(field);
-			// Add columns from this unit to the transformed table.
-			columnsSoFar.addAll(tu.getNewColumnNameMap().values());
-			stepNumber++;
-		}
+				// Iterate over transformation units.
+				for (final Iterator i = ((DataSetTable) ExplainTableDialog.this.ds
+						.getTableByName(ExplainTableDialog.this.tableName))
+						.getTransformationUnits().iterator(); i.hasNext();) {
+					final TransformationUnit tu = (TransformationUnit) i.next();
+					// Holders for our stuff.
+					final JLabel label;
+					final ExplainTransformationDiagram diagram;
+					// Draw the unit.
+					if (tu instanceof Expression) {
+						// Do an expression column list.
+						label = new JLabel(
+								Resources
+										.get(
+												"stepTableLabel",
+												new String[] {
+														"" + stepNumber,
+														Resources
+																.get("explainExpressionLabel") }));
+						diagram = new ExplainTransformationDiagram.AdditionalColumns(
+								ExplainTableDialog.this.martTab, tu,
+								stepNumber, explainContext);
+					} else if (tu instanceof Concat) {
+						// Do an expression column list.
+						label = new JLabel(Resources.get("stepTableLabel",
+								new String[] { "" + stepNumber,
+										Resources.get("explainConcatLabel") }));
+						diagram = new ExplainTransformationDiagram.TempReal(
+								ExplainTableDialog.this.martTab, (Concat) tu,
+								columnsSoFar, stepNumber, explainContext);
+					} else if (tu instanceof JoinTable) {
+						// Temp table to schema table join.
+						label = new JLabel(Resources.get("stepTableLabel",
+								new String[] { "" + stepNumber,
+										Resources.get("explainMergeLabel") }));
+						diagram = new ExplainTransformationDiagram.TempReal(
+								ExplainTableDialog.this.martTab,
+								(JoinTable) tu, columnsSoFar, stepNumber,
+								explainContext);
+					} else if (tu instanceof SelectFromTable) {
+						// Do a single-step select.
+						label = new JLabel(Resources.get("stepTableLabel",
+								new String[] { "" + stepNumber,
+										Resources.get("explainSelectLabel") }));
+						diagram = new ExplainTransformationDiagram.SingleTable(
+								ExplainTableDialog.this.martTab,
+								(SelectFromTable) tu, stepNumber,
+								explainContext);
+					} else
+						throw new BioMartError();
+					ExplainTableDialog.this.transformationTableComponents
+							.addAll(diagram.getTableComponents());
+					// Display the diagram.
+					ExplainTableDialog.this.gridBag.setConstraints(label,
+							ExplainTableDialog.this.labelConstraints);
+					ExplainTableDialog.this.transformation.add(label);
+					diagram
+							.setDiagramContext(ExplainTableDialog.this.transformationContext);
+					JPanel field = new JPanel();
+					field.add(diagram);
+					ExplainTableDialog.this.gridBag.setConstraints(field,
+							ExplainTableDialog.this.fieldConstraints);
+					ExplainTableDialog.this.transformation.add(field);
+					// Add columns from this unit to the transformed table.
+					columnsSoFar.addAll(tu.getNewColumnNameMap().values());
+					stepNumber++;
+				}
 
-		// Reinstate shown/hidden columns.
-		for (final Iterator i = this.transformationTableComponents.iterator(); i
-				.hasNext();) {
-			final TableComponent comp = (TableComponent) i.next();
-			final Object state = shownTables.get(((Table) comp.getObject())
-					.getName());
-			if (state != null)
-				comp.setState(state);
-		}
+				// Reinstate shown/hidden columns.
+				for (final Iterator i = ExplainTableDialog.this.transformationTableComponents
+						.iterator(); i.hasNext();) {
+					final TableComponent comp = (TableComponent) i.next();
+					final Object state = shownTables.get(((Table) comp
+							.getObject()).getName());
+					if (state != null)
+						comp.setState(state);
+				}
 
-		// Resize the diagram to fit the components.
-		this.transformation.validate();
+				// Resize the diagram to fit the components.
+				ExplainTableDialog.this.transformation.validate();
+			}
+		}.start();
 	}
 
 	private void repaintTransformation() {
@@ -343,11 +353,11 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	}
 
 	public void recalculateDialog(final Object changedObject) {
+		final ExplainContext explainContext = new ExplainContext(this.martTab,
+				(DataSetTable) this.ds.getTableByName(this.tableName));
 		if (this.schemaTabSet != null) {
 			// Update explain context.
-			this.explainContext = new ExplainContext(this.martTab,
-					(DataSetTable) this.ds.getTableByName(this.tableName));
-			this.schemaTabSet.setDiagramContext(this.explainContext);
+			this.schemaTabSet.setDiagramContext(explainContext);
 			if (changedObject != null)
 				if (changedObject instanceof Schema)
 					this.schemaTabSet
@@ -379,7 +389,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			this.schemaTabSet.recalculateOverviewDiagram();
 		}
 		if (this.transformation != null) {
-			this.recalculateTransformation();
+			this.recalculateTransformation(explainContext);
 			this.repaintTransformation();
 		}
 	}
