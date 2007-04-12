@@ -23,12 +23,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
@@ -37,17 +39,9 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.dialogs.AboutDialog;
 
-import com.apple.mrj.MRJAboutHandler;
-import com.apple.mrj.MRJApplicationUtils;
-import com.apple.mrj.MRJPrefsHandler;
-import com.apple.mrj.MRJQuitHandler;
-
 /**
  * This abstract class provides some useful common stuff for launching any
  * BioMart Java GUI appliaction.
- * <p>
- * Mac-specific stuff from <a
- * href="http://www.kfu.com/~nsayer/Java/reflection.html">http://www.kfu.com/~nsayer/Java/reflection.html</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
@@ -56,6 +50,8 @@ import com.apple.mrj.MRJQuitHandler;
  */
 public abstract class BioMartGUI extends JFrame {
 	private static final long serialVersionUID = 1L;
+
+	private static boolean reallyIsMac = true;
 
 	/**
 	 * Creates a new instance of MartBuilder. You can customise the
@@ -70,6 +66,66 @@ public abstract class BioMartGUI extends JFrame {
 
 		// Set some nice Mac stuff.
 		if (this.isMac()) {
+			try {
+				// Set up a listener proxy.
+				final Class listenerClass = Class
+						.forName("com.apple.eawt.ApplicationListener");
+				final Class eventClass = Class
+						.forName("com.apple.eawt.ApplicationEvent");
+				final Method eventHandled = eventClass.getMethod("isHandled",
+						new Class[] { Boolean.TYPE });
+				final Method handleAbout = listenerClass.getMethod(
+						"handleAbout", new Class[] { eventClass });
+				final Method handleQuit = listenerClass.getMethod("handleQuit",
+						new Class[] { eventClass });
+				final Object proxy = Proxy.newProxyInstance(listenerClass
+						.getClassLoader(), new Class[] { listenerClass },
+						new InvocationHandler() {
+							public Object invoke(Object proxy, Method method,
+									Object[] args) throws Throwable {
+								if (method.equals(handleAbout)) {
+									// Handle TRUE otherwise it overrides us.
+									eventHandled.invoke(args[0],
+											new Object[] { Boolean.TRUE });
+									BioMartGUI.this.requestShowAbout();
+								} else if (method.equals(handleQuit)) {
+									// Handle FALSE otherwise it preempts us.
+									eventHandled.invoke(args[0],
+											new Object[] { Boolean.FALSE });
+									BioMartGUI.this.requestExitApp();
+								} else
+									eventHandled.invoke(args[0],
+											new Object[] { Boolean.FALSE });
+								// All methods return null.
+								return null;
+							}
+						});
+
+				// Set up application wrapper to include handler methods.
+				final Object app = Class.forName("com.apple.eawt.Application")
+						.newInstance();
+				app.getClass().getMethod("addAboutMenuItem", null).invoke(app,
+						null);
+				app.getClass().getMethod("addPreferencesMenuItem", null)
+						.invoke(app, null);
+				app.getClass().getMethod("setEnabledAboutMenu",
+						new Class[] { Boolean.TYPE }).invoke(app,
+						new Object[] { Boolean.TRUE });
+				app.getClass().getMethod("setEnabledPreferencesMenu",
+						new Class[] { Boolean.TYPE }).invoke(app,
+						new Object[] { Boolean.FALSE });
+				app
+						.getClass()
+						.getMethod(
+								"addApplicationListener",
+								new Class[] { Class
+										.forName("com.apple.eawt.ApplicationListener") })
+						.invoke(app, new Object[] { proxy });
+			} catch (final Throwable t) {
+				Log.warn(t);
+				BioMartGUI.reallyIsMac = false;
+			}
+			// Set up properties.
 			System.setProperty("com.apple.macos.useScreenMenuBar", "true");
 			System.setProperty("com.apple.macos.use-file-dialog-packages",
 					"false");
@@ -96,8 +152,6 @@ public abstract class BioMartGUI extends JFrame {
 					.setProperty(
 							"apple.awt.window.position.forceSafeProgrammaticPositioning",
 							"true");
-			// Set up About handler.
-			new MacHandler(this);
 		}
 
 		// Attach ourselves as the main window for hourglass use.
@@ -209,7 +263,8 @@ public abstract class BioMartGUI extends JFrame {
 	 * @return <tt>true</tt> if we are.
 	 */
 	protected boolean isMac() {
-		return System.getProperty("mrj.version") != null;
+		return BioMartGUI.reallyIsMac
+				&& System.getProperty("mrj.version") != null;
 	}
 
 	/**
@@ -221,7 +276,7 @@ public abstract class BioMartGUI extends JFrame {
 
 		private JMenuItem exit;
 
-		private JMenuItem aboutMartBuilder;
+		private JMenuItem about;
 
 		private BioMartGUI gui;
 
@@ -238,7 +293,7 @@ public abstract class BioMartGUI extends JFrame {
 			this.gui = gui;
 
 			// Don't do the File menu at all on Macs.
-			if (!gui.isMac()) {
+			if (!this.gui.isMac()) {
 				// Construct the mart menu.
 				final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
 				fileMenu.setMnemonic(Resources.get("fileMenuMnemonic")
@@ -261,20 +316,22 @@ public abstract class BioMartGUI extends JFrame {
 			helpMenu.setMnemonic(Resources.get("helpMenuMnemonic").charAt(0));
 
 			// Don't do the About menu option on Macs.
-			if (!gui.isMac()) {
+			if (!this.gui.isMac()) {
 				// About.
-				this.aboutMartBuilder = new JMenuItem(Resources
-						.get("aboutTitle", Resources.get("plainGUITitle")));
-				this.aboutMartBuilder.setMnemonic(Resources.get(
-						"aboutMnemonic").charAt(0));
-				this.aboutMartBuilder.addActionListener(this);
-				helpMenu.add(this.aboutMartBuilder);
+				this.about = new JMenuItem(Resources.get(
+						"aboutTitle", Resources.get("plainGUITitle")));
+				this.about.setMnemonic(Resources
+						.get("aboutMnemonic").charAt(0));
+				this.about.addActionListener(this);
+				helpMenu.add(this.about);
 			}
-			
-			// TODO A help page menu item.
 
-			// Adds the menus to the menu bar.
-			this.add(helpMenu);
+			// TODO Add a help page menu item.
+
+			// Adds the menus to the menu bar (if it exists at all - TODO remove
+			// this check once help page added).
+			if (helpMenu.getItemCount() > 0)
+				this.add(helpMenu);
 		}
 
 		/**
@@ -297,34 +354,8 @@ public abstract class BioMartGUI extends JFrame {
 			if (e.getSource() == this.exit)
 				this.getBioMartGUI().requestExitApp();
 			// Help menu
-			else if (e.getSource() == this.aboutMartBuilder)
+			else if (e.getSource() == this.about)
 				this.getBioMartGUI().requestShowAbout();
-		}
-	}
-
-	// A Mac About/Quit menu handler.
-	private static class MacHandler implements MRJQuitHandler, MRJPrefsHandler,
-			MRJAboutHandler {
-		private final BioMartGUI gui;
-
-		private MacHandler(final BioMartGUI theProgram) {
-			this.gui = theProgram;
-			MRJApplicationUtils.registerAboutHandler(this);
-			MRJApplicationUtils.registerPrefsHandler(this);
-			MRJApplicationUtils.registerQuitHandler(this);
-		}
-
-		public void HandleAbout() {
-			this.gui.requestShowAbout();
-		}
-
-		public void HandlePrefs() {
-			// We don't have a prefs window.
-			JOptionPane.showMessageDialog(this.gui, Resources.get("noPrefsYet", Resources.get("plainGUITitle")), Resources.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
-		}
-
-		public void HandleQuit() {
-			this.gui.requestExitApp();
 		}
 	}
 }
