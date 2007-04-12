@@ -501,7 +501,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dsTable, final Relation relation,
 			final int iteration) {
 		// Get index offset into compound relation.
-		final int index = iteration == RealisedRelation.NO_ITERATION ? 0
+		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
 				: dataset.getSchemaModifications().isCompoundRelation(dsTable,
 						relation) ? this.askUserForCompoundRelationIndex(
 						dataset, dsTable, relation) : 0;
@@ -1189,7 +1189,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dsTable, final Relation relation,
 			final int iteration) {
 		// Get index offset into compound relation.
-		final int index = iteration == RealisedRelation.NO_ITERATION ? 0
+		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
 				: dataset.getSchemaModifications().isCompoundRelation(dsTable,
 						relation) ? this.askUserForCompoundRelationIndex(
 						dataset, dsTable, relation) : 0;
@@ -1252,7 +1252,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dsTable, final Relation relation,
 			final int iteration) {
 		// Get index offset into compound relation.
-		final int index = iteration == RealisedRelation.NO_ITERATION ? 0
+		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
 				: dataset.getSchemaModifications().isCompoundRelation(dsTable,
 						relation) ? this.askUserForCompoundRelationIndex(
 						dataset, dsTable, relation) : 0;
@@ -1301,7 +1301,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dsTable, final Relation relation,
 			final int iteration) {
 		// Get index offset into compound relation.
-		final int index = iteration == RealisedRelation.NO_ITERATION ? 0
+		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
 				: dataset.getSchemaModifications().isCompoundRelation(dsTable,
 						relation) ? this.askUserForCompoundRelationIndex(
 						dataset, dsTable, relation) : 0;
