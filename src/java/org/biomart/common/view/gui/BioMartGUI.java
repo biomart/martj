@@ -72,7 +72,7 @@ public abstract class BioMartGUI extends JFrame {
 						.forName("com.apple.eawt.ApplicationListener");
 				final Class eventClass = Class
 						.forName("com.apple.eawt.ApplicationEvent");
-				final Method eventHandled = eventClass.getMethod("isHandled",
+				final Method eventHandled = eventClass.getMethod("setHandled",
 						new Class[] { Boolean.TYPE });
 				final Method handleAbout = listenerClass.getMethod(
 						"handleAbout", new Class[] { eventClass });
