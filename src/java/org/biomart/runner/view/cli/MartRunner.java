@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.view.cli;
+package org.biomart.runner.view.cli;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -25,22 +25,22 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.biomart.builder.controller.MartRunnerProtocol;
-import org.biomart.builder.exceptions.ProtocolException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.cli.BioMartCLI;
+import org.biomart.runner.exceptions.ProtocolException;
+import org.biomart.runner.model.MartRunnerProtocol;
 
 /**
- * The main app housing the MartBuilder CLI. The {@link #main(String[])} method
+ * The main app housing the MartRunner CLI. The {@link #main(String[])} method
  * starts the CLI.
  * <p>
  * The CLI syntax is:
  * 
  * <pre>
- *     java org.biomart.builder.view.cli.MartBuilder &lt;port&gt;
+ *          java org.biomart.runner.view.cli.MartRunner &lt;port&gt;
  * </pre>
  * 
  * where <tt>&lt;port&gt;</tt> is the port that this server should listen on.
@@ -50,10 +50,8 @@ import org.biomart.common.view.cli.BioMartCLI;
  *          rh4 $
  * @since 0.6
  */
-public class MartBuilder extends BioMartCLI {
+public class MartRunner extends BioMartCLI {
 	private static final long serialVersionUID = 1L;
-
-	private final String[] args;
 
 	private final Collection workers = new HashSet();
 
@@ -69,69 +67,64 @@ public class MartBuilder extends BioMartCLI {
 	 */
 	public static void main(final String[] args) {
 		// Initialise resources.
-		Settings.setApplication(Settings.MARTBUILDER);
-		Resources.setResourceLocation("org/biomart/builder/resources");
-		// Start the application.
-		new MartBuilder(args).launch();
-	}
-
-	/**
-	 * Start a MartBuilder CLI server listening using the given command line
-	 * parameters.
-	 * 
-	 * @param args
-	 *            the arguments from the command line.
-	 */
-	public MartBuilder(final String[] args) {
-		super();
-		this.args = args;
-	}
-
-	private void processArgs() throws ValidationException {
-		if (this.args.length < 1)
-			throw new ValidationException(Resources.get("serverPortMissing"));
+		Settings.setApplication(Settings.MARTRUNNER);
+		Resources.setResourceLocation("org/biomart/runner/resources");
+		// Establish the socket and start listening.
 		try {
-			final int port = Integer.parseInt(this.args[0]);
-			this.serverSocket = new ServerSocket(port);
-			Log.info(Resources.get("serverListening", "" + port));
-		} catch (final IOException e) {
-			throw new ValidationException(Resources.get("serverPortBroken",
-					this.args[0]), e);
-		} catch (final NumberFormatException e) {
-			throw new ValidationException(Resources.get("serverPortInvalid",
-					this.args[0]), e);
+			if (args.length < 1)
+				throw new ValidationException(Resources
+						.get("serverPortMissing"));
+			try {
+				final int port = Integer.parseInt(args[0]);
+				Log.info(Resources.get("serverListening", "" + port));
+				// Start the application.
+				new MartRunner(new ServerSocket(port)).launch();
+			} catch (final IOException e) {
+				throw new ValidationException(Resources.get("serverPortBroken",
+						args[0]), e);
+			} catch (final NumberFormatException e) {
+				throw new ValidationException(Resources.get(
+						"serverPortInvalid", args[0]), e);
+			}
+		} catch (final Throwable t) {
+			t.printStackTrace(System.err);
 		}
 	}
 
+	/**
+	 * Start a MartBuilder CLI server listening using the given socket.
+	 * 
+	 * @param serverSocket
+	 *            the socket to listen on.
+	 */
+	public MartRunner(final ServerSocket serverSocket) {
+		super();
+		this.serverSocket = serverSocket;
+	}
+
 	public boolean poll() throws Throwable {
-		// First time round - read port from args and start listening on it.
-		if (this.serverSocket == null)
-			this.processArgs();
-		// Remaining times - carry on with the job.
-		else {
-			final Socket clientSocket = this.serverSocket.accept();
-			final Runnable worker = new Runnable() {
-				public void run() {
-					final ClientWorker worker = new ClientWorker(clientSocket);
-					synchronized (MartBuilder.this.workers) {
-						MartBuilder.this.workers.add(worker);
-					}
-					try {
-						worker.handleClient();
-					} catch (final ProtocolException e) {
-						throw new RuntimeException(e);
-					}
-					synchronized (MartBuilder.this.workers) {
-						MartBuilder.this.workers.remove(worker);
-					}
-					worker.close();
+		final Socket clientSocket = this.serverSocket.accept();
+		final Runnable worker = new Runnable() {
+			public void run() {
+				final ClientWorker worker = new ClientWorker(clientSocket);
+				synchronized (MartRunner.this.workers) {
+					MartRunner.this.workers.add(worker);
 				}
-			};
-			try {
-				worker.run();
-			} catch (final RuntimeException e) {
-				throw e.getCause();
+				try {
+					worker.handleClient();
+				} catch (final ProtocolException e) {
+					throw new RuntimeException(e);
+				}
+				synchronized (MartRunner.this.workers) {
+					MartRunner.this.workers.remove(worker);
+				}
+				worker.close();
 			}
+		};
+		try {
+			worker.run();
+		} catch (final RuntimeException e) {
+			throw e.getCause();
 		}
 		// We never have cause to exit.
 		return true;
@@ -144,7 +137,7 @@ public class MartBuilder extends BioMartCLI {
 
 	public boolean confirmExitApp() {
 		try {
-			synchronized (MartBuilder.this.workers) {
+			synchronized (MartRunner.this.workers) {
 				for (final Iterator i = this.workers.iterator(); i.hasNext();)
 					((ClientWorker) i.next()).close();
 			}

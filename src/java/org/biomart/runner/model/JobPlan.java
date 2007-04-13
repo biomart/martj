@@ -16,50 +16,40 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.builder.controller;
+package org.biomart.runner.model;
+
+import java.io.Serializable;
 
 /**
- * Tools for running SQL.
+ * Handles planning and execution of jobs.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
-public class MartRunner {
+public class JobPlan implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	
+	private final String jobId;
 
 	/**
-	 * Request a new job ID. Don't define the job, just request an ID for one
-	 * that could be defined in future.
-	 * 
-	 * @return a unique job ID.
-	 */
-	public static int requestNewJob() {
-		// TODO Generate a new job ID.
-		return 0;
-	}
-
-	/**
-	 * Flag that a job is about to start receiving commands.
+	 * Create a new job plan.
 	 * 
 	 * @param jobId
-	 *            the job ID.
+	 *            the id of the job this plan is for.
 	 */
-	public static void beginJob(final int jobId) {
-		// TODO Begin a job definition.
+	public JobPlan(final String jobId) {
+		this.jobId = jobId;
 	}
 
 	/**
-	 * Flag that a job has finished receiving commands.
+	 * Get the id of the job this plan is for.
 	 * 
-	 * @param jobId
-	 *            the job ID.
+	 * @return the id of the job.
 	 */
-	public static void endJob(final int jobId) {
-		// TODO End a job definition.
-	}
-
-	// Tools are static and cannot be instantiated.
-	private MartRunner() {
+	public String getJobId() {
+		return this.jobId;
 	}
 }

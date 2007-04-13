@@ -212,6 +212,13 @@
         	  <exclude name="**/*.java"/>
         	</fileset>
         </copy>
+
+        <copy
+        todir="${build.classes}/org/biomart/runner/resources">
+        	<fileset dir="${src.dir}/org/biomart/runner/resources/" casesensitive="yes">
+        	  <exclude name="**/*.java"/>
+        	</fileset>
+        </copy>
     </target>
 
     <!-- Checks that whole of cvs module compiles with just it's

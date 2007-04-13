@@ -50,8 +50,8 @@ import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
-import org.biomart.builder.view.gui.dialogs.MonitorRemoteHostDialog;
-import org.biomart.builder.view.gui.dialogs.RemoteHostConnectionDialog;
+import org.biomart.builder.view.gui.dialogs.MartRunnerMonitorDialog;
+import org.biomart.builder.view.gui.dialogs.MartRunnerConnectionDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -609,7 +609,7 @@ public class MartTabSet extends JTabbedPane {
 	 * monitors that host.
 	 */
 	public void requestMonitorRemoteHost() {
-		RemoteHostConnectionDialog d = new RemoteHostConnectionDialog(this
+		MartRunnerConnectionDialog d = new MartRunnerConnectionDialog(this
 				.getSelectedMartTab() == null ? null : this
 				.getSelectedMartTab().getMart());
 		d.show();
@@ -632,7 +632,7 @@ public class MartTabSet extends JTabbedPane {
 		this.requestSetOutputHost(host);
 		this.requestSetOutputPort(port);
 		// Open remote host monitor dialog.
-		MonitorRemoteHostDialog.monitor(host, port);
+		MartRunnerMonitorDialog.monitor(host, port);
 	}
 
 	/**

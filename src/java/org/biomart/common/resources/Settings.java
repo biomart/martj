@@ -33,19 +33,19 @@ import java.util.Properties;
 /**
  * Manages the on-disk cache of user settings.
  * <p>
- * Settings are contained in a folder called <tt>.biomart</tt> in the
- * user's home directory, inside which there is a second folder for
- * each of the BioMart applications. In there are two files - one called
- * <tt>properties</tt> which contains general configuration settings such as
- * look and feel, and the other called <tt>cache</tt> which is a directory
- * containing history settings for various classes.
+ * Settings are contained in a folder called <tt>.biomart</tt> in the user's
+ * home directory, inside which there is a second folder for each of the BioMart
+ * applications. In there are two files - one called <tt>properties</tt> which
+ * contains general configuration settings such as look and feel, and the other
+ * called <tt>cache</tt> which is a directory containing history settings for
+ * various classes.
  * <p>
  * You should only ever need to modify the <tt>properties</tt> file, and
  * <tt>cache</tt> should be left alone.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public class Settings {
@@ -55,10 +55,17 @@ public class Settings {
 	 */
 	public static final String MARTBUILDER = "martbuilder";
 
+	/**
+	 * App reference for MartRunner.
+	 */
+	public static final String MARTRUNNER = "martrunner";
+
 	// Insert more app references as more apps are built.
-	
+
 	private static final File homeDir = new File(System
 			.getProperty("user.home"), ".biomart");
+
+	private static File appDir;
 
 	private static final Map classCache = new HashMap();
 
@@ -95,17 +102,26 @@ public class Settings {
 	 */
 	public static void setApplication(final String app) {
 		// Make the home directory.
-		final File appDir = new File(Settings.homeDir, app);
-		if (!appDir.exists())
-			appDir.mkdir();
+		Settings.appDir = new File(Settings.homeDir, app);
+		if (!Settings.appDir.exists())
+			Settings.appDir.mkdir();
 		// Set up the logger.
 		Log.configure(app, appDir);
 		// Use it to log application startup.
 		Log.info(Resources.get("appStarted", app));
 		// Make the class cache directory.
-		Settings.classCacheDir = new File(appDir, "cache");
+		Settings.classCacheDir = new File(Settings.appDir, "cache");
 		if (!Settings.classCacheDir.exists())
 			Settings.classCacheDir.mkdir();
+	}
+
+	/**
+	 * Obtain the current application's storage directory.
+	 * 
+	 * @return the directory.
+	 */
+	public static File getStorageDirectory() {
+		return Settings.appDir;
 	}
 
 	/**

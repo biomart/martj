@@ -3,11 +3,11 @@
 # Note: /bin/sh doesn't work on Alphas (need to use bash thexre) but
 # works everywhere else.
 
-# Starts the MartBuilder GUI application.
+# Starts the MartRunner CLI application.
 
 # Usage:
 #
-# prompt> bin/martbuilder.sh
+# prompt> bin/martrunner.sh <PORT>
 
 TMP_ROOT=`dirname $0`/..
  
@@ -26,14 +26,12 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
-echo "Starting MartBuilder please wait .... " 
-
-#java -ea -cp $TMP_CLASSPATH org.ensembl.mart.builder.MartBuilder $@
+echo "Starting MartRunner please wait .... " 
 
 # Note: If you get Java "Out of memory" errors, try increasing the numbers
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
-java -Xmx256m -Xms256m -ea -cp $TMP_CLASSPATH org.biomart.builder.view.gui.MartBuilder $@
+java -Xmx256m -Xms256m -ea -cp $TMP_CLASSPATH org.biomart.runner.view.cli.MartRunner $@
 
 
 

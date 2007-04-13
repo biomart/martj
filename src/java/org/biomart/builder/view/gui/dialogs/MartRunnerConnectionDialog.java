@@ -47,7 +47,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.6
  */
-public class RemoteHostConnectionDialog extends JDialog {
+public class MartRunnerConnectionDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private JTextField runDDLHost;
@@ -65,10 +65,10 @@ public class RemoteHostConnectionDialog extends JDialog {
 	 * @param mart
 	 *            the mart to get the default settings from.
 	 */
-	public RemoteHostConnectionDialog(final Mart mart) {
+	public MartRunnerConnectionDialog(final Mart mart) {
 		// Creates the basic dialog.
 		super();
-		this.setTitle(Resources.get("remoteHostDialogTitle"));
+		this.setTitle(Resources.get("monitorConnectDialogTitle"));
 		this.setModal(true);
 
 		// Create the content pane to store the create dialog panel.
@@ -112,7 +112,7 @@ public class RemoteHostConnectionDialog extends JDialog {
 		field.add(this.runDDLHost);
 		gridBag.setConstraints(field, fieldConstraints);
 		content.add(field);
-		label = new JLabel(Resources.get("runDDLHostLabel"));
+		label = new JLabel(Resources.get("runDDLPortLabel"));
 		gridBag.setConstraints(label, labelConstraints);
 		content.add(label);
 		field = new JPanel();
@@ -128,7 +128,7 @@ public class RemoteHostConnectionDialog extends JDialog {
 		// without taking any action.
 		cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				RemoteHostConnectionDialog.this.hide();
+				MartRunnerConnectionDialog.this.hide();
 			}
 		});
 
@@ -136,12 +136,12 @@ public class RemoteHostConnectionDialog extends JDialog {
 		// then creates the DDL and closes the dialog.
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (RemoteHostConnectionDialog.this.validateFields()) {
-					RemoteHostConnectionDialog.this.host = RemoteHostConnectionDialog.this.runDDLHost
+				if (MartRunnerConnectionDialog.this.validateFields()) {
+					MartRunnerConnectionDialog.this.host = MartRunnerConnectionDialog.this.runDDLHost
 							.getText().trim();
-					RemoteHostConnectionDialog.this.port = RemoteHostConnectionDialog.this.runDDLPort
+					MartRunnerConnectionDialog.this.port = MartRunnerConnectionDialog.this.runDDLPort
 							.getText().trim();
-					RemoteHostConnectionDialog.this.hide();
+					MartRunnerConnectionDialog.this.hide();
 				}
 			}
 		});
