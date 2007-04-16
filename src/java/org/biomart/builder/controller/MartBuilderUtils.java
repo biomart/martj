@@ -1947,12 +1947,14 @@ public class MartBuilderUtils {
 			final Schema schema) throws SQLException {
 		for (final Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
-			if (!ds.usesSchema(schema)) 
+			if (!ds.usesSchema(schema))
 				continue;
 			for (final Iterator pi = ds.getDataSetModifications()
 					.getPartitionedColumns().entrySet().iterator(); pi
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) pi.next();
+				final DataSetTable dsTable = (DataSetTable) ds
+						.getTableByName((String) entry.getKey());
 				final Map colDef = (Map) entry.getValue();
 				for (final Iterator ci = colDef.entrySet().iterator(); ci
 						.hasNext();) {
@@ -1960,12 +1962,14 @@ public class MartBuilderUtils {
 					if (!(subEntry.getValue() instanceof ValueList))
 						continue;
 					// Work out what we've already got.
-					final Map existingValues = ((ValueList) subEntry.getValue()).getValues();
+					final Map existingValues = ((ValueList) subEntry.getValue())
+							.getValues();
 					// Read the values from the database.
 					final Set dbValues = new HashSet();
 					// First, make a set of all input schemas. We use a set to
 					// prevent duplicates.
-					DataSetColumn dsCol = (DataSetColumn) subEntry.getKey();
+					DataSetColumn dsCol = (DataSetColumn) dsTable
+							.getColumnByName((String) subEntry.getKey());
 					while (dsCol instanceof InheritedColumn)
 						dsCol = ((InheritedColumn) dsCol).getInheritedColumn();
 					final Column col = ((WrappedColumn) dsCol)
