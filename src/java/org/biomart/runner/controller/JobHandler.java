@@ -24,14 +24,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.FileUtils;
 import org.biomart.runner.exceptions.JobException;
+import org.biomart.runner.model.JobList;
 import org.biomart.runner.model.JobPlan;
+import org.biomart.runner.model.JobList.JobSummary;
 
 /**
  * Tools for running SQL.
@@ -48,8 +49,8 @@ public class JobHandler {
 	private static long nextJobSuffix = System.currentTimeMillis();
 
 	private static final File jobsDir = new File(
-			Settings.getStorageDirectory(), "jobs"); 
-	
+			Settings.getStorageDirectory(), "jobs");
+
 	static {
 		if (!jobsDir.exists())
 			jobsDir.mkdir();
@@ -78,7 +79,13 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static void beginJob(final String jobId) throws JobException {
+		// TODO Build in JDBC details.
 		try {
+			// Create a job list entry.
+			final JobList jobList = JobHandler.loadJobList();
+			jobList.addJob(new JobSummary(jobId));
+			JobHandler.saveJobList(jobList);
+			// Create a plan.
 			final JobPlan jobPlan = JobHandler.loadJobPlan(jobId);
 			// Just save it again. We don't need to make any changes yet.
 			JobHandler.saveJobPlan(jobPlan);
@@ -88,7 +95,7 @@ public class JobHandler {
 	}
 
 	/**
-	 * Flag that a job has finished receiving commands.
+	 * Flag that a job is about to end receiving commands.
 	 * 
 	 * @param jobId
 	 *            the job ID.
@@ -96,7 +103,56 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static void endJob(final String jobId) throws JobException {
-		// We actually don't need to do anything at the end of the job.
+		try {
+			final JobList jobList = JobHandler.loadJobList();
+			jobList.getJobSummary(jobId).setAllActionsReceived();
+			JobHandler.saveJobList(jobList);
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Flag that an action is to be added to the end of a job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param sectionPath
+	 *            the section this applies to.
+	 * @param actions
+	 *            the actions to add.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static void addActions(final String jobId,
+			final String[] sectionPath, final Collection actions)
+			throws JobException {
+		try {
+			final JobPlan jobPlan = JobHandler.loadJobPlan(jobId);
+			// Add the action to the job.
+			jobPlan.addActions(sectionPath, actions);
+			// Save it again.
+			JobHandler.saveJobPlan(jobPlan);
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Gets the plan for a job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @return the plan.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static JobPlan getJobPlan(final String jobId) throws JobException {
+		try {
+			return JobHandler.loadJobPlan(jobId);
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
 	}
 
 	/**
@@ -106,15 +162,12 @@ public class JobHandler {
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public static Collection listJobs() throws JobException {
-		final File[] jobDirs = JobHandler.jobsDir.listFiles();
-		final Collection jobIds = new ArrayList();
-		for (int i = 0; i < jobDirs.length; i++)
-			jobIds.add(jobDirs[i].getName());
-		// TODO Introduce a JobOverview class that gets serialized
-		// instead of using a list of filenames. This way we can
-		// store status against each job.
-		return jobIds;
+	public static JobList listJobs() throws JobException {
+		try {
+			return JobHandler.loadJobList();
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
 	}
 
 	/**
@@ -158,6 +211,10 @@ public class JobHandler {
 		return sqlDir;
 	}
 
+	private static File getJobListFile() throws IOException {
+		return new File(JobHandler.jobsDir, "list");
+	}
+
 	private static File getJobPlanFile(final String jobId) throws IOException {
 		return new File(JobHandler.getJobDir(jobId), "plan");
 	}
@@ -198,6 +255,53 @@ public class JobHandler {
 				fos = new FileOutputStream(jobPlanFile);
 				final ObjectOutputStream oos = new ObjectOutputStream(fos);
 				oos.writeObject(jobPlan);
+				oos.flush();
+				fos.flush();
+			} finally {
+				if (fos != null)
+					fos.close();
+			}
+		}
+	}
+
+	private static JobList loadJobList() throws IOException {
+		synchronized (JobHandler.planDirLock) {
+			Log.debug("Loading list");
+			final File jobListFile = JobHandler.getJobListFile();
+			// Doesn't exist? Return a default new list.
+			if (!jobListFile.exists()) 
+				return new JobList();
+			// Load existing job plan.
+			FileInputStream fis = null;
+			JobList jobList = null;
+			try {
+				fis = new FileInputStream(jobListFile);
+				final ObjectInputStream ois = new ObjectInputStream(fis);
+				jobList = (JobList) ois.readObject();
+			} catch (final IOException e) {
+				throw e;
+			} catch (final Throwable t) {
+				// This is horrible. Make up a default one.
+				Log.error(t);
+				jobList = new JobList();
+			} finally {
+				if (fis != null)
+					fis.close();
+			}
+			return jobList;
+		}
+	}
+
+	private static void saveJobList(final JobList jobList) throws IOException {
+		synchronized (JobHandler.planDirLock) {
+			Log.debug("Saving list");
+			final File jobListFile = JobHandler.getJobListFile();
+			// Save (overwrite) file with plan.
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(jobListFile);
+				final ObjectOutputStream oos = new ObjectOutputStream(fos);
+				oos.writeObject(jobList);
 				oos.flush();
 				fos.flush();
 			} finally {

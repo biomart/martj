@@ -1,0 +1,133 @@
+/*
+ Copyright (C) 2006 EBI
+ 
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the itmplied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package org.biomart.runner.model;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Handles list of jobs currently known.
+ * 
+ * @author Richard Holland <holland@ebi.ac.uk>
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
+ * @since 0.6
+ */
+public class JobList implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private final Map jobList;
+
+	/**
+	 * Create a new job list.
+	 */
+	public JobList() {
+		this.jobList = new LinkedHashMap();
+	}
+
+	/**
+	 * Add a job.
+	 * 
+	 * @param job
+	 *            the job to add.
+	 */
+	public void addJob(final JobSummary job) {
+		this.jobList.put(job.getJobId(), job);
+	}
+
+	/**
+	 * Remove a job.
+	 * 
+	 * @param jobId
+	 *            the job ID to remove.
+	 */
+	public void removeJob(final String jobId) {
+		this.jobList.remove(jobId);
+	}
+
+	/**
+	 * Get the Job summary for the given id.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @return the job summary.
+	 */
+	public JobSummary getJobSummary(final String jobId) {
+		return (JobSummary) this.jobList.get(jobId);
+	}
+
+	/**
+	 * Retrieve all jobs we currently know about.
+	 * 
+	 * @return the set of all jobs.
+	 */
+	public Collection getAllJobs() {
+		return this.jobList.values();
+	}
+
+	/**
+	 * A summary of a job's progress.
+	 */
+	public static class JobSummary implements Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private final String jobId;
+
+		private boolean allActionsReceived;
+
+		/**
+		 * Create a new summary for the given job.
+		 * 
+		 * @param jobId
+		 *            the job to summarise.
+		 */
+		public JobSummary(final String jobId) {
+			this.jobId = jobId;
+			this.allActionsReceived = false;
+		}
+
+		/**
+		 * What job do we summarise?
+		 * 
+		 * @return the job ID.
+		 */
+		public String getJobId() {
+			return this.jobId;
+		}
+
+		/**
+		 * Have we successfully received all actions for this job?
+		 * 
+		 * @return <tt>true</tt> if we have.
+		 */
+		public boolean isAllActionsReceived() {
+			return this.allActionsReceived;
+		}
+
+		/**
+		 * Tell us that we have received all the actions we're going to get.
+		 */
+		public void setAllActionsReceived() {
+			this.allActionsReceived = true;
+		}
+	}
+}

@@ -21,10 +21,11 @@ package org.biomart.builder.controller;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -282,13 +283,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private String partition;
 
-		private int martSequence = 0;
-
 		private FileOutputStream outputFileStream;
 
 		private ZipOutputStream outputZipStream;
-
-		private List orderedTables;
 
 		/**
 		 * Constructs a helper which will output all DDL into a single file per
@@ -302,8 +299,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		public TableAsFileHelper(final File outputFile,
 				final DatabaseDialect dialect) {
 			super(dialect);
-			this.actions = new HashMap();
-			this.orderedTables = new ArrayList();
+			this.actions = new LinkedHashMap();
 			this.file = outputFile;
 		}
 
@@ -333,9 +329,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.outputZipStream.finish();
 				this.outputFileStream.flush();
 				this.outputFileStream.close();
-			} else if (event == MartConstructorListener.MART_STARTED) {
-				this.martSequence++;
-				Log.debug("Mart " + this.martSequence + " starting");
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
 				this.dataset = (String) data;
 				Log.debug("Dataset " + this.dataset + " starting");
@@ -344,7 +337,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.partition = (String) data;
 				Log.debug("Partition " + this.partition + " starting");
 				this.actions.clear();
-				this.orderedTables.clear();
 			} else if (event == MartConstructorListener.PARTITION_ENDED) {
 				// Write out one file per table in files.
 				Log.debug("Partition ending");
@@ -352,8 +344,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						.hasNext();) {
 					final Map.Entry actionEntry = (Map.Entry) i.next();
 					final String tableName = (String) actionEntry.getKey();
-					final String entryFilename = Resources.get("martPrefix")
-							+ this.martSequence + "/" + this.partition + "/"
+					final String entryFilename = this.partition + "/"
 							+ this.dataset + "/" + tableName
 							+ Resources.get("ddlExtension");
 					Log.debug("Starting entry " + entryFilename);
@@ -384,12 +375,11 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					this.outputZipStream.closeEntry();
 				}
 				// Write the dataset manifest.
-				ZipEntry entry = new ZipEntry(Resources.get("martPrefix")
-						+ this.martSequence + "/" + this.partition + "/"
+				ZipEntry entry = new ZipEntry(this.partition + "/"
 						+ this.dataset + "/" + Resources.get("datasetManifest"));
 				entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(entry);
-				for (final Iterator i = this.orderedTables.iterator(); i
+				for (final Iterator i = this.actions.values().iterator(); i
 						.hasNext();) {
 					this.outputZipStream.write(((String) i.next()).getBytes());
 					this.outputZipStream.write(Resources.get("ddlExtension")
@@ -401,8 +391,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			} else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Add the action to the current map.
 				final String dsTableName = action.getDataSetTableName();
-				if (!this.orderedTables.contains(dsTableName))
-					this.orderedTables.add(dsTableName);
 				if (!this.actions.containsKey(dsTableName))
 					this.actions.put(dsTableName, new ArrayList());
 				((List) this.actions.get(dsTableName)).add(action);
@@ -415,11 +403,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 */
 	public static class RemoteHostHelper extends DDLHelper {
 
+		private Map actions;
+
 		private String outputHost;
 
 		private String outputPort;
 
 		private String job;
+
+		private String dataset;
+
+		private String partition;
 
 		/**
 		 * Constructs a helper which will output all actions directly to the
@@ -437,6 +431,16 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			super(dialect);
 			this.outputHost = outputHost;
 			this.outputPort = outputPort;
+			this.actions = new LinkedHashMap();
+		}
+
+		/**
+		 * Obtain the job Id for this job.
+		 * 
+		 * @return the job.
+		 */
+		public String getJobId() {
+			return this.job;
 		}
 
 		public void martConstructorEventOccurred(final int event,
@@ -449,19 +453,52 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						this.outputPort);
 				MartRunnerProtocol.Client.beginJob(this.outputHost,
 						this.outputPort, this.job);
+				// TODO Write out JDBC connection details.
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				Log.debug("Finished MartRunner job definition");
 				// Write the closing message to the socket.
 				MartRunnerProtocol.Client.endJob(this.outputHost,
 						this.outputPort, this.job);
-			} else if (event == MartConstructorListener.MART_STARTED) {
-				// TODO Inform the host.
 			} else if (event == MartConstructorListener.DATASET_STARTED) {
-				// TODO Inform the host.
+				this.dataset = (String) data;
+				Log.debug("Dataset " + this.dataset + " starting");
 			} else if (event == MartConstructorListener.PARTITION_STARTED) {
-				// TODO Inform the host.
+				// Clear out action map ready for next dataset.
+				this.partition = (String) data;
+				Log.debug("Partition " + this.partition + " starting");
+				this.actions.clear();
+			} else if (event == MartConstructorListener.PARTITION_ENDED) {
+				// Write out one file per table in files.
+				Log.debug("Partition ending, writing actions now");
+				for (final Iterator i = this.actions.entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry actionEntry = (Map.Entry) i.next();
+					// What table is this?
+					final String tableName = (String) actionEntry.getKey();
+					// What actions are for this table?
+					final List tableActions = (List) actionEntry.getValue();
+					// Write the actions for the table itself.
+					final List actions = new ArrayList();
+					for (final Iterator j = tableActions.iterator(); j
+							.hasNext();)
+						// Convert the action to some DDL.
+						actions
+								.addAll(Arrays
+										.asList(this
+												.getStatementsForAction((MartConstructorAction) j
+														.next())));
+					// Write the data.
+					MartRunnerProtocol.Client.addActions(this.outputHost,
+							this.outputPort, this.job, this.partition,
+							this.dataset, tableName, (String[]) actions
+									.toArray(new String[0]));
+				}
 			} else if (event == MartConstructorListener.ACTION_EVENT) {
-				// TODO Inform the host.
+				// Add the action to the current map.
+				final String dsTableName = action.getDataSetTableName();
+				if (!this.actions.containsKey(dsTableName))
+					this.actions.put(dsTableName, new ArrayList());
+				((List) this.actions.get(dsTableName)).add(action);
 			}
 		}
 	}

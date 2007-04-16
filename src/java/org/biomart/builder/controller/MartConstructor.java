@@ -31,7 +31,6 @@ import java.util.Map;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -1508,16 +1507,6 @@ public interface MartConstructor {
 		public void run() {
 			Log.info(Resources.get("logConstructorStarted"));
 			try {
-				// Split the datasets into groups by mart.
-				final Map martDataSets = new HashMap();
-				for (final Iterator i = this.datasets.iterator(); i.hasNext();) {
-					final DataSet ds = (DataSet) i.next();
-					final Mart mart = ds.getMart();
-					if (!martDataSets.containsKey(mart))
-						martDataSets.put(mart, new HashSet());
-					((Collection) martDataSets.get(mart)).add(ds);
-				}
-
 				// Begin.
 				Log.debug("Construction started");
 				this
@@ -1526,41 +1515,23 @@ public interface MartConstructor {
 				// Work out how many datasets we have.
 				final int totalDataSetCount = this.datasets.size();
 
-				// Loop over each mart.
-				for (final Iterator j = martDataSets.values().iterator(); j
-						.hasNext();) {
-					final Collection dsGroup = (Collection) j.next();
-					this
-							.issueListenerEvent(MartConstructorListener.MART_STARTED);
-
+				for (final Iterator j = this.datasets.iterator(); j.hasNext();) {
+					// Loop over all the datasets we want included from this
+					// mart. Build actions for each one.
+					final DataSet ds = (DataSet) j.next();
 					try {
-						// Loop over all the datasets we want included from this
-						// mart. Build actions for each one.
-						Log.debug("Dataset group started: " + dsGroup);
-						for (final Iterator i = dsGroup.iterator(); i.hasNext();) {
-							final DataSet ds = (DataSet) i.next();
-							try {
-								this
-										.issueListenerEvent(
-												MartConstructorListener.DATASET_STARTED,
-												ds.getName());
-								this.makeActionsForDataset(ds,
-										totalDataSetCount);
-							} catch (final Throwable t) {
-								throw t;
-							} finally {
-								// Make sure the helper always gets a chance to
-								// tidy up,
-								// even if an exception is thrown.
-								this.issueListenerEvent(
-										MartConstructorListener.DATASET_ENDED,
-										ds.getName());
-							}
-						}
+						this.issueListenerEvent(
+								MartConstructorListener.DATASET_STARTED, ds
+										.getName());
+						this.makeActionsForDataset(ds, totalDataSetCount);
+					} catch (final Throwable t) {
+						throw t;
 					} finally {
-						Log.debug("All done");
-						this
-								.issueListenerEvent(MartConstructorListener.MART_ENDED);
+						// Make sure the helper always gets a chance to
+						// tidy up, even if an exception is thrown.
+						this.issueListenerEvent(
+								MartConstructorListener.DATASET_ENDED, ds
+										.getName());
 					}
 				}
 			} catch (final ConstructorException e) {
@@ -1620,24 +1591,14 @@ public interface MartConstructor {
 		public static final int DATASET_STARTED = 4;
 
 		/**
-		 * This event will occur when an individual mart ends.
-		 */
-		public static final int MART_ENDED = 5;
-
-		/**
-		 * This event will occur when an individual mart begins.
-		 */
-		public static final int MART_STARTED = 6;
-
-		/**
 		 * This event will occur when an individual schema partition ends.
 		 */
-		public static final int PARTITION_ENDED = 7;
+		public static final int PARTITION_ENDED = 5;
 
 		/**
 		 * This event will occur when an individual schema partition begins.
 		 */
-		public static final int PARTITION_STARTED = 8;
+		public static final int PARTITION_STARTED = 6;
 
 		/**
 		 * This method will be called when an event occurs.

@@ -418,7 +418,8 @@ public class SaveDDLDialog extends JDialog {
 											SaveDDLDialog.this.runDDLHost
 													.getText(),
 											SaveDDLDialog.this.runDDLPort
-													.getText());
+													.getText(),
+											true);
 					}
 				}
 			});

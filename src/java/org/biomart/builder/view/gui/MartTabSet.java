@@ -617,7 +617,7 @@ public class MartTabSet extends JTabbedPane {
 		if (d.getHost() == null)
 			return;
 		else
-			this.requestMonitorRemoteHost(d.getHost(), d.getPort());
+			this.requestMonitorRemoteHost(d.getHost(), d.getPort(), false);
 	}
 
 	/**
@@ -627,12 +627,15 @@ public class MartTabSet extends JTabbedPane {
 	 *            the host to connect to.
 	 * @param port
 	 *            the port the host is listening on.
+	 * @param defaultJob
+	 *            select the latest job on opening, if <tt>true</tt>.
 	 */
-	public void requestMonitorRemoteHost(final String host, final String port) {
+	public void requestMonitorRemoteHost(final String host, final String port,
+			final boolean defaultJob) {
 		this.requestSetOutputHost(host);
 		this.requestSetOutputPort(port);
 		// Open remote host monitor dialog.
-		MartRunnerMonitorDialog.monitor(host, port);
+		MartRunnerMonitorDialog.monitor(host, port, defaultJob);
 	}
 
 	/**
