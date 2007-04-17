@@ -158,6 +158,19 @@ public class JobPlan implements Serializable {
 		public Collection getAllActions() {
 			return this.actions;
 		}
+
+		/**
+		 * How many actions in total are in this section and all subsections?
+		 * 
+		 * @return the count.
+		 */
+		public int countActions() {
+			int count = this.actions.size();
+			for (final Iterator i = this.getAllSubSections().iterator(); i
+					.hasNext();)
+				count += ((JobPlanSection) i.next()).countActions();
+			return count;
+		}
 	}
 
 	/**

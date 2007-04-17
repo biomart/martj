@@ -181,6 +181,10 @@ public class JobHandler {
 	public static void removeJob(final String jobId) throws JobException {
 		try {
 			// TODO Only remove job if not currently in progress.
+			// Remove the job list entry.
+			final JobList jobList = JobHandler.loadJobList();
+			jobList.removeJob(jobId);
+			JobHandler.saveJobList(jobList);
 			// Recursively delete the job directory.
 			FileUtils.delete(JobHandler.getJobDir(jobId));
 		} catch (final IOException e) {
