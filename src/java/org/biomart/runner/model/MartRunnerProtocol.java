@@ -164,7 +164,13 @@ public class MartRunnerProtocol {
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
-		JobHandler.beginJob(in.readLine());
+		final String jobId = in.readLine();
+		final String jdbcDriverClassName = in.readLine();
+		final String jdbcURL = in.readLine();
+		final String jdbcUsername = in.readLine();
+		final String jdbcPassword = in.readLine();
+		JobHandler.beginJob(jobId, jdbcDriverClassName, jdbcURL, jdbcUsername,
+				jdbcPassword);
 	}
 
 	/**
@@ -319,7 +325,7 @@ public class MartRunnerProtocol {
 
 		/**
 		 * Request a job ID that can be used for a new job. Does not actually
-		 * begin the job. See {@link #beginJob(String, String, String)}.
+		 * begin the job.
 		 * 
 		 * @param host
 		 *            the remote host.
@@ -361,11 +367,22 @@ public class MartRunnerProtocol {
 		 *            the remote port.
 		 * @param jobId
 		 *            the job ID.
+		 * @param jdbcDriverClassName
+		 *            the JDBC driver classname for the server the job will run
+		 *            against.
+		 * @param jdbcURL
+		 *            the JDBC URL of the server the job will run against.
+		 * @param jdbcUsername
+		 *            the JDBC username for the server the job will run against.
+		 * @param jdbcPassword
+		 *            the JDBC password for the server the job will run against.
 		 * @throws ProtocolException
 		 *             if something went wrong.
 		 */
 		public static void beginJob(final String host, final String port,
-				final String jobId) throws ProtocolException {
+				final String jobId, final String jdbcDriverClassName,
+				final String jdbcURL, final String jdbcUsername,
+				final String jdbcPassword) throws ProtocolException {
 			Socket clientSocket = null;
 			try {
 				clientSocket = Client.getClientSocket(host, port);
@@ -373,7 +390,10 @@ public class MartRunnerProtocol {
 						.getOutputStream(), true);
 				bos.println(MartRunnerProtocol.BEGIN_JOB);
 				bos.println(jobId);
-				// TODO Write out JDBC connection details.
+				bos.println(jdbcDriverClassName);
+				bos.println(jdbcURL);
+				bos.println(jdbcUsername);
+				bos.println(jdbcPassword);
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {

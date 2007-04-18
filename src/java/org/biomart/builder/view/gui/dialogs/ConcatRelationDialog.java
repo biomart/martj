@@ -105,8 +105,7 @@ public class ConcatRelationDialog extends JDialog {
 		this.cancelled = true;
 
 		// Create the content pane to store the create dialog panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
@@ -179,8 +178,7 @@ public class ConcatRelationDialog extends JDialog {
 		};
 
 		// Recursion stuff.
-		final GridBagLayout recursionGrid = new GridBagLayout();
-		final JPanel recursionPanel = new JPanel(recursionGrid);
+		final JPanel recursionPanel = new JPanel(new GridBagLayout());
 		this.recursionType = new JComboBox(
 				new RecursionType[] { RecursionType.NONE,
 						RecursionType.PREPEND, RecursionType.APPEND });
@@ -261,81 +259,62 @@ public class ConcatRelationDialog extends JDialog {
 
 		// Add the aliases.
 		JLabel label = new JLabel(Resources.get("columnAliasLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		JPanel field = new JPanel();
 		field.add(this.columnAliasModel);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the expression option.
 		label = new JLabel(Resources.get("expressionLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(new JScrollPane(this.expression));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the recursion combo box.
 		label = new JLabel(Resources.get("recursionTypeLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.recursionType);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the recursion panel.
 		label = new JLabel(Resources.get("recursionKeyLabel"));
-		recursionGrid.setConstraints(label, labelConstraints);
-		recursionPanel.add(label);
+		recursionPanel.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.recursionKey);
-		recursionGrid.setConstraints(field, fieldConstraints);
-		recursionPanel.add(field);
+		recursionPanel.add(field, fieldConstraints);
 		label = new JLabel(Resources.get("firstRelationLabel"));
-		recursionGrid.setConstraints(label, labelConstraints);
-		recursionPanel.add(label);
+		recursionPanel.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.firstRelation);
-		recursionGrid.setConstraints(field, fieldConstraints);
-		recursionPanel.add(field);
+		recursionPanel.add(field, fieldConstraints);
 		label = new JLabel(Resources.get("secondRelationLabel"));
-		recursionGrid.setConstraints(label, labelConstraints);
-		recursionPanel.add(label);
+		recursionPanel.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.secondRelation);
-		recursionGrid.setConstraints(field, fieldConstraints);
-		recursionPanel.add(field);
-		gridBag.setConstraints(recursionPanel, fieldConstraints);
+		recursionPanel.add(field, fieldConstraints);
 		label = new JLabel(Resources.get("concSepLabel"));
-		recursionGrid.setConstraints(label, labelConstraints);
-		recursionPanel.add(label);
+		recursionPanel.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.concSep);
-		recursionGrid.setConstraints(field, fieldConstraints);
-		recursionPanel.add(field);
-		content.add(recursionPanel);
+		recursionPanel.add(field, fieldConstraints);
+		content.add(recursionPanel, fieldConstraints);
 
 		// Row separator.
 		label = new JLabel(Resources.get("rowSepLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.rowSep);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the buttons to the dialog.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(this.cancel);
 		field.add(this.execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the cancel button and use it to close this
 		// dialog without making any changes.

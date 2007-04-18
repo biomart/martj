@@ -92,8 +92,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		super();
 
 		// Create the layout to display the rest of the panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		this.setLayout(gridBag);
+		this.setLayout(new GridBagLayout());
 
 		// Create constraints for labels that are not in the last row.
 		final GridBagConstraints labelConstraints = new GridBagConstraints();
@@ -196,22 +195,22 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 
 		// Display the table and buttons as two parts of a single panel.
-		JPanel field = new JPanel();
-		field.add(new JScrollPane(table));
-		gridBag.setConstraints(field, fieldConstraints);
-		this.add(field);
+		JPanel tableField = new JPanel();
+		tableField.add(new JScrollPane(table));
 		if (this.insert != null || this.remove != null) {
-			field = new JPanel();
+			JPanel field = new JPanel();
 			if (this.insert != null)
 				field.add(this.insert);
 			if (this.remove != null)
 				field.add(this.remove);
-			gridBag.setConstraints(field, fieldConstraints);
-			this.add(field);
+			this.add(tableField, fieldConstraints);
+			this.add(field, fieldLastRowConstraints);
 		} 
 		// If cannot insert/remove then also cannot change.
-		else 
+		else {
+			this.add(tableField, fieldLastRowConstraints);
 			table.setEnabled(false);
+		}
 	}
 
 	/**

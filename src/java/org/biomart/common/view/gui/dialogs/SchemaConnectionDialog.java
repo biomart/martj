@@ -119,8 +119,7 @@ public class SchemaConnectionDialog extends JDialog {
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create some constraints for labels, except those on the last row
@@ -208,8 +207,7 @@ public class SchemaConnectionDialog extends JDialog {
 
 		// Add the name label and name field.
 		JLabel label = new JLabel(Resources.get("nameLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 
 		// In the name field, also include the type label and field, to save
 		// space.
@@ -218,23 +216,19 @@ public class SchemaConnectionDialog extends JDialog {
 		label = new JLabel(Resources.get("typeLabel"));
 		field.add(label);
 		field.add(this.type);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the connection panel holder.
-		gridBag.setConstraints(connectionPanelHolder, fieldConstraints);
-		content.add(connectionPanelHolder);
+		content.add(connectionPanelHolder, fieldConstraints);
 
 		// Add the buttons.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(this.test);
 		field.add(this.cancel);
 		field.add(this.execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the cancel button, which closes the dialog
 		// without taking any action.

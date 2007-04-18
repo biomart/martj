@@ -72,8 +72,7 @@ public class MartRunnerConnectionDialog extends JDialog {
 		this.setModal(true);
 
 		// Create the content pane to store the create dialog panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
@@ -106,19 +105,15 @@ public class MartRunnerConnectionDialog extends JDialog {
 
 		// Add the output host/port etc..
 		JLabel label = new JLabel(Resources.get("runDDLHostLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		JPanel field = new JPanel();
 		field.add(this.runDDLHost);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 		label = new JLabel(Resources.get("runDDLPortLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.runDDLPort);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// The close and execute buttons.
 		final JButton cancel = new JButton(Resources.get("cancelButton"));
@@ -148,13 +143,11 @@ public class MartRunnerConnectionDialog extends JDialog {
 
 		// Add the buttons.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(cancel);
 		field.add(execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Make execute the default button.
 		this.getRootPane().setDefaultButton(execute);

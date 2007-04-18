@@ -108,8 +108,7 @@ public class PartitionColumnDialog extends JDialog {
 		this.setModal(true);
 
 		// Create the content pane to store the create dialog panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
@@ -338,47 +337,37 @@ public class PartitionColumnDialog extends JDialog {
 
 		// Add the partition type label and field to the dialog.
 		JLabel label = new JLabel(Resources.get("partitionedColumnLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		JPanel field = new JPanel();
 		field.add(this.columns);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the partition type label and field to the dialog.
 		label = new JLabel(Resources.get("partitionTypeLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.type);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the value list label and field to the dialog.
-		gridBag.setConstraints(valueListLabel, labelConstraints);
-		content.add(valueListLabel);
+		content.add(valueListLabel, labelConstraints);
 		field = new JPanel();
 		field.add(valueListPanel);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the expression label and field to the dialog.
-		gridBag.setConstraints(exprLabel, labelConstraints);
-		content.add(exprLabel);
+		content.add(exprLabel, labelConstraints);
 		field = new JPanel();
 		field.add(this.expressionAliasModel);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add a blank label and the buttons to the dialog.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(this.cancel);
 		field.add(this.execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the cancel button and use it to close this
 		// dialog without making any changes.

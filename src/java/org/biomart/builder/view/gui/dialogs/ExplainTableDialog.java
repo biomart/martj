@@ -106,8 +106,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	private GridBagConstraints fieldLastRowConstraints;
 
-	private GridBagLayout gridBag;
-
 	private GridBagConstraints labelConstraints;
 
 	private GridBagConstraints labelLastRowConstraints;
@@ -138,9 +136,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.schemaTabSet.setVisible(true);
 		displayArea.add(this.schemaTabSet, "WINDOW_CARD");
 
-		// Create the content pane to store the create dialog panel.
-		this.gridBag = new GridBagLayout();
-
 		// Create constraints for labels that are not in the last row.
 		this.labelConstraints = new GridBagConstraints();
 		this.labelConstraints.gridwidth = GridBagConstraints.RELATIVE;
@@ -163,7 +158,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Compute the transformation diagram.
-		this.transformation = new JPanel(this.gridBag);
+		this.transformation = new JPanel(new GridBagLayout());
 		displayArea.add(new JScrollPane(this.transformation),
 				"TRANSFORMATION_CARD");
 
@@ -317,16 +312,14 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 					ExplainTableDialog.this.transformationTableComponents
 							.addAll(diagram.getTableComponents());
 					// Display the diagram.
-					ExplainTableDialog.this.gridBag.setConstraints(label,
+					ExplainTableDialog.this.transformation.add(label,
 							ExplainTableDialog.this.labelConstraints);
-					ExplainTableDialog.this.transformation.add(label);
 					diagram
 							.setDiagramContext(ExplainTableDialog.this.transformationContext);
 					JPanel field = new JPanel();
 					field.add(diagram);
-					ExplainTableDialog.this.gridBag.setConstraints(field,
+					ExplainTableDialog.this.transformation.add(field,
 							ExplainTableDialog.this.fieldConstraints);
-					ExplainTableDialog.this.transformation.add(field);
 					// Add columns from this unit to the transformed table.
 					columnsSoFar.addAll(tu.getNewColumnNameMap().values());
 					stepNumber++;

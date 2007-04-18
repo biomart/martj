@@ -38,6 +38,7 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.common.model.DataLink;
 import org.biomart.common.model.Schema;
+import org.biomart.common.model.DataLink.JDBCDataLink;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -167,7 +168,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// perform the actual conversion of action to DDL and divide
 		// the results into appropriate files or buffers.
 		final DDLHelper helper = this.outputStringBuffer == null ? this.outputHost != null ? (DDLHelper) new RemoteHostHelper(
-				this.outputHost, this.outputPort, dd)
+				this.outputHost, this.outputPort, dd,
+				(JDBCDataLink) inputSchemaList.get(0))
 				: (DDLHelper) new TableAsFileHelper(this.outputFile, dd)
 				: new SingleStringBufferHelper(this.outputStringBuffer, dd);
 		Log.debug("Chose helper " + helper.getClass().getName());
@@ -415,6 +417,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private String partition;
 
+		private JDBCDataLink targetJDBCDataLink;
+
 		/**
 		 * Constructs a helper which will output all actions directly to the
 		 * given host for interpretation.
@@ -425,13 +429,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            the port the host is listening on.
 		 * @param dialect
 		 *            the type of SQL the actions should contain.
+		 * @param targetJDBCDataLink
+		 *            the target JDBC connection to receive the SQL.
 		 */
 		public RemoteHostHelper(final String outputHost,
-				final String outputPort, final DatabaseDialect dialect) {
+				final String outputPort, final DatabaseDialect dialect,
+				final JDBCDataLink targetJDBCDataLink) {
 			super(dialect);
 			this.outputHost = outputHost;
 			this.outputPort = outputPort;
 			this.actions = new LinkedHashMap();
+			this.targetJDBCDataLink = targetJDBCDataLink;
 		}
 
 		/**
@@ -452,8 +460,11 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				this.job = MartRunnerProtocol.Client.newJob(this.outputHost,
 						this.outputPort);
 				MartRunnerProtocol.Client.beginJob(this.outputHost,
-						this.outputPort, this.job);
-				// TODO Write out JDBC connection details.
+						this.outputPort, this.job, this.targetJDBCDataLink
+								.getDriverClassName(), this.targetJDBCDataLink
+								.getJDBCURL(), this.targetJDBCDataLink
+								.getUsername(), this.targetJDBCDataLink
+								.getPassword());
 			} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 				Log.debug("Finished MartRunner job definition");
 				// Write the closing message to the socket.

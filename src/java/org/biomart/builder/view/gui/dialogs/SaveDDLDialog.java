@@ -114,8 +114,7 @@ public class SaveDDLDialog extends JDialog {
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create some constraints for labels, except those on the last row
@@ -265,53 +264,41 @@ public class SaveDDLDialog extends JDialog {
 
 		// Add the dataset lists.
 		JLabel label = new JLabel(Resources.get("selectedDataSetsLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(this.datasetsList));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the target schema settings label and field.
 		label = new JLabel(Resources.get("targetSchemaLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.targetSchemaName);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the format field.
 		label = new JLabel(Resources.get("outputFormatLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.outputFormat);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the output location label, field and file chooser button.
-		gridBag.setConstraints(outputFileLabel, labelConstraints);
-		content.add(outputFileLabel);
+		content.add(outputFileLabel, labelConstraints);
 		field = new JPanel();
 		field.add(this.outputFileLocation);
 		field.add(this.outputFileLocationButton);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the output host/port etc..
-		gridBag.setConstraints(outputHostLabel, labelConstraints);
-		content.add(outputHostLabel);
+		content.add(outputHostLabel, labelConstraints);
 		field = new JPanel();
 		field.add(this.runDDLHost);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
-		gridBag.setConstraints(outputPortLabel, labelConstraints);
-		content.add(outputPortLabel);
+		content.add(field, fieldConstraints);
+		content.add(outputPortLabel, labelConstraints);
 		field = new JPanel();
 		field.add(this.runDDLPort);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// The close and execute buttons.
 		final JButton cancel = new JButton(Resources.get("cancelButton"));
@@ -338,13 +325,11 @@ public class SaveDDLDialog extends JDialog {
 
 		// Add the buttons.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(cancel);
 		field.add(execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Make execute the default button.
 		this.getRootPane().setDefaultButton(execute);

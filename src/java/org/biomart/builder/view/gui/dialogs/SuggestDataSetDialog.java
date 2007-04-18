@@ -80,8 +80,7 @@ public class SuggestDataSetDialog extends JDialog {
 		this.setModal(true);
 
 		// Create the content pane to store the create dialog panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
@@ -127,22 +126,18 @@ public class SuggestDataSetDialog extends JDialog {
 
 		// Add the list of tables.
 		JLabel label = new JLabel(Resources.get("suggestDSTablesLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(this.tables));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the buttons to the dialog.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(this.cancel);
 		field.add(this.execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the cancel button and use it to close this
 		// dialog without making any changes.

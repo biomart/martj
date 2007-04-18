@@ -20,6 +20,7 @@ package org.biomart.common.resources;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.util.Properties;
 
 import org.apache.log4j.Appender;
@@ -36,8 +37,8 @@ import org.apache.log4j.RollingFileAppender;
  * {@link Settings#setApplication(String)} method.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public class Log {
@@ -97,11 +98,22 @@ public class Log {
 		// Attempt to load any user-defined settings.
 		try {
 			final File log4jPropsFile = new File(appDir, "log4j.properties");
-			if (log4jPropsFile.exists()) {
-				final Properties log4jProps = new Properties();
-				log4jProps.load(new FileInputStream(log4jPropsFile));
-				PropertyConfigurator.configure(log4jProps);
+			if (!log4jPropsFile.exists()) {
+				// Create default config.
+				final FileWriter fw = new FileWriter(log4jPropsFile);
+				final String newLine = System.getProperty("line.separator");
+				fw.write("log4j.category." + app + "=warn,stdout" + newLine);
+				fw
+						.write("log4j.appender.stdout=org.apache.log4j.ConsoleAppender"
+								+ newLine);
+				fw
+						.write("log4j.appender.stdout.layout=org.apache.log4j.TTCCLayout"
+								+ newLine);
+				fw.close();
 			}
+			final Properties log4jProps = new Properties();
+			log4jProps.load(new FileInputStream(log4jPropsFile));
+			PropertyConfigurator.configure(log4jProps);
 		} catch (Throwable t) {
 			Log.warn(Resources.get("noCustomLogger"), t);
 		}

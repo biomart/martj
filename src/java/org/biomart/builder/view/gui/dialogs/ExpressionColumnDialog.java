@@ -101,8 +101,7 @@ public class ExpressionColumnDialog extends JDialog {
 		this.cancelled = true;
 
 		// Create the content pane to store the create dialog panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
@@ -175,49 +174,39 @@ public class ExpressionColumnDialog extends JDialog {
 
 		// Add the column aliases table.
 		JLabel label = new JLabel(Resources.get("columnAliasLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		JPanel field = new JPanel();
 		field.add(this.columnAliasModel);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the expression option.
 		label = new JLabel(Resources.get("expressionLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(new JScrollPane(this.expression));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the group-by option.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.groupBy);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the optimiser option.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(this.optimiser);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the buttons to the dialog.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(this.cancel);
 		field.add(this.execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Make sure group-by and optimiser are mutually exclusive.
 		this.groupBy.addActionListener(new ActionListener() {

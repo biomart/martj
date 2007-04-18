@@ -54,8 +54,7 @@ public class AboutDialog extends JDialog {
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create some constraints for labels, except those on the last row
@@ -91,41 +90,32 @@ public class AboutDialog extends JDialog {
 		// Logo
 		JComponent item = new JLabel(new ImageIcon(Resources
 				.getResourceAsURL("biomart-logo.gif")));
-		gridBag.setConstraints(item, logoConstraints);
-		content.add(item);
+		content.add(item, logoConstraints);
 
 		// Title: Resources.get("GUITitle")
 		item = new JLabel(Resources.get("aboutAppTitle"));
-		gridBag.setConstraints(item, labelConstraints);
-		content.add(item);
+		content.add(item, labelConstraints);
 		item = new JLabel(Resources.get("plainGUITitle"));
-		gridBag.setConstraints(item, fieldConstraints);
-		content.add(item);
+		content.add(item, fieldConstraints);
 
 		// Version: Resources.BIOMART_VERSION
 		item = new JLabel(Resources.get("aboutVersion"));
-		gridBag.setConstraints(item, labelConstraints);
-		content.add(item);
+		content.add(item, labelConstraints);
 		item = new JLabel(Resources.BIOMART_VERSION);
-		gridBag.setConstraints(item, fieldConstraints);
-		content.add(item);
+		content.add(item, fieldConstraints);
 
 		// Website: http://www.biomart.org/
 		item = new JLabel(Resources.get("aboutWebsite"));
-		gridBag.setConstraints(item, labelConstraints);
-		content.add(item);
+		content.add(item, labelConstraints);
 		item = new OpenBrowserLabel(Resources.get("aboutWebsiteAddress"));
-		gridBag.setConstraints(item, fieldConstraints);
-		content.add(item);
+		content.add(item, fieldConstraints);
 
 		// Contact: mart-dev@ebi.ac.uk
 		item = new JLabel(Resources.get("aboutContact"));
-		gridBag.setConstraints(item, labelLastRowConstraints);
-		content.add(item);
+		content.add(item, labelLastRowConstraints);
 		item = new OpenBrowserLabel(Resources.get("aboutContactAddress"),
 				"mailto:" + Resources.get("aboutContactAddress"));
-		gridBag.setConstraints(item, fieldLastRowConstraints);
-		content.add(item);
+		content.add(item, fieldLastRowConstraints);
 
 		// Set size of window.
 		this.pack();

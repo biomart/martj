@@ -76,9 +76,8 @@ public class CompoundRelationDialog extends JDialog {
 		this.setModal(true);
 
 		// Create the layout manager for this panel.
-		final GridBagLayout gridBag = new GridBagLayout();
 		final JPanel content = new JPanel();
-		content.setLayout(gridBag);
+		content.setLayout(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for fields that are not in the last row.
@@ -114,21 +113,18 @@ public class CompoundRelationDialog extends JDialog {
 		field.add(new JLabel(label));
 		field.add(spinner);
 		field.add(new JLabel(Resources.get("compoundRelationSpinnerLabel")));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Parallel button.
 		field = new JPanel();
 		field.add(this.parallel);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Close/Execute buttons at the bottom.
 		field = new JPanel();
 		field.add(close);
 		field.add(execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the spinner.
 		spinner.addChangeListener(new ChangeListener() {

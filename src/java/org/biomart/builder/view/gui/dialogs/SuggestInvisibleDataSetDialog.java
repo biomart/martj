@@ -83,9 +83,8 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		this.setTitle(Resources.get("suggestInvisibleDataSetDialogTitle"));
 		this.setModal(true);
 
-		// Create the content pane to store the create dialog panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel(gridBag);
+		// Create the content pane to store the create dialog panel.		
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for labels that are not in the last row.
@@ -164,31 +163,25 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 
 		// Add the table name.
 		JLabel label = new JLabel(Resources.get("suggestDSTableLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		JPanel field = new JPanel();
 		field.add(this.tables);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the list of columns.
 		label = new JLabel(Resources.get("suggestDSColumnsLabel"));
-		gridBag.setConstraints(label, labelConstraints);
-		content.add(label);
+		content.add(label, labelConstraints);
 		field = new JPanel();
 		field.add(new JScrollPane(this.columns));
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Add the buttons to the dialog.
 		label = new JLabel();
-		gridBag.setConstraints(label, labelLastRowConstraints);
-		content.add(label);
+		content.add(label, labelLastRowConstraints);
 		field = new JPanel();
 		field.add(this.cancel);
 		field.add(this.execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the cancel button and use it to close this
 		// dialog without making any changes.

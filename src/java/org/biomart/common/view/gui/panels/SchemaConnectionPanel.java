@@ -210,8 +210,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			super();
 
 			// Create the layout manager for this panel.
-			final GridBagLayout gridBag = new GridBagLayout();
-			this.setLayout(gridBag);
+			this.setLayout(new GridBagLayout());
 
 			// Create constraints for labels that are not in the last row.
 			final GridBagConstraints labelConstraints = new GridBagConstraints();
@@ -308,70 +307,58 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 			// Add the driver class label and field.
 			JLabel label = new JLabel(Resources.get("driverClassLabel"));
-			gridBag.setConstraints(label, labelConstraints);
-			this.add(label);
+			this.add(label, labelConstraints);
 			JPanel field = new JPanel();
 			field.add(this.predefinedDriverClass);
 			field.add(this.driverClass);
-			gridBag.setConstraints(field, fieldConstraints);
-			this.add(field);
+			this.add(field, fieldConstraints);
 
 			// Add the driver location label, field and file chooser button.
 			label = new JLabel(Resources.get("driverClassLocationLabel"));
-			gridBag.setConstraints(label, labelConstraints);
-			this.add(label);
+			this.add(label, labelConstraints);
 			field = new JPanel();
 			field.add(this.driverClassLocation);
 			field.add(this.driverClassLocationButton);
-			gridBag.setConstraints(field, fieldConstraints);
-			this.add(field);
+			this.add(field, fieldConstraints);
 
 			// Add the host label, and the host field, port label, port field.
 			label = new JLabel(Resources.get("hostLabel"));
-			gridBag.setConstraints(label, labelConstraints);
-			this.add(label);
+			this.add(label, labelConstraints);
 			field = new JPanel();
 			field.add(this.host);
 			label = new JLabel(Resources.get("portLabel"));
 			field.add(label);
 			field.add(this.port);
-			gridBag.setConstraints(field, fieldConstraints);
-			this.add(field);
+			this.add(field, fieldConstraints);
 
 			// Add the database and schema fields.
 			label = new JLabel(Resources.get("databaseLabel"));
-			gridBag.setConstraints(label, labelConstraints);
-			this.add(label);
+			this.add(label, labelConstraints);
 			field = new JPanel();
 			field.add(this.database);
 			label = new JLabel(Resources.get("schemaNameLabel"));
 			field.add(label);
 			field.add(this.schemaName);
-			gridBag.setConstraints(field, fieldConstraints);
-			this.add(field);
+			this.add(field, fieldConstraints);
 
 			// Add the JDBC URL label and field.
 			label = new JLabel(Resources.get("jdbcURLLabel"));
-			gridBag.setConstraints(label, labelConstraints);
-			this.add(label);
+			this.add(label, labelConstraints);
 			field = new JPanel();
 			field.add(this.jdbcURL);
-			gridBag.setConstraints(field, fieldConstraints);
-			this.add(field);
+			this.add(field, fieldConstraints);
 
 			// Add the username label, and the username field, password
 			// label and password field across the username field space
 			// in order to save space.
 			label = new JLabel(Resources.get("usernameLabel"));
-			gridBag.setConstraints(label, labelLastRowConstraints);
-			this.add(label);
+			this.add(label, labelLastRowConstraints);
 			field = new JPanel();
 			field.add(this.username);
 			label = new JLabel(Resources.get("passwordLabel"));
 			field.add(label);
 			field.add(this.password);
-			gridBag.setConstraints(field, fieldLastRowConstraints);
-			this.add(field);
+			this.add(field, fieldLastRowConstraints);
 
 			// Attach the file chooser to the driver class location button.
 			final JPanel panel = this;

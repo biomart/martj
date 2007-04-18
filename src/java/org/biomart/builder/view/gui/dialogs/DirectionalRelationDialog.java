@@ -71,9 +71,7 @@ public class DirectionalRelationDialog extends JDialog {
 		this.setModal(true);
 
 		// Create the layout manager for this panel.
-		final GridBagLayout gridBag = new GridBagLayout();
-		final JPanel content = new JPanel();
-		content.setLayout(gridBag);
+		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 
 		// Create constraints for fields that are not in the last row.
@@ -106,15 +104,13 @@ public class DirectionalRelationDialog extends JDialog {
 		field.add(checkbox);
 		field.add(new JLabel(Resources.get("directionalRelationKeyLabel")));
 		field.add(this.chosenKey);
-		gridBag.setConstraints(field, fieldConstraints);
-		content.add(field);
+		content.add(field, fieldConstraints);
 
 		// Close/Execute buttons at the bottom.
 		field = new JPanel();
 		field.add(close);
 		field.add(execute);
-		gridBag.setConstraints(field, fieldLastRowConstraints);
-		content.add(field);
+		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the drop-down.
 		this.chosenKey.addItemListener(new ItemListener() {

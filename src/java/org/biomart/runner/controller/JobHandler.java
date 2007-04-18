@@ -55,6 +55,10 @@ public class JobHandler {
 		if (!jobsDir.exists())
 			jobsDir.mkdir();
 	}
+	
+	// TODO When JobHandler updates the status of a section/action, update
+	// both the section/action AND the JobSummary for that job by calling
+	// getStatus() on the JobPlan for that job after doing the update.
 
 	/**
 	 * Request a new job ID. Don't define the job, just request an ID for one
@@ -75,20 +79,35 @@ public class JobHandler {
 	 * 
 	 * @param jobId
 	 *            the job ID.
+	 * @param jdbcDriverClassName
+	 *            the JDBC driver classname for the server the job will run
+	 *            against.
+	 * @param jdbcURL
+	 *            the JDBC URL of the server the job will run against.
+	 * @param jdbcUsername
+	 *            the JDBC username for the server the job will run against.
+	 * @param jdbcPassword
+	 *            the JDBC password for the server the job will run against.
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public static void beginJob(final String jobId) throws JobException {
-		// TODO Build in JDBC details.
+	public static void beginJob(final String jobId,
+			final String jdbcDriverClassName, final String jdbcURL,
+			final String jdbcUsername, final String jdbcPassword)
+			throws JobException {
 		try {
 			// Create a job list entry.
 			final JobList jobList = JobHandler.loadJobList();
-			jobList.addJob(new JobSummary(jobId));
+			final JobSummary jobSummary = new JobSummary(jobId);
+			// Set the JDBC stuff.
+			jobSummary.setJDBCDriverClassName(jdbcDriverClassName);
+			jobSummary.setJDBCURL(jdbcURL);
+			jobSummary.setJDBCUsername(jdbcUsername);
+			jobSummary.setJDBCPassword(jdbcPassword);
+			jobList.addJob(jobSummary);
 			JobHandler.saveJobList(jobList);
-			// Create a plan.
-			final JobPlan jobPlan = JobHandler.loadJobPlan(jobId);
-			// Just save it again. We don't need to make any changes yet.
-			JobHandler.saveJobPlan(jobPlan);
+			// Create and save a plan.
+			JobHandler.saveJobPlan(new JobPlan(jobId));
 		} catch (final IOException e) {
 			throw new JobException(e);
 		}
@@ -180,39 +199,16 @@ public class JobHandler {
 	 */
 	public static void removeJob(final String jobId) throws JobException {
 		try {
-			// TODO Only remove job if not currently in progress.
+			// TODO Stop job first if currently running.
 			// Remove the job list entry.
 			final JobList jobList = JobHandler.loadJobList();
 			jobList.removeJob(jobId);
 			JobHandler.saveJobList(jobList);
 			// Recursively delete the job directory.
-			FileUtils.delete(JobHandler.getJobDir(jobId));
+			FileUtils.delete(JobHandler.getJobPlanFile(jobId));
 		} catch (final IOException e) {
 			throw new JobException(e);
 		}
-	}
-
-	private static File getJobDir(final String jobId) throws IOException {
-		final File jobDir = new File(JobHandler.jobsDir, jobId);
-		if (!jobDir.exists()) {
-			Log.debug("Creating job directory for " + jobId);
-			jobDir.mkdir();
-			// Getting the SQL dir forces it to be created.
-			JobHandler.getSQLDir(jobId);
-			// Save a default plan.
-			Log.debug("Creating default plan for " + jobId);
-			JobHandler.saveJobPlan(new JobPlan(jobId));
-		}
-		return jobDir;
-	}
-
-	private static File getSQLDir(final String jobId) throws IOException {
-		final File sqlDir = new File(JobHandler.getJobDir(jobId), "sql");
-		if (!sqlDir.exists()) {
-			Log.debug("Creating SQL directory for " + jobId);
-			sqlDir.mkdir();
-		}
-		return sqlDir;
 	}
 
 	private static File getJobListFile() throws IOException {
@@ -220,7 +216,7 @@ public class JobHandler {
 	}
 
 	private static File getJobPlanFile(final String jobId) throws IOException {
-		return new File(JobHandler.getJobDir(jobId), "plan");
+		return new File(JobHandler.jobsDir, jobId);
 	}
 
 	private static JobPlan loadJobPlan(final String jobId) throws IOException {
@@ -260,7 +256,6 @@ public class JobHandler {
 				final ObjectOutputStream oos = new ObjectOutputStream(fos);
 				oos.writeObject(jobPlan);
 				oos.flush();
-				fos.flush();
 			} finally {
 				if (fos != null)
 					fos.close();
@@ -273,7 +268,7 @@ public class JobHandler {
 			Log.debug("Loading list");
 			final File jobListFile = JobHandler.getJobListFile();
 			// Doesn't exist? Return a default new list.
-			if (!jobListFile.exists()) 
+			if (!jobListFile.exists())
 				return new JobList();
 			// Load existing job plan.
 			FileInputStream fis = null;
