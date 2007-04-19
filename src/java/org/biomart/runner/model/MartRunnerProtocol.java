@@ -61,6 +61,14 @@ public class MartRunnerProtocol {
 
 	private static final String GET_JOB_PLAN = "GET_JOB_PLAN";
 
+	private static final String EMAIL_ADDRESS = "EMAIL_ADDRESS";
+
+	private static final String THREAD_COUNT = "THREAD_COUNT";
+
+	private static final String START_JOB = "START_JOB";
+
+	private static final String STOP_JOB = "STOP_JOB";
+
 	// Short-cut for ending messages and actions.
 	private static final String END_MESSAGE = "___END_MESSAGE___";
 
@@ -284,7 +292,7 @@ public class MartRunnerProtocol {
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
-		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.listJobs());
+		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.getJobList());
 	}
 
 	/**
@@ -311,6 +319,110 @@ public class MartRunnerProtocol {
 			IOException {
 		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.getJobPlan(in
 				.readLine()));
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_EMAIL_ADDRESS(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final String email = in.readLine();
+		JobHandler.setEmailAddress(jobId, email);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_THREAD_COUNT(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final int threadCount = Integer.parseInt(in.readLine());
+		JobHandler.setThreadCount(jobId, threadCount);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_START_JOB(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		JobHandler.startJob(in.readLine());
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_STOP_JOB(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		JobHandler.stopJob(in.readLine());
 	}
 
 	/**
@@ -582,6 +694,146 @@ public class MartRunnerProtocol {
 						.getInputStream()).readObject();
 			} catch (final ClassNotFoundException e) {
 				throw new ProtocolException(e);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Flag that a job email address has changed.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param email
+		 *            the new email address.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void setEmailAddress(final String host,
+				final String port, final String jobId, final String email)
+				throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.EMAIL_ADDRESS);
+				bos.println(jobId);
+				bos.println(email == null ? "" : email);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Flag that a job thread count has changed.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param threadCount
+		 *            the new thread count.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void setThreadCount(final String host, final String port,
+				final String jobId, final int threadCount)
+				throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.THREAD_COUNT);
+				bos.println(jobId);
+				bos.println(threadCount);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Flag that a job is to be started.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void startJob(final String host, final String port,
+				final String jobId) throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.START_JOB);
+				bos.println(jobId);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Flag that a job is to be stopped.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void stopJob(final String host, final String port,
+				final String jobId) throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.STOP_JOB);
+				bos.println(jobId);
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {

@@ -31,8 +31,12 @@ import java.util.Vector;
 
 import javax.swing.tree.TreeNode;
 
+import org.biomart.common.resources.Settings;
+
 /**
- * Handles planning and execution of jobs.
+ * Handles planning and execution of jobs. The maximum number of threads
+ * allowed is controlled by the 'maxthreads' property in the BioMart
+ * properties file. See {@link Settings#getProperty(String)}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
@@ -47,6 +51,22 @@ public class JobPlan implements Serializable {
 
 	private final JobPlanSection rootSection;
 
+	private static final int MAX_THREAD_COUNT = Integer.parseInt(Settings
+			.getProperty("maxthreads") == null ? "5" : Settings
+			.getProperty("maxthreads"));
+
+	private String JDBCDriverClassName;
+
+	private String JDBCURL;
+
+	private String JDBCUsername;
+
+	private String JDBCPassword;
+
+	private int threadCount;
+
+	private String contactEmailAddress;
+
 	/**
 	 * Create a new job plan.
 	 * 
@@ -56,6 +76,7 @@ public class JobPlan implements Serializable {
 	public JobPlan(final String jobId) {
 		this.jobId = jobId;
 		this.rootSection = new JobPlanSection(jobId, null);
+		this.threadCount = 1;
 	}
 
 	/**
@@ -102,6 +123,103 @@ public class JobPlan implements Serializable {
 	}
 
 	/**
+	 * @return the threadCount
+	 */
+	public int getThreadCount() {
+		return threadCount;
+	}
+
+	/**
+	 * @param threadCount
+	 *            the threadCount to set
+	 */
+	public void setThreadCount(int threadCount) {
+		this.threadCount = threadCount;
+	}
+
+	/**
+	 * @return the threadCount
+	 */
+	public int getMaxThreadCount() {
+		return JobPlan.MAX_THREAD_COUNT;
+	}
+
+	/**
+	 * @return the contactEmailAddress
+	 */
+	public String getContactEmailAddress() {
+		return contactEmailAddress;
+	}
+
+	/**
+	 * @param contactEmailAddress
+	 *            the contactEmailAddress to set
+	 */
+	public void setContactEmailAddress(String contactEmailAddress) {
+		this.contactEmailAddress = contactEmailAddress;
+	}
+
+	/**
+	 * @return the JDBCDriverClassName
+	 */
+	public String getJDBCDriverClassName() {
+		return this.JDBCDriverClassName;
+	}
+
+	/**
+	 * @param driverClassName
+	 *            the JDBCDriverClassName to set
+	 */
+	public void setJDBCDriverClassName(String driverClassName) {
+		this.JDBCDriverClassName = driverClassName;
+	}
+
+	/**
+	 * @return the JDBCPassword
+	 */
+	public String getJDBCPassword() {
+		return this.JDBCPassword;
+	}
+
+	/**
+	 * @param password
+	 *            the JDBCPassword to set
+	 */
+	public void setJDBCPassword(String password) {
+		this.JDBCPassword = password;
+	}
+
+	/**
+	 * @return the JDBCURL
+	 */
+	public String getJDBCURL() {
+		return this.JDBCURL;
+	}
+
+	/**
+	 * @param jdbcurl
+	 *            the JDBCURL to set
+	 */
+	public void setJDBCURL(String jdbcurl) {
+		this.JDBCURL = jdbcurl;
+	}
+
+	/**
+	 * @return the JDBCUsername
+	 */
+	public String getJDBCUsername() {
+		return this.JDBCUsername;
+	}
+
+	/**
+	 * @param username
+	 *            the JDBCUsername to set
+	 */
+	public void setJDBCUsername(String username) {
+		this.JDBCUsername = username;
+	}
+
+	/**
 	 * Describes a section of a job, ie. a group of associated actions.
 	 */
 	public static class JobPlanSection implements Serializable, TreeNode {
@@ -112,7 +230,7 @@ public class JobPlan implements Serializable {
 		private final Map subSections = new LinkedHashMap();
 
 		private final List actions = new ArrayList();
-		
+
 		private final JobPlanSection parent;
 
 		/**
@@ -120,7 +238,8 @@ public class JobPlan implements Serializable {
 		 * 
 		 * @param label
 		 *            the label.
-		 *            @param parent the parent node.
+		 * @param parent
+		 *            the parent node.
 		 */
 		public JobPlanSection(final String label, final JobPlanSection parent) {
 			this.label = label;
@@ -305,14 +424,14 @@ public class JobPlan implements Serializable {
 			}
 			return status;
 		}
-		
+
 		private Vector getChildren() {
 			final Vector children = new Vector();
 			children.addAll(this.actions);
 			children.addAll(this.subSections.values());
 			return children;
 		}
-		
+
 		public Enumeration children() {
 			return this.getChildren().elements();
 		}
@@ -322,7 +441,7 @@ public class JobPlan implements Serializable {
 		}
 
 		public TreeNode getChildAt(int childIndex) {
-			return (TreeNode)this.getChildren().get(childIndex);
+			return (TreeNode) this.getChildren().get(childIndex);
 		}
 
 		public int getChildCount() {
@@ -357,7 +476,7 @@ public class JobPlan implements Serializable {
 		private Date ended;
 
 		private String messages;
-		
+
 		private final JobPlanSection parent;
 
 		/**
@@ -365,7 +484,8 @@ public class JobPlan implements Serializable {
 		 * 
 		 * @param action
 		 *            the action to create.
-		 *            @param parent the parent node.
+		 * @param parent
+		 *            the parent node.
 		 */
 		public JobPlanAction(final String action, final JobPlanSection parent) {
 			this.action = action;

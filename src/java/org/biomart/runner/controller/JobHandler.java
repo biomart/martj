@@ -24,15 +24,26 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.biomart.common.resources.Log;
+import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.FileUtils;
 import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.model.JobList;
 import org.biomart.runner.model.JobPlan;
+import org.biomart.runner.model.JobStatus;
+import org.biomart.runner.model.JobThreadManager;
 import org.biomart.runner.model.JobList.JobSummary;
+import org.biomart.runner.model.JobPlan.JobPlanAction;
+import org.biomart.runner.model.JobPlan.JobPlanSection;
+import org.biomart.runner.model.JobThreadManager.JobThreadManagerListener;
 
 /**
  * Tools for running SQL.
@@ -51,11 +62,17 @@ public class JobHandler {
 	private static final File jobsDir = new File(
 			Settings.getStorageDirectory(), "jobs");
 
+	private static JobList jobListCache = null;
+
+	private static final Map jobPlanCache = new HashMap();
+
+	private static final Map jobManagers = new HashMap();
+
 	static {
 		if (!jobsDir.exists())
 			jobsDir.mkdir();
 	}
-	
+
 	// TODO When JobHandler updates the status of a section/action, update
 	// both the section/action AND the JobSummary for that job by calling
 	// getStatus() on the JobPlan for that job after doing the update.
@@ -72,6 +89,53 @@ public class JobHandler {
 		synchronized (JobHandler.planDirLock) {
 			return "" + JobHandler.nextJobSuffix++;
 		}
+	}
+
+	/**
+	 * Locate any jobs that say they're running and change them to say they're
+	 * STOPPED.
+	 * 
+	 * @return the number of jobs changed.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static int stopCrashedJobs() throws JobException {
+		int jobsChanged = 0;
+		try {
+			// Update job summary statuses first.
+			final JobList jobList = JobHandler.getJobList();
+			for (final Iterator i = jobList.getAllJobs().iterator(); i
+					.hasNext();) {
+				final JobSummary summary = (JobSummary) i.next();
+				if (summary.getStatus().equals(JobStatus.RUNNING)) {
+					summary.setStatus(JobStatus.STOPPED);
+					// TODO Send an email when find stopped jobs.
+					JobHandler.saveJobList(jobList);
+					jobsChanged++;
+					// Update actions too.
+					final JobPlan plan = JobHandler.getJobPlan(summary
+							.getJobId());
+					final List sections = new ArrayList();
+					sections.add(plan.getStartingSection());
+					for (int j = 0; j < sections.size(); j++) {
+						final JobPlanSection section = (JobPlanSection) sections
+								.get(j);
+						sections.addAll(section.getAllSubSections());
+						for (final Iterator l = section.getAllActions()
+								.iterator(); l.hasNext();) {
+							final JobPlanAction action = (JobPlanAction) l
+									.next();
+							if (action.getStatus().equals(JobStatus.RUNNING))
+								action.setStatus(JobStatus.STOPPED);
+						}
+					}
+					JobHandler.saveJobPlan(plan);
+				}
+			}
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+		return jobsChanged;
 	}
 
 	/**
@@ -96,17 +160,18 @@ public class JobHandler {
 			final String jdbcUsername, final String jdbcPassword)
 			throws JobException {
 		try {
-			// Create a job list entry.
-			final JobList jobList = JobHandler.loadJobList();
-			final JobSummary jobSummary = new JobSummary(jobId);
+			// Create a job list entry and a job plan.
+			final JobList jobList = JobHandler.getJobList();
+			final JobSummary jobSummary = jobList.getJobSummary(jobId);
+			final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
 			// Set the JDBC stuff.
-			jobSummary.setJDBCDriverClassName(jdbcDriverClassName);
-			jobSummary.setJDBCURL(jdbcURL);
-			jobSummary.setJDBCUsername(jdbcUsername);
-			jobSummary.setJDBCPassword(jdbcPassword);
+			jobPlan.setJDBCDriverClassName(jdbcDriverClassName);
+			jobPlan.setJDBCURL(jdbcURL);
+			jobPlan.setJDBCUsername(jdbcUsername);
+			jobPlan.setJDBCPassword(jdbcPassword);
 			jobList.addJob(jobSummary);
+			// Save all.
 			JobHandler.saveJobList(jobList);
-			// Create and save a plan.
 			JobHandler.saveJobPlan(new JobPlan(jobId));
 		} catch (final IOException e) {
 			throw new JobException(e);
@@ -123,7 +188,7 @@ public class JobHandler {
 	 */
 	public static void endJob(final String jobId) throws JobException {
 		try {
-			final JobList jobList = JobHandler.loadJobList();
+			final JobList jobList = JobHandler.getJobList();
 			jobList.getJobSummary(jobId).setAllActionsReceived();
 			JobHandler.saveJobList(jobList);
 		} catch (final IOException e) {
@@ -147,7 +212,7 @@ public class JobHandler {
 			final String[] sectionPath, final Collection actions)
 			throws JobException {
 		try {
-			final JobPlan jobPlan = JobHandler.loadJobPlan(jobId);
+			final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
 			// Add the action to the job.
 			jobPlan.addActions(sectionPath, actions);
 			// Save it again.
@@ -181,7 +246,7 @@ public class JobHandler {
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public static JobList listJobs() throws JobException {
+	public static JobList getJobList() throws JobException {
 		try {
 			return JobHandler.loadJobList();
 		} catch (final IOException e) {
@@ -199,9 +264,10 @@ public class JobHandler {
 	 */
 	public static void removeJob(final String jobId) throws JobException {
 		try {
-			// TODO Stop job first if currently running.
+			// Stop job first if currently running.
+			JobHandler.stopJob(jobId);
 			// Remove the job list entry.
-			final JobList jobList = JobHandler.loadJobList();
+			final JobList jobList = JobHandler.getJobList();
 			jobList.removeJob(jobId);
 			JobHandler.saveJobList(jobList);
 			// Recursively delete the job directory.
@@ -209,6 +275,100 @@ public class JobHandler {
 		} catch (final IOException e) {
 			throw new JobException(e);
 		}
+	}
+
+	/**
+	 * Flag that a job email address has changed.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param email
+	 *            the new email address to use as a contact address.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static void setEmailAddress(final String jobId, final String email)
+			throws JobException {
+		try {
+			// Create a job list entry.
+			final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
+			// Set the email stuff.
+			final String trimmedEmail = email.trim().length() == 0 ? null
+					: email.trim();
+			if ((jobPlan.getContactEmailAddress() == null && trimmedEmail != null)
+					|| (jobPlan.getContactEmailAddress() != null && !jobPlan
+							.getContactEmailAddress().equals(trimmedEmail))) {
+				jobPlan.setContactEmailAddress(trimmedEmail);
+				JobHandler.saveJobPlan(jobPlan);
+			}
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Flag that a job thread count has changed.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param threadCount
+	 *            the new thread count to use.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static void setThreadCount(final String jobId, final int threadCount)
+			throws JobException {
+		try {
+			// Create a job list entry.
+			final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
+			// Set the thread count.
+			if (threadCount != jobPlan.getThreadCount()) {
+				jobPlan.setThreadCount(threadCount);
+				JobHandler.saveJobPlan(jobPlan);
+			}
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Starts a job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static void startJob(final String jobId) throws JobException {
+		if (JobHandler.jobManagers.containsKey(jobId))
+			return; // Ignore if already running.
+		final JobThreadManager manager = new JobThreadManager(jobId,
+				new JobThreadManagerListener() {
+					public void jobStopped(final String jobId) {
+						JobHandler.jobManagers.remove(jobId);
+						Log.info(Resources.get("threadManagerStopped", jobId));
+					}
+				});
+		JobHandler.jobManagers.put(jobId, manager);
+		manager.startThreadManager();
+		Log.info(Resources.get("startedThreadManager", jobId));
+	}
+
+	/**
+	 * Stops a job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static void stopJob(final String jobId) throws JobException {
+		if (!JobHandler.jobManagers.containsKey(jobId))
+			return; // Ignore if already stopped.
+		final JobThreadManager manager = (JobThreadManager) JobHandler.jobManagers
+				.get(jobId);
+		manager.stopThreadManager();
+		Log.info(Resources.get("stoppedThreadManager", jobId));
 	}
 
 	private static File getJobListFile() throws IOException {
@@ -221,25 +381,32 @@ public class JobHandler {
 
 	private static JobPlan loadJobPlan(final String jobId) throws IOException {
 		synchronized (JobHandler.planDirLock) {
+			if (JobHandler.jobPlanCache.containsKey(jobId))
+				return (JobPlan) JobHandler.jobPlanCache.get(jobId);
 			Log.debug("Loading plan for " + jobId);
 			final File jobPlanFile = JobHandler.getJobPlanFile(jobId);
 			// Load existing job plan.
 			FileInputStream fis = null;
 			JobPlan jobPlan = null;
-			try {
-				fis = new FileInputStream(jobPlanFile);
-				final ObjectInputStream ois = new ObjectInputStream(fis);
-				jobPlan = (JobPlan) ois.readObject();
-			} catch (final IOException e) {
-				throw e;
-			} catch (final Throwable t) {
-				// This is horrible. Make up a default one.
-				Log.error(t);
+			// Doesn't exist? Return a default new plan.
+			if (!jobPlanFile.exists())
 				jobPlan = new JobPlan(jobId);
-			} finally {
-				if (fis != null)
-					fis.close();
-			}
+			else
+				try {
+					fis = new FileInputStream(jobPlanFile);
+					final ObjectInputStream ois = new ObjectInputStream(fis);
+					jobPlan = (JobPlan) ois.readObject();
+				} catch (final IOException e) {
+					throw e;
+				} catch (final Throwable t) {
+					// This is horrible. Make up a default one.
+					Log.error(t);
+					jobPlan = new JobPlan(jobId);
+				} finally {
+					if (fis != null)
+						fis.close();
+				}
+			JobHandler.jobPlanCache.put(jobId, jobPlan);
 			return jobPlan;
 		}
 	}
@@ -265,28 +432,32 @@ public class JobHandler {
 
 	private static JobList loadJobList() throws IOException {
 		synchronized (JobHandler.planDirLock) {
+			if (JobHandler.jobListCache != null)
+				return JobHandler.jobListCache;
 			Log.debug("Loading list");
 			final File jobListFile = JobHandler.getJobListFile();
-			// Doesn't exist? Return a default new list.
-			if (!jobListFile.exists())
-				return new JobList();
 			// Load existing job plan.
 			FileInputStream fis = null;
 			JobList jobList = null;
-			try {
-				fis = new FileInputStream(jobListFile);
-				final ObjectInputStream ois = new ObjectInputStream(fis);
-				jobList = (JobList) ois.readObject();
-			} catch (final IOException e) {
-				throw e;
-			} catch (final Throwable t) {
-				// This is horrible. Make up a default one.
-				Log.error(t);
+			// Doesn't exist? Return a default new list.
+			if (!jobListFile.exists())
 				jobList = new JobList();
-			} finally {
-				if (fis != null)
-					fis.close();
-			}
+			else
+				try {
+					fis = new FileInputStream(jobListFile);
+					final ObjectInputStream ois = new ObjectInputStream(fis);
+					jobList = (JobList) ois.readObject();
+				} catch (final IOException e) {
+					throw e;
+				} catch (final Throwable t) {
+					// This is horrible. Make up a default one.
+					Log.error(t);
+					jobList = new JobList();
+				} finally {
+					if (fis != null)
+						fis.close();
+				}
+			JobHandler.jobListCache = jobList;
 			return jobList;
 		}
 	}

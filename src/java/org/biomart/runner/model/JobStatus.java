@@ -41,9 +41,10 @@ public class JobStatus implements Serializable, Comparable {
 	private static final Map singletons = new HashMap();
 
 	/**
-	 * New things.
+	 * Unknown things.
 	 */
-	public static final JobStatus NEW = JobStatus.getJobStatus("NEW", 2);
+	public static final JobStatus UNKNOWN = JobStatus
+			.getJobStatus("UNKNOWN", 0);
 
 	/**
 	 * Incomplete things.
@@ -52,14 +53,9 @@ public class JobStatus implements Serializable, Comparable {
 			"INCOMPLETE", 1);
 
 	/**
-	 * Queued things.
+	 * New things.
 	 */
-	public static final JobStatus QUEUED = JobStatus.getJobStatus("QUEUED", 4);
-
-	/**
-	 * Failed things.
-	 */
-	public static final JobStatus FAILED = JobStatus.getJobStatus("FAILED", 6);
+	public static final JobStatus NEW = JobStatus.getJobStatus("NEW", 2);
 
 	/**
 	 * Running things.
@@ -71,19 +67,23 @@ public class JobStatus implements Serializable, Comparable {
 	 * Stopped things.
 	 */
 	public static final JobStatus STOPPED = JobStatus
-			.getJobStatus("STOPPED", 5);
+			.getJobStatus("STOPPED", 4);
+
+	/**
+	 * Failed things.
+	 */
+	public static final JobStatus FAILED = JobStatus.getJobStatus("FAILED", 5);
+
+	/**
+	 * Queued things.
+	 */
+	public static final JobStatus QUEUED = JobStatus.getJobStatus("QUEUED", 6);
 
 	/**
 	 * Completed things.
 	 */
 	public static final JobStatus COMPLETED = JobStatus.getJobStatus(
 			"COMPLETED", 7);
-	
-	/**
-	 * Unknown things.
-	 */
-	public static final JobStatus UNKNOWN = JobStatus.getJobStatus(
-			"UNKNOWN", 0);
 
 	private JobStatus(final String status, final int rank) {
 		this.status = status;
@@ -104,7 +104,7 @@ public class JobStatus implements Serializable, Comparable {
 	public String toString() {
 		return this.status;
 	}
-	
+
 	public int hashCode() {
 		return this.status.hashCode();
 	}

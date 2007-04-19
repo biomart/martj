@@ -56,6 +56,8 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
@@ -197,8 +199,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 				if (!e.getValueIsAdjusting()) {
 					// Update the panel on the right with the new job.
 					jobPlanPanel
-							.setJobSummary(selection instanceof JobSummaryListModel.JobSummaryJobNode ? ((JobSummaryListModel.JobSummaryJobNode) selection)
-									.getJobSummary()
+							.setJobSummary(selection instanceof JobSummary ? (JobSummary) selection
 									: null);
 					// Pack the window.
 					MartRunnerMonitorDialog.this.pack();
@@ -232,14 +233,37 @@ public class MartRunnerMonitorDialog extends JFrame {
 				if (e.isPopupTrigger()) {
 					final int index = jobList.locationToIndex(e.getPoint());
 					if (index >= 0) {
-						final JPopupMenu contextMenu = ((JobSummaryListModel.JobSummaryJobNode) jobSummaryListModel
-								.getElementAt(index))
-								.getContextMenu(MartRunnerMonitorDialog.this);
-						if (contextMenu != null
-								&& contextMenu.getComponentCount() > 0) {
-							contextMenu.show(jobList, e.getX(), e.getY());
-							e.consume();
-						}
+						final JobSummary summary = (JobSummary) jobSummaryListModel
+								.getElementAt(index);
+						final JPopupMenu menu = new JPopupMenu();
+
+						// Remove job.
+						final JMenuItem remove = new JMenuItem(Resources
+								.get("removeJobTitle"));
+						remove.setMnemonic(Resources.get("removeJobMnemonic")
+								.charAt(0));
+						remove.addActionListener(new ActionListener() {
+							public void actionPerformed(final ActionEvent evt) {
+								// Confirm.
+								if (JOptionPane.showConfirmDialog(jobList,
+										Resources.get("removeJobConfirm"),
+										Resources.get("questionTitle"),
+										JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+									new LongProcess() {
+										public void run() throws Exception {
+											// Remove the job.
+											Client.removeJob(host, port,
+													summary.getJobId());
+											// Update the list.
+											updateJobListTask.start();
+										}
+									}.start();
+							}
+						});
+						menu.add(remove);
+
+						// Show the menu.
+						menu.show(jobList, e.getX(), e.getY());
 						e.consume();
 					}
 				}
@@ -275,9 +299,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 			Color bgColor = Color.WHITE;
 			Font font = MartRunnerMonitorDialog.PLAIN_FONT;
 			// A Job List entry node?
-			if (value instanceof JobSummaryListModel.JobSummaryJobNode) {
-				final JobSummary summary = ((JobSummaryListModel.JobSummaryJobNode) value)
-						.getJobSummary();
+			if (value instanceof JobSummary) {
+				final JobSummary summary = (JobSummary) value;
 				final String summaryText = summary.getJobId();
 				final JobStatus status = summary.getStatus();
 				if (status.equals(JobStatus.INCOMPLETE)) {
@@ -403,85 +426,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.removeAllElements();
 			for (final Iterator i = Client.listJobs(this.host, this.port)
 					.getAllJobs().iterator(); i.hasNext();)
-				this.addElement(new JobSummaryJobNode(this, (JobSummary) i
-						.next()));
-		}
-
-		private String getHost() {
-			return this.host;
-		}
-
-		private String getPort() {
-			return this.port;
-		}
-
-		// A node in the job list.
-		private static class JobSummaryJobNode {
-			private final JobSummary summary;
-
-			private final JobSummaryListModel list;
-
-			private JobSummaryJobNode(final JobSummaryListModel list,
-					final JobSummary summary) {
-				this.summary = summary;
-				this.list = list;
-			}
-
-			/**
-			 * Obtain the summary this node represents.
-			 * 
-			 * @return the summary.
-			 */
-			public JobSummary getJobSummary() {
-				return this.summary;
-			}
-
-			/**
-			 * Obtain a popup menu to display on this node.
-			 * 
-			 * @param parent
-			 *            the component this is displayed in.
-			 * @return the menu.
-			 */
-			public JPopupMenu getContextMenu(final Component parent) {
-				final JPopupMenu menu = new JPopupMenu();
-
-				// Remove job.
-				final JMenuItem remove = new JMenuItem(Resources
-						.get("removeJobTitle"));
-				remove
-						.setMnemonic(Resources.get("removeJobMnemonic").charAt(
-								0));
-				remove.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						// Confirm.
-						if (JOptionPane.showConfirmDialog(parent, Resources
-								.get("removeJobConfirm"), Resources
-								.get("questionTitle"),
-								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
-							new LongProcess() {
-								public void run() throws Exception {
-									// Remove the job.
-									Client
-											.removeJob(
-													JobSummaryJobNode.this.list
-															.getHost(),
-													JobSummaryJobNode.this.list
-															.getPort(),
-													JobSummaryJobNode.this
-															.getJobSummary()
-															.getJobId());
-									// Update the list.
-									JobSummaryJobNode.this.list.updateList();
-								}
-							}.start();
-					}
-				});
-				menu.add(remove);
-
-				// That's it.
-				return menu;
-			}
+				this.addElement((JobSummary) i.next());
 		}
 	}
 
@@ -577,7 +522,23 @@ public class MartRunnerMonitorDialog extends JFrame {
 			// Create the user-interactive bits of the panel.
 			this.threadSpinnerModel = new SpinnerNumberModel(1, 1, 1, 1);
 			this.threadSpinner = new JSpinner(this.threadSpinnerModel);
-			// TODO Spinner listener updates summary thread count instantly.
+			// Spinner listener updates summary thread count instantly.
+			this.threadSpinnerModel.addChangeListener(new ChangeListener() {
+				public void stateChanged(ChangeEvent e) {
+					if (JobPlanPanel.this.jobId != null)
+						try {
+							Client
+									.setThreadCount(
+											JobPlanPanel.this.host,
+											JobPlanPanel.this.port,
+											JobPlanPanel.this.jobId,
+											((Integer) JobPlanPanel.this.threadSpinnerModel
+													.getValue()).intValue());
+						} catch (final ProtocolException pe) {
+							StackTrace.showStackTrace(pe);
+						}
+				}
+			});
 
 			// Populate the header panel.
 			JLabel label = new JLabel(Resources.get("jobIdLabel"));
@@ -608,22 +569,68 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.contactEmail = new JTextField(30);
 			field.add(this.contactEmail);
 			this.updateEmailButton = new JButton(Resources.get("updateButton"));
-			// TODO Listener on button to instantly update email address.
+			// Listener on button to instantly update email address.
+			this.updateEmailButton.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (JobPlanPanel.this.jobId != null)
+						try {
+							Client.setEmailAddress(JobPlanPanel.this.host,
+									JobPlanPanel.this.port,
+									JobPlanPanel.this.jobId,
+									JobPlanPanel.this.contactEmail.getText()
+											.trim());
+						} catch (final ProtocolException pe) {
+							StackTrace.showStackTrace(pe);
+						}
+				}
+			});
 			field.add(this.updateEmailButton);
 			headerPanel.add(field, fieldConstraints);
 
 			headerPanel.add(new JLabel(), labelLastRowConstraints);
 			field = new JPanel();
 			this.startJob = new JButton(Resources.get("startJobButton"));
-			// TODO Button listener to start job.
 			this.stopJob = new JButton(Resources.get("stopJobButton"));
-			// TODO Button listener to stop job.
+			// Button listeners to start+stop jobs.
+			this.startJob.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (JobPlanPanel.this.jobId != null)
+						try {
+							Client.startJob(JobPlanPanel.this.host,
+									JobPlanPanel.this.port,
+									JobPlanPanel.this.jobId);
+							JobPlanPanel.this.startJob.setEnabled(false);
+							JobPlanPanel.this.stopJob.setEnabled(true);
+						} catch (final ProtocolException pe) {
+							StackTrace.showStackTrace(pe);
+						}
+				}
+			});
+			this.startJob.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (JobPlanPanel.this.jobId != null)
+						try {
+							Client.stopJob(JobPlanPanel.this.host,
+									JobPlanPanel.this.port,
+									JobPlanPanel.this.jobId);
+							JobPlanPanel.this.startJob.setEnabled(true);
+							JobPlanPanel.this.stopJob.setEnabled(false);
+						} catch (final ProtocolException pe) {
+							StackTrace.showStackTrace(pe);
+						}
+				}
+			});
 			this.refreshJobTree = new JButton(Resources.get("refreshButton"));
 			// Button listener to update tree details.
 			this.refreshJobTree.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent e) {
+					final TreePath path = JobPlanPanel.this.tree
+							.getSelectionPath();
 					JobPlanPanel.this.treeModel.update();
 					JobPlanPanel.this.tree.repaint();
+					// Reselect the node to update the summary box.
+					if (path != null)
+						JobPlanPanel.this.tree.setSelectionPath(path);
 				}
 			});
 			field.add(this.startJob);
@@ -711,27 +718,15 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 				// Update viewable fields.
 				this.jobIdField.setText(jobId);
-				this.threadSpinnerModel.setValue(new Integer(jobSummary
-						.getThreadCount()));
-				this.threadSpinnerModel.setMaximum(new Integer(jobSummary
-						.getMaxThreadCount()));
 				this.threadSpinner.setEnabled(true);
-				this.jdbcUrl.setText(jobSummary.getJDBCURL());
-				this.jdbcUser.setText(jobSummary.getJDBCUsername());
-				this.contactEmail.setText(jobSummary.getContactEmailAddress());
 				this.contactEmail.setEnabled(true);
 				this.updateEmailButton.setEnabled(true);
 				this.footerPanel.setVisible(true);
-				this.startJob.setEnabled(!jobSummary.getStatus().equals(
-						JobStatus.INCOMPLETE)
-						&& !jobSummary.getStatus().equals(JobStatus.RUNNING));
-				this.stopJob.setEnabled(jobSummary.getStatus().equals(
-						JobStatus.RUNNING));
 				this.refreshJobTree.setEnabled(true);
 
 				// Create a JTree to hold job details.
 				this.treeModel = new JobPlanTreeModel(this.host, this.port,
-						this.jobId);
+						this.jobId, this);
 				this.tree = new JTree(this.treeModel);
 				this.tree.setOpaque(true);
 				this.tree.setBackground(Color.WHITE);
@@ -885,6 +880,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		private final String jobId;
 
+		private final JobPlanPanel planPanel;
+
 		/**
 		 * Creates a new tree model which auto-updates every five minutes
 		 * against the given jobId and host/port combo.
@@ -895,13 +892,16 @@ public class MartRunnerMonitorDialog extends JFrame {
 		 *            the port.
 		 * @param jobId
 		 *            the job ID.
+		 * @param planPanel
+		 *            the panel we are appearing in.
 		 */
 		public JobPlanTreeModel(final String host, final String port,
-				final String jobId) {
+				final String jobId, final JobPlanPanel planPanel) {
 			super(JobPlanTreeModel.LOADING_TREE, true);
 			this.host = host;
 			this.port = port;
 			this.jobId = jobId;
+			this.planPanel = planPanel;
 
 			// Update the views showing the tree.
 			this.reload();
@@ -924,6 +924,19 @@ public class MartRunnerMonitorDialog extends JFrame {
 		private void loadModel() throws Exception {
 			// Get job details.
 			this.jobPlan = Client.getJobPlan(this.host, this.port, this.jobId);
+			// Update GUI bits from the updated plan.
+			this.planPanel.threadSpinnerModel.setValue(new Integer(this.jobPlan
+					.getThreadCount()));
+			this.planPanel.threadSpinnerModel.setMaximum(new Integer(
+					this.jobPlan.getMaxThreadCount()));
+			this.planPanel.jdbcUrl.setText(this.jobPlan.getJDBCURL());
+			this.planPanel.jdbcUser.setText(this.jobPlan.getJDBCUsername());
+			this.planPanel.contactEmail.setText(this.jobPlan
+					.getContactEmailAddress());
+			this.planPanel.startJob.setEnabled(!this.jobPlan.getStatus()
+					.equals(JobStatus.RUNNING));
+			this.planPanel.stopJob.setEnabled(this.jobPlan.getStatus().equals(
+					JobStatus.RUNNING));
 		}
 
 		/**

@@ -72,6 +72,8 @@ public class JobList implements Serializable {
 	 * @return the job summary.
 	 */
 	public JobSummary getJobSummary(final String jobId) {
+		if (!this.jobList.containsKey(jobId))
+			this.jobList.put(jobId, new JobSummary(jobId));
 		return (JobSummary) this.jobList.get(jobId);
 	}
 
@@ -90,22 +92,8 @@ public class JobList implements Serializable {
 	public static class JobSummary implements Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private static final int MAX_THREAD_COUNT = 5;
-
 		private final String jobId;
-
-		private String JDBCDriverClassName;
-
-		private String JDBCURL;
-
-		private String JDBCUsername;
-
-		private String JDBCPassword;
-
-		private int threadCount;
-
-		private String contactEmailAddress;
-
+		
 		private JobStatus status;
 
 		/**
@@ -117,8 +105,6 @@ public class JobList implements Serializable {
 		public JobSummary(final String jobId) {
 			this.jobId = jobId;
 			this.status = JobStatus.INCOMPLETE;
-			this.threadCount = 1;
-			this.contactEmailAddress = null;
 		}
 
 		/**
@@ -138,114 +124,20 @@ public class JobList implements Serializable {
 		}
 
 		/**
+		 * @param status
+		 *            the status to set
+		 */
+		public void setStatus(final JobStatus status) {
+			this.status = status;
+		}
+
+		/**
 		 * Get this job's status.
 		 * 
 		 * @return the status.
 		 */
 		public JobStatus getStatus() {
 			return this.status;
-		}
-
-		/**
-		 * @return the JDBCDriverClassName
-		 */
-		public String getJDBCDriverClassName() {
-			return this.JDBCDriverClassName;
-		}
-
-		/**
-		 * @param driverClassName
-		 *            the JDBCDriverClassName to set
-		 */
-		public void setJDBCDriverClassName(String driverClassName) {
-			this.JDBCDriverClassName = driverClassName;
-		}
-
-		/**
-		 * @return the JDBCPassword
-		 */
-		public String getJDBCPassword() {
-			return this.JDBCPassword;
-		}
-
-		/**
-		 * @param password
-		 *            the JDBCPassword to set
-		 */
-		public void setJDBCPassword(String password) {
-			if (password != null && "".equals(password.trim()))
-				password = null;
-			this.JDBCPassword = password;
-		}
-
-		/**
-		 * @return the JDBCURL
-		 */
-		public String getJDBCURL() {
-			return this.JDBCURL;
-		}
-
-		/**
-		 * @param jdbcurl
-		 *            the JDBCURL to set
-		 */
-		public void setJDBCURL(String jdbcurl) {
-			this.JDBCURL = jdbcurl;
-		}
-
-		/**
-		 * @return the JDBCUsername
-		 */
-		public String getJDBCUsername() {
-			return this.JDBCUsername;
-		}
-
-		/**
-		 * @param username
-		 *            the JDBCUsername to set
-		 */
-		public void setJDBCUsername(String username) {
-			this.JDBCUsername = username;
-		}
-
-		/**
-		 * @return the threadCount
-		 */
-		public int getThreadCount() {
-			return threadCount;
-		}
-
-		/**
-		 * @param threadCount
-		 *            the threadCount to set
-		 */
-		public void setThreadCount(int threadCount) {
-			this.threadCount = threadCount;
-		}
-
-		/**
-		 * @return the threadCount
-		 */
-		public int getMaxThreadCount() {
-			return JobSummary.MAX_THREAD_COUNT;
-		}
-
-		/**
-		 * @return the contactEmailAddress
-		 */
-		public String getContactEmailAddress() {
-			return contactEmailAddress;
-		}
-
-		/**
-		 * @param contactEmailAddress
-		 *            the contactEmailAddress to set
-		 */
-		public void setContactEmailAddress(String contactEmailAddress) {
-			if (contactEmailAddress != null
-					&& "".equals(contactEmailAddress.trim()))
-				contactEmailAddress = null;
-			this.contactEmailAddress = contactEmailAddress;
 		}
 	}
 }

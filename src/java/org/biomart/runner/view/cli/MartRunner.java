@@ -30,6 +30,7 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.cli.BioMartCLI;
+import org.biomart.runner.controller.JobHandler;
 import org.biomart.runner.exceptions.ProtocolException;
 import org.biomart.runner.model.MartRunnerProtocol;
 
@@ -69,11 +70,17 @@ public class MartRunner extends BioMartCLI {
 		// Initialise resources.
 		Settings.setApplication(Settings.MARTRUNNER);
 		Resources.setResourceLocation("org/biomart/runner/resources");
-		// Establish the socket and start listening.
 		try {
+			// Check port number argument was supplied.
 			if (args.length < 1)
 				throw new ValidationException(Resources
 						.get("serverPortMissing"));
+			// Find and update all crashed jobs and mark them as stopped.
+			Log.debug("Finding crashed jobs");
+			final int crashedJobs = JobHandler.stopCrashedJobs();
+			if (crashedJobs>0)
+				Log.info(Resources.get("foundCrashedJobs",""+crashedJobs));
+			// Establish the socket and start listening.
 			try {
 				final int port = Integer.parseInt(args[0]);
 				Log.info(Resources.get("serverListening", "" + port));
