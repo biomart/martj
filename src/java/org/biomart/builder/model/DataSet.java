@@ -298,17 +298,21 @@ public class DataSet extends GenericSchema {
 		// The third value is the dataset parent table columns to link from.
 		// The fourth value of each entry in the queue determines whether or
 		// not to continue making dimensions off each table in the queue.
+		// The fifth value is the counter of how many times this relation has
+		// been seen before.
+		// The sixth value is a map of relation counts used to reach this point.
 		for (int i = 0; i < normalQ.size(); i++) {
-			final Object[] triple = (Object[]) normalQ.get(i);
-			final Relation mergeSourceRelation = (Relation) triple[0];
-			final List newSourceDSCols = (List) triple[1];
-			final Table mergeTable = (Table) triple[2];
-			final TransformationUnit previousUnit = (TransformationUnit) triple[3];
-			final boolean makeDimensions = ((Boolean) triple[4]).booleanValue();
-			final int iteration = ((Integer) triple[5]).intValue();
+			final Object[] tuple = (Object[]) normalQ.get(i);
+			final Relation mergeSourceRelation = (Relation) tuple[0];
+			final List newSourceDSCols = (List) tuple[1];
+			final Table mergeTable = (Table) tuple[2];
+			final TransformationUnit previousUnit = (TransformationUnit) tuple[3];
+			final boolean makeDimensions = ((Boolean) tuple[4]).booleanValue();
+			final int iteration = ((Integer) tuple[5]).intValue();
+			final Map newRelationCounts = (Map)tuple[6];
 			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable,
 					normalQ, subclassQ, dimensionQ, newSourceDSCols,
-					mergeSourceRelation, relationCount, subclassCount,
+					mergeSourceRelation, newRelationCounts, subclassCount,
 					makeDimensions, iteration);
 		}
 
@@ -718,7 +722,8 @@ public class DataSet extends GenericSchema {
 										Boolean.valueOf(makeDimensions
 												&& r.isOneToOne()
 												|| forceFollowRelation),
-										new Integer(k) });
+										new Integer(k),
+										new HashMap(relationCount)});
 				}
 			}
 	}

@@ -22,10 +22,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
+
+import javax.swing.tree.TreeNode;
 
 /**
  * Handles planning and execution of jobs.
@@ -51,7 +55,7 @@ public class JobPlan implements Serializable {
 	 */
 	public JobPlan(final String jobId) {
 		this.jobId = jobId;
-		this.rootSection = new JobPlanSection(jobId);
+		this.rootSection = new JobPlanSection(jobId, null);
 	}
 
 	/**
@@ -76,7 +80,7 @@ public class JobPlan implements Serializable {
 		for (int i = 0; i < sectionPath.length; i++)
 			section = section.getSubSection(sectionPath[i]);
 		for (final Iterator i = actions.iterator(); i.hasNext();)
-			section.addAction(new JobPlanAction((String) i.next()));
+			section.addAction(new JobPlanAction((String) i.next(), section));
 	}
 
 	/**
@@ -100,23 +104,27 @@ public class JobPlan implements Serializable {
 	/**
 	 * Describes a section of a job, ie. a group of associated actions.
 	 */
-	public static class JobPlanSection implements Serializable {
+	public static class JobPlanSection implements Serializable, TreeNode {
 		private static final long serialVersionUID = 1L;
 
 		private final String label;
 
-		private Map subSections = new LinkedHashMap();
+		private final Map subSections = new LinkedHashMap();
 
-		private List actions = new ArrayList();
+		private final List actions = new ArrayList();
+		
+		private final JobPlanSection parent;
 
 		/**
 		 * Define a new section with the given label.
 		 * 
 		 * @param label
 		 *            the label.
+		 *            @param parent the parent node.
 		 */
-		public JobPlanSection(final String label) {
+		public JobPlanSection(final String label, final JobPlanSection parent) {
 			this.label = label;
+			this.parent = parent;
 		}
 
 		/**
@@ -137,7 +145,7 @@ public class JobPlan implements Serializable {
 		 */
 		public JobPlanSection getSubSection(final String label) {
 			if (!this.subSections.containsKey(label))
-				this.subSections.put(label, new JobPlanSection(label));
+				this.subSections.put(label, new JobPlanSection(label, this));
 			return (JobPlanSection) this.subSections.get(label);
 		}
 
@@ -222,7 +230,7 @@ public class JobPlan implements Serializable {
 						.hasNext();) {
 					final String message = ((JobPlanSection) i.next())
 							.getMessages();
-					if (message != null)
+					if (message != null && message.trim().length() > 0)
 						messages.append(message + '\n');
 				}
 			if (this.getAllActions().size() > 0)
@@ -230,10 +238,10 @@ public class JobPlan implements Serializable {
 						.hasNext();) {
 					final String message = ((JobPlanAction) i.next())
 							.getMessages();
-					if (message != null)
+					if (message != null && message.trim().length() > 0)
 						messages.append(message + '\n');
 				}
-			return messages.toString();
+			return messages.length() == 0 ? null : messages.toString();
 		}
 
 		/**
@@ -297,12 +305,47 @@ public class JobPlan implements Serializable {
 			}
 			return status;
 		}
+		
+		private Vector getChildren() {
+			final Vector children = new Vector();
+			children.addAll(this.actions);
+			children.addAll(this.subSections.values());
+			return children;
+		}
+		
+		public Enumeration children() {
+			return this.getChildren().elements();
+		}
+
+		public boolean getAllowsChildren() {
+			return true;
+		}
+
+		public TreeNode getChildAt(int childIndex) {
+			return (TreeNode)this.getChildren().get(childIndex);
+		}
+
+		public int getChildCount() {
+			return this.subSections.size() + this.actions.size();
+		}
+
+		public int getIndex(TreeNode node) {
+			return this.getChildren().indexOf(node);
+		}
+
+		public TreeNode getParent() {
+			return this.parent;
+		}
+
+		public boolean isLeaf() {
+			return false;
+		}
 	}
 
 	/**
 	 * Represents an individual action.
 	 */
-	public static class JobPlanAction implements Serializable {
+	public static class JobPlanAction implements Serializable, TreeNode {
 		private static final long serialVersionUID = 1L;
 
 		private final String action;
@@ -314,16 +357,20 @@ public class JobPlan implements Serializable {
 		private Date ended;
 
 		private String messages;
+		
+		private final JobPlanSection parent;
 
 		/**
 		 * Create a new action.
 		 * 
 		 * @param action
 		 *            the action to create.
+		 *            @param parent the parent node.
 		 */
-		public JobPlanAction(final String action) {
+		public JobPlanAction(final String action, final JobPlanSection parent) {
 			this.action = action;
 			this.status = JobStatus.NEW;
+			this.parent = parent;
 		}
 
 		/**
@@ -354,8 +401,7 @@ public class JobPlan implements Serializable {
 		 * @return the messages
 		 */
 		public String getMessages() {
-			return this.messages == null ? null
-					: this.messages.trim().length() == 0 ? null : this.messages;
+			return this.messages;
 		}
 
 		/**
@@ -394,6 +440,34 @@ public class JobPlan implements Serializable {
 		 */
 		public void setStatus(JobStatus status) {
 			this.status = status;
+		}
+
+		public Enumeration children() {
+			return null;
+		}
+
+		public boolean getAllowsChildren() {
+			return false;
+		}
+
+		public TreeNode getChildAt(int childIndex) {
+			return null;
+		}
+
+		public int getChildCount() {
+			return 0;
+		}
+
+		public int getIndex(TreeNode node) {
+			return 0;
+		}
+
+		public TreeNode getParent() {
+			return this.parent;
+		}
+
+		public boolean isLeaf() {
+			return true;
 		}
 	}
 }
