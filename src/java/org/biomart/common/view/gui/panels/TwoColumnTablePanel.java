@@ -166,7 +166,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				.setPreferredScrollableViewportSize(new Dimension(table
 						.getColumnModel().getColumn(0).getPreferredWidth()
 						+ table.getColumnModel().getColumn(1)
-								.getPreferredWidth(), 250));
+								.getPreferredWidth(), 150));
 		if (this.getInsertButtonText() != null) {
 			this.insert = new JButton(this.getInsertButtonText());
 			this.insert.addActionListener(new ActionListener() {

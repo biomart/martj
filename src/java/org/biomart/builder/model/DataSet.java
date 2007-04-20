@@ -585,23 +585,6 @@ public class DataSet extends GenericSchema {
 				boolean followRelation = false;
 				boolean forceFollowRelation = false;
 
-				// Work out how many unmasked correct relations lead
-				// from this relation's key.
-				int unmaskedRels = 0;
-				/* FIXME - Temporary comment.
-				if (r.isOneToMany()
-						&& r.getManyKey().getTable().equals(mergeTable))
-					for (final Iterator x = r.getManyKey().getRelations()
-							.iterator(); x.hasNext();) {
-						final Relation rel = (Relation) x.next();
-						if (!rel.getStatus().equals(
-								ComponentStatus.INFERRED_INCORRECT)
-								&& !this.schemaMods.isMaskedRelation(dsTable,
-										rel))
-							unmaskedRels++;
-					}
-				*/
-
 				// Are we at the 1 end of a 1:M?
 				// If so, we may need to make a dimension, a subclass, or
 				// a concat column.
@@ -672,16 +655,6 @@ public class DataSet extends GenericSchema {
 					// Forcibly follow forced relations.
 					else if (this.schemaMods.isForceIncludeRelation(dsTable, r))
 						forceFollowRelation = true;
-				}
-
-				// We're at the M end of a 1:M. Don't follow it if it has
-				// multiple relations, as it is likely to be an artifact
-				// of a non-normalised schema (e.g. Ensembl) and is best
-				// included from the opposite direction, if at all.
-				else if (r.isOneToMany()
-						&& r.getManyKey().getTable().equals(mergeTable)
-						&& unmaskedRels > 1) {
-					// Do nothing.
 				}
 
 				// Follow all others.

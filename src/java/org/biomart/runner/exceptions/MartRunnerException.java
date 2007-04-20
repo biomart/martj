@@ -21,12 +21,11 @@ package org.biomart.runner.exceptions;
 import org.biomart.common.exceptions.BioMartException;
 
 /**
- * This is a basic {@link Exception} for all non-specific MartRunner
- * exceptions.
+ * This is a basic {@link Exception} for all non-specific MartRunner exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class MartRunnerException extends BioMartException {

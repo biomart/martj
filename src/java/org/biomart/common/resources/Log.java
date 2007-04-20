@@ -120,6 +120,15 @@ public class Log {
 	}
 
 	/**
+	 * Are we debugging?
+	 * 
+	 * @return <tt>true</tt> if we are.
+	 */
+	public static boolean isDebug() {
+		return Log.logger.getLevel().isGreaterOrEqual(Level.DEBUG);
+	}
+
+	/**
 	 * See {@link Logger#debug(Object)}.
 	 * 
 	 * @param message

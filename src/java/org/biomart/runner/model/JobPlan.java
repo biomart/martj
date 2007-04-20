@@ -127,14 +127,14 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 * @return the threadCount
 	 */
 	public int getThreadCount() {
-		return threadCount;
+		return this.threadCount;
 	}
 
 	/**
 	 * @param threadCount
 	 *            the threadCount to set
 	 */
-	public void setThreadCount(int threadCount) {
+	public void setThreadCount(final int threadCount) {
 		this.threadCount = threadCount;
 	}
 
@@ -149,14 +149,14 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 * @return the contactEmailAddress
 	 */
 	public String getContactEmailAddress() {
-		return contactEmailAddress;
+		return this.contactEmailAddress;
 	}
 
 	/**
 	 * @param contactEmailAddress
 	 *            the contactEmailAddress to set
 	 */
-	public void setContactEmailAddress(String contactEmailAddress) {
+	public void setContactEmailAddress(final String contactEmailAddress) {
 		this.contactEmailAddress = contactEmailAddress;
 	}
 
@@ -171,7 +171,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 * @param driverClassName
 	 *            the JDBCDriverClassName to set
 	 */
-	public void setJDBCDriverClassName(String driverClassName) {
+	public void setJDBCDriverClassName(final String driverClassName) {
 		this.JDBCDriverClassName = driverClassName;
 	}
 
@@ -186,7 +186,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 * @param password
 	 *            the JDBCPassword to set
 	 */
-	public void setJDBCPassword(String password) {
+	public void setJDBCPassword(final String password) {
 		this.JDBCPassword = password;
 	}
 
@@ -201,7 +201,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 * @param jdbcurl
 	 *            the JDBCURL to set
 	 */
-	public void setJDBCURL(String jdbcurl) {
+	public void setJDBCURL(final String jdbcurl) {
 		this.JDBCURL = jdbcurl;
 	}
 
@@ -216,12 +216,18 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 * @param username
 	 *            the JDBCUsername to set
 	 */
-	public void setJDBCUsername(String username) {
+	public void setJDBCUsername(final String username) {
 		this.JDBCUsername = username;
 	}
 
 	public int hashCode() {
 		return this.jobId.hashCode();
+	}
+
+	public boolean equals(final Object other) {
+		if (!(other instanceof JobPlan))
+			return false;
+		return this.jobId.equals(((JobPlan) other).getJobId());
 	}
 
 	/**
@@ -423,16 +429,6 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 			// Status is important - we get the highest ranking one from
 			// our children and return that one.
 			JobStatus status = null;
-			for (final Iterator i = this.getAllSubSections().iterator(); i
-					.hasNext();) {
-				final JobPlanSection section = (JobPlanSection) i.next();
-				final JobStatus sectionStatus = section.getStatus();
-				if (status == null)
-					status = sectionStatus;
-				else
-					status = sectionStatus.compareTo(status) < 0 ? sectionStatus
-							: status;
-			}
 			for (final Iterator i = this.getAllActions().iterator(); i
 					.hasNext();) {
 				final JobPlanAction action = (JobPlanAction) i.next();
@@ -441,6 +437,16 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 					status = actionStatus;
 				else
 					status = actionStatus.compareTo(status) < 0 ? actionStatus
+							: status;
+			}
+			for (final Iterator i = this.getAllSubSections().iterator(); i
+					.hasNext();) {
+				final JobPlanSection section = (JobPlanSection) i.next();
+				final JobStatus sectionStatus = section.getStatus();
+				if (status == null)
+					status = sectionStatus;
+				else
+					status = sectionStatus.compareTo(status) < 0 ? sectionStatus
 							: status;
 			}
 			return status;
@@ -461,7 +467,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 			return true;
 		}
 
-		public TreeNode getChildAt(int childIndex) {
+		public TreeNode getChildAt(final int childIndex) {
 			return (TreeNode) this.getChildren().get(childIndex);
 		}
 
@@ -469,7 +475,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 			return this.subSections.size() + this.actions.size();
 		}
 
-		public int getIndex(TreeNode node) {
+		public int getIndex(final TreeNode node) {
 			return this.getChildren().indexOf(node);
 		}
 
@@ -479,6 +485,16 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 
 		public boolean isLeaf() {
 			return false;
+		}
+
+		public int hashCode() {
+			return this.getLabel().hashCode();
+		}
+
+		public boolean equals(final Object other) {
+			if (!(other instanceof JobPlanSection))
+				return false;
+			return this.getLabel() == ((JobPlanSection) other).getLabel();
 		}
 	}
 
@@ -501,8 +517,8 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		private final JobPlanSection parent;
 
 		private static int NEXT_IDENTIFIER = 0;
-		
-		private int sequence = JobPlanAction.NEXT_IDENTIFIER++;
+
+		private final int sequence = JobPlanAction.NEXT_IDENTIFIER++;
 
 		/**
 		 * Create a new action.
@@ -531,14 +547,14 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * @return the ended
 		 */
 		public Date getEnded() {
-			return ended;
+			return this.ended;
 		}
 
 		/**
 		 * @param ended
 		 *            the ended to set
 		 */
-		public void setEnded(Date ended) {
+		public void setEnded(final Date ended) {
 			this.ended = ended;
 		}
 
@@ -553,7 +569,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * @param messages
 		 *            the messages to set
 		 */
-		public void setMessages(String messages) {
+		public void setMessages(final String messages) {
 			this.messages = messages;
 		}
 
@@ -561,14 +577,14 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * @return the started
 		 */
 		public Date getStarted() {
-			return started;
+			return this.started;
 		}
 
 		/**
 		 * @param started
 		 *            the started to set
 		 */
-		public void setStarted(Date started) {
+		public void setStarted(final Date started) {
 			this.started = started;
 		}
 
@@ -576,14 +592,14 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * @return the status
 		 */
 		public JobStatus getStatus() {
-			return status;
+			return this.status;
 		}
 
 		/**
 		 * @param status
 		 *            the status to set
 		 */
-		public void setStatus(JobStatus status) {
+		public void setStatus(final JobStatus status) {
 			this.status = status;
 		}
 
@@ -595,7 +611,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 			return false;
 		}
 
-		public TreeNode getChildAt(int childIndex) {
+		public TreeNode getChildAt(final int childIndex) {
 			return null;
 		}
 
@@ -603,7 +619,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 			return 0;
 		}
 
-		public int getIndex(TreeNode node) {
+		public int getIndex(final TreeNode node) {
 			return 0;
 		}
 
@@ -623,13 +639,25 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		public boolean isLeaf() {
 			return true;
 		}
-		
+
 		/**
 		 * Return a unique identifier.
+		 * 
 		 * @return the identifier.
 		 */
 		public int getUniqueIdentifier() {
 			return this.sequence;
+		}
+
+		public int hashCode() {
+			return this.sequence;
+		}
+
+		public boolean equals(final Object other) {
+			if (!(other instanceof JobPlanAction))
+				return false;
+			return this.getUniqueIdentifier() == ((JobPlanAction) other)
+					.getUniqueIdentifier();
 		}
 	}
 }

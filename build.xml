@@ -71,6 +71,12 @@
 
     <!-- classpath set to include jars -->
     <fileset id="lib.classpath" dir="${lib.dir}" >
+        <include name="activation.jar" />
+        <include name="dsn.jar" />
+        <include name="imap.jar" />
+        <include name="mailapi.jar" />
+        <include name="pop3.jar" />
+        <include name="smtp.jar" />
         <include name="ecp1_0beta.jar" />
         <include name="ensj.jar" />
         <include name="ensj-util.jar" />

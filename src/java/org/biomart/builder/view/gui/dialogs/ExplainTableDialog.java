@@ -27,6 +27,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -59,6 +60,7 @@ import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 
 /**
@@ -77,6 +79,9 @@ import org.biomart.common.view.gui.LongProcess;
  */
 public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	private static final long serialVersionUID = 1;
+
+	private static final int MAX_UNITS = Settings.getProperty("maxunits") == null ? 50
+			: Integer.parseInt(Settings.getProperty("maxunits"));
 
 	/**
 	 * Opens an explanation showing the underlying relations and tables behind a
@@ -259,80 +264,109 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 				// Count our steps.
 				int stepNumber = 1;
 
-				// Iterate over transformation units.
-				for (final Iterator i = ((DataSetTable) ExplainTableDialog.this.ds
+				// If more than a set limit of units, we hit memory
+				// and performance issues. Refuse to do the display and
+				// instead put up a helpful message. Limit should be
+				// configurable from a properties file.
+				final Collection units = ((DataSetTable) ExplainTableDialog.this.ds
 						.getTableByName(ExplainTableDialog.this.tableName))
-						.getTransformationUnits().iterator(); i.hasNext();) {
-					final TransformationUnit tu = (TransformationUnit) i.next();
-					// Holders for our stuff.
-					final JLabel label;
-					final ExplainTransformationDiagram diagram;
-					// Draw the unit.
-					if (tu instanceof Expression) {
-						// Do an expression column list.
-						label = new JLabel(
-								Resources
-										.get(
-												"stepTableLabel",
-												new String[] {
-														"" + stepNumber,
-														Resources
-																.get("explainExpressionLabel") }));
-						diagram = new ExplainTransformationDiagram.AdditionalColumns(
-								ExplainTableDialog.this.martTab, tu,
-								stepNumber, explainContext);
-					} else if (tu instanceof Concat) {
-						// Do an expression column list.
-						label = new JLabel(Resources.get("stepTableLabel",
-								new String[] { "" + stepNumber,
-										Resources.get("explainConcatLabel") }));
-						diagram = new ExplainTransformationDiagram.TempReal(
-								ExplainTableDialog.this.martTab, (Concat) tu,
-								columnsSoFar, stepNumber, explainContext);
-					} else if (tu instanceof JoinTable) {
-						// Temp table to schema table join.
-						label = new JLabel(Resources.get("stepTableLabel",
-								new String[] { "" + stepNumber,
-										Resources.get("explainMergeLabel") }));
-						diagram = new ExplainTransformationDiagram.TempReal(
-								ExplainTableDialog.this.martTab,
-								(JoinTable) tu, columnsSoFar, stepNumber,
-								explainContext);
-					} else if (tu instanceof SelectFromTable) {
-						// Do a single-step select.
-						label = new JLabel(Resources.get("stepTableLabel",
-								new String[] { "" + stepNumber,
-										Resources.get("explainSelectLabel") }));
-						diagram = new ExplainTransformationDiagram.SingleTable(
-								ExplainTableDialog.this.martTab,
-								(SelectFromTable) tu, stepNumber,
-								explainContext);
-					} else
-						throw new BioMartError();
-					ExplainTableDialog.this.transformationTableComponents
-							.addAll(diagram.getTableComponents());
-					// Display the diagram.
-					ExplainTableDialog.this.transformation.add(label,
-							ExplainTableDialog.this.labelConstraints);
-					diagram
-							.setDiagramContext(ExplainTableDialog.this.transformationContext);
-					JPanel field = new JPanel();
-					field.add(diagram);
-					ExplainTableDialog.this.transformation.add(field,
-							ExplainTableDialog.this.fieldConstraints);
-					// Add columns from this unit to the transformed table.
-					columnsSoFar.addAll(tu.getNewColumnNameMap().values());
-					stepNumber++;
-				}
+						.getTransformationUnits();
+				if (units.size() > ExplainTableDialog.MAX_UNITS)
+					ExplainTableDialog.this.transformation.add(new JLabel(
+							Resources.get("tooManyUnits", ""
+									+ ExplainTableDialog.MAX_UNITS)),
+							ExplainTableDialog.this.fieldLastRowConstraints);
+				else {
+					// Iterate over transformation units.
+					for (final Iterator i = units.iterator(); i.hasNext();) {
+						final TransformationUnit tu = (TransformationUnit) i
+								.next();
+						// Holders for our stuff.
+						final JLabel label;
+						final ExplainTransformationDiagram diagram;
+						// Draw the unit.
+						if (tu instanceof Expression) {
+							// Do an expression column list.
+							label = new JLabel(
+									Resources
+											.get(
+													"stepTableLabel",
+													new String[] {
+															"" + stepNumber,
+															Resources
+																	.get("explainExpressionLabel") }));
+							diagram = new ExplainTransformationDiagram.AdditionalColumns(
+									ExplainTableDialog.this.martTab, tu,
+									stepNumber, explainContext);
+						} else if (tu instanceof Concat) {
+							// Do an expression column list.
+							label = new JLabel(
+									Resources
+											.get(
+													"stepTableLabel",
+													new String[] {
+															"" + stepNumber,
+															Resources
+																	.get("explainConcatLabel") }));
+							diagram = new ExplainTransformationDiagram.TempReal(
+									ExplainTableDialog.this.martTab,
+									(Concat) tu, columnsSoFar, stepNumber,
+									explainContext);
+						} else if (tu instanceof JoinTable) {
+							// Temp table to schema table join.
+							label = new JLabel(
+									Resources
+											.get(
+													"stepTableLabel",
+													new String[] {
+															"" + stepNumber,
+															Resources
+																	.get("explainMergeLabel") }));
+							diagram = new ExplainTransformationDiagram.TempReal(
+									ExplainTableDialog.this.martTab,
+									(JoinTable) tu, columnsSoFar, stepNumber,
+									explainContext);
+						} else if (tu instanceof SelectFromTable) {
+							// Do a single-step select.
+							label = new JLabel(
+									Resources
+											.get(
+													"stepTableLabel",
+													new String[] {
+															"" + stepNumber,
+															Resources
+																	.get("explainSelectLabel") }));
+							diagram = new ExplainTransformationDiagram.SingleTable(
+									ExplainTableDialog.this.martTab,
+									(SelectFromTable) tu, stepNumber,
+									explainContext);
+						} else
+							throw new BioMartError();
+						ExplainTableDialog.this.transformationTableComponents
+								.addAll(diagram.getTableComponents());
+						// Display the diagram.
+						ExplainTableDialog.this.transformation.add(label,
+								ExplainTableDialog.this.labelConstraints);
+						diagram
+								.setDiagramContext(ExplainTableDialog.this.transformationContext);
+						JPanel field = new JPanel();
+						field.add(diagram);
+						ExplainTableDialog.this.transformation.add(field,
+								ExplainTableDialog.this.fieldConstraints);
+						// Add columns from this unit to the transformed table.
+						columnsSoFar.addAll(tu.getNewColumnNameMap().values());
+						stepNumber++;
+					}
 
-				// Reinstate shown/hidden columns.
-				for (final Iterator i = ExplainTableDialog.this.transformationTableComponents
-						.iterator(); i.hasNext();) {
-					final TableComponent comp = (TableComponent) i.next();
-					final Object state = shownTables.get(((Table) comp
-							.getObject()).getName());
-					if (state != null)
-						comp.setState(state);
+					// Reinstate shown/hidden columns.
+					for (final Iterator i = ExplainTableDialog.this.transformationTableComponents
+							.iterator(); i.hasNext();) {
+						final TableComponent comp = (TableComponent) i.next();
+						final Object state = shownTables.get(((Table) comp
+								.getObject()).getName());
+						if (state != null)
+							comp.setState(state);
+					}
 				}
 
 				// Resize the diagram to fit the components.

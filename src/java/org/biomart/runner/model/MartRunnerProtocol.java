@@ -263,7 +263,7 @@ public class MartRunnerProtocol {
 		final StringBuffer actions = new StringBuffer();
 		final Collection finalActions = new ArrayList();
 		String line;
-		while (!((line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))) {
+		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
 			if (line.equals(MartRunnerProtocol.NEXT_ACTION)) {
 				final String action = actions.toString();
 				finalActions.add(action);
@@ -271,7 +271,6 @@ public class MartRunnerProtocol {
 				actions.setLength(0);
 			} else
 				actions.append(line);
-		}
 		JobHandler.addActions(jobId, sectionPath, finalActions);
 	}
 
@@ -300,7 +299,7 @@ public class MartRunnerProtocol {
 		final String jobId = in.readLine();
 		final Collection identifiers = new ArrayList();
 		String line;
-		while (!((line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE)))
+		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
 			identifiers.add(Integer.valueOf(line));
 		JobHandler.queue(jobId, identifiers);
 	}
@@ -330,7 +329,7 @@ public class MartRunnerProtocol {
 		final String jobId = in.readLine();
 		final Collection identifiers = new ArrayList();
 		String line;
-		while (!((line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE)))
+		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
 			identifiers.add(Integer.valueOf(line));
 		JobHandler.unqueue(jobId, identifiers);
 	}

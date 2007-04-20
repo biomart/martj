@@ -22,16 +22,16 @@ package org.biomart.runner.exceptions;
  * This refers to exceptions where some part of job management fails.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public class JobException extends MartRunnerException {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constructs an instance of <tt>JobException</tt> with the
-	 * specified detail message.
+	 * Constructs an instance of <tt>JobException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -41,8 +41,8 @@ public class JobException extends MartRunnerException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>JobException</tt> with the
-	 * specified detail message and initial cause.
+	 * Constructs an instance of <tt>JobException</tt> with the specified
+	 * detail message and initial cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -54,8 +54,8 @@ public class JobException extends MartRunnerException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>JobException</tt> with the
-	 * specified initial cause.
+	 * Constructs an instance of <tt>JobException</tt> with the specified
+	 * initial cause.
 	 * 
 	 * @param t
 	 *            the initial cause.

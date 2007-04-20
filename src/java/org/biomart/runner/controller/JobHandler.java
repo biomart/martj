@@ -34,10 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.mail.MessagingException;
+
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.FileUtils;
+import org.biomart.common.utils.SendMail;
 import org.biomart.runner.controller.JobThreadManager.JobThreadManagerListener;
 import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.model.JobList;
@@ -71,8 +74,8 @@ public class JobHandler {
 	private static final Map jobManagers = new HashMap();
 
 	static {
-		if (!jobsDir.exists())
-			jobsDir.mkdir();
+		if (!JobHandler.jobsDir.exists())
+			JobHandler.jobsDir.mkdir();
 	}
 
 	/**
@@ -123,7 +126,21 @@ public class JobHandler {
 		}
 		if (stoppedActions.size() > 0)
 			JobHandler.setActionStatus(stoppedActions, JobStatus.STOPPED);
-		// TODO Send an email when find stopped jobs.
+		// Send an email when find stopped jobs.
+		for (final Iterator i = stoppedJobs.iterator(); i.hasNext();) {
+			final JobSummary summary = (JobSummary) i.next();
+			final String jobId = summary.getJobId();
+			final JobPlan plan = JobHandler.getJobPlan(jobId);
+			final String contactEmail = plan.getContactEmailAddress();
+			if (contactEmail != null && !"".equals(contactEmail.trim()))
+				try {
+					SendMail.sendSMTPMail(new String[] { contactEmail },
+							Resources.get("jobStoppedSubject", "" + jobId), "");
+				} catch (final MessagingException e) {
+					// We don't really care.
+					Log.error(e);
+				}
+		}
 		return stoppedJobs.size();
 	}
 
@@ -418,9 +435,10 @@ public class JobHandler {
 			// Set the email stuff.
 			final String trimmedEmail = email.trim().length() == 0 ? null
 					: email.trim();
-			if ((jobPlan.getContactEmailAddress() == null && trimmedEmail != null)
-					|| (jobPlan.getContactEmailAddress() != null && !jobPlan
-							.getContactEmailAddress().equals(trimmedEmail))) {
+			if (jobPlan.getContactEmailAddress() == null
+					&& trimmedEmail != null
+					|| jobPlan.getContactEmailAddress() != null
+					&& !jobPlan.getContactEmailAddress().equals(trimmedEmail)) {
 				jobPlan.setContactEmailAddress(trimmedEmail);
 				JobHandler.saveJobPlan(jobPlan);
 			}

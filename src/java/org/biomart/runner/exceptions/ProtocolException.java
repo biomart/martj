@@ -18,22 +18,21 @@
 
 package org.biomart.runner.exceptions;
 
-
 /**
- * This refers to exceptions where something has failed during
- * communication between a MartBuilder server and client.
+ * This refers to exceptions where something has failed during communication
+ * between a MartBuilder server and client.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class ProtocolException extends MartRunnerException {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constructs an instance of <tt>ProtocolException</tt> with the
-	 * specified detail message.
+	 * Constructs an instance of <tt>ProtocolException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -43,8 +42,8 @@ public class ProtocolException extends MartRunnerException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>ProtocolException</tt> with the
-	 * specified detail message and initial cause.
+	 * Constructs an instance of <tt>ProtocolException</tt> with the specified
+	 * detail message and initial cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -56,8 +55,8 @@ public class ProtocolException extends MartRunnerException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>ProtocolException</tt> with the
-	 * specified initial cause.
+	 * Constructs an instance of <tt>ProtocolException</tt> with the specified
+	 * initial cause.
 	 * 
 	 * @param t
 	 *            the initial cause.

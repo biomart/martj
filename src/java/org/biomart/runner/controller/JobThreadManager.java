@@ -18,6 +18,15 @@
 
 package org.biomart.runner.controller;
 
+import javax.mail.MessagingException;
+
+import org.biomart.common.resources.Log;
+import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.SendMail;
+import org.biomart.runner.exceptions.JobException;
+import org.biomart.runner.model.JobPlan;
+import org.biomart.runner.model.JobStatus;
+import org.biomart.runner.model.JobList.JobSummary;
 
 /**
  * Takes a job and runs it and manages the associated threads.
@@ -63,20 +72,61 @@ public class JobThreadManager extends Thread {
 	}
 
 	public void run() {
-		// TODO Group together tasks and create a queue with waitpoints.
-		// TODO Create a thread pool with N initial threads.
-		// TODO Each thread grabs tasks from the queue.
-		// Queue = first section with queued/stopped actions by tree
-		// walk and do not go past sections with running actions when
-		// searching (this differs from running sections so careful!).
-		// If the section contains any failed actions, it is not run at all.
-		// TODO Timer updates thread pool with correct number of threads.
-		// TODO Send an email when find failures.
-		// TODO Keep going until queue is empty and threads are all done.
-		
-		// When last thread is finished, do a callback.
-		// TODO Send an email when all done.
-		this.listener.jobStopped(this.jobId);
+		// Get the summary and the plan.
+		try {
+			final JobSummary summary = JobHandler.getJobList().getJobSummary(
+					this.jobId);
+			final JobPlan plan = JobHandler.getJobPlan(this.jobId);
+			final String contactEmail = plan.getContactEmailAddress();
+
+			// Send emails.
+			if (contactEmail != null && !"".equals(contactEmail.trim()))
+				try {
+					SendMail
+							.sendSMTPMail(new String[] { contactEmail },
+									Resources.get("jobStartingSubject", ""
+											+ this.jobId), "");
+				} catch (final MessagingException e) {
+					// We don't really care.
+					Log.error(e);
+				}
+
+			// TODO Group together tasks and create a queue with waitpoints.
+			// TODO Create a thread pool with N initial threads.
+			// TODO Each thread grabs tasks from the queue.
+			// Queue = first section with queued/stopped actions by tree
+			// walk and do not go past sections with running actions when
+			// searching (this differs from running sections so careful!).
+			// If the section contains any failed actions, it is not run at all.
+			// TODO Timer updates thread pool with correct number of threads.
+			// TODO Keep going until queue is empty and threads are all done.
+
+			// TODO When last thread is finished...
+
+			// Send emails.
+			if (contactEmail != null && !"".equals(contactEmail.trim())) {
+				final String subject;
+				if (summary.getStatus().equals(JobStatus.COMPLETED))
+					subject = Resources.get("jobEndedOKSubject", ""
+							+ this.jobId);
+				else
+					subject = Resources.get("jobEndedNOKSubject", ""
+							+ this.jobId);
+				try {
+					SendMail.sendSMTPMail(new String[] { contactEmail },
+							subject, "");
+				} catch (final MessagingException e) {
+					// We don't really care.
+					Log.error(e);
+				}
+			}
+			
+			// Do a callback.
+			this.listener.jobStopped(this.jobId);
+		} catch (final JobException e) {
+			// It hates us.
+			Log.fatal(e);
+		}
 	}
 
 	/**

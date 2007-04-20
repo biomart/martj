@@ -93,7 +93,7 @@ public class JobList implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		private final String jobId;
-		
+
 		private JobStatus status;
 
 		/**
@@ -131,6 +131,16 @@ public class JobList implements Serializable {
 		 */
 		public JobStatus getStatus() {
 			return this.status;
+		}
+
+		public int hashCode() {
+			return this.jobId.hashCode();
+		}
+
+		public boolean equals(final Object other) {
+			if (!(other instanceof JobSummary))
+				return false;
+			return this.jobId.equals(((JobSummary) other).getJobId());
 		}
 	}
 }

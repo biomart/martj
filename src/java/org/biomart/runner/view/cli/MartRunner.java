@@ -41,7 +41,7 @@ import org.biomart.runner.model.MartRunnerProtocol;
  * The CLI syntax is:
  * 
  * <pre>
- *          java org.biomart.runner.view.cli.MartRunner &lt;port&gt;
+ *           java org.biomart.runner.view.cli.MartRunner &lt;port&gt;
  * </pre>
  * 
  * where <tt>&lt;port&gt;</tt> is the port that this server should listen on.
@@ -78,8 +78,8 @@ public class MartRunner extends BioMartCLI {
 			// Find and update all crashed jobs and mark them as stopped.
 			Log.debug("Finding crashed jobs");
 			final int crashedJobs = JobHandler.stopCrashedJobs();
-			if (crashedJobs>0)
-				Log.info(Resources.get("foundCrashedJobs",""+crashedJobs));
+			if (crashedJobs > 0)
+				Log.info(Resources.get("foundCrashedJobs", "" + crashedJobs));
 			// Establish the socket and start listening.
 			try {
 				final int port = Integer.parseInt(args[0]);
