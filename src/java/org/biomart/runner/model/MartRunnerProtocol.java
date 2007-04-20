@@ -30,6 +30,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -68,6 +69,10 @@ public class MartRunnerProtocol {
 	private static final String START_JOB = "START_JOB";
 
 	private static final String STOP_JOB = "STOP_JOB";
+
+	private static final String QUEUE = "QUEUE";
+
+	private static final String UNQUEUE = "UNQUEUE";
 
 	// Short-cut for ending messages and actions.
 	private static final String END_MESSAGE = "___END_MESSAGE___";
@@ -268,6 +273,66 @@ public class MartRunnerProtocol {
 				actions.append(line);
 		}
 		JobHandler.addActions(jobId, sectionPath, finalActions);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_QUEUE(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final Collection identifiers = new ArrayList();
+		String line;
+		while (!((line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE)))
+			identifiers.add(Integer.valueOf(line));
+		JobHandler.queue(jobId, identifiers);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_UNQUEUE(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final Collection identifiers = new ArrayList();
+		String line;
+		while (!((line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE)))
+			identifiers.add(Integer.valueOf(line));
+		JobHandler.unqueue(jobId, identifiers);
 	}
 
 	/**
@@ -834,6 +899,84 @@ public class MartRunnerProtocol {
 						.getOutputStream(), true);
 				bos.println(MartRunnerProtocol.STOP_JOB);
 				bos.println(jobId);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Flag identifiers to be queued.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param identifiers
+		 *            the identifiers.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void queue(final String host, final String port,
+				final String jobId, final Collection identifiers)
+				throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.QUEUE);
+				bos.println(jobId);
+				for (final Iterator i = identifiers.iterator(); i.hasNext();)
+					bos.println(i.next());
+				bos.println(MartRunnerProtocol.END_MESSAGE);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Flag identifiers to be unqueued.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param identifiers
+		 *            the identifiers.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void unqueue(final String host, final String port,
+				final String jobId, final Collection identifiers)
+				throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.UNQUEUE);
+				bos.println(jobId);
+				for (final Iterator i = identifiers.iterator(); i.hasNext();)
+					bos.println(i.next());
+				bos.println(MartRunnerProtocol.END_MESSAGE);
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {

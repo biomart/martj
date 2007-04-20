@@ -53,37 +53,38 @@ public class JobStatus implements Serializable, Comparable {
 			"INCOMPLETE", 1);
 
 	/**
-	 * New things.
-	 */
-	public static final JobStatus NEW = JobStatus.getJobStatus("NEW", 2);
-
-	/**
 	 * Running things.
 	 */
 	public static final JobStatus RUNNING = JobStatus
-			.getJobStatus("RUNNING", 3);
+			.getJobStatus("RUNNING", 2);
 
 	/**
 	 * Stopped things.
 	 */
 	public static final JobStatus STOPPED = JobStatus
-			.getJobStatus("STOPPED", 4);
+			.getJobStatus("STOPPED", 3);
 
 	/**
 	 * Failed things.
 	 */
-	public static final JobStatus FAILED = JobStatus.getJobStatus("FAILED", 5);
+	public static final JobStatus FAILED = JobStatus.getJobStatus("FAILED", 4);
 
 	/**
 	 * Queued things.
 	 */
-	public static final JobStatus QUEUED = JobStatus.getJobStatus("QUEUED", 6);
+	public static final JobStatus QUEUED = JobStatus.getJobStatus("QUEUED", 5);
 
 	/**
 	 * Completed things.
 	 */
 	public static final JobStatus COMPLETED = JobStatus.getJobStatus(
-			"COMPLETED", 7);
+			"COMPLETED", 6);
+
+	/**
+	 * New things.
+	 */
+	public static final JobStatus NOT_QUEUED = JobStatus.getJobStatus(
+			"NOT_QUEUED", 7);
 
 	private JobStatus(final String status, final int rank) {
 		this.status = status;

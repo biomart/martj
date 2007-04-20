@@ -26,24 +26,26 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.FileUtils;
+import org.biomart.runner.controller.JobThreadManager.JobThreadManagerListener;
 import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.model.JobList;
 import org.biomart.runner.model.JobPlan;
 import org.biomart.runner.model.JobStatus;
-import org.biomart.runner.model.JobThreadManager;
 import org.biomart.runner.model.JobList.JobSummary;
 import org.biomart.runner.model.JobPlan.JobPlanAction;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
-import org.biomart.runner.model.JobThreadManager.JobThreadManagerListener;
 
 /**
  * Tools for running SQL.
@@ -73,10 +75,6 @@ public class JobHandler {
 			jobsDir.mkdir();
 	}
 
-	// TODO When JobHandler updates the status of a section/action, update
-	// both the section/action AND the JobSummary for that job by calling
-	// getStatus() on the JobPlan for that job after doing the update.
-
 	/**
 	 * Request a new job ID. Don't define the job, just request an ID for one
 	 * that could be defined in future.
@@ -100,42 +98,33 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static int stopCrashedJobs() throws JobException {
-		int jobsChanged = 0;
-		try {
-			// Update job summary statuses first.
-			final JobList jobList = JobHandler.getJobList();
-			for (final Iterator i = jobList.getAllJobs().iterator(); i
-					.hasNext();) {
-				final JobSummary summary = (JobSummary) i.next();
-				if (summary.getStatus().equals(JobStatus.RUNNING)) {
-					summary.setStatus(JobStatus.STOPPED);
-					// TODO Send an email when find stopped jobs.
-					JobHandler.saveJobList(jobList);
-					jobsChanged++;
-					// Update actions too.
-					final JobPlan plan = JobHandler.getJobPlan(summary
-							.getJobId());
-					final List sections = new ArrayList();
-					sections.add(plan.getStartingSection());
-					for (int j = 0; j < sections.size(); j++) {
-						final JobPlanSection section = (JobPlanSection) sections
-								.get(j);
-						sections.addAll(section.getAllSubSections());
-						for (final Iterator l = section.getAllActions()
-								.iterator(); l.hasNext();) {
-							final JobPlanAction action = (JobPlanAction) l
-									.next();
-							if (action.getStatus().equals(JobStatus.RUNNING))
-								action.setStatus(JobStatus.STOPPED);
-						}
+		final List stoppedActions = new ArrayList();
+		final List stoppedJobs = new ArrayList();
+		// Update job summaries.
+		final JobList jobList = JobHandler.getJobList();
+		for (final Iterator i = jobList.getAllJobs().iterator(); i.hasNext();) {
+			final JobSummary summary = (JobSummary) i.next();
+			// Update actions.
+			final JobPlan plan = JobHandler.getJobPlan(summary.getJobId());
+			final List sections = new ArrayList();
+			sections.add(plan.getStartingSection());
+			for (int j = 0; j < sections.size(); j++) {
+				final JobPlanSection section = (JobPlanSection) sections.get(j);
+				sections.addAll(section.getAllSubSections());
+				for (final Iterator l = section.getAllActions().iterator(); l
+						.hasNext();) {
+					final JobPlanAction action = (JobPlanAction) l.next();
+					if (action.getStatus().equals(JobStatus.RUNNING)) {
+						stoppedActions.add(action);
+						stoppedJobs.add(summary);
 					}
-					JobHandler.saveJobPlan(plan);
 				}
 			}
-		} catch (final IOException e) {
-			throw new JobException(e);
 		}
-		return jobsChanged;
+		if (stoppedActions.size() > 0)
+			JobHandler.setActionStatus(stoppedActions, JobStatus.STOPPED);
+		// TODO Send an email when find stopped jobs.
+		return stoppedJobs.size();
 	}
 
 	/**
@@ -187,13 +176,147 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static void endJob(final String jobId) throws JobException {
+		final List sections = new ArrayList();
+		final List actions = new ArrayList();
+		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
+		sections.add(jobPlan.getStartingSection());
+		for (int i = 0; i < sections.size(); i++) {
+			final JobPlanSection section = (JobPlanSection) sections.get(i);
+			sections.addAll(section.getAllSubSections());
+			actions.addAll(section.getAllActions());
+		}
+		// Queue the job.
+		JobHandler.setActionStatus(actions, JobStatus.QUEUED);
+	}
+
+	/**
+	 * Change the status of a job summary object.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param status
+	 *            the new status.
+	 * @throws JobException
+	 *             if it can't.
+	 */
+	public static void setSummaryStatus(final String jobId,
+			final JobStatus status) throws JobException {
 		try {
+			// Create a job list entry and a job plan.
 			final JobList jobList = JobHandler.getJobList();
-			jobList.getJobSummary(jobId).setAllActionsReceived();
+			final JobSummary jobSummary = jobList.getJobSummary(jobId);
+			// Set the status.
+			jobSummary.setStatus(status);
+			// Save all.
 			JobHandler.saveJobList(jobList);
 		} catch (final IOException e) {
 			throw new JobException(e);
 		}
+	}
+
+	/**
+	 * Change the status of a job plan action object.
+	 * 
+	 * @param actions
+	 *            the job action(s).
+	 * @param status
+	 *            the new status.
+	 * @throws JobException
+	 *             if it can't.
+	 */
+	public static void setActionStatus(final Collection actions,
+			final JobStatus status) throws JobException {
+		try {
+			final Set jobPlans = new HashSet();
+			for (final Iterator i = actions.iterator(); i.hasNext();) {
+				final JobPlanAction action = (JobPlanAction) i.next();
+				// Create a job list entry and a job plan.
+				final JobPlan jobPlan = action.getJobSection().getJobPlan();
+				// Set the status.
+				action.setStatus(status);
+				// Remember the plans.
+				jobPlans.add(jobPlan);
+			}
+			for (final Iterator i = jobPlans.iterator(); i.hasNext();) {
+				final JobPlan jobPlan = (JobPlan) i.next();
+				// Save all.
+				JobHandler.saveJobPlan(jobPlan);
+				// Update the summary.
+				JobHandler.setSummaryStatus(jobPlan.getJobId(), jobPlan
+						.getStatus());
+			}
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Change the status of a job plan action object.
+	 * 
+	 * @param action
+	 *            the job action.
+	 * @param status
+	 *            the new status.
+	 * @throws JobException
+	 *             if it can't.
+	 */
+	public static void setActionStatus(final JobPlanAction action,
+			final JobStatus status) throws JobException {
+		JobHandler.setActionStatus(Collections.singletonList(action), status);
+	}
+
+	/**
+	 * Queue some set of sections+actions.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param identifiers
+	 *            the selected node identifiers.
+	 * @throws JobException
+	 *             if it cannot do it.
+	 */
+	public static void queue(final String jobId, final Collection identifiers)
+			throws JobException {
+		JobHandler.setStatusForSelection(jobId, identifiers, JobStatus.QUEUED);
+	}
+
+	/**
+	 * Unqueue some set of sections+actions.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param identifiers
+	 *            the selected node identifiers.
+	 * @throws JobException
+	 *             if it cannot do it.
+	 */
+	public static void unqueue(final String jobId, final Collection identifiers)
+			throws JobException {
+		JobHandler.setStatusForSelection(jobId, identifiers,
+				JobStatus.NOT_QUEUED);
+	}
+
+	private static void setStatusForSelection(final String jobId,
+			final Collection identifiers, final JobStatus status)
+			throws JobException {
+		// Iterate over all actions in order and if in set of
+		// identifiers, add to list to modify.
+		final List sections = new ArrayList();
+		final List actions = new ArrayList();
+		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
+		sections.add(jobPlan.getStartingSection());
+		for (int i = 0; i < sections.size(); i++) {
+			final JobPlanSection section = (JobPlanSection) sections.get(i);
+			sections.addAll(section.getAllSubSections());
+			for (final Iterator k = section.getAllActions().iterator(); k
+					.hasNext();) {
+				final JobPlanAction action = (JobPlanAction) k.next();
+				if (identifiers.contains(new Integer(action
+						.getUniqueIdentifier())))
+					actions.add(action);
+			}
+		}
+		JobHandler.setActionStatus(actions, status);
 	}
 
 	/**

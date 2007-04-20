@@ -30,11 +30,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -107,8 +113,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 	private static final Map STATUS_COLOR_MAP = new HashMap();
 
 	static {
-		MartRunnerMonitorDialog.STATUS_COLOR_MAP
-				.put(JobStatus.NEW, Color.BLACK);
+		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.NOT_QUEUED,
+				Color.BLACK);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.INCOMPLETE,
 				Color.BLACK);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.QUEUED,
@@ -165,32 +171,30 @@ public class MartRunnerMonitorDialog extends JFrame {
 				BorderLayout.PAGE_START);
 		jobListPanel.add(new JScrollPane(jobList), BorderLayout.CENTER);
 		jobListPanel.add(refreshJobList, BorderLayout.PAGE_END);
-		// Separate task so can attach to refresh button too.
-		final LongProcess updateJobListTask = new LongProcess() {
-			private boolean firstRun = true;
-
-			public void run() {
-				try {
-					jobSummaryListModel.updateList();
-				} catch (final ProtocolException e) {
-					StackTrace.showStackTrace(e);
-				} finally {
-					// Attempt to select the first item on first run.
-					if (this.firstRun && defaultJob)
-						jobList.setSelectedValue(jobSummaryListModel
-								.lastElement(), true);
-					this.firstRun = false;
-				}
-			}
-		};
-		// Update now.
-		updateJobListTask.start();
 		// Updates when refresh button is hit.
 		refreshJobList.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				updateJobListTask.start();
+				new LongProcess() {
+					private boolean firstRun = true;
+
+					public void run() {
+						try {
+							jobSummaryListModel.updateList();
+						} catch (final ProtocolException e) {
+							StackTrace.showStackTrace(e);
+						} finally {
+							// Attempt to select the first item on first run.
+							if (this.firstRun && defaultJob)
+								jobList.setSelectedValue(jobSummaryListModel
+										.lastElement(), true);
+							this.firstRun = false;
+						}
+					}
+				}.start();
 			}
 		});
+		// Update now.
+		refreshJobList.doClick();
 
 		// Add a listener to the list to update the pane on the right.
 		jobList.addListSelectionListener(new ListSelectionListener() {
@@ -255,7 +259,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 											Client.removeJob(host, port,
 													summary.getJobId());
 											// Update the list.
-											updateJobListTask.start();
+											refreshJobList.doClick();
 										}
 									}.start();
 							}
@@ -348,7 +352,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			Font font = MartRunnerMonitorDialog.PLAIN_FONT;
 			// Sections are given text labels.
 			if (value instanceof WrapperTreeNode)
-				value = ((WrapperTreeNode) value).getJobPlanSection();
+				value = ((WrapperTreeNode) value).getRootJobPlanSection();
 			if (value instanceof JobPlanSection) {
 				final JobPlanSection section = (JobPlanSection) value;
 				final String sectionText = section.getLabel() + " ("
@@ -626,6 +630,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 				public void actionPerformed(final ActionEvent e) {
 					final TreePath path = JobPlanPanel.this.tree
 							.getSelectionPath();
+					// FIXME Not repainting properly!
 					JobPlanPanel.this.treeModel.update();
 					JobPlanPanel.this.tree.repaint();
 					// Reselect the node to update the summary box.
@@ -762,17 +767,24 @@ public class MartRunnerMonitorDialog extends JFrame {
 							final TreePath treePath = tree.getPathForLocation(e
 									.getX(), e.getY());
 							if (treePath != null) {
-								JPopupMenu contextMenu = null;
+								// Work out what was clicked on or
+								// multiply selected.
 								Object selectedNode = treePath
 										.getLastPathComponent();
 								if (selectedNode instanceof WrapperTreeNode)
 									selectedNode = ((WrapperTreeNode) selectedNode)
-											.getJobPlanSection();
-								if (selectedNode instanceof JobPlanSection) {
-									// TODO Build section menu.
-								} else if (selectedNode instanceof JobPlanAction) {
-									// TODO Build action menu.
-								}
+											.getRootJobPlanSection();
+								final TreePath[] selectedPaths;
+								if (tree.getSelectionCount() == 0
+										&& (selectedNode instanceof JobPlanSection || selectedNode instanceof JobPlanAction))
+									selectedPaths = new TreePath[] { treePath };
+								else
+									selectedPaths = tree.getSelectionPaths();
+
+								// Show menu.
+								final JPopupMenu contextMenu = this
+										.getContextMenu(Arrays
+												.asList(selectedPaths));
 								if (contextMenu != null
 										&& contextMenu.getComponentCount() > 0) {
 									contextMenu.show(JobPlanPanel.this.tree, e
@@ -783,6 +795,76 @@ public class MartRunnerMonitorDialog extends JFrame {
 						}
 					}
 
+					private JPopupMenu getContextMenu(
+							final Collection selectedPaths) {
+						// Convert paths to identifiers.
+						final Set identifiers = new HashSet();
+						final List selectedNodes = new ArrayList();
+						for (final Iterator i = selectedPaths.iterator(); i.hasNext(); ) 
+							selectedNodes.add(((TreePath)i.next()).getLastPathComponent());
+						for (int i = 0; i < selectedNodes.size(); i++) {
+							final Object node = selectedNodes.get(i);
+							if (node instanceof JobPlanAction) 
+								identifiers.add(new Integer(((JobPlanAction)node).getUniqueIdentifier()));
+							else if (node instanceof JobPlanSection) {
+								selectedNodes.addAll(((JobPlanSection)node).getAllSubSections());
+								selectedNodes.addAll(((JobPlanSection)node).getAllActions());
+							}
+						}
+
+						// Did we produce anything?
+						if (identifiers.size() < 1)
+							return null;
+
+						// Build menu.
+						final JPopupMenu contextMenu = new JPopupMenu();
+
+						// Queue row.
+						final JMenuItem queue = new JMenuItem(Resources
+								.get("queueSelectionTitle"));
+						queue.setMnemonic(Resources.get(
+								"queueSelectionMnemonic").charAt(0));
+						queue.addActionListener(new ActionListener() {
+							public void actionPerformed(final ActionEvent evt) {
+								// Confirm.
+								new LongProcess() {
+									public void run() throws Exception {
+										// Queue the job.
+										Client.queue(host, port, jobId,
+												identifiers);
+										// Update the list.
+										JobPlanPanel.this.refreshJobTree
+												.doClick();
+									}
+								}.start();
+							}
+						});
+						contextMenu.add(queue);
+
+						// Unqueue row.
+						final JMenuItem unqueue = new JMenuItem(Resources
+								.get("unqueueSelectionTitle"));
+						unqueue.setMnemonic(Resources.get(
+								"unqueueSelectionMnemonic").charAt(0));
+						unqueue.addActionListener(new ActionListener() {
+							public void actionPerformed(final ActionEvent evt) {
+								// Confirm.
+								new LongProcess() {
+									public void run() throws Exception {
+										// Unqueue the job.
+										Client.unqueue(host, port, jobId,
+												identifiers);
+										// Update the list.
+										JobPlanPanel.this.refreshJobTree
+												.doClick();
+									}
+								}.start();
+							}
+						});
+						contextMenu.add(unqueue);
+
+						return contextMenu;
+					}
 				});
 
 				// Listener on tree to update footer panel fields.
@@ -805,7 +887,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 							// Get info.
 							if (selectedNode instanceof WrapperTreeNode)
 								selectedNode = ((WrapperTreeNode) selectedNode)
-										.getJobPlanSection();
+										.getRootJobPlanSection();
 							if (selectedNode instanceof JobPlanSection) {
 								final JobPlanSection section = (JobPlanSection) selectedNode;
 								status = section.getStatus();
@@ -952,10 +1034,6 @@ public class MartRunnerMonitorDialog extends JFrame {
 			}.start();
 		}
 
-		private JobPlanSection getStartingSection() {
-			return this.jobPlan.getStartingSection();
-		}
-
 		/**
 		 * A virtual tree node which wraps a changing root node supplied by a
 		 * changing tree model and makes it look like nothing has changed.
@@ -975,35 +1053,31 @@ public class MartRunnerMonitorDialog extends JFrame {
 			}
 
 			public Enumeration children() {
-				return this.model.getStartingSection().children();
+				return this.getRootJobPlanSection().children();
 			}
 
 			public boolean getAllowsChildren() {
-				return this.model.getStartingSection().getAllowsChildren();
+				return this.getRootJobPlanSection().getAllowsChildren();
 			}
 
 			public TreeNode getChildAt(int childIndex) {
-				return this.model.getStartingSection().getChildAt(childIndex);
+				return this.getRootJobPlanSection().getChildAt(childIndex);
 			}
 
 			public int getChildCount() {
-				return this.model.getStartingSection().getChildCount();
+				return this.getRootJobPlanSection().getChildCount();
 			}
 
 			public int getIndex(TreeNode node) {
-				return this.model.getStartingSection().getIndex(node);
+				return this.getRootJobPlanSection().getIndex(node);
 			}
 
 			public TreeNode getParent() {
-				return this.model.getStartingSection().getParent();
+				return this.getRootJobPlanSection().getParent();
 			}
 
 			public boolean isLeaf() {
-				return this.model.getStartingSection().isLeaf();
-			}
-
-			public String toString() {
-				return this.model.getStartingSection().getLabel();
+				return this.getRootJobPlanSection().isLeaf();
 			}
 
 			/**
@@ -1011,8 +1085,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 			 * 
 			 * @return the root node.
 			 */
-			public JobPlanSection getJobPlanSection() {
-				return this.model.getStartingSection();
+			public JobPlanSection getRootJobPlanSection() {
+				return ((JobPlanSection) this.model.jobPlan.getRoot());
 			}
 		}
 	}

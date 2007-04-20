@@ -588,6 +588,7 @@ public class DataSet extends GenericSchema {
 				// Work out how many unmasked correct relations lead
 				// from this relation's key.
 				int unmaskedRels = 0;
+				/* FIXME - Temporary comment.
 				if (r.isOneToMany()
 						&& r.getManyKey().getTable().equals(mergeTable))
 					for (final Iterator x = r.getManyKey().getRelations()
@@ -599,6 +600,7 @@ public class DataSet extends GenericSchema {
 										rel))
 							unmaskedRels++;
 					}
+				*/
 
 				// Are we at the 1 end of a 1:M?
 				// If so, we may need to make a dimension, a subclass, or

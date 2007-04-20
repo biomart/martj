@@ -117,13 +117,6 @@ public class JobList implements Serializable {
 		}
 
 		/**
-		 * Tell us that we have received all the actions we're going to get.
-		 */
-		public void setAllActionsReceived() {
-			this.status = JobStatus.NEW;
-		}
-
-		/**
 		 * @param status
 		 *            the status to set
 		 */

@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.runner.model;
+package org.biomart.runner.controller;
 
 
 /**
@@ -66,6 +66,10 @@ public class JobThreadManager extends Thread {
 		// TODO Group together tasks and create a queue with waitpoints.
 		// TODO Create a thread pool with N initial threads.
 		// TODO Each thread grabs tasks from the queue.
+		// Queue = first section with queued/stopped actions by tree
+		// walk and do not go past sections with running actions when
+		// searching (this differs from running sections so careful!).
+		// If the section contains any failed actions, it is not run at all.
 		// TODO Timer updates thread pool with correct number of threads.
 		// TODO Send an email when find failures.
 		// TODO Keep going until queue is empty and threads are all done.

@@ -29,27 +29,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 
 import org.biomart.common.resources.Settings;
 
 /**
- * Handles planning and execution of jobs. The maximum number of threads
- * allowed is controlled by the 'maxthreads' property in the BioMart
- * properties file. See {@link Settings#getProperty(String)}.
+ * Handles planning and execution of jobs. The maximum number of threads allowed
+ * is controlled by the 'maxthreads' property in the BioMart properties file.
+ * See {@link Settings#getProperty(String)}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
  *          rh4 $
  * @since 0.6
  */
-public class JobPlan implements Serializable {
+public class JobPlan extends DefaultTreeModel implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private final String jobId;
-
-	private final JobPlanSection rootSection;
 
 	private static final int MAX_THREAD_COUNT = Integer.parseInt(Settings
 			.getProperty("maxthreads") == null ? "5" : Settings
@@ -74,8 +74,9 @@ public class JobPlan implements Serializable {
 	 *            the id of the job this plan is for.
 	 */
 	public JobPlan(final String jobId) {
+		super(new DefaultMutableTreeNode(), true); // Dummy root.
+		this.setRoot(new JobPlanSection(jobId, this, null));
 		this.jobId = jobId;
-		this.rootSection = new JobPlanSection(jobId, null);
 		this.threadCount = 1;
 	}
 
@@ -85,7 +86,7 @@ public class JobPlan implements Serializable {
 	 * @return the starting section.
 	 */
 	public JobPlanSection getStartingSection() {
-		return this.rootSection;
+		return (JobPlanSection) this.getRoot();
 	}
 
 	/**
@@ -97,7 +98,7 @@ public class JobPlan implements Serializable {
 	 *            the actions to add.
 	 */
 	public void addActions(final String[] sectionPath, final Collection actions) {
-		JobPlanSection section = rootSection;
+		JobPlanSection section = this.getStartingSection();
 		for (int i = 0; i < sectionPath.length; i++)
 			section = section.getSubSection(sectionPath[i]);
 		for (final Iterator i = actions.iterator(); i.hasNext();)
@@ -119,7 +120,7 @@ public class JobPlan implements Serializable {
 	 * @return the status.
 	 */
 	public JobStatus getStatus() {
-		return this.rootSection.getStatus();
+		return this.getStartingSection().getStatus();
 	}
 
 	/**
@@ -219,6 +220,10 @@ public class JobPlan implements Serializable {
 		this.JDBCUsername = username;
 	}
 
+	public int hashCode() {
+		return this.jobId.hashCode();
+	}
+
 	/**
 	 * Describes a section of a job, ie. a group of associated actions.
 	 */
@@ -233,6 +238,8 @@ public class JobPlan implements Serializable {
 
 		private final JobPlanSection parent;
 
+		private final JobPlan plan;
+
 		/**
 		 * Define a new section with the given label.
 		 * 
@@ -240,10 +247,23 @@ public class JobPlan implements Serializable {
 		 *            the label.
 		 * @param parent
 		 *            the parent node.
+		 * @param plan
+		 *            the plan this section is part of.
 		 */
-		public JobPlanSection(final String label, final JobPlanSection parent) {
+		public JobPlanSection(final String label, final JobPlan plan,
+				final JobPlanSection parent) {
 			this.label = label;
 			this.parent = parent;
+			this.plan = plan;
+		}
+
+		/**
+		 * Obtain the job plan.
+		 * 
+		 * @return the job plan.
+		 */
+		public JobPlan getJobPlan() {
+			return this.plan;
 		}
 
 		/**
@@ -264,7 +284,8 @@ public class JobPlan implements Serializable {
 		 */
 		public JobPlanSection getSubSection(final String label) {
 			if (!this.subSections.containsKey(label))
-				this.subSections.put(label, new JobPlanSection(label, this));
+				this.subSections.put(label, new JobPlanSection(label,
+						this.plan, this));
 			return (JobPlanSection) this.subSections.get(label);
 		}
 
@@ -479,6 +500,10 @@ public class JobPlan implements Serializable {
 
 		private final JobPlanSection parent;
 
+		private static int NEXT_IDENTIFIER = 0;
+		
+		private int sequence = JobPlanAction.NEXT_IDENTIFIER++;
+
 		/**
 		 * Create a new action.
 		 * 
@@ -489,7 +514,7 @@ public class JobPlan implements Serializable {
 		 */
 		public JobPlanAction(final String action, final JobPlanSection parent) {
 			this.action = action;
-			this.status = JobStatus.NEW;
+			this.status = JobStatus.NOT_QUEUED;
 			this.parent = parent;
 		}
 
@@ -583,11 +608,28 @@ public class JobPlan implements Serializable {
 		}
 
 		public TreeNode getParent() {
+			return this.getJobSection();
+		}
+
+		/**
+		 * Find out what section this action belongs to.
+		 * 
+		 * @return the section.
+		 */
+		public JobPlanSection getJobSection() {
 			return this.parent;
 		}
 
 		public boolean isLeaf() {
 			return true;
+		}
+		
+		/**
+		 * Return a unique identifier.
+		 * @return the identifier.
+		 */
+		public int getUniqueIdentifier() {
+			return this.sequence;
 		}
 	}
 }
