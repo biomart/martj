@@ -20,6 +20,7 @@ package org.biomart.runner.model;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -27,22 +28,16 @@ import java.util.Map;
  * Handles list of jobs currently known.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class JobList implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final Map jobList;
-
-	/**
-	 * Create a new job list.
-	 */
-	public JobList() {
-		this.jobList = new LinkedHashMap();
-	}
+	private final Map jobList = Collections
+			.synchronizedMap(new LinkedHashMap());
 
 	/**
 	 * Add a job.

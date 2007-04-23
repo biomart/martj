@@ -27,6 +27,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,8 +55,8 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Tools for running SQL.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class JobHandler {
@@ -69,9 +70,11 @@ public class JobHandler {
 
 	private static JobList jobListCache = null;
 
-	private static final Map jobPlanCache = new HashMap();
+	private static final Map jobPlanCache = Collections
+			.synchronizedMap(new HashMap());
 
-	private static final Map jobManagers = new HashMap();
+	private static final Map jobManagers = Collections
+			.synchronizedMap(new HashMap());
 
 	static {
 		if (!JobHandler.jobsDir.exists())
@@ -243,6 +246,24 @@ public class JobHandler {
 	 */
 	public static void setActionStatus(final Collection actions,
 			final JobStatus status) throws JobException {
+		JobHandler.setActionStatus(actions, status, null);
+	}
+
+	/**
+	 * Change the status of a job plan action object.
+	 * 
+	 * @param actions
+	 *            the job action(s).
+	 * @param status
+	 *            the new status.
+	 * @param message
+	 *            any message to assign to the action. Use <tt>null</tt> for
+	 *            no message.
+	 * @throws JobException
+	 *             if it can't.
+	 */
+	public static void setActionStatus(final Collection actions,
+			final JobStatus status, final String message) throws JobException {
 		try {
 			final Set jobPlans = new HashSet();
 			for (final Iterator i = actions.iterator(); i.hasNext();) {
@@ -251,6 +272,18 @@ public class JobHandler {
 				final JobPlan jobPlan = action.getJobSection().getJobPlan();
 				// Set the status.
 				action.setStatus(status);
+				action.setMessages(message);
+				// Update timings.
+				if (status.equals(JobStatus.RUNNING)) {
+					action.setStarted(new Date());
+					action.setEnded(null);
+				} else if (status.equals(JobStatus.FAILED)
+						|| status.equals(JobStatus.COMPLETED))
+					action.setEnded(new Date());
+				else {
+					action.setStarted(null);
+					action.setEnded(null);
+				}
 				// Remember the plans.
 				jobPlans.add(jobPlan);
 			}
@@ -265,6 +298,25 @@ public class JobHandler {
 		} catch (final IOException e) {
 			throw new JobException(e);
 		}
+	}
+
+	/**
+	 * Change the status of a job plan action object.
+	 * 
+	 * @param action
+	 *            the job action.
+	 * @param status
+	 *            the new status.
+	 * @param message
+	 *            any message to assign to the action. Use <tt>null</tt> for
+	 *            no message.
+	 * @throws JobException
+	 *             if it can't.
+	 */
+	public static void setActionStatus(final JobPlanAction action,
+			final JobStatus status, final String message) throws JobException {
+		JobHandler.setActionStatus(Collections.singletonList(action), status,
+				message);
 	}
 
 	/**
@@ -509,6 +561,7 @@ public class JobHandler {
 		final JobThreadManager manager = (JobThreadManager) JobHandler.jobManagers
 				.get(jobId);
 		manager.stopThreadManager();
+		// Don't remove it. The callback will do that.
 		Log.info(Resources.get("stoppedThreadManager", jobId));
 	}
 

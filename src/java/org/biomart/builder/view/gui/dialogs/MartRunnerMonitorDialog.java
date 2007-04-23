@@ -31,6 +31,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,6 +80,7 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
@@ -94,8 +96,8 @@ import org.biomart.runner.model.MartRunnerProtocol.Client;
  * This dialog monitors and interacts with SQL being run on a remote host.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class MartRunnerMonitorDialog extends JFrame {
@@ -124,13 +126,13 @@ public class MartRunnerMonitorDialog extends JFrame {
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.NOT_QUEUED,
 				Color.BLACK);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.INCOMPLETE,
-				Color.BLACK);
+				Color.CYAN);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.QUEUED,
 				Color.MAGENTA);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.FAILED,
 				Color.RED);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.RUNNING,
-				Color.YELLOW);
+				Color.BLUE);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.STOPPED,
 				Color.ORANGE);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.COMPLETED,
@@ -210,13 +212,12 @@ public class MartRunnerMonitorDialog extends JFrame {
 			public void valueChanged(final ListSelectionEvent e) {
 				final Object selection = jobList.getSelectedValue();
 				if (!e.getValueIsAdjusting()
-						&& !MartRunnerMonitorDialog.this.listRefreshing) {
+						&& !MartRunnerMonitorDialog.this.listRefreshing)
 					// Update the panel on the right with the new job.
 					jobPlanPanel
 							.setJobId(selection instanceof JobSummary ? ((JobSummary) selection)
 									.getJobId()
 									: null);
-				}
 			}
 		});
 
@@ -295,11 +296,11 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		// Cancel the timer when we close.
 		this.addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent e) {
+			public void windowClosed(final WindowEvent e) {
 				timer.cancel();
 			}
 
-			public void windowClosing(WindowEvent e) {
+			public void windowClosing(final WindowEvent e) {
 				timer.cancel();
 			}
 		});
@@ -372,7 +373,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 		private static final long serialVersionUID = 1L;
 
 		public Component getTreeCellRendererComponent(final JTree tree,
-				Object value, final boolean sel, final boolean expanded,
+				final Object value, final boolean sel, final boolean expanded,
 				final boolean leaf, final int row, final boolean hasFocus) {
 			final JLabel label = new JLabel();
 			label.setOpaque(true);
@@ -457,7 +458,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.removeAllElements();
 			for (final Iterator i = Client.listJobs(this.host, this.port)
 					.getAllJobs().iterator(); i.hasNext();)
-				this.addElement((JobSummary) i.next());
+				this.addElement(i.next());
 		}
 	}
 
@@ -552,7 +553,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.threadSpinner = new JSpinner(this.threadSpinnerModel);
 			// Spinner listener updates summary thread count instantly.
 			this.threadSpinnerModel.addChangeListener(new ChangeListener() {
-				public void stateChanged(ChangeEvent e) {
+				public void stateChanged(final ChangeEvent e) {
 					if (JobPlanPanel.this.jobId != null)
 						try {
 							Client
@@ -576,7 +577,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.jobIdField.setEnabled(false);
 			field.add(this.jobIdField);
 			field.add(new JLabel(Resources.get("threadCountLabel")));
-			field.add(threadSpinner);
+			field.add(this.threadSpinner);
 			headerPanel.add(field, fieldConstraints);
 
 			label = new JLabel(Resources.get("jdbcURLLabel"));
@@ -628,7 +629,6 @@ public class MartRunnerMonitorDialog extends JFrame {
 									JobPlanPanel.this.port,
 									JobPlanPanel.this.jobId);
 							JobPlanPanel.this.startJob.setEnabled(false);
-							JobPlanPanel.this.stopJob.setEnabled(true);
 						} catch (final ProtocolException pe) {
 							StackTrace.showStackTrace(pe);
 						}
@@ -641,7 +641,6 @@ public class MartRunnerMonitorDialog extends JFrame {
 							Client.stopJob(JobPlanPanel.this.host,
 									JobPlanPanel.this.port,
 									JobPlanPanel.this.jobId);
-							JobPlanPanel.this.startJob.setEnabled(true);
 							JobPlanPanel.this.stopJob.setEnabled(false);
 						} catch (final ProtocolException pe) {
 							StackTrace.showStackTrace(pe);
@@ -721,19 +720,20 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 				private void doMouse(final MouseEvent e) {
 					if (e.isPopupTrigger()) {
-						final TreePath treePath = tree.getPathForLocation(e
-								.getX(), e.getY());
+						final TreePath treePath = JobPlanPanel.this.tree
+								.getPathForLocation(e.getX(), e.getY());
 						if (treePath != null) {
 							// Work out what was clicked on or
 							// multiply selected.
-							Object selectedNode = treePath
+							final Object selectedNode = treePath
 									.getLastPathComponent();
 							final TreePath[] selectedPaths;
-							if (tree.getSelectionCount() == 0
+							if (JobPlanPanel.this.tree.getSelectionCount() == 0
 									&& (selectedNode instanceof JobPlanSection || selectedNode instanceof JobPlanAction))
 								selectedPaths = new TreePath[] { treePath };
 							else
-								selectedPaths = tree.getSelectionPaths();
+								selectedPaths = JobPlanPanel.this.tree
+										.getSelectionPaths();
 
 							// Show menu.
 							final JPopupMenu contextMenu = this
@@ -758,7 +758,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 						selectedNodes.add(((TreePath) i.next())
 								.getLastPathComponent());
 					for (int i = 0; i < selectedNodes.size(); i++) {
-						Object node = selectedNodes.get(i);
+						final Object node = selectedNodes.get(i);
 						if (node instanceof JobPlanAction)
 							identifiers.add(new Integer(((JobPlanAction) node)
 									.getUniqueIdentifier()));
@@ -828,7 +828,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			// Listener on tree to update footer panel fields.
 			this.tree.addTreeSelectionListener(new TreeSelectionListener() {
 
-				public void valueChanged(TreeSelectionEvent e) {
+				public void valueChanged(final TreeSelectionEvent e) {
 					// Default values.
 					Date started = null;
 					Date ended = null;
@@ -839,7 +839,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 					// Check a path was actually selected.
 					final TreePath path = e.getPath();
 					if (path != null) {
-						Object selectedNode = e.getPath()
+						final Object selectedNode = e.getPath()
 								.getLastPathComponent();
 
 						// Get info.
@@ -867,17 +867,31 @@ public class MartRunnerMonitorDialog extends JFrame {
 					}
 
 					// Elapsed time to string.
-					long seconds = elapsed % 60;
+					elapsed /= 1000; // Un-millify.
+					final long seconds = elapsed % 60;
 					elapsed /= 60;
-					long minutes = elapsed % 60;
+					final long minutes = elapsed % 60;
 					elapsed /= 60;
-					long hours = elapsed % 24;
+					final long hours = elapsed % 24;
 					elapsed /= 24;
-					long days = elapsed;
+					final long days = elapsed;
 
 					// Update dialog.
-					JobPlanPanel.this.started.setValue(started);
-					JobPlanPanel.this.finished.setValue(ended);
+					try {
+						if (started != null) {
+							JobPlanPanel.this.started.setValue(started);
+							JobPlanPanel.this.started.commitEdit();
+						} else
+							JobPlanPanel.this.started.setText(null);
+						if (ended != null) {
+							JobPlanPanel.this.finished.setValue(ended);
+							JobPlanPanel.this.finished.commitEdit();
+						} else
+							JobPlanPanel.this.finished.setText(null);
+					} catch (final ParseException pe) {
+						// Don't be so silly.
+						Log.error(pe);
+					}
 					JobPlanPanel.this.elapsed.setText(Resources.get(
 							"timeElapsedPattern", new String[] { "" + days,
 									"" + hours, "" + minutes, "" + seconds }));

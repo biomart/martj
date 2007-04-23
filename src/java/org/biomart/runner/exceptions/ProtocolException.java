@@ -23,8 +23,8 @@ package org.biomart.runner.exceptions;
  * between a MartBuilder server and client.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class ProtocolException extends MartRunnerException {

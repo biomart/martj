@@ -21,6 +21,7 @@ package org.biomart.runner.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -41,8 +42,8 @@ import org.biomart.common.resources.Settings;
  * See {@link Settings#getProperty(String)}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class JobPlan extends DefaultTreeModel implements Serializable {
@@ -238,9 +239,11 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 
 		private final String label;
 
-		private final Map subSections = new LinkedHashMap();
+		private final Map subSections = Collections
+				.synchronizedMap(new LinkedHashMap());
 
-		private final List actions = new ArrayList();
+		private final List actions = Collections
+				.synchronizedList(new ArrayList());
 
 		private final JobPlanSection parent;
 
@@ -345,22 +348,18 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 					.hasNext();) {
 				final JobPlanSection section = (JobPlanSection) i.next();
 				final Date sectionEnded = section.getEnded();
-				if (sectionEnded == null)
-					return null;
-				else if (ended == null)
+				if (ended == null)
 					ended = sectionEnded;
-				else
+				else if (sectionEnded != null)
 					ended = sectionEnded.after(ended) ? sectionEnded : ended;
 			}
 			for (final Iterator i = this.getAllActions().iterator(); i
 					.hasNext();) {
 				final JobPlanAction action = (JobPlanAction) i.next();
 				final Date actionEnded = action.getEnded();
-				if (actionEnded == null)
-					return null;
-				else if (ended == null)
+				if (ended == null)
 					ended = actionEnded;
-				else
+				else if (actionEnded != null)
 					ended = actionEnded.after(ended) ? actionEnded : ended;
 			}
 			return ended;
@@ -399,11 +398,9 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 					.hasNext();) {
 				final JobPlanSection section = (JobPlanSection) i.next();
 				final Date sectionStarted = section.getStarted();
-				if (sectionStarted == null)
-					return null;
-				else if (started == null)
+				if (started == null)
 					started = sectionStarted;
-				else
+				else if (sectionStarted != null)
 					started = sectionStarted.before(started) ? sectionStarted
 							: started;
 			}
@@ -411,11 +408,9 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 					.hasNext();) {
 				final JobPlanAction action = (JobPlanAction) i.next();
 				final Date actionStarted = action.getStarted();
-				if (actionStarted == null)
-					return null;
-				else if (started == null)
+				if (started == null)
 					started = actionStarted;
-				else
+				else if (actionStarted != null)
 					started = actionStarted.before(started) ? actionStarted
 							: started;
 			}

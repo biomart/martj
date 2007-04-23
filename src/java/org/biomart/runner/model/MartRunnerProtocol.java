@@ -42,8 +42,8 @@ import org.biomart.runner.exceptions.ProtocolException;
  * Handles client communication and runs background jobs.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class MartRunnerProtocol {
@@ -183,7 +183,7 @@ public class MartRunnerProtocol {
 		final String jdbcUsername = in.readLine();
 		final String jdbcPassword = in.readLine();
 		JobHandler.beginJob(jobId, jdbcDriverClassName, jdbcURL, jdbcUsername,
-				jdbcPassword);
+				jdbcPassword.equals(null) ? null : jdbcPassword);
 	}
 
 	/**

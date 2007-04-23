@@ -31,6 +31,7 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.cli.BioMartCLI;
 import org.biomart.runner.controller.JobHandler;
+import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.exceptions.ProtocolException;
 import org.biomart.runner.model.MartRunnerProtocol;
 
@@ -41,14 +42,14 @@ import org.biomart.runner.model.MartRunnerProtocol;
  * The CLI syntax is:
  * 
  * <pre>
- *           java org.biomart.runner.view.cli.MartRunner &lt;port&gt;
+ *             java org.biomart.runner.view.cli.MartRunner &lt;port&gt;
  * </pre>
  * 
  * where <tt>&lt;port&gt;</tt> is the port that this server should listen on.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class MartRunner extends BioMartCLI {
@@ -70,43 +71,48 @@ public class MartRunner extends BioMartCLI {
 		// Initialise resources.
 		Settings.setApplication(Settings.MARTRUNNER);
 		Resources.setResourceLocation("org/biomart/runner/resources");
+		// Start the app.
 		try {
-			// Check port number argument was supplied.
-			if (args.length < 1)
-				throw new ValidationException(Resources
-						.get("serverPortMissing"));
-			// Find and update all crashed jobs and mark them as stopped.
-			Log.debug("Finding crashed jobs");
-			final int crashedJobs = JobHandler.stopCrashedJobs();
-			if (crashedJobs > 0)
-				Log.info(Resources.get("foundCrashedJobs", "" + crashedJobs));
-			// Establish the socket and start listening.
-			try {
-				final int port = Integer.parseInt(args[0]);
-				Log.info(Resources.get("serverListening", "" + port));
-				// Start the application.
-				new MartRunner(new ServerSocket(port)).launch();
-			} catch (final IOException e) {
-				throw new ValidationException(Resources.get("serverPortBroken",
-						args[0]), e);
-			} catch (final NumberFormatException e) {
-				throw new ValidationException(Resources.get(
-						"serverPortInvalid", args[0]), e);
-			}
+			new MartRunner(args).launch();
 		} catch (final Throwable t) {
-			t.printStackTrace(System.err);
+			Log.fatal(t);
 		}
 	}
 
 	/**
 	 * Start a MartBuilder CLI server listening using the given socket.
 	 * 
-	 * @param serverSocket
-	 *            the socket to listen on.
+	 * @param args
+	 *            the command line arguments. It expects the first one to be a
+	 *            socket number to listen on.
+	 * @throws ValidationException
+	 *             if the arguments were invalid.
+	 * @throws JobException
+	 *             it if could not set things up.
 	 */
-	public MartRunner(final ServerSocket serverSocket) {
+	public MartRunner(final String[] args) throws ValidationException,
+			JobException {
 		super();
-		this.serverSocket = serverSocket;
+		// Check port number argument was supplied.
+		if (args.length < 1)
+			throw new ValidationException(Resources.get("serverPortMissing"));
+		// Find and update all crashed jobs and mark them as stopped.
+		Log.debug("Finding crashed jobs");
+		final int crashedJobs = JobHandler.stopCrashedJobs();
+		if (crashedJobs > 0)
+			Log.info(Resources.get("foundCrashedJobs", "" + crashedJobs));
+		// Establish the socket and start listening.
+		try {
+			final int port = Integer.parseInt(args[0]);
+			Log.info(Resources.get("serverListening", "" + port));
+			this.serverSocket = new ServerSocket(port);
+		} catch (final IOException e) {
+			throw new ValidationException(Resources.get("serverPortBroken",
+					args[0]), e);
+		} catch (final NumberFormatException e) {
+			throw new ValidationException(Resources.get("serverPortInvalid",
+					args[0]), e);
+		}
 	}
 
 	public boolean poll() throws Throwable {
