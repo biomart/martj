@@ -381,7 +381,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						+ this.dataset + "/" + Resources.get("datasetManifest"));
 				entry.setTime(System.currentTimeMillis());
 				this.outputZipStream.putNextEntry(entry);
-				for (final Iterator i = this.actions.values().iterator(); i
+				for (final Iterator i = this.actions.keySet().iterator(); i
 						.hasNext();) {
 					this.outputZipStream.write(((String) i.next()).getBytes());
 					this.outputZipStream.write(Resources.get("ddlExtension")
