@@ -168,23 +168,17 @@ public class JobHandler {
 			final String jdbcDriverClassName, final String jdbcURL,
 			final String jdbcUsername, final String jdbcPassword)
 			throws JobException {
-		try {
-			// Create a job list entry and a job plan.
-			final JobList jobList = JobHandler.getJobList();
-			final JobSummary jobSummary = jobList.getJobSummary(jobId);
-			final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
-			// Set the JDBC stuff.
-			jobPlan.setJDBCDriverClassName(jdbcDriverClassName);
-			jobPlan.setJDBCURL(jdbcURL);
-			jobPlan.setJDBCUsername(jdbcUsername);
-			jobPlan.setJDBCPassword(jdbcPassword);
-			jobList.addJob(jobSummary);
-			// Save all.
-			JobHandler.saveJobList(jobList);
-			JobHandler.saveJobPlan(new JobPlan(jobId));
-		} catch (final IOException e) {
-			throw new JobException(e);
-		}
+		// Create a job list entry and a job plan.
+		final JobList jobList = JobHandler.getJobList();
+		final JobSummary jobSummary = jobList.getJobSummary(jobId);
+		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
+		// Set the JDBC stuff.
+		jobPlan.setJDBCDriverClassName(jdbcDriverClassName);
+		jobPlan.setJDBCURL(jdbcURL);
+		jobPlan.setJDBCUsername(jdbcUsername);
+		jobPlan.setJDBCPassword(jdbcPassword);
+		jobList.addJob(jobSummary);
+		// We don't save anything until the job is ended.
 	}
 
 	/**
@@ -207,6 +201,7 @@ public class JobHandler {
 		}
 		// Queue the job.
 		JobHandler.setActionStatus(actions, JobStatus.QUEUED);
+		// This will also save the job.
 	}
 
 	/**
@@ -403,15 +398,10 @@ public class JobHandler {
 	public static void addActions(final String jobId,
 			final String[] sectionPath, final Collection actions)
 			throws JobException {
-		try {
-			final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
-			// Add the action to the job.
-			jobPlan.addActions(sectionPath, actions);
-			// Save it again.
-			JobHandler.saveJobPlan(jobPlan);
-		} catch (final IOException e) {
-			throw new JobException(e);
-		}
+		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
+		// Add the action to the job.
+		jobPlan.addActions(sectionPath, actions);
+		// We'll save it later.
 	}
 
 	/**
