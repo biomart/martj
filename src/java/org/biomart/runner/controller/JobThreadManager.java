@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -42,7 +43,6 @@ import org.biomart.common.utils.SendMail;
 import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.model.JobPlan;
 import org.biomart.runner.model.JobStatus;
-import org.biomart.runner.model.JobList.JobSummary;
 import org.biomart.runner.model.JobPlan.JobPlanAction;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
 
@@ -50,8 +50,8 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Takes a job and runs it and manages the associated threads.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class JobThreadManager extends Thread {
@@ -98,8 +98,6 @@ public class JobThreadManager extends Thread {
 	public void run() {
 		// Get the summary and the plan.
 		try {
-			final JobSummary summary = JobHandler.getJobList().getJobSummary(
-					this.jobId);
 			final JobPlan plan = JobHandler.getJobPlan(this.jobId);
 			final String contactEmail = plan.getContactEmailAddress();
 
@@ -144,7 +142,7 @@ public class JobThreadManager extends Thread {
 			// Send emails.
 			if (contactEmail != null && !"".equals(contactEmail.trim())) {
 				final String subject;
-				if (summary.getStatus().equals(JobStatus.COMPLETED))
+				if (plan.getRoot().getStatus().equals(JobStatus.COMPLETED))
 					subject = Resources.get("jobEndedOKSubject", ""
 							+ this.jobId);
 				else
@@ -213,7 +211,16 @@ public class JobThreadManager extends Thread {
 						.info(Resources.get("jobThreadStarting", ""
 								+ this.sequence));
 				// Process section.
-				for (final Iterator i = section.getAllActions().iterator(); i
+				Map actions;
+				try {
+					actions = JobHandler.getActions(this.plan.getJobId(),
+							section.getIdentifier());
+				} catch (final JobException e) {
+					// Break out early and complain.
+					Log.error(e);
+					break;
+				}
+				for (final Iterator i = actions.values().iterator(); i
 						.hasNext()
 						&& this.continueRunning();) {
 					final JobPlanAction action = (JobPlanAction) i.next();
@@ -248,13 +255,14 @@ public class JobThreadManager extends Thread {
 		private void processAction(final JobPlanAction action) {
 			try {
 				// Update action status to running.
-				JobHandler.setActionStatus(action, JobStatus.RUNNING);
+				JobHandler.setStatus(this.plan.getJobId(), action
+						.getIdentifier(), JobStatus.RUNNING, null);
 				// Execute action.
 				String failureMessage = null;
 				try {
 					final Connection conn = this.getConnection();
 					final Statement stmt = conn.createStatement();
-					stmt.execute(action.getAction());
+					stmt.execute(action.toString());
 					final SQLWarning warning = conn.getWarnings();
 					if (warning != null)
 						throw warning;
@@ -269,11 +277,12 @@ public class JobThreadManager extends Thread {
 				// Update status to failed or completed, and store
 				// exception messages if failed.
 				if (failureMessage != null) {
-					JobHandler.setActionStatus(action, JobStatus.FAILED,
-							failureMessage);
+					JobHandler.setStatus(this.plan.getJobId(), action
+							.getIdentifier(), JobStatus.FAILED, failureMessage);
 					this.actionFailed = true;
 				} else
-					JobHandler.setActionStatus(action, JobStatus.COMPLETED);
+					JobHandler.setStatus(this.plan.getJobId(), action
+							.getIdentifier(), JobStatus.COMPLETED, null);
 			} catch (final JobException e) {
 				// We don't really care but print it just in case.
 				Log.warn(e);
@@ -330,7 +339,7 @@ public class JobThreadManager extends Thread {
 		private synchronized JobPlanSection getNextSection() {
 			synchronized (this.plan) {
 				final List sections = new ArrayList();
-				sections.add(this.plan.getStartingSection());
+				sections.add(this.plan.getRoot());
 				for (int i = 0; i < sections.size(); i++) {
 					final JobPlanSection section = (JobPlanSection) sections
 							.get(i);
@@ -338,7 +347,16 @@ public class JobThreadManager extends Thread {
 					// and at least one queued or stopped, then select it.
 					boolean hasUsableActions = false;
 					boolean hasUnusableActions = false;
-					for (final Iterator j = section.getAllActions().iterator(); j
+					Map actions;
+					try {
+						actions = JobHandler.getActions(this.plan.getJobId(),
+								section.getIdentifier());
+					} catch (final JobException e) {
+						// Complain.
+						Log.error(e);
+						return null;
+					}
+					for (final Iterator j = actions.values().iterator(); j
 							.hasNext()
 							&& !hasUnusableActions;) {
 						final JobStatus status = ((JobPlanAction) j.next())
@@ -365,7 +383,7 @@ public class JobThreadManager extends Thread {
 						return section;
 					// Otherwise, add subsections to list and keep looking.
 					else
-						sections.addAll(section.getAllSubSections());
+						sections.addAll(section.getSubSections());
 				}
 				// Return null if there are no more sections to process.
 				return null;

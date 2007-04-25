@@ -37,13 +37,14 @@ import org.biomart.common.resources.Resources;
 import org.biomart.runner.controller.JobHandler;
 import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.exceptions.ProtocolException;
+import org.biomart.runner.model.JobPlan.JobPlanSection;
 
 /**
  * Handles client communication and runs background jobs.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class MartRunnerProtocol {
@@ -58,9 +59,9 @@ public class MartRunnerProtocol {
 
 	private static final String REMOVE_JOB = "REMOVE_JOB";
 
-	private static final String ADD_ACTION = "ADD_ACTION";
+	private static final String SET_ACTIONS = "SET_ACTIONS";
 
-	private static final String GET_JOB_PLAN = "GET_JOB_PLAN";
+	private static final String GET_ACTIONS = "GET_ACTIONS";
 
 	private static final String EMAIL_ADDRESS = "EMAIL_ADDRESS";
 
@@ -77,7 +78,7 @@ public class MartRunnerProtocol {
 	// Short-cut for ending messages and actions.
 	private static final String END_MESSAGE = "___END_MESSAGE___";
 
-	private static final String NEXT_ACTION = "___NEXT_ACTION___";
+	private static final String NEXT = "___NEXT___";
 
 	/**
 	 * Handles a client communication attempt. Receives an open socket and
@@ -254,7 +255,7 @@ public class MartRunnerProtocol {
 	 * @throws IOException
 	 *             if IO fails.
 	 */
-	public static void handle_ADD_ACTION(final BufferedReader in,
+	public static void handle_SET_ACTIONS(final BufferedReader in,
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
@@ -264,14 +265,14 @@ public class MartRunnerProtocol {
 		final Collection finalActions = new ArrayList();
 		String line;
 		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
-			if (line.equals(MartRunnerProtocol.NEXT_ACTION)) {
+			if (line.equals(MartRunnerProtocol.NEXT)) {
 				final String action = actions.toString();
 				finalActions.add(action);
 				Log.debug("Receiving action: " + action);
 				actions.setLength(0);
 			} else
 				actions.append(line);
-		JobHandler.addActions(jobId, sectionPath, finalActions);
+		JobHandler.setActions(jobId, sectionPath, finalActions, false);
 	}
 
 	/**
@@ -300,7 +301,7 @@ public class MartRunnerProtocol {
 		final Collection identifiers = new ArrayList();
 		String line;
 		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
-			identifiers.add(Integer.valueOf(line));
+			identifiers.add(line);
 		JobHandler.queue(jobId, identifiers);
 	}
 
@@ -330,7 +331,7 @@ public class MartRunnerProtocol {
 		final Collection identifiers = new ArrayList();
 		String line;
 		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
-			identifiers.add(Integer.valueOf(line));
+			identifiers.add(line);
 		JobHandler.unqueue(jobId, identifiers);
 	}
 
@@ -377,12 +378,14 @@ public class MartRunnerProtocol {
 	 * @throws IOException
 	 *             if IO fails.
 	 */
-	public static void handle_GET_JOB_PLAN(final BufferedReader in,
+	public static void handle_GET_ACTIONS(final BufferedReader in,
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
-		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.getJobPlan(in
-				.readLine()));
+		final String jobId = in.readLine();
+		final String sectionId = in.readLine();
+		(new ObjectOutputStream(outRaw)).writeObject(new ArrayList(JobHandler
+				.getActions(jobId, sectionId).values()));
 	}
 
 	/**
@@ -649,7 +652,7 @@ public class MartRunnerProtocol {
 		}
 
 		/**
-		 * Request a list of current jobs as a {@link JobList} object.
+		 * Request a list of current jobs as {@link JobPlan} objects.
 		 * 
 		 * @param host
 		 *            the remote host.
@@ -703,7 +706,7 @@ public class MartRunnerProtocol {
 		 * @throws ProtocolException
 		 *             if something went wrong.
 		 */
-		public static void addActions(final String host, final String port,
+		public static void setActions(final String host, final String port,
 				final String jobId, final String partition,
 				final String dataset, final String table, final String[] actions)
 				throws ProtocolException {
@@ -712,12 +715,12 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
-				bos.println(MartRunnerProtocol.ADD_ACTION);
+				bos.println(MartRunnerProtocol.SET_ACTIONS);
 				bos.println(jobId);
 				bos.println(partition + "," + dataset + "," + table);
 				for (int i = 0; i < actions.length; i++) {
 					bos.println(actions[i]);
-					bos.println(MartRunnerProtocol.NEXT_ACTION);
+					bos.println(MartRunnerProtocol.NEXT);
 				}
 				bos.println(MartRunnerProtocol.END_MESSAGE);
 			} catch (final IOException e) {
@@ -733,7 +736,7 @@ public class MartRunnerProtocol {
 		}
 
 		/**
-		 * Retrieve a job plan.
+		 * Retrieve job plan nodes for a given section.
 		 * 
 		 * @param host
 		 *            the remote host.
@@ -741,20 +744,24 @@ public class MartRunnerProtocol {
 		 *            the remote port.
 		 * @param jobId
 		 *            the job ID.
+		 * @param jobSection
+		 *            the section to get nodes for.
 		 * @return the job plan.
 		 * @throws ProtocolException
 		 *             if something went wrong.
 		 */
-		public static JobPlan getJobPlan(final String host, final String port,
-				final String jobId) throws ProtocolException {
+		public static Collection getActions(final String host,
+				final String port, final String jobId,
+				final JobPlanSection jobSection) throws ProtocolException {
 			Socket clientSocket = null;
 			try {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
-				bos.println(MartRunnerProtocol.GET_JOB_PLAN);
+				bos.println(MartRunnerProtocol.GET_ACTIONS);
 				bos.println(jobId);
-				return (JobPlan) new ObjectInputStream(clientSocket
+				bos.println(jobSection.getIdentifier());
+				return (Collection) new ObjectInputStream(clientSocket
 						.getInputStream()).readObject();
 			} catch (final ClassNotFoundException e) {
 				throw new ProtocolException(e);

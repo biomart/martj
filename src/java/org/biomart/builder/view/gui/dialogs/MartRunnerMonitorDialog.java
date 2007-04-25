@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -72,10 +73,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -87,7 +91,6 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.runner.exceptions.ProtocolException;
 import org.biomart.runner.model.JobPlan;
 import org.biomart.runner.model.JobStatus;
-import org.biomart.runner.model.JobList.JobSummary;
 import org.biomart.runner.model.JobPlan.JobPlanAction;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
 import org.biomart.runner.model.MartRunnerProtocol.Client;
@@ -96,8 +99,8 @@ import org.biomart.runner.model.MartRunnerProtocol.Client;
  * This dialog monitors and interacts with SQL being run on a remote host.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class MartRunnerMonitorDialog extends JFrame {
@@ -166,10 +169,10 @@ public class MartRunnerMonitorDialog extends JFrame {
 		final JobPlanPanel jobPlanPanel = new JobPlanPanel(this, host, port);
 
 		// Make the LHS list of jobs.
-		final JobSummaryListModel jobSummaryListModel = new JobSummaryListModel(
-				host, port);
-		final JList jobList = new JList(jobSummaryListModel);
-		jobList.setCellRenderer(new JobSummaryListCellRenderer());
+		final JobPlanListModel jobPlanListModel = new JobPlanListModel(host,
+				port);
+		final JList jobList = new JList(jobPlanListModel);
+		jobList.setCellRenderer(new JobPlanListCellRenderer());
 		jobList.setBackground(Color.WHITE);
 		jobList.setOpaque(true);
 		jobList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -190,14 +193,14 @@ public class MartRunnerMonitorDialog extends JFrame {
 						Object selection = jobList.getSelectedValue();
 						try {
 							MartRunnerMonitorDialog.this.listRefreshing = true;
-							jobSummaryListModel.updateList();
+							jobPlanListModel.updateList();
 							MartRunnerMonitorDialog.this.listRefreshing = false;
 						} catch (final ProtocolException e) {
 							StackTrace.showStackTrace(e);
 						} finally {
 							// Attempt to select the first item on first run.
 							if (this.firstRun && defaultJob)
-								selection = jobSummaryListModel.lastElement();
+								selection = jobPlanListModel.lastElement();
 							if (selection != null)
 								jobList.setSelectedValue(selection, true);
 							this.firstRun = false;
@@ -215,8 +218,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 						&& !MartRunnerMonitorDialog.this.listRefreshing)
 					// Update the panel on the right with the new job.
 					jobPlanPanel
-							.setJobId(selection instanceof JobSummary ? ((JobSummary) selection)
-									.getJobId()
+							.setJobPlan(selection instanceof JobPlan ? (JobPlan) selection
 									: null);
 			}
 		});
@@ -247,7 +249,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 				if (e.isPopupTrigger()) {
 					final int index = jobList.locationToIndex(e.getPoint());
 					if (index >= 0) {
-						final JobSummary summary = (JobSummary) jobSummaryListModel
+						final JobPlan plan = (JobPlan) jobPlanListModel
 								.getElementAt(index);
 						final JPopupMenu menu = new JPopupMenu();
 
@@ -266,8 +268,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 									new LongProcess() {
 										public void run() throws Exception {
 											// Remove the job.
-											Client.removeJob(host, port,
-													summary.getJobId());
+											Client.removeJob(host, port, plan
+													.getJobId());
 											// Update the list.
 											MartRunnerMonitorDialog.this.refreshJobList
 													.doClick();
@@ -321,7 +323,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 	}
 
 	// Renders cells nicely.
-	private static class JobSummaryListCellRenderer implements ListCellRenderer {
+	private static class JobPlanListCellRenderer implements ListCellRenderer {
 		private static final long serialVersionUID = 1L;
 
 		public Component getListCellRendererComponent(final JList list,
@@ -333,16 +335,15 @@ public class MartRunnerMonitorDialog extends JFrame {
 			Color bgColor = Color.WHITE;
 			Font font = MartRunnerMonitorDialog.PLAIN_FONT;
 			// A Job List entry node?
-			if (value instanceof JobSummary) {
-				final JobSummary summary = (JobSummary) value;
-				final String summaryText = summary.getJobId();
-				final JobStatus status = summary.getStatus();
+			if (value instanceof JobPlan) {
+				final JobPlan plan = (JobPlan) value;
+				final JobStatus status = plan.getRoot().getStatus();
 				if (status.equals(JobStatus.INCOMPLETE)) {
-					label.setText(summaryText + " ["
+					label.setText(plan + " ["
 							+ Resources.get("jobStatusIncomplete") + "]");
 					font = MartRunnerMonitorDialog.ITALIC_FONT;
 				} else {
-					label.setText(summaryText);
+					label.setText(plan.toString());
 					if (status.equals(JobStatus.FAILED)
 							|| status.equals(JobStatus.STOPPED))
 						font = MartRunnerMonitorDialog.BOLD_FONT;
@@ -381,10 +382,11 @@ public class MartRunnerMonitorDialog extends JFrame {
 			Color bgColor = Color.WHITE;
 			Font font = MartRunnerMonitorDialog.PLAIN_FONT;
 			// Sections are given text labels.
-			if (value instanceof JobPlanSection) {
-				final JobPlanSection section = (JobPlanSection) value;
-				final String sectionText = section.getLabel() + " ("
-						+ section.countActions() + ")";
+			if (value instanceof SectionNode) {
+				final JobPlanSection section = ((SectionNode) value)
+						.getSection();
+				final String sectionText = section + " ("
+						+ section.getTotalActionCount() + ")";
 				final JobStatus status = section.getStatus();
 				if (status.equals(JobStatus.INCOMPLETE)) {
 					label.setText(sectionText + " ["
@@ -406,16 +408,15 @@ public class MartRunnerMonitorDialog extends JFrame {
 						.get(status);
 			}
 			// Actions are given text labels.
-			else if (value instanceof JobPlanAction) {
-				final JobPlanAction action = (JobPlanAction) value;
-				final String actionText = action.getAction();
+			if (value instanceof ActionNode) {
+				final JobPlanAction action = ((ActionNode) value).getAction();
 				final JobStatus status = action.getStatus();
 				if (status.equals(JobStatus.INCOMPLETE)) {
-					label.setText(actionText + " ["
+					label.setText(action + " ["
 							+ Resources.get("jobStatusIncomplete") + "]");
 					font = MartRunnerMonitorDialog.ITALIC_FONT;
 				} else {
-					label.setText(actionText);
+					label.setText(action.toString());
 					if (status.equals(JobStatus.FAILED)
 							|| status.equals(JobStatus.STOPPED))
 						font = MartRunnerMonitorDialog.BOLD_FONT;
@@ -440,14 +441,14 @@ public class MartRunnerMonitorDialog extends JFrame {
 	}
 
 	// A model for representing lists of jobs.
-	private static class JobSummaryListModel extends DefaultListModel {
+	private static class JobPlanListModel extends DefaultListModel {
 		private static final long serialVersionUID = 1L;
 
 		private final String host;
 
 		private final String port;
 
-		private JobSummaryListModel(final String host, final String port) {
+		private JobPlanListModel(final String host, final String port) {
 			super();
 			this.host = host;
 			this.port = port;
@@ -725,11 +726,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 						if (treePath != null) {
 							// Work out what was clicked on or
 							// multiply selected.
-							final Object selectedNode = treePath
-									.getLastPathComponent();
 							final TreePath[] selectedPaths;
-							if (JobPlanPanel.this.tree.getSelectionCount() == 0
-									&& (selectedNode instanceof JobPlanSection || selectedNode instanceof JobPlanAction))
+							if (JobPlanPanel.this.tree.getSelectionCount() == 0)
 								selectedPaths = new TreePath[] { treePath };
 							else
 								selectedPaths = JobPlanPanel.this.tree
@@ -759,15 +757,12 @@ public class MartRunnerMonitorDialog extends JFrame {
 								.getLastPathComponent());
 					for (int i = 0; i < selectedNodes.size(); i++) {
 						final Object node = selectedNodes.get(i);
-						if (node instanceof JobPlanAction)
-							identifiers.add(new Integer(((JobPlanAction) node)
-									.getUniqueIdentifier()));
-						else if (node instanceof JobPlanSection) {
-							selectedNodes.addAll(((JobPlanSection) node)
-									.getAllSubSections());
-							selectedNodes.addAll(((JobPlanSection) node)
-									.getAllActions());
-						}
+						if (node instanceof ActionNode)
+							identifiers.add(((ActionNode) node).getAction()
+									.getIdentifier());
+						else if (node instanceof SectionNode)
+							identifiers.add(((SectionNode) node).getSection()
+									.getIdentifier());
 					}
 
 					// Did we produce anything?
@@ -843,14 +838,16 @@ public class MartRunnerMonitorDialog extends JFrame {
 								.getLastPathComponent();
 
 						// Get info.
-						if (selectedNode instanceof JobPlanSection) {
-							final JobPlanSection section = (JobPlanSection) selectedNode;
+						if (selectedNode instanceof SectionNode) {
+							final JobPlanSection section = ((SectionNode) selectedNode)
+									.getSection();
 							status = section.getStatus();
 							started = section.getStarted();
 							ended = section.getEnded();
-							messages = section.getMessages();
-						} else if (selectedNode instanceof JobPlanAction) {
-							final JobPlanAction action = (JobPlanAction) selectedNode;
+							messages = null;
+						} else if (selectedNode instanceof ActionNode) {
+							final JobPlanAction action = ((ActionNode) selectedNode)
+									.getAction();
 							status = action.getStatus();
 							started = action.getStarted();
 							ended = action.getEnded();
@@ -903,6 +900,10 @@ public class MartRunnerMonitorDialog extends JFrame {
 				}
 			});
 
+			// Install an ExpansionListener on the tree which causes the model
+			// to add actions dynamically from server.
+			this.tree.addTreeWillExpandListener(this.treeModel);
+
 			// Update the layout.
 			this.add(headerPanel, BorderLayout.PAGE_START);
 			this.add(new JScrollPane(this.tree), BorderLayout.CENTER);
@@ -925,18 +926,21 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.startJob.setEnabled(false);
 			this.stopJob.setEnabled(false);
 			try {
-				this.treeModel.setJobId(null);
+				this.treeModel.setJobPlan(null);
 			} catch (final ProtocolException e) {
 				StackTrace.showStackTrace(e);
 			}
 		}
 
-		private void setJobId(final String jobId) {
-			if (jobId == null)
+		private void setJobPlan(final JobPlan jobPlan) {
+			if (jobPlan == null)
 				this.setNoJob();
 			else
 				new LongProcess() {
 					public void run() throws Exception {
+						// Get new job ID.
+						final String jobId = jobPlan.getJobId();
+
 						// Update viewable fields.
 						JobPlanPanel.this.jobIdField.setText(jobId);
 						JobPlanPanel.this.threadSpinner.setEnabled(true);
@@ -968,7 +972,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 							JobPlanPanel.this.jobId = jobId;
 
 						// Update tree.
-						JobPlanPanel.this.treeModel.setJobId(jobId);
+						JobPlanPanel.this.treeModel.setJobPlan(jobPlan);
 
 						if (!jobIdChanged)
 							// Re-expand tree.
@@ -984,7 +988,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 	/**
 	 * Represents a job plan as a tree model.
 	 */
-	public static class JobPlanTreeModel extends DefaultTreeModel {
+	public static class JobPlanTreeModel extends DefaultTreeModel implements
+			TreeWillExpandListener {
 		private static final long serialVersionUID = 1L;
 
 		private static final TreeNode LOADING_TREE = new DefaultMutableTreeNode(
@@ -993,11 +998,11 @@ public class MartRunnerMonitorDialog extends JFrame {
 		private static final TreeNode EMPTY_TREE = new DefaultMutableTreeNode(
 				Resources.get("emptyTree"));
 
+		private final JobPlanPanel planPanel;
+
 		private final String host;
 
 		private final String port;
-
-		private final JobPlanPanel planPanel;
 
 		/**
 		 * Creates a new tree model.
@@ -1012,48 +1017,192 @@ public class MartRunnerMonitorDialog extends JFrame {
 		public JobPlanTreeModel(final String host, final String port,
 				final JobPlanPanel planPanel) {
 			super(JobPlanTreeModel.EMPTY_TREE, true);
+			this.planPanel = planPanel;
 			this.host = host;
 			this.port = port;
-			this.planPanel = planPanel;
 		}
 
 		/**
 		 * Change the job this tree shows.
 		 * 
-		 * @param jobId
-		 *            the job ID.
+		 * @param jobPlan
+		 *            the job plan.
 		 * @throws ProtocolException
 		 *             if it was unable to do it.
 		 */
-		public void setJobId(final String jobId) throws ProtocolException {
-			if (jobId == null) {
-				JobPlanTreeModel.this.setRoot(JobPlanTreeModel.EMPTY_TREE);
-				JobPlanTreeModel.this.reload();
+		public void setJobPlan(final JobPlan jobPlan) throws ProtocolException {
+			if (jobPlan == null) {
+				this.setRoot(JobPlanTreeModel.EMPTY_TREE);
+				this.reload();
 			} else {
+				// Set loading message.
+				this.setRoot(JobPlanTreeModel.LOADING_TREE);
+				this.reload();
 				// Get job details.
-				JobPlanTreeModel.this.setRoot(JobPlanTreeModel.LOADING_TREE);
-				JobPlanTreeModel.this.reload();
-				final JobPlan jobPlan = Client.getJobPlan(
-						JobPlanTreeModel.this.host, JobPlanTreeModel.this.port,
-						jobId);
-				JobPlanTreeModel.this.setRoot(jobPlan.getStartingSection());
-				JobPlanTreeModel.this.reload();
+				final SectionNode rootNode = new SectionNode(null, jobPlan.getRoot());
+				rootNode.expanded(this.host, this.port, this.planPanel.jobId);
+				this.setRoot(rootNode);
+				this.reload();
 				// Update GUI bits from the updated plan.
-				JobPlanTreeModel.this.planPanel.threadSpinnerModel
-						.setValue(new Integer(jobPlan.getThreadCount()));
-				JobPlanTreeModel.this.planPanel.threadSpinnerModel
-						.setMaximum(new Integer(jobPlan.getMaxThreadCount()));
-				JobPlanTreeModel.this.planPanel.jdbcUrl.setText(jobPlan
-						.getJDBCURL());
-				JobPlanTreeModel.this.planPanel.jdbcUser.setText(jobPlan
-						.getJDBCUsername());
-				JobPlanTreeModel.this.planPanel.contactEmail.setText(jobPlan
+				this.planPanel.threadSpinnerModel.setValue(new Integer(jobPlan
+						.getThreadCount()));
+				this.planPanel.threadSpinnerModel.setMaximum(new Integer(
+						jobPlan.getMaxThreadCount()));
+				this.planPanel.jdbcUrl.setText(jobPlan.getJDBCURL());
+				this.planPanel.jdbcUser.setText(jobPlan.getJDBCUsername());
+				this.planPanel.contactEmail.setText(jobPlan
 						.getContactEmailAddress());
-				JobPlanTreeModel.this.planPanel.startJob.setEnabled(!jobPlan
+				this.planPanel.startJob.setEnabled(!jobPlan.getRoot()
 						.getStatus().equals(JobStatus.RUNNING));
-				JobPlanTreeModel.this.planPanel.stopJob.setEnabled(jobPlan
-						.getStatus().equals(JobStatus.RUNNING));
+				this.planPanel.stopJob.setEnabled(jobPlan.getRoot().getStatus()
+						.equals(JobStatus.RUNNING));
 			}
+		}
+
+		public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
+			// Remove children.
+			final Object collapsedNode = event.getPath().getLastPathComponent();
+			if (collapsedNode instanceof SectionNode)
+				((SectionNode) collapsedNode).collapsed();
+		}
+
+		public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+			// Insert children.
+			final Object expandedNode = event.getPath().getLastPathComponent();
+			if (expandedNode instanceof SectionNode)
+				((SectionNode) expandedNode).expanded(this.host, this.port,
+						this.planPanel.jobId);			
+		}
+	}
+
+	private static class SectionNode implements TreeNode {
+
+		private final JobPlanSection section;
+
+		private final SectionNode parent;
+
+		// Must use Vector to be able to provide enumeration.
+		private final Vector children = new Vector();
+
+		private SectionNode(final SectionNode parent,
+				final JobPlanSection section) {
+			this.section = section;
+			this.parent = parent;
+		}
+
+		private JobPlanSection getSection() {
+			return this.section;
+		}
+
+		private void collapsed() {
+			// Forget children.
+			this.children.clear();
+		}
+
+		private void expanded(final String host, final String port,
+				final String jobId) {
+			// Create children.
+			// Actions first.
+			try {
+				final Collection actions = Client.getActions(host, port, jobId,
+						this.section);
+				for (final Iterator i = actions.iterator(); i.hasNext();)
+					this.children.add(new ActionNode(this, (JobPlanAction) i
+							.next()));
+			} catch (final ProtocolException e) {
+				// Log it.
+				Log.error(e);
+				// Add dummy actions instead.
+				for (int i = 0; i < this.section.getActionCount(); i++)
+					this.children.add(new DefaultMutableTreeNode(Resources
+							.get("emptyTree")));
+			}
+			// Then subsections.
+			for (final Iterator i = this.section.getSubSections().iterator(); i
+					.hasNext();)
+				this.children.add(new SectionNode(this, (JobPlanSection) i
+						.next()));
+		}
+
+		public Enumeration children() {
+			return this.children.elements();
+		}
+
+		public boolean getAllowsChildren() {
+			return this.getChildCount() > 0;
+		}
+
+		public TreeNode getChildAt(final int childIndex) {
+			return (TreeNode) this.children.get(childIndex);
+		}
+
+		public int getChildCount() {
+			return this.section.getActionCount()
+					+ this.section.getSubSections().size();
+		}
+
+		public int getIndex(final TreeNode node) {
+			return this.children.indexOf(node);
+		}
+
+		public TreeNode getParent() {
+			return this.parent;
+		}
+
+		public boolean isLeaf() {
+			return this.getChildCount() == 0;
+		}
+		
+		public String toString() {
+			return this.section.toString();
+		}
+	}
+
+	private static class ActionNode implements TreeNode {
+
+		private final JobPlanAction action;
+
+		private final SectionNode parent;
+
+		private ActionNode(final SectionNode parent, final JobPlanAction action) {
+			this.action = action;
+			this.parent = parent;
+		}
+
+		private JobPlanAction getAction() {
+			return this.action;
+		}
+
+		public Enumeration children() {
+			return null;
+		}
+
+		public boolean getAllowsChildren() {
+			return false;
+		}
+
+		public TreeNode getChildAt(final int childIndex) {
+			return null;
+		}
+
+		public int getChildCount() {
+			return 0;
+		}
+
+		public int getIndex(final TreeNode node) {
+			return 0;
+		}
+
+		public TreeNode getParent() {
+			return this.parent;
+		}
+
+		public boolean isLeaf() {
+			return true;
+		}
+		
+		public String toString() {
+			return this.action.toString();
 		}
 	}
 }

@@ -45,7 +45,7 @@ public class JobList implements Serializable {
 	 * @param job
 	 *            the job to add.
 	 */
-	public void addJob(final JobSummary job) {
+	public void addJob(final JobPlan job) {
 		this.jobList.put(job.getJobId(), job);
 	}
 
@@ -60,16 +60,16 @@ public class JobList implements Serializable {
 	}
 
 	/**
-	 * Get the Job summary for the given id.
+	 * Get the Job plan for the given id.
 	 * 
 	 * @param jobId
 	 *            the job ID.
-	 * @return the job summary.
+	 * @return the job plan.
 	 */
-	public JobSummary getJobSummary(final String jobId) {
+	public JobPlan getJobPlan(final String jobId) {
 		if (!this.jobList.containsKey(jobId))
-			this.jobList.put(jobId, new JobSummary(jobId));
-		return (JobSummary) this.jobList.get(jobId);
+			this.jobList.put(jobId, new JobPlan(jobId));
+		return (JobPlan) this.jobList.get(jobId);
 	}
 
 	/**
@@ -79,63 +79,5 @@ public class JobList implements Serializable {
 	 */
 	public Collection getAllJobs() {
 		return this.jobList.values();
-	}
-
-	/**
-	 * A summary of a job's progress.
-	 */
-	public static class JobSummary implements Serializable {
-		private static final long serialVersionUID = 1L;
-
-		private final String jobId;
-
-		private JobStatus status;
-
-		/**
-		 * Create a new summary for the given job.
-		 * 
-		 * @param jobId
-		 *            the job to summarise.
-		 */
-		public JobSummary(final String jobId) {
-			this.jobId = jobId;
-			this.status = JobStatus.INCOMPLETE;
-		}
-
-		/**
-		 * What job do we summarise?
-		 * 
-		 * @return the job ID.
-		 */
-		public String getJobId() {
-			return this.jobId;
-		}
-
-		/**
-		 * @param status
-		 *            the status to set
-		 */
-		public void setStatus(final JobStatus status) {
-			this.status = status;
-		}
-
-		/**
-		 * Get this job's status.
-		 * 
-		 * @return the status.
-		 */
-		public JobStatus getStatus() {
-			return this.status;
-		}
-
-		public int hashCode() {
-			return this.jobId.hashCode();
-		}
-
-		public boolean equals(final Object other) {
-			if (!(other instanceof JobSummary))
-				return false;
-			return this.jobId.equals(((JobSummary) other).getJobId());
-		}
 	}
 }

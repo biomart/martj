@@ -19,22 +19,18 @@
 package org.biomart.runner.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
-
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Settings;
+import org.biomart.runner.controller.JobHandler;
+import org.biomart.runner.exceptions.JobException;
 
 /**
  * Handles planning and execution of jobs. The maximum number of threads allowed
@@ -42,11 +38,11 @@ import org.biomart.common.resources.Settings;
  * See {@link Settings#getProperty(String)}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
-public class JobPlan extends DefaultTreeModel implements Serializable {
+public class JobPlan implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -68,6 +64,10 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 
 	private String contactEmailAddress;
 
+	private final JobPlanSection root;
+
+	private final Map sectionIds = new HashMap();
+
 	/**
 	 * Create a new job plan.
 	 * 
@@ -75,8 +75,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 *            the id of the job this plan is for.
 	 */
 	public JobPlan(final String jobId) {
-		super(new DefaultMutableTreeNode(), true); // Dummy root.
-		this.setRoot(new JobPlanSection(jobId, this, null));
+		this.root = new JobPlanSection(jobId, this, null);
 		this.jobId = jobId;
 		this.threadCount = 1;
 	}
@@ -86,24 +85,34 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 * 
 	 * @return the starting section.
 	 */
-	public JobPlanSection getStartingSection() {
-		return (JobPlanSection) this.getRoot();
+	public JobPlanSection getRoot() {
+		return this.root;
 	}
 
 	/**
-	 * Add an action to the end of a job.
+	 * Obtain the section with the given ID.
+	 * 
+	 * @param sectionId
+	 *            the ID.
+	 * @return the section.
+	 */
+	public JobPlanSection getJobPlanSection(final String sectionId) {
+		return (JobPlanSection) this.sectionIds.get(sectionId);
+	}
+
+	/**
+	 * Set an action count.
 	 * 
 	 * @param sectionPath
 	 *            the section this applies to.
-	 * @param actions
-	 *            the actions to add.
+	 * @param actionCount
+	 *            the action count to set.
 	 */
-	public void addActions(final String[] sectionPath, final Collection actions) {
-		JobPlanSection section = this.getStartingSection();
+	public void setActionCount(final String[] sectionPath, final int actionCount) {
+		JobPlanSection section = this.getRoot();
 		for (int i = 0; i < sectionPath.length; i++)
 			section = section.getSubSection(sectionPath[i]);
-		for (final Iterator i = actions.iterator(); i.hasNext();)
-			section.addAction(new JobPlanAction((String) i.next(), section));
+		section.setActionCount(actionCount);
 	}
 
 	/**
@@ -113,15 +122,6 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	 */
 	public String getJobId() {
 		return this.jobId;
-	}
-
-	/**
-	 * Obtain the overall status.
-	 * 
-	 * @return the status.
-	 */
-	public JobStatus getStatus() {
-		return this.getStartingSection().getStatus();
 	}
 
 	/**
@@ -225,6 +225,10 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		return this.jobId.hashCode();
 	}
 
+	public String toString() {
+		return this.jobId;
+	}
+	
 	public boolean equals(final Object other) {
 		if (!(other instanceof JobPlan))
 			return false;
@@ -234,7 +238,7 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 	/**
 	 * Describes a section of a job, ie. a group of associated actions.
 	 */
-	public static class JobPlanSection implements Serializable, TreeNode {
+	public static class JobPlanSection implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		private final String label;
@@ -242,12 +246,21 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		private final Map subSections = Collections
 				.synchronizedMap(new LinkedHashMap());
 
-		private final List actions = Collections
-				.synchronizedList(new ArrayList());
+		private int actionCount = 0;
 
 		private final JobPlanSection parent;
 
 		private final JobPlan plan;
+
+		private JobStatus status;
+
+		private Date started;
+
+		private Date ended;
+
+		private static int NEXT_IDENTIFIER = 0;
+
+		private final int sequence = JobPlanSection.NEXT_IDENTIFIER++;
 
 		/**
 		 * Define a new section with the given label.
@@ -264,6 +277,8 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 			this.label = label;
 			this.parent = parent;
 			this.plan = plan;
+			this.status = JobStatus.INCOMPLETE;
+			plan.sectionIds.put(this.getIdentifier(), this);
 		}
 
 		/**
@@ -276,12 +291,12 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		}
 
 		/**
-		 * Get the label for this section.
+		 * Obtain the parent node.
 		 * 
-		 * @return the label.
+		 * @return the parent node.
 		 */
-		public String getLabel() {
-			return this.label;
+		public JobPlanSection getParent() {
+			return this.parent;
 		}
 
 		/**
@@ -303,27 +318,27 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * 
 		 * @return all subsections.
 		 */
-		public Collection getAllSubSections() {
+		public Collection getSubSections() {
 			return this.subSections.values();
 		}
 
 		/**
-		 * Add an action.
+		 * Sets the action count.
 		 * 
-		 * @param action
-		 *            the action to add.
+		 * @param actionCount
+		 *            the action count to add.
 		 */
-		public void addAction(final JobPlanAction action) {
-			this.actions.add(action);
+		public void setActionCount(final int actionCount) {
+			this.actionCount = actionCount;
 		}
 
 		/**
-		 * Get all actions as {@link JobPlanAction} objects.
+		 * How many actions are in this section alone?
 		 * 
-		 * @return all actions.
+		 * @return the count.
 		 */
-		public Collection getAllActions() {
-			return this.actions;
+		public int getActionCount() {
+			return this.actionCount;
 		}
 
 		/**
@@ -331,11 +346,11 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * 
 		 * @return the count.
 		 */
-		public int countActions() {
-			int count = this.actions.size();
-			for (final Iterator i = this.getAllSubSections().iterator(); i
+		public int getTotalActionCount() {
+			int count = this.getActionCount();
+			for (final Iterator i = this.getSubSections().iterator(); i
 					.hasNext();)
-				count += ((JobPlanSection) i.next()).countActions();
+				count += ((JobPlanSection) i.next()).getTotalActionCount();
 			return count;
 		}
 
@@ -343,160 +358,80 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * @return the ended
 		 */
 		public Date getEnded() {
-			Date ended = null;
-			for (final Iterator i = this.getAllSubSections().iterator(); i
-					.hasNext();) {
-				final JobPlanSection section = (JobPlanSection) i.next();
-				final Date sectionEnded = section.getEnded();
-				if (ended == null)
-					ended = sectionEnded;
-				else if (sectionEnded != null)
-					ended = sectionEnded.after(ended) ? sectionEnded : ended;
-			}
-			for (final Iterator i = this.getAllActions().iterator(); i
-					.hasNext();) {
-				final JobPlanAction action = (JobPlanAction) i.next();
-				final Date actionEnded = action.getEnded();
-				if (ended == null)
-					ended = actionEnded;
-				else if (actionEnded != null)
-					ended = actionEnded.after(ended) ? actionEnded : ended;
-			}
-			return ended;
+			return this.ended;
 		}
 
-		/**
-		 * @return the messages
-		 */
-		public String getMessages() {
-			final StringBuffer messages = new StringBuffer();
-			if (this.getAllSubSections().size() > 0)
-				for (final Iterator i = this.getAllSubSections().iterator(); i
-						.hasNext();) {
-					final String message = ((JobPlanSection) i.next())
-							.getMessages();
-					if (message != null && message.trim().length() > 0)
-						messages.append(message + '\n');
-				}
-			if (this.getAllActions().size() > 0)
-				for (final Iterator i = this.getAllActions().iterator(); i
-						.hasNext();) {
-					final String message = ((JobPlanAction) i.next())
-							.getMessages();
-					if (message != null && message.trim().length() > 0)
-						messages.append(message + '\n');
-				}
-			return messages.length() == 0 ? null : messages.toString();
+		private void updateEnded(final Date newEnded) {
+			if (this.ended == null)
+				this.ended = newEnded;
+			else if (newEnded != null)
+				this.ended = newEnded.after(this.ended) ? newEnded : this.ended;
+			if (this.parent != null)
+				this.parent.updateEnded(this.ended);
 		}
 
 		/**
 		 * @return the started
 		 */
 		public Date getStarted() {
-			Date started = null;
-			for (final Iterator i = this.getAllSubSections().iterator(); i
-					.hasNext();) {
-				final JobPlanSection section = (JobPlanSection) i.next();
-				final Date sectionStarted = section.getStarted();
-				if (started == null)
-					started = sectionStarted;
-				else if (sectionStarted != null)
-					started = sectionStarted.before(started) ? sectionStarted
-							: started;
-			}
-			for (final Iterator i = this.getAllActions().iterator(); i
-					.hasNext();) {
-				final JobPlanAction action = (JobPlanAction) i.next();
-				final Date actionStarted = action.getStarted();
-				if (started == null)
-					started = actionStarted;
-				else if (actionStarted != null)
-					started = actionStarted.before(started) ? actionStarted
-							: started;
-			}
-			return started;
+			return this.started;
+		}
+
+		private void updateStarted(final Date newStarted) {
+			if (this.started == null)
+				this.started = newStarted;
+			else if (newStarted != null)
+				this.started = newStarted.before(this.started) ? newStarted
+						: this.started;
+			if (this.parent != null)
+				this.parent.updateStarted(this.started);
 		}
 
 		/**
 		 * @return the status
 		 */
 		public JobStatus getStatus() {
-			// Status is important - we get the highest ranking one from
-			// our children and return that one.
-			JobStatus status = null;
-			for (final Iterator i = this.getAllActions().iterator(); i
-					.hasNext();) {
-				final JobPlanAction action = (JobPlanAction) i.next();
-				final JobStatus actionStatus = action.getStatus();
-				if (status == null)
-					status = actionStatus;
-				else
-					status = actionStatus.compareTo(status) < 0 ? actionStatus
-							: status;
-			}
-			for (final Iterator i = this.getAllSubSections().iterator(); i
-					.hasNext();) {
-				final JobPlanSection section = (JobPlanSection) i.next();
-				final JobStatus sectionStatus = section.getStatus();
-				if (status == null)
-					status = sectionStatus;
-				else
-					status = sectionStatus.compareTo(status) < 0 ? sectionStatus
-							: status;
-			}
-			return status;
+			return this.status;
 		}
 
-		private Vector getChildren() {
-			final Vector children = new Vector();
-			children.addAll(this.actions);
-			children.addAll(this.subSections.values());
-			return children;
+		private void updateStatus(final JobStatus newStatus) {
+			if (this.status == null)
+				this.status = newStatus;
+			else
+				this.status = newStatus.compareTo(this.status) < 0 ? newStatus
+						: this.status;
+			if (this.parent != null)
+				this.parent.updateStatus(this.status);
 		}
 
-		public Enumeration children() {
-			return this.getChildren().elements();
-		}
-
-		public boolean getAllowsChildren() {
-			return true;
-		}
-
-		public TreeNode getChildAt(final int childIndex) {
-			return (TreeNode) this.getChildren().get(childIndex);
-		}
-
-		public int getChildCount() {
-			return this.subSections.size() + this.actions.size();
-		}
-
-		public int getIndex(final TreeNode node) {
-			return this.getChildren().indexOf(node);
-		}
-
-		public TreeNode getParent() {
-			return this.parent;
-		}
-
-		public boolean isLeaf() {
-			return false;
+		/**
+		 * Return a unique identifier.
+		 * 
+		 * @return the identifier.
+		 */
+		public String getIdentifier() {
+			return ""+this.sequence;
 		}
 
 		public int hashCode() {
-			return this.getLabel().hashCode();
+			return this.sequence;
+		}
+
+		public String toString() {
+			return this.label;
 		}
 
 		public boolean equals(final Object other) {
 			if (!(other instanceof JobPlanSection))
 				return false;
-			return this.getLabel() == ((JobPlanSection) other).getLabel();
+			return this.sequence == ((JobPlanSection) other).sequence;
 		}
 	}
 
 	/**
 	 * Represents an individual action.
 	 */
-	public static class JobPlanAction implements Serializable, TreeNode {
+	public static class JobPlanAction implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		private final String action;
@@ -509,7 +444,9 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 
 		private String messages;
 
-		private final JobPlanSection parent;
+		private final String parentIdentifier;
+
+		private final String jobId;
 
 		private static int NEXT_IDENTIFIER = 0;
 
@@ -518,24 +455,19 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		/**
 		 * Create a new action.
 		 * 
+		 * @param jobId
+		 *            the job.
 		 * @param action
 		 *            the action to create.
-		 * @param parent
-		 *            the parent node.
+		 * @param parentIdentifier
+		 *            the parent node ID.
 		 */
-		public JobPlanAction(final String action, final JobPlanSection parent) {
+		public JobPlanAction(final String jobId, final String action,
+				final String parentIdentifier) {
 			this.action = action;
 			this.status = JobStatus.NOT_QUEUED;
-			this.parent = parent;
-		}
-
-		/**
-		 * Obtain this action.
-		 * 
-		 * @return the action.
-		 */
-		public String getAction() {
-			return this.action;
+			this.parentIdentifier = parentIdentifier;
+			this.jobId = jobId;
 		}
 
 		/**
@@ -551,6 +483,13 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 */
 		public void setEnded(final Date ended) {
 			this.ended = ended;
+			try {
+				JobHandler.getSection(this.jobId, this.parentIdentifier)
+						.updateEnded(ended);
+			} catch (final JobException e) {
+				// Aaargh!
+				Log.error(e);
+			}
 		}
 
 		/**
@@ -581,6 +520,13 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 */
 		public void setStarted(final Date started) {
 			this.started = started;
+			try {
+				JobHandler.getSection(this.jobId, this.parentIdentifier)
+						.updateStarted(started);
+			} catch (final JobException e) {
+				// Aaargh!
+				Log.error(e);
+			}
 		}
 
 		/**
@@ -596,43 +542,22 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 */
 		public void setStatus(final JobStatus status) {
 			this.status = status;
-		}
-
-		public Enumeration children() {
-			return null;
-		}
-
-		public boolean getAllowsChildren() {
-			return false;
-		}
-
-		public TreeNode getChildAt(final int childIndex) {
-			return null;
-		}
-
-		public int getChildCount() {
-			return 0;
-		}
-
-		public int getIndex(final TreeNode node) {
-			return 0;
-		}
-
-		public TreeNode getParent() {
-			return this.getJobSection();
+			try {
+				JobHandler.getSection(this.jobId, this.parentIdentifier)
+						.updateStatus(status);
+			} catch (final JobException e) {
+				// Aaargh!
+				Log.error(e);
+			}
 		}
 
 		/**
-		 * Find out what section this action belongs to.
+		 * Get the parent section ID.
 		 * 
-		 * @return the section.
+		 * @return the parent section ID.
 		 */
-		public JobPlanSection getJobSection() {
-			return this.parent;
-		}
-
-		public boolean isLeaf() {
-			return true;
+		public String getParentIdentifier() {
+			return this.parentIdentifier;
 		}
 
 		/**
@@ -640,19 +565,22 @@ public class JobPlan extends DefaultTreeModel implements Serializable {
 		 * 
 		 * @return the identifier.
 		 */
-		public int getUniqueIdentifier() {
-			return this.sequence;
+		public String getIdentifier() {
+			return this.parentIdentifier+"#"+this.sequence;
 		}
 
 		public int hashCode() {
 			return this.sequence;
 		}
 
+		public String toString() {
+			return this.action;
+		}
+
 		public boolean equals(final Object other) {
 			if (!(other instanceof JobPlanAction))
 				return false;
-			return this.getUniqueIdentifier() == ((JobPlanAction) other)
-					.getUniqueIdentifier();
+			return this.sequence == ((JobPlanAction) other).sequence;
 		}
 	}
 }

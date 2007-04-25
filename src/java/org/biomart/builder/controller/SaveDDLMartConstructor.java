@@ -499,7 +499,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 												.getStatementsForAction((MartConstructorAction) j
 														.next())));
 					// Write the data.
-					MartRunnerProtocol.Client.addActions(this.outputHost,
+					MartRunnerProtocol.Client.setActions(this.outputHost,
 							this.outputPort, this.job, this.partition,
 							this.dataset, tableName, (String[]) actions
 									.toArray(new String[0]));

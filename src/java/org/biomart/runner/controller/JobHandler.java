@@ -29,11 +29,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.mail.MessagingException;
 
@@ -47,7 +46,6 @@ import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.model.JobList;
 import org.biomart.runner.model.JobPlan;
 import org.biomart.runner.model.JobStatus;
-import org.biomart.runner.model.JobList.JobSummary;
 import org.biomart.runner.model.JobPlan.JobPlanAction;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
 
@@ -55,23 +53,20 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Tools for running SQL.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class JobHandler {
 
 	private static final Object planDirLock = "__PLANDIR__LOCK__";
 
-	private static long nextJobSuffix = System.currentTimeMillis();
+	private static long nextJob = System.currentTimeMillis();
 
 	private static final File jobsDir = new File(
 			Settings.getStorageDirectory(), "jobs");
 
-	private static JobList jobListCache = null;
-
-	private static final Map jobPlanCache = Collections
-			.synchronizedMap(new HashMap());
+	private static JobList jobList = null;
 
 	private static final Map jobManagers = Collections
 			.synchronizedMap(new HashMap());
@@ -91,7 +86,7 @@ public class JobHandler {
 	 */
 	public static String nextJobId() throws JobException {
 		synchronized (JobHandler.planDirLock) {
-			return "" + JobHandler.nextJobSuffix++;
+			return "" + JobHandler.nextJob++;
 		}
 	}
 
@@ -104,41 +99,39 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static int stopCrashedJobs() throws JobException {
-		final List stoppedActions = new ArrayList();
 		final List stoppedJobs = new ArrayList();
 		// Update job summaries.
 		final JobList jobList = JobHandler.getJobList();
 		for (final Iterator i = jobList.getAllJobs().iterator(); i.hasNext();) {
-			final JobSummary summary = (JobSummary) i.next();
-			// Update actions.
-			final JobPlan plan = JobHandler.getJobPlan(summary.getJobId());
+			final JobPlan plan = (JobPlan) i.next();
 			final List sections = new ArrayList();
-			sections.add(plan.getStartingSection());
+			sections.add(plan.getRoot());
 			for (int j = 0; j < sections.size(); j++) {
 				final JobPlanSection section = (JobPlanSection) sections.get(j);
-				sections.addAll(section.getAllSubSections());
-				for (final Iterator l = section.getAllActions().iterator(); l
+				if (!section.getStatus().equals(JobStatus.RUNNING))
+					continue;
+				sections.addAll(section.getSubSections());
+				for (final Iterator l = JobHandler.getActions(plan.getJobId(),
+						section.getIdentifier()).values().iterator(); l
 						.hasNext();) {
 					final JobPlanAction action = (JobPlanAction) l.next();
 					if (action.getStatus().equals(JobStatus.RUNNING)) {
-						stoppedActions.add(action);
-						stoppedJobs.add(summary);
+						JobHandler.setStatus(plan.getJobId(), action
+								.getIdentifier(), JobStatus.STOPPED, null);
+						stoppedJobs.add(plan);
 					}
 				}
 			}
 		}
-		if (stoppedActions.size() > 0)
-			JobHandler.setActionStatus(stoppedActions, JobStatus.STOPPED);
 		// Send an email when find stopped jobs.
 		for (final Iterator i = stoppedJobs.iterator(); i.hasNext();) {
-			final JobSummary summary = (JobSummary) i.next();
-			final String jobId = summary.getJobId();
-			final JobPlan plan = JobHandler.getJobPlan(jobId);
+			final JobPlan plan = (JobPlan) i.next();
 			final String contactEmail = plan.getContactEmailAddress();
 			if (contactEmail != null && !"".equals(contactEmail.trim()))
 				try {
 					SendMail.sendSMTPMail(new String[] { contactEmail },
-							Resources.get("jobStoppedSubject", "" + jobId), "");
+							Resources.get("jobStoppedSubject", ""
+									+ plan.getJobId()), "");
 				} catch (final MessagingException e) {
 					// We don't really care.
 					Log.error(e);
@@ -168,17 +161,19 @@ public class JobHandler {
 			final String jdbcDriverClassName, final String jdbcURL,
 			final String jdbcUsername, final String jdbcPassword)
 			throws JobException {
-		// Create a job list entry and a job plan.
-		final JobList jobList = JobHandler.getJobList();
-		final JobSummary jobSummary = jobList.getJobSummary(jobId);
-		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
-		// Set the JDBC stuff.
-		jobPlan.setJDBCDriverClassName(jdbcDriverClassName);
-		jobPlan.setJDBCURL(jdbcURL);
-		jobPlan.setJDBCUsername(jdbcUsername);
-		jobPlan.setJDBCPassword(jdbcPassword);
-		jobList.addJob(jobSummary);
-		// We don't save anything until the job is ended.
+		try {
+			// Create a job list entry and a job plan.
+			final JobPlan jobPlan = JobHandler.getJobList().getJobPlan(jobId);
+			// Set the JDBC stuff.
+			jobPlan.setJDBCDriverClassName(jdbcDriverClassName);
+			jobPlan.setJDBCURL(jdbcURL);
+			jobPlan.setJDBCUsername(jdbcUsername);
+			jobPlan.setJDBCPassword(jdbcPassword);
+			// Save stuff.
+			JobHandler.saveJobList();
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
 	}
 
 	/**
@@ -190,65 +185,39 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static void endJob(final String jobId) throws JobException {
-		final List sections = new ArrayList();
-		final List actions = new ArrayList();
 		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
-		sections.add(jobPlan.getStartingSection());
-		for (int i = 0; i < sections.size(); i++) {
-			final JobPlanSection section = (JobPlanSection) sections.get(i);
-			sections.addAll(section.getAllSubSections());
-			actions.addAll(section.getAllActions());
-		}
-		// Queue the job.
-		JobHandler.setActionStatus(actions, JobStatus.QUEUED);
-		// This will also save the job.
+		// Queue the job, which will also save the job.
+		JobHandler.setStatus(jobId, jobPlan.getRoot().getIdentifier(),
+				JobStatus.QUEUED, null);
 	}
 
 	/**
-	 * Change the status of a job summary object.
+	 * Change the status of a job plan action object.
 	 * 
 	 * @param jobId
-	 *            the job ID.
+	 *            the job.
+	 * @param identifiers
+	 *            the identifiers.
 	 * @param status
 	 *            the new status.
+	 * @param message
+	 *            the new message.
 	 * @throws JobException
 	 *             if it can't.
 	 */
-	public static void setSummaryStatus(final String jobId,
-			final JobStatus status) throws JobException {
-		try {
-			// Create a job list entry and a job plan.
-			final JobList jobList = JobHandler.getJobList();
-			final JobSummary jobSummary = jobList.getJobSummary(jobId);
-			// Set the status.
-			jobSummary.setStatus(status);
-			// Save all.
-			JobHandler.saveJobList(jobList);
-		} catch (final IOException e) {
-			throw new JobException(e);
-		}
+	public static void setStatus(final String jobId,
+			final Collection identifiers, final JobStatus status,
+			final String message) throws JobException {
+		JobHandler.setStatus(jobId, identifiers, status, message, true);
 	}
 
 	/**
 	 * Change the status of a job plan action object.
 	 * 
-	 * @param actions
-	 *            the job action(s).
-	 * @param status
-	 *            the new status.
-	 * @throws JobException
-	 *             if it can't.
-	 */
-	public static void setActionStatus(final Collection actions,
-			final JobStatus status) throws JobException {
-		JobHandler.setActionStatus(actions, status, null);
-	}
-
-	/**
-	 * Change the status of a job plan action object.
-	 * 
-	 * @param actions
-	 *            the job action(s).
+	 * @param jobId
+	 *            the job.
+	 * @param identifier
+	 *            the job action.
 	 * @param status
 	 *            the new status.
 	 * @param message
@@ -257,14 +226,45 @@ public class JobHandler {
 	 * @throws JobException
 	 *             if it can't.
 	 */
-	public static void setActionStatus(final Collection actions,
+	public static void setStatus(final String jobId, final String identifier,
 			final JobStatus status, final String message) throws JobException {
-		try {
-			final Set jobPlans = new HashSet();
-			for (final Iterator i = actions.iterator(); i.hasNext();) {
-				final JobPlanAction action = (JobPlanAction) i.next();
-				// Create a job list entry and a job plan.
-				final JobPlan jobPlan = action.getJobSection().getJobPlan();
+		JobHandler.setStatus(jobId, Collections.singletonList(identifier),
+				status, message);
+	}
+
+	private static void setStatus(final String jobId,
+			final Collection identifiers, final JobStatus status,
+			final String message, final boolean saveList) throws JobException {
+		Map actions = null;
+		String previousSectionId = null;
+		boolean sectionHasUpdatedActions = false;
+		for (final Iterator i = identifiers.iterator(); i.hasNext();) {
+			final String identifier = (String) i.next();
+			String sectionId = null;
+			String actionId = null;
+			// Convert identifier into either a section
+			// or an action.
+			if (identifier.indexOf('#') < 0)
+				// Convert to a section and process all actions.
+				sectionId = identifier;
+			else {
+				// Locate section and process individual action.
+				final String[] parts = identifier.split("#");
+				sectionId = parts[0];
+				actionId = parts[1];
+			}
+			if (!sectionId.equals(previousSectionId)) {
+				if (previousSectionId != null && sectionHasUpdatedActions)
+					JobHandler.setActions(jobId, previousSectionId, actions,
+							false);
+				sectionHasUpdatedActions = false;
+				actions = JobHandler.getActions(jobId, sectionId);
+			}
+			previousSectionId = sectionId;
+			if (actionId != null) {
+				sectionHasUpdatedActions = true;
+				final JobPlanAction action = (JobPlanAction) actions
+						.get(identifier);
 				// Set the status.
 				action.setStatus(status);
 				action.setMessages(message);
@@ -279,54 +279,50 @@ public class JobHandler {
 					action.setStarted(null);
 					action.setEnded(null);
 				}
-				// Remember the plans.
-				jobPlans.add(jobPlan);
+			} else {
+				// Find all subsections and recurse on them.
+				final Collection newIdentifiers = new ArrayList();
+				final JobPlanSection section = JobHandler.getJobPlan(jobId)
+						.getJobPlanSection(sectionId);
+				if (section.getActionCount() > 0)
+					// Recurse on direct actions.
+					for (final Iterator j = JobHandler.getActions(jobId,
+							sectionId).keySet().iterator(); j.hasNext();)
+						newIdentifiers.add(j.next());
+				// Recurse on subsections too.
+				for (final Iterator j = section.getSubSections().iterator(); j
+						.hasNext();)
+					newIdentifiers.add(((JobPlanSection) j.next())
+							.getIdentifier());
+				// Do the recursive call.
+				JobHandler.setStatus(jobId, newIdentifiers, status, message, 
+						false);
 			}
-			for (final Iterator i = jobPlans.iterator(); i.hasNext();) {
-				final JobPlan jobPlan = (JobPlan) i.next();
-				// Save all.
-				JobHandler.saveJobPlan(jobPlan);
-				// Update the summary.
-				JobHandler.setSummaryStatus(jobPlan.getJobId(), jobPlan
-						.getStatus());
-			}
-		} catch (final IOException e) {
-			throw new JobException(e);
 		}
+		if (previousSectionId != null && sectionHasUpdatedActions)
+			JobHandler.setActions(jobId, previousSectionId, actions, false);
+		// Now save the list if required.
+		if (saveList)
+			try {
+				JobHandler.saveJobList();
+			} catch (final IOException e) {
+				throw new JobException(e);
+			}
 	}
 
 	/**
-	 * Change the status of a job plan action object.
+	 * Get the numbered section from the job def.
 	 * 
-	 * @param action
-	 *            the job action.
-	 * @param status
-	 *            the new status.
-	 * @param message
-	 *            any message to assign to the action. Use <tt>null</tt> for
-	 *            no message.
+	 * @param jobId
+	 *            the job.
+	 * @param sectionId
+	 *            the section number.
+	 * @return the section.
 	 * @throws JobException
-	 *             if it can't.
 	 */
-	public static void setActionStatus(final JobPlanAction action,
-			final JobStatus status, final String message) throws JobException {
-		JobHandler.setActionStatus(Collections.singletonList(action), status,
-				message);
-	}
-
-	/**
-	 * Change the status of a job plan action object.
-	 * 
-	 * @param action
-	 *            the job action.
-	 * @param status
-	 *            the new status.
-	 * @throws JobException
-	 *             if it can't.
-	 */
-	public static void setActionStatus(final JobPlanAction action,
-			final JobStatus status) throws JobException {
-		JobHandler.setActionStatus(Collections.singletonList(action), status);
+	public static JobPlanSection getSection(final String jobId,
+			final String sectionId) throws JobException {
+		return JobHandler.getJobPlan(jobId).getJobPlanSection(sectionId);
 	}
 
 	/**
@@ -341,7 +337,7 @@ public class JobHandler {
 	 */
 	public static void queue(final String jobId, final Collection identifiers)
 			throws JobException {
-		JobHandler.setStatusForSelection(jobId, identifiers, JobStatus.QUEUED);
+		JobHandler.setStatus(jobId, identifiers, JobStatus.QUEUED, null);
 	}
 
 	/**
@@ -356,35 +352,11 @@ public class JobHandler {
 	 */
 	public static void unqueue(final String jobId, final Collection identifiers)
 			throws JobException {
-		JobHandler.setStatusForSelection(jobId, identifiers,
-				JobStatus.NOT_QUEUED);
-	}
-
-	private static void setStatusForSelection(final String jobId,
-			final Collection identifiers, final JobStatus status)
-			throws JobException {
-		// Iterate over all actions in order and if in set of
-		// identifiers, add to list to modify.
-		final List sections = new ArrayList();
-		final List actions = new ArrayList();
-		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
-		sections.add(jobPlan.getStartingSection());
-		for (int i = 0; i < sections.size(); i++) {
-			final JobPlanSection section = (JobPlanSection) sections.get(i);
-			sections.addAll(section.getAllSubSections());
-			for (final Iterator k = section.getAllActions().iterator(); k
-					.hasNext();) {
-				final JobPlanAction action = (JobPlanAction) k.next();
-				if (identifiers.contains(new Integer(action
-						.getUniqueIdentifier())))
-					actions.add(action);
-			}
-		}
-		JobHandler.setActionStatus(actions, status);
+		JobHandler.setStatus(jobId, identifiers, JobStatus.NOT_QUEUED, null);
 	}
 
 	/**
-	 * Flag that an action is to be added to the end of a job.
+	 * Flag that an action is to be set to the job.
 	 * 
 	 * @param jobId
 	 *            the job ID.
@@ -392,16 +364,122 @@ public class JobHandler {
 	 *            the section this applies to.
 	 * @param actions
 	 *            the actions to add.
+	 * @param saveList
+	 *            <tt>true</tt> if the list should be updated after making the
+	 *            change.
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public static void addActions(final String jobId,
-			final String[] sectionPath, final Collection actions)
-			throws JobException {
+	public static void setActions(final String jobId,
+			final String[] sectionPath, final Collection actions,
+			final boolean saveList) throws JobException {
 		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
 		// Add the action to the job.
-		jobPlan.addActions(sectionPath, actions);
-		// We'll save it later.
+		jobPlan.setActionCount(sectionPath, actions.size());
+		// Get the section ID.
+		JobPlanSection section = jobPlan.getRoot();
+		for (int i = 0; i < sectionPath.length; i++)
+			section = section.getSubSection(sectionPath[i]);
+		// Convert each action into an action object and create
+		// a map.
+		final Map actionMap = new LinkedHashMap();
+		for (final Iterator i = actions.iterator(); i.hasNext();) {
+			final JobPlanAction action = new JobPlanAction(jobId, (String) i
+					.next(), section.getIdentifier());
+			actionMap.put(action.getIdentifier(), action);
+		}
+		// Do the work.
+		JobHandler.setActions(jobId, section.getIdentifier(), actionMap,
+				saveList);
+	}
+
+	private static void setActions(final String jobId, final String sectionId,
+			final Map actionMap, final boolean saveList) throws JobException {
+		Log.debug("Saving actions for job " + jobId + " section " + sectionId);
+		FileOutputStream fos = null;
+		try {
+			// Write the actions to a file.
+			fos = new FileOutputStream(JobHandler.getActionsFile(jobId,
+					sectionId));
+			final ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(actionMap);
+			oos.flush();
+			fos.flush();
+			// Save the list.
+			if (saveList)
+				JobHandler.saveJobList();
+		} catch (final IOException e) {
+			throw new JobException(e);
+		} finally {
+			if (fos != null)
+				try {
+					fos.close();
+				} catch (final IOException ie) {
+					// Ignore.
+				}
+		}
+	}
+
+	/**
+	 * Get the actions for the specified job section. Keys are identifiers,
+	 * values are actions.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param sectionId
+	 *            the section ID.
+	 * @return the actions.
+	 * @throws JobException
+	 *             if they could not be read.
+	 */
+	public static Map getActions(final String jobId, final String sectionId)
+			throws JobException {
+		// Load actions from file.
+		synchronized (JobHandler.planDirLock) {
+			// Load existing job plan.
+			FileInputStream fis = null;
+			Map actions = null;
+			try {
+				final File actionsFile = JobHandler.getActionsFile(jobId,
+						sectionId);
+				// Doesn't exist? Return a default empty list.
+				if (!actionsFile.exists())
+					actions = Collections.EMPTY_MAP;
+				else {
+					fis = new FileInputStream(actionsFile);
+					final ObjectInputStream ois = new ObjectInputStream(fis);
+					actions = (Map) ois.readObject();
+				}
+			} catch (final Throwable t) {
+				// This is horrible. Make up a default one.
+				Log.error(t);
+				actions = Collections.EMPTY_MAP;
+				throw new JobException(t);
+			} finally {
+				if (fis != null)
+					try {
+						fis.close();
+					} catch (final IOException ie) {
+						// We don't care.
+					}
+			}
+			return actions;
+		}
+	}
+
+	private static File getActionsFile(final String jobId,
+			final String sectionId) throws IOException {
+		synchronized (JobHandler.planDirLock) {
+			final String firstDir = sectionId.length() <= 3 ? sectionId
+					: sectionId.substring(0, 3);
+			final String secondDir = sectionId.length() <= 6 ? sectionId
+					: sectionId.substring(0, 6);
+			final File sectionDir = new File(new File(new File(
+					JobHandler.jobsDir, jobId), firstDir), secondDir);
+			if (!sectionDir.exists())
+				sectionDir.mkdirs();
+			return new File(sectionDir, sectionId);
+		}
 	}
 
 	/**
@@ -414,11 +492,7 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static JobPlan getJobPlan(final String jobId) throws JobException {
-		try {
-			return JobHandler.loadJobPlan(jobId);
-		} catch (final IOException e) {
-			throw new JobException(e);
-		}
+		return JobHandler.getJobList().getJobPlan(jobId);
 	}
 
 	/**
@@ -451,9 +525,9 @@ public class JobHandler {
 			// Remove the job list entry.
 			final JobList jobList = JobHandler.getJobList();
 			jobList.removeJob(jobId);
-			JobHandler.saveJobList(jobList);
+			JobHandler.saveJobList();
 			// Recursively delete the job directory.
-			FileUtils.delete(JobHandler.getJobPlanFile(jobId));
+			FileUtils.delete(new File(JobHandler.jobsDir, jobId));
 		} catch (final IOException e) {
 			throw new JobException(e);
 		}
@@ -482,7 +556,7 @@ public class JobHandler {
 					|| jobPlan.getContactEmailAddress() != null
 					&& !jobPlan.getContactEmailAddress().equals(trimmedEmail)) {
 				jobPlan.setContactEmailAddress(trimmedEmail);
-				JobHandler.saveJobPlan(jobPlan);
+				JobHandler.saveJobList();
 			}
 		} catch (final IOException e) {
 			throw new JobException(e);
@@ -507,7 +581,7 @@ public class JobHandler {
 			// Set the thread count.
 			if (threadCount != jobPlan.getThreadCount()) {
 				jobPlan.setThreadCount(threadCount);
-				JobHandler.saveJobPlan(jobPlan);
+				JobHandler.saveJobList();
 			}
 		} catch (final IOException e) {
 			throw new JobException(e);
@@ -559,65 +633,10 @@ public class JobHandler {
 		return new File(JobHandler.jobsDir, "list");
 	}
 
-	private static File getJobPlanFile(final String jobId) throws IOException {
-		return new File(JobHandler.jobsDir, jobId);
-	}
-
-	private static JobPlan loadJobPlan(final String jobId) throws IOException {
-		synchronized (JobHandler.planDirLock) {
-			if (JobHandler.jobPlanCache.containsKey(jobId))
-				return (JobPlan) JobHandler.jobPlanCache.get(jobId);
-			Log.debug("Loading plan for " + jobId);
-			final File jobPlanFile = JobHandler.getJobPlanFile(jobId);
-			// Load existing job plan.
-			FileInputStream fis = null;
-			JobPlan jobPlan = null;
-			// Doesn't exist? Return a default new plan.
-			if (!jobPlanFile.exists())
-				jobPlan = new JobPlan(jobId);
-			else
-				try {
-					fis = new FileInputStream(jobPlanFile);
-					final ObjectInputStream ois = new ObjectInputStream(fis);
-					jobPlan = (JobPlan) ois.readObject();
-				} catch (final IOException e) {
-					throw e;
-				} catch (final Throwable t) {
-					// This is horrible. Make up a default one.
-					Log.error(t);
-					jobPlan = new JobPlan(jobId);
-				} finally {
-					if (fis != null)
-						fis.close();
-				}
-			JobHandler.jobPlanCache.put(jobId, jobPlan);
-			return jobPlan;
-		}
-	}
-
-	private static void saveJobPlan(final JobPlan jobPlan) throws IOException {
-		synchronized (JobHandler.planDirLock) {
-			final String jobId = jobPlan.getJobId();
-			Log.debug("Saving plan for " + jobId);
-			final File jobPlanFile = JobHandler.getJobPlanFile(jobId);
-			// Save (overwrite) file with plan.
-			FileOutputStream fos = null;
-			try {
-				fos = new FileOutputStream(jobPlanFile);
-				final ObjectOutputStream oos = new ObjectOutputStream(fos);
-				oos.writeObject(jobPlan);
-				oos.flush();
-			} finally {
-				if (fos != null)
-					fos.close();
-			}
-		}
-	}
-
 	private static JobList loadJobList() throws IOException {
 		synchronized (JobHandler.planDirLock) {
-			if (JobHandler.jobListCache != null)
-				return JobHandler.jobListCache;
+			if (JobHandler.jobList != null)
+				return JobHandler.jobList;
 			Log.debug("Loading list");
 			final File jobListFile = JobHandler.getJobListFile();
 			// Load existing job plan.
@@ -641,12 +660,12 @@ public class JobHandler {
 					if (fis != null)
 						fis.close();
 				}
-			JobHandler.jobListCache = jobList;
+			JobHandler.jobList = jobList;
 			return jobList;
 		}
 	}
 
-	private static void saveJobList(final JobList jobList) throws IOException {
+	private static void saveJobList() throws IOException {
 		synchronized (JobHandler.planDirLock) {
 			Log.debug("Saving list");
 			final File jobListFile = JobHandler.getJobListFile();
@@ -655,7 +674,7 @@ public class JobHandler {
 			try {
 				fos = new FileOutputStream(jobListFile);
 				final ObjectOutputStream oos = new ObjectOutputStream(fos);
-				oos.writeObject(jobList);
+				oos.writeObject(JobHandler.jobList);
 				oos.flush();
 				fos.flush();
 			} finally {

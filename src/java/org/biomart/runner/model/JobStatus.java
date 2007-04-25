@@ -44,13 +44,13 @@ public class JobStatus implements Serializable, Comparable {
 	 * Unknown things.
 	 */
 	public static final JobStatus UNKNOWN = JobStatus
-			.getJobStatus("UNKNOWN", 0);
+			.getJobStatus("UNKNOWN", -1);
 
 	/**
 	 * Incomplete things.
 	 */
 	public static final JobStatus INCOMPLETE = JobStatus.getJobStatus(
-			"INCOMPLETE", 1);
+			"INCOMPLETE", 999);
 
 	/**
 	 * Running things.
