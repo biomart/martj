@@ -61,17 +61,17 @@ public class SendMail {
 	public static void sendSMTPMail(final String recipients[],
 			final String subject, final String message)
 			throws MessagingException {
-		
+
 		final String hostname = Settings.getProperty("smtp.hostname");
 		final String username = Settings.getProperty("smtp.username");
 		final String password = Settings.getProperty("smtp.password");
 		final String from = Settings.getProperty("mail.from");
-		
-		if (hostname==null||from==null) {
+
+		if (hostname == null || from == null) {
 			Log.debug("No hostname/from address supplied. Not sending mail.");
 			return;
 		}
-		
+
 		final Properties props = new Properties();
 		props.setProperty("mail.transport.protocol", "smtp");
 		props.setProperty("mail.host", hostname);

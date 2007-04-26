@@ -203,13 +203,17 @@ public class JobThreadManager extends Thread {
 		}
 
 		public void run() {
+			Log
+			.info(Resources.get("jobThreadStarting", ""
+					+ this.sequence));
 			// Each thread grabs sections from the queue until none are left.
 			JobPlanSection section = null;
 			while (this.continueRunning()
 					&& (section = this.getNextSection()) != null) {
-				Log
-						.info(Resources.get("jobThreadStarting", ""
-								+ this.sequence));
+				// Skip section if already running.
+				if (!(section.getStatus().equals(JobStatus.QUEUED) || section
+							.getStatus().equals(JobStatus.STOPPED)))
+						continue;
 				// Process section.
 				Map actions;
 				try {
@@ -364,7 +368,7 @@ public class JobThreadManager extends Thread {
 											JobStatus.FAILED);
 					}
 					// If all three checks satisfied, we can use this section.
-					if (hasUsableActions && !hasUnusableSiblings)
+					if (hasUsableActions && !hasUnusableSiblings) 
 						return section;
 					// Otherwise, add subsections to list and keep looking.
 					else
