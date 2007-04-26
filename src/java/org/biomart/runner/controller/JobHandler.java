@@ -185,10 +185,7 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static void endJob(final String jobId) throws JobException {
-		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
-		// Queue the job, which will also save the job.
-		JobHandler.setStatus(jobId, jobPlan.getRoot().getIdentifier(),
-				JobStatus.QUEUED, null);
+		// We don't really care.
 	}
 
 	/**
@@ -389,6 +386,8 @@ public class JobHandler {
 		// Do the work.
 		JobHandler.setActions(jobId, section.getIdentifier(), actionMap,
 				saveList);
+		// Update the status to QUEUED (for external requests only).
+		JobHandler.setStatus(jobId, actionMap.keySet(), JobStatus.QUEUED, null);
 	}
 
 	private static void setActions(final String jobId, final String sectionId,

@@ -1534,22 +1534,14 @@ public interface MartConstructor {
 										.getName());
 					}
 				}
+				this
+				.issueListenerEvent(MartConstructorListener.CONSTRUCTION_ENDED);
+				Log.info(Resources.get("logConstructorEnded"));
 			} catch (final ConstructorException e) {
 				// This is so the users see a nice message straight away.
 				this.failure = e;
 			} catch (final Throwable t) {
 				this.failure = new ConstructorException(t);
-			} finally {
-				try {
-					this
-							.issueListenerEvent(MartConstructorListener.CONSTRUCTION_ENDED);
-				} catch (final ConstructorException e) {
-					this.failure = e;
-				} catch (final Throwable t) {
-					this.failure = new ConstructorException(t);
-				} finally {
-					Log.info(Resources.get("logConstructorEnded"));
-				}
 			}
 		}
 	}
