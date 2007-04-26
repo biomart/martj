@@ -395,7 +395,7 @@ public class JobPlan implements Serializable {
 								.hasNext();) {
 							final Date childEnded = ((JobPlanAction) i.next())
 									.getEnded();
-							if (newEnded == null || childEnded.before(newEnded))
+							if (newEnded == null || newEnded.before(childEnded))
 								newEnded = childEnded;
 						}
 				}
@@ -441,7 +441,7 @@ public class JobPlan implements Serializable {
 							final Date childStarted = ((JobPlanAction) i.next())
 									.getStarted();
 							if (newStarted == null
-									|| childStarted.before(newStarted))
+									|| newStarted.after(childStarted))
 								newStarted = childStarted;
 						}
 				}
