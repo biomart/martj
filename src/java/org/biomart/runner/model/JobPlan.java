@@ -387,7 +387,9 @@ public class JobPlan implements Serializable {
 							.hasNext();) {
 						final Date childEnded = ((JobPlanSection) i.next())
 								.getEnded();
-						if (newEnded == null || newEnded.before(childEnded))
+						if (newEnded == null
+								|| (childEnded != null && newEnded
+										.before(childEnded)))
 							newEnded = childEnded;
 					}
 					if (allActions != null)
@@ -395,7 +397,9 @@ public class JobPlan implements Serializable {
 								.hasNext();) {
 							final Date childEnded = ((JobPlanAction) i.next())
 									.getEnded();
-							if (newEnded == null || newEnded.before(childEnded))
+							if (newEnded == null
+									|| (childEnded != null && newEnded
+											.before(childEnded)))
 								newEnded = childEnded;
 						}
 				}
@@ -432,7 +436,8 @@ public class JobPlan implements Serializable {
 						final Date childStarted = ((JobPlanSection) i.next())
 								.getStarted();
 						if (newStarted == null
-								|| newStarted.after(childStarted))
+								|| (childStarted != null && newStarted
+										.after(childStarted)))
 							newStarted = childStarted;
 					}
 					if (allActions != null)
@@ -441,7 +446,8 @@ public class JobPlan implements Serializable {
 							final Date childStarted = ((JobPlanAction) i.next())
 									.getStarted();
 							if (newStarted == null
-									|| newStarted.after(childStarted))
+									|| (childStarted != null && newStarted
+											.after(childStarted)))
 								newStarted = childStarted;
 						}
 				}
