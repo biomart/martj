@@ -99,8 +99,8 @@ import org.biomart.runner.model.MartRunnerProtocol.Client;
  * This dialog monitors and interacts with SQL being run on a remote host.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class MartRunnerMonitorDialog extends JFrame {
@@ -121,11 +121,14 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 	private static final Map STATUS_COLOR_MAP = new HashMap();
 
+	private static final Map STATUS_FONT_MAP = new HashMap();
+
 	private final JButton refreshJobList;
 
 	private boolean listRefreshing = false;
 
 	static {
+		// Colours.
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.NOT_QUEUED,
 				Color.BLACK);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.INCOMPLETE,
@@ -142,6 +145,23 @@ public class MartRunnerMonitorDialog extends JFrame {
 				Color.GREEN);
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.UNKNOWN,
 				Color.LIGHT_GRAY);
+		// Fonts
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.NOT_QUEUED,
+				MartRunnerMonitorDialog.PLAIN_FONT);
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.INCOMPLETE,
+				MartRunnerMonitorDialog.ITALIC_FONT);
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.QUEUED,
+				MartRunnerMonitorDialog.PLAIN_FONT);
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.FAILED,
+				MartRunnerMonitorDialog.BOLD_FONT);
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.RUNNING,
+				MartRunnerMonitorDialog.BOLD_ITALIC_FONT);
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.STOPPED,
+				MartRunnerMonitorDialog.BOLD_FONT);
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.COMPLETED,
+				MartRunnerMonitorDialog.PLAIN_FONT);
+		MartRunnerMonitorDialog.STATUS_FONT_MAP.put(JobStatus.UNKNOWN,
+				MartRunnerMonitorDialog.ITALIC_FONT);
 	}
 
 	/**
@@ -185,10 +205,10 @@ public class MartRunnerMonitorDialog extends JFrame {
 		jobListPanel.add(this.refreshJobList, BorderLayout.PAGE_END);
 		// Updates when refresh button is hit.
 		this.refreshJobList.addActionListener(new ActionListener() {
+			private boolean firstRun = true;
+
 			public void actionPerformed(final ActionEvent e) {
 				new LongProcess() {
-					private boolean firstRun = true;
-
 					public void run() {
 						Object selection = jobList.getSelectedValue();
 						try {
@@ -199,11 +219,10 @@ public class MartRunnerMonitorDialog extends JFrame {
 							StackTrace.showStackTrace(e);
 						} finally {
 							// Attempt to select the first item on first run.
-							if (this.firstRun && defaultJob)
+							if (firstRun && defaultJob && jobPlanListModel.size()>0)
 								selection = jobPlanListModel.lastElement();
-							if (selection != null)
-								jobList.setSelectedValue(selection, true);
-							this.firstRun = false;
+							jobList.setSelectedValue(selection, true);
+							firstRun = false;
 						}
 					}
 				}.start();
@@ -329,37 +348,25 @@ public class MartRunnerMonitorDialog extends JFrame {
 		public Component getListCellRendererComponent(final JList list,
 				final Object value, final int index, final boolean isSelected,
 				final boolean cellHasFocus) {
-			final JLabel label = new JLabel();
+			final JLabel label = new JLabel(value.toString());
 			label.setOpaque(true);
 			Color fgColor = Color.BLACK;
 			Color bgColor = Color.WHITE;
 			Font font = MartRunnerMonitorDialog.PLAIN_FONT;
-			// A Job List entry node?
+			// A Job Plan entry node?
 			if (value instanceof JobPlan) {
-				final JobPlan plan = (JobPlan) value;
-				final JobStatus status = plan.getRoot().getStatus();
-				if (status.equals(JobStatus.INCOMPLETE)) {
-					label.setText(plan + " ["
-							+ Resources.get("jobStatusIncomplete") + "]");
-					font = MartRunnerMonitorDialog.ITALIC_FONT;
-				} else {
-					label.setText(plan.toString());
-					if (status.equals(JobStatus.FAILED)
-							|| status.equals(JobStatus.STOPPED))
-						font = MartRunnerMonitorDialog.BOLD_FONT;
-					else if (status.equals(JobStatus.RUNNING))
-						font = MartRunnerMonitorDialog.BOLD_ITALIC_FONT;
-				}
+				final JobStatus status = ((JobPlan) value).getRoot()
+						.getStatus();
 				// White/Cyan stripes.
 				bgColor = index % 2 == 0 ? Color.WHITE
 						: MartRunnerMonitorDialog.PALE_BLUE;
 				// Color-code text.
 				fgColor = (Color) MartRunnerMonitorDialog.STATUS_COLOR_MAP
 						.get(status);
+				// Set font.
+				font = (Font) MartRunnerMonitorDialog.STATUS_FONT_MAP
+						.get(status);
 			}
-			// Others are plain text.
-			else
-				label.setText(value.toString());
 			// Always white-on-color or color-on-white.
 			label.setFont(font);
 			label.setForeground(isSelected ? bgColor : fgColor);
@@ -376,61 +383,39 @@ public class MartRunnerMonitorDialog extends JFrame {
 		public Component getTreeCellRendererComponent(final JTree tree,
 				final Object value, final boolean sel, final boolean expanded,
 				final boolean leaf, final int row, final boolean hasFocus) {
-			final JLabel label = new JLabel();
+			final JLabel label = new JLabel(value.toString());
 			label.setOpaque(true);
 			Color fgColor = Color.BLACK;
 			Color bgColor = Color.WHITE;
 			Font font = MartRunnerMonitorDialog.PLAIN_FONT;
 			// Sections are given text labels.
 			if (value instanceof SectionNode) {
-				final JobPlanSection section = ((SectionNode) value)
-						.getSection();
-				final String sectionText = section + " ("
-						+ section.getTotalActionCount() + ")";
-				final JobStatus status = section.getStatus();
-				if (status.equals(JobStatus.INCOMPLETE)) {
-					label.setText(sectionText + " ["
-							+ Resources.get("jobStatusIncomplete") + "]");
-					font = MartRunnerMonitorDialog.ITALIC_FONT;
-				} else {
-					label.setText(sectionText);
-					if (status.equals(JobStatus.FAILED)
-							|| status.equals(JobStatus.STOPPED))
-						font = MartRunnerMonitorDialog.BOLD_FONT;
-					else if (status.equals(JobStatus.RUNNING))
-						font = MartRunnerMonitorDialog.BOLD_ITALIC_FONT;
-				}
+				final JobStatus status = (((SectionNode) value).getSection())
+						.getStatus();
 				// White/Cyan stripes.
 				bgColor = row % 2 == 0 ? Color.WHITE
 						: MartRunnerMonitorDialog.PALE_BLUE;
 				// Color-code text.
 				fgColor = (Color) MartRunnerMonitorDialog.STATUS_COLOR_MAP
 						.get(status);
+				// Set font.
+				font = (Font) MartRunnerMonitorDialog.STATUS_FONT_MAP
+						.get(status);
 			}
 			// Actions are given text labels.
-			if (value instanceof ActionNode) {
-				final JobPlanAction action = ((ActionNode) value).getAction();
-				final JobStatus status = action.getStatus();
-				if (status.equals(JobStatus.INCOMPLETE)) {
-					label.setText(action + " ["
-							+ Resources.get("jobStatusIncomplete") + "]");
-					font = MartRunnerMonitorDialog.ITALIC_FONT;
-				} else {
-					label.setText(action.toString());
-					if (status.equals(JobStatus.FAILED)
-							|| status.equals(JobStatus.STOPPED))
-						font = MartRunnerMonitorDialog.BOLD_FONT;
-					else if (status.equals(JobStatus.RUNNING))
-						font = MartRunnerMonitorDialog.BOLD_ITALIC_FONT;
-				}
+			else if (value instanceof ActionNode) {
+				final JobStatus status = (((ActionNode) value).getAction())
+						.getStatus();
 				// White/Cyan stripes.
 				bgColor = row % 2 == 0 ? Color.WHITE
 						: MartRunnerMonitorDialog.PALE_GREEN;
 				// Color-code text.
 				fgColor = (Color) MartRunnerMonitorDialog.STATUS_COLOR_MAP
 						.get(status);
-			} else
-				label.setText(value.toString());
+				// Set font.
+				font = (Font) MartRunnerMonitorDialog.STATUS_FONT_MAP
+						.get(status);
+			}
 			// Always white-on-color or color-on-white.
 			label.setFont(font);
 			label.setForeground(sel ? bgColor : fgColor);
@@ -851,7 +836,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 							status = action.getStatus();
 							started = action.getStarted();
 							ended = action.getEnded();
-							messages = action.getMessages();
+							messages = action.getMessage();
 						}
 
 						// Elapsed time calculation.
@@ -1039,7 +1024,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 				this.setRoot(JobPlanTreeModel.LOADING_TREE);
 				this.reload();
 				// Get job details.
-				final SectionNode rootNode = new SectionNode(null, jobPlan.getRoot());
+				final SectionNode rootNode = new SectionNode(null, jobPlan
+						.getRoot());
 				rootNode.expanded(this.host, this.port, this.planPanel.jobId);
 				this.setRoot(rootNode);
 				this.reload();
@@ -1059,19 +1045,21 @@ public class MartRunnerMonitorDialog extends JFrame {
 			}
 		}
 
-		public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
+		public void treeWillCollapse(TreeExpansionEvent event)
+				throws ExpandVetoException {
 			// Remove children.
 			final Object collapsedNode = event.getPath().getLastPathComponent();
 			if (collapsedNode instanceof SectionNode)
 				((SectionNode) collapsedNode).collapsed();
 		}
 
-		public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+		public void treeWillExpand(TreeExpansionEvent event)
+				throws ExpandVetoException {
 			// Insert children.
 			final Object expandedNode = event.getPath().getLastPathComponent();
 			if (expandedNode instanceof SectionNode)
 				((SectionNode) expandedNode).expanded(this.host, this.port,
-						this.planPanel.jobId);			
+						this.planPanel.jobId);
 		}
 	}
 
@@ -1152,7 +1140,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 		public boolean isLeaf() {
 			return this.getChildCount() == 0;
 		}
-		
+
 		public String toString() {
 			return this.section.toString();
 		}
@@ -1200,7 +1188,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 		public boolean isLeaf() {
 			return true;
 		}
-		
+
 		public String toString() {
 			return this.action.toString();
 		}

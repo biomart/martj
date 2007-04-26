@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.biomart.common.resources.Log;
+import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.runner.controller.JobHandler;
 import org.biomart.runner.exceptions.JobException;
@@ -38,8 +39,8 @@ import org.biomart.runner.exceptions.JobException;
  * See {@link Settings#getProperty(String)}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class JobPlan implements Serializable {
@@ -226,9 +227,19 @@ public class JobPlan implements Serializable {
 	}
 
 	public String toString() {
-		return this.jobId;
+		final StringBuffer buf = new StringBuffer();
+		buf.append(this.jobId);
+		if (this.root.getStatus().equals(JobStatus.INCOMPLETE)) {
+			buf.append(" [");
+			buf.append(Resources.get("jobStatusIncomplete"));
+			buf.append("]");
+		}
+		buf.append(" (");
+		buf.append(this.root.getTotalActionCount());
+		buf.append(")");
+		return buf.toString();
 	}
-	
+
 	public boolean equals(final Object other) {
 		if (!(other instanceof JobPlan))
 			return false;
@@ -361,13 +372,41 @@ public class JobPlan implements Serializable {
 			return this.ended;
 		}
 
-		private void updateEnded(final Date newEnded) {
-			if (this.ended == null)
-				this.ended = newEnded;
-			else if (newEnded != null)
-				this.ended = newEnded.after(this.ended) ? newEnded : this.ended;
+		private void updateEnded(Date newEnded, final Collection allActions) {
+			// If our date is not null and new date is not null
+			// and new date is before our date, do nothing.
+			if (this.ended != null) {
+				if (newEnded != null) {
+					if (newEnded.before(this.ended))
+						return;
+				}
+				// If our date is not null and new date is null,
+				// take latest date from children.
+				else {
+					for (final Iterator i = this.getSubSections().iterator(); i
+							.hasNext();) {
+						final Date childEnded = ((JobPlanSection) i.next())
+								.getEnded();
+						if (newEnded == null || newEnded.before(childEnded))
+							newEnded = childEnded;
+					}
+					if (allActions != null)
+						for (final Iterator i = allActions.iterator(); i
+								.hasNext();) {
+							final Date childEnded = ((JobPlanAction) i.next())
+									.getEnded();
+							if (newEnded == null || childEnded.before(newEnded))
+								newEnded = childEnded;
+						}
+				}
+			}
+			// Otherwise if new date is also null, do nothing.
+			else if (newEnded == null)
+				return;
+			// Update date as it has changed.
+			this.ended = newEnded;
 			if (this.parent != null)
-				this.parent.updateEnded(this.ended);
+				this.parent.updateEnded(newEnded, null);
 		}
 
 		/**
@@ -377,14 +416,43 @@ public class JobPlan implements Serializable {
 			return this.started;
 		}
 
-		private void updateStarted(final Date newStarted) {
-			if (this.started == null)
-				this.started = newStarted;
-			else if (newStarted != null)
-				this.started = newStarted.before(this.started) ? newStarted
-						: this.started;
+		private void updateStarted(Date newStarted, final Collection allActions) {
+			// If our date is not null and new date is not null
+			// and new date is after our date, do nothing.
+			if (this.started != null) {
+				if (newStarted != null) {
+					if (newStarted.after(this.started))
+						return;
+				}
+				// If our date is not null and new date is null,
+				// take earliest date from children.
+				else {
+					for (final Iterator i = this.getSubSections().iterator(); i
+							.hasNext();) {
+						final Date childStarted = ((JobPlanSection) i.next())
+								.getStarted();
+						if (newStarted == null
+								|| newStarted.after(childStarted))
+							newStarted = childStarted;
+					}
+					if (allActions != null)
+						for (final Iterator i = allActions.iterator(); i
+								.hasNext();) {
+							final Date childStarted = ((JobPlanAction) i.next())
+									.getStarted();
+							if (newStarted == null
+									|| childStarted.before(newStarted))
+								newStarted = childStarted;
+						}
+				}
+			}
+			// Otherwise if new date is also null, do nothing.
+			else if (newStarted == null)
+				return;
+			// Update date as it has changed.
+			this.started = newStarted;
 			if (this.parent != null)
-				this.parent.updateStarted(this.started);
+				this.parent.updateStarted(newStarted, null);
 		}
 
 		/**
@@ -394,14 +462,32 @@ public class JobPlan implements Serializable {
 			return this.status;
 		}
 
-		private void updateStatus(final JobStatus newStatus) {
-			if (this.status == null)
-				this.status = newStatus;
-			else
-				this.status = newStatus.compareTo(this.status) < 0 ? newStatus
-						: this.status;
+		private void updateStatus(JobStatus newStatus,
+				final Collection allActions) {
+			// New one less important? Check all and take most important.
+			if (!newStatus.isMoreImportantThan(this.status)) {
+				for (final Iterator i = this.getSubSections().iterator(); i
+						.hasNext();) {
+					final JobStatus childStatus = ((JobPlanSection) i.next())
+							.getStatus();
+					if (childStatus.isMoreImportantThan(newStatus))
+						newStatus = childStatus;
+				}
+				if (allActions != null)
+					for (final Iterator i = allActions.iterator(); i.hasNext();) {
+						final JobStatus childStatus = ((JobPlanAction) i.next())
+								.getStatus();
+						if (childStatus.isMoreImportantThan(newStatus))
+							newStatus = childStatus;
+					}
+			}
+			// Same status? Keep it.
+			if (newStatus.equals(this.status))
+				return;
+			// Change it now.
+			this.status = newStatus;
 			if (this.parent != null)
-				this.parent.updateStatus(this.status);
+				this.parent.updateStatus(newStatus, null);
 		}
 
 		/**
@@ -410,7 +496,7 @@ public class JobPlan implements Serializable {
 		 * @return the identifier.
 		 */
 		public String getIdentifier() {
-			return ""+this.sequence;
+			return "" + this.sequence;
 		}
 
 		public int hashCode() {
@@ -418,7 +504,17 @@ public class JobPlan implements Serializable {
 		}
 
 		public String toString() {
-			return this.label;
+			final StringBuffer buf = new StringBuffer();
+			buf.append(this.label);
+			if (this.getStatus().equals(JobStatus.INCOMPLETE)) {
+				buf.append(" [");
+				buf.append(Resources.get("jobStatusIncomplete"));
+				buf.append("]");
+			}
+			buf.append(" (");
+			buf.append(this.getTotalActionCount());
+			buf.append(")");
+			return buf.toString();
 		}
 
 		public boolean equals(final Object other) {
@@ -442,7 +538,7 @@ public class JobPlan implements Serializable {
 
 		private Date ended;
 
-		private String messages;
+		private String message;
 
 		private final String parentIdentifier;
 
@@ -480,12 +576,14 @@ public class JobPlan implements Serializable {
 		/**
 		 * @param ended
 		 *            the ended to set
+		 * @param allActions
+		 *            all actions in this section, in order to do sibling tests.
 		 */
-		public void setEnded(final Date ended) {
+		public void setEnded(final Date ended, final Collection allActions) {
 			this.ended = ended;
 			try {
 				JobHandler.getSection(this.jobId, this.parentIdentifier)
-						.updateEnded(ended);
+						.updateEnded(ended, allActions);
 			} catch (final JobException e) {
 				// Aaargh!
 				Log.error(e);
@@ -495,16 +593,16 @@ public class JobPlan implements Serializable {
 		/**
 		 * @return the messages
 		 */
-		public String getMessages() {
-			return this.messages;
+		public String getMessage() {
+			return this.message;
 		}
 
 		/**
-		 * @param messages
-		 *            the messages to set
+		 * @param message
+		 *            the message to set
 		 */
-		public void setMessages(final String messages) {
-			this.messages = messages;
+		public void setMessage(final String message) {
+			this.message = message;
 		}
 
 		/**
@@ -517,12 +615,14 @@ public class JobPlan implements Serializable {
 		/**
 		 * @param started
 		 *            the started to set
+		 * @param allActions
+		 *            all actions in this section, in order to do sibling tests.
 		 */
-		public void setStarted(final Date started) {
+		public void setStarted(final Date started, final Collection allActions) {
 			this.started = started;
 			try {
 				JobHandler.getSection(this.jobId, this.parentIdentifier)
-						.updateStarted(started);
+						.updateStarted(started, allActions);
 			} catch (final JobException e) {
 				// Aaargh!
 				Log.error(e);
@@ -539,12 +639,17 @@ public class JobPlan implements Serializable {
 		/**
 		 * @param status
 		 *            the status to set
+		 * @param allActions
+		 *            all actions in this section, in order to do sibling tests.
 		 */
-		public void setStatus(final JobStatus status) {
+		public void setStatus(final JobStatus status,
+				final Collection allActions) {
+			if (status.equals(this.status))
+				return;
 			this.status = status;
 			try {
 				JobHandler.getSection(this.jobId, this.parentIdentifier)
-						.updateStatus(status);
+						.updateStatus(status, allActions);
 			} catch (final JobException e) {
 				// Aaargh!
 				Log.error(e);
@@ -566,7 +671,7 @@ public class JobPlan implements Serializable {
 		 * @return the identifier.
 		 */
 		public String getIdentifier() {
-			return this.parentIdentifier+"#"+this.sequence;
+			return this.parentIdentifier + "#" + this.sequence;
 		}
 
 		public int hashCode() {
@@ -574,7 +679,14 @@ public class JobPlan implements Serializable {
 		}
 
 		public String toString() {
-			return this.action;
+			final StringBuffer buf = new StringBuffer();
+			buf.append(this.action);
+			if (this.getStatus().equals(JobStatus.INCOMPLETE)) {
+				buf.append(" [");
+				buf.append(Resources.get("jobStatusIncomplete"));
+				buf.append("]");
+			}
+			return buf.toString();
 		}
 
 		public boolean equals(final Object other) {

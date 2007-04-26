@@ -50,8 +50,8 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Takes a job and runs it and manages the associated threads.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class JobThreadManager extends Thread {
@@ -346,40 +346,25 @@ public class JobThreadManager extends Thread {
 					// Check actions. If none failed and none running,
 					// and at least one queued or stopped, then select it.
 					boolean hasUsableActions = false;
-					boolean hasUnusableActions = false;
-					Map actions;
-					try {
-						actions = JobHandler.getActions(this.plan.getJobId(),
-								section.getIdentifier());
-					} catch (final JobException e) {
-						// Complain.
-						Log.error(e);
-						return null;
-					}
-					for (final Iterator j = actions.values().iterator(); j
-							.hasNext()
-							&& !hasUnusableActions;) {
-						final JobStatus status = ((JobPlanAction) j.next())
-								.getStatus();
-						if (status.equals(JobStatus.QUEUED)
-								|| status.equals(JobStatus.STOPPED))
-							hasUsableActions = true;
-						else if (status.equals(JobStatus.RUNNING)
-								|| status.equals(JobStatus.FAILED))
-							hasUnusableActions = true;
-					}
-					// Check that no sibling sections have actions that are
-					// running.
 					boolean hasUnusableSiblings = false;
-					final JobPlanSection parent = (JobPlanSection) section
-							.getParent();
-					if (parent != null)
-						hasUnusableSiblings = parent.getStatus().equals(
-								JobStatus.RUNNING)
-								|| parent.getStatus().equals(JobStatus.FAILED);
+					// Only do check if has actions at all and is not
+					// running or failed.
+					if (section.getActionCount() > 0
+							&& (section.getStatus().equals(JobStatus.STOPPED) || section
+									.getStatus().equals(JobStatus.QUEUED))) {
+						hasUsableActions = true;
+						// Check that no sibling sections have actions that are
+						// running or failed.
+						final JobPlanSection parent = (JobPlanSection) section
+								.getParent();
+						if (parent != null)
+							hasUnusableSiblings = parent.getStatus().equals(
+									JobStatus.RUNNING)
+									|| parent.getStatus().equals(
+											JobStatus.FAILED);
+					}
 					// If all three checks satisfied, we can use this section.
-					if (hasUsableActions && !hasUnusableActions
-							&& !hasUnusableSiblings)
+					if (hasUsableActions && !hasUnusableSiblings)
 						return section;
 					// Otherwise, add subsections to list and keep looking.
 					else

@@ -61,15 +61,24 @@ public class SendMail {
 	public static void sendSMTPMail(final String recipients[],
 			final String subject, final String message)
 			throws MessagingException {
+		
+		final String hostname = Settings.getProperty("smtp.hostname");
+		final String username = Settings.getProperty("smtp.username");
+		final String password = Settings.getProperty("smtp.password");
+		final String from = Settings.getProperty("mail.from");
+		
+		if (hostname==null||from==null) {
+			Log.debug("No hostname/from address supplied. Not sending mail.");
+			return;
+		}
+		
 		final Properties props = new Properties();
 		props.setProperty("mail.transport.protocol", "smtp");
-		props.setProperty("mail.host", Settings.getProperty("smtp.hostname"));
-		if (Settings.getProperty("smtp.username") != null)
-			props.setProperty("mail.user", Settings
-					.getProperty("smtp.username"));
-		if (Settings.getProperty("smtp.password") != null)
-			props.setProperty("mail.password", Settings
-					.getProperty("smtp.password"));
+		props.setProperty("mail.host", hostname);
+		if (username != null)
+			props.setProperty("mail.user", username);
+		if (password != null)
+			props.setProperty("mail.password", password);
 		if (Log.isDebug())
 			props.setProperty("mail.debug", "true");
 
@@ -81,7 +90,7 @@ public class SendMail {
 		final Transport transport = mailSession.getTransport();
 
 		final MimeMessage msg = new MimeMessage(mailSession);
-		msg.setFrom(new InternetAddress(Settings.getProperty("mail.from")));
+		msg.setFrom(new InternetAddress(from));
 		msg.setSubject(subject);
 		msg.setContent(message, "text/plain");
 		for (int i = 0; i < recipients.length; i++)

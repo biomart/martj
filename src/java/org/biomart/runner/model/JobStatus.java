@@ -44,13 +44,13 @@ public class JobStatus implements Serializable, Comparable {
 	 * Unknown things.
 	 */
 	public static final JobStatus UNKNOWN = JobStatus
-			.getJobStatus("UNKNOWN", -1);
+			.getJobStatus("UNKNOWN", 0);
 
 	/**
 	 * Incomplete things.
 	 */
 	public static final JobStatus INCOMPLETE = JobStatus.getJobStatus(
-			"INCOMPLETE", 999);
+			"INCOMPLETE", 1);
 
 	/**
 	 * Running things.
@@ -100,6 +100,15 @@ public class JobStatus implements Serializable, Comparable {
 	public int compareTo(final Object other) {
 		final JobStatus otherStatus = (JobStatus) other;
 		return this.rank - otherStatus.rank;
+	}
+	
+	/**
+	 * Is this status more important than the one specified?
+	 * @param other the one to check against.
+	 * @return <tt>true</tt> if this status beats the one passed in.
+	 */
+	public boolean isMoreImportantThan(final JobStatus other) {
+		return this.compareTo(other)<=0;
 	}
 
 	public String toString() {

@@ -254,7 +254,7 @@ public class JobHandler {
 				actionId = parts[1];
 			}
 			if (!sectionId.equals(previousSectionId)) {
-				if (previousSectionId != null && sectionHasUpdatedActions)
+				if (previousSectionId != null && sectionHasUpdatedActions) 
 					JobHandler.setActions(jobId, previousSectionId, actions,
 							false);
 				sectionHasUpdatedActions = false;
@@ -266,32 +266,30 @@ public class JobHandler {
 				final JobPlanAction action = (JobPlanAction) actions
 						.get(identifier);
 				// Set the status.
-				action.setStatus(status);
-				action.setMessages(message);
+				action.setStatus(status, actions.values());
+				action.setMessage(message);
 				// Update timings.
 				if (status.equals(JobStatus.RUNNING)) {
-					action.setStarted(new Date());
-					action.setEnded(null);
+					action.setStarted(new Date(), actions.values());
+					action.setEnded(null, actions.values());
 				} else if (status.equals(JobStatus.FAILED)
 						|| status.equals(JobStatus.COMPLETED))
-					action.setEnded(new Date());
+					action.setEnded(new Date(), actions.values());
 				else {
-					action.setStarted(null);
-					action.setEnded(null);
+					action.setStarted(null, actions.values());
+					action.setEnded(null, actions.values());
 				}
 			} else {
 				// Find all subsections and recurse on them.
 				final Collection newIdentifiers = new ArrayList();
 				final JobPlanSection section = JobHandler.getJobPlan(jobId)
 						.getJobPlanSection(sectionId);
-				if (section.getActionCount() > 0)
+				if (section.getActionCount() > 0) 
 					// Recurse on direct actions.
-					for (final Iterator j = JobHandler.getActions(jobId,
-							sectionId).keySet().iterator(); j.hasNext();)
-						newIdentifiers.add(j.next());
+					newIdentifiers.addAll(actions.keySet());
 				// Recurse on subsections too.
 				for (final Iterator j = section.getSubSections().iterator(); j
-						.hasNext();)
+						.hasNext();) 
 					newIdentifiers.add(((JobPlanSection) j.next())
 							.getIdentifier());
 				// Do the recursive call.
@@ -434,6 +432,7 @@ public class JobHandler {
 	 */
 	public static Map getActions(final String jobId, final String sectionId)
 			throws JobException {
+		Log.debug("Loading actions for job "+jobId+" section "+sectionId);
 		// Load actions from file.
 		synchronized (JobHandler.planDirLock) {
 			// Load existing job plan.
