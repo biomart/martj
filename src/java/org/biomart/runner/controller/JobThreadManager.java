@@ -364,20 +364,39 @@ public class JobThreadManager extends Thread {
 						// running or failed.
 						final JobPlanSection parent = (JobPlanSection) section
 								.getParent();
-						if (parent != null)
-							hasUnusableSiblings = parent.getStatus().equals(
-									JobStatus.RUNNING)
+						final List siblings = new ArrayList();
+						if (parent != null) {
+							if (parent.getStatus().equals(JobStatus.FAILED)
 									|| parent.getStatus().equals(
-											JobStatus.FAILED);
-					}
-					// Double-check siblings
-					for (final Iterator j = this.manager.jobThreadPool
-							.iterator(); !hasUnusableSiblings && j.hasNext();) {
-						final JobThread thread = (JobThread) j.next();
-						final String threadId = thread
-								.getCurrentSectionIdentifier();
-						hasUnusableSiblings = threadId != null
-								&& threadId.equals(section.getIdentifier());
+											JobStatus.RUNNING))
+								hasUnusableSiblings = true;
+							else
+								siblings.addAll(parent.getSubSections());
+						}
+						// If any sibling claimed by another section, or
+						// any sibling failed, then this section is
+						// not usable.
+						for (final Iterator k = siblings.iterator(); !hasUnusableSiblings
+								&& k.hasNext();) {
+							final JobPlanSection sibling = (JobPlanSection) k
+									.next();
+							if (sibling.getStatus().equals(JobStatus.FAILED)
+									|| sibling.getStatus().equals(
+											JobStatus.RUNNING))
+								hasUnusableSiblings = true;
+							else
+								for (final Iterator j = this.manager.jobThreadPool
+										.iterator(); !hasUnusableSiblings
+										&& j.hasNext();) {
+									final JobThread thread = (JobThread) j
+											.next();
+									final String threadId = thread
+											.getCurrentSectionIdentifier();
+									hasUnusableSiblings = threadId != null
+											&& threadId.equals(sibling
+													.getIdentifier());
+								}
+						}
 					}
 					// If all three checks satisfied, we can use this section.
 					if (hasUsableActions && !hasUnusableSiblings)
