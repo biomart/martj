@@ -243,7 +243,8 @@ public class JobThreadManager extends Thread {
 		}
 
 		private String getCurrentSectionIdentifier() {
-			return this.currentSection.getIdentifier();
+			return this.currentSection == null ? null : this.currentSection
+					.getIdentifier();
 		}
 
 		private boolean continueRunning() {
