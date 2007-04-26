@@ -28,12 +28,10 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -68,9 +66,6 @@ public class JobThreadManager extends Thread {
 			.synchronizedList(new ArrayList());
 
 	private boolean jobStopped = false;
-
-	private final Set processedSections = Collections
-			.synchronizedSet(new HashSet());
 
 	/**
 	 * Create a new manager for the given job ID.
@@ -203,6 +198,8 @@ public class JobThreadManager extends Thread {
 
 		private Connection connection;
 
+		private JobPlanSection currentSection = null;
+
 		private JobThread(final JobThreadManager manager, final JobPlan plan) {
 			super();
 			this.manager = manager;
@@ -212,14 +209,13 @@ public class JobThreadManager extends Thread {
 		public void run() {
 			Log.info(Resources.get("jobThreadStarting", "" + this.sequence));
 			// Each thread grabs sections from the queue until none are left.
-			JobPlanSection section = null;
 			while (this.continueRunning()
-					&& (section = this.getNextSection()) != null) {
+					&& (this.currentSection = this.getNextSection()) != null) {
 				// Process section.
 				Map actions;
 				try {
 					actions = JobHandler.getActions(this.plan.getJobId(),
-							section.getIdentifier());
+							this.currentSection.getIdentifier());
 				} catch (final JobException e) {
 					// Break out early and complain.
 					Log.error(e);
@@ -238,11 +234,16 @@ public class JobThreadManager extends Thread {
 					else
 						this.processAction(action);
 				}
+				this.currentSection = null;
 			}
 			// Quit thread by removing ourselves.
 			this.manager.jobThreadPool.remove(this);
 			Log.info(Resources.get("jobThreadEnding", "" + this.sequence));
 			this.closeConnection();
+		}
+
+		private String getCurrentSectionIdentifier() {
+			return this.currentSection.getIdentifier();
 		}
 
 		private boolean continueRunning() {
@@ -368,15 +369,18 @@ public class JobThreadManager extends Thread {
 									|| parent.getStatus().equals(
 											JobStatus.FAILED);
 					}
-					// If all three checks satisfied, we can use this section.
-					if (hasUsableActions
-							&& !hasUnusableSiblings
-							&& !this.manager.processedSections.contains(section
-									.getIdentifier())) {
-						this.manager.processedSections.add(section
-								.getIdentifier());
-						return section;
+					// Double-check siblings
+					for (final Iterator j = this.manager.jobThreadPool
+							.iterator(); !hasUnusableSiblings && j.hasNext();) {
+						final JobThread thread = (JobThread) j.next();
+						final String threadId = thread
+								.getCurrentSectionIdentifier();
+						hasUnusableSiblings = threadId != null
+								&& threadId.equals(section.getIdentifier());
 					}
+					// If all three checks satisfied, we can use this section.
+					if (hasUsableActions && !hasUnusableSiblings)
+						return section;
 					// Otherwise, add subsections to list and keep looking.
 					else
 						sections.addAll(section.getSubSections());
