@@ -28,10 +28,12 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -50,11 +52,13 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Takes a job and runs it and manages the associated threads.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class JobThreadManager extends Thread {
+
+	private static final String SYNC_KEY = "__SYNC__KEY__";
 
 	private final String jobId;
 
@@ -64,6 +68,9 @@ public class JobThreadManager extends Thread {
 			.synchronizedList(new ArrayList());
 
 	private boolean jobStopped = false;
+
+	private final Set processedSections = Collections
+			.synchronizedSet(new HashSet());
 
 	/**
 	 * Create a new manager for the given job ID.
@@ -203,17 +210,11 @@ public class JobThreadManager extends Thread {
 		}
 
 		public void run() {
-			Log
-			.info(Resources.get("jobThreadStarting", ""
-					+ this.sequence));
+			Log.info(Resources.get("jobThreadStarting", "" + this.sequence));
 			// Each thread grabs sections from the queue until none are left.
 			JobPlanSection section = null;
 			while (this.continueRunning()
 					&& (section = this.getNextSection()) != null) {
-				// Skip section if already running.
-				if (!(section.getStatus().equals(JobStatus.QUEUED) || section
-							.getStatus().equals(JobStatus.STOPPED)))
-						continue;
 				// Process section.
 				Map actions;
 				try {
@@ -341,7 +342,7 @@ public class JobThreadManager extends Thread {
 		}
 
 		private synchronized JobPlanSection getNextSection() {
-			synchronized (this.plan) {
+			synchronized (JobThreadManager.SYNC_KEY) {
 				final List sections = new ArrayList();
 				sections.add(this.plan.getRoot());
 				for (int i = 0; i < sections.size(); i++) {
@@ -368,8 +369,14 @@ public class JobThreadManager extends Thread {
 											JobStatus.FAILED);
 					}
 					// If all three checks satisfied, we can use this section.
-					if (hasUsableActions && !hasUnusableSiblings) 
+					if (hasUsableActions
+							&& !hasUnusableSiblings
+							&& !this.manager.processedSections.contains(section
+									.getIdentifier())) {
+						this.manager.processedSections.add(section
+								.getIdentifier());
 						return section;
+					}
 					// Otherwise, add subsections to list and keep looking.
 					else
 						sections.addAll(section.getSubSections());
