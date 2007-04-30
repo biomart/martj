@@ -58,11 +58,6 @@ public class ColumnComponent extends BoxShapedComponent {
 	public static Color INHERITED_COLOUR = Color.RED;
 
 	/**
-	 * Constant referring to uninherited column border colour.
-	 */
-	public static Color NONINHERITED_FG_COLOUR = Color.MAGENTA;
-
-	/**
 	 * Constant referring to normal column border colour.
 	 */
 	public static Color NORMAL_FG_COLOUR = Color.BLACK;
@@ -78,11 +73,6 @@ public class ColumnComponent extends BoxShapedComponent {
 	 * Constant referring to partitioned column background colour.
 	 */
 	public static Color PARTITIONED_COLOUR = Color.CYAN;
-
-	/**
-	 * Constant referring to concat column background colour.
-	 */
-	public static Color CONCAT_COLOUR = Color.YELLOW;
 
 	private GridBagConstraints constraints;
 
@@ -113,6 +103,7 @@ public class ColumnComponent extends BoxShapedComponent {
 
 		// Set the background colour.
 		this.setBackground(ColumnComponent.NORMAL_COLOUR);
+		this.setForeground(ColumnComponent.NORMAL_FG_COLOUR);
 
 		// Calculate the diagram.
 		this.recalculateDiagramComponent();

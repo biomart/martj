@@ -111,11 +111,6 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constant referring to concat-only relation colour.
-	 */
-	public static Color CONCAT_COLOUR = Color.BLUE;
-
-	/**
 	 * Constant referring to handmade relation colour.
 	 */
 	public static Color HANDMADE_COLOUR = Color.GREEN;

@@ -43,7 +43,6 @@ import javax.swing.JScrollPane;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
@@ -298,20 +297,6 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 							diagram = new ExplainTransformationDiagram.AdditionalColumns(
 									ExplainTableDialog.this.martTab, tu,
 									stepNumber, explainContext);
-						} else if (tu instanceof Concat) {
-							// Do an expression column list.
-							label = new JLabel(
-									Resources
-											.get(
-													"stepTableLabel",
-													new String[] {
-															"" + stepNumber,
-															Resources
-																	.get("explainConcatLabel") }));
-							diagram = new ExplainTransformationDiagram.TempReal(
-									ExplainTableDialog.this.martTab,
-									(Concat) tu, columnsSoFar, stepNumber,
-									explainContext);
 						} else if (tu instanceof JoinTable) {
 							// Temp table to schema table join.
 							label = new JLabel(

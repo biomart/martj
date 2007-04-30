@@ -23,11 +23,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -69,8 +67,6 @@ public class SchemaModificationSet {
 	private final Map restrictedTables = new HashMap();
 
 	private final Map restrictedRelations = new HashMap();
-
-	private final Map concatRelations = new HashMap();
 
 	/**
 	 * Create a new empty set of modifications related to the given dataset.
@@ -428,11 +424,6 @@ public class SchemaModificationSet {
 			final Relation relation, final int index,
 			final RestrictedRelationDefinition restriction)
 			throws ValidationException {
-		if (this.isConcatRelation(dsTableName, relation, index)
-				&& this.getConcatRelation(dsTableName, relation, index)
-						.getRecursionType() != RecursionType.NONE)
-			throw new ValidationException(Resources
-					.get("cannotConcatRecurseRestricted"));
 		if (!this.restrictedRelations.containsKey(dsTableName))
 			this.restrictedRelations.put(dsTableName, new HashMap());
 		final Map restrictions = (Map) this.restrictedRelations
@@ -598,246 +589,6 @@ public class SchemaModificationSet {
 	 */
 	public Map getRestrictedRelations() {
 		return this.restrictedRelations;
-	}
-
-	/**
-	 * Get a unique name to use for the next concat column to be created.
-	 * 
-	 * @return the next concat column name.
-	 */
-	public String nextConcatColumn() {
-		final Set used = new HashSet();
-		for (final Iterator j = this.concatRelations.values().iterator(); j
-				.hasNext();)
-			for (final Iterator k = ((Map) j.next()).values().iterator(); k
-					.hasNext();)
-				for (final Iterator i = ((Map) k.next()).values().iterator(); i
-						.hasNext();)
-					used.add(((ConcatRelationDefinition) i.next()).getColKey());
-		int i = 1;
-		while (used.contains(Resources.get("concatColumnPrefix") + i))
-			i++;
-		return Resources.get("concatColumnPrefix") + i;
-	}
-
-	/**
-	 * Mark the relation as concated for the whole dataset.
-	 * 
-	 * @param relation
-	 *            the relation.
-	 * @param index
-	 *            the index of a compounded relation to mark.
-	 * @param restriction
-	 *            the concat definition.
-	 * @throws ValidationException
-	 *             if it could not be marked.
-	 */
-	public void setConcatRelation(final Relation relation, final int index,
-			final ConcatRelationDefinition restriction)
-			throws ValidationException {
-		this.setConcatRelation(SchemaModificationSet.DATASET, relation, index,
-				restriction);
-	}
-
-	/**
-	 * Mark the relation as concated for the given dataset table only.
-	 * 
-	 * @param dsTable
-	 *            the dataset table this affects.
-	 * @param relation
-	 *            the relation.
-	 * @param index
-	 *            the index of a compounded relation to mark.
-	 * @param restriction
-	 *            the concat definition.
-	 * @throws ValidationException
-	 *             if it could not be marked.
-	 */
-	public void setConcatRelation(final DataSetTable dsTable,
-			final Relation relation, final int index,
-			final ConcatRelationDefinition restriction)
-			throws ValidationException {
-		this.setConcatRelation(dsTable.getName(), relation, index, restriction);
-	}
-
-	private void setConcatRelation(final String dsTableName,
-			final Relation relation, final int index,
-			final ConcatRelationDefinition restriction)
-			throws ValidationException {
-		if (!relation.isOneToMany())
-			throw new ValidationException(Resources
-					.get("cannotConcatNonOneMany"));
-		if (this.isRestrictedRelation(dsTableName, relation)
-				&& restriction.getRecursionType() != RecursionType.NONE)
-			throw new ValidationException(Resources
-					.get("cannotConcatRecurseRestricted"));
-		if (this.isCompoundRelation(dsTableName, relation))
-			throw new ValidationException(Resources.get("cannotConcatCompound"));
-		if (!this.concatRelations.containsKey(dsTableName))
-			this.concatRelations.put(dsTableName, new HashMap());
-		final Map restrictions = (Map) this.concatRelations.get(dsTableName);
-		if (!restrictions.containsKey(relation))
-			restrictions.put(relation, new HashMap());
-		((Map) restrictions.get(relation)).put(new Integer(index), restriction);
-	}
-
-	/**
-	 * Unmark the relation as concated for the whole dataset.
-	 * 
-	 * @param relation
-	 *            the relation.
-	 * @param index
-	 *            the index of a compounded relation to unmark.
-	 */
-	public void unsetConcatRelation(final Relation relation, final int index) {
-		this
-				.unsetConcatRelation(SchemaModificationSet.DATASET, relation,
-						index);
-	}
-
-	/**
-	 * Unmark the relation as concated for the given dataset table only.
-	 * 
-	 * @param dsTable
-	 *            the dataset table this affects.
-	 * @param relation
-	 *            the relation.
-	 * @param index
-	 *            the index of a compounded relation to unmark.
-	 * @throws ValidationException
-	 *             if it could not be unmarked.
-	 */
-	public void unsetConcatRelation(final DataSetTable dsTable,
-			final Relation relation, final int index)
-			throws ValidationException {
-		// Complain if asked to unmask globally masked relation.
-		final Map globalRests = (Map) this.concatRelations
-				.get(SchemaModificationSet.DATASET);
-		if (globalRests != null
-				&& globalRests.containsKey(relation)
-				&& ((Map) globalRests.get(relation)).containsKey(new Integer(
-						index)))
-			throw new ValidationException(Resources
-					.get("relationConcatedGlobally"));
-		this.unsetConcatRelation(dsTable.getName(), relation, index);
-	}
-
-	private void unsetConcatRelation(final String dsTableName,
-			final Relation relation, final int index) {
-		if (!this.isConcatRelation(dsTableName, relation, index))
-			return;
-		if (this.concatRelations.containsKey(dsTableName)) {
-			final Map rests = (Map) this.concatRelations.get(dsTableName);
-			((Map) rests.get(relation)).remove(new Integer(index));
-			if (((Map) rests.get(relation)).isEmpty())
-				rests.remove(relation);
-			if (rests.isEmpty())
-				this.concatRelations.remove(dsTableName);
-		}
-	}
-
-	/**
-	 * Is this relation restricted in the given dataset table on any compound
-	 * iteration?
-	 * 
-	 * @param dsTable
-	 *            the dataset table.
-	 * @param relation
-	 *            the relation.
-	 * @return <tt>true</tt> if it is.
-	 */
-	public boolean isConcatRelation(final DataSetTable dsTable,
-			final Relation relation) {
-		return this.isConcatRelation(
-				dsTable == null ? SchemaModificationSet.DATASET : dsTable
-						.getName(), relation);
-	}
-
-	private boolean isConcatRelation(final String dsTableName,
-			final Relation relation) {
-		final Map globalRests = (Map) this.concatRelations
-				.get(SchemaModificationSet.DATASET);
-		final Map rests = (Map) this.concatRelations.get(dsTableName);
-		return rests != null && rests.containsKey(relation)
-				|| globalRests != null && globalRests.containsKey(relation);
-	}
-
-	/**
-	 * Is this relation concated in the given dataset table on the given
-	 * compound iteration?
-	 * 
-	 * @param dsTable
-	 *            the dataset table.
-	 * @param relation
-	 *            the relation.
-	 * @param index
-	 *            the compound index.
-	 * @return <tt>true</tt> if it is.
-	 */
-	public boolean isConcatRelation(final DataSetTable dsTable,
-			final Relation relation, final int index) {
-		return this.isConcatRelation(
-				dsTable == null ? SchemaModificationSet.DATASET : dsTable
-						.getName(), relation, index);
-	}
-
-	private boolean isConcatRelation(final String dsTableName,
-			final Relation relation, final int index) {
-		final Map globalRests = (Map) this.concatRelations
-				.get(SchemaModificationSet.DATASET);
-		final Map rests = (Map) this.concatRelations.get(dsTableName);
-		return rests != null
-				&& rests.containsKey(relation)
-				&& ((Map) rests.get(relation)).containsKey(new Integer(index))
-				|| globalRests != null
-				&& globalRests.containsKey(relation)
-				&& ((Map) globalRests.get(relation)).containsKey(new Integer(
-						index));
-	}
-
-	/**
-	 * Get the concat definition.
-	 * 
-	 * @param dsTable
-	 *            the dataset table to look in.
-	 * @param relation
-	 *            the relation.
-	 * @param index
-	 *            the compound relation index to check for.
-	 * @return the definition.
-	 */
-	public ConcatRelationDefinition getConcatRelation(
-			final DataSetTable dsTable, final Relation relation, final int index) {
-		return this.getConcatRelation(
-				dsTable == null ? SchemaModificationSet.DATASET : dsTable
-						.getName(), relation, index);
-	}
-
-	private ConcatRelationDefinition getConcatRelation(
-			final String dsTableName, final Relation relation, final int index) {
-		if (!this.isConcatRelation(dsTableName, relation, index))
-			return null;
-		final Map globalRests = (Map) this.concatRelations
-				.get(SchemaModificationSet.DATASET);
-		final Map rests = (Map) this.concatRelations.get(dsTableName);
-		return rests != null && rests.containsKey(relation)
-				&& ((Map) rests.get(relation)).containsKey(new Integer(index)) ? (ConcatRelationDefinition) ((Map) rests
-				.get(relation)).get(new Integer(index))
-				: (ConcatRelationDefinition) ((Map) globalRests.get(relation))
-						.get(new Integer(index));
-	}
-
-	/**
-	 * Obtain all the concated relation definitions. The keys of the map are
-	 * dataset table names or the {@link #DATASET} constant. Values are also
-	 * maps, where the keys are relations, and the values are more maps. These
-	 * last maps have keys of compound relation index integers, and values of
-	 * the restriction definitions.
-	 * 
-	 * @return the map.
-	 */
-	public Map getConcatRelations() {
-		return this.concatRelations;
 	}
 
 	/**
@@ -1253,8 +1004,6 @@ public class SchemaModificationSet {
 	private void setCompoundRelation(final String tableName,
 			final Relation relation, final CompoundRelationDefinition def)
 			throws ValidationException {
-		if (this.isConcatRelation(tableName, relation))
-			throw new ValidationException(Resources.get("cannotConcatCompound"));
 		if (!this.compoundRelations.containsKey(tableName))
 			this.compoundRelations.put(tableName, new HashMap());
 		final Map masks = (Map) this.compoundRelations.get(tableName);
@@ -1412,23 +1161,6 @@ public class SchemaModificationSet {
 						.get(entry2.getKey())).putAll((Map) entry2.getValue());
 			}
 			((Map) target.restrictedRelations.get(entry.getKey()))
-					.putAll((Map) entry.getValue());
-		}
-		target.concatRelations.clear();
-		// We have to use an iterator because of nested maps.
-		for (final Iterator i = this.concatRelations.entrySet().iterator(); i
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			target.concatRelations.put(entry.getKey(), new HashMap());
-			for (final Iterator j = ((Map) entry.getValue()).entrySet()
-					.iterator(); j.hasNext();) {
-				final Map.Entry entry2 = (Map.Entry) j.next();
-				((Map) target.concatRelations.get(entry.getKey())).put(entry2
-						.getKey(), new HashMap());
-				((Map) ((Map) target.concatRelations.get(entry.getKey()))
-						.get(entry2.getKey())).putAll((Map) entry2.getValue());
-			}
-			((Map) target.concatRelations.get(entry.getKey()))
 					.putAll((Map) entry.getValue());
 		}
 	}

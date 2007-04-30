@@ -55,8 +55,6 @@ public class DataSetModificationSet {
 
 	private final Collection distinctTables = new HashSet();
 
-	private final Collection noOptimiserTables = new HashSet();
-
 	private final Collection maskedTables = new HashSet();
 
 	private final Map maskedColumns = new HashMap();
@@ -64,8 +62,6 @@ public class DataSetModificationSet {
 	private final Map indexedColumns = new HashMap();
 
 	private final Map partitionedColumns = new HashMap();
-
-	private final Map nonInheritedColumns = new HashMap();
 
 	private final Map expressionColumns = new HashMap();
 
@@ -198,72 +194,6 @@ public class DataSetModificationSet {
 	 */
 	public Map getIndexedColumns() {
 		return this.indexedColumns;
-	}
-
-	/**
-	 * Non-inherit a column.
-	 * 
-	 * @param column
-	 *            the column.
-	 * @throws ValidationException
-	 *             if logically it cannot be done.
-	 */
-	public void setNonInheritedColumn(final DataSetColumn column)
-			throws ValidationException {
-		final String tableKey = column.getTable().getName();
-		if (((DataSetTable) column.getTable()).getType().equals(
-				DataSetTableType.DIMENSION))
-			throw new ValidationException(Resources
-					.get("cannotNonInheritDimensionColumn"));
-		if (!this.isNonInheritedColumn(column)) {
-			if (column.getModifiedName().endsWith(Resources.get("keySuffix")))
-				throw new ValidationException(Resources
-						.get("cannotNonInheritNecessaryColumn"));
-			if (!this.nonInheritedColumns.containsKey(tableKey))
-				this.nonInheritedColumns.put(tableKey, new HashSet());
-			((Collection) this.nonInheritedColumns.get(tableKey)).add(column
-					.getName());
-		}
-	}
-
-	/**
-	 * Un-non-inherit a column.
-	 * 
-	 * @param column
-	 *            the column.
-	 */
-	public void unsetNonInheritedColumn(final DataSetColumn column) {
-		final String tableKey = column.getTable().getName();
-		if (this.nonInheritedColumns.containsKey(tableKey)) {
-			((Collection) this.nonInheritedColumns.get(tableKey)).remove(column
-					.getName());
-			if (((Collection) this.nonInheritedColumns.get(tableKey)).isEmpty())
-				this.nonInheritedColumns.remove(tableKey);
-		}
-	}
-
-	/**
-	 * Is the column non-inherited?
-	 * 
-	 * @param column
-	 *            the column.
-	 * @return <tt>true</tt> if it is.
-	 */
-	public boolean isNonInheritedColumn(final DataSetColumn column) {
-		final String tableKey = column.getTable().getName();
-		return this.nonInheritedColumns.containsKey(tableKey)
-				&& ((Collection) this.nonInheritedColumns.get(tableKey))
-						.contains(column.getName());
-	}
-
-	/**
-	 * Get all non-inherited columns. The keys of the map are table names, and
-	 * the values are non-inherited column names from those tables.
-	 * 
-	 * @return the map.
-	 */
-	public Map getNonInheritedColumns() {
-		return this.nonInheritedColumns;
 	}
 
 	/**
@@ -404,46 +334,6 @@ public class DataSetModificationSet {
 	 */
 	public Collection getDistinctTables() {
 		return this.distinctTables;
-	}
-
-	/**
-	 * Unoptimise the table.
-	 * 
-	 * @param table
-	 *            the table.
-	 */
-	public void setNoOptimiserTable(final DataSetTable table) {
-		this.noOptimiserTables.add(table.getName());
-	}
-
-	/**
-	 * Reoptimise the table.
-	 * 
-	 * @param table
-	 *            the table.
-	 */
-	public void unsetNoOptimiserTable(final DataSetTable table) {
-		this.noOptimiserTables.remove(table.getName());
-	}
-
-	/**
-	 * Is the table unoptimised?
-	 * 
-	 * @param table
-	 *            the table.
-	 * @return <tt>true</tt> if it is.
-	 */
-	public boolean isNoOptimiserTable(final DataSetTable table) {
-		return this.noOptimiserTables.contains(table.getName());
-	}
-
-	/**
-	 * Get a collection of all unoptimised table names.
-	 * 
-	 * @return the collection.
-	 */
-	public Collection getNoOptimiserTables() {
-		return this.noOptimiserTables;
 	}
 
 	/**
@@ -734,12 +624,8 @@ public class DataSetModificationSet {
 		target.maskedTables.addAll(this.maskedTables);
 		target.distinctTables.clear();
 		target.distinctTables.addAll(this.distinctTables);
-		target.noOptimiserTables.clear();
-		target.noOptimiserTables.addAll(this.noOptimiserTables);
 		target.expressionColumns.clear();
 		target.expressionColumns.putAll(this.expressionColumns);
-		target.nonInheritedColumns.clear();
-		target.nonInheritedColumns.putAll(this.nonInheritedColumns);
 		target.partitionedColumns.clear();
 		// We have to use an iterator because of nested maps.
 		for (final Iterator i = this.partitionedColumns.entrySet().iterator(); i
@@ -893,8 +779,6 @@ public class DataSetModificationSet {
 
 		private boolean groupBy;
 
-		private boolean optimiser;
-
 		private String colKey;
 
 		/**
@@ -908,14 +792,11 @@ public class DataSetModificationSet {
 		 * @param groupBy
 		 *            if this expression requires a group-by statement to be
 		 *            used on all columns not included in the expression.
-		 * @param optimiser
-		 *            if this expression should be used as an optimiser column
-		 *            and not as an expression.
 		 * @param colKey
 		 *            the name of the expression column that will be created.
 		 */
 		public ExpressionColumnDefinition(final String expr, final Map aliases,
-				final boolean groupBy, final boolean optimiser,
+				final boolean groupBy, 
 				final String colKey) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
@@ -930,7 +811,6 @@ public class DataSetModificationSet {
 			this.aliases.putAll(aliases);
 			this.expr = expr;
 			this.groupBy = groupBy;
-			this.optimiser = optimiser;
 			this.colKey = colKey;
 		}
 
@@ -961,16 +841,6 @@ public class DataSetModificationSet {
 		 */
 		public String getColKey() {
 			return this.colKey;
-		}
-
-		/**
-		 * Does this expression need to be ignored and used only as an optimiser
-		 * column?
-		 * 
-		 * @return <tt>true</tt> if it does.
-		 */
-		public boolean isOptimiser() {
-			return this.optimiser;
 		}
 
 		/**
@@ -1044,11 +914,6 @@ public class DataSetModificationSet {
 			if (this.ds.getTableByName(tbl) == null)
 				i.remove();
 		}
-		for (final Iterator i = this.noOptimiserTables.iterator(); i.hasNext();) {
-			final String tbl = (String) i.next();
-			if (this.ds.getTableByName(tbl) == null)
-				i.remove();
-		}
 		for (final Iterator i = this.maskedTables.iterator(); i.hasNext();) {
 			final String tbl = (String) i.next();
 			if (this.ds.getTableByName(tbl) == null)
@@ -1089,22 +954,6 @@ public class DataSetModificationSet {
 			}
 		}
 		for (final Iterator i = this.indexedColumns.entrySet().iterator(); i
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			if (this.ds.getTableByName((String) entry.getKey()) == null)
-				i.remove();
-			else {
-				final DataSetTable tbl = (DataSetTable) this.ds
-						.getTableByName((String) entry.getKey());
-				final Collection cols = (Collection) entry.getValue();
-				for (final Iterator j = cols.iterator(); j.hasNext();)
-					if (tbl.getColumnByName((String) j.next()) == null)
-						j.remove();
-				if (cols.isEmpty())
-					i.remove();
-			}
-		}
-		for (final Iterator i = this.nonInheritedColumns.entrySet().iterator(); i
 				.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
 			if (this.ds.getTableByName((String) entry.getKey()) == null)

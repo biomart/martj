@@ -56,10 +56,8 @@ import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinit
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column;
@@ -476,9 +474,6 @@ public class MartBuilderXML extends DefaultHandler {
 			// Begin the schema element.
 			this.openElement("jdbcSchema", xmlWriter);
 
-			if (jdbcSchema.getDriverClassLocation() != null)
-				this.writeAttribute("driverClassLocation", jdbcSchema
-						.getDriverClassLocation().getPath(), xmlWriter);
 			this.writeAttribute("driverClassName", jdbcSchema
 					.getDriverClassName(), xmlWriter);
 			this.writeAttribute("url", jdbcSchema.getJDBCURL(), xmlWriter);
@@ -495,8 +490,10 @@ public class MartBuilderXML extends DefaultHandler {
 					.isKeyGuessing()), xmlWriter);
 
 			// Partitions.
-			this.writeAttribute("partitionRegex", jdbcSchema.getPartitionRegex(), xmlWriter);
-			this.writeAttribute("partitionExpression", jdbcSchema.getPartitionNameExpression(), xmlWriter);
+			this.writeAttribute("partitionRegex", jdbcSchema
+					.getPartitionRegex(), xmlWriter);
+			this.writeAttribute("partitionExpression", jdbcSchema
+					.getPartitionNameExpression(), xmlWriter);
 		}
 		// Other schema types are not recognised.
 		else
@@ -669,8 +666,6 @@ public class MartBuilderXML extends DefaultHandler {
 					.toString(ds.getInvisible()), xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
-			this.writeAttribute("subclassOptimiser", Boolean.toString(ds
-					.isSubclassOptimiser()), xmlWriter);
 
 			// Get schema and dataset mods.
 			final SchemaModificationSet schemaMods = ds
@@ -686,19 +681,6 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("relationId",
 						(String) this.reverseMappedObjects.get(r), xmlWriter);
 				this.closeElement("subclassRelation", xmlWriter);
-			}
-			// Write out non-inherited columns and tables.
-			for (final Iterator x = dsMods.getNonInheritedColumns().entrySet()
-					.iterator(); x.hasNext();) {
-				final Map.Entry entry = (Map.Entry) x.next();
-				for (final Iterator y = ((Collection) entry.getValue())
-						.iterator(); y.hasNext();) {
-					this.openElement("nonInheritedColumn", xmlWriter);
-					this.writeAttribute("tableKey", (String) entry.getKey(),
-							xmlWriter);
-					this.writeAttribute("colKey", (String) y.next(), xmlWriter);
-					this.closeElement("nonInheritedColumn", xmlWriter);
-				}
 			}
 
 			// Write out masked columns.
@@ -796,15 +778,6 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("distinctRows", xmlWriter);
 			}
 
-			// Write out optimiserless tables inside dataset. Can go before or
-			// after.
-			for (final Iterator x = dsMods.getNoOptimiserTables().iterator(); x
-					.hasNext();) {
-				this.openElement("noOptimiserColumns", xmlWriter);
-				this.writeAttribute("tableKey", (String) x.next(), xmlWriter);
-				this.closeElement("noOptimiserColumns", xmlWriter);
-			}
-
 			// Write out masked tables inside dataset. Can go before or
 			// after.
 			for (final Iterator x = dsMods.getMaskedTables().iterator(); x
@@ -891,82 +864,6 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 			}
 
-			// Write out concat relations.
-			for (final Iterator x = schemaMods.getConcatRelations().entrySet()
-					.iterator(); x.hasNext();) {
-				final Map.Entry entry = (Map.Entry) x.next();
-				for (final Iterator y = ((Map) entry.getValue()).entrySet()
-						.iterator(); y.hasNext();) {
-					final Map.Entry entry2 = (Map.Entry) y.next();
-					for (final Iterator z = ((Map) entry2.getValue())
-							.entrySet().iterator(); z.hasNext();) {
-						final Map.Entry entry3 = (Map.Entry) z.next();
-						this.openElement("concatRelation", xmlWriter);
-						this.writeAttribute("tableKey",
-								(String) entry.getKey(), xmlWriter);
-						this.writeAttribute("relationId",
-								(String) this.reverseMappedObjects.get(entry2
-										.getKey()), xmlWriter);
-						this.writeAttribute("index", "" + entry3.getKey(),
-								xmlWriter);
-						final ConcatRelationDefinition restrict = (ConcatRelationDefinition) entry3
-								.getValue();
-						final StringBuffer rels = new StringBuffer();
-						final StringBuffer cols = new StringBuffer();
-						final StringBuffer names = new StringBuffer();
-						for (final Iterator a = restrict.getAliases()
-								.entrySet().iterator(); a.hasNext();) {
-							Map.Entry entry4 = (Map.Entry) a.next();
-							final Object[] crPair = (Object[]) entry4.getKey();
-							if (crPair[0] != null)
-								rels.append((String) this.reverseMappedObjects
-										.get(crPair[0]));
-							cols.append((String) this.reverseMappedObjects
-									.get(crPair[1]));
-							names.append((String) entry4.getValue());
-							if (a.hasNext()) {
-								rels.append(',');
-								cols.append(',');
-								names.append(',');
-							}
-						}
-						this.writeAttribute("colKey", restrict.getColKey(),
-								xmlWriter);
-						this.writeAttribute("aliasRelationIds",
-								rels.toString(), xmlWriter);
-						this.writeAttribute("aliasColumnIds", cols.toString(),
-								xmlWriter);
-						this.writeAttribute("aliasNames", names.toString(),
-								xmlWriter);
-						this.writeAttribute("expression", restrict
-								.getExpression(), xmlWriter);
-						this.writeAttribute("rowSep", restrict.getRowSep(),
-								xmlWriter);
-						this.writeAttribute("recursionType", restrict
-								.getRecursionType().getName(), xmlWriter);
-						if (restrict.getRecursionType() != RecursionType.NONE) {
-							this.writeAttribute("recursionKey",
-									(String) this.reverseMappedObjects
-											.get(restrict.getRecursionKey()),
-									xmlWriter);
-							this.writeAttribute("firstRelation",
-									(String) this.reverseMappedObjects
-											.get(restrict.getFirstRelation()),
-									xmlWriter);
-							if (restrict.getSecondRelation() != null)
-								this.writeAttribute("secondRelation",
-										(String) this.reverseMappedObjects
-												.get(restrict
-														.getSecondRelation()),
-										xmlWriter);
-							this.writeAttribute("concSep", restrict
-									.getConcSep(), xmlWriter);
-						}
-						this.closeElement("concatRelation", xmlWriter);
-					}
-				}
-			}
-
 			// Write out expression columns.
 			for (final Iterator x = dsMods.getExpressionColumns().entrySet()
 					.iterator(); x.hasNext();) {
@@ -1000,8 +897,6 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("expression", expcol.getExpression(),
 							xmlWriter);
 					this.writeAttribute("groupBy", "" + expcol.isGroupBy(),
-							xmlWriter);
-					this.writeAttribute("optimiser", "" + expcol.isOptimiser(),
 							xmlWriter);
 					this.closeElement("expressionColumn", xmlWriter);
 				}
@@ -1266,12 +1161,6 @@ public class MartBuilderXML extends DefaultHandler {
 		else if ("jdbcSchema".equals(eName)) {
 			// Start a new JDBC schema.
 
-			// Does it have a driver class location? (optional)
-			File driverClassLocation = null;
-			if (attributes.containsKey("driverClassLocation"))
-				driverClassLocation = new File((String) attributes
-						.get("driverClassLocation"));
-
 			// Does it have a password? (optional)
 			String password = null;
 			if (attributes.containsKey("password"))
@@ -1288,14 +1177,15 @@ public class MartBuilderXML extends DefaultHandler {
 					(String) attributes.get("keyguessing")).booleanValue();
 
 			// Does it have partitions?
-			final String partitionRegex = (String) attributes.get("partitionRegex");
-			final String partitionExpression = (String) attributes.get("partitionExpression");
-			
+			final String partitionRegex = (String) attributes
+					.get("partitionRegex");
+			final String partitionExpression = (String) attributes
+					.get("partitionExpression");
+
 			// Construct the JDBC schema.
 			try {
-				final Schema schema = new JDBCSchema(driverClassLocation,
-						driverClassName, url, schemaName, username, password,
-						name, keyguessing);
+				final Schema schema = new JDBCSchema(driverClassName, url,
+						schemaName, username, password, name, keyguessing);
 				schema.setPartitionRegex(partitionRegex);
 				schema.setPartitionNameExpression(partitionExpression);
 				schema.storeInHistory();
@@ -1557,28 +1447,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Mask it.
 				if (tableKey != null)
-					w.getDataSetModifications().getDistinctTables().add(tableKey);
-			} catch (final Exception e) {
-				throw new SAXException(e);
-			}
-		}
-
-		// Optimiserless Table (inside dataset).
-		else if ("noOptimiserColumns".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("noOptColsOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the table.
-				final String tableKey = (String) attributes.get("tableKey");
-
-				// Mask it.
-				if (tableKey != null)
-					w.getDataSetModifications().getNoOptimiserTables().add(tableKey);
+					w.getDataSetModifications().getDistinctTables().add(
+							tableKey);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1749,33 +1619,6 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// Non-inherited Column (inside dataset).
-		else if ("nonInheritedColumn".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("nonInheritedColumnOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the relation.
-				final String tableKey = (String) attributes.get("tableKey");
-				final String colKey = (String) attributes.get("colKey");
-
-				// Subclass it.
-				if (tableKey != null && colKey != null) {
-					final Map colMap = w.getDataSetModifications()
-							.getNonInheritedColumns();
-					if (!colMap.containsKey(tableKey))
-						colMap.put(tableKey, new HashSet());
-					((Collection) colMap.get(tableKey)).add(colKey);
-				}
-			} catch (final Exception e) {
-				throw new SAXException(e);
-			}
-		}
-
 		// Partitioned Column (inside dataset).
 		else if ("partitionedColumn".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -1941,95 +1784,6 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// Concat Relation (inside dataset).
-		else if ("concatRelation".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("concatRelationOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the restriction.
-				final Relation rel = (Relation) this.mappedObjects
-						.get(attributes.get("relationId"));
-				final String tableKey = (String) attributes.get("tableKey");
-				final int index = Integer.parseInt((String) attributes
-						.get("index"));
-
-				// Get the aliases to use for the first table.
-				final Map aliases = new HashMap();
-				String[] aliasRelationIds = this.readListAttribute(
-						(String) attributes.get("aliasRelationIds"), true);
-				final String[] aliasColumnIds = this.readListAttribute(
-						(String) attributes.get("aliasColumnIds"), false);
-				// Remove
-				final String[] aliasNames = this.readListAttribute(
-						(String) attributes.get("aliasNames"), false);
-				for (int i = 0; i < aliasColumnIds.length; i++) {
-					final Relation wrel = aliasRelationIds[i] != null ? (Relation) this.mappedObjects
-							.get(aliasRelationIds[i])
-							: null;
-					final Column wcol = (Column) this.mappedObjects
-							.get(aliasColumnIds[i]);
-					if (wcol != null)
-						aliases.put(new Object[] { wrel, wcol }, aliasNames[i]);
-				}
-				// Get the expression to use.
-				final String expr = (String) attributes.get("expression");
-				final String rowSep = (String) attributes.get("rowSep");
-				final String colKey = (String) attributes.get("colKey");
-
-				// Recursion stuff.
-				RecursionType rType = attributes.containsKey("recursionType") ? RecursionType
-						.get((String) attributes.get("recursionType"))
-						: RecursionType.NONE;
-				Key rKey = null;
-				Relation fRel = null;
-				Relation sRel = null;
-				String concSep = null;
-				if (rType != RecursionType.NONE) {
-					rKey = (Key) this.mappedObjects.get((String) attributes
-							.get("relationKey"));
-					fRel = (Relation) this.mappedObjects
-							.get((String) attributes.get("firstRelation"));
-					if (attributes.containsKey("secondRelation"))
-						sRel = (Relation) this.mappedObjects
-								.get((String) attributes.get("secondRelation"));
-					if (rKey == null
-							|| fRel == null
-							|| !fRel.getFirstKey().getTable().equals(
-									fRel.getSecondKey().getTable())
-							&& sRel == null)
-						rType = RecursionType.NONE;
-					concSep = (String) attributes.get("concSep");
-				}
-
-				// Flag it as restricted
-				if (expr != null && rel != null && tableKey != null
-						&& !aliases.isEmpty() && rowSep != null
-						&& colKey != null) {
-					final ConcatRelationDefinition restrict = new ConcatRelationDefinition(
-							expr, aliases, rowSep, colKey, rType, rKey, fRel,
-							sRel, concSep);
-					final Map restMap = w.getSchemaModifications()
-							.getConcatRelations();
-					if (!restMap.containsKey(tableKey))
-						restMap.put(tableKey, new HashMap());
-					if (!((Map) restMap.get(tableKey)).containsKey(rel))
-						((Map) restMap.get(tableKey)).put(rel, new HashMap());
-					((Map) ((Map) restMap.get(tableKey)).get(rel)).put(
-							new Integer(index), restrict);
-				}
-			} catch (final Exception e) {
-				if (e instanceof SAXException)
-					throw (SAXException) e;
-				else
-					throw new SAXException(e);
-			}
-		}
-
 		// Restricted Table (inside dataset).
 		else if ("restrictedTable".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -2115,14 +1869,12 @@ public class MartBuilderXML extends DefaultHandler {
 				final String expr = (String) attributes.get("expression");
 				final boolean groupBy = Boolean.valueOf(
 						(String) attributes.get("groupBy")).booleanValue();
-				final boolean optimiser = Boolean.valueOf(
-						(String) attributes.get("optimiser")).booleanValue();
 
 				// Flag it as restricted
 				if (expr != null && !aliases.isEmpty() && tableKey != null
 						&& colKey != null) {
 					final ExpressionColumnDefinition expcol = new ExpressionColumnDefinition(
-							expr, aliases, groupBy, optimiser, colKey);
+							expr, aliases, groupBy, colKey);
 					final Map expMap = w.getDataSetModifications()
 							.getExpressionColumns();
 					if (!expMap.containsKey(tableKey))
@@ -2220,9 +1972,6 @@ public class MartBuilderXML extends DefaultHandler {
 				final boolean index = Boolean.valueOf(
 						(String) attributes.get("indexOptimiser"))
 						.booleanValue();
-				final boolean subclass = Boolean.valueOf(
-						(String) attributes.get("subclassOptimiser"))
-						.booleanValue();
 
 				// Construct the dataset.
 				final DataSet ds = new DataSet(this.constructedMart,
@@ -2266,7 +2015,6 @@ public class MartBuilderXML extends DefaultHandler {
 				ds.setDataSetOptimiserType(opt);
 				ds.setInvisible(invisible);
 				ds.setIndexOptimiser(index);
-				ds.setSubclassOptimiser(subclass);
 				element = ds;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)

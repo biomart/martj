@@ -22,14 +22,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -96,186 +92,6 @@ public abstract class MartConstructorAction {
 	public abstract String getStatusMessage();
 
 	/**
-	 * Copy optimiser table actions.
-	 */
-	public static class CopyOptimiserVia extends CopyOptimiserDirect {
-		private static final long serialVersionUID = 1L;
-
-		private List fromKeyColumns;
-
-		private String viaTableName;
-
-		/**
-		 * Creates a new CopyOptimiser action.
-		 * 
-		 * @param datasetSchemaName
-		 *            the dataset schema we are working in.
-		 * @param datasetTableName
-		 *            the dataset table we are working on.
-		 */
-		public CopyOptimiserVia(String datasetSchemaName,
-				String datasetTableName) {
-			super(datasetSchemaName, datasetTableName);
-		}
-
-		/**
-		 * @return the fromKeyColumns
-		 */
-		public List getFromKeyColumns() {
-			return this.fromKeyColumns;
-		}
-
-		/**
-		 * @param fromKeyColumns
-		 *            the fromKeyColumns to set
-		 */
-		public void setFromKeyColumns(List fromKeyColumns) {
-			this.fromKeyColumns = fromKeyColumns;
-		}
-
-		/**
-		 * @return the viaTableName
-		 */
-		public String getViaTableName() {
-			return this.viaTableName;
-		}
-
-		/**
-		 * @param viaTableName
-		 *            the viaTableName to set
-		 */
-		public void setViaTableName(String viaTableName) {
-			this.viaTableName = viaTableName;
-		}
-	}
-
-	/**
-	 * Copy optimiser table actions.
-	 */
-	public static class CopyOptimiserDirect extends MartConstructorAction {
-		private static final long serialVersionUID = 1L;
-
-		private String fromOptTableName;
-
-		private String toOptTableName;
-
-		private String fromOptColumnName;
-
-		private String toOptColumnName;
-
-		private List toKeyColumns;
-
-		private boolean countNotBool;
-
-		/**
-		 * Creates a new CopyOptimiser action.
-		 * 
-		 * @param datasetSchemaName
-		 *            the dataset schema we are working in.
-		 * @param datasetTableName
-		 *            the dataset table we are working on.
-		 */
-		public CopyOptimiserDirect(String datasetSchemaName,
-				String datasetTableName) {
-			super(datasetSchemaName, datasetTableName);
-		}
-
-		public String getStatusMessage() {
-			return Resources.get("mcCopyOpt", this.getFromOptColumnName());
-		}
-
-		/**
-		 * @return the fromOptTableName
-		 */
-		public String getFromOptTableName() {
-			return this.fromOptTableName;
-		}
-
-		/**
-		 * @param fromOptTableName
-		 *            the fromOptTableName to set
-		 */
-		public void setFromOptTableName(String fromOptTableName) {
-			this.fromOptTableName = fromOptTableName;
-		}
-
-		/**
-		 * @return the optColumnName
-		 */
-		public String getFromOptColumnName() {
-			return this.fromOptColumnName;
-		}
-
-		/**
-		 * @param optColumnName
-		 *            the optColumnName to set
-		 */
-		public void setFromOptColumnName(String optColumnName) {
-			this.fromOptColumnName = optColumnName;
-		}
-
-		/**
-		 * @return the toOptTableName
-		 */
-		public String getToOptTableName() {
-			return this.toOptTableName;
-		}
-
-		/**
-		 * @param toOptTableName
-		 *            the toOptTableName to set
-		 */
-		public void setToOptTableName(String toOptTableName) {
-			this.toOptTableName = toOptTableName;
-		}
-
-		/**
-		 * @return the toKeyColumns
-		 */
-		public List getToKeyColumns() {
-			return this.toKeyColumns;
-		}
-
-		/**
-		 * @param toKeyColumns
-		 *            the toKeyColumns to set
-		 */
-		public void setToKeyColumns(List toKeyColumns) {
-			this.toKeyColumns = toKeyColumns;
-		}
-
-		/**
-		 * @return the countNotBool
-		 */
-		public boolean isCountNotBool() {
-			return this.countNotBool;
-		}
-
-		/**
-		 * @param countNotBool
-		 *            the countNotBool to set
-		 */
-		public void setCountNotBool(boolean countNotBool) {
-			this.countNotBool = countNotBool;
-		}
-
-		/**
-		 * @return the toOptColumnName
-		 */
-		public String getToOptColumnName() {
-			return this.toOptColumnName;
-		}
-
-		/**
-		 * @param toOptColumnName
-		 *            the toOptColumnName to set
-		 */
-		public void setToOptColumnName(String toOptColumnName) {
-			this.toOptColumnName = toOptColumnName;
-		}
-	}
-
-	/**
 	 * Update optimiser table actions.
 	 */
 	public static class UpdateOptimiser extends MartConstructorAction {
@@ -295,10 +111,6 @@ public abstract class MartConstructorAction {
 
 		private boolean nullNotZero;
 		
-		private ExpressionColumnDefinition expression;
-		
-		private DataSetTable expressionDSTable;
-
 		/**
 		 * Creates a new UpdateOptimiser action.
 		 * 
@@ -420,34 +232,6 @@ public abstract class MartConstructorAction {
 		public void setSourceTableName(String sourceTableName) {
 			this.sourceTableName = sourceTableName;
 		}
-
-		/**
-		 * @return the expression
-		 */
-		public ExpressionColumnDefinition getExpression() {
-			return expression;
-		}
-
-		/**
-		 * @param expression the expression to set
-		 */
-		public void setExpression(ExpressionColumnDefinition expression) {
-			this.expression = expression;
-		}
-
-		/**
-		 * @return the expressionDSTable
-		 */
-		public DataSetTable getExpressionDSTable() {
-			return expressionDSTable;
-		}
-
-		/**
-		 * @param expressionDSTable the expressionDSTable to set
-		 */
-		public void setExpressionDSTable(DataSetTable expressionDSTable) {
-			this.expressionDSTable = expressionDSTable;
-		}
 	}
 
 	/**
@@ -459,6 +243,10 @@ public abstract class MartConstructorAction {
 		private Collection keyColumns;
 
 		private String optTableName;
+		
+		private String copyTable;
+		
+		private List copyKey;
 
 		/**
 		 * Creates a new CreateOptimiser action.
@@ -504,6 +292,34 @@ public abstract class MartConstructorAction {
 		 */
 		public void setOptTableName(String optTableName) {
 			this.optTableName = optTableName;
+		}
+
+		/**
+		 * @return the copyTable
+		 */
+		public String getCopyTable() {
+			return copyTable;
+		}
+
+		/**
+		 * @param copyTable the copyTable to set
+		 */
+		public void setCopyTable(String copyTable) {
+			this.copyTable = copyTable;
+		}
+
+		/**
+		 * @return the copyKey
+		 */
+		public List getCopyKey() {
+			return copyKey;
+		}
+
+		/**
+		 * @param copyKey the copyKey to set
+		 */
+		public void setCopyKey(List copyKey) {
+			this.copyKey = copyKey;
 		}
 	}
 
@@ -947,341 +763,6 @@ public abstract class MartConstructorAction {
 		 */
 		public void setPartitionListDef(ValueList partitionListDef) {
 			this.partitionListDef = partitionListDef;
-		}
-	}
-
-	/**
-	 * ConcatJoin actions.
-	 */
-	public static class ConcatJoin extends MartConstructorAction {
-		private static final long serialVersionUID = 1L;
-
-		private String leftTable;
-
-		private String rightSchema;
-
-		private String rightTable;
-
-		private List leftJoinColumns;
-
-		private List rightJoinColumns;
-
-		private String resultTable;
-
-		private RestrictedTableDefinition restrictedTableDefinition;
-
-		private RestrictedRelationDefinition restrictedRelationDefinition;
-
-		private boolean relationRestrictionLeftIsFirst;
-
-		private String concatColumnName;
-
-		private ConcatRelationDefinition concatColumnDefinition;
-
-		private RecursionType recursionType;
-
-		private List recursionFromColumns;
-
-		private List recursionToColumns;
-
-		private String recursionTable;
-
-		private List recursionSecondFromColumns;
-
-		private List recursionSecondToColumns;
-
-		private TransformationUnit relationRestrictionPreviousUnit;
-
-		/**
-		 * Creates a new LeftJoin action.
-		 * 
-		 * @param datasetSchemaName
-		 *            the dataset schema we are working in.
-		 * @param datasetTableName
-		 *            the dataset table we are working on.
-		 */
-		public ConcatJoin(String datasetSchemaName, String datasetTableName) {
-			super(datasetSchemaName, datasetTableName);
-		}
-
-		public String getStatusMessage() {
-			return Resources.get("mcConcat", this.getConcatColumnName());
-		}
-
-		/**
-		 * @return the leftJoinColumns
-		 */
-		public List getLeftJoinColumns() {
-			return this.leftJoinColumns;
-		}
-
-		/**
-		 * @param leftJoinColumns
-		 *            the leftJoinColumns to set
-		 */
-		public void setLeftJoinColumns(List leftJoinColumns) {
-			this.leftJoinColumns = leftJoinColumns;
-		}
-
-		/**
-		 * @return the leftTable
-		 */
-		public String getLeftTable() {
-			return this.leftTable;
-		}
-
-		/**
-		 * @param leftTable
-		 *            the leftTable to set
-		 */
-		public void setLeftTable(String leftTable) {
-			this.leftTable = leftTable;
-		}
-
-		/**
-		 * @return the resultTable
-		 */
-		public String getResultTable() {
-			return this.resultTable;
-		}
-
-		/**
-		 * @param resultTable
-		 *            the resultTable to set
-		 */
-		public void setResultTable(String resultTable) {
-			this.resultTable = resultTable;
-		}
-
-		/**
-		 * @return the rightJoinColumns
-		 */
-		public List getRightJoinColumns() {
-			return this.rightJoinColumns;
-		}
-
-		/**
-		 * @param rightJoinColumns
-		 *            the rightJoinColumns to set
-		 */
-		public void setRightJoinColumns(List rightJoinColumns) {
-			this.rightJoinColumns = rightJoinColumns;
-		}
-
-		/**
-		 * @return the rightSchema
-		 */
-		public String getRightSchema() {
-			return this.rightSchema;
-		}
-
-		/**
-		 * @param rightSchema
-		 *            the rightSchema to set
-		 */
-		public void setRightSchema(String rightSchema) {
-			this.rightSchema = rightSchema;
-		}
-
-		/**
-		 * @return the rightTable
-		 */
-		public String getRightTable() {
-			return this.rightTable;
-		}
-
-		/**
-		 * @param rightTable
-		 *            the rightTable to set
-		 */
-		public void setRightTable(String rightTable) {
-			this.rightTable = rightTable;
-		}
-
-		/**
-		 * @return the tableRestriction
-		 */
-		public RestrictedTableDefinition getTableRestriction() {
-			return this.restrictedTableDefinition;
-		}
-
-		/**
-		 * @param restrictedTableDefinition
-		 *            the tableRestriction to set
-		 */
-		public void setTableRestriction(
-				RestrictedTableDefinition restrictedTableDefinition) {
-			this.restrictedTableDefinition = restrictedTableDefinition;
-		}
-
-		/**
-		 * @return the relationRestriction
-		 */
-		public RestrictedRelationDefinition getRelationRestriction() {
-			return this.restrictedRelationDefinition;
-		}
-
-		/**
-		 * @param restrictedRelationDefinition
-		 *            the relationRestriction to set
-		 */
-		public void setRelationRestriction(
-				RestrictedRelationDefinition restrictedRelationDefinition) {
-			this.restrictedRelationDefinition = restrictedRelationDefinition;
-		}
-
-		/**
-		 * @return the relationRestrictionLeftIsFirst
-		 */
-		public boolean isRelationRestrictionLeftIsFirst() {
-			return this.relationRestrictionLeftIsFirst;
-		}
-
-		/**
-		 * @param relationRestrictionLeftIsFirst
-		 *            the relationRestrictionLeftIsFirst to set
-		 */
-		public void setRelationRestrictionLeftIsFirst(
-				boolean relationRestrictionLeftIsFirst) {
-			this.relationRestrictionLeftIsFirst = relationRestrictionLeftIsFirst;
-		}
-
-		/**
-		 * @return the concatColumnDefinition
-		 */
-		public ConcatRelationDefinition getConcatColumnDefinition() {
-			return this.concatColumnDefinition;
-		}
-
-		/**
-		 * @param concatColumnDefinition
-		 *            the concatColumnDefinition to set
-		 */
-		public void setConcatColumnDefinition(
-				ConcatRelationDefinition concatColumnDefinition) {
-			this.concatColumnDefinition = concatColumnDefinition;
-		}
-
-		/**
-		 * @return the concatColumnName
-		 */
-		public String getConcatColumnName() {
-			return this.concatColumnName;
-		}
-
-		/**
-		 * @param concatColumnName
-		 *            the concatColumnName to set
-		 */
-		public void setConcatColumnName(String concatColumnName) {
-			this.concatColumnName = concatColumnName;
-		}
-
-		/**
-		 * @return the recursionFromColumns
-		 */
-		public List getRecursionFromColumns() {
-			return this.recursionFromColumns;
-		}
-
-		/**
-		 * @param recursionFromColumns
-		 *            the recursionFromColumns to set
-		 */
-		public void setRecursionFromColumns(List recursionFromColumns) {
-			this.recursionFromColumns = recursionFromColumns;
-		}
-
-		/**
-		 * @return the recursionSecondFromColumns
-		 */
-		public List getRecursionSecondFromColumns() {
-			return this.recursionSecondFromColumns;
-		}
-
-		/**
-		 * @param recursionSecondFromColumns
-		 *            the recursionSecondFromColumns to set
-		 */
-		public void setRecursionSecondFromColumns(
-				List recursionSecondFromColumns) {
-			this.recursionSecondFromColumns = recursionSecondFromColumns;
-		}
-
-		/**
-		 * @return the recursionSecondToColumns
-		 */
-		public List getRecursionSecondToColumns() {
-			return this.recursionSecondToColumns;
-		}
-
-		/**
-		 * @param recursionSecondToColumns
-		 *            the recursionSecondToColumns to set
-		 */
-		public void setRecursionSecondToColumns(List recursionSecondToColumns) {
-			this.recursionSecondToColumns = recursionSecondToColumns;
-		}
-
-		/**
-		 * @return the recursionTable
-		 */
-		public String getRecursionTable() {
-			return this.recursionTable;
-		}
-
-		/**
-		 * @param recursionTable
-		 *            the recursionTable to set
-		 */
-		public void setRecursionTable(String recursionTable) {
-			this.recursionTable = recursionTable;
-		}
-
-		/**
-		 * @return the recursionToColumns
-		 */
-		public List getRecursionToColumns() {
-			return this.recursionToColumns;
-		}
-
-		/**
-		 * @param recursionToColumns
-		 *            the recursionToColumns to set
-		 */
-		public void setRecursionToColumns(List recursionToColumns) {
-			this.recursionToColumns = recursionToColumns;
-		}
-
-		/**
-		 * @return the recursionType
-		 */
-		public RecursionType getRecursionType() {
-			return this.recursionType;
-		}
-
-		/**
-		 * @param recursionType
-		 *            the recursionType to set
-		 */
-		public void setRecursionType(RecursionType recursionType) {
-			this.recursionType = recursionType;
-		}
-
-		/**
-		 * @return the relationRestrictionPreviousUnit
-		 */
-		public TransformationUnit getRelationRestrictionPreviousUnit() {
-			return this.relationRestrictionPreviousUnit;
-		}
-
-		/**
-		 * @param relationRestrictionPreviousUnit
-		 *            the relationRestrictionPreviousUnit to set
-		 */
-		public void setRelationRestrictionPreviousUnit(
-				TransformationUnit relationRestrictionPreviousUnit) {
-			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
 		}
 	}
 

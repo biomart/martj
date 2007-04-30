@@ -125,7 +125,6 @@ JDBC Schema
 Name: <xsl:value-of select="@name"/>
 
 Driver class: <xsl:value-of select="@driverClassName"/>
-Driver location: <xsl:value-of select="@driverClassLocation"/>
 URL: <xsl:value-of select="@url"/>
 Database schema: <xsl:value-of select="@schemaName"/>
 Username: <xsl:value-of select="@username"/>
@@ -182,7 +181,6 @@ Focused on:
    Table: <xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@centralTableId"/></xsl:call-template>
 Optimiser type: <xsl:value-of select="@optimiser"/>
 Optimisers indexed?: <xsl:value-of select="@indexOptimiser"/>
-Subclass optimisers?: <xsl:value-of select="@subclassOptimiser"/>
 Invisible?: <xsl:value-of select="@invisible"/>
 
 Dataset-wide modifications (if-any)
@@ -225,11 +223,6 @@ Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 Distinct rows only for table: <xsl:value-of select="@tableKey"/>
 </xsl:template>
 
-<xsl:template match="noOptimiserColumns">
-
-No optimiser columns for table: <xsl:value-of select="@tableKey"/>
-</xsl:template>
-
 <xsl:template match="renamedTable">
 
 Table renamed from <xsl:value-of select="@tableKey"/> to <xsl:value-of select="@newName"/>
@@ -238,11 +231,6 @@ Table renamed from <xsl:value-of select="@tableKey"/> to <xsl:value-of select="@
 <xsl:template match="renamedColumn">
 
 Renamed column from <xsl:value-of select="@colKey"/> to <xsl:value-of select="@newName"/> on table <xsl:value-of select="@tableKey"/> 
-</xsl:template>
-
-<xsl:template match="nonInheritedColumn">
-
-Non-inherited column <xsl:value-of select="@colKey"/> on table <xsl:value-of select="@tableKey"/>
 </xsl:template>
 
 <xsl:template match="maskedColumn">
@@ -306,7 +294,6 @@ Aliases:
 Expression:
 <xsl:value-of select="@expression"/>
 Requires group-by?: <xsl:value-of select="@groupBy"/>
-Is really an optimiser?: <xsl:value-of select="@optimiser"/>
 </xsl:template>
 
 <xsl:template match="restrictedTable">
@@ -319,27 +306,6 @@ Aliases:
 Expression:
 <xsl:value-of select="@expression"/>
 Hard restriction?: <xsl:value-of select="@hard"/>
-<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
-Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
-</xsl:template>
-
-<xsl:template match="concatRelation">
-
-Concat relation, creating column <xsl:value-of select="@colKey"/>
-Relation: <xsl:apply-templates select="key('ids',@relationId)"/>
-Compound relation index: <xsl:value-of select="@index"/>
-Aliases:
-<xsl:call-template name="threeColumnPrintoutWithTwoIds"><xsl:with-param name="str1" select="@aliasColumnIds"/><xsl:with-param name="str2" select="@aliasRelationIds"/><xsl:with-param name="str3" select="@aliasNames"/></xsl:call-template>
-Expression:
-<xsl:value-of select="@expression"/>
-Row separator: <xsl:value-of select="@rowSep"/>
-Recursion type: <xsl:value-of select="@recursionType"/>
-<xsl:if test="not(@recursionType='NONE')">
-Recursive row separator: <xsl:value-of select="@concSep"/>
-Recursion key: <xsl:apply-templates select="key('ids',@recursionKey)"/>
-First relation: <xsl:apply-templates select="key('ids',@firstRelation)"/>
-Second relation: <xsl:apply-templates select="key('ids',@secondRelation)"/>
-</xsl:if>
 <xsl:if test="not(@tableKey='__DATASET_WIDE__')">
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>

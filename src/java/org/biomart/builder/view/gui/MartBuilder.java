@@ -149,8 +149,6 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem indexOptimiser;
 
-		private JMenuItem subclassOptimiser;
-
 		/**
 		 * Constructor calls super then sets up our menu items.
 		 * 
@@ -375,12 +373,6 @@ public class MartBuilder extends BioMartGUI {
 					"indexOptimiserMnemonic").charAt(0));
 			this.indexOptimiser.addActionListener(this);
 			this.optimiseDatasetSubmenu.add(this.indexOptimiser);
-			this.subclassOptimiser = new JCheckBoxMenuItem(Resources
-					.get("subclassOptimiserTitle"));
-			this.subclassOptimiser.setMnemonic(Resources.get(
-					"subclassOptimiserMnemonic").charAt(0));
-			this.subclassOptimiser.addActionListener(this);
-			this.optimiseDatasetSubmenu.add(this.subclassOptimiser);
 
 			// Construct the mart menu.
 			final JMenu martMenu = new JMenu(Resources.get("martMenuTitle"));
@@ -595,10 +587,6 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.indexOptimiser
 							.setSelected(ds != null && ds.isIndexOptimiser());
-					MartBuilderMenuBar.this.subclassOptimiser
-							.setEnabled(ds != null);
-					MartBuilderMenuBar.this.subclassOptimiser
-							.setSelected(ds != null && ds.isSubclassOptimiser());
 					int index = 0;
 					for (final Iterator i = DataSetOptimiserType.getTypes()
 							.values().iterator(); i.hasNext(); index++) {
@@ -673,7 +661,7 @@ public class MartBuilder extends BioMartGUI {
 			} else if (e.getSource() == this.updateSchema) {
 				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
-						.getSelectedSchema();
+						.getSelectedSchema(); 
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestModifySchema(schema);
 			} else if (e.getSource() == this.renameSchema) {
@@ -753,17 +741,7 @@ public class MartBuilder extends BioMartGUI {
 				else
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestNoIndexOptimiser(ds);
-			} else if (e.getSource() == this.subclassOptimiser) {
-				final DataSet ds = this.getMartBuilder().martTabSet
-						.getSelectedMartTab().getDataSetTabSet()
-						.getSelectedDataSet();
-				if (this.subclassOptimiser.isSelected())
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestSubclassOptimiser(ds);
-				else
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestNoSubclassOptimiser(ds);
-			}
+			} 
 			// Others
 			else
 				super.actionPerformed(e);

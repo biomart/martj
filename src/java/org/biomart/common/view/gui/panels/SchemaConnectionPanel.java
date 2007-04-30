@@ -34,7 +34,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
@@ -175,10 +174,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 		private JTextField driverClass;
 
-		private JTextField driverClassLocation;
-
-		private JButton driverClassLocationButton;
-
 		private JTextField host;
 
 		private JFileChooser jarFileChooser;
@@ -234,9 +229,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 			// Create all the useful fields in the dialog box.
-			this.driverClassLocation = new JTextField(30);
-			this.driverClassLocationButton = new JButton(Resources
-					.get("browseButton"));
 			this.jdbcURL = new JTextField(40);
 			this.host = new JTextField(20);
 			this.port = new JFormattedTextField(new DecimalFormat("0"));
@@ -313,14 +305,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			field.add(this.driverClass);
 			this.add(field, fieldConstraints);
 
-			// Add the driver location label, field and file chooser button.
-			label = new JLabel(Resources.get("driverClassLocationLabel"));
-			this.add(label, labelConstraints);
-			field = new JPanel();
-			field.add(this.driverClassLocation);
-			field.add(this.driverClassLocationButton);
-			this.add(field, fieldConstraints);
-
 			// Add the host label, and the host field, port label, port field.
 			label = new JLabel(Resources.get("hostLabel"));
 			this.add(label, labelConstraints);
@@ -359,32 +343,11 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			field.add(label);
 			field.add(this.password);
 			this.add(field, fieldLastRowConstraints);
-
-			// Attach the file chooser to the driver class location button.
-			final JPanel panel = this;
-			this.driverClassLocationButton
-					.addActionListener(new ActionListener() {
-						public void actionPerformed(final ActionEvent e) {
-							if (JDBCSchemaConnectionPanel.this.jarFileChooser
-									.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
-								final File file = JDBCSchemaConnectionPanel.this.jarFileChooser
-										.getSelectedFile();
-								// When a file is chosen, put its name in the
-								// driver
-								// class location field.
-								if (file != null)
-									JDBCSchemaConnectionPanel.this.driverClassLocation
-											.setText(file.toString());
-							}
-						}
-					});
 		}
 
 		public void copySettingsFromProperties(final Properties template) {
 			// Copy the driver class.
 			this.driverClass.setText(template.getProperty("driverClass"));
-			this.driverClassLocation.setText(template
-					.getProperty("driverClassLocation"));
 
 			// Make sure the right fields get enabled.
 			this.driverClassChanged();
@@ -486,20 +449,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					this.port.setEnabled(false);
 					this.database.setEnabled(false);
 				}
-
-				// Attempt to load the driver class that the user specified.
-				boolean classNotFound = true;
-				try {
-					Class.forName(className);
-					classNotFound = false;
-				} catch (final Throwable t) {
-					classNotFound = true;
-				}
-
-				// If not found, then the user needs to specify a location
-				// for the class too.
-				this.driverClassLocation.setEnabled(classNotFound);
-				this.driverClassLocationButton.setEnabled(classNotFound);
 			}
 
 			// If it's empty, disable the fields that depend on it.
@@ -564,8 +513,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			try {
 				// Record the user's specifications.
 				final String driverClassName = this.driverClass.getText();
-				final String driverClassLocation = this.driverClassLocation
-						.getText();
 				final String url = this.jdbcURL.getText();
 				final String schemaName = this.schemaName.getText();
 				final String username = this.username.getText();
@@ -573,8 +520,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 				// Construct a JDBCSchema based on them.
 				final JDBCSchema schema = CommonUtils.createJDBCSchema(
-						driverClassLocation == null ? null : new File(
-								driverClassLocation), driverClassName, url,
+						driverClassName, url,
 						schemaName, username, password, name, false);
 
 				// Return that schema.
@@ -611,11 +557,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					// the existing schema object.
 					final JDBCSchema jschema = (JDBCSchema) schema;
 					jschema.setDriverClassName(this.driverClass.getText());
-					final String driverClassLocation = this.driverClassLocation
-							.getText();
-					jschema
-							.setDriverClassLocation(driverClassLocation == null ? null
-									: new File(driverClassLocation));
 					jschema.setJDBCURL(this.jdbcURL.getText());
 					jschema.setDatabaseSchema(this.schemaName.getText());
 					jschema.setUsername(this.username.getText());
@@ -645,9 +586,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 				// Copy the driver class.
 				this.driverClass.setText(jdbcSchema.getDriverClassName());
-				this.driverClassLocation.setText(jdbcSchema
-						.getDriverClassLocation() == null ? null : jdbcSchema
-						.getDriverClassLocation().toString());
 
 				// Make sure the right fields get enabled.
 				this.driverClassChanged();
@@ -686,7 +624,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			// Otherwise, set some sensible defaults.
 			else {
 				this.driverClass.setText(null);
-				this.driverClassLocation.setText(null);
 
 				// Make sure the right fields get enabled.
 				this.driverClassChanged();
@@ -716,13 +653,6 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			if (this.isEmpty(this.driverClass.getText()))
 				messages.add(Resources.get("fieldIsEmpty", Resources
 						.get("driverClass")));
-
-			// If we do have a class, and we don't know where it lives, make
-			// sure the user has told us where it lives.
-			else if (this.driverClassLocation.isEnabled()
-					&& this.isEmpty(this.driverClassLocation.getText()))
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("driverClassLocation")));
 
 			// If the user had to specify their own JDBC URL, make sure
 			// they have done so.

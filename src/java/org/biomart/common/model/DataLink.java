@@ -18,7 +18,6 @@
 
 package org.biomart.common.model;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -88,17 +87,6 @@ public interface DataLink {
 		public String getDatabaseSchema();
 
 		/**
-		 * Gets the location of the driver class, if specified. May return
-		 * <tt>null</tt> but only if the class should be looked for using the
-		 * default class loader. This location is a fully-qualified pathname
-		 * including the name of the JAR file that the driver lives in.
-		 * 
-		 * @return the location of the driver class, or <tt>null</tt> if it is
-		 *         expected to be found by the default class loader.
-		 */
-		public File getDriverClassLocation();
-
-		/**
 		 * Getter for the name of the driver class, eg.
 		 * <tt>com.mysql.jdbc.Driver</tt>
 		 * 
@@ -135,18 +123,6 @@ public interface DataLink {
 		 *            the database schema name.
 		 */
 		public void setDatabaseSchema(String schemaName);
-
-		/**
-		 * Sets the location of the driver class. If the class is not found at
-		 * that location, or the location is <tt>null</tt>, the default
-		 * system class loader is used instead. The location should be a fully
-		 * qualified pathname including the name of the JAR file the driver
-		 * class lives in.
-		 * 
-		 * @param driverClassLocation
-		 *            the location of the driver class.
-		 */
-		public void setDriverClassLocation(File driverClassLocation);
 
 		/**
 		 * Sets the name of the driver class, eg. <tt>com.mysql.jdbc.Driver</tt>

@@ -195,9 +195,6 @@ public class DataSetContext extends SchemaContext {
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
 				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
-			// Magenta CONCAT columns.
-			else if (column instanceof ConcatColumn)
-				component.setBackground(ColumnComponent.CONCAT_COLOUR);
 			// All others are normal.
 			else
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
@@ -208,13 +205,6 @@ public class DataSetContext extends SchemaContext {
 				((BoxShapedComponent) component).setIndexed(true);
 			else
 				((BoxShapedComponent) component).setIndexed(false);
-
-			// Change foreground of non-inherited columns.
-			if (((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isNonInheritedColumn(column))
-				component.setForeground(ColumnComponent.NONINHERITED_FG_COLOUR);
-			else
-				component.setForeground(ColumnComponent.NORMAL_FG_COLOUR);
 
 			((ColumnComponent) component).setRenameable(true);
 			((ColumnComponent) component).setSelectable(true);
@@ -402,57 +392,6 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(unindex);
-
-			// If all are non-dimensions...
-			boolean allNonDimensions = true;
-			for (final Iterator i = selectedItems.iterator(); i.hasNext();)
-				allNonDimensions &= !((DataSetTable) ((DataSetColumn) i.next())
-						.getTable()).getType().equals(
-						DataSetTableType.DIMENSION);
-			if (allNonDimensions) {
-
-				contextMenu.addSeparator();
-
-				// Non-inherit all columns on this table.
-				final JMenuItem non = new JMenuItem(Resources
-						.get("nonInheritGroupTitle"));
-				non.setMnemonic(Resources.get("nonInheritGroupMnemonic")
-						.charAt(0));
-				non.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						for (final Iterator i = selectedItems.iterator(); i
-								.hasNext();) {
-							final DataSetColumn column = (DataSetColumn) i
-									.next();
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestNonInheritColumn(
-											DataSetContext.this.getDataSet(),
-											column);
-						}
-					}
-				});
-				contextMenu.add(non);
-				
-				// Re-inherit all columns on this table.
-				final JMenuItem unnon = new JMenuItem(Resources
-						.get("unNonInheritGroupTitle"));
-				unnon.setMnemonic(Resources.get("unNonInheritGroupMnemonic")
-						.charAt(0));
-				unnon.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						for (final Iterator i = selectedItems.iterator(); i
-								.hasNext();) {
-							final DataSetColumn column = (DataSetColumn) i
-									.next();
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestUnNonInheritColumn(
-											DataSetContext.this.getDataSet(),
-											column);
-						}
-					}
-				});
-				contextMenu.add(unnon);
-			}
 		}
 	}
 
@@ -560,33 +499,6 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.add(distinct);
 			if (dataset.getDataSetModifications().isDistinctTable(table))
 				distinct.setSelected(true);
-			
-			// Special stuff for non-main tables.
-			if (!table.getType().equals(DataSetTableType.MAIN)) {
-				
-				// The table can be unoptimised by using this option.
-				final JCheckBoxMenuItem unoptimise = new JCheckBoxMenuItem(
-						Resources.get("noOptimiserTableTitle"));
-				unoptimise.setMnemonic(Resources.get("noOptimiserTableMnemonic")
-						.charAt(0));
-				unoptimise.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						if (unoptimise.isSelected())
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestUnoptimiseTable(
-											DataSetContext.this.getDataSet(),
-											table);
-						else
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestReoptimiseTable(
-											DataSetContext.this.getDataSet(),
-											table);
-					}
-				});
-				contextMenu.add(unoptimise);
-				if (dataset.getDataSetModifications().isNoOptimiserTable(table))
-					unoptimise.setSelected(true);
-			}
 
 			final boolean isMasked = this.getDataSet()
 					.getDataSetModifications().isMaskedTable(table);
@@ -755,40 +667,6 @@ public class DataSetContext extends SchemaContext {
 				if (!isPartitioned)
 					unpartition.setEnabled(false);
 			}
-			// Special stuff for all non-dimension tables.
-			else {
-				// Non-inherit all columns on this table.
-				final JMenuItem non = new JMenuItem(Resources
-						.get("nonInheritAllTitle"));
-				non.setMnemonic(Resources.get("nonInheritAllMnemonic")
-						.charAt(0));
-				non.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestNonInheritAllColumns(
-										DataSetContext.this.getDataSet(), table);
-					}
-				});
-				contextMenu.add(non);
-				
-				// Re-inherit all columns on this table.
-				final JMenuItem unnon = new JMenuItem(Resources
-						.get("unNonInheritAllTitle"));
-				unnon.setMnemonic(Resources.get("unNonInheritAllMnemonic")
-						.charAt(0));
-				unnon.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestUnNonInheritAllColumns(
-										DataSetContext.this.getDataSet(), table);
-					}
-				});
-				contextMenu.add(unnon);
-			}
 
 			// Subclass tables have their own options too.
 			if (tableType.equals(DataSetTableType.MAIN_SUBCLASS)) {
@@ -893,34 +771,6 @@ public class DataSetContext extends SchemaContext {
 			if (isPartitioned || column instanceof ConcatColumn
 					|| column instanceof ExpressionColumn)
 				mask.setEnabled(false);
-
-			// Non-inherit inherited columns.
-			final boolean isNonInherited = ((DataSet) column.getTable()
-					.getSchema()).getDataSetModifications()
-					.isNonInheritedColumn(column);
-			final JCheckBoxMenuItem inherited = new JCheckBoxMenuItem(Resources
-					.get("nonInheritColumnTitle"));
-			inherited.setMnemonic(Resources.get("nonInheritColumnMnemonic")
-					.charAt(0));
-			inherited.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					if (inherited.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestNonInheritColumn(
-										DataSetContext.this.getDataSet(),
-										column);
-					else
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestUnNonInheritColumn(
-										DataSetContext.this.getDataSet(),
-										column);
-				}
-			});
-			contextMenu.add(inherited);
-			inherited.setSelected(isNonInherited);
-			inherited.setEnabled(!isMasked
-					&& !((DataSetTable) column.getTable()).getType().equals(
-							DataSetTableType.DIMENSION));
 
 			// Index the column.
 			final boolean isIndexed = ((DataSet) column.getTable().getSchema())

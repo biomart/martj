@@ -18,10 +18,6 @@
 
 package org.biomart.common.model;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
@@ -742,8 +738,6 @@ public interface Schema extends Comparable, DataLink {
 
 		private Connection connection;
 
-		private File driverClassLocation;
-
 		private String driverClassName;
 
 		private String password;
@@ -760,13 +754,6 @@ public interface Schema extends Comparable, DataLink {
 		 * remembers it. Nothing is read yet - if you want to read the schema
 		 * data, you must use the {@link #synchronise()} method to do so.
 		 * 
-		 * @param driverClassLocation
-		 *            the location (filesystem path) of the class to load the
-		 *            JDBC driver from. This will usually be a <tt>.jar</tt>
-		 *            file, or a folder containing a Java <tt>.class</tt>
-		 *            file. If the path does not exist, is null, or does not
-		 *            contain the class specified, then the default system class
-		 *            loader is used instead.
 		 * @param driverClassName
 		 *            the class name of the JDBC driver, eg.
 		 *            <tt>com.mysql.jdbc.Driver</tt>.
@@ -788,8 +775,7 @@ public interface Schema extends Comparable, DataLink {
 		 *            <tt>true</tt> if you want keyguessing enabled,
 		 *            <tt>false</tt> otherwise.
 		 */
-		public JDBCSchema(File driverClassLocation,
-				final String driverClassName, final String url,
+		public JDBCSchema(final String driverClassName, final String url,
 				final String schemaName, final String username,
 				final String password, final String name,
 				final boolean keyGuessing) {
@@ -800,12 +786,7 @@ public interface Schema extends Comparable, DataLink {
 
 			Log.debug("Creating JDBC schema");
 
-			// Sensible defaults.
-			if (driverClassLocation != null && !driverClassLocation.exists())
-				driverClassLocation = null;
-
 			// Remember the settings.
-			this.driverClassLocation = driverClassLocation;
 			this.driverClassName = driverClassName;
 			this.url = url;
 			this.username = username;
@@ -869,7 +850,7 @@ public interface Schema extends Comparable, DataLink {
 			} finally {
 				rs.close();
 			}
-			if (partitions.isEmpty()) {			
+			if (partitions.isEmpty()) {
 				Log.debug("Looking up JDBC schemas instead");
 				// Did we get no catalogs? Try schemas instead.
 				rs = conn.getMetaData().getSchemas();
@@ -1536,34 +1517,14 @@ public interface Schema extends Comparable, DataLink {
 				// Start out with no driver at all.
 				Class loadedDriverClass = null;
 
-				// If a path was specified for the driver, and that path exists,
-				// load the driver from that path.
-				if (this.driverClassLocation != null
-						&& this.driverClassLocation.exists())
-					try {
-						final ClassLoader classLoader = URLClassLoader
-								.newInstance(new URL[] { this.driverClassLocation
-										.toURL() });
-						loadedDriverClass = classLoader
-								.loadClass(this.driverClassName);
-					} catch (final ClassNotFoundException e) {
-						final SQLException e2 = new SQLException();
-						e2.initCause(e);
-						throw e2;
-					} catch (final MalformedURLException e) {
-						throw new BioMartError(e);
-					}
-
-				// If we failed to load the driver from the custom path, try the
-				// system class loader instead.
-				if (loadedDriverClass == null)
-					try {
-						loadedDriverClass = Class.forName(this.driverClassName);
-					} catch (final ClassNotFoundException e) {
-						final SQLException e2 = new SQLException();
-						e2.initCause(e);
-						throw e2;
-					}
+				// Try the system class loader instead.
+				try {
+					loadedDriverClass = Class.forName(this.driverClassName);
+				} catch (final ClassNotFoundException e) {
+					final SQLException e2 = new SQLException();
+					e2.initCause(e);
+					throw e2;
+				}
 
 				// Check it really is an instance of Driver.
 				if (!Driver.class.isAssignableFrom(loadedDriverClass))
@@ -1616,10 +1577,6 @@ public interface Schema extends Comparable, DataLink {
 			return this.schemaName;
 		}
 
-		public File getDriverClassLocation() {
-			return this.driverClassLocation;
-		}
-
 		public String getDriverClassName() {
 			return this.driverClassName;
 		}
@@ -1639,9 +1596,9 @@ public interface Schema extends Comparable, DataLink {
 		public Schema replicate(final String newName) {
 			Log.debug("Replicating JDBC schema " + this + " as " + newName);
 			// Make an empty copy.
-			final Schema newSchema = new JDBCSchema(this.driverClassLocation,
-					this.driverClassName, this.url, this.schemaName,
-					this.username, this.password, newName, this.isKeyGuessing());
+			final Schema newSchema = new JDBCSchema(this.driverClassName,
+					this.url, this.schemaName, this.username, this.password,
+					newName, this.isKeyGuessing());
 
 			// Copy the contents over.
 			this.replicateContents(newSchema);
@@ -1653,19 +1610,6 @@ public interface Schema extends Comparable, DataLink {
 		public void setDatabaseSchema(final String schemaName) {
 			if (this.schemaName != null && !this.schemaName.equals(schemaName)) {
 				this.schemaName = schemaName;
-				// Reset the cached database connection.
-				try {
-					this.closeConnection();
-				} catch (SQLException e) {
-					// We don't care.
-				}
-			}
-		}
-
-		public void setDriverClassLocation(final File driverClassLocation) {
-			if (this.driverClassLocation != null
-					&& !this.driverClassLocation.equals(driverClassLocation)) {
-				this.driverClassLocation = driverClassLocation;
 				// Reset the cached database connection.
 				try {
 					this.closeConnection();
@@ -1985,9 +1929,6 @@ public interface Schema extends Comparable, DataLink {
 			// Store the schema settings in the history file.
 			final Properties history = new Properties();
 			history.setProperty("driverClass", this.getDriverClassName());
-			history.setProperty("driverClassLocation", this
-					.getDriverClassLocation() == null ? "" : this
-					.getDriverClassLocation().toString());
 			history.setProperty("jdbcURL", this.getJDBCURL());
 			history.setProperty("username", this.getUsername());
 			history.setProperty("password", this.getPassword() == null ? ""

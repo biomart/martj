@@ -28,7 +28,6 @@
 <!ATTLIST mart outputPort CDATA #IMPLIED>
 
 <!ELEMENT jdbcSchema (table+,relation*)>
-<!ATTLIST jdbcSchema driverClassLocation CDATA #IMPLIED>
 <!ATTLIST jdbcSchema driverClassName CDATA #REQUIRED>
 <!ATTLIST jdbcSchema url CDATA #REQUIRED>
 <!ATTLIST jdbcSchema schemaName CDATA #REQUIRED>
@@ -65,16 +64,15 @@
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
 <!ELEMENT dataset (
-compoundRelation*,subclassRelation*,nonInheritedColumn*,maskedColumn*,
+compoundRelation*,subclassRelation*,maskedColumn*,
 indexedColumn*,partitionedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,forcedRelation*,restrictedTable*,restrictedRelation*,
-expressionColumn*,concatRelation*,directionalRelation*,renamedTable*,
-renamedColumn*,distinctRows*,noOptimiserColumns*)>
+expressionColumn*,directionalRelation*,renamedTable*,
+renamedColumn*,distinctRows*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL|COLUMN_BOOL_NULL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
 <!ATTLIST dataset indexOptimiser (true|false) #REQUIRED>
-<!ATTLIST dataset subclassOptimiser (true|false) #REQUIRED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
 
 <!ELEMENT subclassRelation EMPTY>
@@ -99,10 +97,6 @@ renamedColumn*,distinctRows*,noOptimiserColumns*)>
 <!ATTLIST renamedColumn tableKey CDATA #REQUIRED>
 <!ATTLIST renamedColumn colKey CDATA #REQUIRED>
 <!ATTLIST renamedColumn newName CDATA #REQUIRED>
-
-<!ELEMENT nonInheritedColumn EMPTY>
-<!ATTLIST nonInheritedColumn tableKey CDATA #REQUIRED>
-<!ATTLIST nonInheritedColumn colKey CDATA #REQUIRED>
 
 <!ELEMENT maskedColumn EMPTY>
 <!ATTLIST maskedColumn tableKey CDATA #REQUIRED>
@@ -138,9 +132,6 @@ renamedColumn*,distinctRows*,noOptimiserColumns*)>
 <!ELEMENT distinctRows EMPTY>
 <!ATTLIST distinctRows tableKey CDATA #REQUIRED>
 
-<!ELEMENT noOptimiserColumns EMPTY>
-<!ATTLIST noOptimiserColumns tableKey CDATA #REQUIRED>
-
 <!ELEMENT restrictedTable EMPTY>
 <!ATTLIST restrictedTable tableKey CDATA #REQUIRED>
 <!ATTLIST restrictedTable tableId IDREF #REQUIRED>
@@ -168,20 +159,3 @@ renamedColumn*,distinctRows*,noOptimiserColumns*)>
 <!ATTLIST expressionColumn aliasNames CDATA #REQUIRED>
 <!ATTLIST expressionColumn expression CDATA #REQUIRED>
 <!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>
-<!ATTLIST expressionColumn optimiser  (true|false) #REQUIRED>
-
-<!ELEMENT concatRelation EMPTY>
-<!ATTLIST concatRelation tableKey CDATA #REQUIRED>
-<!ATTLIST concatRelation colKey CDATA #REQUIRED>
-<!ATTLIST concatRelation relationId IDREF #REQUIRED>
-<!ATTLIST concatRelation index CDATA #REQUIRED>
-<!ATTLIST concatRelation aliasRelationIds IDREFS #REQUIRED>
-<!ATTLIST concatRelation aliasColumnIds IDREFS #REQUIRED>
-<!ATTLIST concatRelation aliasNames CDATA #REQUIRED>
-<!ATTLIST concatRelation expression CDATA #REQUIRED>
-<!ATTLIST concatRelation rowSep CDATA #REQUIRED>
-<!ATTLIST concatRelation recursionType (NONE|PREPEND|APPEND) #REQUIRED>
-<!ATTLIST concatRelation recursionKey IDREF #IMPLIED>
-<!ATTLIST concatRelation firstRelation IDREF #IMPLIED>
-<!ATTLIST concatRelation secondRelation IDREF #IMPLIED>
-<!ATTLIST concatRelation concSep CDATA #IMPLIED>

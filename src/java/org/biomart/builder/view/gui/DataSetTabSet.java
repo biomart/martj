@@ -44,8 +44,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
 import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
@@ -55,7 +53,6 @@ import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.CompoundRelationDialog;
-import org.biomart.builder.view.gui.dialogs.ConcatRelationDialog;
 import org.biomart.builder.view.gui.dialogs.DirectionalRelationDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
@@ -485,86 +482,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks that a relation be concated.
-	 * 
-	 * @param dataset
-	 *            the dataset we are working with.
-	 * @param dsTable
-	 *            the table we are working with.
-	 * @param relation
-	 *            the schema relation to concat.
-	 * @param iteration
-	 *            the iteration to apply this to, or
-	 *            {@link RealisedRelation#NO_ITERATION} to prompt the user.
-	 */
-	public void requestConcatRelation(final DataSet dataset,
-			final DataSetTable dsTable, final Relation relation,
-			final int iteration) {
-		// Get index offset into compound relation.
-		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
-				: dataset.getSchemaModifications().isCompoundRelation(dsTable,
-						relation) ? this.askUserForCompoundRelationIndex(
-						dataset, dsTable, relation) : 0;
-
-		// Cancelled?
-		if (index == -1)
-			return;
-
-		final ConcatRelationDefinition definition = dataset
-				.getSchemaModifications().getConcatRelation(dsTable, relation,
-						index);
-
-		final ConcatRelationDialog dialog = new ConcatRelationDialog(relation
-				.getManyKey().getTable(), definition);
-		dialog.show();
-
-		final String colKey = definition == null ? dataset
-				.getSchemaModifications().nextConcatColumn() : definition
-				.getColKey();
-
-		// Cancelled?
-		if (dialog.getCancelled())
-			return;
-
-		// Get updated details from the user.
-		final Map aliases = dialog.getColumnAliases();
-		final String expression = dialog.getExpression();
-		final String rowSep = dialog.getRowSep();
-		final RecursionType recursionType = dialog.getRecursionType();
-		final Key recursionKey = dialog.getRecursionKey();
-		final Relation firstRelation = dialog.getFirstRelation();
-		final Relation secondRelation = dialog.getSecondRelation();
-		final String concSep = dialog.getConcSep();
-		// Do this in the background.
-		new LongProcess() {
-			public void run() throws Exception {
-				if (dsTable != null)
-					MartBuilderUtils.concatRelation(dsTable, relation, index,
-							new ConcatRelationDefinition(expression, aliases,
-									rowSep, colKey, recursionType,
-									recursionKey, firstRelation,
-									secondRelation, concSep));
-				else
-					MartBuilderUtils.concatRelation(dataset, relation, index,
-							new ConcatRelationDefinition(expression, aliases,
-									rowSep, colKey, recursionType,
-									recursionKey, firstRelation,
-									secondRelation, concSep));
-
-				// Repaint the dataset diagram based on the modified
-				// dataset.
-				DataSetTabSet.this.recalculateDataSetDiagram(
-						dsTable != null ? (DataSet) dsTable.getSchema()
-								: dataset, relation);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
 	 * On a request to create DDL for the current dataset, open the DDL creation
 	 * window with all this dataset selected.
 	 * 
@@ -627,56 +544,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 				// And the overview.
 				DataSetTabSet.this.repaintOverviewDiagram();
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that all columns be non-inherited.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param table
-	 *            the table to non-inherit all columns on.
-	 */
-	public void requestNonInheritAllColumns(final DataSet ds,
-			final DataSetTable table) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Mask the column.
-				MartBuilderUtils.nonInheritAllColumns(ds, table);
-
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that a column be non-inherited.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param column
-	 *            the column to non-inherit.
-	 */
-	public void requestNonInheritColumn(final DataSet ds,
-			final DataSetColumn column) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Mask the column.
-				MartBuilderUtils.nonInheritColumn(ds, column);
-
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()
@@ -779,48 +646,6 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() throws Exception {
 				// Mask the column.
 				MartBuilderUtils.distinctTable(ds, dst);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that a table be unoptimised.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dst
-	 *            the table to unoptimise.
-	 */
-	public void requestUnoptimiseTable(final DataSet ds, final DataSetTable dst) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Mask the column.
-				MartBuilderUtils.unoptimiseTable(ds, dst);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that a table be reoptimised.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dst
-	 *            the table to reoptimise.
-	 */
-	public void requestReoptimiseTable(final DataSet ds, final DataSetTable dst) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Mask the column.
-				MartBuilderUtils.reoptimiseTable(ds, dst);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()
@@ -1285,53 +1110,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks for a relation concat to be removed.
-	 * 
-	 * @param dataset
-	 *            the dataset we are working with.
-	 * @param dsTable
-	 *            the table to work with.
-	 * @param relation
-	 *            the relation to unconcat.
-	 * @param iteration
-	 *            the iteration to apply this to, or
-	 *            {@link RealisedRelation#NO_ITERATION} to prompt the user.
-	 */
-	public void requestUnconcatRelation(final DataSet dataset,
-			final DataSetTable dsTable, final Relation relation,
-			final int iteration) {
-		// Get index offset into compound relation.
-		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
-				: dataset.getSchemaModifications().isCompoundRelation(dsTable,
-						relation) ? this.askUserForCompoundRelationIndex(
-						dataset, dsTable, relation) : 0;
-
-		// Cancelled?
-		if (index == -1)
-			return;
-
-		// Do this in the background.
-		new LongProcess() {
-			public void run() throws Exception {
-				// Remove the concat.
-				if (dsTable != null)
-					MartBuilderUtils.unconcatRelation(dsTable, relation, index);
-				else
-					MartBuilderUtils.unconcatRelation(dataset, relation, index);
-
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram(
-						dsTable != null ? (DataSet) dsTable.getSchema()
-								: dataset, null);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
 	 * Asks that a relation be masked.
 	 * 
 	 * @param ds
@@ -1444,14 +1222,13 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliases = dialog.getColumnAliases();
 		final String expression = dialog.getExpression();
 		final boolean groupBy = dialog.getGroupBy();
-		final boolean optimiser = dialog.getOptimiser();
 		// Do this in the background.
 		new LongProcess() {
 			public void run() throws Exception {
 				// Update the restriction.
 				MartBuilderUtils.setExpressionColumn(dsTable,
 						column == null ? null : column.getDefinition(),
-						aliases, expression, groupBy, optimiser);
+						aliases, expression, groupBy);
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram((DataSet) dsTable
@@ -2060,56 +1837,6 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Requests that a column be un-non-inherited.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param column
-	 *            the column to un-non-inherit.
-	 */
-	public void requestUnNonInheritColumn(final DataSet ds,
-			final DataSetColumn column) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Unmask the column.
-				MartBuilderUtils.unNonInheritColumn(ds, column);
-
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that all columns be un-non-inherited.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param table
-	 *            the table to un-non-inherit all columns on.
-	 */
-	public void requestUnNonInheritAllColumns(final DataSet ds,
-			final DataSetTable table) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Unmask the column.
-				MartBuilderUtils.unNonInheritAllColumns(ds, table);
-
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
 	 * Asks that a relation be unforced.
 	 * 
 	 * @param ds
@@ -2282,44 +2009,6 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() throws Exception {
 				// Do the visibility.
 				MartBuilderUtils.indexOptimiserDataSet(dataset);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that the dataset be un-subclass optimised.
-	 * 
-	 * @param dataset
-	 *            the dataset to do this to.
-	 */
-	public void requestNoSubclassOptimiser(final DataSet dataset) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Do the visibility.
-				MartBuilderUtils.noSubclassOptimiserDataSet(dataset);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that the dataset be subclass optimised.
-	 * 
-	 * @param dataset
-	 *            the dataset to do this to.
-	 */
-	public void requestSubclassOptimiser(final DataSet dataset) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Do the visibility.
-				MartBuilderUtils.subclassOptimiserDataSet(dataset);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()

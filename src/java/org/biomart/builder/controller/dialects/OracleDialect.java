@@ -17,9 +17,6 @@
  */
 package org.biomart.builder.controller.dialects;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -35,9 +32,6 @@ import java.util.Map;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
-import org.biomart.builder.model.MartConstructorAction.ConcatJoin;
-import org.biomart.builder.model.MartConstructorAction.CopyOptimiserDirect;
-import org.biomart.builder.model.MartConstructorAction.CopyOptimiserVia;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -48,7 +42,6 @@ import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition.RecursionType;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.DataLink;
@@ -57,7 +50,6 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.DataLink.JDBCDataLink;
 import org.biomart.common.model.Schema.JDBCSchema;
-import org.biomart.common.resources.Resources;
 
 /**
  * Understands how to create SQL and DDL for an Oracle database.
@@ -68,477 +60,8 @@ import org.biomart.common.resources.Resources;
  * @since 0.5
  */
 public class OracleDialect extends DatabaseDialect {
-	// Check we only make the aggregate functions once.
-	private boolean GROUP_CONCAT_CREATED;
 
 	private int indexCount;
-
-	/**
-	 * Performs an action.
-	 * 
-	 * @param action
-	 *            the action to perform.
-	 * @param statements
-	 *            the list into which statements will be added.
-	 * @throws Exception
-	 *             if anything goes wrong.
-	 */
-	public void doConcatJoin(final ConcatJoin action, final List statements)
-			throws Exception {
-		final String srcSchemaName = action.getDataSetSchemaName();
-		final String srcTableName = action.getLeftTable();
-		final String trgtSchemaName = action.getRightSchema();
-		final String trgtTableName = action.getRightTable();
-		final String mergeTableName = action.getResultTable();
-		final boolean isRecursive = action.getRecursionType() != RecursionType.NONE;
-		final boolean isDoubleRecursive = action
-				.getRecursionSecondFromColumns() != null;
-		final String recursionTempTable = "MART_RECURSE";
-
-		this.checkColumnName(action.getConcatColumnName());
-
-		// Work out additional tables to include in this.
-		char additionalTable = 'f';
-		final Map allAdditionalRels = new HashMap();
-		final Map trAdditionalRels = new HashMap();
-		if (action.getTableRestriction() != null)
-			for (final Iterator i = action.getTableRestriction()
-					.getAdditionalRelations().iterator(); i.hasNext();) {
-				trAdditionalRels.put((Relation) i.next(), "" + additionalTable);
-				allAdditionalRels.put((Relation) i.next(), ""
-						+ additionalTable++);
-			}
-		for (final Iterator i = action.getConcatColumnDefinition()
-				.getAdditionalRelations().iterator(); i.hasNext();)
-			allAdditionalRels.put((Relation) i.next(), "" + additionalTable++);
-
-		final StringBuffer sb = new StringBuffer();
-
-		// If we haven't defined the group_concat function yet, define it.
-		// Note limitation of total 32767 characters for group_concat result.
-		if (!this.GROUP_CONCAT_CREATED) {
-			final BufferedReader br = new BufferedReader(new InputStreamReader(
-					Resources.getResourceAsStream("ora_group_concat.sql")));
-			try {
-				String line;
-				while ((line = br.readLine()) != null) {
-					sb.append(line);
-					sb.append(System.getProperty("line.separator"));
-				}
-			} catch (final IOException e) {
-				throw new BioMartError(e);
-			}
-			statements.add(sb.toString());
-			sb.setLength(0);
-			this.GROUP_CONCAT_CREATED = true;
-		}
-
-		if (isRecursive) {
-			// Start block.
-			sb.append("DECLARE rows_updated NUMBER; BEGIN ");
-			// Create intial temp table
-			sb.append("create table " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + " as select ");
-			for (final Iterator i = action.getRightJoinColumns().iterator(); i
-					.hasNext();) {
-				final String entry = (String) i.next();
-				sb.append("a.");
-				sb.append(entry);
-				sb.append(",");
-			}
-			sb.append(action.getConcatColumnDefinition()
-					.getSubstitutedExpression(allAdditionalRels, "a"));
-			sb.append(" as ");
-			sb.append(action.getConcatColumnName());
-			sb.append(",1 as finalRow");
-			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
-					.hasNext();) {
-				final String entry = (String) i.next();
-				sb.append(",");
-				sb.append("b.");
-				sb.append(entry);
-			}
-			sb.append(" from " + srcSchemaName + "." + srcTableName
-					+ " x inner join ");
-			sb.append(trgtSchemaName + "." + trgtTableName);
-			sb.append(" a on ");
-			for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
-				if (i > 0)
-					sb.append(" and ");
-				final String pkColName = (String) action.getLeftJoinColumns()
-						.get(i);
-				final String fkColName = (String) action.getRightJoinColumns()
-						.get(i);
-				sb.append("x." + pkColName + "=a." + fkColName);
-			}
-			if (action.getTableRestriction() != null
-					&& trAdditionalRels.isEmpty()) {
-				sb.append(" and (");
-				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression(trAdditionalRels, "a"));
-				sb.append(')');
-			}
-			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) k.next();
-				final Relation rel = (Relation) entry.getKey();
-				final Table tbl = (Table) rel.getOneKey().getTable();
-				sb.append(" inner join ");
-				sb.append(trgtSchemaName);
-				sb.append(".");
-				sb.append(tbl.getName());
-				sb.append(' ');
-				sb.append((String) entry.getValue());
-				sb.append(" on ");
-				final List aCols = rel.getManyKey().getColumns();
-				final List joinCols = rel.getOneKey().getColumns();
-				for (int i = 0; i < aCols.size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					sb.append("a.");
-					sb.append(((Column) aCols.get(i)).getName());
-					sb.append('=');
-					sb.append((String) entry.getValue());
-					sb.append('.');
-					sb.append(((Column) joinCols.get(i)).getName());
-				}
-			}
-			sb.append(" inner join ");
-			if (isDoubleRecursive) {
-				sb.append(trgtSchemaName + "." + action.getRecursionTable());
-				sb.append(" c on ");
-				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					final String pkColName = (String) action
-							.getRecursionFromColumns().get(i);
-					final String fkColName = (String) action
-							.getRecursionToColumns().get(i);
-					sb.append("a." + pkColName + "=c." + fkColName);
-				}
-				sb.append(" inner join ");
-				sb.append(trgtSchemaName + "." + trgtTableName);
-				sb.append(" b on ");
-				for (int i = 0; i < action.getRecursionSecondFromColumns()
-						.size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					final String pkColName = (String) action
-							.getRecursionSecondFromColumns().get(i);
-					final String fkColName = (String) action
-							.getRecursionSecondToColumns().get(i);
-					sb.append("c." + pkColName + "=b." + fkColName);
-				}
-			} else {
-				sb.append(trgtSchemaName + "." + trgtTableName);
-				sb.append(" b on ");
-				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					final String pkColName = (String) action
-							.getRecursionFromColumns().get(i);
-					final String fkColName = (String) action
-							.getRecursionToColumns().get(i);
-					sb.append("a." + pkColName + "=b." + fkColName);
-				}
-			}
-			if (action.getTableRestriction() != null
-					&& !trAdditionalRels.isEmpty()) {
-				sb.append(" where ");
-				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression(trAdditionalRels, "a"));
-			}
-			sb.append("; ");
-			// Index rtJoinCols.
-			sb.append("create index I_"+this.indexCount+++" on " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + "(");
-			for (final Iterator i = action.getRightJoinColumns().iterator(); i
-					.hasNext();) {
-				final String entry = (String) i.next();
-				sb.append(entry);
-				if (i.hasNext())
-					sb.append(',');
-			}
-			sb.append("); ");
-			// Index parentFromCols.
-			sb.append("create index I_"+this.indexCount+++" on " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + "(");
-			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
-					.hasNext();) {
-				final String entry = (String) i.next();
-				sb.append(entry);
-				if (i.hasNext())
-					sb.append(',');
-			}
-			sb.append("); ");
-			// Index finalRow.
-			sb.append("create index I_"+this.indexCount+++" on " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + "(finalRow); ");
-			// Initialise rows updated
-			sb.append("rows_updated := 0; ");
-			// Loop
-			sb.append("loop ");
-			// Insert into table with flag = 0.
-			sb.append("insert into " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + " select ");
-			for (final Iterator i = action.getRightJoinColumns().iterator(); i
-					.hasNext();) {
-				final String entry = (String) i.next();
-				sb.append("x.");
-				sb.append(entry);
-				sb.append(",");
-			}
-			if (action.getRecursionType() == RecursionType.APPEND) {
-				sb.append("x.");
-				sb.append(action.getConcatColumnName());
-				sb.append("||'");
-				sb.append(action.getConcatColumnDefinition().getConcSep()
-						.replaceAll("'", "\\'"));
-				sb.append("'||");
-				sb.append(action.getConcatColumnDefinition()
-						.getSubstitutedExpression(allAdditionalRels, "a"));
-			} else {
-				sb.append(action.getConcatColumnDefinition()
-						.getSubstitutedExpression(allAdditionalRels, "a"));
-				sb.append("||'");
-				sb.append(action.getConcatColumnDefinition().getConcSep()
-						.replaceAll("'", "\\'"));
-				sb.append("'||");
-				sb.append("x.");
-				sb.append(action.getConcatColumnName());
-			}
-			sb.append(" as ");
-			sb.append(action.getConcatColumnName());
-			sb.append(",0 as finalRow");
-			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
-					.hasNext();) {
-				final String entry = (String) i.next();
-				sb.append(",");
-				sb.append("b.");
-				sb.append(entry);
-			}
-			sb.append(" from " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + " x inner join ");
-			sb.append(trgtSchemaName + "." + trgtTableName);
-			sb.append(" a on ");
-			for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
-				if (i > 0)
-					sb.append(" and ");
-				final String pkColName = (String) action.getLeftJoinColumns()
-						.get(i);
-				final String fkColName = (String) action.getRightJoinColumns()
-						.get(i);
-				sb.append("x." + pkColName + "=a." + fkColName);
-			}
-			if (action.getTableRestriction() != null
-					&& trAdditionalRels.isEmpty()) {
-				sb.append(" and (");
-				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression(trAdditionalRels, "a"));
-				sb.append(')');
-			}
-			sb.append(" inner join ");
-			if (isDoubleRecursive) {
-				sb.append(trgtSchemaName + "." + action.getRecursionTable());
-				sb.append(" c on ");
-				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					final String pkColName = (String) action
-							.getRecursionFromColumns().get(i);
-					final String fkColName = (String) action
-							.getRecursionToColumns().get(i);
-					sb.append("a." + pkColName + "=c." + fkColName);
-				}
-				sb.append(" inner join ");
-				sb.append(trgtSchemaName + "." + trgtTableName);
-				sb.append(" b on ");
-				for (int i = 0; i < action.getRecursionSecondFromColumns()
-						.size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					final String pkColName = (String) action
-							.getRecursionSecondFromColumns().get(i);
-					final String fkColName = (String) action
-							.getRecursionSecondToColumns().get(i);
-					sb.append("c." + pkColName + "=b." + fkColName);
-				}
-			} else {
-				sb.append(trgtSchemaName + "." + trgtTableName);
-				sb.append(" b on ");
-				for (int i = 0; i < action.getRecursionFromColumns().size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					final String pkColName = (String) action
-							.getRecursionFromColumns().get(i);
-					final String fkColName = (String) action
-							.getRecursionToColumns().get(i);
-					sb.append("a." + pkColName + "=b." + fkColName);
-				}
-			}
-			for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) k.next();
-				final Relation rel = (Relation) entry.getKey();
-				final Table tbl = (Table) rel.getOneKey().getTable();
-				sb.append(" inner join ");
-				sb.append(trgtSchemaName);
-				sb.append(".");
-				sb.append(tbl.getName());
-				sb.append(' ');
-				sb.append((String) entry.getValue());
-				sb.append(" on ");
-				final List aCols = rel.getManyKey().getColumns();
-				final List joinCols = rel.getOneKey().getColumns();
-				for (int i = 0; i < aCols.size(); i++) {
-					if (i > 0)
-						sb.append(" and ");
-					sb.append("a.");
-					sb.append(((Column) aCols.get(i)).getName());
-					sb.append('=');
-					sb.append((String) entry.getValue());
-					sb.append('.');
-					sb.append(((Column) joinCols.get(i)).getName());
-				}
-			}
-			if (action.getTableRestriction() != null
-					&& !trAdditionalRels.isEmpty()) {
-				sb.append(" where ");
-				sb.append(action.getTableRestriction()
-						.getSubstitutedExpression(trAdditionalRels, "a"));
-			}
-			sb.append("; ");
-			// Delete old rows where old row flag = 1 and parentFromCols
-			// are not null.
-			sb.append("delete from " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable + " where finalRow=1");
-			for (final Iterator i = action.getRecursionFromColumns().iterator(); i
-					.hasNext();) {
-				final String entry = (String) i.next();
-				sb.append(" and ");
-				sb.append(entry);
-				sb.append(" is not null");
-			}
-			sb.append("; ");
-			// Update rowsUpdated.
-			sb.append("rows_updated := SQL%ROWCOUNT; ");
-			// Update old row flag.
-			sb
-					.append("update " + action.getDataSetSchemaName() + "."
-							+ recursionTempTable
-							+ " set finalRow=1 where finalRow=0; ");
-			// End loop when expanded all successfully.
-			sb.append("exit when rows_updated = 0; ");
-			sb.append("end loop; ");
-			// Finish up.
-			sb.append(" END;");
-			sb.append('/');
-			// Reset the statement buffer.
-			statements.add(sb.toString());
-			sb.setLength(0);
-		}
-
-		// Now do the grouping on the nicely recursed (or original if not
-		// recursed) table.
-		sb.append("create table " + action.getDataSetSchemaName() + "."
-				+ mergeTableName + " as select ");
-		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
-				.hasNext();) {
-			final String entry = (String) i.next();
-			sb.append("a.");
-			sb.append(entry);
-			sb.append(",");
-		}
-		sb.append("group_concat(concat_expr(");
-		if (isRecursive) {
-			sb.append("b.");
-			sb.append(action.getConcatColumnName());
-		} else
-			sb.append(action.getConcatColumnDefinition()
-					.getSubstitutedExpression(allAdditionalRels, "b"));
-		sb.append(",'");
-		sb.append(action.getConcatColumnDefinition().getRowSep().replaceAll(
-				"'", "\\'"));
-		sb.append("')) as ");
-		sb.append(action.getConcatColumnName());
-		sb.append(" from " + srcSchemaName + "." + srcTableName
-				+ " a inner join ");
-		if (isRecursive)
-			sb.append(action.getDataSetSchemaName() + "." + recursionTempTable);
-		else
-			sb.append(trgtSchemaName + "." + trgtTableName);
-		sb.append(" b on ");
-		for (int i = 0; i < action.getLeftJoinColumns().size(); i++) {
-			if (i > 0)
-				sb.append(" and ");
-			final String pkColName = (String) action.getLeftJoinColumns()
-					.get(i);
-			final String fkColName = (String) action.getRightJoinColumns().get(
-					i);
-			sb.append("a." + pkColName + "=b." + fkColName);
-		}
-		if (action.getRelationRestriction() != null) {
-			sb.append(" and ");
-			sb.append(action.getRelationRestriction().getSubstitutedExpression(
-					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
-					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
-					action.isRelationRestrictionLeftIsFirst(),
-					action.getRelationRestrictionPreviousUnit()));
-		}
-		if (!isRecursive && action.getTableRestriction() != null
-				&& trAdditionalRels.isEmpty()) {
-			sb.append(" and (");
-			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					trAdditionalRels, "b"));
-			sb.append(')');
-		}
-		for (final Iterator k = allAdditionalRels.entrySet().iterator(); k
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) k.next();
-			final Relation rel = (Relation) entry.getKey();
-			final Table tbl = (Table) rel.getOneKey().getTable();
-			sb.append(" inner join ");
-			sb.append(trgtSchemaName);
-			sb.append(".");
-			sb.append(tbl.getName());
-			sb.append(' ');
-			sb.append((String) entry.getValue());
-			sb.append(" on ");
-			final List aCols = rel.getManyKey().getColumns();
-			final List joinCols = rel.getOneKey().getColumns();
-			for (int i = 0; i < aCols.size(); i++) {
-				if (i > 0)
-					sb.append(" and ");
-				sb.append("a.");
-				sb.append(((Column) aCols.get(i)).getName());
-				sb.append('=');
-				sb.append((String) entry.getValue());
-				sb.append('.');
-				sb.append(((Column) joinCols.get(i)).getName());
-			}
-		}
-		if (!isRecursive && action.getTableRestriction() != null
-				&& !trAdditionalRels.isEmpty()) {
-			sb.append(" where ");
-			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					trAdditionalRels, "b"));
-		}
-		sb.append(" group by ");
-		for (final Iterator i = action.getLeftJoinColumns().iterator(); i
-				.hasNext();) {
-			final String entry = (String) i.next();
-			sb.append("a.");
-			sb.append(entry);
-			if (i.hasNext())
-				sb.append(",");
-		}
-
-		statements.add(sb.toString());
-
-		if (isRecursive)
-			statements.add("drop table " + action.getDataSetSchemaName() + "."
-					+ recursionTempTable);
-	}
 
 	/**
 	 * Performs an action.
@@ -1009,12 +532,30 @@ public class OracleDialect extends DatabaseDialect {
 		sb.append("create table " + schemaName + "." + optTableName
 				+ " as select distinct ");
 		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext();) {
+			sb.append("a.");
 			sb.append((String) i.next());
 			if (i.hasNext())
 				sb.append(',');
 		}
-		sb.append(" from " + schemaName + "." + sourceTableName);
+		if (action.getCopyTable()!=null) 
+			sb.append(",b.*");
+		sb.append(" from " + schemaName + "." + sourceTableName + " a");
+		if (action.getCopyTable()!=null) {
+			sb.append(" inner join " + schemaName + "." + action.getCopyTable() + " b on ");
+			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext(); ) {
+				final String col = (String)i.next();
+				sb.append("a."+col+"=b."+col);
+				if (i.hasNext())
+					sb.append(" and ");
+			}
+		}
 		statements.add(sb.toString());
+		if (action.getCopyTable()!=null) {
+			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext(); ) 
+				statements.add("alter table " + schemaName + "." + optTableName + " set unused ("+(String)i.next()+")");
+			statements.add("alter table " + schemaName + "." + optTableName
+					+ " drop unused columns");
+		}
 	}
 
 	/**
@@ -1055,11 +596,6 @@ public class OracleDialect extends DatabaseDialect {
 			sb.append(keyCol);
 			sb.append(" and ");
 		}
-		if (action.getExpression() != null)
-			sb.append("("
-					+ action.getExpression().getSubstitutedExpression(
-							action.getExpressionDSTable(), "b"));
-		else {
 			sb.append("not(");
 			for (final Iterator i = action.getNonNullColumns().iterator(); i
 					.hasNext();) {
@@ -1069,105 +605,7 @@ public class OracleDialect extends DatabaseDialect {
 				if (i.hasNext())
 					sb.append(" and ");
 			}
-		}
 		sb.append("))");
-		statements.add(sb.toString());
-	}
-
-	/**
-	 * Performs an action.
-	 * 
-	 * @param action
-	 *            the action to perform.
-	 * @param statements
-	 *            the list into which statements will be added.
-	 * @throws Exception
-	 *             if anything goes wrong.
-	 */
-	public void doCopyOptimiserVia(final CopyOptimiserVia action,
-			final List statements) throws Exception {
-		final String schemaName = action.getDataSetSchemaName();
-		final String toOptTableName = action.getToOptTableName();
-		final String fromOptTableName = action.getFromOptTableName();
-		final String viaTableName = action.getViaTableName();
-		final String fromOptColName = action.getFromOptColumnName();
-		final String toOptColName = action.getToOptColumnName();
-
-		statements.add("alter table " + schemaName + "." + toOptTableName
-				+ " add (" + toOptColName + " number default 0)");
-
-		final String function = action.isCountNotBool() ? "sum" : "max";
-
-		final StringBuffer sb = new StringBuffer();
-		sb.append("update " + schemaName + "." + toOptTableName + " a set "
-				+ toOptColName + "=(select " + function + "(b."
-				+ fromOptColName + ") from " + schemaName + "."
-				+ fromOptTableName + " b inner join " + schemaName + "."
-				+ viaTableName + " c on ");
-		for (final Iterator i = action.getFromKeyColumns().iterator(); i
-				.hasNext();) {
-			final String keyCol = (String) i.next();
-			sb.append("b.");
-			sb.append(keyCol);
-			sb.append("=c.");
-			sb.append(keyCol);
-			if (i.hasNext())
-				sb.append(" and ");
-		}
-		sb.append(" where ");
-		for (final Iterator i = action.getToKeyColumns().iterator(); i
-				.hasNext();) {
-			final String keyCol = (String) i.next();
-			sb.append("a.");
-			sb.append(keyCol);
-			sb.append("=c.");
-			sb.append(keyCol);
-			if (i.hasNext())
-				sb.append(" and ");
-		}
-		sb.append(')');
-		statements.add(sb.toString());
-	}
-
-	/**
-	 * Performs an action.
-	 * 
-	 * @param action
-	 *            the action to perform.
-	 * @param statements
-	 *            the list into which statements will be added.
-	 * @throws Exception
-	 *             if anything goes wrong.
-	 */
-	public void doCopyOptimiserDirect(final CopyOptimiserDirect action,
-			final List statements) throws Exception {
-		final String schemaName = action.getDataSetSchemaName();
-		final String toOptTableName = action.getToOptTableName();
-		final String fromOptTableName = action.getFromOptTableName();
-		final String fromOptColName = action.getFromOptColumnName();
-		final String toOptColName = action.getToOptColumnName();
-
-		statements.add("alter table " + schemaName + "." + toOptTableName
-				+ " add (" + toOptColName + " number default 0)");
-
-		final String function = action.isCountNotBool() ? "sum" : "max";
-
-		final StringBuffer sb = new StringBuffer();
-		sb.append("update " + schemaName + "." + toOptTableName + " a set "
-				+ toOptColName + "=(select " + function + "(b."
-				+ fromOptColName + ") from " + schemaName + "."
-				+ fromOptTableName + " b where ");
-		for (final Iterator i = action.getToKeyColumns().iterator(); i
-				.hasNext();) {
-			final String keyCol = (String) i.next();
-			sb.append("a.");
-			sb.append(keyCol);
-			sb.append("=b.");
-			sb.append(keyCol);
-			if (i.hasNext())
-				sb.append(" and ");
-		}
-		sb.append(')');
 		statements.add(sb.toString());
 	}
 
@@ -1250,7 +688,6 @@ public class OracleDialect extends DatabaseDialect {
 	}
 
 	public void reset() {
-		this.GROUP_CONCAT_CREATED = false;
 		this.indexCount = 0;
 	}
 

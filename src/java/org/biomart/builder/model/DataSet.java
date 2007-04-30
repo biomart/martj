@@ -29,13 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
-import org.biomart.builder.model.TransformationUnit.Concat;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
@@ -98,8 +96,6 @@ public class DataSet extends GenericSchema {
 	private DataSetOptimiserType optimiser;
 
 	private boolean indexOptimiser;
-
-	private boolean subclassOptimiser;
 
 	/**
 	 * The constructor creates a dataset around one central table and gives the
@@ -240,8 +236,7 @@ public class DataSet extends GenericSchema {
 						continue;
 				}
 				// If column is masked, don't inherit it.
-				if (this.dsMods.isMaskedColumn(parentDSCol)
-						|| this.dsMods.isNonInheritedColumn(parentDSCol))
+				if (this.dsMods.isMaskedColumn(parentDSCol))
 					continue;
 				// Only unfiltered columns reach this point. Create a copy of
 				// the column.
@@ -309,7 +304,7 @@ public class DataSet extends GenericSchema {
 			final TransformationUnit previousUnit = (TransformationUnit) tuple[3];
 			final boolean makeDimensions = ((Boolean) tuple[4]).booleanValue();
 			final int iteration = ((Integer) tuple[5]).intValue();
-			final Map newRelationCounts = (Map)tuple[6];
+			final Map newRelationCounts = (Map) tuple[6];
 			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable,
 					normalQ, subclassQ, dimensionQ, newSourceDSCols,
 					mergeSourceRelation, newRelationCounts, subclassCount,
@@ -449,9 +444,6 @@ public class DataSet extends GenericSchema {
 		// Don't ignore any keys by default.
 		final Set ignoreCols = new HashSet();
 
-		final boolean isConcat = this.schemaMods.isConcatRelation(dsTable,
-				sourceRelation, relationIteration);
-
 		final TransformationUnit tu;
 
 		// Did we get here via somewhere else?
@@ -465,12 +457,8 @@ public class DataSet extends GenericSchema {
 			// Add the relation and key to the list that the table depends on.
 			// This list is what defines the path required to construct
 			// the DDL for this table.
-			if (isConcat)
-				tu = new Concat(previousUnit, mergeTable, sourceDataSetCols,
-						mergeKey, sourceRelation, relationIteration);
-			else
-				tu = new JoinTable(previousUnit, mergeTable, sourceDataSetCols,
-						mergeKey, sourceRelation, relationIteration);
+			tu = new JoinTable(previousUnit, mergeTable, sourceDataSetCols,
+					mergeKey, sourceRelation, relationIteration);
 
 			// Remember we've been here.
 			this.includedRelations.add(sourceRelation);
@@ -500,207 +488,184 @@ public class DataSet extends GenericSchema {
 
 		// Add all columns from merge table to dataset table, except those in
 		// the ignore key.
-		if (isConcat) {
-			final ConcatRelationDefinition expr = this.schemaMods
-					.getConcatRelation(dsTable, sourceRelation,
-							relationIteration);
-			final String expColName = expr.getColKey();
-			final ConcatColumn expCol = new ConcatColumn(expColName, dsTable,
-					expr);
-			dsTable.addColumn(expCol);
-			tu.getNewColumnNameMap().put(expColName, expCol);
-		} else
-			for (final Iterator i = mergeTable.getColumns().iterator(); i
-					.hasNext();) {
-				final Column c = (Column) i.next();
+		for (final Iterator i = mergeTable.getColumns().iterator(); i.hasNext();) {
+			final Column c = (Column) i.next();
 
-				// Ignore those in the key used to get here.
-				if (ignoreCols.contains(c))
-					continue;
+			// Ignore those in the key used to get here.
+			if (ignoreCols.contains(c))
+				continue;
 
-				// Create a wrapped column for this column.
-				String colName = c.getName();
-				// Rename all PK columns to have the '_key' suffix.
-				if (includeMergeTablePK
-						&& mergeTablePK.getColumns().contains(c)
-						&& !colName.endsWith(Resources.get("keySuffix")))
-					colName = colName + Resources.get("keySuffix");
-				final WrappedColumn wc = new WrappedColumn(c, colName, dsTable,
-						sourceRelation);
-				tu.getNewColumnNameMap().put(c.getName(), wc);
-				dsTable.addColumn(wc);
+			// Create a wrapped column for this column.
+			String colName = c.getName();
+			// Rename all PK columns to have the '_key' suffix.
+			if (includeMergeTablePK && mergeTablePK.getColumns().contains(c)
+					&& !colName.endsWith(Resources.get("keySuffix")))
+				colName = colName + Resources.get("keySuffix");
+			final WrappedColumn wc = new WrappedColumn(c, colName, dsTable,
+					sourceRelation);
+			tu.getNewColumnNameMap().put(c.getName(), wc);
+			dsTable.addColumn(wc);
 
-				// If the column is in any key on this table then it is a
-				// dependency for possible future linking, which must be
-				// flagged.
-				wc.setKeyDependency(c.isInAnyKey());
+			// If the column is in any key on this table then it is a
+			// dependency for possible future linking, which must be
+			// flagged.
+			wc.setKeyDependency(c.isInAnyKey());
 
-				// If the column was in the merge table's PK, and we are
-				// expecting to add the PK to the generated table's PK, then
-				// add it to the generated table's PK.
-				if (includeMergeTablePK
-						&& mergeTablePK.getColumns().contains(c))
-					dsTablePKCols.add(wc);
-			}
+			// If the column was in the merge table's PK, and we are
+			// expecting to add the PK to the generated table's PK, then
+			// add it to the generated table's PK.
+			if (includeMergeTablePK && mergeTablePK.getColumns().contains(c))
+				dsTablePKCols.add(wc);
+		}
 
 		// Update the three queues with relations that lead away from this
 		// table.
-		if (!isConcat)
-			for (final Iterator i = mergeTable.getRelations().iterator(); i
-					.hasNext();) {
-				final Relation r = (Relation) i.next();
+		for (final Iterator i = mergeTable.getRelations().iterator(); i
+				.hasNext();) {
+			final Relation r = (Relation) i.next();
 
-				// Don't repeat relations or go back up relation just followed.
-				if (r.equals(sourceRelation)
-						|| ((Integer) relationCount.get(r)).intValue() <= 0)
-					continue;
+			// Don't repeat relations or go back up relation just followed.
+			if (r.equals(sourceRelation)
+					|| ((Integer) relationCount.get(r)).intValue() <= 0)
+				continue;
 
-				// Don't follow masked relations.
-				if (this.schemaMods.isMaskedRelation(dsTable, r))
-					continue;
+			// Don't follow masked relations.
+			if (this.schemaMods.isMaskedRelation(dsTable, r))
+				continue;
 
-				// Don't follow directional relations from the wrong end.
-				if (this.schemaMods.isDirectionalRelation(dsTable, r)
-						&& !r.getFirstKey().getTable().equals(
-								r.getSecondKey().getTable())
-						&& !this.schemaMods.getDirectionalRelation(dsTable, r)
-								.equals(r.getKeyForTable(mergeTable)))
-					continue;
+			// Don't follow directional relations from the wrong end.
+			if (this.schemaMods.isDirectionalRelation(dsTable, r)
+					&& !r.getFirstKey().getTable().equals(
+							r.getSecondKey().getTable())
+					&& !this.schemaMods.getDirectionalRelation(dsTable, r)
+							.equals(r.getKeyForTable(mergeTable)))
+				continue;
 
-				// Don't follow incorrect relations, or relations
-				// between incorrect keys.
-				if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-						|| r.getFirstKey().getStatus().equals(
-								ComponentStatus.INFERRED_INCORRECT)
-						|| r.getSecondKey().getStatus().equals(
-								ComponentStatus.INFERRED_INCORRECT))
-					continue;
+			// Don't follow incorrect relations, or relations
+			// between incorrect keys.
+			if (r.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
+					|| r.getFirstKey().getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT)
+					|| r.getSecondKey().getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT))
+				continue;
 
-				// Decrement the relation counter.
-				relationCount.put(r, new Integer(((Integer) relationCount
-						.get(r)).intValue() - 1));
+			// Decrement the relation counter.
+			relationCount.put(r, new Integer(((Integer) relationCount.get(r))
+					.intValue() - 1));
 
-				// Set up a holder to indicate whether or not to follow
-				// the relation.
-				boolean followRelation = false;
-				boolean forceFollowRelation = false;
+			// Set up a holder to indicate whether or not to follow
+			// the relation.
+			boolean followRelation = false;
+			boolean forceFollowRelation = false;
 
-				// Are we at the 1 end of a 1:M?
-				// If so, we may need to make a dimension, a subclass, or
-				// a concat column.
-				if (r.isOneToMany()
-						&& r.getOneKey().getTable().equals(mergeTable)
-						&& (!this.schemaMods.isDirectionalRelation(dsTable, r) || this.schemaMods
-								.getDirectionalRelation(dsTable, r).equals(
-										r.getOneKey()))) {
+			// Are we at the 1 end of a 1:M?
+			// If so, we may need to make a dimension, a subclass, or
+			// a concat column.
+			if (r.isOneToMany()
+					&& r.getOneKey().getTable().equals(mergeTable)
+					&& (!this.schemaMods.isDirectionalRelation(dsTable, r) || this.schemaMods
+							.getDirectionalRelation(dsTable, r).equals(
+									r.getOneKey()))) {
 
-					// Forcibly follow concat relations.
-					if (this.schemaMods.isConcatRelation(dsTable, r))
-						forceFollowRelation = true;
-
-					// Subclass subclassed relations, if we are currently
-					// not building a dimension table.
-					else if (this.schemaMods.isSubclassedRelation(r)
-							&& !dsTable.getType().equals(
-									DataSetTableType.DIMENSION)) {
-						final List newSourceDSCols = new ArrayList();
-						for (final Iterator j = r.getOneKey().getColumns()
-								.iterator(); j.hasNext();)
-							newSourceDSCols.add(tu
-									.getDataSetColumnFor((Column) j.next()));
-						// Deal with recursive subclasses.
-						final int nextSC = subclassCount.containsKey(r) ? ((Integer) subclassCount
-								.get(r)).intValue() + 1
-								: 0;
-						subclassCount.put(r, new Integer(nextSC));
-						// Only do this if the subclassCount is less than
-						// the maximum allowed.
-						final int childCompounded = this.schemaMods
-								.isCompoundRelation(dsTable, r) ? this.schemaMods
-								.getCompoundRelation(dsTable, r).getN()
-								: 1;
-						if (nextSC < childCompounded)
-							subclassQ.add(new Object[] { newSourceDSCols, r,
-									new Integer(nextSC) });
-					}
-
-					// Dimensionize dimension relations, which are all other 1:M
-					// relations, if we are not constructing a dimension
-					// table, and are currently intending to construct
-					// dimensions.
-					else if (makeDimensions
-							&& !dsTable.getType().equals(
-									DataSetTableType.DIMENSION)) {
-						final List newSourceDSCols = new ArrayList();
-						for (final Iterator j = r.getOneKey().getColumns()
-								.iterator(); j.hasNext();) {
-							final DataSetColumn newCol = tu
-									.getDataSetColumnFor((Column) j.next());
-							newSourceDSCols.add(newCol);
-						}
-						int childCompounded = 1;
-						if (this.schemaMods.isCompoundRelation(dsTable, r)
-								&& this.schemaMods.getCompoundRelation(dsTable,
-										r).isParallel())
-							childCompounded = this.schemaMods
-									.getCompoundRelation(dsTable, r).getN();
-						// Follow the relation.
-						for (int k = 0; k < childCompounded; k++)
-							dimensionQ.add(new Object[] { newSourceDSCols, r,
-									new Integer(k) });
-						if (this.schemaMods.isMergedRelation(r))
-							forceFollowRelation = true;
-					}
-
-					// Forcibly follow forced relations.
-					else if (this.schemaMods.isForceIncludeRelation(dsTable, r))
-						forceFollowRelation = true;
-				}
-
-				// Follow all others.
-				else
-					followRelation = true;
-
-				// If we follow a 1:1, and we are currently
-				// including dimensions, include them from the 1:1 as well.
-				// Otherwise, stop including dimensions on subsequent tables.
-				if (followRelation || forceFollowRelation) {
-					this.includedRelations.add(r);
-					dsTable.includedRelations.add(r);
-
-					final Key sourceKey = (this.schemaMods
-							.isDirectionalRelation(dsTable, r) && r
-							.getFirstKey().getTable().equals(
-									r.getSecondKey().getTable())) ? this.schemaMods
-							.getDirectionalRelation(dsTable, r)
-							: r.getKeyForTable(mergeTable);
-					final Key targetKey = r.getOtherKey(sourceKey);
+				// Subclass subclassed relations, if we are currently
+				// not building a dimension table.
+				if (this.schemaMods.isSubclassedRelation(r)
+						&& !dsTable.getType()
+								.equals(DataSetTableType.DIMENSION)) {
 					final List newSourceDSCols = new ArrayList();
-					for (final Iterator j = sourceKey.getColumns().iterator(); j
-							.hasNext();)
+					for (final Iterator j = r.getOneKey().getColumns()
+							.iterator(); j.hasNext();)
 						newSourceDSCols.add(tu.getDataSetColumnFor((Column) j
 								.next()));
-					// Repeat queueing of relation N times if compounded.
+					// Deal with recursive subclasses.
+					final int nextSC = subclassCount.containsKey(r) ? ((Integer) subclassCount
+							.get(r)).intValue() + 1
+							: 0;
+					subclassCount.put(r, new Integer(nextSC));
+					// Only do this if the subclassCount is less than
+					// the maximum allowed.
+					final int childCompounded = this.schemaMods
+							.isCompoundRelation(dsTable, r) ? this.schemaMods
+							.getCompoundRelation(dsTable, r).getN() : 1;
+					if (nextSC < childCompounded)
+						subclassQ.add(new Object[] { newSourceDSCols, r,
+								new Integer(nextSC) });
+				}
+
+				// Dimensionize dimension relations, which are all other 1:M
+				// relations, if we are not constructing a dimension
+				// table, and are currently intending to construct
+				// dimensions.
+				else if (makeDimensions
+						&& !dsTable.getType()
+								.equals(DataSetTableType.DIMENSION)) {
+					final List newSourceDSCols = new ArrayList();
+					for (final Iterator j = r.getOneKey().getColumns()
+							.iterator(); j.hasNext();) {
+						final DataSetColumn newCol = tu
+								.getDataSetColumnFor((Column) j.next());
+						newSourceDSCols.add(newCol);
+					}
 					int childCompounded = 1;
 					if (this.schemaMods.isCompoundRelation(dsTable, r)
 							&& this.schemaMods.getCompoundRelation(dsTable, r)
 									.isParallel())
 						childCompounded = this.schemaMods.getCompoundRelation(
 								dsTable, r).getN();
+					// Follow the relation.
 					for (int k = 0; k < childCompounded; k++)
-						normalQ
-								.add(new Object[] {
-										r,
-										newSourceDSCols,
-										targetKey.getTable(),
-										tu,
-										Boolean.valueOf(makeDimensions
-												&& r.isOneToOne()
-												|| forceFollowRelation),
-										new Integer(k),
-										new HashMap(relationCount)});
+						dimensionQ.add(new Object[] { newSourceDSCols, r,
+								new Integer(k) });
+					if (this.schemaMods.isMergedRelation(r))
+						forceFollowRelation = true;
 				}
+
+				// Forcibly follow forced relations.
+				else if (this.schemaMods.isForceIncludeRelation(dsTable, r))
+					forceFollowRelation = true;
 			}
+
+			// Follow all others.
+			else
+				followRelation = true;
+
+			// If we follow a 1:1, and we are currently
+			// including dimensions, include them from the 1:1 as well.
+			// Otherwise, stop including dimensions on subsequent tables.
+			if (followRelation || forceFollowRelation) {
+				this.includedRelations.add(r);
+				dsTable.includedRelations.add(r);
+
+				final Key sourceKey = (this.schemaMods.isDirectionalRelation(
+						dsTable, r) && r.getFirstKey().getTable().equals(
+						r.getSecondKey().getTable())) ? this.schemaMods
+						.getDirectionalRelation(dsTable, r) : r
+						.getKeyForTable(mergeTable);
+				final Key targetKey = r.getOtherKey(sourceKey);
+				final List newSourceDSCols = new ArrayList();
+				for (final Iterator j = sourceKey.getColumns().iterator(); j
+						.hasNext();)
+					newSourceDSCols.add(tu.getDataSetColumnFor((Column) j
+							.next()));
+				// Repeat queueing of relation N times if compounded.
+				int childCompounded = 1;
+				if (this.schemaMods.isCompoundRelation(dsTable, r)
+						&& this.schemaMods.getCompoundRelation(dsTable, r)
+								.isParallel())
+					childCompounded = this.schemaMods.getCompoundRelation(
+							dsTable, r).getN();
+				for (int k = 0; k < childCompounded; k++)
+					normalQ.add(new Object[] {
+							r,
+							newSourceDSCols,
+							targetKey.getTable(),
+							tu,
+							Boolean.valueOf(makeDimensions && r.isOneToOne()
+									|| forceFollowRelation), new Integer(k),
+							new HashMap(relationCount) });
+			}
+		}
 	}
 
 	/**
@@ -774,15 +739,6 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Sees if the optimiser will count subclasses.
-	 * 
-	 * @return <tt>true</tt> if it will.
-	 */
-	public boolean isSubclassOptimiser() {
-		return this.subclassOptimiser;
-	}
-
-	/**
 	 * Test to see if this dataset is invisible.
 	 * 
 	 * @return <tt>true</tt> if it is invisible, <tt>false</tt> otherwise.
@@ -848,18 +804,6 @@ public class DataSet extends GenericSchema {
 		Log.debug("Setting optimiser index in " + this.getName());
 		// Do it.
 		this.indexOptimiser = index;
-	}
-
-	/**
-	 * Sets the subclass count optimiser type.
-	 * 
-	 * @param subclassCount
-	 *            the subclass optimiser if <tt>true</tt>.
-	 */
-	public void setSubclassOptimiser(final boolean subclassCount) {
-		Log.debug("Setting subclass optimiser in " + this.getName());
-		// Do it.
-		this.subclassOptimiser = subclassCount;
 	}
 
 	/**
@@ -1100,16 +1044,6 @@ public class DataSet extends GenericSchema {
 			 */
 			public ExpressionColumnDefinition getDefinition() {
 				return this.definition;
-			}
-
-			public boolean isRequiredInterim() {
-				return !this.definition.isOptimiser()
-						|| super.isRequiredInterim();
-			}
-
-			public boolean isRequiredFinal() {
-				return !this.definition.isOptimiser()
-						|| super.isRequiredFinal();
 			}
 		}
 

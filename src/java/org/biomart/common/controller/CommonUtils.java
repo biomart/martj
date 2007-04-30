@@ -18,7 +18,6 @@
 
 package org.biomart.common.controller;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -41,8 +40,8 @@ import org.biomart.common.resources.Resources;
  * manipulating the various objects in the data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class CommonUtils {
@@ -70,12 +69,6 @@ public class CommonUtils {
 	 * Creates a JDBC schema and returns it. No further action is taken - the
 	 * schema will not synchronise itself.
 	 * 
-	 * @param driverClassLocation
-	 *            the location, optional, of the JDBC driver class. This can
-	 *            either be a JAR file or a path to a class file. If null, the
-	 *            default system class loader is used to load the class. The
-	 *            system class loader is also used if the class could not be
-	 *            found in the location specified here.
 	 * @param driverClassName
 	 *            the name of the JDBC driver class, eg.
 	 *            <tt>com.mysql.jdbc.Driver</tt>
@@ -95,15 +88,14 @@ public class CommonUtils {
 	 *            schema or not. This can always be changed later.
 	 * @return the created schema.
 	 */
-	public static JDBCSchema createJDBCSchema(final File driverClassLocation,
-			final String driverClassName, final String url,
-			final String schemaName, final String username, String password,
-			final String name, final boolean keyGuessing) {
+	public static JDBCSchema createJDBCSchema(final String driverClassName,
+			final String url, final String schemaName, final String username,
+			String password, final String name, final boolean keyGuessing) {
 		Log.info(Resources.get("logCreateJDBCSchema"));
 		if (password != null && password.equals(""))
 			password = null;
-		return new JDBCSchema(driverClassLocation, driverClassName, url,
-				schemaName, username, password, name, keyGuessing);
+		return new JDBCSchema(driverClassName, url, schemaName, username,
+				password, name, keyGuessing);
 	}
 
 	/**

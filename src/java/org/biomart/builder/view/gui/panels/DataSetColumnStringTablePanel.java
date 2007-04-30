@@ -31,7 +31,6 @@ import javax.swing.ListCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 /**
@@ -97,10 +96,8 @@ public abstract class DataSetColumnStringTablePanel extends
 		// excludes optimiser columns.
 		for (final Iterator i = columns.iterator(); i.hasNext();) {
 			final DataSetColumn col = (DataSetColumn) i.next();
-			if ((this.dontIncludeThis == null || !col
+			if (this.dontIncludeThis == null || !col
 					.equals(this.dontIncludeThis))
-					&& !(col instanceof ExpressionColumn && ((ExpressionColumn) col)
-							.getDefinition().isOptimiser()))
 				sortedCols.put(col.getModifiedName(), col);
 		}
 		return sortedCols.values();

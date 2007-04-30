@@ -71,8 +71,6 @@ public class ExpressionColumnDialog extends JDialog {
 
 	private JCheckBox groupBy;
 
-	private JCheckBox optimiser;
-
 	private DataSetTable table;
 
 	/**
@@ -165,7 +163,6 @@ public class ExpressionColumnDialog extends JDialog {
 		};
 
 		this.groupBy = new JCheckBox(Resources.get("groupbyLabel"));
-		this.optimiser = new JCheckBox(Resources.get("optimiserLabel"));
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
@@ -193,13 +190,6 @@ public class ExpressionColumnDialog extends JDialog {
 		field.add(this.groupBy);
 		content.add(field, fieldConstraints);
 
-		// Add the optimiser option.
-		label = new JLabel();
-		content.add(label, labelConstraints);
-		field = new JPanel();
-		field.add(this.optimiser);
-		content.add(field, fieldConstraints);
-
 		// Add the buttons to the dialog.
 		label = new JLabel();
 		content.add(label, labelLastRowConstraints);
@@ -207,26 +197,6 @@ public class ExpressionColumnDialog extends JDialog {
 		field.add(this.cancel);
 		field.add(this.execute);
 		content.add(field, fieldLastRowConstraints);
-
-		// Make sure group-by and optimiser are mutually exclusive.
-		this.groupBy.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				ExpressionColumnDialog.this.optimiser
-						.setEnabled(!ExpressionColumnDialog.this.groupBy
-								.isSelected());
-				if (ExpressionColumnDialog.this.groupBy.isSelected())
-					ExpressionColumnDialog.this.optimiser.setSelected(false);
-			}
-		});
-		this.optimiser.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				ExpressionColumnDialog.this.groupBy
-						.setEnabled(!ExpressionColumnDialog.this.optimiser
-								.isSelected());
-				if (ExpressionColumnDialog.this.optimiser.isSelected())
-					ExpressionColumnDialog.this.groupBy.setSelected(false);
-			}
-		});
 
 		// Intercept the cancel button and use it to close this
 		// dialog without making any changes.
@@ -254,7 +224,6 @@ public class ExpressionColumnDialog extends JDialog {
 		if (template != null) {
 			this.expression.setText(template.getExpression());
 			this.groupBy.setSelected(template.isGroupBy());
-			this.optimiser.setSelected(template.isOptimiser());
 			// Aliases were already copied in the JTable constructor above.
 		}
 
@@ -346,14 +315,5 @@ public class ExpressionColumnDialog extends JDialog {
 	 */
 	public boolean getGroupBy() {
 		return this.groupBy.isSelected();
-	}
-
-	/**
-	 * Return <tt>true</tt> if the user selected the optimiser box.
-	 * 
-	 * @return the optimiser flag.
-	 */
-	public boolean getOptimiser() {
-		return this.optimiser.isSelected();
 	}
 }

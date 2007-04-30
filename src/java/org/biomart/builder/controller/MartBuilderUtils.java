@@ -41,7 +41,6 @@ import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefiniti
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
 import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.controller.CommonUtils;
@@ -487,125 +486,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Removes optimisers for a given table within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to unoptimise the table in.
-	 * @param dst
-	 *            the table to unoptimise.
-	 * @throws ValidationException
-	 *             if the table could not be unoptimise.
-	 */
-	public static void unoptimiseTable(final DataSet dataset,
-			final DataSetTable dst) throws ValidationException {
-		Log.info(Resources.get("logReqUnoptimiseTable"));
-		dataset.getDataSetModifications().setNoOptimiserTable(dst);
-	}
-
-	/**
-	 * Re-optimises a table within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to undistinct the table in.
-	 * @param dst
-	 *            the table to undistinct.
-	 */
-	public static void reoptimiseTable(final DataSet dataset,
-			final DataSetTable dst) {
-		Log.info(Resources.get("logReqReoptimiseTable"));
-		dataset.getDataSetModifications().unsetNoOptimiserTable(dst);
-	}
-
-	/**
-	 * Non-inherits all columns within a dataset. Any that cannot be
-	 * non-inherited are ignored.
-	 * 
-	 * @param dataset
-	 *            the dataset to uninherit the columns in.
-	 * @param table
-	 *            the table to uninherit columns from.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
-	 */
-	public static void nonInheritAllColumns(final DataSet dataset,
-			final DataSetTable table) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqNonInheritColumn"));
-		for (final Iterator i = table.getColumns().iterator(); i.hasNext();) {
-			final DataSetColumn column = (DataSetColumn) i.next();
-			try {
-				dataset.getDataSetModifications().setNonInheritedColumn(column);
-			} catch (ValidationException e) {
-				// We don't care.
-			}
-		}
-		dataset.synchronise();
-	}
-
-	/**
-	 * Non-inherits a column within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to uninherit the column in.
-	 * @param column
-	 *            the column to uninherit.
-	 * @throws ValidationException
-	 *             if the column is not uninheritable.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
-	 */
-	public static void nonInheritColumn(final DataSet dataset,
-			final DataSetColumn column) throws ValidationException,
-			SQLException, DataModelException {
-		Log.info(Resources.get("logReqNonInheritColumn"));
-		dataset.getDataSetModifications().setNonInheritedColumn(column);
-		dataset.synchronise();
-	}
-
-	/**
-	 * Un-non-inherits a column within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to un-uninherit the column in.
-	 * @param column
-	 *            the column to un-uninherit.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
-	 */
-	public static void unNonInheritColumn(final DataSet dataset,
-			final DataSetColumn column) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnNonInheritColumn"));
-		dataset.getDataSetModifications().unsetNonInheritedColumn(column);
-		dataset.synchronise();
-	}
-
-	/**
-	 * Un-Non-inherits all columns within a dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to uninherit the columns in.
-	 * @param table
-	 *            the table to uninherit columns from.
-	 * @throws SQLException
-	 *             if the dataset could not be synchronised.
-	 * @throws DataModelException
-	 *             if the dataset could not be synchronised.
-	 */
-	public static void unNonInheritAllColumns(final DataSet dataset,
-			final DataSetTable table) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqNonInheritColumn"));
-		for (final Iterator i = table.getColumns().iterator(); i.hasNext();)
-			dataset.getDataSetModifications().unsetNonInheritedColumn(
-					(DataSetColumn) i.next());
-		dataset.synchronise();
-	}
-
-	/**
 	 * Indexes a column within a dataset.
 	 * 
 	 * @param dataset
@@ -993,60 +873,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * This method asks to modify a concat column.
-	 * 
-	 * @param dsTable
-	 *            the table the concat relation is associated with.
-	 * @param rel
-	 *            the relation to concat.
-	 * @param index
-	 *            the index of the relation to concat.
-	 * @param expr
-	 *            the concat definition.
-	 * @throws SQLException
-	 *             if something went wrong.
-	 * @throws DataModelException
-	 *             if something went wrong.
-	 * @throws ValidationException
-	 *             if something went wrong.
-	 */
-	public static void concatRelation(final DataSetTable dsTable,
-			final Relation rel, final int index,
-			final ConcatRelationDefinition expr) throws SQLException,
-			DataModelException, ValidationException {
-		Log.info(Resources.get("logReqConcatRelation"));
-		((DataSet) dsTable.getSchema()).getSchemaModifications()
-				.setConcatRelation(dsTable, rel, index, expr);
-		((DataSet) dsTable.getSchema()).synchronise();
-	}
-
-	/**
-	 * This method asks to modify a concat column.
-	 * 
-	 * @param ds
-	 *            the dataset the concat relation is associated with.
-	 * @param rel
-	 *            the relation to concat.
-	 * @param index
-	 *            the index of the relation to concat.
-	 * @param expr
-	 *            the concat definition.
-	 * @throws SQLException
-	 *             if something went wrong.
-	 * @throws DataModelException
-	 *             if something went wrong.
-	 * @throws ValidationException
-	 *             if something went wrong.
-	 */
-	public static void concatRelation(final DataSet ds, final Relation rel,
-			final int index, final ConcatRelationDefinition expr)
-			throws SQLException, DataModelException, ValidationException {
-		Log.info(Resources.get("logReqConcatRelation"));
-		ds.getSchemaModifications().setConcatRelation(rel, index, expr);
-		ds.synchronise();
-	}
-
-	/**
 	 * This method asks to modify an expression column.
 	 * 
 	 * @param dsTable
@@ -1061,9 +887,6 @@ public class MartBuilderUtils {
 	 *            whether this column requires a group-by statement. If it does,
 	 *            the group-by columns required will be worked out
 	 *            automatically.
-	 * @param optimiser
-	 *            whether this column is to be used as an optimiser column
-	 *            instead.
 	 * @throws SQLException
 	 *             if something went wrong.
 	 * @throws DataModelException
@@ -1071,16 +894,15 @@ public class MartBuilderUtils {
 	 */
 	public static void setExpressionColumn(final DataSetTable dsTable,
 			final ExpressionColumnDefinition def, final Map aliases,
-			final String expression, final boolean groupBy,
-			final boolean optimiser) throws SQLException, DataModelException {
+			final String expression, final boolean groupBy)
+			throws SQLException, DataModelException {
 		Log.info(Resources.get("logReqChangeExprCol"));
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.unsetExpressionColumn(dsTable, def);
 		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(
-				expression, aliases, groupBy, optimiser,
-				def == null ? ((DataSet) dsTable.getSchema())
-						.getDataSetModifications().nextExpressionColumn() : def
-						.getColKey());
+				expression, aliases, groupBy, def == null ? ((DataSet) dsTable
+						.getSchema()).getDataSetModifications()
+						.nextExpressionColumn() : def.getColKey());
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.setExpressionColumn(dsTable, expr);
 		((DataSet) dsTable.getSchema()).synchronise();
@@ -1120,55 +942,6 @@ public class MartBuilderUtils {
 			final DataSet dataset) {
 		Log.info(Resources.get("logReqRemoveDSFromMart"));
 		mart.removeDataSet(dataset);
-	}
-
-	/**
-	 * This method asks to remove a particular concat column.
-	 * 
-	 * @param ds
-	 *            the dataset to remove the concat from.
-	 * @param relation
-	 *            the relation to unconcat.
-	 * @param index
-	 *            the index of the relation to unconcat.
-	 * @throws ValidationException
-	 *             if something went wrong.
-	 * @throws SQLException
-	 *             if something went wrong.
-	 * @throws DataModelException
-	 *             if something went wrong.
-	 */
-	public static void unconcatRelation(final DataSet ds,
-			final Relation relation, final int index)
-			throws ValidationException, SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnconcatRelation"));
-		ds.getSchemaModifications().unsetConcatRelation(relation, index);
-		ds.synchronise();
-	}
-
-	/**
-	 * This method asks to remove a particular concat column.
-	 * 
-	 * @param dsTable
-	 *            the table to remove the concat from.
-	 * @param relation
-	 *            the relation to unconcat.
-	 * @param index
-	 *            the index of the relation to unconcat.
-	 * @throws ValidationException
-	 *             if something went wrong.
-	 * @throws SQLException
-	 *             if something went wrong.
-	 * @throws DataModelException
-	 *             if something went wrong.
-	 */
-	public static void unconcatRelation(final DataSetTable dsTable,
-			final Relation relation, final int index)
-			throws ValidationException, SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnconcatRelation"));
-		((DataSet) dsTable.getSchema()).getSchemaModifications()
-				.unsetConcatRelation(dsTable, relation, index);
-		((DataSet) dsTable.getSchema()).synchronise();
 	}
 
 	/**
@@ -2007,28 +1780,6 @@ public class MartBuilderUtils {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Turns subclass optimiser off in a given dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to disable subclass optimiser in.
-	 */
-	public static void noSubclassOptimiserDataSet(final DataSet dataset) {
-		Log.info(Resources.get("logReqNoSCOptDataset"));
-		dataset.setSubclassOptimiser(false);
-	}
-
-	/**
-	 * Turns subclass optimiser on in a given dataset.
-	 * 
-	 * @param dataset
-	 *            the dataset to enable subclass optimiser in.
-	 */
-	public static void subclassOptimiserDataSet(final DataSet dataset) {
-		Log.info(Resources.get("logReqSCOptDataset"));
-		dataset.setSubclassOptimiser(true);
 	}
 
 	/**

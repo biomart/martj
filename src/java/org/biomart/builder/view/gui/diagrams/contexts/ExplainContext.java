@@ -177,14 +177,6 @@ public class ExplainContext extends SchemaContext {
 						this.datasetTable, relation))
 			component.setForeground(RelationComponent.MASKED_COLOUR);
 
-		// Highlight CONCAT-ONLY relations.
-		else if (this.dataset.getSchemaModifications().isConcatRelation(
-				this.datasetTable, relation)
-				&& (iteration == RealisedRelation.NO_ITERATION || this.dataset
-						.getSchemaModifications().isConcatRelation(
-								this.datasetTable, relation, iteration)))
-			component.setForeground(RelationComponent.CONCAT_COLOUR);
-
 		// Highlight SUBCLASS relations.
 		else if (this.dataset.getSchemaModifications().isSubclassedRelation(
 				relation))
@@ -368,11 +360,6 @@ public class ExplainContext extends SchemaContext {
 		final boolean relationMasked = this.dataset.getSchemaModifications()
 				.isMaskedRelation(this.datasetTable, relation);
 
-		final boolean relationConcated = this.dataset.getSchemaModifications()
-				.isConcatRelation(this.datasetTable, relation)
-				&& (iteration == RealisedRelation.NO_ITERATION || this.dataset
-						.getSchemaModifications().isConcatRelation(
-								this.datasetTable, relation, iteration));
 		final boolean relationRestricted = this.dataset
 				.getSchemaModifications().isRestrictedRelation(
 						this.datasetTable, relation)
@@ -505,7 +492,7 @@ public class ExplainContext extends SchemaContext {
 		});
 		contextMenu.add(subclass);
 		if (incorrect || relationMasked || relation.isOneToOne()
-				|| relationConcated || this.datasetTable != null)
+				|| this.datasetTable != null)
 			subclass.setEnabled(false);
 		if (relationSubclassed)
 			subclass.setSelected(true);
@@ -570,63 +557,5 @@ public class ExplainContext extends SchemaContext {
 		contextMenu.add(remove);
 		if (!relationRestricted)
 			remove.setEnabled(false);
-
-		// If it's a concat column...
-		if (relationConcated) {
-
-			// Option to modify concat.
-			final JMenuItem modify = new JMenuItem(Resources
-					.get("modifyConcatRelationTitle"), new ImageIcon(Resources
-					.getResourceAsURL("collapseAll.gif")));
-			modify.setMnemonic(Resources.get("modifyConcatRelationMnemonic")
-					.charAt(0));
-			modify.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatRelation(ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation,
-									iteration);
-				}
-			});
-			contextMenu.add(modify);
-
-		} else {
-
-			// Add a relation concat.
-			final JMenuItem concat = new JMenuItem(Resources
-					.get("addConcatRelationTitle"), new ImageIcon(Resources
-					.getResourceAsURL("collapseAll.gif")));
-			concat.setMnemonic(Resources.get("addConcatRelationMnemonic")
-					.charAt(0));
-			concat.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestConcatRelation(ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation,
-									iteration);
-				}
-			});
-			contextMenu.add(concat);
-			if (relationSubclassed || !relation.isOneToMany())
-				concat.setEnabled(false);
-		}
-
-		// Option to remove concat.
-		final JMenuItem removec = new JMenuItem(Resources
-				.get("removeConcatRelationTitle"));
-		removec.setMnemonic(Resources.get("removeConcatRelationMnemonic")
-				.charAt(0));
-		removec.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				ExplainContext.this.getMartTab().getDataSetTabSet()
-						.requestUnconcatRelation(ExplainContext.this.dataset,
-								ExplainContext.this.datasetTable, relation,
-								iteration);
-			}
-		});
-		contextMenu.add(removec);
-		if (!relationConcated)
-			removec.setEnabled(false);
-
 	}
 }

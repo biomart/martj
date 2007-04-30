@@ -377,36 +377,4 @@ public abstract class TransformationUnit {
 			return groups;
 		}
 	}
-
-	/**
-	 * This transformation joins two tables by mean of a concatenation.
-	 */
-	public static class Concat extends JoinTable {
-		private static final long serialVersionUID = 1L;
-
-		/**
-		 * Joins two tables by means of a concatenation.
-		 * 
-		 * @param previousUnit
-		 *            the unit that precedes this one.
-		 * @param table
-		 *            the table we are joining to.
-		 * @param sourceDataSetColumns
-		 *            the columns in the existing dataset table that are used to
-		 *            make the join.
-		 * @param schemaSourceKey
-		 *            the key in the schema table that we are joining to.
-		 * @param schemaRelation
-		 *            the relation we are following to make the join.
-		 * @param schemaRelationIteration
-		 *            the number of the compound relation, if it is compound.
-		 *            Use 0 if it is not.
-		 */
-		public Concat(final TransformationUnit previousUnit, final Table table,
-				final List sourceDataSetColumns, final Key schemaSourceKey,
-				final Relation schemaRelation, final int schemaRelationIteration) {
-			super(previousUnit, table, sourceDataSetColumns, schemaSourceKey,
-					schemaRelation, schemaRelationIteration);
-		}
-	}
 }
