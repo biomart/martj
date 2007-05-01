@@ -29,10 +29,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 
@@ -99,7 +101,7 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static int stopCrashedJobs() throws JobException {
-		final List stoppedJobs = new ArrayList();
+		final Set stoppedJobs = new HashSet();
 		// Update job summaries.
 		final JobList jobList = JobHandler.getJobList();
 		for (final Iterator i = jobList.getAllJobs().iterator(); i.hasNext();) {
