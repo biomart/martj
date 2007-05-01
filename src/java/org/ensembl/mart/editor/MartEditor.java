@@ -32,24 +32,18 @@ import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.prefs.Preferences;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Hashtable;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Enumeration;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.prefs.Preferences;
 
+import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
-
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -59,30 +53,17 @@ import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 
-import org.apache.xalan.processor.StopParseException;
 import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 import org.ensembl.mart.lib.DetailedDataSource;
-import org.ensembl.mart.lib.config.AttributePage;
-//import org.ensembl.mart.lib.config.Exportable;
-//import org.ensembl.mart.lib.config.Importable;
-import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.AttributeCollection;
-import org.ensembl.mart.lib.config.AttributeGroup;
-import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.FilterCollection;
-import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
-import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
-//import org.jdom.Document;
 
 
 
@@ -337,8 +318,15 @@ System.out.println ("getting driver "+ driver);
     //menuItem = new JMenuItem("Naive using Template");
     //menuItem.addActionListener(menuActionListener);
     //menu.add(menuItem); now done with short-cut keys only:
-	menu.registerKeyboardAction(menuActionListener,"Naive using Template",
-		KeyStroke.getKeyStroke(KeyEvent.VK_N,8),JComponent.WHEN_FOCUSED);
+    desktop.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_N,8), "Naive using Template");
+    desktop.getActionMap().put("Naive using Template", new AbstractAction("Naive using Template")
+    {
+        public void actionPerformed(final ActionEvent e) {
+        	naiveTemplateDatasetConfig();
+        	}	
+    });
+	//menu.registerKeyboardAction(menuActionListener,"Naive using Template",
+	//	KeyStroke.getKeyStroke(KeyEvent.VK_N,8),JComponent.WHEN_FOCUSED);
 	
     menuItem = new JMenuItem("Import");
     menuItem.addActionListener(menuActionListener);
@@ -364,14 +352,28 @@ System.out.println ("getting driver "+ driver);
     //menuItem = new JMenuItem("View Dataset Configuration");
 	//menuItem.addActionListener(menuActionListener);
 	//menu.add(menuItem); now done with short-cut keys only
-	menu.registerKeyboardAction(menuActionListener,"View Dataset Configuration",
-			KeyStroke.getKeyStroke(KeyEvent.VK_V,8),JComponent.WHEN_FOCUSED);
+	//menu.registerKeyboardAction(menuActionListener,"View Dataset Configuration",
+	//		KeyStroke.getKeyStroke(KeyEvent.VK_V,8),JComponent.WHEN_FOCUSED);
+    desktop.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_V,8), "View Dataset Configuration");
+    desktop.getActionMap().put("View Dataset Configuration", new AbstractAction("View Dataset Configuration")
+    {
+        public void actionPerformed(final ActionEvent e) {
+        	importDatasetConfig();
+        	}	
+    });
     
     //menuItem = new JMenuItem("Delete Dataset Configuration");
     //menuItem.addActionListener(menuActionListener);
     //menu.add(menuItem); now done with short-cut keys only
-	menu.registerKeyboardAction(menuActionListener,"Delete Dataset Configuration",
-			KeyStroke.getKeyStroke(KeyEvent.VK_D,8),JComponent.WHEN_FOCUSED);
+	//menu.registerKeyboardAction(menuActionListener,"Delete Dataset Configuration",
+	//		KeyStroke.getKeyStroke(KeyEvent.VK_D,8),JComponent.WHEN_FOCUSED);
+    desktop.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_D,8), "Delete Dataset Configuration");
+    desktop.getActionMap().put("Delete Dataset Configuration", new AbstractAction("Delete Dataset Configuration")
+    {
+        public void actionPerformed(final ActionEvent e) {
+        	deleteDatasetConfig();
+        	}	
+    });
     //menu.addSeparator();
 
 //	menuItem = new JMenuItem("Import Config");
@@ -646,14 +648,14 @@ System.out.println ("getting driver "+ driver);
 		//importTemplate(); DISABLED
 	  else if (e.getActionCommand().equals("Import"))
 	  	importTemplateConfig();	 
-      else if (e.getActionCommand().equals("View Dataset Configuration"))
-        importDatasetConfig(); 
+      //else if (e.getActionCommand().equals("View Dataset Configuration"))
+      //  importDatasetConfig(); 
 	  else if (e.getActionCommand().equals("Export"))
 		exportTemplate();  
       //else if (e.getActionCommand().startsWith("Export"))
       //  exportDatasetConfig();
-      else if (e.getActionCommand().equals("Naive using Template"))
-          naiveTemplateDatasetConfig();
+      //else if (e.getActionCommand().equals("Naive using Template"))
+      //    naiveTemplateDatasetConfig();
       else if (e.getActionCommand().equals("Naive"))
     	  naiveDatasetConfig();
 	  else if (e.getActionCommand().equals("Update All"))
@@ -672,8 +674,8 @@ System.out.println ("getting driver "+ driver);
 //		  validateDatasetConfig();  
       else if (e.getActionCommand().equals("Delete"))
         deleteTemplateConfig();
-      else if (e.getActionCommand().equals("Delete Dataset Configuration"))
-          deleteDatasetConfig();
+      //else if (e.getActionCommand().equals("Delete Dataset Configuration"))
+      //    deleteDatasetConfig();
       //else if (e.getActionCommand().startsWith("hide"))
       //  makeHidden();
     }
