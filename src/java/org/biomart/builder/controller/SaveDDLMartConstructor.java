@@ -42,7 +42,7 @@ import org.biomart.common.model.DataLink.JDBCDataLink;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.runner.model.MartRunnerProtocol;
+import org.biomart.runner.controller.MartRunnerProtocol;
 
 /**
  * This implementation of the {@link MartConstructor} interface generates DDL

@@ -88,12 +88,12 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
+import org.biomart.runner.controller.MartRunnerProtocol.Client;
 import org.biomart.runner.exceptions.ProtocolException;
 import org.biomart.runner.model.JobPlan;
 import org.biomart.runner.model.JobStatus;
 import org.biomart.runner.model.JobPlan.JobPlanAction;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
-import org.biomart.runner.model.MartRunnerProtocol.Client;
 
 /**
  * This dialog monitors and interacts with SQL being run on a remote host.

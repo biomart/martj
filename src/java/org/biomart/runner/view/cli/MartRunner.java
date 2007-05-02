@@ -31,9 +31,9 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.cli.BioMartCLI;
 import org.biomart.runner.controller.JobHandler;
+import org.biomart.runner.controller.MartRunnerProtocol;
 import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.exceptions.ProtocolException;
-import org.biomart.runner.model.MartRunnerProtocol;
 
 /**
  * The main app housing the MartRunner CLI. The {@link #main(String[])} method

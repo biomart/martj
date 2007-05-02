@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.runner.model;
+package org.biomart.runner.controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,9 +34,10 @@ import java.util.Iterator;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
-import org.biomart.runner.controller.JobHandler;
 import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.exceptions.ProtocolException;
+import org.biomart.runner.model.JobList;
+import org.biomart.runner.model.JobPlan;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
 
 /**
@@ -79,6 +80,8 @@ public class MartRunnerProtocol {
 	private static final String END_MESSAGE = "___END_MESSAGE___";
 
 	private static final String NEXT = "___NEXT___";
+
+	private static final String OK = "___OK___";
 
 	/**
 	 * Handles a client communication attempt. Receives an open socket and
@@ -185,6 +188,7 @@ public class MartRunnerProtocol {
 		final String jdbcPassword = in.readLine();
 		JobHandler.beginJob(jobId, jdbcDriverClassName, jdbcURL, jdbcUsername,
 				jdbcPassword.equals(null) ? null : jdbcPassword);
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -210,6 +214,7 @@ public class MartRunnerProtocol {
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
 		JobHandler.endJob(in.readLine());
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -235,6 +240,7 @@ public class MartRunnerProtocol {
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
 		JobHandler.removeJob(in.readLine());
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -273,6 +279,7 @@ public class MartRunnerProtocol {
 			} else
 				actions.append(line);
 		JobHandler.setActions(jobId, sectionPath, finalActions, false);
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -303,6 +310,7 @@ public class MartRunnerProtocol {
 		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
 			identifiers.add(line);
 		JobHandler.queue(jobId, identifiers);
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -333,6 +341,7 @@ public class MartRunnerProtocol {
 		while (!(line = in.readLine()).equals(MartRunnerProtocol.END_MESSAGE))
 			identifiers.add(line);
 		JobHandler.unqueue(jobId, identifiers);
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -413,6 +422,7 @@ public class MartRunnerProtocol {
 		final String jobId = in.readLine();
 		final String email = in.readLine();
 		JobHandler.setEmailAddress(jobId, email);
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -440,6 +450,7 @@ public class MartRunnerProtocol {
 		final String jobId = in.readLine();
 		final int threadCount = Integer.parseInt(in.readLine());
 		JobHandler.setThreadCount(jobId, threadCount);
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -465,6 +476,7 @@ public class MartRunnerProtocol {
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
 		JobHandler.startJob(in.readLine());
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -490,6 +502,7 @@ public class MartRunnerProtocol {
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
 		JobHandler.stopJob(in.readLine());
+		out.println(MartRunnerProtocol.OK);
 	}
 
 	/**
@@ -567,12 +580,15 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.BEGIN_JOB);
 				bos.println(jobId);
 				bos.println(jdbcDriverClassName);
 				bos.println(jdbcURL);
 				bos.println(jdbcUsername);
 				bos.println(jdbcPassword);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -604,8 +620,11 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.END_JOB);
 				bos.println(jobId);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -637,8 +656,11 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.REMOVE_JOB);
 				bos.println(jobId);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -715,6 +737,8 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.SET_ACTIONS);
 				bos.println(jobId);
 				bos.println(partition + "," + dataset + "," + table);
@@ -723,6 +747,7 @@ public class MartRunnerProtocol {
 					bos.println(MartRunnerProtocol.NEXT);
 				}
 				bos.println(MartRunnerProtocol.END_MESSAGE);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -799,9 +824,12 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.EMAIL_ADDRESS);
 				bos.println(jobId);
 				bos.println(email == null ? "" : email);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -836,9 +864,12 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.THREAD_COUNT);
 				bos.println(jobId);
 				bos.println(threadCount);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -870,8 +901,11 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.START_JOB);
 				bos.println(jobId);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -903,8 +937,11 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.STOP_JOB);
 				bos.println(jobId);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -939,11 +976,14 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.QUEUE);
 				bos.println(jobId);
 				for (final Iterator i = identifiers.iterator(); i.hasNext();)
 					bos.println(i.next());
 				bos.println(MartRunnerProtocol.END_MESSAGE);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
@@ -978,11 +1018,14 @@ public class MartRunnerProtocol {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.UNQUEUE);
 				bos.println(jobId);
 				for (final Iterator i = identifiers.iterator(); i.hasNext();)
 					bos.println(i.next());
 				bos.println(MartRunnerProtocol.END_MESSAGE);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {
