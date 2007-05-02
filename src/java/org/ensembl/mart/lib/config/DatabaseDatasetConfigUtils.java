@@ -4886,7 +4886,7 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
 								String TEMPLATEDM   = "delete from "+getSchema()[0]+"."+MARTTEMPLATEDMTABLE;
 								String VERSIONSQL   = "update "+getSchema()[0]+"."+MARTVERSIONTABLE+" set version='"+SOFTWAREVERSION+"'";
 								
-								if (JOptionPane.showConfirmDialog(null,"WARNING - EXISTING TEMPLATES ARE NOT 0.5 COMPATIBLE AND NEED DELETING.\n" +									"Are you sure you want to do this?","DELETE TEMPLATES?",JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return metatable;
+								if (JOptionPane.showConfirmDialog(null,"WARNING - EXISTING TEMPLATES ARE NOT "+SOFTWAREVERSION+" COMPATIBLE AND NEED DELETING.\n" +									"Are you sure you want to do this?","DELETE TEMPLATES?",JOptionPane.YES_NO_OPTION)!=JOptionPane.YES_OPTION) return metatable;
 								
 								//System.out.println("THE VERSIONS DO NOT MATCH FOR DB - LINES TO RUN (NOT PUT IN YET)\n"+TEMPLATEMAIN+"\n"+TEMPLATEDM+"\n"+VERSIONSQL);
 								PreparedStatement ps1=conn.prepareStatement(TEMPLATEMAIN);
