@@ -74,8 +74,8 @@ import org.jdom.transform.JDOMSource;
 
 public class DatabaseDatasetConfigUtils {
 
-  private final String SOFTWAREVERSION = "0.5";
-  private final String XSL_FILE = "data/mart_0_4_0_5.xsl";
+  private final String SOFTWAREVERSION = "0.6";
+  private final String XSL_FILE = "data/mart_0_5_0_6.xsl";
   
   private final String BASEMETATABLE =      "meta_conf__dataset__main";
   private final String MARTUSERTABLE =      "meta_conf__user__dm";
