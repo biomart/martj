@@ -1147,6 +1147,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 			Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig, ourConf.getDataset(), colForDisplay);
 
+			if (options.length>200) {
+				JOptionPane.showMessageDialog(null, "Many options have been found ("+options.length+" of them). This may affect the performance of MartEditor and MartView.");
+			}
+			
 			for (int k = options.length - 1; k > -1; k--) {
 
 				insert(node, options[k], "Option");
@@ -1292,6 +1296,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			pa.addOptions(
 				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, dsConfig, joinKey, ourConf.getDataset(), field, opName, orderSQL,MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0],pushColForDisplay));
 
+			if (pa.getOptions().length > 200) {				
+				JOptionPane.showMessageDialog(null, "Many options have been found ("+pa.getOptions().length+" of them). This may affect the performance of MartEditor and MartView.");
+			}
+			
 			if (pa.getOptions().length > 0) {
 				Enumeration children = node.children();
 				DatasetConfigTreeNode childNode = null;

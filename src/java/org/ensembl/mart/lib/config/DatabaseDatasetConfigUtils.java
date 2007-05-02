@@ -75,7 +75,8 @@ import org.jdom.transform.JDOMSource;
 public class DatabaseDatasetConfigUtils {
 
   private final String SOFTWAREVERSION = "0.6";
-  private final String XSL_FILE = "data/mart_0_5_0_6.xsl";
+  private final String XSL_05_FILE = "data/mart_0_4_0_5.xsl";
+  private final String XSL_06_FILE = "data/mart_0_5_0_6.xsl";
   
   private final String BASEMETATABLE =      "meta_conf__dataset__main";
   private final String MARTUSERTABLE =      "meta_conf__user__dm";
@@ -4208,11 +4209,21 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		//Element thisElement = sourceDoc.getRootElement();
 		//String template = thisElement.getAttributeValue("template", "");
 		//System.out.println("ORIGINAL DOC HAS "+template);
-		InputStream xsl = this.getClass().getClassLoader().getResourceAsStream(XSL_FILE);
-		Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl));      
-		JDOMResult out = new JDOMResult();
-		transformer.transform(new JDOMSource(sourceDoc),out);
-        Document resultDoc = out.getDocument();
+
+		// 0.4 to 0.5 transform
+		InputStream xsl05 = this.getClass().getClassLoader().getResourceAsStream(XSL_05_FILE);
+		Transformer transformer05 = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl05));      
+		JDOMResult out05 = new JDOMResult();
+		transformer05.transform(new JDOMSource(sourceDoc),out05);
+
+		// 0.5 to 0.6 transform
+		InputStream xsl06 = this.getClass().getClassLoader().getResourceAsStream(XSL_06_FILE);
+		Transformer transformer06 = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl06));      
+		JDOMResult out06 = new JDOMResult();
+		transformer06.transform(new JDOMSource(out05.getDocument()),out06);
+		
+		// Final result - currently 0.6 output
+        Document resultDoc = out06.getDocument();
 		DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
 			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 
 			config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
@@ -7574,7 +7585,6 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         + " IS NOT NULL ORDER BY "
         + columnName;
     }
-	if (dsource.getDatabaseType().equals("mysql")) {sql += " LIMIT 200";}// hack to keep chr drop downs in check
     //System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = ps.executeQuery();
@@ -7774,7 +7784,6 @@ public void deleteTemplateConfigs(String template) throws ConfigurationException
         + " IS NOT NULL "
         + orderSQL;
     }  
-	if (dsource.getDatabaseType().equals("mysql")) {sql += " LIMIT 200";}// hack to keep chr drop downs in check
 	//System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = null;
