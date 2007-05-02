@@ -74,9 +74,9 @@ import org.jdom.transform.JDOMSource;
 
 public class DatabaseDatasetConfigUtils {
 
-  private final String SOFTWAREVERSION = "0.6";
+  private final String SOFTWAREVERSION = "0.5";
   private final String XSL_05_FILE = "data/mart_0_4_0_5.xsl";
-  private final String XSL_06_FILE = "data/mart_0_5_0_6.xsl";
+  //private final String XSL_06_FILE = "data/mart_0_5_0_6.xsl";
   
   private final String BASEMETATABLE =      "meta_conf__dataset__main";
   private final String MARTUSERTABLE =      "meta_conf__user__dm";
@@ -4216,14 +4216,17 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		JDOMResult out05 = new JDOMResult();
 		transformer05.transform(new JDOMSource(sourceDoc),out05);
 
-		// 0.5 to 0.6 transform
+		// 0.5 to 0.6 transform 
+		/*
 		InputStream xsl06 = this.getClass().getClassLoader().getResourceAsStream(XSL_06_FILE);
 		Transformer transformer06 = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl06));      
 		JDOMResult out06 = new JDOMResult();
 		transformer06.transform(new JDOMSource(out05.getDocument()),out06);
+		*/
 		
-		// Final result - currently 0.6 output
-        Document resultDoc = out06.getDocument();
+		// Final result - currently 0.5 output
+        Document resultDoc = out05.getDocument();
+		
 		DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
 			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 
 			config.getDatasetID(),config.getModified(),config.getMartUsers(),config.getInterfaces(),
