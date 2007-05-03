@@ -23,10 +23,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -38,6 +42,8 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.dialogs.AboutDialog;
+import org.biomart.common.view.gui.dialogs.StackTrace;
+import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 
 /**
  * This abstract class provides some useful common stuff for launching any
@@ -248,6 +254,27 @@ public abstract class BioMartGUI extends JFrame {
 	}
 
 	/**
+	 * Requests the app to show a docs dialog.
+	 */
+	public void requestShowDocs() {
+		// Load the docs for this app.
+		final StringBuffer textBuffer = new StringBuffer();
+		final BufferedReader reader = new BufferedReader(new InputStreamReader(
+				Resources.getResourceAsStream("docs.txt")));
+		try {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				textBuffer.append(line);
+				textBuffer.append('\n');
+			}
+			ViewTextDialog.displayText(Resources.get("docsDialogTitle",
+					Resources.get("plainGUITitle")), textBuffer.toString());
+		} catch (final IOException e) {
+			StackTrace.showStackTrace(e);
+		}
+	}
+
+	/**
 	 * Override this method if you wish to ask the user for confirmation.
 	 * 
 	 * @return <tt>true</tt> if it is OK to exit, and <tt>false</tt> if the
@@ -277,6 +304,8 @@ public abstract class BioMartGUI extends JFrame {
 		private JMenuItem exit;
 
 		private JMenuItem about;
+
+		private JMenuItem docs;
 
 		private BioMartGUI gui;
 
@@ -318,15 +347,24 @@ public abstract class BioMartGUI extends JFrame {
 			// Don't do the About menu option on Macs.
 			if (!this.gui.isMac()) {
 				// About.
-				this.about = new JMenuItem(Resources.get(
-						"aboutTitle", Resources.get("plainGUITitle")));
-				this.about.setMnemonic(Resources
-						.get("aboutMnemonic").charAt(0));
+				this.about = new JMenuItem(Resources.get("aboutTitle",
+						Resources.get("plainGUITitle")));
+				this.about
+						.setMnemonic(Resources.get("aboutMnemonic").charAt(0));
 				this.about.addActionListener(this);
 				helpMenu.add(this.about);
+
+				// Line to separate from rest of menu.
+				helpMenu.addSeparator();
 			}
 
-			// TODO Add a help page menu item.
+			// Add a docs page menu item.
+			this.docs = new JMenuItem(Resources.get("docsTitle", Resources
+					.get("plainGUITitle")), new ImageIcon(Resources
+					.getResourceAsURL("help.gif")));
+			this.docs.setMnemonic(Resources.get("docsMnemonic").charAt(0));
+			this.docs.addActionListener(this);
+			helpMenu.add(this.docs);
 
 			// Adds the menus to the menu bar (if it exists at all - TODO remove
 			// this check once help page added).
@@ -353,9 +391,12 @@ public abstract class BioMartGUI extends JFrame {
 			// File menu.
 			if (e.getSource() == this.exit)
 				this.getBioMartGUI().requestExitApp();
-			// Help menu
+			// About menu
 			else if (e.getSource() == this.about)
 				this.getBioMartGUI().requestShowAbout();
+			// Docs menu
+			else if (e.getSource() == this.docs)
+				this.getBioMartGUI().requestShowDocs();
 		}
 	}
 }

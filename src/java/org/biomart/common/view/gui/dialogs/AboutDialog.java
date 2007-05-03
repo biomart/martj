@@ -32,10 +32,7 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.OpenBrowser.OpenBrowserLabel;
 
 /**
- * A dialog which allows the user to choose some options about creating DDL over
- * a given set of datasets, then lets them actually do it. The options include
- * granularity of statements generated, and whether to output to file or to
- * screen.
+ * A dialog which shows the about info.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
