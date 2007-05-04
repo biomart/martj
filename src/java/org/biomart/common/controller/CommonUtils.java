@@ -31,8 +31,6 @@ import org.biomart.common.model.Key.GenericForeignKey;
 import org.biomart.common.model.Key.GenericPrimaryKey;
 import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.model.Schema.JDBCSchema;
-import org.biomart.common.resources.Log;
-import org.biomart.common.resources.Resources;
 
 /**
  * Tools for working with BioMart apps from a GUI or CLI. These wrapper methods
@@ -59,7 +57,6 @@ public class CommonUtils {
 	 */
 	public static void createForeignKey(final Table table, final List columns)
 			throws AssociationException {
-		Log.info(Resources.get("logRequestFK"));
 		final ForeignKey fk = new GenericForeignKey(columns);
 		fk.setStatus(ComponentStatus.HANDMADE);
 		table.addForeignKey(fk);
@@ -91,7 +88,6 @@ public class CommonUtils {
 	public static JDBCSchema createJDBCSchema(final String driverClassName,
 			final String url, final String schemaName, final String username,
 			String password, final String name, final boolean keyGuessing) {
-		Log.info(Resources.get("logCreateJDBCSchema"));
 		if (password != null && password.equals(""))
 			password = null;
 		return new JDBCSchema(driverClassName, url, schemaName, username,
@@ -113,7 +109,6 @@ public class CommonUtils {
 	 */
 	public static void createPrimaryKey(final Table table, final List columns)
 			throws AssociationException {
-		Log.info(Resources.get("logRequestPK"));
 		final PrimaryKey pk = new GenericPrimaryKey(columns);
 		pk.setStatus(ComponentStatus.HANDMADE);
 		table.setPrimaryKey(pk);
@@ -131,7 +126,6 @@ public class CommonUtils {
 	 */
 	public static void disableKeyGuessing(final Schema schema)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logDisableKeyGuess"));
 		schema.setKeyGuessing(false);
 	}
 
@@ -147,7 +141,6 @@ public class CommonUtils {
 	 */
 	public static void enableKeyGuessing(final Schema schema)
 			throws DataModelException, SQLException {
-		Log.info(Resources.get("logEnableKeyGuess"));
 		schema.setKeyGuessing(true);
 	}
 
@@ -165,7 +158,6 @@ public class CommonUtils {
 	 */
 	public static void synchroniseSchema(final Schema schema)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logRequestSyncSchema"));
 		schema.synchronise();
 	}
 
@@ -185,7 +177,6 @@ public class CommonUtils {
 	 *             for failure.
 	 */
 	public static boolean testSchema(final Schema schema) throws Exception {
-		Log.info(Resources.get("logRequestTestSchema"));
 		return schema.test();
 	}
 

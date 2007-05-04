@@ -85,7 +85,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            text files.
 	 */
 	public SaveDDLMartConstructor(final File outputFile) {
-		Log.info(Resources.get("logSaveDDLFile", outputFile.getPath()));
+		Log.info("Saving DDL to "+outputFile.getPath());
 		// Remember the settings.
 		this.outputFile = outputFile;
 		// This last call is redundant but is included for clarity.
@@ -104,7 +104,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            granularity will cause an exception.
 	 */
 	public SaveDDLMartConstructor(final StringBuffer outputStringBuffer) {
-		Log.info(Resources.get("logSaveDDLBuffer"));
+		Log.info("Saving DDL to buffer");
 		// Remember the settings.
 		this.outputStringBuffer = outputStringBuffer;
 		// This last call is redundant but is included for clarity.
@@ -124,7 +124,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 */
 	public SaveDDLMartConstructor(final String outputHost,
 			final String outputPort) {
-		Log.info(Resources.get("logSaveDDLHost"));
+		Log.info("Saving DDL to MartRunner");
 		// Remember the settings.
 		this.outputHost = outputHost;
 		this.outputPort = outputPort;
@@ -137,7 +137,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			final String targetSchemaName, final Collection datasets)
 			throws Exception {
 		// Check that all the input schemas involved are cohabitable.
-		Log.info(Resources.get("logCheckDDLCohabit"));
+		Log.info("Checking all schemas can cohabit");
 
 		// First, make a set of all input schemas. We use a set to prevent
 		// duplicates.

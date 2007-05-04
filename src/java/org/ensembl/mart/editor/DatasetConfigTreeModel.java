@@ -368,6 +368,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 				config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				config.removeImportable((Importable) node.getUserObject());
 			} 
+		} else if (node.getUserObject() instanceof DynamicDataset) {
+			config = (DatasetConfig)((DatasetConfigTreeNode)node.getParent().getParent()).getUserObject();
+			config.removeDynamicDataset((DynamicDataset)node.getUserObject());
 		} else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
 			if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {
 				FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();

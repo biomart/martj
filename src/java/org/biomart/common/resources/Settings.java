@@ -90,7 +90,7 @@ public class Settings {
 			if (!Settings.propertiesFile.exists())
 				Settings.propertiesFile.createNewFile();
 		} catch (final Throwable t) {
-			Log.error(Resources.get("settingsCacheInitFailed"));
+			Log.error("Failed to initialise settings cache");
 		}
 	}
 
@@ -108,7 +108,7 @@ public class Settings {
 		// Set up the logger.
 		Log.configure(app, appDir);
 		// Use it to log application startup.
-		Log.info(Resources.get("appStarted", app));
+		Log.info("Started "+app);
 		// Make the class cache directory.
 		Settings.classCacheDir = new File(Settings.appDir, "cache");
 		if (!Settings.classCacheDir.exists())
@@ -136,8 +136,6 @@ public class Settings {
 		}
 
 		synchronized (Settings.SAVE_LOCK) {
-
-			Log.info(Resources.get("startingSaveSettings"));
 
 			try {
 				Log.debug("Saving settings to "
@@ -179,10 +177,10 @@ public class Settings {
 					}
 				}
 			} catch (final Throwable t) {
-				Log.error(Resources.get("settingsCacheSaveFailed"), t);
+				Log.error("Failed to save settings", t);
 			}
 
-			Log.info(Resources.get("doneSaveSettings"));
+			Log.info("Done saving settings");
 		}
 	}
 
@@ -234,7 +232,6 @@ public class Settings {
 	 * <tt>~/.biomart/&lt;appname&gt;</tt>.
 	 */
 	public static synchronized void load() {
-		Log.info(Resources.get("startingLoadSettings"));
 		Settings.initialising = true;
 
 		// Clear the existing settings.
@@ -248,7 +245,7 @@ public class Settings {
 			Settings.properties.load(new FileInputStream(
 					Settings.propertiesFile));
 		} catch (final Throwable t) {
-			Log.error(Resources.get("settingsCacheLoadFailed"), t);
+			Log.error("Failed to load settings", t);
 		}
 
 		// Set up the cache.
@@ -290,11 +287,11 @@ public class Settings {
 					// Ignore. We don't care as these settings are
 					// now irrelevant if the class no longer exists.
 				} catch (final Throwable t) {
-					Log.error(Resources.get("settingsCacheLoadFailed"), t);
+					Log.error("Failed to load settings", t);
 				}
 
 		Settings.initialising = false;
-		Log.info(Resources.get("doneLoadSettings"));
+		Log.info("Done loading settings");
 	}
 
 	/**

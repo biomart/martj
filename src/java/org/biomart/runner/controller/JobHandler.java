@@ -603,12 +603,12 @@ public class JobHandler {
 				new JobThreadManagerListener() {
 					public void jobStopped(final String jobId) {
 						JobHandler.jobManagers.remove(jobId);
-						Log.info(Resources.get("threadManagerStopped", jobId));
+						Log.info("Thread manager stopped for "+jobId);
 					}
 				});
 		JobHandler.jobManagers.put(jobId, manager);
 		manager.startThreadManager();
-		Log.info(Resources.get("startedThreadManager", jobId));
+		Log.info("Thread manager started for "+jobId);
 	}
 
 	/**
@@ -626,7 +626,7 @@ public class JobHandler {
 				.get(jobId);
 		manager.stopThreadManager();
 		// Don't remove it. The callback will do that.
-		Log.info(Resources.get("stoppedThreadManager", jobId));
+		Log.info("Stopped thread manager "+jobId);
 	}
 
 	private static File getJobListFile() throws IOException {

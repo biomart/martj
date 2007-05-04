@@ -68,7 +68,6 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
-import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
@@ -109,7 +108,6 @@ public class DataSetTabSet extends JTabbedPane {
 	public DataSetTabSet(final MartTab martTab) {
 		super();
 
-		Log.info(Resources.get("logCreateDatasetTabs"));
 
 		// Remember the settings.
 		this.martTab = martTab;
@@ -145,7 +143,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 	private synchronized void addDataSetTab(final DataSet dataset,
 			final boolean selectDataset) {
-		Log.info(Resources.get("logAddDatasetTab", "" + dataset));
 		// Create the diagram to represent this dataset.
 		final DataSetDiagram datasetDiagram = new DataSetDiagram(this.martTab,
 				dataset);
@@ -242,7 +239,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 	private synchronized void removeDataSetTab(final DataSet dataset,
 			final boolean select) {
-		Log.info(Resources.get("logRemoveDatasetTab", "" + dataset));
 		// Work out the currently selected tab.
 		final int currentTab = this.getSelectedIndex();
 
@@ -389,7 +385,6 @@ public class DataSetTabSet extends JTabbedPane {
 	 * are in the mart but not yet displayed.
 	 */
 	public synchronized void recalculateDataSetTabs() {
-		Log.info(Resources.get("logRecalcDatasetTabs"));
 		// Synchronise the datasets first.
 		try {
 			MartBuilderUtils.synchroniseMartDataSets(this.martTab.getMart());

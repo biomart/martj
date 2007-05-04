@@ -141,7 +141,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	public static Mart load(final File file) throws IOException,
 			DataModelException {
-		Log.info(Resources.get("logStartLoadingXMLFile", file.getPath()));
+		Log.info("Loading XML from "+file.getPath());
 		// Use the default (non-validating) parser
 		final SAXParserFactory factory = SAXParserFactory.newInstance();
 		// Parse the input
@@ -161,7 +161,7 @@ public class MartBuilderXML extends DefaultHandler {
 			throw new DataModelException(Resources.get("fileNotSchemaVersion",
 					MartBuilderXML.CURRENT_DTD_VERSION));
 		// Return.
-		Log.info(Resources.get("logDoneLoadingXMLFile"));
+		Log.info("Done loading XML");
 		return mart;
 	}
 
@@ -182,7 +182,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	public static void save(final Mart mart, final File file)
 			throws IOException, DataModelException {
-		Log.info(Resources.get("logStartSavingXMLFile", file.getPath()));
+		Log.info("Saving XML as "+file.getPath());
 		// Open the file.
 		final FileWriter fw = new FileWriter(file);
 		try {
@@ -196,7 +196,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// Close the output stream.
 			fw.close();
 		}
-		Log.info(Resources.get("logDoneSavingXMLFile"));
+		Log.info("Done saving XML");
 	}
 
 	/**
@@ -217,7 +217,7 @@ public class MartBuilderXML extends DefaultHandler {
 	 */
 	public static String saveReport(final Mart mart) throws IOException,
 			DataModelException, TransformerException {
-		Log.info(Resources.get("logMartReportStart"));
+		Log.info("Starting report");
 		// Open the file.
 		final StringWriter sw = new StringWriter();
 		try {
@@ -243,7 +243,7 @@ public class MartBuilderXML extends DefaultHandler {
 		transformer.transform(new StreamSource(new StringReader(xml)),
 				new StreamResult(rsw));
 		rsw.close();
-		Log.info(Resources.get("logMartReportEnd"));
+		Log.info("Report ended");
 		return rsw.getBuffer().toString();
 	}
 

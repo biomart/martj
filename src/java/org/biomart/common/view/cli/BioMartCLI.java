@@ -51,7 +51,7 @@ public abstract class BioMartCLI {
 	 */
 	protected void launch() {
 		// Start the application.
-		Log.info(Resources.get("launchingCLI"));
+		Log.info("Launching command line application");
 		// Start work.
 		boolean moreInput = true;
 		while (moreInput)
@@ -89,12 +89,12 @@ public abstract class BioMartCLI {
 	 * the user first if necessary.
 	 */
 	public void requestExitApp() {
-		Log.info(Resources.get("logRequestNormalExit"));
+		Log.info("Normal exit requested");
 		if (this.confirmExitApp()) {
-			Log.info(Resources.get("logRequestNormalExitGranted"));
+			Log.info("Normal exit granted");
 			System.exit(0);
 		} else
-			Log.info(Resources.get("logRequestNormalExitDenied"));
+			Log.info("Normal exit denied");
 	}
 
 	/**

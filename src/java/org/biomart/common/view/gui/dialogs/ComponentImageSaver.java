@@ -38,7 +38,7 @@ import org.biomart.common.view.gui.LongProcess;
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by 
- *  		$Author$
+ * 			$Author$
  * @since 0.5
  */
 public class ComponentImageSaver {
@@ -107,14 +107,9 @@ public class ComponentImageSaver {
 			// Call save() with the filename and format.
 			new LongProcess() {
 				public void run() throws Exception {
-					try {
-						Log.info(Resources.get("savingImage"));
-						ComponentImageSaver.this.save(fileChooser
-								.getSelectedFile(),
-								(ImageSaverFilter) fileChooser.getFileFilter());
-					} finally {
-						Log.info(Resources.get("doneSavingImage"));
-					}
+					ComponentImageSaver.this.save(
+							fileChooser.getSelectedFile(),
+							(ImageSaverFilter) fileChooser.getFileFilter());
 				}
 			}.start();
 	}

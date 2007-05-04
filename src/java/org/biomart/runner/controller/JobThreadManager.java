@@ -207,7 +207,7 @@ public class JobThreadManager extends Thread {
 		}
 
 		public void run() {
-			Log.info(Resources.get("jobThreadStarting", "" + this.sequence));
+			Log.info("Thread "+this.sequence+" starting");
 			// Each thread grabs sections from the queue until none are left.
 			while (this.continueRunning()
 					&& (this.currentSection = this.getNextSection()) != null) {
@@ -238,7 +238,7 @@ public class JobThreadManager extends Thread {
 			}
 			// Quit thread by removing ourselves.
 			this.manager.jobThreadPool.remove(this);
-			Log.info(Resources.get("jobThreadEnding", "" + this.sequence));
+			Log.info("Thread "+this.sequence+" ending");
 			this.closeConnection();
 		}
 

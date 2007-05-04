@@ -387,8 +387,6 @@ public interface Schema extends Comparable, DataLink {
 		 *            if not.
 		 */
 		public GenericSchema(final String name, final boolean keyguessing) {
-			Log.info(Resources.get("logCreatingSchema", new String[] { name,
-					"" + keyguessing }));
 			this.name = name;
 			this.keyguessing = keyguessing;
 		}
@@ -677,8 +675,6 @@ public interface Schema extends Comparable, DataLink {
 
 		public void setKeyGuessing(final boolean keyguessing)
 				throws SQLException, DataModelException {
-			Log.info(Resources.get("logChangeKeyguessing", new String[] {
-					"" + keyguessing, this.getName() }));
 			this.keyguessing = keyguessing;
 			this.synchroniseKeys();
 		}
@@ -692,7 +688,7 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void synchronise() throws SQLException, DataModelException {
-			Log.info(Resources.get("logSynchronising", this.getName()));
+			Log.info("Synchronising "+this.getName());
 			this.synchroniseKeys();
 		}
 
@@ -1670,11 +1666,9 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void synchronise() throws SQLException, DataModelException {
-			Log.info(Resources.get("logSyncJDBCSchema", "" + this));
+			Log.info("Synchronising "+this);
 			// Get database metadata, catalog, and schema details.
-			Log.debug("Loading connection metadata");
 			final DatabaseMetaData dmd = this.getConnection().getMetaData();
-			Log.debug("Loading database catalog");
 			final String catalog = this.getConnection().getCatalog();
 
 			// Create a list of existing tables. During this method, we remove
@@ -1686,7 +1680,6 @@ public interface Schema extends Comparable, DataLink {
 			final Collection tablesToBeDropped = new HashSet(this.getTables());
 
 			// Load tables and views from database, then loop over them.
-			Log.debug("Loading database table list");
 			final ResultSet dbTables = dmd.getTables(catalog, this.schemaName,
 					"%", new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
 
@@ -1774,7 +1767,7 @@ public interface Schema extends Comparable, DataLink {
 
 			// Sync the keys.
 			this.synchroniseKeys();
-			Log.info(Resources.get("logDoneSyncJDBCSchema"));
+			Log.info("Done synchronising");
 		}
 
 		public void synchroniseKeys() throws SQLException, DataModelException {
@@ -1939,7 +1932,6 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public boolean test() throws Exception {
-			Log.info(Resources.get("logTestJDBCSchema", "" + this));
 			// Establish the JDBC connection. May throw an exception of its own,
 			// which is fine, just let it go.
 			final Connection connection = this.getConnection();
@@ -1964,7 +1956,6 @@ public interface Schema extends Comparable, DataLink {
 			rs.close();
 
 			// If we get here, it worked.
-			Log.info(Resources.get("logDoneTestJDBCSchema"));
 			return worked;
 		}
 	}

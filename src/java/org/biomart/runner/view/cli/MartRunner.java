@@ -100,11 +100,11 @@ public class MartRunner extends BioMartCLI {
 		Log.debug("Finding crashed jobs");
 		final int crashedJobs = JobHandler.stopCrashedJobs();
 		if (crashedJobs > 0)
-			Log.info(Resources.get("foundCrashedJobs", "" + crashedJobs));
+			Log.info("Found crashed jobs: "+crashedJobs);
 		// Establish the socket and start listening.
 		try {
 			final int port = Integer.parseInt(args[0]);
-			Log.info(Resources.get("serverListening", "" + port));
+			Log.info("Server listening on "+port);
 			this.serverSocket = new ServerSocket(port);
 		} catch (final IOException e) {
 			throw new ValidationException(Resources.get("serverPortBroken",
@@ -166,8 +166,8 @@ public class MartRunner extends BioMartCLI {
 
 		private ClientWorker(final Socket clientSocket) {
 			this.clientSocket = clientSocket;
-			Log.info(Resources.get("clientConnected", ""
-					+ this.clientSocket.getInetAddress()));
+			Log.info("Client connected on "
+					+ this.clientSocket.getInetAddress());
 		}
 
 		/**
@@ -193,8 +193,8 @@ public class MartRunner extends BioMartCLI {
 			} catch (final IOException e) {
 				// We don't really care. We're exiting anyway.
 			} finally {
-				Log.info(Resources.get("clientDisconnected", ""
-						+ this.clientSocket.getInetAddress()));
+				Log.info("Client disconnected from"
+						+ this.clientSocket.getInetAddress());
 			}
 		}
 	}

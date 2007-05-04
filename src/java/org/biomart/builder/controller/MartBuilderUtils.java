@@ -56,8 +56,6 @@ import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Schema.JDBCSchema;
-import org.biomart.common.resources.Log;
-import org.biomart.common.resources.Resources;
 
 /**
  * Tools for working with the mart from a GUI or CLI. These wrapper methods
@@ -191,7 +189,6 @@ public class MartBuilderUtils {
 	 */
 	public static void setOutputSchema(final Mart mart,
 			final String outputSchema) {
-		Log.info(Resources.get("logReqOutputSchema"));
 		mart.setOutputSchema(outputSchema);
 	}
 
@@ -204,7 +201,6 @@ public class MartBuilderUtils {
 	 *            the new output host value.
 	 */
 	public static void setOutputHost(final Mart mart, final String outputHost) {
-		Log.info(Resources.get("logReqOutputHost"));
 		mart.setOutputHost(outputHost);
 	}
 
@@ -217,7 +213,6 @@ public class MartBuilderUtils {
 	 *            the new output port value.
 	 */
 	public static void setOutputPort(final Mart mart, final String outputPort) {
-		Log.info(Resources.get("logReqOutputPort"));
 		mart.setOutputPort(outputPort);
 	}
 
@@ -230,7 +225,6 @@ public class MartBuilderUtils {
 	 *            the schema to add to the mart.
 	 */
 	public static void addSchemaToMart(final Mart mart, final Schema schema) {
-		Log.info(Resources.get("logReqAddSchemaToMart"));
 		mart.addSchema(schema);
 	}
 
@@ -254,7 +248,6 @@ public class MartBuilderUtils {
 	public static void changeKeyStatus(final Mart mart, final Key key,
 			final ComponentStatus status) throws SQLException,
 			DataModelException {
-		Log.info(Resources.get("logReqChangeKeyStatus"));
 		key.setStatus(status);
 		mart.synchroniseDataSets(key.getTable().getSchema());
 	}
@@ -269,7 +262,6 @@ public class MartBuilderUtils {
 	 */
 	public static void changeOptimiserType(final DataSet dataset,
 			final DataSetOptimiserType type) {
-		Log.info(Resources.get("logReqChangeOptimiser"));
 		dataset.setDataSetOptimiserType(type);
 	}
 
@@ -297,7 +289,6 @@ public class MartBuilderUtils {
 	public static void changeRelationCardinality(final Mart mart,
 			final Relation relation, final Cardinality cardinality)
 			throws SQLException, DataModelException, AssociationException {
-		Log.info(Resources.get("logReqChangeCardinality"));
 		// Change the cardinality.
 		relation.setCardinality(cardinality);
 		// Change it to handmade to make it obvious.
@@ -340,7 +331,6 @@ public class MartBuilderUtils {
 	public static void changeRelationStatus(final Mart mart,
 			final Relation relation, final ComponentStatus status)
 			throws SQLException, DataModelException, AssociationException {
-		Log.info(Resources.get("logReqChangeRelStatus"));
 		relation.setStatus(status);
 		mart.synchroniseDataSets(relation.getFirstKey().getTable().getSchema(),
 				relation.getSecondKey().getTable().getSchema());
@@ -370,8 +360,6 @@ public class MartBuilderUtils {
 	public static void createRelation(final Mart mart, final Key from,
 			final Key to) throws SQLException, DataModelException,
 			AssociationException {
-		Log.info(Resources.get("logReqRelation"));
-
 		// Create the relation.
 		final Relation r = new GenericRelation(from, to, Cardinality.MANY);
 		r.setStatus(ComponentStatus.HANDMADE);
@@ -408,7 +396,6 @@ public class MartBuilderUtils {
 	public static void editKeyColumns(final Mart mart, final Key key,
 			final List columns) throws SQLException, DataModelException,
 			AssociationException {
-		Log.info(Resources.get("logReqEditKey"));
 		key.setColumns(columns);
 		MartBuilderUtils.changeKeyStatus(mart, key, ComponentStatus.HANDMADE);
 		mart.synchroniseDataSets(key.getTable().getSchema());
@@ -421,7 +408,6 @@ public class MartBuilderUtils {
 	 *            the dataset to enable invisibility in.
 	 */
 	public static void invisibleDataSet(final DataSet dataset) {
-		Log.info(Resources.get("logReqInvisibleDataset"));
 		dataset.setInvisible(true);
 	}
 
@@ -437,7 +423,6 @@ public class MartBuilderUtils {
 	 */
 	public static void maskDimension(final DataSet dataset,
 			final DataSetTable table) throws ValidationException {
-		Log.info(Resources.get("logReqMaskTable"));
 		dataset.getDataSetModifications().setMaskedTable(table);
 	}
 
@@ -451,7 +436,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unmaskDimension(final DataSet dataset,
 			final DataSetTable table) {
-		Log.info(Resources.get("logReqUnmaskTable"));
 		dataset.getDataSetModifications().unsetMaskedTable(table);
 	}
 
@@ -467,7 +451,6 @@ public class MartBuilderUtils {
 	 */
 	public static void distinctTable(final DataSet dataset,
 			final DataSetTable table) throws ValidationException {
-		Log.info(Resources.get("logReqDistinctTable"));
 		dataset.getDataSetModifications().setDistinctTable(table);
 	}
 
@@ -481,7 +464,6 @@ public class MartBuilderUtils {
 	 */
 	public static void undistinctTable(final DataSet dataset,
 			final DataSetTable table) {
-		Log.info(Resources.get("logReqUndistinctTable"));
 		dataset.getDataSetModifications().unsetDistinctTable(table);
 	}
 
@@ -495,7 +477,6 @@ public class MartBuilderUtils {
 	 */
 	public static void indexColumn(final DataSet dataset,
 			final DataSetColumn column) {
-		Log.info(Resources.get("logReqIndexColumn"));
 		dataset.getDataSetModifications().setIndexedColumn(column);
 	}
 
@@ -511,7 +492,6 @@ public class MartBuilderUtils {
 	 */
 	public static void maskColumns(final DataSet dataset,
 			final Collection columns) throws ValidationException {
-		Log.info(Resources.get("logReqMaskColumn"));
 		for (final Iterator i = columns.iterator(); i.hasNext();)
 			dataset.getDataSetModifications().setMaskedColumn(
 					(DataSetColumn) i.next());
@@ -532,7 +512,6 @@ public class MartBuilderUtils {
 	 */
 	public static void maskRelation(final DataSetTable datasetTable,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqMaskRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setMaskedRelation(datasetTable, relation);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -553,7 +532,6 @@ public class MartBuilderUtils {
 	 */
 	public static void mergeRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqMergeRelation"));
 		dataset.getSchemaModifications().setMergedRelation(relation);
 		dataset.synchronise();
 	}
@@ -573,7 +551,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unmergeRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnmergeRelation"));
 		dataset.getSchemaModifications().unsetMergedRelation(relation);
 		dataset.synchronise();
 	}
@@ -593,7 +570,6 @@ public class MartBuilderUtils {
 	 */
 	public static void uncompoundRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUncompoundRelation"));
 		dataset.getSchemaModifications().unsetCompoundRelation(relation);
 		dataset.synchronise();
 	}
@@ -616,7 +592,6 @@ public class MartBuilderUtils {
 	public static void uncompoundRelation(final DataSetTable datasetTable,
 			final Relation relation) throws SQLException, DataModelException,
 			ValidationException {
-		Log.info(Resources.get("logReqUncompoundRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.unsetCompoundRelation(datasetTable, relation);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -637,7 +612,6 @@ public class MartBuilderUtils {
 	 */
 	public static void undirectionalRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUndirectionalRelation"));
 		dataset.getSchemaModifications().unsetDirectionalRelation(relation);
 		dataset.synchronise();
 	}
@@ -660,7 +634,6 @@ public class MartBuilderUtils {
 	public static void undirectionalRelation(final DataSetTable datasetTable,
 			final Relation relation) throws SQLException, DataModelException,
 			ValidationException {
-		Log.info(Resources.get("logReqUndirectionalRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.unsetDirectionalRelation(datasetTable, relation);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -686,7 +659,6 @@ public class MartBuilderUtils {
 	public static void compoundRelation(final DataSet dataset,
 			final Relation relation, final CompoundRelationDefinition def)
 			throws SQLException, DataModelException, ValidationException {
-		Log.info(Resources.get("logReqCompoundRelation"));
 		dataset.getSchemaModifications().setCompoundRelation(relation, def);
 		dataset.synchronise();
 	}
@@ -711,7 +683,6 @@ public class MartBuilderUtils {
 	public static void compoundRelation(final DataSetTable datasetTable,
 			final Relation relation, final CompoundRelationDefinition def)
 			throws SQLException, DataModelException, ValidationException {
-		Log.info(Resources.get("logReqCompoundRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setCompoundRelation(datasetTable, relation, def);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -737,7 +708,6 @@ public class MartBuilderUtils {
 	public static void directionalRelation(final DataSet dataset,
 			final Relation relation, final Key def) throws SQLException,
 			DataModelException, ValidationException {
-		Log.info(Resources.get("logReqDirectionalRelation"));
 		dataset.getSchemaModifications().setDirectionalRelation(relation, def);
 		dataset.synchronise();
 	}
@@ -762,7 +732,6 @@ public class MartBuilderUtils {
 	public static void directionalRelation(final DataSetTable datasetTable,
 			final Relation relation, final Key def) throws SQLException,
 			DataModelException, ValidationException {
-		Log.info(Resources.get("logReqDirectionalRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setDirectionalRelation(datasetTable, relation, def);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -782,7 +751,6 @@ public class MartBuilderUtils {
 	 */
 	public static void maskRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqMaskRelation"));
 		dataset.getSchemaModifications().setMaskedRelation(relation);
 		dataset.synchronise();
 	}
@@ -802,7 +770,6 @@ public class MartBuilderUtils {
 	 */
 	public static void forceRelation(final DataSetTable datasetTable,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqForceRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.setForceIncludeRelation(datasetTable, relation);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -823,7 +790,6 @@ public class MartBuilderUtils {
 	 */
 	public static void forceRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqForceRelation"));
 		dataset.getSchemaModifications().setForceIncludeRelation(relation);
 		dataset.synchronise();
 	}
@@ -843,7 +809,6 @@ public class MartBuilderUtils {
 	 */
 	public static void maskAllRelations(final DataSetTable datasetTable,
 			final Table table) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqMaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			((DataSet) datasetTable.getSchema()).getSchemaModifications()
 					.setMaskedRelation(datasetTable, (Relation) i.next());
@@ -865,7 +830,6 @@ public class MartBuilderUtils {
 	 */
 	public static void maskAllRelations(final DataSet dataset, final Table table)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqMaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.getSchemaModifications().setMaskedRelation(
 					(Relation) i.next());
@@ -896,7 +860,6 @@ public class MartBuilderUtils {
 			final ExpressionColumnDefinition def, final Map aliases,
 			final String expression, final boolean groupBy)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqChangeExprCol"));
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.unsetExpressionColumn(dsTable, def);
 		final ExpressionColumnDefinition expr = new ExpressionColumnDefinition(
@@ -924,7 +887,6 @@ public class MartBuilderUtils {
 	public static void partitionByColumn(final DataSet dataset,
 			final DataSetColumn column, final PartitionedColumnDefinition type)
 			throws ValidationException {
-		Log.info(Resources.get("logReqPartitionCol"));
 		dataset.getDataSetModifications().setPartitionedColumn(column, type);
 	}
 
@@ -940,7 +902,6 @@ public class MartBuilderUtils {
 	 */
 	public static void removeDataSetFromMart(final Mart mart,
 			final DataSet dataset) {
-		Log.info(Resources.get("logReqRemoveDSFromMart"));
 		mart.removeDataSet(dataset);
 	}
 
@@ -959,7 +920,6 @@ public class MartBuilderUtils {
 	public static void removeExpressionColumn(final DataSetTable dsTable,
 			final ExpressionColumnDefinition column) throws SQLException,
 			DataModelException {
-		Log.info(Resources.get("logReqRemoveExprCol"));
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.unsetExpressionColumn(dsTable, column);
 		((DataSet) dsTable.getSchema()).synchronise();
@@ -981,7 +941,6 @@ public class MartBuilderUtils {
 	 */
 	public static void removeKey(final Mart mart, final Key key)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqRemoveKey"));
 		key.destroy();
 		mart.synchroniseDataSets(key.getTable().getSchema());
 	}
@@ -1004,7 +963,6 @@ public class MartBuilderUtils {
 	 */
 	public static void removeRelation(final Mart mart, final Relation relation)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqRemoveRelation"));
 		relation.destroy();
 		mart.synchroniseDataSets(relation.getFirstKey().getTable().getSchema(),
 				relation.getSecondKey().getTable().getSchema());
@@ -1028,7 +986,6 @@ public class MartBuilderUtils {
 	 */
 	public static void removeSchemaFromMart(final Mart mart, final Schema schema)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqRemoveSchemaFromMart"));
 		mart.removeSchema(schema);
 	}
 
@@ -1045,7 +1002,6 @@ public class MartBuilderUtils {
 	 */
 	public static void renameDataSet(final Mart mart, final DataSet dataset,
 			final String newName) {
-		Log.info(Resources.get("logReqRenameDataset"));
 		mart.renameDataSet(dataset, newName);
 	}
 
@@ -1070,7 +1026,6 @@ public class MartBuilderUtils {
 	public static void renameDataSetColumn(final DataSetColumn col,
 			final String newName) throws ValidationException, SQLException,
 			DataModelException {
-		Log.info(Resources.get("logReqRenameDSColumn"));
 		((DataSet) col.getTable().getSchema()).getDataSetModifications()
 				.setColumnRename(col, newName);
 		((DataSet) col.getTable().getSchema()).synchronise();
@@ -1087,7 +1042,6 @@ public class MartBuilderUtils {
 	 */
 	public static void renameDataSetTable(final DataSetTable tbl,
 			final String newName) {
-		Log.info(Resources.get("logReqRenameDSTable"));
 		((DataSet) tbl.getSchema()).getDataSetModifications().setTableRename(
 				tbl, newName);
 	}
@@ -1104,7 +1058,6 @@ public class MartBuilderUtils {
 	 */
 	public static void renameSchema(final Mart mart, final Schema schema,
 			final String newName) {
-		Log.info(Resources.get("logReqRenameSchema"));
 		mart.renameSchema(schema, newName);
 	}
 
@@ -1123,7 +1076,6 @@ public class MartBuilderUtils {
 	 */
 	public static DataSet replicateDataSet(final Mart mart,
 			final DataSet dataset, final String newName) {
-		Log.info(Resources.get("logReqReplicateDataset"));
 		final DataSet newDataSet = (DataSet) dataset.replicate(newName);
 		return newDataSet;
 	}
@@ -1145,7 +1097,6 @@ public class MartBuilderUtils {
 	 */
 	public static Schema replicateSchema(final Mart mart, final Schema schema,
 			final String newName) {
-		Log.info(Resources.get("logReqReplicateSchema"));
 		final Schema newSchema = schema.replicate(newName);
 		mart.addSchema(newSchema);
 		return newSchema;
@@ -1171,7 +1122,6 @@ public class MartBuilderUtils {
 	public static void restrictTable(final DataSetTable datasetTable,
 			final Table table, final String expression, final Map aliases,
 			final boolean hard) throws ValidationException {
-		Log.info(Resources.get("logReqRestrictTable"));
 		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
 				expression, aliases, hard);
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
@@ -1198,7 +1148,6 @@ public class MartBuilderUtils {
 	public static void restrictTable(final DataSet dataset, final Table table,
 			final String expression, final Map aliases, final boolean hard)
 			throws ValidationException {
-		Log.info(Resources.get("logReqRestrictTable"));
 		final RestrictedTableDefinition restriction = new RestrictedTableDefinition(
 				expression, aliases, hard);
 		dataset.getSchemaModifications().setRestrictedTable(table, restriction);
@@ -1216,7 +1165,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unrestrictTable(final DataSetTable datasetTable,
 			final Table table) throws ValidationException {
-		Log.info(Resources.get("logReqUnrestrictTable"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.unsetRestrictedTable(datasetTable, table);
 	}
@@ -1233,7 +1181,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unrestrictTable(final DataSet dataset, final Table table)
 			throws ValidationException {
-		Log.info(Resources.get("logReqUnrestrictTable"));
 		dataset.getSchemaModifications().unsetRestrictedTable(table);
 	}
 
@@ -1262,7 +1209,6 @@ public class MartBuilderUtils {
 			final Relation relation, final int index, final String expression,
 			final Map lhsAliases, final Map rhsAliases, final boolean hard)
 			throws ValidationException {
-		Log.info(Resources.get("logReqRestrictRelation"));
 		final RestrictedRelationDefinition restriction = new RestrictedRelationDefinition(
 				expression, lhsAliases, rhsAliases, hard);
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
@@ -1295,7 +1241,6 @@ public class MartBuilderUtils {
 			final Relation relation, final int index, final String expression,
 			final Map lhsAliases, final Map rhsAliases, final boolean hard)
 			throws ValidationException {
-		Log.info(Resources.get("logReqRestrictRelation"));
 		final RestrictedRelationDefinition restriction = new RestrictedRelationDefinition(
 				expression, lhsAliases, rhsAliases, hard);
 		dataset.getSchemaModifications().setRestrictedRelation(relation, index,
@@ -1317,7 +1262,6 @@ public class MartBuilderUtils {
 	public static void unrestrictRelation(final DataSetTable datasetTable,
 			final Relation relation, final int index)
 			throws ValidationException {
-		Log.info(Resources.get("logReqUnrestrictRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.unsetRestrictedRelation(datasetTable, relation, index);
 	}
@@ -1337,7 +1281,6 @@ public class MartBuilderUtils {
 	public static void unrestrictRelation(final DataSet dataset,
 			final Relation relation, final int index)
 			throws ValidationException {
-		Log.info(Resources.get("logReqUnrestrictRelation"));
 		dataset.getSchemaModifications().unsetRestrictedRelation(relation,
 				index);
 	}
@@ -1363,7 +1306,6 @@ public class MartBuilderUtils {
 	 */
 	public static Collection selectRows(final Table table, final int offset,
 			final int count) throws SQLException {
-		Log.info(Resources.get("logReqSelectRows"));
 		final Schema schema = table.getSchema();
 		final Collection results = new ArrayList();
 		final DatabaseDialect dd = DatabaseDialect.getDialect(schema);
@@ -1391,7 +1333,6 @@ public class MartBuilderUtils {
 	public static void subclassRelation(final DataSet dataset,
 			final Relation relation) throws ValidationException, SQLException,
 			DataModelException {
-		Log.info(Resources.get("logReqSubclassRel"));
 		dataset.getSchemaModifications().setSubclassedRelation(relation);
 		dataset.synchronise();
 	}
@@ -1417,7 +1358,6 @@ public class MartBuilderUtils {
 	public static Collection suggestDataSets(final Mart mart,
 			final Collection tables) throws SQLException, AssociationException,
 			DataModelException {
-		Log.info(Resources.get("logReqSuggestDatasets"));
 		return mart.suggestDataSets(tables);
 	}
 
@@ -1452,7 +1392,6 @@ public class MartBuilderUtils {
 	public static Collection suggestInvisibleDataSets(final Mart mart,
 			final DataSet dataset, final Collection columns)
 			throws AssociationException, DataModelException, SQLException {
-		Log.info(Resources.get("logReqSuggestInvDatasets"));
 		return mart.suggestInvisibleDataSets(dataset, columns);
 	}
 
@@ -1469,7 +1408,6 @@ public class MartBuilderUtils {
 	 */
 	public static void synchroniseMartDataSets(final Mart mart)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqSyncMartDS"));
 		mart.synchroniseDataSets();
 	}
 
@@ -1488,7 +1426,6 @@ public class MartBuilderUtils {
 	 */
 	public static void synchroniseMartSchemas(final Mart mart)
 			throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqSyncMartSchema"));
 		mart.synchroniseSchemas();
 	}
 
@@ -1502,7 +1439,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unindexColumn(final DataSet dataset,
 			final DataSetColumn column) {
-		Log.info(Resources.get("logReqUnindexColumn"));
 		dataset.getDataSetModifications().unsetIndexedColumn(column);
 	}
 
@@ -1516,7 +1452,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unmaskColumns(final DataSet dataset,
 			final Collection columns) {
-		Log.info(Resources.get("logReqUnmaskColumn"));
 		for (final Iterator i = columns.iterator(); i.hasNext();)
 			dataset.getDataSetModifications().unsetMaskedColumn(
 					(DataSetColumn) i.next());
@@ -1540,7 +1475,6 @@ public class MartBuilderUtils {
 	public static void unmaskAllRelations(final DataSetTable datasetTable,
 			final Table table) throws ValidationException, SQLException,
 			DataModelException {
-		Log.info(Resources.get("logReqUnmaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			((DataSet) datasetTable.getSchema()).getSchemaModifications()
 					.unsetMaskedRelation(datasetTable, (Relation) i.next());
@@ -1562,7 +1496,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unmaskAllRelations(final DataSet dataset,
 			final Table table) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnmaskTable"));
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();)
 			dataset.getSchemaModifications().unsetMaskedRelation(
 					(Relation) i.next());
@@ -1587,7 +1520,6 @@ public class MartBuilderUtils {
 	public static void unmaskRelation(final DataSetTable datasetTable,
 			final Relation relation) throws ValidationException, SQLException,
 			DataModelException {
-		Log.info(Resources.get("logReqUnmaskRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.unsetMaskedRelation(datasetTable, relation);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -1608,7 +1540,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unmaskRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnmaskRelation"));
 		dataset.getSchemaModifications().unsetMaskedRelation(relation);
 		dataset.synchronise();
 	}
@@ -1631,7 +1562,6 @@ public class MartBuilderUtils {
 	public static void unforceRelation(final DataSetTable datasetTable,
 			final Relation relation) throws ValidationException, SQLException,
 			DataModelException {
-		Log.info(Resources.get("logReqUnforceRelation"));
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
 				.unsetForceIncludeRelation(datasetTable, relation);
 		((DataSet) datasetTable.getSchema()).synchronise();
@@ -1652,7 +1582,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unforceRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnforceRelation"));
 		dataset.getSchemaModifications().unsetForceIncludeRelation(relation);
 		dataset.synchronise();
 	}
@@ -1670,7 +1599,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unpartitionByColumn(final DataSet dataset,
 			final DataSetTable table) throws ValidationException {
-		Log.info(Resources.get("logReqUnpartitionCol"));
 		dataset.getDataSetModifications().unsetPartitionedColumn(table);
 	}
 
@@ -1688,7 +1616,6 @@ public class MartBuilderUtils {
 	 */
 	public static void unsubclassRelation(final DataSet dataset,
 			final Relation relation) throws SQLException, DataModelException {
-		Log.info(Resources.get("logReqUnsubclassRel"));
 		dataset.getSchemaModifications().unsetSubclassedRelation(relation);
 		dataset.synchronise();
 	}
@@ -1700,7 +1627,6 @@ public class MartBuilderUtils {
 	 *            the dataset to disable invisibility in.
 	 */
 	public static void visibleDataSet(final DataSet dataset) {
-		Log.info(Resources.get("logReqVisibleDataset"));
 		dataset.setInvisible(false);
 	}
 
@@ -1789,7 +1715,6 @@ public class MartBuilderUtils {
 	 *            the dataset to disable index optimiser in.
 	 */
 	public static void noIndexOptimiserDataSet(final DataSet dataset) {
-		Log.info(Resources.get("logReqNoIndOptDataset"));
 		dataset.setIndexOptimiser(false);
 	}
 
@@ -1800,7 +1725,6 @@ public class MartBuilderUtils {
 	 *            the dataset to enable index optimiser in.
 	 */
 	public static void indexOptimiserDataSet(final DataSet dataset) {
-		Log.info(Resources.get("logReqIndOptDataset"));
 		dataset.setIndexOptimiser(true);
 	}
 

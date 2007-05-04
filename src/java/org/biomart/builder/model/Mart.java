@@ -73,7 +73,6 @@ public class Mart {
 	 * been created.
 	 */
 	public Mart() {
-		Log.info(Resources.get("logNewMart"));
 	}
 
 	/**

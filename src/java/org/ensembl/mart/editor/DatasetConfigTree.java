@@ -1542,7 +1542,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			return;
 		}
 		if (!MartEditor.getDatabaseDatasetConfigUtils().uniqueCheckConfig(dsConfig)) return;
-		MartEditor.getDatabaseDatasetConfigUtils().storeTemplateXML(dsConfig,dsConfig.getTemplate());
+		//MartEditor.getDatabaseDatasetConfigUtils().storeTemplateXML(dsConfig,dsConfig.getTemplate());
 		// update config to template
 		MartEditor.getDatabaseDatasetConfigUtils().updateConfigsToTemplate(dsConfig.getTemplate(),dsConfig);
 	}

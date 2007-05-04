@@ -116,8 +116,6 @@ public class DataSet extends GenericSchema {
 		// Super first, to set the name.
 		super(name);
 
-		Log.info(Resources.get("logNewDataset", name));
-
 		// Remember the settings and make some defaults.
 		this.invisible = false;
 		this.mart = mart;

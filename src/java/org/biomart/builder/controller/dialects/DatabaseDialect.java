@@ -72,9 +72,8 @@ public abstract class DatabaseDialect {
 	 * subclass has been created and registered.
 	 */
 	protected DatabaseDialect() {
-		Log
-				.info(Resources.get("logRegisterDialect", this.getClass()
-						.getName()));
+		Log.info("Registering dialect: "+this.getClass()
+						.getName());
 	}
 
 	/**
@@ -98,14 +97,10 @@ public abstract class DatabaseDialect {
 	 */
 	public static DatabaseDialect getDialect(final DataLink dataLink)
 			throws SQLException {
-		Log.info(Resources.get("logGetDialect", "" + dataLink));
 		for (final Iterator i = DatabaseDialect.dialects.iterator(); i
 				.hasNext();) {
 			final DatabaseDialect d = (DatabaseDialect) i.next();
 			if (d.understandsDataLink(dataLink)) {
-				Log
-						.info(Resources.get("logGotDialect", d.getClass()
-								.getName()));
 				// Get maximum table/col name lengths.
 				if (dataLink instanceof JDBCSchema) {
 					final DatabaseMetaData dmd = ((JDBCSchema) dataLink)
@@ -116,7 +111,6 @@ public abstract class DatabaseDialect {
 				return d;
 			}
 		}
-		Log.info(Resources.get("logGotNoDialect"));
 		return null;
 	}
 

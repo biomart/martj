@@ -168,7 +168,7 @@ public abstract class BioMartGUI extends JFrame {
 
 		// Set the look and feel to the one specified by the user, or the system
 		// default if not specified by the user. This may be null.
-		Log.info(Resources.get("loadingLookAndFeel"));
+		Log.info("Loading look-and-feel settings");
 		String lookAndFeelClass = Settings.getProperty("lookandfeel");
 		try {
 			UIManager.setLookAndFeel(lookAndFeelClass);
@@ -177,7 +177,7 @@ public abstract class BioMartGUI extends JFrame {
 			// work.
 			if (lookAndFeelClass != null)
 				// only worry if we were actually given one.
-				Log.warn(Resources.get("badLookAndFeel", lookAndFeelClass), e);
+				Log.warn("Bad look-and-feel: "+lookAndFeelClass, e);
 			// Use system default.
 			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
 			try {
@@ -185,12 +185,12 @@ public abstract class BioMartGUI extends JFrame {
 			} catch (final Exception e2) {
 				// Ignore, as we'll end up with the cross-platform one if there
 				// is no system one.
-				Log.warn(Resources.get("badLookAndFeel", lookAndFeelClass), e2);
+				Log.warn("Bad look-and-feel: "+lookAndFeelClass, e2);
 			}
 		}
 
 		// Set up window listener and use it to handle windows closing.
-		Log.info(Resources.get("createMainGUI"));
+		Log.info("Creating main GUI window");
 		final BioMartGUI mb = this;
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(final WindowEvent e) {
@@ -217,7 +217,7 @@ public abstract class BioMartGUI extends JFrame {
 	 */
 	protected void launch() {
 		// Start the application.
-		Log.info(Resources.get("launchingGUI"));
+		Log.info("Launching GUI application");
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				// Centre it.
@@ -238,12 +238,12 @@ public abstract class BioMartGUI extends JFrame {
 	 * the user first if necessary.
 	 */
 	public void requestExitApp() {
-		Log.info(Resources.get("logRequestNormalExit"));
+		Log.info("Normal exit requested");
 		if (this.confirmExitApp()) {
-			Log.info(Resources.get("logRequestNormalExitGranted"));
+			Log.info("Normal exit granted");
 			System.exit(0);
 		} else
-			Log.info(Resources.get("logRequestNormalExitDenied"));
+			Log.info("Normal exit denied");
 	}
 
 	/**

@@ -1245,7 +1245,6 @@ public interface MartConstructor {
 		}
 
 		public void run() {
-			Log.info(Resources.get("logConstructorStarted"));
 			try {
 				// Begin.
 				Log.debug("Construction started");
@@ -1276,7 +1275,7 @@ public interface MartConstructor {
 				}
 				this
 						.issueListenerEvent(MartConstructorListener.CONSTRUCTION_ENDED);
-				Log.info(Resources.get("logConstructorEnded"));
+				Log.info("Construction ended");
 			} catch (final ConstructorException e) {
 				// This is so the users see a nice message straight away.
 				this.failure = e;

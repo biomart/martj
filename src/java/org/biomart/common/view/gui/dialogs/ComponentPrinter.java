@@ -26,7 +26,6 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterJob;
 
 import org.biomart.common.resources.Log;
-import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
 
 /**
@@ -66,12 +65,7 @@ public class ComponentPrinter implements Printable {
 		if (printJob.printDialog())
 			new LongProcess() {
 				public void run() throws Exception {
-					try {
-						Log.info(Resources.get("printingImage"));
-						printJob.print();
-					} finally {
-						Log.info(Resources.get("donePrintingImage"));
-					}
+					printJob.print();
 				}
 			}.start();
 	}

@@ -93,7 +93,7 @@ public class Log {
 		} catch (Throwable t) {
 			// Fall-back to the defaults if we can't write to file.
 			Log.logger.addAppender(Log.defaultAppender);
-			Log.warn(Resources.get("noRollingLogger"), t);
+			Log.warn("No rolling logger", t);
 		}
 		// Attempt to load any user-defined settings.
 		try {
@@ -115,7 +115,7 @@ public class Log {
 			log4jProps.load(new FileInputStream(log4jPropsFile));
 			PropertyConfigurator.configure(log4jProps);
 		} catch (Throwable t) {
-			Log.warn(Resources.get("noCustomLogger"), t);
+			Log.warn("No custom logger", t);
 		}
 	}
 
