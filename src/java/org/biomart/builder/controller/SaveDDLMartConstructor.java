@@ -503,7 +503,6 @@ public class SaveDDLMartConstructor implements MartConstructor {
 							this.outputPort, this.job, this.partition,
 							this.dataset, tableName, (String[]) actions
 									.toArray(new String[0]));
-					// TODO Queue the actions we just sent.
 				}
 			} else if (event == MartConstructorListener.ACTION_EVENT) {
 				// Add the action to the current map.

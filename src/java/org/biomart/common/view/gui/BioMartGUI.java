@@ -365,11 +365,6 @@ public abstract class BioMartGUI extends JFrame {
 			this.docs.setMnemonic(Resources.get("docsMnemonic").charAt(0));
 			this.docs.addActionListener(this);
 			helpMenu.add(this.docs);
-
-			// Adds the menus to the menu bar (if it exists at all - TODO remove
-			// this check once help page added).
-			if (helpMenu.getItemCount() > 0)
-				this.add(helpMenu);
 		}
 
 		/**
