@@ -666,7 +666,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			label = new JLabel(Resources.get("messagesLabel"));
 			footerPanel.add(label, labelConstraints);
 			field = new JPanel();
-			this.messages = new JTextArea(5, 100);
+			this.messages = new JTextArea(6, 60);
 			this.messages.setEnabled(false);
 			field.add(new JScrollPane(this.messages));
 			footerPanel.add(field, fieldConstraints);
