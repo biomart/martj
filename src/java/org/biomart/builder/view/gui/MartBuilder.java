@@ -158,8 +158,8 @@ public class MartBuilder extends BioMartGUI {
 		public MartBuilderMenuBar(final MartBuilder martBuilder) {
 			super(martBuilder);
 		}
-		
-		protected void buildMenus() {
+
+		protected void buildMenus(final JMenuItem exit) {
 			// New mart.
 			this.newMart = new JMenuItem(Resources.get("newMartTitle"),
 					new ImageIcon(Resources.getResourceAsURL("new.gif")));
@@ -355,12 +355,13 @@ public class MartBuilder extends BioMartGUI {
 						Resources.get("optimiser" + name + "Title"));
 				opt.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						final DataSet ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet
+						final DataSet ds = MartBuilderMenuBar.this
+								.getMartBuilder().martTabSet
 								.getSelectedMartTab().getDataSetTabSet()
 								.getSelectedDataSet();
-						MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-								.getDataSetTabSet().requestChangeOptimiserType(
-										ds, value);
+						MartBuilderMenuBar.this.getMartBuilder().martTabSet
+								.getSelectedMartTab().getDataSetTabSet()
+								.requestChangeOptimiserType(ds, value);
 					}
 				});
 				optGroup.add(opt);
@@ -374,21 +375,33 @@ public class MartBuilder extends BioMartGUI {
 			this.indexOptimiser.addActionListener(this);
 			this.optimiseDatasetSubmenu.add(this.indexOptimiser);
 
+			// Construct the file menu.
+			final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
+			fileMenu.setMnemonic(Resources.get("fileMenuMnemonic").charAt(0));
+			fileMenu.add(this.newMart);
+			fileMenu.add(this.openMart);
+			fileMenu.add(this.closeMart);
+			fileMenu.addSeparator();
+			fileMenu.add(this.saveMart);
+			fileMenu.add(this.saveMartAs);
+			// Add Quit option (only for non-Macs)
+			if (exit != null) {
+				fileMenu.addSeparator();
+				fileMenu.add(exit);
+			}
+			final int firstRecentFileEntry = fileMenu.getMenuComponentCount();
+
+			// Adds the menus to the menu bar.
+			this.add(fileMenu);
+
 			// Construct the mart menu.
 			final JMenu martMenu = new JMenu(Resources.get("martMenuTitle"));
 			martMenu.setMnemonic(Resources.get("martMenuMnemonic").charAt(0));
-			martMenu.add(this.newMart);
-			martMenu.add(this.openMart);
-			martMenu.add(this.closeMart);
-			martMenu.addSeparator();
-			martMenu.add(this.saveMart);
-			martMenu.add(this.saveMartAs);
 			martMenu.add(this.saveDDL);
 			martMenu.addSeparator();
 			martMenu.add(this.martReport);
+			martMenu.addSeparator();
 			martMenu.add(this.monitorHost);
-			final int firstMartRecentFileEntry = martMenu
-					.getMenuComponentCount();
 
 			// Construct the schema menu.
 			final JMenu schemaMenu = new JMenu(Resources.get("schemaMenuTitle"));
@@ -439,31 +452,48 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() == null)
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
+							.getSelectedMartTab() == null)
 						hasMart = false;
-					MartBuilderMenuBar.this.saveMart.setEnabled(hasMart
-							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getModifiedStatus());
+					MartBuilderMenuBar.this.saveMart
+							.setEnabled(hasMart
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
+											.getModifiedStatus());
 					MartBuilderMenuBar.this.saveMartAs.setEnabled(hasMart);
-					MartBuilderMenuBar.this.saveDDL.setEnabled(hasMart
-							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-									.getMart().getDataSets().size() > 0);
-					MartBuilderMenuBar.this.martReport.setEnabled(hasMart
-							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-									.getMart().getDataSets().size() > 0);
+					MartBuilderMenuBar.this.saveDDL
+							.setEnabled(hasMart
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
+											.getSelectedMartTab().getMart()
+											.getDataSets().size() > 0);
+					MartBuilderMenuBar.this.martReport
+							.setEnabled(hasMart
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
+											.getSelectedMartTab().getMart()
+											.getDataSets().size() > 0);
 					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
+				}
+			});
+			fileMenu.addMenuListener(new MenuListener() {
+				public void menuCanceled(final MenuEvent e) {
+				} // Interface requirement.
+
+				public void menuDeselected(final MenuEvent e) {
+				} // Interface requirement.
+
+				public void menuSelected(final MenuEvent e) {
 					// Wipe from the separator to the last non-separator/
 					// non-numbered entry.
 					// Then, insert after the separator a numbered list
 					// of recent files, followed by another separator if
 					// the list was not empty.
-					while (martMenu.getMenuComponentCount() > firstMartRecentFileEntry)
-						martMenu.remove(martMenu
-								.getMenuComponent(firstMartRecentFileEntry));
+					while (fileMenu.getMenuComponentCount() > firstRecentFileEntry)
+						fileMenu.remove(fileMenu
+								.getMenuComponent(firstRecentFileEntry));
 					final Collection names = Settings
 							.getHistoryNamesForClass(MartTabSet.class);
 					int position = 1;
 					if (names.size() > 1)
-						martMenu.addSeparator();
+						fileMenu.addSeparator();
 					for (final Iterator i = names.iterator(); i.hasNext(); position++) {
 						final String name = (String) i.next();
 						final File location = new File((String) Settings
@@ -478,7 +508,7 @@ public class MartBuilder extends BioMartGUI {
 										.requestLoadMart(location);
 							}
 						});
-						martMenu.add(file);
+						fileMenu.add(file);
 					}
 				}
 			});
@@ -491,18 +521,23 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() == null)
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
+							.getSelectedMartTab() == null)
 						hasMart = false;
 					final Schema schema;
 					if (hasMart)
-						schema = MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-								.getSchemaTabSet().getSelectedSchema();
+						schema = MartBuilderMenuBar.this.getMartBuilder().martTabSet
+								.getSelectedMartTab().getSchemaTabSet()
+								.getSelectedSchema();
 					else
 						schema = null;
 					MartBuilderMenuBar.this.addSchema.setEnabled(hasMart);
-					MartBuilderMenuBar.this.updateAllSchemas.setEnabled(hasMart
-							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-									.getSchemaTabSet().getComponentCount() > 1);
+					MartBuilderMenuBar.this.updateAllSchemas
+							.setEnabled(hasMart
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
+											.getSelectedMartTab()
+											.getSchemaTabSet()
+											.getComponentCount() > 1);
 					MartBuilderMenuBar.this.keyguessingSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.keyguessingSchema
@@ -512,7 +547,7 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.partitionedSchema
 							.setSelected(schema != null
-									&& schema.getPartitionRegex()!=null);
+									&& schema.getPartitionRegex() != null);
 					MartBuilderMenuBar.this.updateSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.renameSchema
@@ -532,11 +567,15 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() == null)
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
+							.getSelectedMartTab() == null)
 						hasMart = false;
-					MartBuilderMenuBar.this.createDatasets.setEnabled(hasMart
-							&& MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-									.getSchemaTabSet().getComponentCount() > 1);
+					MartBuilderMenuBar.this.createDatasets
+							.setEnabled(hasMart
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
+											.getSelectedMartTab()
+											.getSchemaTabSet()
+											.getComponentCount() > 1);
 					MartBuilderMenuBar.this.removeAllDatasets
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -545,8 +584,9 @@ public class MartBuilder extends BioMartGUI {
 											.getComponentCount() > 1);
 					final DataSet ds;
 					if (hasMart)
-						ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-								.getDataSetTabSet().getSelectedDataSet();
+						ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet
+								.getSelectedMartTab().getDataSetTabSet()
+								.getSelectedDataSet();
 					else
 						ds = null;
 					MartBuilderMenuBar.this.invisibleDataset
@@ -578,9 +618,11 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					final DataSet ds;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab() != null)
-						ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet.getSelectedMartTab()
-								.getDataSetTabSet().getSelectedDataSet();
+					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
+							.getSelectedMartTab() != null)
+						ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet
+								.getSelectedMartTab().getDataSetTabSet()
+								.getSelectedDataSet();
 					else
 						ds = null;
 					MartBuilderMenuBar.this.indexOptimiser
@@ -604,9 +646,9 @@ public class MartBuilder extends BioMartGUI {
 			this.add(schemaMenu);
 			this.add(datasetMenu);
 		}
-		
+
 		private MartBuilder getMartBuilder() {
-			return (MartBuilder)this.getBioMartGUI();
+			return (MartBuilder) this.getBioMartGUI();
 		}
 
 		public void actionPerformed(final ActionEvent e) {
@@ -661,7 +703,7 @@ public class MartBuilder extends BioMartGUI {
 			} else if (e.getSource() == this.updateSchema) {
 				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
-						.getSelectedSchema(); 
+						.getSelectedSchema();
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestModifySchema(schema);
 			} else if (e.getSource() == this.renameSchema) {
@@ -741,7 +783,7 @@ public class MartBuilder extends BioMartGUI {
 				else
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestNoIndexOptimiser(ds);
-			} 
+			}
 			// Others
 			else
 				super.actionPerformed(e);

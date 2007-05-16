@@ -177,7 +177,7 @@ public abstract class BioMartGUI extends JFrame {
 			// work.
 			if (lookAndFeelClass != null)
 				// only worry if we were actually given one.
-				Log.warn("Bad look-and-feel: "+lookAndFeelClass, e);
+				Log.warn("Bad look-and-feel: " + lookAndFeelClass, e);
 			// Use system default.
 			lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
 			try {
@@ -185,7 +185,7 @@ public abstract class BioMartGUI extends JFrame {
 			} catch (final Exception e2) {
 				// Ignore, as we'll end up with the cross-platform one if there
 				// is no system one.
-				Log.warn("Bad look-and-feel: "+lookAndFeelClass, e2);
+				Log.warn("Bad look-and-feel: " + lookAndFeelClass, e2);
 			}
 		}
 
@@ -321,24 +321,16 @@ public abstract class BioMartGUI extends JFrame {
 			// Remember our parent.
 			this.gui = gui;
 
-			// Don't do the File menu at all on Macs.
-			if (!this.gui.isMac()) {
-				// Construct the mart menu.
-				final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
-				fileMenu.setMnemonic(Resources.get("fileMenuMnemonic")
-						.charAt(0));
-
-				// Exit MartBuilder.
+			if (this.gui.isMac())
+				this.buildMenus(null);
+			else {
+				// Exit MartBuilder menu item.
 				this.exit = new JMenuItem(Resources.get("exitTitle"));
 				this.exit.setMnemonic(Resources.get("exitMnemonic").charAt(0));
 				this.exit.addActionListener(this);
-				fileMenu.add(BioMartMenuBar.this.exit);
 
-				// Adds the menus to the menu bar.
-				this.add(fileMenu);
+				this.buildMenus(this.exit);
 			}
-
-			this.buildMenus();
 
 			// Construct the help menu.
 			final JMenu helpMenu = new JMenu(Resources.get("helpMenuTitle"));
@@ -369,8 +361,11 @@ public abstract class BioMartGUI extends JFrame {
 
 		/**
 		 * Override this to provide additional menu items.
+		 * 
+		 * @param exit
+		 *            if not null then include this item in the menus somewhere.
 		 */
-		protected abstract void buildMenus();
+		protected abstract void buildMenus(final JMenuItem exit);
 
 		/**
 		 * Obtain the {@link BioMartGUI} instance which this menubar is attached

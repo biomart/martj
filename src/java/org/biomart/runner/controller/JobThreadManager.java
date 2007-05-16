@@ -50,8 +50,8 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Takes a job and runs it and manages the associated threads.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class JobThreadManager extends Thread {
@@ -158,12 +158,12 @@ public class JobThreadManager extends Thread {
 					Log.error(e);
 				}
 			}
-
+		} catch (final Throwable t) {
+			// It hates us.
+			Log.fatal(t);
+		} finally {
 			// Do a callback.
 			this.listener.jobStopped(this.jobId);
-		} catch (final JobException e) {
-			// It hates us.
-			Log.fatal(e);
 		}
 	}
 
@@ -207,39 +207,39 @@ public class JobThreadManager extends Thread {
 		}
 
 		public void run() {
-			Log.info("Thread "+this.sequence+" starting");
-			// Each thread grabs sections from the queue until none are left.
-			while (this.continueRunning()
-					&& (this.currentSection = this.getNextSection()) != null) {
-				// Process section.
-				Map actions;
-				try {
-					actions = JobHandler.getActions(this.plan.getJobId(),
-							this.currentSection.getIdentifier());
-				} catch (final JobException e) {
-					// Break out early and complain.
-					Log.error(e);
-					break;
+			try {
+				Log.info("Thread " + this.sequence + " starting");
+				// Each thread grabs sections from the queue until none are
+				// left.
+				while (this.continueRunning()
+						&& (this.currentSection = this.getNextSection()) != null) {
+					// Process section.
+					final Map actions = JobHandler.getActions(this.plan
+							.getJobId(), this.currentSection.getIdentifier());
+					for (final Iterator i = actions.values().iterator(); i
+							.hasNext()
+							&& this.continueRunning();) {
+						final JobPlanAction action = (JobPlanAction) i.next();
+						// Only process queued/stopped
+						// actions.
+						if (!(action.getStatus().equals(JobStatus.QUEUED) || action
+								.getStatus().equals(JobStatus.STOPPED)))
+							continue;
+						// Process the action.
+						else
+							this.processAction(action);
+					}
+					this.currentSection = null;
 				}
-				for (final Iterator i = actions.values().iterator(); i
-						.hasNext()
-						&& this.continueRunning();) {
-					final JobPlanAction action = (JobPlanAction) i.next();
-					// Only process queued/stopped
-					// actions.
-					if (!(action.getStatus().equals(JobStatus.QUEUED) || action
-							.getStatus().equals(JobStatus.STOPPED)))
-						continue;
-					// Process the action.
-					else
-						this.processAction(action);
-				}
-				this.currentSection = null;
+			} catch (final JobException e) {
+				// Break out early and complain.
+				Log.error(e);
+			} finally {
+				// Quit thread by removing ourselves.
+				this.manager.jobThreadPool.remove(this);
+				Log.info("Thread " + this.sequence + " ending");
+				this.closeConnection();
 			}
-			// Quit thread by removing ourselves.
-			this.manager.jobThreadPool.remove(this);
-			Log.info("Thread "+this.sequence+" ending");
-			this.closeConnection();
 		}
 
 		private String getCurrentSectionIdentifier() {
