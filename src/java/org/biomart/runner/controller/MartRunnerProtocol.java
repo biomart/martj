@@ -187,7 +187,7 @@ public class MartRunnerProtocol {
 		final String jdbcUsername = in.readLine();
 		final String jdbcPassword = in.readLine();
 		JobHandler.beginJob(jobId, jdbcDriverClassName, jdbcURL, jdbcUsername,
-				jdbcPassword.equals(null) ? null : jdbcPassword);
+				jdbcPassword);
 		out.println(MartRunnerProtocol.OK);
 	}
 

@@ -59,6 +59,8 @@ public class Settings {
 	 * App reference for MartRunner.
 	 */
 	public static final String MARTRUNNER = "martrunner";
+	
+	private static String application;
 
 	// Insert more app references as more apps are built.
 
@@ -101,6 +103,7 @@ public class Settings {
 	 *            the current application.
 	 */
 	public static void setApplication(final String app) {
+		Settings.application = app;
 		// Make the home directory.
 		Settings.appDir = new File(Settings.homeDir, app);
 		if (!Settings.appDir.exists())
@@ -113,6 +116,15 @@ public class Settings {
 		Settings.classCacheDir = new File(Settings.appDir, "cache");
 		if (!Settings.classCacheDir.exists())
 			Settings.classCacheDir.mkdir();
+	}
+	
+	/**
+	 * Gets the current application
+	 * 
+	 * @return the current application.
+	 */
+	public static String getApplication() {
+		return Settings.application;
 	}
 
 	/**

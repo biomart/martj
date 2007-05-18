@@ -51,7 +51,8 @@ public abstract class BioMartCLI {
 	 */
 	protected void launch() {
 		// Start the application.
-		Log.info("Launching command line application");
+		Log.info("Launching command line application");	
+		System.out.println("..."+Settings.getApplication()+" started.");
 		// Start work.
 		boolean moreInput = true;
 		while (moreInput)
