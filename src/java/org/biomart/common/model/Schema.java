@@ -763,8 +763,8 @@ public interface Schema extends Comparable, DataLink {
 		 * @param username
 		 *            the username to connect as.
 		 * @param password
-		 *            the password to connect as. Defaults to the empty string
-		 *            if null.
+		 *            the password to connect as. Defaults to no password
+		 *            if the empty string is passed in.
 		 * @param name
 		 *            the name to give this schema after it has been created.
 		 * @param keyGuessing
@@ -1530,7 +1530,7 @@ public interface Schema extends Comparable, DataLink {
 				// Connect!
 				final Properties properties = new Properties();
 				properties.setProperty("user", this.username);
-				if (this.password != null && !this.password.equals(""))
+				if (!this.password.equals(""))
 					properties.setProperty("password", this.password);
 				this.connection = DriverManager.getConnection(this.url,
 						properties);

@@ -1162,7 +1162,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// Start a new JDBC schema.
 
 			// Does it have a password? (optional)
-			String password = null;
+			String password = "";
 			if (attributes.containsKey("password"))
 				password = (String) attributes.get("password");
 

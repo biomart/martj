@@ -324,8 +324,7 @@ public class JobThreadManager extends Thread {
 				// Connect!
 				final Properties properties = new Properties();
 				properties.setProperty("user", this.plan.getJDBCUsername());
-				if (this.plan.getJDBCPassword() != null
-						&& !this.plan.getJDBCPassword().equals(""))
+				if (!this.plan.getJDBCPassword().equals(""))
 					properties.setProperty("password", this.plan
 							.getJDBCPassword());
 				this.connection = DriverManager.getConnection(this.plan
