@@ -1530,7 +1530,7 @@ public interface Schema extends Comparable, DataLink {
 				// Connect!
 				final Properties properties = new Properties();
 				properties.setProperty("user", this.username);
-				if (this.password != null)
+				if (this.password != null && !this.password.equals(""))
 					properties.setProperty("password", this.password);
 				this.connection = DriverManager.getConnection(this.url,
 						properties);

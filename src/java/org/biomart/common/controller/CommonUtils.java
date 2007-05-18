@@ -38,8 +38,8 @@ import org.biomart.common.model.Schema.JDBCSchema;
  * manipulating the various objects in the data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class CommonUtils {
@@ -88,8 +88,6 @@ public class CommonUtils {
 	public static JDBCSchema createJDBCSchema(final String driverClassName,
 			final String url, final String schemaName, final String username,
 			String password, final String name, final boolean keyGuessing) {
-		if (password != null && password.equals(""))
-			password = null;
 		return new JDBCSchema(driverClassName, url, schemaName, username,
 				password, name, keyGuessing);
 	}
