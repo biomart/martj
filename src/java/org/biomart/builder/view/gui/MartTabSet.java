@@ -24,13 +24,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -436,6 +439,19 @@ public class MartTabSet extends JTabbedPane {
 	 * window with all the datasets for this mart selected.
 	 */
 	public void requestCreateDDL() {
+		this.requestSaveDDLDialog(SaveDDLDialog.VIEW_DDL);
+	}
+
+	/**
+	 * On a request to run DDL for the current mart, open the DDL creation
+	 * window with all the datasets for this mart selected and MartRunner option
+	 * selected.
+	 */
+	public void requestRunDDL() {
+		this.requestSaveDDLDialog(SaveDDLDialog.RUN_DDL);
+	}
+
+	private void requestSaveDDLDialog(final String generateOption) {
 
 		// If nothing is selected, forget it, they can't close!
 		if (this.getSelectedMartTab() == null)
@@ -444,9 +460,18 @@ public class MartTabSet extends JTabbedPane {
 		// Work out the current selected mart.
 		final MartTab currentMartTab = this.getSelectedMartTab();
 
-		// Open the DDL creation dialog and let it do it's stuff.
-		(new SaveDDLDialog(currentMartTab, currentMartTab.getMart()
-				.getDataSets())).show();
+		// If the mart has no datasets, ignore the request.
+		final Mart mart = currentMartTab.getMart();
+		final Collection datasets = mart.getDataSets();
+		if (datasets.size() == 0)
+			JOptionPane.showMessageDialog(null, Resources
+					.get("noDatasetsToGenerate"),
+					Resources.get("messageTitle"),
+					JOptionPane.INFORMATION_MESSAGE);
+		else
+			// Open the DDL creation dialog and let it do it's stuff.
+			(new SaveDDLDialog(currentMartTab, datasets, generateOption))
+					.show();
 	}
 
 	/**
@@ -803,9 +828,26 @@ public class MartTabSet extends JTabbedPane {
 			});
 			buttonsPanel.add(this.schemaButton);
 
+			// Create a central area.
+			final Box box = Box.createVerticalBox();
+
 			// Add the Biomart logo to the buttons panel.
-			buttonsPanel.add(new JLabel(new ImageIcon(Resources
+			box.add(new JLabel(new ImageIcon(Resources
 					.getResourceAsURL("biomart-logo.gif"))));
+
+			// Create the Run DDL button.
+			final JButton runDDL = new JButton(Resources.get("runDDLButton"),
+					new ImageIcon(Resources.getResourceAsURL("run.gif")));
+			runDDL.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (e.getSource() == runDDL)
+						MartTab.this.martTabSet.requestRunDDL();
+				}
+			});
+			box.add(runDDL);
+
+			// Add the box to the panel.
+			buttonsPanel.add(box);
 
 			// Create the dataset tabset.
 			this.datasetTabSet = new DataSetTabSet(this);

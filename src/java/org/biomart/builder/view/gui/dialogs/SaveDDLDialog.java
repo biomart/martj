@@ -92,6 +92,21 @@ public class SaveDDLDialog extends JDialog {
 	private JTextField runDDLPort;
 
 	/**
+	 * Constant referring to running DDL.
+	 */
+	public static final String RUN_DDL = Resources.get("runDDL");
+
+	/**
+	 * Constant referring to viewing DDL.
+	 */
+	public static final String VIEW_DDL = Resources.get("viewDDL");
+
+	/**
+	 * Constant referring to saving DDL.
+	 */
+	public static final String SAVE_DDL = Resources.get("filePerTableDDL");
+
+	/**
 	 * Creates (but does not display) a dialog centred on the given tab, which
 	 * allows DDL generation for the given datasets. When the OK button is
 	 * chosen, the DDL is generated in the background.
@@ -100,8 +115,11 @@ public class SaveDDLDialog extends JDialog {
 	 *            the tab in which this will be displayed.
 	 * @param datasets
 	 *            the datasets to list.
+	 * @param generateOption
+	 *            the option to select in the dropdown.
 	 */
-	public SaveDDLDialog(final MartTab martTab, final Collection datasets) {
+	public SaveDDLDialog(final MartTab martTab, final Collection datasets,
+			final String generateOption) {
 		// Create the base dialog.
 		super();
 		this.setTitle(Resources.get("saveDDLDialogTitle"));
@@ -146,9 +164,9 @@ public class SaveDDLDialog extends JDialog {
 		this.targetSchemaName.setText(martTab.getMart().getOutputSchema());
 
 		this.outputFormat = new JComboBox();
-		this.outputFormat.addItem(Resources.get("filePerTableDDL"));
-		this.outputFormat.addItem(Resources.get("viewDDL"));
-		this.outputFormat.addItem(Resources.get("runDDL"));
+		this.outputFormat.addItem(SaveDDLDialog.SAVE_DDL);
+		this.outputFormat.addItem(SaveDDLDialog.VIEW_DDL);
+		this.outputFormat.addItem(SaveDDLDialog.RUN_DDL);
 
 		// Create the list for choosing datasets.
 		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
@@ -335,8 +353,7 @@ public class SaveDDLDialog extends JDialog {
 		this.getRootPane().setDefaultButton(execute);
 
 		// Set a default value of View SQL.
-		SaveDDLDialog.this.outputFormat.setSelectedItem(Resources
-				.get("viewDDL"));
+		SaveDDLDialog.this.outputFormat.setSelectedItem(generateOption);
 
 		// Set size of window.
 		this.pack();
@@ -390,21 +407,20 @@ public class SaveDDLDialog extends JDialog {
 					if (event == MartConstructorListener.CONSTRUCTION_ENDED
 							&& cr.getFailureException() == null) {
 						if (SaveDDLDialog.this.outputFormat.getSelectedItem()
-								.equals(Resources.get("viewDDL")))
+								.equals(SaveDDLDialog.VIEW_DDL))
 							ViewTextDialog
 									.displayText(Resources
 											.get("mcViewDDLWindowTitle"), sb
 											.toString());
 						else if (SaveDDLDialog.this.outputFormat
-								.getSelectedItem().equals(
-										Resources.get("runDDL")))
+								.getSelectedItem()
+								.equals(SaveDDLDialog.RUN_DDL))
 							SaveDDLDialog.this.martTab.getMartTabSet()
 									.requestMonitorRemoteHost(
 											SaveDDLDialog.this.runDDLHost
 													.getText(),
 											SaveDDLDialog.this.runDDLPort
-													.getText(),
-											true);
+													.getText(), true);
 					}
 				}
 			});
@@ -432,14 +448,13 @@ public class SaveDDLDialog extends JDialog {
 					.get("targetSchema")));
 
 		// Must have an output file.
-		if (this.outputFormat.getSelectedItem().equals(
-				Resources.get("filePerTableDDL"))
+		if (this.outputFormat.getSelectedItem().equals(SaveDDLDialog.SAVE_DDL)
 				&& this.isEmpty(this.outputFileLocation.getText()))
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("saveDDLFileLocation")));
 
 		// Must have an output host/port.
-		if (this.outputFormat.getSelectedItem().equals(Resources.get("runDDL"))) {
+		if (this.outputFormat.getSelectedItem().equals(SaveDDLDialog.RUN_DDL)) {
 			if (this.isEmpty(this.runDDLHost.getText()))
 				messages.add(Resources.get("fieldIsEmpty", Resources
 						.get("runDDLHost")));

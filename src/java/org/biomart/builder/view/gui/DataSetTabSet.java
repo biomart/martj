@@ -485,7 +485,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestCreateDDL(final DataSet dataset) {
 		// Open the DDL creation dialog and let it do it's stuff.
-		(new SaveDDLDialog(this.martTab, Collections.singleton(dataset)))
+		(new SaveDDLDialog(this.martTab, Collections.singleton(dataset),
+				SaveDDLDialog.VIEW_DDL))
 				.show();
 	}
 
