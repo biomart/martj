@@ -39,8 +39,6 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   public final int DEFAULTMAXSELECT = 0;
   private boolean hasBrokenAttributes = false;
   
-  private final String maxSelectKey = "maxSelect";
-  
   private List AttributeDescriptions = new ArrayList();
   private Hashtable attributeDescriptionNameMap = new Hashtable();
   
@@ -49,6 +47,13 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 
   //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
   private AttributeDescription lastSupportingAttribute = null;
+
+  private final String maxSelectKey = "maxSelect";
+	protected final String enableSelectAllKey = "enableSelectAll";
+private final String[] titles = new String[] { 
+		 maxSelectKey,
+		 enableSelectAllKey
+};
 
   /**
    * Copy constructor.  Constructs a new AttributeCollection which
@@ -80,7 +85,9 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   public AttributeCollection() {
     super();
     
-    setAttribute(maxSelectKey, null);
+    for (int i = 0, n = titles.length; i < n; i++) {
+      setAttribute(titles[i], null); //establishes the order of the keys, and adds all possible attribute titles to getXMLAttributeTitles, even if never set in future
+    }
   }
   
 	/**
@@ -91,7 +98,7 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 	 * @throws ConfigurationException when the required values are null or empty.
 	 */
 	public AttributeCollection(String internalName) throws ConfigurationException {
-		this(internalName, "0", "", "");
+		this(internalName, "0", "", "", "");
 	}
 
 	/**
@@ -104,9 +111,10 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 	 * @param description String description of the AttributeCollection
 	 * @throws ConfigurationException if required parameters are null or empty, and if Integer.parseInt(maxSelect) throws a NumberFormatException .
 	 */
-	public AttributeCollection(String internalName, String maxSelect, String displayName, String description) throws ConfigurationException {
+	public AttributeCollection(String internalName, String maxSelect, String displayName, String description, String enableSelectAll) throws ConfigurationException {
     super( internalName, displayName, description);
     setAttribute(maxSelectKey, maxSelect);
+    setAttribute(enableSelectAllKey, enableSelectAll);
 	}
 
   /**
@@ -501,5 +509,13 @@ public boolean containsOnlyPointerAttributes() {
     }
     
     return ret;
+}
+
+public void setEnableSelectAll(String value) {
+	setAttribute(enableSelectAllKey, value);
+}
+
+public String getEnableSelectAll() {
+	return getAttribute(enableSelectAllKey);
 }
 }

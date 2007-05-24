@@ -42,6 +42,11 @@ public class FilterCollection extends BaseNamedConfigurationObject {
   //cache one FilterDescription for call to supports
   private FilterDescription lastSupportFilt = null;
   
+	protected final String enableSelectAllKey = "enableSelectAll";
+  private final String[] titles = new String[] { 
+			 enableSelectAllKey	 
+  };
+  
   /**
    * Copy Constructor. Constructs an exact copy of an existing
    * FilterCollection.
@@ -65,6 +70,10 @@ public class FilterCollection extends BaseNamedConfigurationObject {
    */
   public FilterCollection() {
     super();
+    
+    for (int i = 0, n = titles.length; i < n; i++) {
+      setAttribute(titles[i], null); //establishes the order of the keys, and adds all possible attribute titles to getXMLAttributeTitles, even if never set in future
+    }
   }
   
 	/**
@@ -74,7 +83,7 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 	 * @throws ConfigurationException when paremeter requirements are not met
 	 */
 	public FilterCollection(String internalName) throws ConfigurationException {
-		this(internalName, "", "");
+		this(internalName, "", "", "");
 	}
 
 	/**
@@ -85,9 +94,10 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 	 * @param description String description of the FilterCollection.
 	 * @throws ConfigurationException when paremeters are null or empty
 	 */
-	public FilterCollection(String internalName, String displayName, String description) throws ConfigurationException {
+	public FilterCollection(String internalName, String displayName, String description, String enableSelectAll) throws ConfigurationException {
 
 		super(internalName, displayName, description);
+		setAttribute(enableSelectAllKey, enableSelectAll);
 	}
 
 	/**
@@ -444,4 +454,12 @@ public class FilterCollection extends BaseNamedConfigurationObject {
       
       return ret;
   }
+	
+	public void setEnableSelectAll(String value) {
+		setAttribute(enableSelectAllKey, value);
+	}
+
+	public String getEnableSelectAll() {
+		return getAttribute(enableSelectAllKey);
+	}
 }
