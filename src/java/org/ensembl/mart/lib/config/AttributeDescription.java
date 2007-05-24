@@ -55,7 +55,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String pointerAttributeKey = "pointerAttribute";
   private final String pointerFilterKey = "pointerFilter";
   private final String checkForNullsKey = "checkForNulls";
-  
+  private final String pipeDisplayKey = "pipeDisplay";
+
   private int[] reqFields = {0,5,8,9};// rendered red in AttributeTable
   //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
@@ -99,7 +100,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerAttributeKey, null);
 	setAttribute(pointerFilterKey, null);
 	setAttribute(checkForNullsKey, null);
-	
+	setAttribute(pipeDisplayKey, null);
 	setRequiredFields(reqFields);
   }
 
@@ -112,7 +113,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "", "", "","");
+    this(internalName, field, "", "0", "", "", "", "", "", "", "", "", "", "", "", "", "","","");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -148,7 +149,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String pointerInterface,
     String pointerAttribute,
     String pointerFilter,
-    String checkForNulls)
+    String checkForNulls,
+    String pipeDisplay)
     throws ConfigurationException {
 
     super(internalName, displayName, description);
@@ -171,7 +173,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	setAttribute(pointerAttributeKey, pointerAttribute);
 	setAttribute(pointerFilterKey, pointerFilter);
 	setAttribute(checkForNullsKey, checkForNulls);
-	
+	setAttribute(pipeDisplayKey, pipeDisplay);
 	setRequiredFields(reqFields);
   }
 

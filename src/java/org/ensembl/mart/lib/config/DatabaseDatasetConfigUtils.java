@@ -74,7 +74,7 @@ public class DatabaseDatasetConfigUtils {
 
   private final String SOFTWAREVERSION = "0.5";
   private final String XSL_05_FILE = "data/mart_0_4_0_5.xsl";
-  //private final String XSL_06_FILE = "data/mart_0_5_0_6.xsl";
+  private final String XSL_06_FILE = "data/mart_0_5_0_6.xsl";
   
   private final String BASEMETATABLE =      "meta_conf__dataset__main";
   private final String MARTUSERTABLE =      "meta_conf__user__dm";
@@ -4038,7 +4038,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		final Document sourceDoc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(config);
 		//Element thisElement = sourceDoc.getRootElement();
 		//String template = thisElement.getAttributeValue("template", "");
-		//System.out.println("ORIGINAL DOC HAS "+template);
+		System.out.println("XSLT TRANSFORMING");
 
 		// 0.4 to 0.5 transform
 		final InputStream xsl05 = this.getClass().getClassLoader().getResourceAsStream(this.XSL_05_FILE);
@@ -4047,15 +4047,15 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		transformer05.transform(new JDOMSource(sourceDoc),out05);
 
 		// 0.5 to 0.6 transform 
-		/*
+		
 		InputStream xsl06 = this.getClass().getClassLoader().getResourceAsStream(XSL_06_FILE);
 		Transformer transformer06 = TransformerFactory.newInstance().newTransformer(new StreamSource(xsl06));      
 		JDOMResult out06 = new JDOMResult();
 		transformer06.transform(new JDOMSource(out05.getDocument()),out06);
-		*/
 		
-		// Final result - currently 0.5 output
-        final Document resultDoc = out05.getDocument();
+		
+		// Final result - currently 0.6 output
+        final Document resultDoc = out06.getDocument();
 		
 		final DatasetConfig newConfig = new DatasetConfig(config.getInternalName(),config.getDisplayName(),config.getDataset(),config.getDescription(), 
 			config.getType(),config.getVisible(),config.getVisibleFilterPage(),config.getVersion(),config.getOptionalParameter(), 

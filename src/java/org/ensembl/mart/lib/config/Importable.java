@@ -34,6 +34,7 @@ public class Importable extends BaseNamedConfigurationObject {
   private final String nameKey = "name";
   private final String filtersKey = "filters";
   private final String orderByKey = "orderBy";
+  private final String typeKey = "type";
   private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
  
 	/**
@@ -53,11 +54,12 @@ public class Importable extends BaseNamedConfigurationObject {
     setAttribute(nameKey, null);
 	setAttribute(filtersKey, null);
     setAttribute(orderByKey, null);
+    setAttribute(typeKey, "link");
     setRequiredFields(reqFields);
   }
 
   public Importable(String linkName)  throws ConfigurationException {
-    this(linkName, null, null, linkName, null, null, null, null);
+    this(linkName, null, null, linkName, null, null, null, null,null);
   }
   
   /**
@@ -66,7 +68,7 @@ public class Importable extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when ref is null or empty.
    */
   public Importable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
-  	this(internalName, displayName, description, linkName, null, null, null, null);
+  	this(internalName, displayName, description, linkName, null, null, null, null,null);
   }
   
   /**
@@ -75,7 +77,7 @@ public class Importable extends BaseNamedConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Importable(String internalName, String displayName, String description, String linkName, String linkVersion, String moduleName, String filters, String orderBy) throws ConfigurationException {
+  public Importable(String internalName, String displayName, String description, String linkName, String linkVersion, String moduleName, String filters, String orderBy,String type) throws ConfigurationException {
   	super(internalName, displayName, description);
   	
   	if (linkName == null || "".equals(linkName))
@@ -86,6 +88,7 @@ public class Importable extends BaseNamedConfigurationObject {
   	setAttribute(nameKey, moduleName);
 	setAttribute(filtersKey, filters);
     setAttribute(orderByKey, orderBy);
+    setAttribute(typeKey, type);
     setRequiredFields(reqFields);
   }
 	
