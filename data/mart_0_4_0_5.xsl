@@ -78,6 +78,9 @@
 	<xsl:when test="@tableConstraint != '' and count(.//Option/Option) &gt; 0" >
 	    <xsl:attribute name="graph">1</xsl:attribute>
         </xsl:when>
+	<xsl:when test="@graph = '1'" >
+	    <xsl:attribute name="graph">1</xsl:attribute>
+        </xsl:when>
 	<xsl:otherwise>
 	   <xsl:attribute name="graph"></xsl:attribute>
         </xsl:otherwise>
@@ -192,8 +195,10 @@
                 <xsl:attribute name="value">excluded</xsl:attribute>
 	    </xsl:element>
     </xsl:if>
+
     <!-- call other templates eg identity copy on all the child elements -->
     <xsl:apply-templates select="node()"/>
+
   </xsl:copy>
 </xsl:template>
 
