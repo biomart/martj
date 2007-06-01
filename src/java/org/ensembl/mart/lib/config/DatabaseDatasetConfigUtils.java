@@ -72,7 +72,7 @@ import org.jdom.transform.JDOMSource;
 
 public class DatabaseDatasetConfigUtils {
 
-  private final String SOFTWAREVERSION = "0.5";
+  private final String SOFTWAREVERSION = "0.6";
   private final String XSL_05_FILE = "data/mart_0_4_0_5.xsl";
   private final String XSL_06_FILE = "data/mart_0_5_0_6.xsl";
   
