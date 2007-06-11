@@ -2379,7 +2379,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
 //							|| dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
 
-					configCollection.addFilterDescription(configAttToAdd);
+					if (!configCollection.containsFilterDescription(configAttToAdd.getInternalName()))
+						configCollection.addFilterDescription(configAttToAdd);
 					//}
 					
 						/*
@@ -2577,8 +2578,8 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					if (configAttToAdd.getTableConstraint()!=null && !configAttToAdd.getTableConstraint().equals("main"))
 						configAttToAdd.setTableConstraint(dsConfig.getDataset()+"__"+configAttToAdd.getTableConstraint());
 						//System.err.println("Renamed "+configAttToAdd.getTableConstraint()+"."+configAttToAdd.getField());
-					
-					configCollection.addAttributeDescription(configAttToAdd);
+					if (!configCollection.containsAttributeDescription(configAttToAdd.getInternalName()))
+						configCollection.addAttributeDescription(configAttToAdd);
 					
 						/*
 					if (!(configCollection.getAttributeDescriptions().size() > 0)){
