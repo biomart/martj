@@ -115,7 +115,10 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (childClassName.equals("org.ensembl.mart.lib.config.PushAction")) {
 				Option op = (Option) parentNode.getUserObject();
 				op.addPushAction((PushAction) editingNode.getUserObject());
-			}
+			} else if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
+				Option op = (Option) parentNode.getUserObject();
+				op.addOption((Option) editingNode.getUserObject());
+			} 
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.PushAction")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
 				PushAction pa = (PushAction) parentNode.getUserObject();
@@ -290,6 +293,9 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (child instanceof org.ensembl.mart.lib.config.PushAction) {
 				Option op = (Option) parentNode.getUserObject();
 				op.insertPushAction(objIndex, (PushAction) editingNode.getUserObject());
+			} else if (child instanceof org.ensembl.mart.lib.config.Option) {
+				Option op = (Option) parentNode.getUserObject();
+				op.insertOption(objIndex, (Option) editingNode.getUserObject());
 			}
 		} else if (parent instanceof org.ensembl.mart.lib.config.PushAction) {
 			if (child instanceof org.ensembl.mart.lib.config.Option) {
