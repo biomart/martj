@@ -2367,9 +2367,15 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					
 
 					// Resolve options.
-					final Option[] options = configAttToAdd.getOptions();
-					for (int r = 0; r < options.length; r++)
-						options[r].resolveText(templateConfig.getDynamicDataset(dsConfig.getDataset()));
+					final List options = new ArrayList(Arrays.asList(configAttToAdd.getOptions()));
+					for (int r = 0; r < options.size(); r++) {
+						final Option option = (Option)options.get(r);
+						final String intName = option.getInternalName();
+						if (dsConfig.getCollectionForFilter(intName)!=null)
+							dsConfig.getCollectionForFilter(intName).removeFilterDescription(dsConfig.getFilterDescriptionByInternalName(intName));
+						option.resolveText(templateConfig.getDynamicDataset(dsConfig.getDataset()));
+						options.addAll(Arrays.asList(option.getOptions()));
+					}
 					//if (configAttToAdd.getTableConstraint()==null || "".equals(configAttToAdd.getTableConstraint())) {
 //							|| dsConfig.supportsFilterDescription(configAttToAdd.getField(), configAttToAdd.getTableConstraint(), configAttToAdd.getQualifier())){
 
