@@ -69,11 +69,6 @@ public class ColumnComponent extends BoxShapedComponent {
 	 */
 	public static Color NORMAL_COLOUR = Color.ORANGE;
 
-	/**
-	 * Constant referring to partitioned column background colour.
-	 */
-	public static Color PARTITIONED_COLOUR = Color.CYAN;
-
 	private GridBagConstraints constraints;
 
 	private GridBagLayout layout;

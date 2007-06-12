@@ -271,9 +271,12 @@ public class DataSet extends GenericSchema {
 			for (final Iterator j = ((Schema) i.next()).getRelations()
 					.iterator(); j.hasNext();) {
 				final Relation rel = (Relation) j.next();
-				final int compounded = this.schemaMods.isCompoundRelation(
-						dsTable, rel) ? this.schemaMods.getCompoundRelation(
-						dsTable, rel).getN() : 1;
+				int compounded = this.schemaMods.isCompoundRelation(dsTable,
+						rel) ? this.schemaMods
+						.getCompoundRelation(dsTable, rel).getN() : 1;
+				// If loopback, increment count by one.
+				if (this.schemaMods.isLoopbackRelation(dsTable, rel))
+					compounded++;
 				relationCount.put(rel, new Integer(compounded));
 			}
 
@@ -522,9 +525,19 @@ public class DataSet extends GenericSchema {
 				.hasNext();) {
 			final Relation r = (Relation) i.next();
 
-			// Don't repeat relations or go back up relation just followed.
-			if (r.equals(sourceRelation)
-					|| ((Integer) relationCount.get(r)).intValue() <= 0)
+			// Allow to go back up sourceRelation if it is a loopback
+			// 1:M relation and we have just merged the 1 end.
+			final boolean isLoopback = this.schemaMods.isLoopbackRelation(
+					dsTable, r)
+					&& r.getOneKey().equals(r.getKeyForTable(mergeTable));
+
+			// Don't go back up relation just followed unless we are doing
+			// loopback.
+			if (r.equals(sourceRelation) && !isLoopback)
+				continue;
+
+			// Don't excessively repeat relations.
+			if (((Integer) relationCount.get(r)).intValue() <= 0)
 				continue;
 
 			// Don't follow masked relations.
@@ -619,8 +632,9 @@ public class DataSet extends GenericSchema {
 						forceFollowRelation = true;
 				}
 
-				// Forcibly follow forced relations.
-				else if (this.schemaMods.isForceIncludeRelation(dsTable, r))
+				// Forcibly follow forced or loopback relations.
+				else if (this.schemaMods.isLoopbackRelation(dsTable, r)
+						|| this.schemaMods.isForceIncludeRelation(dsTable, r))
 					forceFollowRelation = true;
 			}
 
@@ -648,7 +662,12 @@ public class DataSet extends GenericSchema {
 							.next()));
 				// Repeat queueing of relation N times if compounded.
 				int childCompounded = 1;
-				if (this.schemaMods.isCompoundRelation(dsTable, r)
+				// Don't compound if loopback and we just processed the M end.
+				final boolean skipCompound = this.schemaMods
+						.isLoopbackRelation(dsTable, r)
+						&& r.getManyKey().equals(r.getKeyForTable(mergeTable));
+				if (!skipCompound
+						&& this.schemaMods.isCompoundRelation(dsTable, r)
 						&& this.schemaMods.getCompoundRelation(dsTable, r)
 								.isParallel())
 					childCompounded = this.schemaMods.getCompoundRelation(
@@ -1566,6 +1585,19 @@ public class DataSet extends GenericSchema {
 		 */
 		public DataSetTableType getType() {
 			return this.type;
+		}
+
+		/**
+		 * Return the parent table, if any, or <tt>null</tt> if none.
+		 * 
+		 * @return the parent table.
+		 */
+		public DataSetTable getParent() {
+			if (this.getForeignKeys().size() == 0)
+				return null;
+			return (DataSetTable) ((Relation) ((Key) this.getForeignKeys()
+					.iterator().next()).getRelations().iterator().next())
+					.getOneKey().getTable();
 		}
 	}
 

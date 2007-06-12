@@ -60,11 +60,6 @@ public class TableComponent extends BoxShapedComponent {
 	private static Color BACKGROUND_COLOUR = Color.PINK;
 
 	/**
-	 * Border colour for all partitioned tables.
-	 */
-	public static Color PARTITIONED_COLOUR = Color.CYAN;
-
-	/**
 	 * Border colour for all unpartitioned tables.
 	 */
 	public static Color NORMAL_COLOUR = Color.BLACK;

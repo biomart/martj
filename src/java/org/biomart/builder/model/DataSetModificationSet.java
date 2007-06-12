@@ -30,7 +30,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -60,8 +59,6 @@ public class DataSetModificationSet {
 	private final Map maskedColumns = new HashMap();
 
 	private final Map indexedColumns = new HashMap();
-
-	private final Map partitionedColumns = new HashMap();
 
 	private final Map expressionColumns = new HashMap();
 
@@ -419,108 +416,6 @@ public class DataSetModificationSet {
 	}
 
 	/**
-	 * Mark the column as partitioned.
-	 * 
-	 * @param column
-	 *            the column.
-	 * @param restriction
-	 *            the partition definition.
-	 * @throws ValidationException
-	 *             if it logically cannot be partitioned.
-	 */
-	public void setPartitionedColumn(final DataSetColumn column,
-			final PartitionedColumnDefinition restriction)
-			throws ValidationException {
-		final String tableKey = column.getTable().getName();
-		// Refuse to partition subclass tables.
-		if (!((DataSetTable) column.getTable()).getType().equals(
-				DataSetTableType.DIMENSION))
-			throw new ValidationException(Resources
-					.get("partitionOnlyDimensionTables"));
-		// Check type of column.
-		if (!(column instanceof WrappedColumn))
-			throw new ValidationException(Resources
-					.get("cannotPartitionNonWrapSchColumns"));
-		// Do it. This will overwrite any existing partitioned column.
-		this.partitionedColumns.put(tableKey, new HashMap());
-		final Map restrictions = (Map) this.partitionedColumns.get(tableKey);
-		restrictions.put(column.getName(), restriction);
-	}
-
-	/**
-	 * Remove the partitioned column from the given table.
-	 * 
-	 * @param table
-	 *            the table to unpartition.
-	 */
-	public void unsetPartitionedColumn(final DataSetTable table) {
-		final String tableKey = table.getName();
-		this.partitionedColumns.remove(tableKey);
-	}
-
-	/**
-	 * Does this table have a partitioned column?
-	 * 
-	 * @param table
-	 *            the table.
-	 * @return <tt>true</tt> if it has.
-	 */
-	public boolean isPartitionedTable(final DataSetTable table) {
-		return this.partitionedColumns.containsKey(table.getName());
-	}
-
-	/**
-	 * Is this column partitioned?
-	 * 
-	 * @param column
-	 *            the column.
-	 * @return <tt>true</tt> if it is.
-	 */
-	public boolean isPartitionedColumn(final DataSetColumn column) {
-		final String tableKey = column.getTable().getName();
-		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
-		return pcs != null && pcs.containsKey(column.getName());
-	}
-
-	/**
-	 * Get the name of the partitioned column in the given table.
-	 * 
-	 * @param table
-	 *            the table.
-	 * @return the name.
-	 */
-	public String getPartitionedColumnName(final DataSetTable table) {
-		final String tableKey = table.getName();
-		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
-		return (String) ((Map.Entry) pcs.entrySet().iterator().next()).getKey();
-	}
-
-	/**
-	 * Get the partitioned column definition for the given table.
-	 * 
-	 * @param dsTable
-	 *            the table.
-	 * @return the definition.
-	 */
-	public PartitionedColumnDefinition getPartitionedColumnDef(
-			final DataSetTable dsTable) {
-		final String tableKey = dsTable.getName();
-		final Map pcs = (Map) this.partitionedColumns.get(tableKey);
-		return (PartitionedColumnDefinition) pcs.get(this
-				.getPartitionedColumnName(dsTable));
-	}
-
-	/**
-	 * Get a map of all partitioned columns. Keys are table names. Values are
-	 * maps, where the keys are column names and the values are the definitions.
-	 * 
-	 * @return the map.
-	 */
-	public Map getPartitionedColumns() {
-		return this.partitionedColumns;
-	}
-
-	/**
 	 * Get a unique name for the next expression column to be added.
 	 * 
 	 * @return the name.
@@ -626,145 +521,6 @@ public class DataSetModificationSet {
 		target.distinctTables.addAll(this.distinctTables);
 		target.expressionColumns.clear();
 		target.expressionColumns.putAll(this.expressionColumns);
-		target.partitionedColumns.clear();
-		// We have to use an iterator because of nested maps.
-		for (final Iterator i = this.partitionedColumns.entrySet().iterator(); i
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			target.partitionedColumns.put(entry.getKey(), new HashMap());
-			((Map) target.partitionedColumns.get(entry.getKey()))
-					.putAll((Map) entry.getValue());
-		}
-	}
-
-	/**
-	 * Represents a method of partitioning by column. There are no methods.
-	 * Actual logic to divide up by column is left to the mart constructor to
-	 * decide.
-	 */
-	public interface PartitionedColumnDefinition {
-		/**
-		 * Use this class to partition on a range of values - ie. only columns
-		 * which fit one of these ranges will be returned.
-		 */
-		public static class ValueRange implements PartitionedColumnDefinition {
-			private static final long serialVersionUID = 1L;
-
-			private Map ranges = new HashMap();
-
-			/**
-			 * The constructor specifies the ranges to partition on. Duplicate
-			 * ranges will be ignored. Keys of the range are names for the
-			 * ranges. Values are range expressions where :col represents the
-			 * name of the column.
-			 * 
-			 * @param ranges
-			 *            the set of unique ranges to partition on.
-			 */
-			public ValueRange(final Map ranges) {
-				this.ranges = new TreeMap();
-				this.ranges.putAll(ranges);
-			}
-
-			public boolean equals(final Object o) {
-				if (o == null || !(o instanceof ValueRange))
-					return false;
-				final ValueRange vc = (ValueRange) o;
-				return vc.getRanges().equals(this.ranges);
-			}
-
-			/**
-			 * Returns the set of ranges we will partition on. May be empty but
-			 * never <tt>null</tt>.
-			 * 
-			 * @return the ranges we will partition on.
-			 */
-			public Map getRanges() {
-				return this.ranges;
-			}
-
-			/**
-			 * For the given range name, return the range definition after
-			 * substituing column names for aliases.
-			 * 
-			 * @param name
-			 *            the name of the range to obtain.
-			 * @param alias
-			 *            the table prefix to use.
-			 * @param colName
-			 *            the column name to use.
-			 * @return the substituted expression.
-			 */
-			public String getSubstitutedExpression(final String name,
-					final String alias, final String colName) {
-				return ((String) this.ranges.get(name)).replaceAll(":col",
-						alias + "." + colName);
-			}
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "ValueRange:" suffixed with the output of
-			 * {@link #getRanges()}.
-			 */
-			public String toString() {
-				return "ValueRange:"
-						+ (this.ranges == null ? "<undef>" : this.ranges
-								.toString());
-			}
-		}
-
-		/**
-		 * Use this class to partition on a list of values - ie. only columns
-		 * which match one of these values will be returned.
-		 */
-		public static class ValueList implements PartitionedColumnDefinition {
-			private static final long serialVersionUID = 1L;
-
-			private Map values = new HashMap();
-
-			/**
-			 * The constructor specifies the values to partition on. Duplicate
-			 * values will be ignored. Keys of the map are short names for the
-			 * values
-			 * 
-			 * @param values
-			 *            the set of unique values to partition on.
-			 */
-			public ValueList(final Map values) {
-				this.values = new TreeMap();
-				this.values.putAll(values);
-			}
-
-			public boolean equals(final Object o) {
-				if (o == null || !(o instanceof ValueList))
-					return false;
-				final ValueList vc = (ValueList) o;
-				return vc.getValues().equals(this.values);
-			}
-
-			/**
-			 * Returns the set of values we will partition on. May be empty but
-			 * never <tt>null</tt>.
-			 * 
-			 * @return the values we will partition on.
-			 */
-			public Map getValues() {
-				return this.values;
-			}
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * This will return "ValueList:" suffixed with the output of
-			 * {@link #getValues()}.
-			 */
-			public String toString() {
-				return "ValueList:"
-						+ (this.values == null ? "<undef>" : this.values
-								.toString());
-			}
-		}
 	}
 
 	/**
@@ -965,24 +721,6 @@ public class DataSetModificationSet {
 				for (final Iterator j = cols.iterator(); j.hasNext();)
 					if (tbl.getColumnByName((String) j.next()) == null)
 						j.remove();
-				if (cols.isEmpty())
-					i.remove();
-			}
-		}
-		for (final Iterator i = this.partitionedColumns.entrySet().iterator(); i
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			if (this.ds.getTableByName((String) entry.getKey()) == null)
-				i.remove();
-			else {
-				final DataSetTable tbl = (DataSetTable) this.ds
-						.getTableByName((String) entry.getKey());
-				final Map cols = (Map) entry.getValue();
-				for (final Iterator j = cols.entrySet().iterator(); j.hasNext();) {
-					final Map.Entry entry2 = (Map.Entry) j.next();
-					if (tbl.getColumnByName((String) entry2.getKey()) == null)
-						j.remove();
-				}
 				if (cols.isEmpty())
 					i.remove();
 			}

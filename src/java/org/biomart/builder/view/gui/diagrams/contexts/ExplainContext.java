@@ -52,8 +52,8 @@ import org.biomart.common.resources.Resources;
  * the dataset's generated schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public class ExplainContext extends SchemaContext {
@@ -168,6 +168,11 @@ public class ExplainContext extends SchemaContext {
 				.getSchemaModifications().isCompoundRelation(this.datasetTable,
 						relation));
 
+		// Is it loopback?
+		((RelationComponent) component).setLoopback(this.dataset
+				.getSchemaModifications().isLoopbackRelation(this.datasetTable,
+						relation));
+
 		// Fade out all UNINCLUDED and MASKED relations.
 		final boolean included = this.datasetTable == null ? this.dataset
 				.getIncludedRelations().contains(relation) : this.datasetTable
@@ -210,21 +215,6 @@ public class ExplainContext extends SchemaContext {
 
 			// Obtain the table object we should refer to.
 			final Table table = (Table) object;
-
-			// Show the first 10 rows on a table.
-			final JMenuItem showTen = new JMenuItem(Resources
-					.get("showFirstTenRowsTitle"));
-			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
-					.charAt(0));
-			showTen.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					ExplainContext.this.getMartTab().getSchemaTabSet()
-							.requestShowRows(table, 0, 10);
-				}
-			});
-			contextMenu.add(showTen);
-
-			contextMenu.addSeparator();
 
 			// The mask option allows the user to mask all
 			// relations on a table.
@@ -379,6 +369,9 @@ public class ExplainContext extends SchemaContext {
 		final boolean relationIncluded = this.datasetTable == null ? this.dataset
 				.getIncludedRelations().contains(relation)
 				: this.datasetTable.getIncludedRelations().contains(relation);
+		final boolean relationLoopbacked = this.dataset
+				.getSchemaModifications().isLoopbackRelation(this.datasetTable,
+						relation);
 
 		// The mask/unmask option allows the user to mask/unmask a relation.
 		final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
@@ -402,6 +395,33 @@ public class ExplainContext extends SchemaContext {
 			mask.setEnabled(false);
 		if (relationMasked)
 			mask.setSelected(true);
+
+		// The loopback option allows the user to loopback include a relation
+		// that would otherwise only be included once.
+		final JCheckBoxMenuItem loopback = new JCheckBoxMenuItem(Resources
+				.get("loopbackRelationTitle"));
+		loopback.setMnemonic(Resources.get("loopbackRelationMnemonic")
+				.charAt(0));
+		loopback.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				if (loopback.isSelected())
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestLoopbackRelation(
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, relation);
+				else
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestUnloopbackRelation(
+									ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, relation);
+			}
+		});
+		contextMenu.add(loopback);
+		if (incorrect || relationMasked || !relation.isOneToMany()
+				&& !relationLoopbacked)
+			loopback.setEnabled(false);
+		if (relationLoopbacked)
+			loopback.setSelected(true);
 
 		// The force option allows the user to forcibly include a relation
 		// that would otherwise remain unincluded.

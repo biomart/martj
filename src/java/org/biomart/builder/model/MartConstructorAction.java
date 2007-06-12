@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.resources.Log;
@@ -509,14 +507,6 @@ public abstract class MartConstructorAction {
 
 		private boolean relationRestrictionLeftIsFirst;
 
-		private String partitionColumn;
-
-		private ValueRange partitionRangeDef;
-
-		private ValueList partitionListDef;
-
-		private String partitionValue;
-
 		private TransformationUnit relationRestrictionPreviousUnit;
 
 		/**
@@ -656,22 +646,6 @@ public abstract class MartConstructorAction {
 				RestrictedTableDefinition tableRestriction) {
 			this.tableRestriction = tableRestriction;
 		}
-
-		/**
-		 * @return the partitionColumn
-		 */
-		public String getPartitionColumn() {
-			return this.partitionColumn;
-		}
-
-		/**
-		 * @param partitionColumn
-		 *            the partitionColumn to set
-		 */
-		public void setPartitionColumn(String partitionColumn) {
-			this.partitionColumn = partitionColumn;
-		}
-
 		/**
 		 * @return the relationRestriction
 		 */
@@ -705,21 +679,6 @@ public abstract class MartConstructorAction {
 		}
 
 		/**
-		 * @return the partitionRangeDef
-		 */
-		public ValueRange getPartitionRangeDef() {
-			return this.partitionRangeDef;
-		}
-
-		/**
-		 * @param partitionRangeDef
-		 *            the partitionRangeDef to set
-		 */
-		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
-			this.partitionRangeDef = partitionRangeDef;
-		}
-
-		/**
 		 * @return the relationRestrictionPreviousUnit
 		 */
 		public TransformationUnit getRelationRestrictionPreviousUnit() {
@@ -733,36 +692,6 @@ public abstract class MartConstructorAction {
 		public void setRelationRestrictionPreviousUnit(
 				TransformationUnit relationRestrictionPreviousUnit) {
 			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
-		}
-
-		/**
-		 * @return the partitionValue
-		 */
-		public String getPartitionValue() {
-			return this.partitionValue;
-		}
-
-		/**
-		 * @param partitionValue
-		 *            the partitionValue to set
-		 */
-		public void setPartitionValue(String partitionValue) {
-			this.partitionValue = partitionValue;
-		}
-
-		/**
-		 * @return the partitionListDef
-		 */
-		public ValueList getPartitionListDef() {
-			return this.partitionListDef;
-		}
-
-		/**
-		 * @param partitionListDef
-		 *            the partitionListDef to set
-		 */
-		public void setPartitionListDef(ValueList partitionListDef) {
-			this.partitionListDef = partitionListDef;
 		}
 	}
 
@@ -966,14 +895,6 @@ public abstract class MartConstructorAction {
 
 		private RestrictedTableDefinition tableRestriction;
 
-		private String partitionColumn;
-
-		private ValueRange partitionRangeDef;
-
-		private ValueList partitionListDef;
-
-		private String partitionValue;
-
 		/**
 		 * Creates a new Select action.
 		 * 
@@ -1065,66 +986,6 @@ public abstract class MartConstructorAction {
 		public void setTableRestriction(
 				RestrictedTableDefinition tableRestriction) {
 			this.tableRestriction = tableRestriction;
-		}
-
-		/**
-		 * @return the partitionColumn
-		 */
-		public String getPartitionColumn() {
-			return this.partitionColumn;
-		}
-
-		/**
-		 * @param partitionColumn
-		 *            the partitionColumn to set
-		 */
-		public void setPartitionColumn(String partitionColumn) {
-			this.partitionColumn = partitionColumn;
-		}
-
-		/**
-		 * @return the partitionRangeDef
-		 */
-		public ValueRange getPartitionRangeDef() {
-			return this.partitionRangeDef;
-		}
-
-		/**
-		 * @param partitionRangeDef
-		 *            the partitionRangeDef to set
-		 */
-		public void setPartitionRangeDef(ValueRange partitionRangeDef) {
-			this.partitionRangeDef = partitionRangeDef;
-		}
-
-		/**
-		 * @return the partitionValue
-		 */
-		public String getPartitionValue() {
-			return this.partitionValue;
-		}
-
-		/**
-		 * @param partitionValue
-		 *            the partitionValue to set
-		 */
-		public void setPartitionValue(String partitionValue) {
-			this.partitionValue = partitionValue;
-		}
-
-		/**
-		 * @return the partitionListDef
-		 */
-		public ValueList getPartitionListDef() {
-			return this.partitionListDef;
-		}
-
-		/**
-		 * @param partitionListDef
-		 *            the partitionListDef to set
-		 */
-		public void setPartitionListDef(ValueList partitionListDef) {
-			this.partitionListDef = partitionListDef;
 		}
 	}
 

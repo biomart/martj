@@ -96,6 +96,9 @@ public class SchemaContext implements DiagramContext {
 			// Is it compounded?
 			((RelationComponent) component).setCompounded(false);
 
+			// Is it loopback?
+			((RelationComponent) component).setLoopback(false);
+
 			// Fade out all INFERRED_INCORRECT relations.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 				component.setForeground(RelationComponent.INCORRECT_COLOUR);
@@ -165,21 +168,6 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(suggest);
 
 			// Separator.
-			contextMenu.addSeparator();
-
-			// Show the first 10 rows on a table.
-			final JMenuItem showTen = new JMenuItem(Resources
-					.get("showFirstTenRowsTitle"));
-			showTen.setMnemonic(Resources.get("showFirstTenRowsMnemonic")
-					.charAt(0));
-			showTen.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.getMartTab().getSchemaTabSet()
-							.requestShowRows(table, 0, 10);
-				}
-			});
-			contextMenu.add(showTen);
-
 			contextMenu.addSeparator();
 
 			// Menu item to create a primary key. If it already has one, disable

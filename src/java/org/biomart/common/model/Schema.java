@@ -688,7 +688,7 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void synchronise() throws SQLException, DataModelException {
-			Log.info("Synchronising "+this.getName());
+			Log.info("Synchronising " + this.getName());
 			this.synchroniseKeys();
 		}
 
@@ -763,8 +763,8 @@ public interface Schema extends Comparable, DataLink {
 		 * @param username
 		 *            the username to connect as.
 		 * @param password
-		 *            the password to connect as. Defaults to no password
-		 *            if the empty string is passed in.
+		 *            the password to connect as. Defaults to no password if the
+		 *            empty string is passed in.
 		 * @param name
 		 *            the name to give this schema after it has been created.
 		 * @param keyGuessing
@@ -824,7 +824,7 @@ public interface Schema extends Comparable, DataLink {
 			}
 			// Use regex and friends to work out partitions.
 			final Map partitions = new TreeMap();
-			final Connection conn = this.getConnection();
+			final Connection conn = this.getConnection(null);
 			// List out all catalogs available.
 			ResultSet rs = conn.getMetaData().getCatalogs();
 			try {
@@ -1479,13 +1479,13 @@ public interface Schema extends Comparable, DataLink {
 			// Work out the partner's catalogs and schemas.
 			final Collection partnerSchemas = new HashSet();
 			try {
-				final DatabaseMetaData dmd = partnerLink.getConnection()
+				final DatabaseMetaData dmd = partnerLink.getConnection(null)
 						.getMetaData();
 				// We need to compare by catalog only.
 				final ResultSet catalogs = dmd.getCatalogs();
 				while (catalogs.next())
 					partnerSchemas.add(catalogs.getString("TABLE_CAT"));
-				return partnerSchemas.contains(this.getConnection()
+				return partnerSchemas.contains(this.getConnection(null)
 						.getCatalog());
 			} catch (final Throwable t) {
 				// If get an error, assume can't find anything, thus assume
@@ -1494,7 +1494,8 @@ public interface Schema extends Comparable, DataLink {
 			}
 		}
 
-		public Connection getConnection() throws SQLException {
+		public Connection getConnection(final String partition)
+				throws SQLException {
 			// If we are already connected, test to see if we are
 			// still connected. If not, reset our connection.
 			if (this.connection != null && this.connection.isClosed())
@@ -1532,8 +1533,9 @@ public interface Schema extends Comparable, DataLink {
 				properties.setProperty("user", this.username);
 				if (!this.password.equals(""))
 					properties.setProperty("password", this.password);
-				this.connection = DriverManager.getConnection(this.url,
-						properties);
+				this.connection = DriverManager.getConnection(
+						partition == null ? this.url : this.url.replaceAll(
+								this.schemaName, partition), properties);
 
 				// Check the schema name.
 				final DatabaseMetaData dmd = this.connection.getMetaData();
@@ -1666,10 +1668,10 @@ public interface Schema extends Comparable, DataLink {
 		}
 
 		public void synchronise() throws SQLException, DataModelException {
-			Log.info("Synchronising "+this);
+			Log.info("Synchronising " + this);
 			// Get database metadata, catalog, and schema details.
-			final DatabaseMetaData dmd = this.getConnection().getMetaData();
-			final String catalog = this.getConnection().getCatalog();
+			final DatabaseMetaData dmd = this.getConnection(null).getMetaData();
+			final String catalog = this.getConnection(null).getCatalog();
 
 			// Create a list of existing tables. During this method, we remove
 			// from
@@ -1773,9 +1775,9 @@ public interface Schema extends Comparable, DataLink {
 		public void synchroniseKeys() throws SQLException, DataModelException {
 			Log.debug("Synchronising JDBC schema keys");
 			Log.debug("Loading connection metadata");
-			final DatabaseMetaData dmd = this.getConnection().getMetaData();
+			final DatabaseMetaData dmd = this.getConnection(null).getMetaData();
 			Log.debug("Loading database catalog");
-			final String catalog = this.getConnection().getCatalog();
+			final String catalog = this.getConnection(null).getCatalog();
 			final String schema = this.schemaName;
 
 			// Get and create primary keys.
@@ -1934,7 +1936,7 @@ public interface Schema extends Comparable, DataLink {
 		public boolean test() throws Exception {
 			// Establish the JDBC connection. May throw an exception of its own,
 			// which is fine, just let it go.
-			final Connection connection = this.getConnection();
+			final Connection connection = this.getConnection(null);
 			// If we have no connection, we can't test it!
 			if (connection == null)
 				return false;

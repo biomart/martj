@@ -19,11 +19,8 @@ package org.biomart.builder.controller.dialects;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -46,10 +43,8 @@ import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.DataLink;
 import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.DataLink.JDBCDataLink;
-import org.biomart.common.model.Schema.JDBCSchema;
 
 /**
  * Understands how to create SQL and DDL for a PostgreSQL database.
@@ -165,31 +160,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
 					additionalRels, "a"));
 		}
-		if (action.getPartitionColumn() != null) {
-			if (action.getTableRestriction() != null)
-				sb.append(" and ");
-			else
-				sb.append(" where ");
-			if (action.getPartitionRangeDef() != null)
-				sb.append(action.getPartitionRangeDef()
-						.getSubstitutedExpression(action.getPartitionValue(),
-								"a", action.getPartitionColumn()));
-			else if (action.getPartitionListDef() != null) {
-				final String actualValue = (String) action
-						.getPartitionListDef().getValues().get(
-								action.getPartitionValue());
-				sb.append("a.");
-				sb.append(action.getPartitionColumn());
-				if (actualValue == null)
-					sb.append(" is null");
-				else {
-					sb.append("='");
-					sb.append(actualValue.replaceAll("'", "\\'"));
-					sb.append('\'');
-				}
-			} else
-				throw new BioMartError();
-		}
 
 		statements.add(sb.toString());
 	}
@@ -216,8 +186,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select distinct * from " + fromTableSchema + "." + fromTableName);
-		
+				+ " as select distinct * from " + fromTableSchema + "."
+				+ fromTableName);
+
 		statements.add(sb.toString());
 	}
 
@@ -292,8 +263,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 		statements.add("set search_path=" + schemaName + ",pg_catalog");
 
-		sb.append("create index I_" + this.indexCount++
-				+ " on " + schemaName + "." + tableName + "(");
+		sb.append("create index I_" + this.indexCount++ + " on " + schemaName
+				+ "." + tableName + "(");
 		for (final Iterator i = action.getColumns().iterator(); i.hasNext();) {
 			sb.append(i.next());
 			if (i.hasNext())
@@ -330,8 +301,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					.getAdditionalRelations().iterator(); i.hasNext();)
 				additionalRels.put((Relation) i.next(), "" + additionalTable++);
 
-		final String joinType = action.getPartitionColumn() != null
-				|| action.getRelationRestriction() != null
+		final String joinType = action.getRelationRestriction() != null
 				&& action.getRelationRestriction().isHard()
 				|| action.getTableRestriction() != null
 				&& action.getTableRestriction().isHard() ? "inner" : "left";
@@ -378,28 +348,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
 					additionalRels, "b"));
 			sb.append(')');
-		}
-		if (action.getPartitionColumn() != null) {
-			sb.append(" and ");
-			if (action.getPartitionRangeDef() != null)
-				sb.append(action.getPartitionRangeDef()
-						.getSubstitutedExpression(action.getPartitionValue(),
-								"b", action.getPartitionColumn()));
-			else if (action.getPartitionListDef() != null) {
-				final String actualValue = (String) action
-						.getPartitionListDef().getValues().get(
-								action.getPartitionValue());
-				sb.append("b.");
-				sb.append(action.getPartitionColumn());
-				if (actualValue == null)
-					sb.append(" is null");
-				else {
-					sb.append("='");
-					sb.append(actualValue.replaceAll("'", "\\'"));
-					sb.append('\'');
-				}
-			} else
-				throw new BioMartError();
 		}
 		for (final Iterator k = additionalRels.entrySet().iterator(); k
 				.hasNext();) {
@@ -559,22 +507,24 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sb.append(',');
 		}
-		if (action.getCopyTable()!=null) 
+		if (action.getCopyTable() != null)
 			sb.append(",b.*");
 		sb.append(" from " + schemaName + "." + sourceTableName + " a");
-		if (action.getCopyTable()!=null) {
-			sb.append(" inner join " + schemaName + "." + action.getCopyTable() + " b on ");
-			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext(); ) {
-				final String col = (String)i.next();
-				sb.append("a."+col+"=b."+col);
+		if (action.getCopyTable() != null) {
+			sb.append(" inner join " + schemaName + "." + action.getCopyTable()
+					+ " b on ");
+			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext();) {
+				final String col = (String) i.next();
+				sb.append("a." + col + "=b." + col);
 				if (i.hasNext())
 					sb.append(" and ");
 			}
 		}
 		statements.add(sb.toString());
-		if (action.getCopyTable()!=null) {
-			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext(); ) 
-			statements.add("alter table " + schemaName + "." + optTableName + " drop column "+(String)i.next());
+		if (action.getCopyTable() != null) {
+			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext();)
+				statements.add("alter table " + schemaName + "." + optTableName
+						+ " drop column " + (String) i.next());
 		}
 	}
 
@@ -622,66 +572,17 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append(keyCol);
 			sb.append(" and ");
 		}
-			sb.append("not (");
-			for (final Iterator i = action.getNonNullColumns().iterator(); i
-					.hasNext();) {
-				sb.append("b.");
-				sb.append((String) i.next());
-				sb.append(" is null");
-				if (i.hasNext())
-					sb.append(" and ");
-			}
+		sb.append("not (");
+		for (final Iterator i = action.getNonNullColumns().iterator(); i
+				.hasNext();) {
+			sb.append("b.");
+			sb.append((String) i.next());
+			sb.append(" is null");
+			if (i.hasNext())
+				sb.append(" and ");
+		}
 		sb.append("))");
 		statements.add(sb.toString());
-	}
-
-	public Collection executeSelectDistinct(final String schemaName,
-			final Column col) throws SQLException {
-		final String colName = col.getName();
-		final String tableName = col.getTable().getName();
-		final Schema schema = col.getTable().getSchema();
-
-		// The simple case where we actually do a select distinct.
-		final Collection results = new ArrayList();
-		final Connection conn = ((JDBCSchema) schema).getConnection();
-		final ResultSet rs = conn.prepareStatement(
-				"select distinct " + colName + " from " + schemaName + "."
-						+ tableName).executeQuery();
-		while (rs.next())
-			results.add(rs.getString(1));
-		rs.close();
-		return results;
-	}
-
-	public Collection executeSelectRows(final Table table, final int offset,
-			final int count) throws SQLException {
-		final String tableName = table.getName();
-		final Schema schema = table.getSchema();
-
-		// Build up a list of column names.
-		final StringBuffer colNames = new StringBuffer();
-		for (final Iterator i = table.getColumns().iterator(); i.hasNext();) {
-			colNames.append(((Column) i.next()).getName());
-			if (i.hasNext())
-				colNames.append(',');
-		}
-
-		// The simple case where we actually do a select.
-		final Collection results = new ArrayList();
-		final String schemaName = ((JDBCSchema) schema).getDatabaseSchema();
-		final Connection conn = ((JDBCSchema) schema).getConnection();
-		final ResultSet rs = conn.prepareStatement(
-				"select " + colNames.toString() + " from " + schemaName + "."
-						+ tableName + " limit " + count + " offset " + offset)
-				.executeQuery();
-		while (rs.next()) {
-			final List values = new ArrayList();
-			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++)
-				values.add(rs.getObject(i));
-			results.add(values);
-		}
-		rs.close();
-		return results;
 	}
 
 	public String[] getStatementsForAction(final MartConstructorAction action)
@@ -723,15 +624,14 @@ public class PostgreSQLDialect extends DatabaseDialect {
 	}
 
 	public boolean understandsDataLink(final DataLink dataLink) {
-
 		// Convert to JDBC version.
 		if (!(dataLink instanceof JDBCDataLink))
 			return false;
 		final JDBCDataLink jddl = (JDBCDataLink) dataLink;
 
 		try {
-			return jddl.getConnection().getMetaData().getDatabaseProductName()
-					.equals("PostgreSQL");
+			return jddl.getConnection(null).getMetaData()
+					.getDatabaseProductName().equals("PostgreSQL");
 		} catch (final SQLException e) {
 			throw new BioMartError(e);
 		}

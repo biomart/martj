@@ -361,6 +361,12 @@ public interface Relation extends Comparable {
 				final Cardinality cardinality) throws AssociationException {
 			Log.debug("Creating relation between " + firstKey + " and "
 					+ secondKey + " with cardinality " + cardinality);
+			// Remember the keys etc.
+			this.firstKey = firstKey;
+			this.secondKey = secondKey;
+			this.setCardinality(cardinality);
+			this.status = ComponentStatus.INFERRED;
+			
 			// Check the keys have the same number of columns.
 			if (firstKey.countColumns() != secondKey.countColumns())
 				throw new AssociationException(Resources
@@ -386,11 +392,6 @@ public interface Relation extends Comparable {
 							firstKey).getTable().equals(firstKey.getTable())))
 				throw new AssociationException(Resources
 						.get("fkToThisOnceOrOthers"));
-			// Remember the keys etc.
-			this.firstKey = firstKey;
-			this.secondKey = secondKey;
-			this.setCardinality(cardinality);
-			this.status = ComponentStatus.INFERRED;
 
 			// Update flags.
 			this.oneToManyAllowed = !this.firstKey.getClass().equals(
@@ -416,7 +417,11 @@ public interface Relation extends Comparable {
 			if (o == null || !(o instanceof Relation))
 				return false;
 			final Relation r = (Relation) o;
-			return r.toString().equals(this.toString());
+			// Check that not same keys are involved.
+			return (r.getFirstKey().equals(this.secondKey) && r.getSecondKey()
+					.equals(this.firstKey))
+					|| (r.getFirstKey().equals(this.firstKey) && r
+							.getSecondKey().equals(this.secondKey));
 		}
 
 		public Cardinality getCardinality() {
@@ -459,7 +464,11 @@ public interface Relation extends Comparable {
 		}
 
 		public int hashCode() {
-			return this.toString().hashCode();
+			final int firstHash = this.firstKey.hashCode();
+			final int secondHash = this.secondKey.hashCode();
+			// So that two rels between same keys always match.
+			return (Math.min(firstHash, secondHash) + "_" + Math.max(firstHash,
+					secondHash)).hashCode();
 		}
 
 		public boolean isOneToManyAllowed() {

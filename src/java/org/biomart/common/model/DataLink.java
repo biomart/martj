@@ -73,11 +73,16 @@ public interface DataLink {
 		 * Returns a JDBC connection connected to this database using the data
 		 * supplied to all the other methods in this interface.
 		 * 
+		 * @param partition
+		 *            the partition of the schema to connect to, if any.
+		 *            <tt>null</tt> is used where no partition in particular
+		 *            is required and the default main schema is suitable.
 		 * @return the connection for this database.
 		 * @throws SQLException
 		 *             if there was any problem connecting.
 		 */
-		public Connection getConnection() throws SQLException;
+		public Connection getConnection(final String partition)
+				throws SQLException;
 
 		/**
 		 * Gets the database schema name.

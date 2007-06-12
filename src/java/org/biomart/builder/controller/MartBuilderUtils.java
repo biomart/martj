@@ -19,43 +19,31 @@
 package org.biomart.builder.controller;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 
-import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.common.controller.CommonUtils;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
-import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
-import org.biomart.common.model.DataLink;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
-import org.biomart.common.model.Schema.JDBCSchema;
 
 /**
  * Tools for working with the mart from a GUI or CLI. These wrapper methods
@@ -756,6 +744,51 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Loopback a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to loopback the relation in.
+	 * @param relation
+	 *            the relation to loopback.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 * @throws ValidationException
+	 *             if the operation is not allowed.
+	 */
+	public static void loopbackRelation(final DataSetTable datasetTable,
+			final Relation relation) throws SQLException, DataModelException,
+			ValidationException {
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.setLoopbackRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
+	}
+
+	/**
+	 * Loopback a relation within a dataset. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param dataset
+	 *            the dataset to loopback the relation in.
+	 * @param relation
+	 *            the relation to loopback.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 * @throws ValidationException
+	 *             if the operation is not allowed.
+	 */
+	public static void loopbackRelation(final DataSet dataset,
+			final Relation relation) throws SQLException, DataModelException,
+			ValidationException {
+		dataset.getSchemaModifications().setLoopbackRelation(relation);
+		dataset.synchronise();
+	}
+
+	/**
 	 * Forces a relation within a dataset table. The dataset is regenerated
 	 * afterwards.
 	 * 
@@ -869,25 +902,6 @@ public class MartBuilderUtils {
 		((DataSet) dsTable.getSchema()).getDataSetModifications()
 				.setExpressionColumn(dsTable, expr);
 		((DataSet) dsTable.getSchema()).synchronise();
-	}
-
-	/**
-	 * Asks a dataset to partition tables on the specified column.
-	 * 
-	 * @param dataset
-	 *            the dataset to turn partitioning on for.
-	 * @param column
-	 *            the column to partition on.
-	 * @param type
-	 *            the type of partitioning to use for this column.
-	 * @throws ValidationException
-	 *             if the column could not be used for partitioning, for
-	 *             whatever reason.
-	 */
-	public static void partitionByColumn(final DataSet dataset,
-			final DataSetColumn column, final PartitionedColumnDefinition type)
-			throws ValidationException {
-		dataset.getDataSetModifications().setPartitionedColumn(column, type);
 	}
 
 	/**
@@ -1286,35 +1300,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * This method returns the first few rows from a given offset in the given
-	 * table. The results are a nested list, where each item in the main list is
-	 * another list containing all the column values in the same order as they
-	 * appear in the method {@link Table#getColumns()}.
-	 * <p>
-	 * If the schema is unrecognised by
-	 * {@link DatabaseDialect#getDialect(DataLink)} then no rows are returned.
-	 * 
-	 * @param table
-	 *            the table to get the rows for.
-	 * @param offset
-	 *            the offset to start at, zero-indexed.
-	 * @param count
-	 *            the number of rows to get.
-	 * @return the rows.
-	 * @throws SQLException
-	 *             if anything goes wrong whilst fetching the rows.
-	 */
-	public static Collection selectRows(final Table table, final int offset,
-			final int count) throws SQLException {
-		final Schema schema = table.getSchema();
-		final Collection results = new ArrayList();
-		final DatabaseDialect dd = DatabaseDialect.getDialect(schema);
-		if (dd != null)
-			results.addAll(dd.executeSelectRows(table, offset, count));
-		return results;
-	}
-
-	/**
 	 * Flags a relation as subclassed within a dataset. The dataset is
 	 * regenerated afterwards.
 	 * 
@@ -1545,6 +1530,48 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Unloopbacks a relation within a dataset table. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param datasetTable
+	 *            the dataset table to unloopback the relation in.
+	 * @param relation
+	 *            the relation to unloopback.
+	 * @throws ValidationException
+	 *             if the relation could not be unforced.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void unloopbackRelation(final DataSetTable datasetTable,
+			final Relation relation) throws ValidationException, SQLException,
+			DataModelException {
+		((DataSet) datasetTable.getSchema()).getSchemaModifications()
+				.unsetLoopbackRelation(datasetTable, relation);
+		((DataSet) datasetTable.getSchema()).synchronise();
+	}
+
+	/**
+	 * Unloopbacks a relation within a dataset. The dataset is regenerated
+	 * afterwards.
+	 * 
+	 * @param dataset
+	 *            the dataset to unloopback the relation in.
+	 * @param relation
+	 *            the relation to unloopback.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
+	 */
+	public static void unloopbackRelation(final DataSet dataset,
+			final Relation relation) throws SQLException, DataModelException {
+		dataset.getSchemaModifications().unsetLoopbackRelation(relation);
+		dataset.synchronise();
+	}
+
+	/**
 	 * Unforces a relation within a dataset table. The dataset is regenerated
 	 * afterwards.
 	 * 
@@ -1587,22 +1614,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Turns off partitioning on a given dataset table.
-	 * 
-	 * @param dataset
-	 *            the dataset to turn off partitioning for on this table.
-	 * @param table
-	 *            the table to turn off partitioning for.
-	 * @throws ValidationException
-	 *             if the column could not be used for partitioning, for
-	 *             whatever reason.
-	 */
-	public static void unpartitionByColumn(final DataSet dataset,
-			final DataSetTable table) throws ValidationException {
-		dataset.getDataSetModifications().unsetPartitionedColumn(table);
-	}
-
-	/**
 	 * Unflags a relation as subclassed, and regenerates the dataset.
 	 * 
 	 * @param dataset
@@ -1628,84 +1639,6 @@ public class MartBuilderUtils {
 	 */
 	public static void visibleDataSet(final DataSet dataset) {
 		dataset.setInvisible(false);
-	}
-
-	/**
-	 * Works out which datasets reference the given schema, then updates any
-	 * list-based partition values in those datasets to reflect the correct set
-	 * of distinct values.
-	 * 
-	 * @param mart
-	 *            the mart we are working in.
-	 * @param schema
-	 *            the schema that recently changed.
-	 * @throws SQLException
-	 *             if it could not connect to the db to do the lookup.
-	 */
-	public static void updatePartitionColumns(final Mart mart,
-			final Schema schema) throws SQLException {
-		for (final Iterator i = mart.getDataSets().iterator(); i.hasNext();) {
-			final DataSet ds = (DataSet) i.next();
-			if (!ds.usesSchema(schema))
-				continue;
-			for (final Iterator pi = ds.getDataSetModifications()
-					.getPartitionedColumns().entrySet().iterator(); pi
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) pi.next();
-				final DataSetTable dsTable = (DataSetTable) ds
-						.getTableByName((String) entry.getKey());
-				final Map colDef = (Map) entry.getValue();
-				for (final Iterator ci = colDef.entrySet().iterator(); ci
-						.hasNext();) {
-					final Map.Entry subEntry = (Map.Entry) ci.next();
-					if (!(subEntry.getValue() instanceof ValueList))
-						continue;
-					// Work out what we've already got.
-					final Map existingValues = ((ValueList) subEntry.getValue())
-							.getValues();
-					// Read the values from the database.
-					final Set dbValues = new HashSet();
-					// First, make a set of all input schemas. We use a set to
-					// prevent duplicates.
-					DataSetColumn dsCol = (DataSetColumn) dsTable
-							.getColumnByName((String) subEntry.getKey());
-					while (dsCol instanceof InheritedColumn)
-						dsCol = ((InheritedColumn) dsCol).getInheritedColumn();
-					final Column col = ((WrappedColumn) dsCol)
-							.getWrappedColumn();
-					if (!col.getTable().getSchema().equals(schema))
-						continue;
-					final DatabaseDialect dd = DatabaseDialect
-							.getDialect(schema);
-					if (dd != null)
-						if (schema.getPartitions().isEmpty())
-							dbValues.addAll(dd.executeSelectDistinct(
-									((JDBCSchema) schema).getDatabaseSchema(),
-									col));
-						else
-							for (final Iterator si = schema.getPartitions()
-									.keySet().iterator(); si.hasNext();)
-								dbValues.addAll(dd.executeSelectDistinct(
-										(String) si.next(), col));
-					// Combine the two to create an updated list.
-					final Map newValues = new TreeMap(existingValues);
-					for (final Iterator vi = newValues.entrySet().iterator(); vi
-							.hasNext();) {
-						final Map.Entry oldEntry = (Map.Entry) vi.next();
-						if (!dbValues.contains(oldEntry.getValue()))
-							i.remove();
-					}
-					for (final Iterator vi = dbValues.iterator(); vi.hasNext();) {
-						final String value = (String) vi.next();
-						if (!newValues.containsValue(value))
-							newValues.put(value, value);
-					}
-					// Update the table contents.
-					existingValues.clear();
-					existingValues.putAll(newValues);
-				}
-			}
-		}
 	}
 
 	/**

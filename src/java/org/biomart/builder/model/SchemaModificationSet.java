@@ -58,6 +58,8 @@ public class SchemaModificationSet {
 
 	private final Map maskedRelations = new HashMap();
 
+	private final Map loopbackRelations = new HashMap();
+
 	private final Map forceIncludeRelations = new HashMap();
 
 	private final Map compoundRelations = new HashMap();
@@ -707,6 +709,130 @@ public class SchemaModificationSet {
 	}
 
 	/**
+	 * Loopback the given relation.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 * @throws ValidationException
+	 *             if it cannot be done logically.
+	 */
+	public void setLoopbackRelation(final Relation relation)
+			throws ValidationException {
+		this.setLoopbackRelation(SchemaModificationSet.DATASET, relation);
+	}
+
+	/**
+	 * Loopback the given relation, but only as part of the given dataset table.
+	 * 
+	 * @param table
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation.
+	 * @throws ValidationException
+	 *             if it cannot be done logically.
+	 */
+	public void setLoopbackRelation(final DataSetTable table,
+			final Relation relation) throws ValidationException {
+		this.setLoopbackRelation(table.getName(), relation);
+	}
+
+	private void setLoopbackRelation(final String tableName,
+			final Relation relation) throws ValidationException {
+
+		// Check that the relation is a 1:M relation.
+		if (!relation.isOneToMany())
+			throw new ValidationException(Resources.get("subclassNotOneMany"));
+
+		if (!this.loopbackRelations.containsKey(tableName))
+			this.loopbackRelations.put(tableName, new HashSet());
+		final Collection masks = (Collection) this.loopbackRelations
+				.get(tableName);
+		masks.add(relation);
+	}
+
+	/**
+	 * Unloopback the relation dataset-wide.
+	 * 
+	 * @param relation
+	 *            the relation.
+	 */
+	public void unsetLoopbackRelation(final Relation relation) {
+		this.unsetLoopbackRelation(SchemaModificationSet.DATASET, relation);
+	}
+
+	/**
+	 * Unloopback the relation for the specific dataset table.
+	 * 
+	 * @param table
+	 *            the dataset table.
+	 * @param relation
+	 *            the relation.
+	 * @throws ValidationException
+	 *             if it cannot do it for logical reasons.
+	 */
+	public void unsetLoopbackRelation(final DataSetTable table,
+			final Relation relation) throws ValidationException {
+		// Complain if asked to unmask globally masked relation.
+		final Collection globalIncs = (Collection) this.loopbackRelations
+				.get(SchemaModificationSet.DATASET);
+		if (globalIncs != null && globalIncs.contains(relation))
+			throw new ValidationException(Resources
+					.get("relationLoopedBackGlobally"));
+		this.unsetLoopbackRelation(table.getName(), relation);
+	}
+
+	private void unsetLoopbackRelation(final String tableName,
+			final Relation relation) {
+		// Skip already-unmasked relations.
+		if (!this.isLoopbackRelation(tableName, relation))
+			return;
+		if (this.loopbackRelations.containsKey(tableName)) {
+			final Collection incs = (Collection) this.loopbackRelations
+					.get(tableName);
+			incs.remove(relation);
+			if (incs.isEmpty())
+				this.loopbackRelations.remove(tableName);
+		}
+	}
+
+	/**
+	 * Is ths relation loopbacked for the given dataset table?
+	 * 
+	 * @param table
+	 *            the dataset table to check.
+	 * @param relation
+	 *            the relation.
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isLoopbackRelation(final DataSetTable table,
+			final Relation relation) {
+		return this
+				.isLoopbackRelation(
+						table == null ? SchemaModificationSet.DATASET : table
+								.getName(), relation);
+	}
+
+	private boolean isLoopbackRelation(final String tableName,
+			final Relation relation) {
+		final Collection globalIncs = (Collection) this.loopbackRelations
+				.get(SchemaModificationSet.DATASET);
+		final Collection incs = (Collection) this.loopbackRelations
+				.get(tableName);
+		return incs != null && incs.contains(relation) || globalIncs != null
+				&& globalIncs.contains(relation);
+	}
+
+	/**
+	 * Get the map of loopback relations. Keys are dataset table names or the
+	 * {@link #DATASET} constant. Values are relations.
+	 * 
+	 * @return the map.
+	 */
+	public Map getLoopbackRelations() {
+		return this.loopbackRelations;
+	}
+
+	/**
 	 * Subclass the given relation.
 	 * 
 	 * @param relation
@@ -723,7 +849,7 @@ public class SchemaModificationSet {
 		if (this.isSubclassedRelation(relation))
 			return;
 
-		// Check that the relation is a 1:M relation and isn't a loop-back.
+		// Check that the relation is a 1:M relation.
 		if (!relation.isOneToMany())
 			throw new ValidationException(Resources.get("subclassNotOneMany"));
 
@@ -1127,6 +1253,8 @@ public class SchemaModificationSet {
 	public void replicate(final SchemaModificationSet target) {
 		target.subclassedRelations.clear();
 		target.subclassedRelations.addAll(this.subclassedRelations);
+		target.loopbackRelations.clear();
+		target.loopbackRelations.putAll(this.loopbackRelations);
 		target.maskedRelations.clear();
 		target.maskedRelations.putAll(this.maskedRelations);
 		target.forceIncludeRelations.clear();

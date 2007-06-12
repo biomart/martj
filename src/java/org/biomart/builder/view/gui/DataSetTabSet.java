@@ -42,7 +42,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
@@ -58,7 +57,6 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
-import org.biomart.builder.view.gui.dialogs.PartitionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
@@ -107,7 +105,6 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public DataSetTabSet(final MartTab martTab) {
 		super();
-
 
 		// Remember the settings.
 		this.martTab = martTab;
@@ -486,8 +483,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestCreateDDL(final DataSet dataset) {
 		// Open the DDL creation dialog and let it do it's stuff.
 		(new SaveDDLDialog(this.martTab, Collections.singleton(dataset),
-				SaveDDLDialog.VIEW_DDL))
-				.show();
+				SaveDDLDialog.VIEW_DDL)).show();
 	}
 
 	/**
@@ -1137,6 +1133,37 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks that a relation be loopbacked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to work with.
+	 * @param relation
+	 *            the schema relation to loopback.
+	 */
+	public void requestLoopbackRelation(final DataSet ds,
+			final DataSetTable dst, final Relation relation) {
+		new LongProcess() {
+			public void run() throws Exception {
+				// Force the relation.
+				if (dst != null)
+					MartBuilderUtils.loopbackRelation(dst, relation);
+				else
+					MartBuilderUtils.loopbackRelation(ds, relation);
+
+				// And the overview.
+				DataSetTabSet.this.recalculateDataSetDiagram(
+						dst != null ? (DataSet) dst.getSchema() : ds, relation);
+
+				// Update the modified status for this tabset.
+				DataSetTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
+			}
+		}.start();
+	}
+
+	/**
 	 * Asks that a relation be forced.
 	 * 
 	 * @param ds
@@ -1302,63 +1329,6 @@ public class DataSetTabSet extends JTabbedPane {
 				DataSetTabSet.this.repaintDataSetDiagram(
 						dsTable != null ? (DataSet) dsTable.getSchema()
 								: dataset, table);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that the dataset should be partitioned by the contents of the
-	 * specified column. A dialog is put up asking the user how to partition
-	 * this column. If it is already partitioned, the dialog will explain how
-	 * and allow the user to change it. The user's input is then used to
-	 * partition the column appropriately (or re-partition using the new
-	 * settings if it was already partitioned).
-	 * 
-	 * @param dataset
-	 *            the dataset we are working with.
-	 * @param dsTable
-	 *            the table to work with.
-	 * @param column
-	 *            the column to partition.
-	 */
-	public void requestPartitionByColumn(final DataSet dataset,
-			final DataSetTable dsTable, final DataSetColumn column) {
-		PartitionColumnDialog dialog;
-		// If the column is already partitioned, open a dialog
-		// explaining this and asking the user to edit the settings.
-		if (dataset.getDataSetModifications().isPartitionedTable(dsTable))
-			dialog = new PartitionColumnDialog(Resources
-					.get("updatePartitionButton"),
-					dataset.getDataSetModifications().getPartitionedColumnDef(
-							dsTable), dsTable,
-					column == null ? (DataSetColumn) dsTable
-							.getColumnByName(dataset.getDataSetModifications()
-									.getPartitionedColumnName(dsTable))
-							: column);
-		// Otherwise, open a dialog asking the user to define the partitioning
-		// scheme.
-		else
-			dialog = new PartitionColumnDialog(Resources
-					.get("createPartitionButton"), null, dsTable, column);
-		// Check they didn't cancel the request.
-		dialog.setLocationRelativeTo(null);
-		dialog.show();
-		final PartitionedColumnDefinition type = dialog.getPartitionType();
-		final DataSetColumn partCol = dialog.getColumn();
-		if (type == null)
-			return;
-		// Do the partitioning.
-		new LongProcess() {
-			public void run() throws Exception {
-				// Do the partitioning.
-				MartBuilderUtils.partitionByColumn(dataset, partCol, type);
-
-				// And the overview.
-				DataSetTabSet.this.repaintDataSetDiagram(dataset, null);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()
@@ -1833,6 +1803,37 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks that a relation be unloopbacked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to work with.
+	 * @param relation
+	 *            the schema relation to unloopback.
+	 */
+	public void requestUnloopbackRelation(final DataSet ds,
+			final DataSetTable dst, final Relation relation) {
+		new LongProcess() {
+			public void run() throws Exception {
+				// Unmasks the relation.
+				if (dst != null)
+					MartBuilderUtils.unloopbackRelation(dst, relation);
+				else
+					MartBuilderUtils.unloopbackRelation(ds, relation);
+
+				// And the overview.
+				DataSetTabSet.this.recalculateDataSetDiagram(
+						dst != null ? (DataSet) dst.getSchema() : ds, relation);
+
+				// Update the modified status for this tabset.
+				DataSetTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
+			}
+		}.start();
+	}
+
+	/**
 	 * Asks that a relation be unforced.
 	 * 
 	 * @param ds
@@ -1917,31 +1918,6 @@ public class DataSetTabSet extends JTabbedPane {
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(
 						dst != null ? (DataSet) dst.getSchema() : ds, table);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Requests that partioning be turned off on the given table.
-	 * 
-	 * @param dataset
-	 *            the dataset we are working with.
-	 * @param dsTable
-	 *            the table to work with.
-	 */
-	public void requestUnpartitionByColumn(final DataSet dataset,
-			final DataSetTable dsTable) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Unpartition the column.
-				MartBuilderUtils.unpartitionByColumn(dataset, dsTable);
-
-				// And the overview.
-				DataSetTabSet.this.repaintDataSetDiagram(dataset, null);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()

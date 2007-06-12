@@ -50,6 +50,7 @@ import org.biomart.builder.controller.MartConstructor;
 import org.biomart.builder.controller.SaveDDLMartConstructor;
 import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.controller.MartConstructor.MartConstructorListener;
+import org.biomart.builder.exceptions.ListenerException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -403,7 +404,7 @@ public class SaveDDLDialog extends JDialog {
 			cr.addMartConstructorListener(new MartConstructorListener() {
 				public void martConstructorEventOccurred(final int event,
 						final Object data, final MartConstructorAction action)
-						throws Exception {
+						throws ListenerException {
 					if (event == MartConstructorListener.CONSTRUCTION_ENDED
 							&& cr.getFailureException() == null) {
 						if (SaveDDLDialog.this.outputFormat.getSelectedItem()

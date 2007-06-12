@@ -20,19 +20,13 @@ package org.biomart.builder.controller.dialects;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.common.model.Column;
 import org.biomart.common.model.DataLink;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
-import org.biomart.common.model.DataLink.JDBCDataLink;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -72,8 +66,7 @@ public abstract class DatabaseDialect {
 	 * subclass has been created and registered.
 	 */
 	protected DatabaseDialect() {
-		Log.info("Registering dialect: "+this.getClass()
-						.getName());
+		Log.info("Registering dialect: " + this.getClass().getName());
 	}
 
 	/**
@@ -104,7 +97,7 @@ public abstract class DatabaseDialect {
 				// Get maximum table/col name lengths.
 				if (dataLink instanceof JDBCSchema) {
 					final DatabaseMetaData dmd = ((JDBCSchema) dataLink)
-							.getConnection().getMetaData();
+							.getConnection(null).getMetaData();
 					d.setMaxColumnNameLength(dmd.getMaxColumnNameLength());
 					d.setMaxTableNameLength(dmd.getMaxTableNameLength());
 				}
@@ -113,79 +106,6 @@ public abstract class DatabaseDialect {
 		}
 		return null;
 	}
-
-	/**
-	 * Gets all distinct values in the given column. This method should perform
-	 * the select and return the results as a list. If the column is empty, the
-	 * list will be empty, but it will never be <tt>null</tt>.
-	 * <p>
-	 * The method will use the {@link Column#getTable()} method to discover
-	 * which table to use. It will use the {@link Column#getName()},
-	 * {@link Table#getName()} methods to work out the names to use in the
-	 * query. It is expected that the method will be able to work out from the
-	 * type of {@link Schema} object returned by {@link Table#getSchema()}
-	 * exactly how to connect to the database in question and use this
-	 * information. For instance, if it finds a {@link JDBCSchema}, it knows
-	 * that this will implement {@link JDBCDataLink} and therefore will be able
-	 * to discover and use {@link JDBCDataLink#getConnection()} to connect to
-	 * the database and execute the query.
-	 * <p>
-	 * The actual schema interrogated is given by <tt>schemaName</tt> and NOT
-	 * by {@link JDBCSchema#getDatabaseSchema()}.
-	 * 
-	 * @param schemaName
-	 *            the name of the schema to interrogate.
-	 * @param col
-	 *            the column to get the distinct values from.
-	 * @return a list of the distinct values in the column.
-	 * @throws SQLException
-	 *             in case of problems.
-	 */
-	public abstract Collection executeSelectDistinct(final String schemaName,
-			Column col) throws SQLException;
-
-	/**
-	 * Gets rows from the given table. This method should perform the select and
-	 * return the results. Each row is returned in a {@link List}, where each
-	 * entry in the list is another {@link List} which contains the values of
-	 * the columns, in order. If the column is empty, the list will be empty,
-	 * but it will never be <tt>null</tt>. It is not possible for any member
-	 * {@link List} inside the list to be empty or <tt>null</tt>.
-	 * <p>
-	 * An offset and count are provided to allow the function to be used to
-	 * return a slice of the table instead of the whole table. The offset
-	 * determines the number of the first row to return, and the count
-	 * determines how many rows to return from that point. The offset is
-	 * 0-indexed, such that the first row in a table is row 0.
-	 * <p>
-	 * <p>
-	 * The method will use the {@link Column#getTable()} method to discover
-	 * which table to use. It will use the {@link Column#getName()},
-	 * {@link Table#getName()} methods to work out the names to use in the
-	 * query. It is expected that the method will be able to work out from the
-	 * type of {@link Schema} object returned by {@link Table#getSchema()}
-	 * exactly how to connect to the database in question and use this
-	 * information. For instance, if it finds a {@link JDBCSchema}, it knows
-	 * that this will implement {@link JDBCDataLink} and therefore will be able
-	 * to discover and use {@link JDBCDataLink#getConnection()} to connect to
-	 * the database and execute the query.
-	 * <p>
-	 * The actual schema interrogated is given by <tt>schemaName</tt> and NOT
-	 * by {@link JDBCSchema#getDatabaseSchema()}.
-	 * 
-	 * @param table
-	 *            the table to get the rows from.
-	 * @param offset
-	 *            how far into the table to start. This value is 0-indexed, so
-	 *            the first row is row 0.
-	 * @param count
-	 *            how many rows to get.
-	 * @return the rows as a nested list.
-	 * @throws SQLException
-	 *             in case of problems.
-	 */
-	public abstract Collection executeSelectRows(Table table, int offset,
-			int count) throws SQLException;
 
 	/**
 	 * Given a particular action, return a SQL or DDL statement that will

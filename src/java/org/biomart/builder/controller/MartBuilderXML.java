@@ -25,7 +25,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,9 +51,6 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueList;
-import org.biomart.builder.model.DataSetModificationSet.PartitionedColumnDefinition.ValueRange;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -106,10 +102,10 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class MartBuilderXML extends DefaultHandler {
 
-	private static final String CURRENT_DTD_VERSION = "0.6";
+	private static final String CURRENT_DTD_VERSION = "0.7";
 
 	private static final String[] SUPPORTED_DTD_VERSIONS = new String[] {
-			"0.6", "0.5" };
+			"0.7", "0.6", "0.5" };
 
 	private static final String DTD_PUBLIC_ID_START = "-//EBI//DTD MartBuilder ";
 
@@ -710,47 +706,7 @@ public class MartBuilderXML extends DefaultHandler {
 					this.closeElement("indexedColumn", xmlWriter);
 				}
 			}
-
-			// Write out partitioned columns.
-			for (final Iterator x = dsMods.getPartitionedColumns().entrySet()
-					.iterator(); x.hasNext();) {
-				final Map.Entry entry = (Map.Entry) x.next();
-				for (final Iterator y = ((Map) entry.getValue()).entrySet()
-						.iterator(); y.hasNext();) {
-					final Map.Entry entry2 = (Map.Entry) y.next();
-					final PartitionedColumnDefinition pc = (PartitionedColumnDefinition) entry2
-							.getValue();
-					final String pcType = pc instanceof ValueRange ? "valueRange"
-							: "valueList";
-					this.openElement("partitionedColumn", xmlWriter);
-					this.writeAttribute("tableKey", (String) entry.getKey(),
-							xmlWriter);
-					this.writeAttribute("colKey", (String) entry2.getKey(),
-							xmlWriter);
-					this.writeAttribute("partitionType", pcType, xmlWriter);
-					if (pc instanceof ValueList) {
-						this.writeListAttribute("valueNames",
-								(String[]) ((ValueList) pc).getValues()
-										.keySet().toArray(new String[0]),
-								xmlWriter);
-						this.writeListAttribute("valueValues",
-								(String[]) ((ValueList) pc).getValues()
-										.values().toArray(new String[0]),
-								xmlWriter);
-					} else if (pc instanceof ValueRange) {
-						this.writeListAttribute("rangeNames",
-								(String[]) ((ValueRange) pc).getRanges()
-										.keySet().toArray(new String[0]),
-								xmlWriter);
-						this.writeListAttribute("rangeExpressions",
-								(String[]) ((ValueRange) pc).getRanges()
-										.values().toArray(new String[0]),
-								xmlWriter);
-					}
-					this.closeElement("partitionedColumn", xmlWriter);
-				}
-			}
-
+			
 			// Write out masked relations inside dataset. Can go before or
 			// after.
 			for (final Iterator x = schemaMods.getMaskedRelations().entrySet()
@@ -813,6 +769,24 @@ public class MartBuilderXML extends DefaultHandler {
 							(String) this.reverseMappedObjects.get(r),
 							xmlWriter);
 					this.closeElement("forcedRelation", xmlWriter);
+				}
+			}
+
+			// Write out loopback relations inside dataset. Can go before or
+			// after.
+			for (final Iterator x = schemaMods.getLoopbackRelations()
+					.entrySet().iterator(); x.hasNext();) {
+				final Map.Entry entry = (Map.Entry) x.next();
+				for (final Iterator y = ((Collection) entry.getValue())
+						.iterator(); y.hasNext();) {
+					final Relation r = (Relation) y.next();
+					this.openElement("loopbackRelation", xmlWriter);
+					this.writeAttribute("tableKey", (String) entry.getKey(),
+							xmlWriter);
+					this.writeAttribute("relationId",
+							(String) this.reverseMappedObjects.get(r),
+							xmlWriter);
+					this.closeElement("loopbackRelation", xmlWriter);
 				}
 			}
 
@@ -1597,6 +1571,34 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
+		// Forced Relation (inside dataset).
+		else if ("loopbackRelation".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("loopbackRelationOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				final Relation rel = (Relation) this.mappedObjects
+						.get(attributes.get("relationId"));
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Mask it.
+				if (rel != null && tableKey != null) {
+					final Map fMap = w.getSchemaModifications()
+							.getLoopbackRelations();
+					if (!fMap.containsKey(tableKey))
+						fMap.put(tableKey, new HashSet());
+					((Collection) fMap.get(tableKey)).add(rel);
+				}
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
 		// Subclass Relation (inside dataset).
 		else if ("subclassRelation".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -1614,68 +1616,6 @@ public class MartBuilderXML extends DefaultHandler {
 				// Subclass it.
 				if (rel != null)
 					w.getSchemaModifications().setSubclassedRelation(rel);
-			} catch (final Exception e) {
-				throw new SAXException(e);
-			}
-		}
-
-		// Partitioned Column (inside dataset).
-		else if ("partitionedColumn".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("partitionedColumnOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the relation.
-				final String tableKey = (String) attributes.get("tableKey");
-				final String colKey = (String) attributes.get("colKey");
-
-				final String partitionType = (String) attributes
-						.get("partitionType");
-				PartitionedColumnDefinition resolvedPartitionType;
-				if (partitionType == null || "null".equals(partitionType))
-					resolvedPartitionType = null;
-				else if ("valueList".equals(partitionType)) {
-					final List valueNames = new ArrayList();
-					valueNames.addAll(Arrays.asList(this.readListAttribute(
-							(String) attributes.get("valueNames"), false)));
-					final List valueValues = new ArrayList();
-					valueValues.addAll(Arrays.asList(this.readListAttribute(
-							(String) attributes.get("valueValues"), false)));
-					// Make the range collection.
-					final Map values = new HashMap();
-					for (int i = 0; i < valueNames.size(); i++)
-						values.put(valueNames.get(i), valueValues.get(i));
-					resolvedPartitionType = new ValueList(values);
-				} else if ("valueRange".equals(partitionType)) {
-					final List rangeNames = new ArrayList();
-					rangeNames.addAll(Arrays.asList(this.readListAttribute(
-							(String) attributes.get("rangeNames"), false)));
-					final List rangeExpressions = new ArrayList();
-					rangeExpressions.addAll(Arrays.asList(this
-							.readListAttribute((String) attributes
-									.get("rangeExpressions"), false)));
-					// Make the range collection.
-					final Map ranges = new HashMap();
-					for (int i = 0; i < rangeNames.size(); i++)
-						ranges.put(rangeNames.get(i), rangeExpressions.get(i));
-					resolvedPartitionType = new ValueRange(ranges);
-				} else
-					throw new SAXException(Resources.get(
-							"unknownPartitionColumnType", partitionType));
-
-				// Partition it.
-				if (tableKey != null && colKey != null) {
-					final Map colMap = w.getDataSetModifications()
-							.getPartitionedColumns();
-					if (!colMap.containsKey(tableKey))
-						colMap.put(tableKey, new HashMap());
-					((Map) colMap.get(tableKey)).put(colKey,
-							resolvedPartitionType);
-				}
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1887,6 +1827,11 @@ public class MartBuilderXML extends DefaultHandler {
 				else
 					throw new SAXException(e);
 			}
+		}
+		
+		// Partitioned column (inside dataset).
+		else if ("partitionedColumn".equals(eName)) {
+			// Ignore - legacy from 0.6.
 		}
 
 		// Restricted Relation (inside dataset).

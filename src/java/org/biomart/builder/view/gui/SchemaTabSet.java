@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
@@ -34,9 +33,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
 
 import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -46,7 +43,6 @@ import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.KeyDialog;
 import org.biomart.common.controller.CommonUtils;
-import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -871,9 +867,6 @@ public class SchemaTabSet extends JTabbedPane {
 						// Do the work.
 						CommonUtils.setSchemaPartition(schema, dialog
 								.getRegex(), dialog.getExpression());
-						MartBuilderUtils.updatePartitionColumns(
-								SchemaTabSet.this.getMartTab().getMart(),
-								schema);
 					} finally {
 						// Must use a finally in case the schema gets
 						// created
@@ -1096,47 +1089,6 @@ public class SchemaTabSet extends JTabbedPane {
 				// Update the modified status for this tabset.
 				SchemaTabSet.this.martTab.getMartTabSet()
 						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Shows some rows of the table in a {@link JTable} in a popup dialog.
-	 * 
-	 * @param table
-	 *            the table to show rows from.
-	 * @param offset
-	 *            where to start from.
-	 * @param count
-	 *            how many rows to show.
-	 */
-	public void requestShowRows(final Table table, final int offset,
-			final int count) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Get the rows.
-				final Collection rows = MartBuilderUtils.selectRows(table,
-						offset, count);
-				// Convert to a nested vector.
-				final Vector data = new Vector();
-				for (final Iterator i = rows.iterator(); i.hasNext();)
-					data.add(new Vector((List) i.next()));
-				// Get the column names.
-				final Vector colNames = new Vector();
-				for (final Iterator i = table.getColumns().iterator(); i
-						.hasNext();)
-					colNames.add(((Column) i.next()).getName());
-				// Construct a JTable.
-				final JTable jtable = new JTable(new DefaultTableModel(data,
-						colNames));
-				// Display them.
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						JOptionPane.showMessageDialog(null, new JScrollPane(
-								jtable), Resources.get("showRowsTitle"),
-								JOptionPane.INFORMATION_MESSAGE);
-					}
-				});
 			}
 		}.start();
 	}

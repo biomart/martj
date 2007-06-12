@@ -38,7 +38,6 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
@@ -155,12 +154,6 @@ public class DataSetContext extends SchemaContext {
 
 			// Highlight DIMENSION tables.
 			else if (tableType.equals(DataSetTableType.DIMENSION)) {
-				if (this.getDataSet()
-						.getDataSetModifications().isPartitionedTable(
-								(DataSetTable) object))
-				component
-						.setForeground(TableComponent.PARTITIONED_COLOUR);
-
 				// Is it compounded?
 				((TableComponent) component).setCompounded(this.dataset
 						.getSchemaModifications().isCompoundRelation(null,
@@ -185,10 +178,6 @@ public class DataSetContext extends SchemaContext {
 			if (((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isMaskedColumn(column))
 				component.setBackground(ColumnComponent.MASKED_COLOUR);
-			// Blue PARTITIONED columns.
-			else if (((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isPartitionedColumn(column))
-				component.setBackground(ColumnComponent.PARTITIONED_COLOUR);
 			// Red INHERITED columns.
 			else if (column instanceof InheritedColumn)
 				component.setBackground(ColumnComponent.INHERITED_COLOUR);
@@ -314,10 +303,7 @@ public class DataSetContext extends SchemaContext {
 						final boolean isMasked = DataSetContext.this
 								.getDataSet().getDataSetModifications()
 								.isMaskedColumn(column);
-						final boolean isPartitioned = DataSetContext.this
-								.getDataSet().getDataSetModifications()
-								.isPartitionedColumn(column);
-						if (!isMasked && !isPartitioned
+						if (!isMasked 
 								&& !(column instanceof ConcatColumn)
 								&& !(column instanceof ExpressionColumn))
 							columns.add(column);
@@ -600,72 +586,6 @@ public class DataSetContext extends SchemaContext {
 					compound.setEnabled(false);
 				if (isCompound)
 					compound.setSelected(true);
-				contextMenu.addSeparator();
-
-				// If it is partitioned, make a submenu to change the partition
-				// type.
-				final boolean isPartitioned = this.dataset
-						.getDataSetModifications().isPartitionedTable(table);
-				if (isPartitioned) {
-
-					// The option to change the partition type.
-					final JMenuItem changepartition = new JMenuItem(Resources
-							.get("changePartitionTableTitle"), new ImageIcon(
-							Resources.getResourceAsURL("expandAll.gif")));
-					changepartition.setMnemonic(Resources.get(
-							"changePartitionTableMnemonic").charAt(0));
-					changepartition.addActionListener(new ActionListener() {
-						public void actionPerformed(final ActionEvent evt) {
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestPartitionByColumn(
-											DataSetContext.this.getDataSet(),
-											table, null);
-						}
-					});
-					contextMenu.add(changepartition);
-
-				}
-
-				// If it is not partitioned, allow the user to turn partitioning
-				// on.
-				else {
-
-					// Option to enable partitioning.
-					final JMenuItem partition = new JMenuItem(Resources
-							.get("partitionTableTitle"), new ImageIcon(
-							Resources.getResourceAsURL("expandAll.gif")));
-					partition.setMnemonic(Resources.get(
-							"partitionTableMnemonic").charAt(0));
-					partition.addActionListener(new ActionListener() {
-						public void actionPerformed(ActionEvent evt) {
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestPartitionByColumn(
-											DataSetContext.this.getDataSet(),
-											table, null);
-						}
-					});
-					contextMenu.add(partition);
-					if (isMasked)
-						partition.setEnabled(false);
-				}
-
-				// The option to turn off partitioning.
-				final JMenuItem unpartition = new JMenuItem(Resources
-						.get("unpartitionTableTitle"));
-				unpartition.setMnemonic(Resources.get(
-						"unpartitionTableMnemonic").charAt(0));
-				unpartition.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestUnpartitionByColumn(
-										DataSetContext.this.getDataSet(), table);
-					}
-				});
-				contextMenu.add(unpartition);
-				if (!isPartitioned)
-					unpartition.setEnabled(false);
 			}
 
 			// Subclass tables have their own options too.
@@ -744,9 +664,6 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.addSeparator();
 
 			// Mask the column.
-			final boolean isPartitioned = ((DataSet) column.getTable()
-					.getSchema()).getDataSetModifications()
-					.isPartitionedColumn(column);
 			final boolean isMasked = ((DataSet) column.getTable().getSchema())
 					.getDataSetModifications().isMaskedColumn(column);
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
@@ -768,7 +685,7 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 			mask.setSelected(isMasked);
-			if (isPartitioned || column instanceof ConcatColumn
+			if (column instanceof ConcatColumn
 					|| column instanceof ExpressionColumn)
 				mask.setEnabled(false);
 
@@ -794,75 +711,6 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(index);
 			index.setSelected(isIndexed);
-
-			contextMenu.addSeparator();
-
-			// If it is partitioned, make a submenu to change the partition
-			// type.
-			if (isPartitioned) {
-
-				// The option to change the partition type.
-				final JMenuItem changepartition = new JMenuItem(Resources
-						.get("changePartitionColumnTitle"), new ImageIcon(
-						Resources.getResourceAsURL("expandAll.gif")));
-				changepartition.setMnemonic(Resources.get(
-						"changePartitionColumnMnemonic").charAt(0));
-				changepartition.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestPartitionByColumn(
-										DataSetContext.this.getDataSet(),
-										(DataSetTable) column.getTable(),
-										column);
-					}
-				});
-				contextMenu.add(changepartition);
-
-			}
-
-			// If it is not partitioned, allow the user to turn partitioning
-			// on.
-			else {
-
-				// Option to enable partitioning.
-				final JMenuItem partition = new JMenuItem(Resources
-						.get("partitionColumnTitle"), new ImageIcon(Resources
-						.getResourceAsURL("expandAll.gif")));
-				partition.setMnemonic(Resources.get("partitionColumnMnemonic")
-						.charAt(0));
-				partition.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestPartitionByColumn(
-										DataSetContext.this.getDataSet(),
-										(DataSetTable) column.getTable(),
-										column);
-					}
-				});
-				contextMenu.add(partition);
-				if (isMasked
-						|| !(column instanceof WrappedColumn)
-						|| !((DataSetTable) column.getTable()).getType()
-								.equals(DataSetTableType.DIMENSION))
-					partition.setEnabled(false);
-			}
-
-			// The option to turn off partitioning.
-			final JMenuItem unpartition = new JMenuItem(Resources
-					.get("unpartitionColumnTitle"));
-			unpartition.setMnemonic(Resources.get("unpartitionColumnMnemonic")
-					.charAt(0));
-			unpartition.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestUnpartitionByColumn(
-									DataSetContext.this.getDataSet(),
-									(DataSetTable) column.getTable());
-				}
-			});
-			contextMenu.add(unpartition);
-			if (!isPartitioned)
-				unpartition.setEnabled(false);
 
 			// Else, if it's an expression column...
 			if (column instanceof ExpressionColumn) {

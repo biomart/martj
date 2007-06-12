@@ -139,6 +139,8 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 	private boolean compounded = false;
 
+	private boolean loopback = false;
+
 	private Diagram diagram;
 
 	private Shape lineShape;
@@ -191,7 +193,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		g2d.setRenderingHints(this.renderHints);
 		g2d.setColor(this.getForeground());
 		g2d.setStroke(this.stroke);
-		g2d.draw(this.lineShape);
+		g2d.draw(this.loopback ? this.outline : this.lineShape);
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -343,6 +345,18 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	 */
 	public void setCompounded(final boolean compounded) {
 		this.compounded = compounded;
+	}
+
+	/**
+	 * If this is set to <tt>true</tt> then the component will appear with a
+	 * double outline. Otherwise, it appears with a single outline.
+	 * 
+	 * @param loopback
+	 *            <tt>true</tt> if the component is to appear with a double
+	 *            outline. The default is <tt>false</tt>.
+	 */
+	public void setLoopback(final boolean loopback) {
+		this.loopback = loopback;
 	}
 
 	public void updateAppearance() {
