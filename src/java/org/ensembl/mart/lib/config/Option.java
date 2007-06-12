@@ -72,12 +72,16 @@ public class Option extends QueryFilterSettings {
   public void resolveText(DynamicDataset ds) {
 	  ds.resolveText(this, this);
       if (getTableConstraint()!=null && !getTableConstraint().equals("") && !getTableConstraint().equals("main")) {
+		  setTableConstraint(ds.getInternalName()+"__"+getTableConstraint());
+		  /*
           if (!getTableConstraint().startsWith(ds.getInternalName()+"__")) 
           	if (getTableConstraint().matches(".*__.*__.*"))
           		setTableConstraint(ds.getInternalName()+"__"+getTableConstraint().split("__")[1]+"__"+getTableConstraint().split("__")[2]);
           	else
           		setTableConstraint(ds.getInternalName()+"__"+getTableConstraint().split("__")[0]+"__"+getTableConstraint().split("__")[1]);
-          } 
+          }
+          */
+      } 
 	  for (Iterator i = this.uiOptions.iterator(); i.hasNext(); )
 		  ((Option)i.next()).resolveText(ds);
 	  for (Iterator i = this.pushActions.iterator(); i.hasNext(); )
