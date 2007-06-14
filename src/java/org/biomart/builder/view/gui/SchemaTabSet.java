@@ -272,11 +272,11 @@ public class SchemaTabSet extends JTabbedPane {
 		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
+		
+		// Update the all-schemas diagram.
+		this.recalculateOverviewDiagram();
 
 		if (select) {
-			// Update the all-schemas diagram.
-			this.recalculateOverviewDiagram();
-
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.
 			this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1,
@@ -399,8 +399,6 @@ public class SchemaTabSet extends JTabbedPane {
 			if (!this.martTab.getMart().getSchemas().contains(schema))
 				this.removeSchemaTab(schema, false);
 		}
-
-		this.recalculateOverviewDiagram();
 	}
 
 	/**

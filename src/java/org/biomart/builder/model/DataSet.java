@@ -33,7 +33,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
-import org.biomart.builder.model.SchemaModificationSet.ConcatRelationDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
@@ -1060,49 +1059,6 @@ public class DataSet extends GenericSchema {
 			 * @return the expression.
 			 */
 			public ExpressionColumnDefinition getDefinition() {
-				return this.definition;
-			}
-		}
-
-		/**
-		 * A column on a dataset table that is an expression bringing together
-		 * values from other columns. Those columns should be marked with a
-		 * dependency flag to indicate that they are still needed even if
-		 * otherwise masked. If this is the case, they can be dropped after the
-		 * dependent expression column has been added.
-		 * <p>
-		 * Note that all expression columns should be added in a single step.
-		 */
-		public static class ConcatColumn extends DataSetColumn {
-			private static final long serialVersionUID = 1L;
-
-			private final ConcatRelationDefinition definition;
-
-			/**
-			 * This constructor gives the column a name. The underlying relation
-			 * is not required here.
-			 * 
-			 * @param name
-			 *            the name to give this column.
-			 * @param dsTable
-			 *            the dataset table to add the wrapped column to.
-			 * @param definition
-			 *            the definition of the concat expression.
-			 */
-			public ConcatColumn(final String name, final DataSetTable dsTable,
-					final ConcatRelationDefinition definition) {
-				// The super constructor will make the alias for us.
-				super(name, dsTable);
-				this.definition = definition;
-			}
-
-			/**
-			 * Obtain the expression used in each concatenated row inside this
-			 * column.
-			 * 
-			 * @return the concat expression used.
-			 */
-			public ConcatRelationDefinition getDefinition() {
 				return this.definition;
 			}
 		}

@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.common.exceptions.BioMartError;
@@ -36,9 +37,11 @@ import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
+import org.biomart.common.model.PartitionTable;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.PartitionTable.PartitionColumn;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -53,6 +56,10 @@ import org.biomart.common.resources.Resources;
  */
 public class Mart {
 	private static final long serialVersionUID = 1L;
+
+	// OK to use map, as keys are strings and never change.
+	// Use tree map to keep them in alphabetical order.
+	private final Map partitionTables = new TreeMap();
 
 	// OK to use map, as keys are strings and never change.
 	// Use tree map to keep them in alphabetical order.
@@ -297,6 +304,26 @@ public class Mart {
 	}
 
 	/**
+	 * Adds a partition table to the mart.
+	 * 
+	 * @param partitionTable
+	 *            the table to add.
+	 */
+	public void addPartitionTable(final PartitionTable partitionTable) {
+		Log.debug("Adding partition table " + partitionTable);
+		String name = partitionTable.getName();
+		final String baseName = partitionTable.getName();
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.partitionTables.containsKey(name); name = baseName
+				+ "_" + i++)
+			;
+		partitionTable.setName(name);
+		Log.debug("Unique name is " + name);
+		// Add it.
+		this.partitionTables.put(partitionTable.getName(), partitionTable);
+	}
+
+	/**
 	 * Adds a schema to the set which this mart includes. It is renamed if one
 	 * with that name already exists.
 	 * 
@@ -339,6 +366,27 @@ public class Mart {
 	}
 
 	/**
+	 * Returns the partition table object with the given name.
+	 * 
+	 * @param name
+	 *            the name to look for.
+	 * @return a partition table object matching the specified name.
+	 */
+	public PartitionTable getPartitionTableByName(final String name) {
+		return (PartitionTable) this.partitionTables.get(name);
+	}
+
+	/**
+	 * Returns the set of partition table objects which this mart includes. The
+	 * set may be empty but it is never <tt>null</tt>.
+	 * 
+	 * @return a set of partition table objects.
+	 */
+	public Collection getPartitionTables() {
+		return this.partitionTables.values();
+	}
+
+	/**
 	 * Returns the schema object with the given name. If it doesn't exist,
 	 * <tt>null</tt> is returned.
 	 * 
@@ -358,6 +406,17 @@ public class Mart {
 	 */
 	public Collection getSchemas() {
 		return this.schemas.values();
+	}
+
+	/**
+	 * Removes a partition table from the set which this mart includes.
+	 * 
+	 * @param partitionTable
+	 *            the partition table to remove.
+	 */
+	public void removePartitionTable(final PartitionTable partitionTable) {
+		Log.debug("Removing partitionTable " + partitionTable);
+		this.partitionTables.remove(partitionTable.getName());
 	}
 
 	/**
@@ -414,6 +473,31 @@ public class Mart {
 		this.datasets.remove(dataset.getName());
 		dataset.setName(name);
 		this.datasets.put(name, dataset);
+	}
+
+	/**
+	 * Renames a partition table. This call cascades to the table itself and
+	 * renames that too.
+	 * 
+	 * @param partitionTable
+	 *            the partition table to rename.
+	 * @param name
+	 *            the new name for it.
+	 */
+	public void renamePartitionTable(final PartitionTable partitionTable,
+			String name) {
+		Log.debug("Renaming partition table " + partitionTable + " as " + name);
+		final String baseName = name;
+		// Check we don't have one by this name already. Alias if we do.
+		for (int i = 1; this.partitionTables.containsKey(name)
+				&& !name.equals(partitionTable.getName()); name = baseName
+				+ "_" + i++)
+			;
+		Log.debug("Unique name is " + name);
+		// Rename it.
+		this.partitionTables.remove(partitionTable.getName());
+		partitionTable.setName(name);
+		this.partitionTables.put(name, partitionTable);
 	}
 
 	/**
@@ -739,5 +823,59 @@ public class Mart {
 			((Schema) i.next()).synchronise();
 		// Then, synchronise datasets.
 		this.synchroniseDataSets();
+	}
+
+	/**
+	 * Using the descriptor (table[.subtable[.subtable]*]*.column) return the
+	 * actual column from a {@link PartitionTable}.
+	 * 
+	 * @param descriptor
+	 *            the descriptor.
+	 * @return the column.
+	 */
+	private PartitionColumn getPartitionColumn(final String descriptor) {
+		final String[] parts = descriptor.split("\\.");
+		PartitionTable table = this.getPartitionTableByName(parts[0]);
+		for (int i = 1; table != null && i < parts.length; i++) {
+			if (parts[i].equals(table.getSubdivisionName()))
+				table = table.getSubdivision();
+			else
+				try {
+					return table.getColumn(parts[i]);
+				} catch (final PartitionException pe) {
+					return null;
+				}
+		}
+		return null;
+	}
+
+	/**
+	 * Resolve and replace all partition references in the expression and return
+	 * the resolved expression. Partition references are enclosed in $ signs and
+	 * are in the form $table[.subtable[.subtable]*]*.column$. Any $ sections
+	 * that do not resolve to a valid partition are ignored and left intact.
+	 * 
+	 * @param expression
+	 *            the expression to resolve.
+	 * @return the resolved expression.
+	 * @throws PartitionException
+	 *             if any alias could not be resolved into a value.
+	 */
+	public String resolveExpression(final String expression)
+			throws PartitionException {
+		String resolvedExpression = expression;
+		int previousDollar = expression.indexOf('$');
+		int nextDollar = expression.indexOf('$', previousDollar + 1);
+		while (nextDollar != -1) {
+			final String alias = expression.substring(previousDollar + 1,
+					nextDollar);
+			final PartitionColumn col = this.getPartitionColumn(alias);
+			if (col != null)
+				resolvedExpression.replace("\\$" + alias + "\\$", col
+						.getValueForRow(col.getPartitionTable().currentRow()));
+			previousDollar = nextDollar;
+			nextDollar = expression.indexOf('$', previousDollar + 1);
+		}
+		return resolvedExpression;
 	}
 }

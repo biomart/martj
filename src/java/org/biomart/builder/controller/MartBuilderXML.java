@@ -67,6 +67,7 @@ import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.GenericForeignKey;
 import org.biomart.common.model.Key.GenericPrimaryKey;
 import org.biomart.common.model.Key.PrimaryKey;
+import org.biomart.common.model.PartitionTable.PartitionAppliedDefinition;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Schema.GenericSchema;
@@ -897,6 +898,7 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("n", "" + def.getN(), xmlWriter);
 					this.writeAttribute("parallel", "" + def.isParallel(),
 							xmlWriter);
+					// TODO Write partition info to XML.
 					this.closeElement("compoundRelation", xmlWriter);
 				}
 			}
@@ -1497,6 +1499,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final Integer n = Integer.valueOf((String) attributes.get("n"));
 				final boolean parallel = Boolean.valueOf(
 						(String) attributes.get("parallel")).booleanValue();
+				// TODO Read partition info from XML.
+				final PartitionAppliedDefinition partition = null;
 
 				// Compound it.
 				if (rel != null && tableKey != null && n != null) {
@@ -1506,7 +1510,7 @@ public class MartBuilderXML extends DefaultHandler {
 						compMap.put(tableKey, new HashMap());
 					((Map) compMap.get(tableKey)).put(rel,
 							new CompoundRelationDefinition(n.intValue(),
-									parallel));
+									parallel, partition));
 				}
 			} catch (final Exception e) {
 				throw new SAXException(e);

@@ -35,7 +35,6 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
-import org.biomart.builder.model.DataSet.DataSetColumn.ConcatColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
@@ -304,7 +303,6 @@ public class DataSetContext extends SchemaContext {
 								.getDataSet().getDataSetModifications()
 								.isMaskedColumn(column);
 						if (!isMasked 
-								&& !(column instanceof ConcatColumn)
 								&& !(column instanceof ExpressionColumn))
 							columns.add(column);
 					}
@@ -685,8 +683,7 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(mask);
 			mask.setSelected(isMasked);
-			if (column instanceof ConcatColumn
-					|| column instanceof ExpressionColumn)
+			if (column instanceof ExpressionColumn)
 				mask.setEnabled(false);
 
 			// Index the column.

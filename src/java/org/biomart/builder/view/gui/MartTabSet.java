@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -45,6 +44,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.MartBuilderUtils;
@@ -154,6 +154,7 @@ public class MartTabSet extends JTabbedPane {
 		// Within that tab, select the all-schemas and all-datasets tabs.
 		martTab.getDataSetTabSet().setSelectedIndex(0);
 		martTab.getSchemaTabSet().setSelectedIndex(0);
+		martTab.getPartitionTableTabSet().setSelectedIndex(0);
 	}
 
 	/**
@@ -766,6 +767,8 @@ public class MartTabSet extends JTabbedPane {
 
 		private JRadioButton datasetButton;
 
+		private JRadioButton partitionTableButton;
+
 		private DataSetTabSet datasetTabSet;
 
 		private JPanel displayArea;
@@ -777,6 +780,8 @@ public class MartTabSet extends JTabbedPane {
 		private JRadioButton schemaButton;
 
 		private SchemaTabSet schemaTabSet;
+
+		private PartitionTableTabSet partitionTableTabSet;
 
 		/**
 		 * Constructs a new tab in the tabbed pane that represents the given
@@ -795,16 +800,37 @@ public class MartTabSet extends JTabbedPane {
 			this.martTabSet = martTabSet;
 			this.mart = mart;
 
-			// Create the schema tabset.
-			this.schemaTabSet = new SchemaTabSet(this);
-
 			// Create display part of the tab. The display area consists of
 			// two cards - one for the schema editor, one for the dataset
 			// editor. Buttons in another area switch between the cards.
 			this.displayArea = new JPanel(new CardLayout());
 
 			// Create panel which contains the buttons.
+			final JPanel headerPanel = new JPanel(new BorderLayout());
 			final JPanel buttonsPanel = new JPanel();
+			headerPanel.add(buttonsPanel, BorderLayout.CENTER);
+
+			// Add the Biomart logo to the buttons panel.
+			final JLabel logo = new JLabel(new ImageIcon(Resources
+					.getResourceAsURL("biomart-logo.gif")));
+			logo.setBorder(new EmptyBorder(2, 2, 2, 2));
+			headerPanel.add(logo, BorderLayout.NORTH);
+
+			// Create the Run DDL button.
+			final JButton runDDL = new JButton(Resources.get("runDDLButton"),
+					new ImageIcon(Resources.getResourceAsURL("run.gif")));
+			runDDL.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (e.getSource() == runDDL)
+						MartTab.this.martTabSet.requestRunDDL();
+				}
+			});
+			final JPanel smallerPanel = new JPanel();
+			smallerPanel.add(runDDL);
+			headerPanel.add(smallerPanel, BorderLayout.SOUTH);
+
+			// Create the schema tabset.
+			this.schemaTabSet = new SchemaTabSet(this);
 
 			// Create the button that selects the window card. It reattaches
 			// it every time in case it has been attached somewhere else
@@ -828,27 +854,6 @@ public class MartTabSet extends JTabbedPane {
 			});
 			buttonsPanel.add(this.schemaButton);
 
-			// Create a central area.
-			final Box box = Box.createVerticalBox();
-
-			// Add the Biomart logo to the buttons panel.
-			box.add(new JLabel(new ImageIcon(Resources
-					.getResourceAsURL("biomart-logo.gif"))));
-
-			// Create the Run DDL button.
-			final JButton runDDL = new JButton(Resources.get("runDDLButton"),
-					new ImageIcon(Resources.getResourceAsURL("run.gif")));
-			runDDL.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent e) {
-					if (e.getSource() == runDDL)
-						MartTab.this.martTabSet.requestRunDDL();
-				}
-			});
-			box.add(runDDL);
-
-			// Add the box to the panel.
-			buttonsPanel.add(box);
-
 			// Create the dataset tabset.
 			this.datasetTabSet = new DataSetTabSet(this);
 
@@ -870,14 +875,37 @@ public class MartTabSet extends JTabbedPane {
 			});
 			buttonsPanel.add(this.datasetButton);
 
+			// Create the partition table tabset.
+			this.partitionTableTabSet = new PartitionTableTabSet(this);
+
+			// Partition table card.
+			this.displayArea.add(this.partitionTableTabSet,
+					"PARTITIONTABLE_EDITOR_CARD");
+
+			// Create the button that selects the dataset card.
+			this.partitionTableButton = new JRadioButton(Resources
+					.get("partitionTableEditorButtonName"));
+			this.partitionTableButton.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (e.getSource() == MartTab.this.partitionTableButton) {
+						final CardLayout cards = (CardLayout) MartTab.this.displayArea
+								.getLayout();
+						cards.show(MartTab.this.displayArea,
+								"PARTITIONTABLE_EDITOR_CARD");
+					}
+				}
+			});
+			buttonsPanel.add(this.partitionTableButton);
+
 			// Make buttons mutually exclusive.
 			final ButtonGroup buttons = new ButtonGroup();
 			buttons.add(this.schemaButton);
 			buttons.add(this.datasetButton);
+			buttons.add(this.partitionTableButton);
 
 			// Add the buttons panel, and the display area containing the cards,
 			// to the panel.
-			this.add(buttonsPanel, BorderLayout.NORTH);
+			this.add(headerPanel, BorderLayout.NORTH);
 			this.add(this.displayArea, BorderLayout.CENTER);
 
 			// Select the default button (which shows the schema card).
@@ -923,6 +951,16 @@ public class MartTabSet extends JTabbedPane {
 		}
 
 		/**
+		 * Obtain the tabbed pane set inside this one that represents the
+		 * partition tables in this mart.
+		 * 
+		 * @return the tabbed pane set showing the partition table in this mart.
+		 */
+		public PartitionTableTabSet getPartitionTableTabSet() {
+			return this.partitionTableTabSet;
+		}
+
+		/**
 		 * Fakes a click on the dataset editor radio button.
 		 */
 		public void selectDataSetEditor() {
@@ -938,6 +976,16 @@ public class MartTabSet extends JTabbedPane {
 			// May get called before button has been created.
 			if (this.schemaButton != null && !this.schemaButton.isSelected())
 				this.schemaButton.doClick();
+		}
+
+		/**
+		 * Fakes a click on the partition table editor radio button.
+		 */
+		public void selectPartitionTableEditor() {
+			// May get called before button has been created.
+			if (this.partitionTableButton != null
+					&& !this.partitionTableButton.isSelected())
+				this.partitionTableButton.doClick();
 		}
 	}
 }

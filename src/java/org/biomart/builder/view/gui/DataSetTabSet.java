@@ -66,6 +66,7 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.PartitionTable.PartitionAppliedDefinition;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
@@ -249,11 +250,11 @@ public class DataSetTabSet extends JTabbedPane {
 		this.removeTabAt(tabIndex);
 		this.datasetToDiagram[0].remove(index);
 		this.datasetToDiagram[1].remove(index);
+		
+		// Update the overview diagram.
+		this.recalculateOverviewDiagram();
 
 		if (select) {
-			// Update the overview diagram.
-			this.recalculateOverviewDiagram();
-
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.
 			this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1,
@@ -409,8 +410,6 @@ public class DataSetTabSet extends JTabbedPane {
 			if (!this.martTab.getMart().getDataSets().contains(dataset))
 				this.removeDataSetTab(dataset, false);
 		}
-
-		this.recalculateOverviewDiagram();
 	}
 
 	private synchronized void recalculateOverviewDiagram() {
@@ -756,7 +755,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (!ds.getSchemaModifications().isSubclassedRelation(relation))
 			return;
 		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
-				false);
+				false, null);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
 			def = ds.getSchemaModifications()
 					.getCompoundRelation(dst, relation);
@@ -769,6 +768,8 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.show();
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
+		// TODO Get this from dialog.
+		final PartitionAppliedDefinition partition = null;
 
 		// Skip altogether if no change.
 		if (newN == def.getN())
@@ -783,7 +784,8 @@ public class DataSetTabSet extends JTabbedPane {
 				else
 					// Compound the relation.
 					MartBuilderUtils.compoundRelation(ds, relation,
-							new CompoundRelationDefinition(newN, newParallel));
+							new CompoundRelationDefinition(newN, newParallel,
+									partition));
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
@@ -808,7 +810,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// Work out if it is already compounded.
 		final Relation relation = dst.getFocusRelation();
 		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
-				false);
+				false, null);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
 			def = ds.getSchemaModifications()
 					.getCompoundRelation(dst, relation);
@@ -821,6 +823,8 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.show();
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
+		// TODO Get this from dialog.
+		final PartitionAppliedDefinition partition = null;
 
 		// Skip altogether if no change.
 		if (newN == def.getN() && newParallel == def.isParallel())
@@ -835,7 +839,8 @@ public class DataSetTabSet extends JTabbedPane {
 				else
 					// Compound the relation.
 					MartBuilderUtils.compoundRelation(ds, relation,
-							new CompoundRelationDefinition(newN, newParallel));
+							new CompoundRelationDefinition(newN, newParallel,
+									partition));
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
@@ -916,7 +921,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dst, final Relation relation) {
 		// Work out if it is already compounded.
 		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
-				false);
+				false, null);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
 			def = ds.getSchemaModifications()
 					.getCompoundRelation(dst, relation);
@@ -929,6 +934,8 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.show();
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
+		// TODO Get this from dialog.
+		final PartitionAppliedDefinition partition = null;
 
 		// Skip altogether if no change.
 		if (newN == def.getN() && newParallel == def.isParallel())
@@ -946,10 +953,12 @@ public class DataSetTabSet extends JTabbedPane {
 				} else // Compound the relation.
 				if (dst != null)
 					MartBuilderUtils.compoundRelation(dst, relation,
-							new CompoundRelationDefinition(newN, newParallel));
+							new CompoundRelationDefinition(newN, newParallel,
+									partition));
 				else
 					MartBuilderUtils.compoundRelation(ds, relation,
-							new CompoundRelationDefinition(newN, newParallel));
+							new CompoundRelationDefinition(newN, newParallel,
+									partition));
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(

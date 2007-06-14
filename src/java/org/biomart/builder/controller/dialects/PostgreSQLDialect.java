@@ -158,7 +158,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		if (action.getTableRestriction() != null) {
 			sb.append(" where ");
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					additionalRels, "a"));
+					additionalRels, "a", action.getResolvedTableRestriction()));
 		}
 
 		statements.add(sb.toString());
@@ -341,12 +341,12 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
 					action.isRelationRestrictionLeftIsFirst(),
-					action.getRelationRestrictionPreviousUnit()));
+					action.getRelationRestrictionPreviousUnit(), action.getResolvedRelationRestriction()));
 		}
 		if (action.getTableRestriction() != null && additionalRels.isEmpty()) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					additionalRels, "b"));
+					additionalRels, "b", action.getResolvedTableRestriction()));
 			sb.append(')');
 		}
 		for (final Iterator k = additionalRels.entrySet().iterator(); k
@@ -378,7 +378,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		if (action.getTableRestriction() != null && !additionalRels.isEmpty()) {
 			sb.append(" where ");
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					additionalRels, "b"));
+					additionalRels, "b", action.getResolvedTableRestriction()));
 		}
 
 		statements.add(sb.toString());

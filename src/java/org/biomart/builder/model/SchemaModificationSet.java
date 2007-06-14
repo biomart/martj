@@ -30,6 +30,7 @@ import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
+import org.biomart.common.model.PartitionTable.PartitionAppliedDefinition;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -1261,8 +1262,6 @@ public class SchemaModificationSet {
 		target.forceIncludeRelations.putAll(this.forceIncludeRelations);
 		target.mergedRelations.clear();
 		target.mergedRelations.addAll(this.mergedRelations);
-		target.compoundRelations.clear();
-		target.compoundRelations.putAll(this.compoundRelations);
 		target.directionalRelations.clear();
 		target.directionalRelations.putAll(this.directionalRelations);
 		target.restrictedTables.clear();
@@ -1291,6 +1290,8 @@ public class SchemaModificationSet {
 			((Map) target.restrictedRelations.get(entry.getKey()))
 					.putAll((Map) entry.getValue());
 		}
+		target.compoundRelations.clear();
+		target.compoundRelations.putAll(this.compoundRelations);
 	}
 
 	/**
@@ -1377,12 +1378,17 @@ public class SchemaModificationSet {
 		 *            joined by relations off the primary table involved.
 		 * @param tablePrefix
 		 *            the prefix to use for the table in the expression.
+		 * @param resolvedExpr
+		 *            the resolved expression (with all partition aliases
+		 *            resolved and replaced) for working on. If you are not
+		 *            using partitions, just pass in the result from
+		 *            {@link #getExpression()} instead.
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final Map additionalRels,
-				final String tablePrefix) {
+				final String tablePrefix, final String resolvedExpr) {
 			Log.debug("Calculating restricted table expression");
-			String sub = this.expr;
+			String sub = resolvedExpr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
@@ -1537,13 +1543,18 @@ public class SchemaModificationSet {
 		 * @param mappingUnit
 		 *            the transformation unit this restriction will use to
 		 *            translate columns into dataset column equivalents.
+		 * @param resolvedExpr
+		 *            the resolved expression (with all partition aliases
+		 *            resolved and replaced) for working on. If you are not
+		 *            using partitions, just pass in the result from
+		 *            {@link #getExpression()} instead.
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final String leftTablePrefix,
 				final String rightTablePrefix, final boolean leftIsDataSet,
-				final TransformationUnit mappingUnit) {
+				final TransformationUnit mappingUnit, final String resolvedExpr) {
 			Log.debug("Calculating restricted table expression");
-			String sub = this.expr;
+			String sub = resolvedExpr;
 			for (final Iterator i = this.leftAliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
@@ -1582,336 +1593,16 @@ public class SchemaModificationSet {
 	}
 
 	/**
-	 * Defines the restriction on a table, ie. a where-clause.
-	 */
-	public static class ConcatRelationDefinition {
-		private static final long serialVersionUID = 1L;
-
-		private Map aliases;
-
-		private String expr;
-
-		private String rowSep;
-
-		private String colKey;
-
-		private RecursionType recursionType;
-
-		private Key recursionKey;
-
-		private Relation firstRelation;
-
-		private Relation secondRelation;
-
-		private String concSep;
-
-		/**
-		 * This constructor gives the restriction an initial expression and a
-		 * set of aliases. The expression may not be empty, and neither can the
-		 * alias map.
-		 * 
-		 * @param expr
-		 *            the expression to define for this restriction.
-		 * @param aliases
-		 *            the aliases to use for columns.
-		 * @param rowSep
-		 *            the row separator to put between concated rows.
-		 * @param colKey
-		 *            the name of the concated column.
-		 * @param recursionType
-		 *            the type of recursion to use, if any.
-		 * @param recursionKey
-		 *            the key to start recursing from.
-		 * @param firstRelation
-		 *            the first relation to recurse.
-		 * @param secondRelation
-		 *            the second relation to recurse (optional).
-		 * @param concSep
-		 *            the separator to put between recursed values.
-		 */
-		public ConcatRelationDefinition(final String expr, final Map aliases,
-				final String rowSep, final String colKey,
-				RecursionType recursionType, final Key recursionKey,
-				final Relation firstRelation, final Relation secondRelation,
-				final String concSep) {
-			// Test for good arguments.
-			if (expr == null || expr.trim().length() == 0)
-				throw new IllegalArgumentException(Resources
-						.get("concatRelMissingExpression"));
-			if (aliases == null || aliases.isEmpty())
-				throw new IllegalArgumentException(Resources
-						.get("concatRelMissingAliases"));
-			if (rowSep == null || rowSep.length() == 0)
-				throw new IllegalArgumentException(Resources
-						.get("concatRelMissingRowSep"));
-			if (recursionType == null)
-				recursionType = RecursionType.NONE;
-			if (recursionType != RecursionType.NONE) {
-				if (recursionKey == null)
-					throw new IllegalArgumentException(Resources
-							.get("concatRelMissingRecursionKey"));
-				if (firstRelation == null)
-					throw new IllegalArgumentException(Resources
-							.get("concatRelMissingFirstRelation"));
-				if (secondRelation == null
-						&& !firstRelation.getFirstKey().getTable().equals(
-								firstRelation.getSecondKey().getTable()))
-					throw new IllegalArgumentException(Resources
-							.get("concatRelMissingSecondRelation"));
-				if (concSep == null || concSep.length() == 0)
-					throw new IllegalArgumentException(Resources
-							.get("concatRelMissingConcSep"));
-			}
-
-			// Remember the settings.
-			this.aliases = new HashMap();
-			this.aliases.putAll(aliases);
-			this.expr = expr;
-			this.rowSep = rowSep;
-			this.colKey = colKey;
-			this.recursionType = recursionType;
-			this.recursionKey = recursionKey;
-			this.firstRelation = firstRelation;
-			this.secondRelation = secondRelation;
-			this.concSep = concSep;
-		}
-
-		/**
-		 * Retrieves the map used for setting up aliases.
-		 * 
-		 * @return the aliases map. Keys must be {@link Column} instances, and
-		 *         values are aliases used in the expression.
-		 */
-		public Map getAliases() {
-			return this.aliases;
-		}
-
-		/**
-		 * Returns the expression, <i>without</i> substitution. This value is
-		 * RDBMS-specific.
-		 * 
-		 * @return the unsubstituted expression.
-		 */
-		public String getExpression() {
-			return this.expr;
-		}
-
-		/**
-		 * @return the column name.
-		 */
-		public String getColKey() {
-			return this.colKey;
-		}
-
-		/**
-		 * @return the expression.
-		 */
-		public String getExpr() {
-			return this.expr;
-		}
-
-		/**
-		 * @return the first recursion relation.
-		 */
-		public Relation getFirstRelation() {
-			return this.firstRelation;
-		}
-
-		/**
-		 * @return the recursion key.
-		 */
-		public Key getRecursionKey() {
-			return this.recursionKey;
-		}
-
-		/**
-		 * @return the recursion type.
-		 */
-		public RecursionType getRecursionType() {
-			return this.recursionType;
-		}
-
-		/**
-		 * @return the second recursion relation.
-		 */
-		public Relation getSecondRelation() {
-			return this.secondRelation;
-		}
-
-		/**
-		 * @return the row separator.
-		 */
-		public String getRowSep() {
-			return this.rowSep;
-		}
-
-		/**
-		 * @return the separator to use between recursed rows.
-		 */
-		public String getConcSep() {
-			return this.concSep;
-		}
-
-		/**
-		 * Returns the expression, <i>with</i> substitution. This value is
-		 * RDBMS-specific. The prefix map must contain two entries. Each entry
-		 * relates to one of the keys of a relation. The key of the map is the
-		 * key of the relation, and the value is the prefix to use in the
-		 * substituion, eg. "a" if columns for the table for that key should be
-		 * prefixed as "a.mycolumn".
-		 * 
-		 * @param additionalRels
-		 *            the prefixes to use for each table involved through an
-		 *            additional relation.
-		 * @param tablePrefix
-		 *            the prefix to use for the table in the expression.
-		 * @return the substituted expression.
-		 */
-		public String getSubstitutedExpression(final Map additionalRels,
-				final String tablePrefix) {
-			Log.debug("Calculating restricted table expression");
-			String sub = this.expr;
-			for (final Iterator i = this.aliases.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final Object[] crPair = (Object[]) entry.getKey();
-				final Relation rel = (Relation) crPair[0];
-				final Column col = (Column) crPair[1];
-				final String tp;
-				if (rel == null)
-					tp = tablePrefix;
-				else
-					tp = (String) additionalRels.get(rel);
-				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, tp + "." + col.getName());
-			}
-			Log.debug("Expression is: " + sub);
-			return sub;
-		}
-
-		/**
-		 * Get all the additional relations involved with this.
-		 * 
-		 * @return the additional relations.
-		 */
-		public Collection getAdditionalRelations() {
-			final Collection pairs = new HashSet();
-			for (final Iterator i = this.aliases.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final Object[] crPair = (Object[]) entry.getKey();
-				if (crPair[0] == null)
-					continue;
-				pairs.add(crPair[0]);
-			}
-			return pairs;
-		}
-
-		/**
-		 * Defines types of concat relation recursion.
-		 */
-		public static class RecursionType implements Comparable {
-			private static final long serialVersionUID = 1L;
-
-			private static final Map singletons = new HashMap();
-
-			/**
-			 * Use this constant to refer to a key with many values.
-			 */
-			public static final RecursionType APPEND = RecursionType
-					.get("APPEND");
-
-			/**
-			 * Use this constant to refer to a key with one value.
-			 */
-			public static final RecursionType PREPEND = RecursionType
-					.get("PREPEND");
-
-			/**
-			 * Use this constant to refer to a key with one value.
-			 */
-			public static final RecursionType NONE = RecursionType.get("NONE");
-
-			/**
-			 * The static factory method creates and returns a recursion type
-			 * with the given name. It ensures the object returned is a
-			 * singleton. Note that the names of recursion type objects are
-			 * case-sensitive.
-			 * 
-			 * @param name
-			 *            the name of the recursion type object.
-			 * @return the recursion type object.
-			 */
-			public static RecursionType get(final String name) {
-				// Do we already have this one?
-				// If so, then return it.
-				if (RecursionType.singletons.containsKey(name))
-					return (RecursionType) RecursionType.singletons.get(name);
-
-				// Otherwise, create it, remember it.
-				final RecursionType c = new RecursionType(name);
-				RecursionType.singletons.put(name, c);
-
-				// Return it.
-				return c;
-			}
-
-			private final String name;
-
-			/**
-			 * The private constructor takes a single parameter, which defines
-			 * the name this recursion type object will display when printed.
-			 * 
-			 * @param name
-			 *            the name of the recursion type.
-			 */
-			private RecursionType(final String name) {
-				this.name = name;
-			}
-
-			public int compareTo(final Object o) throws ClassCastException {
-				final RecursionType c = (RecursionType) o;
-				return this.toString().compareTo(c.toString());
-			}
-
-			public boolean equals(final Object o) {
-				// We are dealing with singletons so can use == happily.
-				return o == this;
-			}
-
-			/**
-			 * Displays the name of this recursion type object.
-			 * 
-			 * @return the name of this recursion type object.
-			 */
-			public String getName() {
-				return this.name;
-			}
-
-			public int hashCode() {
-				return this.toString().hashCode();
-			}
-
-			/**
-			 * {@inheritDoc}
-			 * <p>
-			 * Always returns the name of this recursion type.
-			 */
-			public String toString() {
-				return this.getName();
-			}
-		}
-	}
-
-	/**
 	 * Defines a compound relation.
 	 */
 	public static class CompoundRelationDefinition {
 		private static final long serialVersionUID = 1L;
 
-		private int n;
+		private final int n;
 
-		private boolean parallel;
+		private final boolean parallel;
+
+		private final PartitionAppliedDefinition partition;
 
 		/**
 		 * This constructor gives the compound relation an arity and a flag
@@ -1924,11 +1615,16 @@ public class SchemaModificationSet {
 		 * @param parallel
 		 *            whether this is a parallel (<tt>true</tt>) or serial (<tt>false</tt>)
 		 *            compounding.
+		 * @param partition
+		 *            the partition definition, if any. Use <tt>null</tt> for
+		 *            none.
 		 */
-		public CompoundRelationDefinition(final int n, final boolean parallel) {
+		public CompoundRelationDefinition(final int n, final boolean parallel,
+				final PartitionAppliedDefinition partition) {
 			// Remember the settings.
 			this.n = n;
 			this.parallel = parallel;
+			this.partition = partition;
 		}
 
 		/**
@@ -1947,6 +1643,16 @@ public class SchemaModificationSet {
 		 */
 		public boolean isParallel() {
 			return this.parallel;
+		}
+
+		/**
+		 * Is this compound relation associated with a partition?
+		 * 
+		 * @return the partition definition if it is, or <tt>null</tt>
+		 *         otherwise.
+		 */
+		public PartitionAppliedDefinition getPartition() {
+			return this.partition;
 		}
 	}
 }

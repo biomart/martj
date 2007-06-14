@@ -30,6 +30,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.common.model.PartitionTable.PartitionAppliedDefinition;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -46,6 +47,8 @@ public class DataSetModificationSet {
 
 	private final DataSet ds;
 
+	private PartitionAppliedDefinition datasetPartition = null;
+
 	// NOTE: Using Collections/Strings avoids problems with changing hashcodes.
 
 	private final Map renamedTables = new HashMap();
@@ -61,6 +64,8 @@ public class DataSetModificationSet {
 	private final Map indexedColumns = new HashMap();
 
 	private final Map expressionColumns = new HashMap();
+
+	private final Map datasetTablePartitions = new HashMap();
 
 	/**
 	 * Constructs an empty set of modifications that apply to the given dataset.
@@ -245,6 +250,88 @@ public class DataSetModificationSet {
 	 */
 	public Map getTableRenames() {
 		return this.renamedTables;
+	}
+
+	/**
+	 * Set the partition for this dataset. Use <tt>null</tt> to remove it.
+	 * 
+	 * @param partition
+	 *            the partition.
+	 */
+	public void setDatasetPartition(final PartitionAppliedDefinition partition) {
+		this.datasetPartition = partition;
+	}
+
+	/**
+	 * Is this dataset partitioned?
+	 * 
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isDatasetPartition() {
+		return this.datasetPartition != null;
+	}
+
+	/**
+	 * Get the dataset partition definition.
+	 * 
+	 * @return the definition.
+	 */
+	public PartitionAppliedDefinition getDatasetPartition() {
+		return this.datasetPartition;
+	}
+
+	/**
+	 * Partition a table.
+	 * 
+	 * @param table
+	 *            the table (must be a dimension).
+	 * @param partition
+	 *            the partition to set on it. Use <tt>null</tt> to clear it.
+	 *            @throws ValidationException if it cannot be done.
+	 */
+	public void setTablePartition(final DataSetTable table,
+			final PartitionAppliedDefinition partition) throws ValidationException {
+		// Throw exception if not a dimension.
+		if (!table.getType().equals(DataSetTableType.DIMENSION))
+			throw new ValidationException(Resources
+					.get("cannotPartitionNonDimension"));		
+		if (partition == null)
+			this.datasetTablePartitions.remove(table.getName());
+		else
+			this.datasetTablePartitions.put(table.getName(), partition);
+	}
+
+	/**
+	 * Has this table been partitioned?
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return <tt>true</tt> if it has.
+	 */
+	public boolean isTablePartition(final DataSetTable table) {
+		return this.datasetTablePartitions.containsKey(table.getName());
+	}
+
+	/**
+	 * Get the partition definition for the renamed table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return the partition definition.
+	 */
+	public PartitionAppliedDefinition getTablePartition(final DataSetTable table) {
+		return (PartitionAppliedDefinition) this.datasetTablePartitions
+				.get(table.getName());
+	}
+
+	/**
+	 * Get a map of all partitioned tables. Keys are original table names and
+	 * values are the definitions.
+	 * 
+	 * @return the map.
+	 */
+	public Map getTablePartitions() {
+		return this.datasetTablePartitions;
 	}
 
 	/**
@@ -519,8 +606,12 @@ public class DataSetModificationSet {
 		target.maskedTables.addAll(this.maskedTables);
 		target.distinctTables.clear();
 		target.distinctTables.addAll(this.distinctTables);
+		;
 		target.expressionColumns.clear();
 		target.expressionColumns.putAll(this.expressionColumns);
+		target.datasetTablePartitions.clear();
+		target.datasetTablePartitions.putAll(this.datasetTablePartitions);
+		target.datasetPartition = this.datasetPartition;
 	}
 
 	/**
@@ -552,8 +643,7 @@ public class DataSetModificationSet {
 		 *            the name of the expression column that will be created.
 		 */
 		public ExpressionColumnDefinition(final String expr, final Map aliases,
-				final boolean groupBy, 
-				final String colKey) {
+				final boolean groupBy, final String colKey) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -616,8 +706,8 @@ public class DataSetModificationSet {
 		 * @param dsTable
 		 *            the table to use to look up column names from.
 		 * @param prefix
-		 *            the prefix to use for each column. If <tt>null</tt>,
-         *            no prefix is used.
+		 *            the prefix to use for each column. If <tt>null</tt>, no
+		 *            prefix is used.
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final DataSetTable dsTable,
@@ -724,6 +814,12 @@ public class DataSetModificationSet {
 				if (cols.isEmpty())
 					i.remove();
 			}
+		}
+		for (final Iterator i = this.datasetTablePartitions.entrySet()
+				.iterator(); i.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (this.ds.getTableByName((String) entry.getKey()) == null)
+				i.remove();
 		}
 	}
 }

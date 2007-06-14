@@ -508,6 +508,10 @@ public abstract class MartConstructorAction {
 		private boolean relationRestrictionLeftIsFirst;
 
 		private TransformationUnit relationRestrictionPreviousUnit;
+		
+		private String resolvedTableRestriction;
+		
+		private String resolvedRelationRestriction;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -692,6 +696,34 @@ public abstract class MartConstructorAction {
 		public void setRelationRestrictionPreviousUnit(
 				TransformationUnit relationRestrictionPreviousUnit) {
 			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
+		}
+
+		/**
+		 * @return the resolvedRelationRestriction
+		 */
+		public String getResolvedRelationRestriction() {
+			return resolvedRelationRestriction;
+		}
+
+		/**
+		 * @param resolvedRelationRestriction the resolvedRelationRestriction to set
+		 */
+		public void setResolvedRelationRestriction(String resolvedRelationRestriction) {
+			this.resolvedRelationRestriction = resolvedRelationRestriction;
+		}
+
+		/**
+		 * @return the resolvedTableRestriction
+		 */
+		public String getResolvedTableRestriction() {
+			return resolvedTableRestriction;
+		}
+
+		/**
+		 * @param resolvedTableRestriction the resolvedTableRestriction to set
+		 */
+		public void setResolvedTableRestriction(String resolvedTableRestriction) {
+			this.resolvedTableRestriction = resolvedTableRestriction;
 		}
 	}
 
@@ -894,6 +926,8 @@ public abstract class MartConstructorAction {
 		private String resultTable;
 
 		private RestrictedTableDefinition tableRestriction;
+		
+		private String resolvedTableRestriction;
 
 		/**
 		 * Creates a new Select action.
@@ -986,6 +1020,20 @@ public abstract class MartConstructorAction {
 		public void setTableRestriction(
 				RestrictedTableDefinition tableRestriction) {
 			this.tableRestriction = tableRestriction;
+		}
+
+		/**
+		 * @return the resovledTableRestriction
+		 */
+		public String getResolvedTableRestriction() {
+			return resolvedTableRestriction;
+		}
+
+		/**
+		 * @param resovledTableRestriction the resovledTableRestriction to set
+		 */
+		public void setResolvedTableRestriction(String resovledTableRestriction) {
+			this.resolvedTableRestriction = resovledTableRestriction;
 		}
 	}
 
