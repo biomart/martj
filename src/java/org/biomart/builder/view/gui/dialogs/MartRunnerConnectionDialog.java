@@ -123,7 +123,7 @@ public class MartRunnerConnectionDialog extends JDialog {
 		// without taking any action.
 		cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				MartRunnerConnectionDialog.this.hide();
+				MartRunnerConnectionDialog.this.setVisible(false);
 			}
 		});
 
@@ -136,7 +136,7 @@ public class MartRunnerConnectionDialog extends JDialog {
 							.getText().trim();
 					MartRunnerConnectionDialog.this.port = MartRunnerConnectionDialog.this.runDDLPort
 							.getText().trim();
-					MartRunnerConnectionDialog.this.hide();
+					MartRunnerConnectionDialog.this.setVisible(false);
 				}
 			}
 		});

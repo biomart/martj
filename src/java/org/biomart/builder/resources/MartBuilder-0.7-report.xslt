@@ -90,9 +90,9 @@ Mart report
 
 IMPORTANT NOTE: If you are running this report against a 
 mart XML file that you created BEFORE this report feature was 
-added to MartBuilder, then any changes of relation cardinality 
-you have made will NOT appear in this report, unless they have
-been changed again SINCE this report feature was added. 
+added to MartBuilder (release 0.6), then any changes of relation 
+cardinality you have made will NOT appear in this report, unless 
+they have been changed again SINCE this report feature was added. 
 
 Default target schema for SQL output: <xsl:choose><xsl:when test="@outputSchema"><xsl:value-of select="@outputSchema"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 Default host/port for remote host output: <xsl:choose><xsl:when test="@outputHost"><xsl:value-of select="@outputHost"/>/<xsl:value-of select="@outputPort"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
@@ -104,6 +104,10 @@ Schemas
 Inter-schema (external) relations (if any)
 ==========================================
 <xsl:apply-templates select="./relation"/> 
+
+Partition Tables (if any)
+=========================
+<xsl:apply-templates select="./partitionTable"/>
 
 Datasets
 ========
@@ -168,6 +172,31 @@ Relation:
          From: <xsl:apply-templates select="key('ids',@firstKeyId)"/>           
          To: <xsl:apply-templates select="key('ids',@secondKeyId)"/></xsl:template>
 
+<!-- PARTITION TABLES -->
+<xsl:template match="partitionTable">
+
+Name: <xsl:value-of select="@name"/>
+<xsl:apply-templates select="./fixedColumn"/>
+<xsl:apply-templates select="./regexColumn"/>
+<xsl:apply-templates select="./subPartitionTable"/>
+
+</xsl:template>
+
+<xsl:template match="fixedColumn">
+Fixed column: <xsl:value-of select="@name"/>
+</xsl:template>
+
+<xsl:template match="regexColumn">
+Regex column: <xsl:value-of select="@name"/>
+  Source column name: <xsl:value-of select="key('ids',@sourceColumnId)/@cardinality"/> 
+  Regex for matching: <xsl:value-of select="@regexMatch"/>
+  Regex for replacing: <xsl:value-of select="@regexReplace"/>
+</xsl:template>
+
+<xsl:template match="subPartitionTable">
+Subdivision:
+  Name: <xsl:value-of select="@name"/>
+  Columns: <xsl:value-of select="@subdivisionColumns"/></xsl:template>
 
 <!-- DATASETS -->
 <xsl:template match="/mart/dataset">
@@ -182,6 +211,7 @@ Focused on:
 Optimiser type: <xsl:value-of select="@optimiser"/>
 Optimisers indexed?: <xsl:value-of select="@indexOptimiser"/>
 Invisible?: <xsl:value-of select="@invisible"/>
+<xsl:if test="@partition">Partition using: <xsl:value-of select="@partition"/></xsl:if>
 
 Dataset-wide modifications (if-any)
 ------------------------------------
@@ -196,6 +226,13 @@ Table-level modifications (if any)
 
 <!-- DATASET AND SCHEMA MODS -->
 
+<xsl:template match="dimensionPartition">
+
+Dimension table: <xsl:value-of select="@tableKey"/>
+Partition using: <xsl:value-of select="@partition"/>
+
+</xsl:template>
+
 <xsl:template match="subclassRelation">
 
 Subclass relation: <xsl:apply-templates select="key('ids',@relationId)"/>
@@ -208,6 +245,7 @@ Number of times compounded (arity): <xsl:value-of select="@n"/>
 Compound in parallel?: <xsl:value-of select="@parallel"/>
 <xsl:if test="not(@tableKey='__DATASET_WIDE__')">
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+<xsl:if test="@partition">Partition using: <xsl:value-of select="@partition"/></xsl:if>
 </xsl:template>
 
 <xsl:template match="directionalRelation">

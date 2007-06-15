@@ -30,7 +30,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
-import org.biomart.common.model.PartitionTable.PartitionAppliedDefinition;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -47,7 +46,7 @@ public class DataSetModificationSet {
 
 	private final DataSet ds;
 
-	private PartitionAppliedDefinition datasetPartition = null;
+	private String datasetPartition = null;
 
 	// NOTE: Using Collections/Strings avoids problems with changing hashcodes.
 
@@ -258,7 +257,7 @@ public class DataSetModificationSet {
 	 * @param partition
 	 *            the partition.
 	 */
-	public void setDatasetPartition(final PartitionAppliedDefinition partition) {
+	public void setDatasetPartition(final String partition) {
 		this.datasetPartition = partition;
 	}
 
@@ -276,7 +275,7 @@ public class DataSetModificationSet {
 	 * 
 	 * @return the definition.
 	 */
-	public PartitionAppliedDefinition getDatasetPartition() {
+	public String getDatasetPartition() {
 		return this.datasetPartition;
 	}
 
@@ -290,7 +289,7 @@ public class DataSetModificationSet {
 	 *            @throws ValidationException if it cannot be done.
 	 */
 	public void setTablePartition(final DataSetTable table,
-			final PartitionAppliedDefinition partition) throws ValidationException {
+			final String partition) throws ValidationException {
 		// Throw exception if not a dimension.
 		if (!table.getType().equals(DataSetTableType.DIMENSION))
 			throw new ValidationException(Resources
@@ -319,8 +318,8 @@ public class DataSetModificationSet {
 	 *            the table.
 	 * @return the partition definition.
 	 */
-	public PartitionAppliedDefinition getTablePartition(final DataSetTable table) {
-		return (PartitionAppliedDefinition) this.datasetTablePartitions
+	public String getTablePartition(final DataSetTable table) {
+		return (String) this.datasetTablePartitions
 				.get(table.getName());
 	}
 

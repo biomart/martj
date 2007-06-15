@@ -144,7 +144,7 @@ public class SuggestDataSetDialog extends JDialog {
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				SuggestDataSetDialog.this.tables.clearSelection();
-				SuggestDataSetDialog.this.hide();
+				SuggestDataSetDialog.this.setVisible(false);
 			}
 		});
 
@@ -153,7 +153,7 @@ public class SuggestDataSetDialog extends JDialog {
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (SuggestDataSetDialog.this.validateFields())
-					SuggestDataSetDialog.this.hide();
+					SuggestDataSetDialog.this.setVisible(false);
 			}
 		});
 

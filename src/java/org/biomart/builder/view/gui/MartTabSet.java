@@ -472,7 +472,7 @@ public class MartTabSet extends JTabbedPane {
 		else
 			// Open the DDL creation dialog and let it do it's stuff.
 			(new SaveDDLDialog(currentMartTab, datasets, generateOption))
-					.show();
+					.setVisible(true);
 	}
 
 	/**
@@ -634,7 +634,7 @@ public class MartTabSet extends JTabbedPane {
 		MartRunnerConnectionDialog d = new MartRunnerConnectionDialog(this
 				.getSelectedMartTab() == null ? null : this
 				.getSelectedMartTab().getMart());
-		d.show();
+		d.setVisible(true);
 		// Cancelled by user?
 		if (d.getHost() == null)
 			return;

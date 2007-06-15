@@ -70,7 +70,7 @@ public class SchemaConnectionDialog extends JDialog {
 				Resources.get("newSchemaDialogTitle"), Resources
 						.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		return dialog.schema;
 	}
 
@@ -88,7 +88,7 @@ public class SchemaConnectionDialog extends JDialog {
 				Resources.get("modifySchemaDialogTitle"), Resources
 						.get("modifyButton"), schema);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		if (dialog.schema != null && dialog.schema instanceof JDBCSchema)
 			return ((JDBCSchemaConnectionPanel) dialog.connectionPanel)
 					.copySettingsToExistingSchema(schema) != null;
@@ -235,7 +235,7 @@ public class SchemaConnectionDialog extends JDialog {
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				SchemaConnectionDialog.this.schema = null;
-				SchemaConnectionDialog.this.hide();
+				SchemaConnectionDialog.this.setVisible(false);
 			}
 		});
 
@@ -260,7 +260,7 @@ public class SchemaConnectionDialog extends JDialog {
 						.createSchemaFromSettings();
 				SchemaConnectionDialog.this.schema.storeInHistory();
 				if (SchemaConnectionDialog.this.schema != null)
-					SchemaConnectionDialog.this.hide();
+					SchemaConnectionDialog.this.setVisible(false);
 			}
 		});
 

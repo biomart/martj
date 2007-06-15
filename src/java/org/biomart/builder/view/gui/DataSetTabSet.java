@@ -66,7 +66,6 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.PartitionTable.PartitionAppliedDefinition;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
@@ -482,7 +481,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestCreateDDL(final DataSet dataset) {
 		// Open the DDL creation dialog and let it do it's stuff.
 		(new SaveDDLDialog(this.martTab, Collections.singleton(dataset),
-				SaveDDLDialog.VIEW_DDL)).show();
+				SaveDDLDialog.VIEW_DDL)).setVisible(true);
 	}
 
 	/**
@@ -765,11 +764,11 @@ public class DataSetTabSet extends JTabbedPane {
 				Resources.get("recurseSubclassDialogTitle"), Resources
 						.get("recurseSubclassNLabel"), true);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
 		// TODO Get this from dialog.
-		final PartitionAppliedDefinition partition = null;
+		final String partition = null;
 
 		// Skip altogether if no change.
 		if (newN == def.getN())
@@ -820,11 +819,11 @@ public class DataSetTabSet extends JTabbedPane {
 				Resources.get("replicateDimensionDialogTitle"), Resources
 						.get("replicateDimensionNLabel"), true);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
 		// TODO Get this from dialog.
-		final PartitionAppliedDefinition partition = null;
+		final String partition = null;
 
 		// Skip altogether if no change.
 		if (newN == def.getN() && newParallel == def.isParallel())
@@ -874,7 +873,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final DirectionalRelationDialog dialog = new DirectionalRelationDialog(
 				def, relation);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		final Key newKey = dialog.getChosenKey();
 
 		// Skip altogether if no change.
@@ -931,11 +930,11 @@ public class DataSetTabSet extends JTabbedPane {
 				Resources.get("compoundRelationDialogTitle"), Resources
 						.get("compoundRelationNLabel"), false);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
 		// TODO Get this from dialog.
-		final PartitionAppliedDefinition partition = null;
+		final String partition = null;
 
 		// Skip altogether if no change.
 		if (newN == def.getN() && newParallel == def.isParallel())
@@ -1027,7 +1026,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
 				relation, dataset.getSchemaModifications()
 						.getRestrictedRelation(dsTable, relation, index));
-		dialog.show();
+		dialog.setVisible(true);
 
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -1246,7 +1245,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final ExpressionColumn column) {
 		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
 				dsTable, column == null ? null : column.getDefinition(), column);
-		dialog.show();
+		dialog.setVisible(true);
 		// Cancelled?
 		if (dialog.getCancelled())
 			return;
@@ -1315,7 +1314,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
 				dataset.getSchemaModifications().getRestrictedTable(dsTable,
 						table));
-		dialog.show();
+		dialog.setVisible(true);
 		// Cancelled?
 		if (dialog.getCancelled())
 			return;
@@ -1666,7 +1665,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// mode they want.
 		final SuggestDataSetDialog dialog = new SuggestDataSetDialog(
 				this.martTab.getMart().getSchemas(), table);
-		dialog.show();
+		dialog.setVisible(true);
 
 		// If they cancelled it, return without doing anything.
 		if (dialog.getSelectedTables().isEmpty())
@@ -1718,7 +1717,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// mode they want.
 		final SuggestInvisibleDataSetDialog dialog = new SuggestInvisibleDataSetDialog(
 				table);
-		dialog.show();
+		dialog.setVisible(true);
 
 		// If they cancelled it, return without doing anything.
 		if (dialog.getSelectedColumns().isEmpty())

@@ -126,6 +126,6 @@ public class AboutDialog extends JDialog {
 	 */
 	public static void displayAbout() {
 		// Create and show a window frame.
-		(new AboutDialog()).show();
+		(new AboutDialog()).setVisible(true);
 	}
 }

@@ -141,7 +141,7 @@ public class DirectionalRelationDialog extends JDialog {
 				// Reset to default value.
 				DirectionalRelationDialog.this.chosenKey
 						.setSelectedItem(initialChoice);
-				DirectionalRelationDialog.this.hide();
+				DirectionalRelationDialog.this.setVisible(false);
 			}
 		});
 
@@ -150,7 +150,7 @@ public class DirectionalRelationDialog extends JDialog {
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (DirectionalRelationDialog.this.validateFields())
-					DirectionalRelationDialog.this.hide();
+					DirectionalRelationDialog.this.setVisible(false);
 			}
 		});
 

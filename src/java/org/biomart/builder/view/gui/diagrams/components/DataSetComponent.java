@@ -26,6 +26,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.sql.SQLException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
@@ -226,7 +227,31 @@ public class DataSetComponent extends BoxShapedComponent {
 				this.getDataSet(), newName);
 	}
 
-	public String getName() {
+	public String getEditableName() {
 		return this.getDataSet().getName();
+	}
+
+	public String getName() {
+		final StringBuffer name = new StringBuffer();
+		if (this.getDataSet().getDataSetModifications().isDatasetPartition()) {
+			name.append('$');
+			name.append(this.getDataSet().getDataSetModifications()
+					.getDatasetPartition());
+			name.append("$_");
+		}
+		name.append(this.getEditableName());
+		int parts;
+		try {
+			parts = this.getDataSet().getCentralTable().getSchema()
+					.getPartitions().size();
+		} catch (final SQLException e) {
+			parts = 0;
+		}
+		if (parts > 0) {
+			name.append(" (x");
+			name.append(parts);
+			name.append(')');
+		}
+		return name.toString();
 	}
 }

@@ -51,6 +51,9 @@ public class PartitionTableComponent extends BoxShapedComponent {
 
 	private static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
+	/**
+	 * The normal background for a partition table component.
+	 */
 	public static Color NORMAL_BACKGROUND = Color.YELLOW;
 
 	private GridBagConstraints constraints;

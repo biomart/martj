@@ -202,7 +202,7 @@ public class ExpressionColumnDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				ExpressionColumnDialog.this.hide();
+				ExpressionColumnDialog.this.setVisible(false);
 			}
 		});
 
@@ -212,7 +212,7 @@ public class ExpressionColumnDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (ExpressionColumnDialog.this.validateFields()) {
 					ExpressionColumnDialog.this.cancelled = false;
-					ExpressionColumnDialog.this.hide();
+					ExpressionColumnDialog.this.setVisible(false);
 				}
 			}
 		});

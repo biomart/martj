@@ -30,7 +30,6 @@ import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.PartitionTable.PartitionAppliedDefinition;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -1602,7 +1601,7 @@ public class SchemaModificationSet {
 
 		private final boolean parallel;
 
-		private final PartitionAppliedDefinition partition;
+		private final String partition;
 
 		/**
 		 * This constructor gives the compound relation an arity and a flag
@@ -1620,7 +1619,7 @@ public class SchemaModificationSet {
 		 *            none.
 		 */
 		public CompoundRelationDefinition(final int n, final boolean parallel,
-				final PartitionAppliedDefinition partition) {
+				final String partition) {
 			// Remember the settings.
 			this.n = n;
 			this.parallel = parallel;
@@ -1651,7 +1650,7 @@ public class SchemaModificationSet {
 		 * @return the partition definition if it is, or <tt>null</tt>
 		 *         otherwise.
 		 */
-		public PartitionAppliedDefinition getPartition() {
+		public String getPartition() {
 			return this.partition;
 		}
 	}

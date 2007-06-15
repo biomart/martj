@@ -224,7 +224,7 @@ public class KeyDialog extends JDialog {
 		// without taking any action.
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				KeyDialog.this.hide();
+				KeyDialog.this.setVisible(false);
 			}
 		});
 
@@ -233,7 +233,7 @@ public class KeyDialog extends JDialog {
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (KeyDialog.this.validateFields())
-					KeyDialog.this.hide();
+					KeyDialog.this.setVisible(false);
 			}
 		});
 

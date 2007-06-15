@@ -151,8 +151,8 @@ public class SchemaComponent extends BoxShapedComponent {
 		// Add an option to replicate this dataset.
 		final JMenuItem replicate = new JMenuItem(Resources
 				.get("replicateSchemaTitle"));
-		replicate.setMnemonic(Resources.get("replicateSchemaMnemonic").charAt(
-				0));
+		replicate.setMnemonic(Resources.get("replicateSchemaMnemonic")
+				.charAt(0));
 		replicate.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
 				SchemaComponent.this.getDiagram().getMartTab()
@@ -224,7 +224,19 @@ public class SchemaComponent extends BoxShapedComponent {
 				this.getSchema(), newName);
 	}
 
-	public String getName() {
+	public String getEditableName() {
 		return this.getSchema().getName();
+	}
+
+	public String getName() {
+		final StringBuffer name = new StringBuffer();
+		if (this.getSchema().getPartitionRegex() != null
+				&& !this.getSchema().getPartitionRegex().equals("")) {
+			name.append(" (");
+			name.append(Resources.get("partitionedSchemaMessage"));
+			name.append(')');
+		}
+		name.append(this.getEditableName());
+		return name.toString();
 	}
 }

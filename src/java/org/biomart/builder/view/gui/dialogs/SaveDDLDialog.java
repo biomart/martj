@@ -327,7 +327,7 @@ public class SaveDDLDialog extends JDialog {
 		// without taking any action.
 		cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				SaveDDLDialog.this.hide();
+				SaveDDLDialog.this.setVisible(false);
 			}
 		});
 
@@ -337,7 +337,7 @@ public class SaveDDLDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (SaveDDLDialog.this.validateFields()) {
 					SaveDDLDialog.this.createDDL();
-					SaveDDLDialog.this.hide();
+					SaveDDLDialog.this.setVisible(false);
 				}
 			}
 		});

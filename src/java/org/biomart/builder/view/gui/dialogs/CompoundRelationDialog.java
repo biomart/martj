@@ -160,7 +160,7 @@ public class CompoundRelationDialog extends JDialog {
 				// Reset to default value.
 				CompoundRelationDialog.this.arity.setValue(new Integer(
 						startvalue.getN()));
-				CompoundRelationDialog.this.hide();
+				CompoundRelationDialog.this.setVisible(false);
 			}
 		});
 
@@ -169,7 +169,7 @@ public class CompoundRelationDialog extends JDialog {
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (CompoundRelationDialog.this.validateFields())
-					CompoundRelationDialog.this.hide();
+					CompoundRelationDialog.this.setVisible(false);
 			}
 		});
 

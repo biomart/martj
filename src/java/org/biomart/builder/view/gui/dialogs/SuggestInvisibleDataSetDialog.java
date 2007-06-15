@@ -188,7 +188,7 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				SuggestInvisibleDataSetDialog.this.columns.clearSelection();
-				SuggestInvisibleDataSetDialog.this.hide();
+				SuggestInvisibleDataSetDialog.this.setVisible(false);
 			}
 		});
 
@@ -197,7 +197,7 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		this.execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (SuggestInvisibleDataSetDialog.this.validateFields())
-					SuggestInvisibleDataSetDialog.this.hide();
+					SuggestInvisibleDataSetDialog.this.setVisible(false);
 			}
 		});
 

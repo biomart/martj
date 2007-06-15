@@ -199,7 +199,7 @@ public class RestrictedTableDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				RestrictedTableDialog.this.hide();
+				RestrictedTableDialog.this.setVisible(false);
 			}
 		});
 
@@ -209,7 +209,7 @@ public class RestrictedTableDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (RestrictedTableDialog.this.validateFields()) {
 					RestrictedTableDialog.this.cancelled = false;
-					RestrictedTableDialog.this.hide();
+					RestrictedTableDialog.this.setVisible(false);
 				}
 			}
 		});

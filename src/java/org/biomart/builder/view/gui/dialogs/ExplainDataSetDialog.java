@@ -61,7 +61,7 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 		final ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab,
 				dataset);
 		martTab.getDataSetTabSet().setCurrentExplanationDialog(dialog);
-		dialog.show();
+		dialog.setVisible(true);
 		martTab.getDataSetTabSet().clearCurrentExplanationDialog();
 	}
 

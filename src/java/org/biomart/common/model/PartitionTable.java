@@ -19,6 +19,7 @@
 package org.biomart.common.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,6 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.biomart.builder.exceptions.PartitionException;
-import org.biomart.common.model.PartitionTable.PartitionColumn.FixedColumn;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Resources;
 
@@ -37,8 +37,8 @@ import org.biomart.common.resources.Resources;
  * itself also has a unique name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public interface PartitionTable {
@@ -139,11 +139,7 @@ public interface PartitionTable {
 	public void removeColumn(final String name) throws PartitionException;
 
 	/**
-	 * Obtain the named column definition. If the name is dotted, it will
-	 * recurse and return the final definition in the chain. This is useful for
-	 * navigating subdivided columns to get to the bottom of the nest, from
-	 * where you can obtain a nested table definition and proceed to use
-	 * {@link #currentRow()} etc.
+	 * Obtain the named column definition.
 	 * 
 	 * @param name
 	 *            the column name.
@@ -154,6 +150,12 @@ public interface PartitionTable {
 	 */
 	public PartitionColumn getColumn(final String name)
 			throws PartitionException;
+	
+	/**
+	 * What columns do we have?
+	 * @return the column names.
+	 */
+	public Collection getColumnNames();
 
 	/**
 	 * Set the columns to subdivide by, and the name to give the subdivision.
@@ -229,6 +231,8 @@ public interface PartitionTable {
 		private PartitionTable subdivision = null;
 
 		private String name;
+		
+		private List currentSubRows = new ArrayList();
 
 		/**
 		 * Create a new table with a given name.
@@ -297,6 +301,10 @@ public interface PartitionTable {
 			return (PartitionColumn) this.columnMap.get(name);
 		}
 
+		public Collection getColumnNames() {
+			return this.columnMap.keySet();
+		}
+
 		public boolean isMutableColumns() {
 			// True for top-level, false for subdivided.
 			return true;
@@ -313,6 +321,20 @@ public interface PartitionTable {
 						"partitionColumnNameTaken", name));
 			this.subdivisionCols = new ArrayList(columns);
 			this.subdivisionName = name;
+			// Build a fake sub partition table.
+			final Map columnMapPointer = this.columnMap;
+			this.subdivision = new AbstractPartitionTable(
+					this.subdivisionName) {
+				// Make columns map identically across all tables.
+				{
+					this.columnMap = columnMapPointer;
+				}
+
+				public List getRows(final String ignoreMe)
+						throws PartitionException {
+					return currentSubRows;
+				}
+			};
 		}
 
 		public String getSubdivisionName() {
@@ -340,8 +362,8 @@ public interface PartitionTable {
 			this.currentRow = (PartitionRow) this.rows.get(this.rowIterator++);
 			// Set up the sub-division table.
 			if (this.subdivisionCols != null) {
-				final List subRows = new ArrayList();
-				subRows.add(this.currentRow);
+				this.currentSubRows.clear();
+				this.currentSubRows.add(this.currentRow);
 				// Keep adding rows till find one not same.
 				boolean keepGoing = true;
 				while (keepGoing && this.rowIterator < this.rows.size()) {
@@ -355,24 +377,10 @@ public interface PartitionTable {
 								.equals(subRow.getValue(subColName));
 					}
 					if (keepGoing) {
-						subRows.add(subRow);
+						this.currentSubRows.add(subRow);
 						this.rowIterator++;
 					}
 				}
-				// Build a fake sub partition table.
-				final Map columnMapPointer = this.columnMap;
-				this.subdivision = new AbstractPartitionTable(
-						this.subdivisionName) {
-					// Make columns map identically across all tables.
-					{
-						this.columnMap = columnMapPointer;
-					}
-
-					public List getRows(final String ignoreMe)
-							throws PartitionException {
-						return subRows;
-					}
-				};
 			}
 			return true;
 		}
@@ -417,7 +425,10 @@ public interface PartitionTable {
 					|| newName.equals(this.name + '.' + this.subdivisionName))
 				throw new PartitionException(Resources.get(
 						"partitionColumnNameTaken", newName));
-			this.columnMap.put(newName, this.columnMap.remove(oldName));
+			final PartitionColumn col = (PartitionColumn) this.columnMap
+					.remove(oldName);
+			col.setColumnName(newName);
+			this.columnMap.put(newName, col);
 		}
 
 		public String toString() {
@@ -438,6 +449,22 @@ public interface PartitionTable {
 		public PartitionTable getPartitionTable();
 
 		/**
+		 * Find out the column name.
+		 * 
+		 * @return the column name.
+		 */
+		public String getColumnName();
+
+		/**
+		 * Rename this column. Don't use - use the
+		 * {@link PartitionTable#renameColumn(String, String)} method instead.
+		 * 
+		 * @param name
+		 *            the new name.
+		 */
+		public void setColumnName(final String name);
+
+		/**
 		 * Get the value in this column for the specified row.
 		 * 
 		 * @param row
@@ -456,15 +483,29 @@ public interface PartitionTable {
 		public static abstract class AbstractColumn implements PartitionColumn {
 			private final PartitionTable table;
 
+			private String name;
+
 			/**
 			 * Construct a new column that is going to be added to this table
 			 * (but don't actually add it yet).
 			 * 
 			 * @param table
 			 *            the table.
+			 * @param name
+			 *            the name.
 			 */
-			protected AbstractColumn(final PartitionTable table) {
+			protected AbstractColumn(final PartitionTable table,
+					final String name) {
 				this.table = table;
+				this.name = name;
+			}
+
+			public void setColumnName(final String name) {
+				this.name = name;
+			}
+
+			public String getColumnName() {
+				return this.name;
 			}
 
 			public PartitionTable getPartitionTable() {
@@ -477,31 +518,18 @@ public interface PartitionTable {
 		 */
 		public static class FixedColumn extends AbstractColumn {
 
-			private final String columnName;
-
 			/**
 			 * Construct a new column that is going to be added to this table
 			 * (but don't actually add it yet).
 			 * 
 			 * @param table
 			 *            the table.
-			 * @param columnName
-			 *            a name to pass to {@link PartitionRow} instances to
-			 *            get data.
+			 * @param name
+			 *            the name of this column, which will also be passed to
+			 *            {@link PartitionRow} instances to get data.
 			 */
-			public FixedColumn(final PartitionTable table,
-					final String columnName) {
-				super(table);
-				this.columnName = columnName;
-			}
-
-			/**
-			 * Which row column do we get values from?
-			 * 
-			 * @return the column name.
-			 */
-			public String getColumnName() {
-				return this.columnName;
+			public FixedColumn(final PartitionTable table, final String name) {
+				super(table, name);
 			}
 
 			public String getValueForRow(final PartitionRow row)
@@ -510,7 +538,7 @@ public interface PartitionTable {
 				if (!row.getPartitionTable().equals(this.getPartitionTable()))
 					throw new PartitionException(Resources
 							.get("partitionRowColMismatch"));
-				return row.getValue(columnName);
+				return row.getValue(this.getColumnName());
 			}
 		}
 
@@ -526,19 +554,34 @@ public interface PartitionTable {
 
 			private Pattern compiled = null;
 
+			private final String sourceColumnName;
+
 			/**
 			 * Construct a new column that is going to be added to this table
 			 * (but don't actually add it yet).
 			 * 
 			 * @param table
 			 *            the table.
+			 * @param name
+			 *            the name of this column.
 			 * @param sourceColumnName
 			 *            the column that will provide data for this regex to
 			 *            work with.
 			 */
-			public RegexColumn(final PartitionTable table,
+			public RegexColumn(final PartitionTable table, final String name,
 					final String sourceColumnName) {
-				super(table, sourceColumnName);
+				super(table, name);
+				this.sourceColumnName = sourceColumnName;
+			}
+
+			/**
+			 * Which column are we going to use to source data for our regexes
+			 * to transform?
+			 * 
+			 * @return the column name.
+			 */
+			public String getSourceColumnName() {
+				return this.sourceColumnName;
 			}
 
 			/**
@@ -584,6 +627,34 @@ public interface PartitionTable {
 					throws PartitionException {
 				return this.compiled.matcher(super.getValueForRow(row))
 						.replaceAll(this.regexReplace);
+			}
+		}
+
+		/**
+		 * A fake column for use when partitioning is not applied, but the
+		 * algorithm requires a partition column object.
+		 */
+		public static class FakeColumn extends FixedColumn {
+			/**
+			 * Construct a fake column that belongs to a fake table which only
+			 * has one row, with no columns.
+			 */
+			public FakeColumn() {
+				super(new AbstractPartitionTable("__FAKE__TABLE__") {
+					protected List getRows(String schemaPartition)
+							throws PartitionException {
+						final List rows = new ArrayList();
+						rows.add(new PartitionRow(this, 0) {
+							public String getValue(final String columnName)
+									throws PartitionException {
+								// Should never get called. If it does,
+								// then the empty string should suffice.
+								return "";
+							}
+						});
+						return rows;
+					}
+				}, null);
 			}
 		}
 	}
@@ -642,102 +713,6 @@ public interface PartitionTable {
 
 		public int compareTo(final Object obj) {
 			return this.getRowNumber() - ((PartitionRow) obj).getRowNumber();
-		}
-	}
-
-	/**
-	 * Applies a partition table and specifies the column used to uniquely
-	 * modify generated names in the target object to make them unique for each
-	 * partition.
-	 */
-	public static class PartitionAppliedDefinition {
-		private final PartitionTable table;
-
-		private final String columnName;
-
-		/**
-		 * Create a definition.
-		 * 
-		 * @param table
-		 *            the table to apply.
-		 * @param columnName
-		 *            the column to use for unique name generation.
-		 */
-		public PartitionAppliedDefinition(final PartitionTable table,
-				final String columnName) {
-			this.table = table;
-			this.columnName = columnName;
-		}
-
-		/**
-		 * Obtain a reference to the applied table.
-		 * 
-		 * @return the applied table.
-		 */
-		public PartitionTable getPartitionTable() {
-			return this.table;
-		}
-
-		/**
-		 * Obtain a reference to the column name for generating unique names
-		 * with.
-		 * 
-		 * @return the column name. Can then be used to call
-		 *         {@link PartitionTable#getColumn(String)} on the table
-		 *         returned by {@link #getPartitionTable()}.
-		 */
-		public String getColumnName() {
-			return this.columnName;
-		}
-	}
-
-	/**
-	 * Use this to substitute for no-partition whenever code requires a
-	 * partition and uses a null check on column name to determine whether the
-	 * partition it has received is to be used or not.
-	 */
-	public static class FakePartitionAppliedDefinition extends
-			PartitionAppliedDefinition {
-		/**
-		 * Create a new fake partition that isn't really partitioned at all.
-		 * 
-		 * @throws PartitionException
-		 *             if it can't be created.
-		 */
-		public FakePartitionAppliedDefinition() throws PartitionException {
-			super(new FakeTable(), null);
-		}
-
-		private static class FakeTable extends AbstractPartitionTable {
-			private FakeTable() throws PartitionException {
-				super("__FAKE_EMPTY_PARTITION_TABLE__");
-				this.addColumn("hello", new FixedColumn(this, "hello"));
-				this.addColumn("world", new FixedColumn(this, "world"));
-			}
-
-			public PartitionTable replicate(final String newName)
-					throws PartitionException {
-				final FakeTable fake = new FakeTable();
-				fake.setName(newName);
-				return fake;
-			}
-
-			public List getRows(String name) {
-				final List fakeList = new ArrayList();
-				fakeList.add(new PartitionRow(this, 0) {
-					public String getValue(final String columnName)
-							throws PartitionException {
-						return columnName + "0";
-					}
-				});
-				fakeList.add(new PartitionRow(this, 1) {
-					public String getValue(final String columnName)
-							throws PartitionException {
-						return columnName + "1";
-					}
-				});
-				return fakeList;
-			}
 		}
 	}
 }

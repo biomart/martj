@@ -311,6 +311,6 @@ public class ViewTextDialog extends JFrame {
 	 */
 	public static void displayText(final String title, final String textBuffer) {
 		// Create and show a window frame.
-		new ViewTextDialog(title, textBuffer).show();
+		new ViewTextDialog(title, textBuffer).setVisible(true);
 	}
 }

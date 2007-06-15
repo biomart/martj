@@ -78,7 +78,7 @@ public class PartitionSchemaDialog extends JDialog {
 		this.setLocationRelativeTo(null);
 
 		// Show the dialog.
-		this.show();
+		this.setVisible(true);
 
 		// Return true if not cancelled - ie. values changed.
 		return !this.cancelled;
@@ -247,7 +247,7 @@ public class PartitionSchemaDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				PartitionSchemaDialog.this.hide();
+				PartitionSchemaDialog.this.setVisible(false);
 			}
 		});
 
@@ -257,7 +257,7 @@ public class PartitionSchemaDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (PartitionSchemaDialog.this.validateFields()) {
 					PartitionSchemaDialog.this.cancelled = false;
-					PartitionSchemaDialog.this.hide();
+					PartitionSchemaDialog.this.setVisible(false);
 				}
 			}
 		});

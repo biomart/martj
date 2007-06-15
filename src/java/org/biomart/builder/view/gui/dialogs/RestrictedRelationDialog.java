@@ -221,7 +221,7 @@ public class RestrictedRelationDialog extends JDialog {
 		// dialog without making any changes.
 		this.cancel.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				RestrictedRelationDialog.this.hide();
+				RestrictedRelationDialog.this.setVisible(false);
 			}
 		});
 
@@ -231,7 +231,7 @@ public class RestrictedRelationDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (RestrictedRelationDialog.this.validateFields()) {
 					RestrictedRelationDialog.this.cancelled = false;
-					RestrictedRelationDialog.this.hide();
+					RestrictedRelationDialog.this.setVisible(false);
 				}
 			}
 		});

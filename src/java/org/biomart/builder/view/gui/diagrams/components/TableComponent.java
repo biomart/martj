@@ -35,6 +35,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
@@ -221,14 +222,29 @@ public class TableComponent extends BoxShapedComponent {
 	}
 
 	public String getName() {
-		String name = this.getEditableName();
-		if (this.getTable() != null && this.getTable() instanceof DataSetTable) {
+		final Table table = this.getTable();
+		final StringBuffer name = new StringBuffer();
+		if (table != null && table instanceof DataSetTable) {
+			final DataSetTable dsTable = (DataSetTable) table;
+			final DataSet ds = (DataSet) dsTable.getSchema();
+			if (ds.getDataSetModifications().isTablePartition(dsTable)) {
+				name.append('$');
+				name.append(ds.getDataSetModifications().getTablePartition(
+						dsTable));
+				name.append("$_");
+			}
 			final String originalName = this.getTable().getName();
 			final String modifiedName = this.getEditableName();
-			if (!modifiedName.equals(originalName))
-				name += " (" + originalName + ")";
+			name.append(modifiedName);
+			if (!modifiedName.equals(originalName)) {
+				name.append(" (");
+				name.append(originalName);
+				name.append(')');
+			}
+		} else {
+			name.append(this.getEditableName());
 		}
-		return name;
+		return name.toString();
 	}
 
 	public void setState(final Object state) {

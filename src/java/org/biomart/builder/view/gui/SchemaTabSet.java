@@ -587,7 +587,7 @@ public class SchemaTabSet extends JTabbedPane {
 		final KeyDialog dialog = new KeyDialog(table, Resources
 				.get("newFKDialogTitle"), Resources.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		final List cols = dialog.getSelectedColumns();
 
 		// If they chose some columns, create the key.
@@ -638,7 +638,7 @@ public class SchemaTabSet extends JTabbedPane {
 		final KeyDialog dialog = new KeyDialog(table, Resources
 				.get("newPKDialogTitle"), Resources.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		final List cols = dialog.getSelectedColumns();
 
 		// If they chose some columns, create the key.
@@ -773,7 +773,7 @@ public class SchemaTabSet extends JTabbedPane {
 				.get("editKeyDialogTitle"), Resources.get("modifyButton"), key
 				.getColumns());
 		dialog.setLocationRelativeTo(null);
-		dialog.show();
+		dialog.setVisible(true);
 		final List cols = dialog.getSelectedColumns();
 
 		// If they selected any columns, and those columns are not

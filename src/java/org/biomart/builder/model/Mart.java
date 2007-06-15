@@ -19,11 +19,13 @@
 package org.biomart.builder.model;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -833,7 +835,7 @@ public class Mart {
 	 *            the descriptor.
 	 * @return the column.
 	 */
-	private PartitionColumn getPartitionColumn(final String descriptor) {
+	public PartitionColumn getPartitionColumn(final String descriptor) {
 		final String[] parts = descriptor.split("\\.");
 		PartitionTable table = this.getPartitionTableByName(parts[0]);
 		for (int i = 1; table != null && i < parts.length; i++) {
@@ -877,5 +879,23 @@ public class Mart {
 			nextDollar = expression.indexOf('$', previousDollar + 1);
 		}
 		return resolvedExpression;
+	}
+	
+	/**
+	 * Obtain a list of all partition table column aliases available 
+	 * @return a list of all partition table aliases available.
+	 */
+	public Collection listAllPartitionTableColumns() {
+		final List aliases = new ArrayList();
+		final List tables = new ArrayList();
+		tables.addAll(this.getPartitionTables());
+		for (int i =0; i < tables.size(); i++) {
+			final PartitionTable pt = (PartitionTable)tables.get(i);
+			for (final Iterator j = pt.getColumnNames().iterator(); j.hasNext(); ) 
+				aliases.add(pt.getName()+"."+j.next());
+			if (pt.getSubdivision()!=null) 
+				tables.add(pt.getSubdivision());
+		}
+		return aliases;
 	}
 }

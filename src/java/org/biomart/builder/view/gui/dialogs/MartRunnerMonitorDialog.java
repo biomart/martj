@@ -177,7 +177,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 	public static void monitor(final String host, final String port,
 			final boolean defaultJob) {
 		// Open the dialog.
-		new MartRunnerMonitorDialog(host, port, defaultJob).show();
+		new MartRunnerMonitorDialog(host, port, defaultJob).setVisible(true);
 	}
 
 	private MartRunnerMonitorDialog(final String host, final String port,

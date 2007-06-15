@@ -22,7 +22,7 @@
 # since: 0.1
 -->
 
-<!ELEMENT mart (jdbcSchema+,dataset*,relation*)>
+<!ELEMENT mart (jdbcSchema+,partitionTable*,dataset*,relation*)>
 <!ATTLIST mart outputSchema CDATA #IMPLIED>
 <!ATTLIST mart outputHost CDATA #IMPLIED>
 <!ATTLIST mart outputPort CDATA #IMPLIED>
@@ -63,6 +63,22 @@
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
+<!ELEMENT partitionTable (fixedColumn*,regexColumn*,subPartitionTable*)>
+<!ATTLIST partitionTable name CDATA #REQUIRED>
+
+<!ELEMENT subPartitionTable EMPTY>
+<!ATTLIST subPartitionTable name CDATA #REQUIRED>
+<!ATTLIST subPartitionTable subdivisionColumns CDATA #IMPLIED>
+
+<!ELEMENT fixedColumn EMPTY>
+<!ATTLIST fixedColumn name CDATA #REQUIRED>
+
+<!ELEMENT regexColumn EMPTY>
+<!ATTLIST regexColumn name CDATA #REQUIRED>
+<!ATTLIST regexColumn sourceColumn CDATA #REQUIRED>
+<!ATTLIST regexColumn regexMatch CDATA #REQUIRED>
+<!ATTLIST regexColumn regexReplace CDATA #REQUIRED>
+
 <!ELEMENT dataset (
 compoundRelation*,subclassRelation*,maskedColumn*,
 indexedColumn*,maskedRelation*,maskedTable*,
@@ -74,6 +90,7 @@ renamedColumn*,distinctRows*)>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL|COLUMN_BOOL_NULL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
 <!ATTLIST dataset indexOptimiser (true|false) #REQUIRED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
+<!ATTLIST dataset partition CDATA #IMPLIED>
 
 <!ELEMENT subclassRelation EMPTY>
 <!ATTLIST subclassRelation relationId IDREF #REQUIRED>
@@ -83,6 +100,7 @@ renamedColumn*,distinctRows*)>
 <!ATTLIST compoundRelation relationId IDREF #REQUIRED>
 <!ATTLIST compoundRelation n CDATA #REQUIRED>
 <!ATTLIST compoundRelation parallel (true|false) #REQUIRED>
+<!ATTLIST compoundRelation partition CDATA #IMPLIED>
 
 <!ELEMENT directionalRelation EMPTY>
 <!ATTLIST directionalRelation tableKey CDATA #REQUIRED>
@@ -154,3 +172,7 @@ renamedColumn*,distinctRows*)>
 <!ATTLIST expressionColumn aliasNames CDATA #REQUIRED>
 <!ATTLIST expressionColumn expression CDATA #REQUIRED>
 <!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>
+
+<!ELEMENT dimensionPartition EMPTY>
+<!ATTLIST dimensionPartition tableKey CDATA #REQUIRED>
+<!ATTLIST dimensionPartition partition CDATA #REQUIRED>
