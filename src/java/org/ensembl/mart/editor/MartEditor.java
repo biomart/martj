@@ -1523,6 +1523,7 @@ System.out.println ("getting driver "+ driver);
 						DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
 						//DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","");
 						//dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
+						odsv.setSoftwareVersion(dbutils.getSoftwareVersion());
 						dbutils.storeTemplateXML(odsv,odsv.getTemplate());
 						
 						//DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
@@ -1661,6 +1662,7 @@ System.out.println ("getting driver "+ driver);
 					String template = templates[i];
 					DatasetConfig odsv = new DatasetConfig("template","",template+"_template","","","","","","","","","","","",template,"","","","");
 					dscutils.loadDatasetConfigWithDocument(odsv,dbutils.getTemplateDocument(template));
+					odsv.setSoftwareVersion(dbutils.getSoftwareVersion());
 					try {
 							File newFile = new File(tempFolder, odsv.getDataset() + ".template.xml");
 							newFile.deleteOnExit();
@@ -1841,7 +1843,7 @@ System.out.println ("getting driver "+ driver);
 				String schema = null;
 				if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
 				else schema = databaseDialog.getSchema();
-				DatasetConfig templateConfig = dbutils.getNewFiltsAtts(schema, dsv, true);
+				DatasetConfig templateConfig = dbutils.getNewFiltsAtts(schema, dsv, true);// NB this actually stores the templateConfig for dsv as well
 				// export it
 				// convert config to latest version using xslt
 				dsv = MartEditor.getDatabaseDatasetConfigUtils().getXSLTransformedConfig(dsv);

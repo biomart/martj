@@ -122,6 +122,10 @@ public class DatabaseDatasetConfigUtils {
 	  this.readonly = readonly;
   }
 
+  public String getSoftwareVersion() {
+	  return SOFTWAREVERSION;
+  }
+  
   /**
    * Verify if a meta_configuration_[user] table exists.  Returns false if user is null, or
    * if the table does not exist. 
@@ -4718,8 +4722,9 @@ public void deleteTemplateConfigs(final String template) throws ConfigurationExc
 		  					final String version = rs.getString(1);
 		  					rs.close();
 		  					if (!version.equals(this.SOFTWAREVERSION)){
-								// REMOVE THE TEMPLATE TABLES - PUT IN ONCE SURE IS SAFE
-								final String TEMPLATEMAIN   = "delete from "+this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE;
+								/* Decided no need to delete existing templates from now on as 0.5 and 0.6 are compatible now
+								
+		  						final String TEMPLATEMAIN   = "delete from "+this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE;
 								final String TEMPLATEDM   = "delete from "+this.getSchema()[0]+"."+this.MARTTEMPLATEDMTABLE;
 								final String VERSIONSQL   = "update "+this.getSchema()[0]+"."+this.MARTVERSIONTABLE+" set version='"+this.SOFTWAREVERSION+"'";
 								
@@ -4732,7 +4737,7 @@ public void deleteTemplateConfigs(final String template) throws ConfigurationExc
 								ps2.executeUpdate();
 								final PreparedStatement ps3=conn.prepareStatement(VERSIONSQL);
 								ps3.executeUpdate();
-									
+								*/	
 			  				}
 		  				}
 		  				conn.close(); 
@@ -7029,6 +7034,9 @@ public void deleteTemplateConfigs(final String template) throws ConfigurationExc
     if (fp != null && fp.getFilterGroups().size() > 0)
       templateConfig.addFilterPage(fp);
 
+    
+    // make sure template has same version as config incase it has got increased
+    templateConfig.setSoftwareVersion(dsv.getSoftWareVersion());
     if (store) this.storeTemplateXML(templateConfig, template);
     
     return templateConfig;
