@@ -389,6 +389,38 @@ public class Mart {
 	}
 
 	/**
+	 * Returns the set of partition column names which this mart includes. The
+	 * set may be empty but it is never <tt>null</tt>.
+	 * 
+	 * @return a set of partition column names (as strings). Each name returned
+	 *         is fully qualified and ready to pass to
+	 *         {@link #getPartitionColumn(String)}.
+	 */
+	public Collection getPartitionColumnNames() {
+		final List colNames = new ArrayList();
+		// Iterate over every table and recurse.
+		for (final Iterator i = this.getPartitionTables().iterator(); i
+				.hasNext();) {
+			PartitionTable tab = (PartitionTable) i.next();
+			String prefix = null;
+			do {
+				if (prefix == null)
+					prefix = tab.getName();
+				else
+					prefix += "." + tab.getName();
+				for (final Iterator j = tab.getColumnNames().iterator(); j
+						.hasNext();) {
+					final String colName = (String) j.next();
+					colNames.add(prefix + "." + colName);
+				}
+			} while ((tab = tab.getSubdivision()) != null);
+		}
+		// Tidy up.
+		Collections.sort(colNames);
+		return colNames;
+	}
+
+	/**
 	 * Returns the schema object with the given name. If it doesn't exist,
 	 * <tt>null</tt> is returned.
 	 * 
@@ -880,20 +912,21 @@ public class Mart {
 		}
 		return resolvedExpression;
 	}
-	
+
 	/**
-	 * Obtain a list of all partition table column aliases available 
+	 * Obtain a list of all partition table column aliases available
+	 * 
 	 * @return a list of all partition table aliases available.
 	 */
 	public Collection listAllPartitionTableColumns() {
 		final List aliases = new ArrayList();
 		final List tables = new ArrayList();
 		tables.addAll(this.getPartitionTables());
-		for (int i =0; i < tables.size(); i++) {
-			final PartitionTable pt = (PartitionTable)tables.get(i);
-			for (final Iterator j = pt.getColumnNames().iterator(); j.hasNext(); ) 
-				aliases.add(pt.getName()+"."+j.next());
-			if (pt.getSubdivision()!=null) 
+		for (int i = 0; i < tables.size(); i++) {
+			final PartitionTable pt = (PartitionTable) tables.get(i);
+			for (final Iterator j = pt.getColumnNames().iterator(); j.hasNext();)
+				aliases.add(pt.getName() + "." + j.next());
+			if (pt.getSubdivision() != null)
 				tables.add(pt.getSubdivision());
 		}
 		return aliases;

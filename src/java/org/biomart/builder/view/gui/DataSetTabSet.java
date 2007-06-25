@@ -57,6 +57,7 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
+import org.biomart.builder.view.gui.dialogs.PartitionSelectionDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
@@ -249,7 +250,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.removeTabAt(tabIndex);
 		this.datasetToDiagram[0].remove(index);
 		this.datasetToDiagram[1].remove(index);
-		
+
 		// Update the overview diagram.
 		this.recalculateOverviewDiagram();
 
@@ -543,6 +544,66 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Pops up a dialog with details of the dataset partition table, which
+	 * allows the user to modify it.
+	 * 
+	 * @param ds
+	 *            the dataset to modify partitions for.
+	 */
+	public void requestModifyDataSetPartition(final DataSet ds) {
+		final PartitionSelectionDialog dialog = new PartitionSelectionDialog(ds
+				.getMart().getPartitionColumnNames(), Resources
+				.get("datasetPartitionTitle"), ds.getDataSetModifications()
+				.getDatasetPartition());
+		dialog.setVisible(true);
+		new LongProcess() {
+			public void run() throws Exception {
+				// Do the partition.
+				MartBuilderUtils.partitionDataSet(ds, dialog.getPartition());
+
+				// And the overview.
+				DataSetTabSet.this.repaintOverviewDiagram();
+
+				// Update the modified status for this tabset.
+				DataSetTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
+			}
+		}.start();
+	}
+
+	/**
+	 * Pops up a dialog with details of the dataset table partition table, which
+	 * allows the user to modify it.
+	 * 
+	 * @param ds
+	 *            the host dataset.
+	 * @param dsTable
+	 *            the dataset table to modify partitions for.
+	 */
+	public void requestModifyDataSetTablePartition(final DataSet ds,
+			final DataSetTable dsTable) {
+		final PartitionSelectionDialog dialog = new PartitionSelectionDialog(ds
+				.getMart().getPartitionColumnNames(), Resources
+				.get("datasetTablePartitionTitle"), ds
+				.getDataSetModifications().getTablePartition(dsTable));
+		dialog.setVisible(true);
+		new LongProcess() {
+			public void run() throws Exception {
+				// Do the partition.
+				MartBuilderUtils.partitionDataSetTable(ds, dsTable, dialog
+						.getPartition());
+
+				// And the diagram.
+				DataSetTabSet.this.repaintDataSetDiagram(ds, null);
+
+				// Update the modified status for this tabset.
+				DataSetTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
+			}
+		}.start();
+	}
+
+	/**
 	 * Requests that a column be masked.
 	 * 
 	 * @param ds
@@ -762,16 +823,19 @@ public class DataSetTabSet extends JTabbedPane {
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("recurseSubclassDialogTitle"), Resources
-						.get("recurseSubclassNLabel"), true);
+						.get("recurseSubclassNLabel"), true, ds.getMart()
+						.getPartitionColumnNames());
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
-		// TODO Get this from dialog.
-		final String partition = null;
+		final String partition = dialog.getPartition();
 
 		// Skip altogether if no change.
-		if (newN == def.getN())
+		if (newN == def.getN()
+				&& newParallel == def.isParallel()
+				&& (partition == def.getPartition() || (partition != null && partition
+						.equals(def.getPartition()))))
 			return;
 
 		new LongProcess() {
@@ -817,16 +881,19 @@ public class DataSetTabSet extends JTabbedPane {
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("replicateDimensionDialogTitle"), Resources
-						.get("replicateDimensionNLabel"), true);
+						.get("replicateDimensionNLabel"), true, ds.getMart()
+						.getPartitionColumnNames());
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
-		// TODO Get this from dialog.
-		final String partition = null;
+		final String partition = dialog.getPartition();
 
 		// Skip altogether if no change.
-		if (newN == def.getN() && newParallel == def.isParallel())
+		if (newN == def.getN()
+				&& newParallel == def.isParallel()
+				&& (partition == def.getPartition() || (partition != null && partition
+						.equals(def.getPartition()))))
 			return;
 
 		new LongProcess() {
@@ -928,16 +995,19 @@ public class DataSetTabSet extends JTabbedPane {
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
 				Resources.get("compoundRelationDialogTitle"), Resources
-						.get("compoundRelationNLabel"), false);
+						.get("compoundRelationNLabel"), false, ds.getMart()
+						.getPartitionColumnNames());
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
-		// TODO Get this from dialog.
-		final String partition = null;
+		final String partition = dialog.getPartition();
 
 		// Skip altogether if no change.
-		if (newN == def.getN() && newParallel == def.isParallel())
+		if (newN == def.getN()
+				&& newParallel == def.isParallel()
+				&& (partition == def.getPartition() || (partition != null && partition
+						.equals(def.getPartition()))))
 			return;
 
 		new LongProcess() {

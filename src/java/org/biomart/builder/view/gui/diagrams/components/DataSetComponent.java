@@ -233,12 +233,6 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	public String getName() {
 		final StringBuffer name = new StringBuffer();
-		if (this.getDataSet().getDataSetModifications().isDatasetPartition()) {
-			name.append('$');
-			name.append(this.getDataSet().getDataSetModifications()
-					.getDatasetPartition());
-			name.append("$_");
-		}
 		name.append(this.getEditableName());
 		int parts;
 		try {

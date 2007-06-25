@@ -136,6 +136,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem invisibleDataset;
 
+		private JMenuItem partitionDataset;
+
 		private JMenuItem explainDataset;
 
 		private JMenuItem saveDatasetDDL;
@@ -307,6 +309,13 @@ public class MartBuilder extends BioMartGUI {
 			this.invisibleDataset.setMnemonic(Resources.get(
 					"invisibleDataSetMnemonic").charAt(0));
 			this.invisibleDataset.addActionListener(this);
+
+			// Partition dataset.
+			this.partitionDataset = new JCheckBoxMenuItem(Resources
+					.get("partitionDataSetTitle"));
+			this.partitionDataset.setMnemonic(Resources.get(
+					"partitionDataSetMnemonic").charAt(0));
+			this.partitionDataset.addActionListener(this);
 
 			// Explain dataset.
 			this.explainDataset = new JMenuItem(Resources
@@ -481,6 +490,7 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.add(this.removeAllDatasets);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.invisibleDataset);
+			datasetMenu.add(this.partitionDataset);
 			datasetMenu.add(this.optimiseDatasetSubmenu);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.explainDataset);
@@ -658,6 +668,10 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.invisibleDataset
 							.setSelected(ds != null && ds.getInvisible());
+					MartBuilderMenuBar.this.partitionDataset
+							.setEnabled(ds != null);
+					MartBuilderMenuBar.this.partitionDataset
+							.setSelected(ds != null && ds.getDataSetModifications().isDatasetPartition());
 					MartBuilderMenuBar.this.explainDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.saveDatasetDDL
@@ -835,6 +849,12 @@ public class MartBuilder extends BioMartGUI {
 				else
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestVisibleDataSet(ds);
+			} else if (e.getSource() == this.partitionDataset) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestModifyDataSetPartition(ds);
 			} else if (e.getSource() == this.explainDataset) {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()

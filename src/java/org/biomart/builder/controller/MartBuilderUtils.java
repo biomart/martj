@@ -1729,6 +1729,39 @@ public class MartBuilderUtils {
 		dataset.setIndexOptimiser(true);
 	}
 
+	/**
+	 * Partition a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to partition.
+	 * @param partition
+	 *            the partition column to apply. If null then the partition is
+	 *            removed.
+	 */
+	public static void partitionDataSet(final DataSet dataset,
+			final String partition) {
+		dataset.getDataSetModifications().setDatasetPartition(partition);
+	}
+
+	/**
+	 * Partition a dataset table.
+	 * 
+	 * @param dataset
+	 *            the host dataset.
+	 * @param dsTable
+	 *            the dataset table to partition.
+	 * @param partition
+	 *            the partition column to apply. If null then the partition is
+	 *            removed.
+	 * @throws ValidationException
+	 *             if it cannot be done.
+	 */
+	public static void partitionDataSetTable(final DataSet dataset,
+			final DataSetTable dsTable, final String partition)
+			throws ValidationException {
+		dataset.getDataSetModifications().setTablePartition(dsTable, partition);
+	}
+
 	// The tools are static and not intended to be instantiated.
 	private MartBuilderUtils() {
 	}

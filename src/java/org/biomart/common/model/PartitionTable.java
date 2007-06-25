@@ -37,8 +37,8 @@ import org.biomart.common.resources.Resources;
  * itself also has a unique name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public interface PartitionTable {
@@ -95,13 +95,6 @@ public interface PartitionTable {
 	public PartitionRow currentRow() throws PartitionException;
 
 	/**
-	 * Can the columns be added to or removed by the user?
-	 * 
-	 * @return <tt>true</tt> if they can.
-	 */
-	public boolean isMutableColumns();
-
-	/**
 	 * Add a column to the table.
 	 * 
 	 * @param name
@@ -150,9 +143,10 @@ public interface PartitionTable {
 	 */
 	public PartitionColumn getColumn(final String name)
 			throws PartitionException;
-	
+
 	/**
 	 * What columns do we have?
+	 * 
 	 * @return the column names.
 	 */
 	public Collection getColumnNames();
@@ -231,7 +225,7 @@ public interface PartitionTable {
 		private PartitionTable subdivision = null;
 
 		private String name;
-		
+
 		private List currentSubRows = new ArrayList();
 
 		/**
@@ -305,11 +299,6 @@ public interface PartitionTable {
 			return this.columnMap.keySet();
 		}
 
-		public boolean isMutableColumns() {
-			// True for top-level, false for subdivided.
-			return true;
-		}
-
 		public void setSubDivision(final List columns, final String name)
 				throws PartitionException {
 			// Throw exception if any cols are not in this table.
@@ -323,8 +312,7 @@ public interface PartitionTable {
 			this.subdivisionName = name;
 			// Build a fake sub partition table.
 			final Map columnMapPointer = this.columnMap;
-			this.subdivision = new AbstractPartitionTable(
-					this.subdivisionName) {
+			this.subdivision = new AbstractPartitionTable(this.subdivisionName) {
 				// Make columns map identically across all tables.
 				{
 					this.columnMap = columnMapPointer;
@@ -478,6 +466,13 @@ public interface PartitionTable {
 				throws PartitionException;
 
 		/**
+		 * Check to see if this column can be changed (or removed).
+		 * 
+		 * @return <tt>true</tt> if it can.
+		 */
+		public boolean isMutable();
+
+		/**
 		 * A base implementation from which all others inherit.
 		 */
 		public static abstract class AbstractColumn implements PartitionColumn {
@@ -532,6 +527,10 @@ public interface PartitionTable {
 				super(table, name);
 			}
 
+			public boolean isMutable() {
+				return false;
+			}
+
 			public String getValueForRow(final PartitionRow row)
 					throws PartitionException {
 				// Check row+col in same table, exception if not.
@@ -572,6 +571,10 @@ public interface PartitionTable {
 					final String sourceColumnName) {
 				super(table, name);
 				this.sourceColumnName = sourceColumnName;
+			}
+
+			public boolean isMutable() {
+				return true;
 			}
 
 			/**

@@ -32,56 +32,40 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
-import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.common.resources.Resources;
 
 /**
- * A dialog which allows the user to specify how many times a relation will be
- * followed by the transformation process.
+ * A dialog which allows the user to choose a partition column, or none at all.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.6
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.7
  */
-public class CompoundRelationDialog extends JDialog {
+public class PartitionSelectionDialog extends JDialog {
 	private static final long serialVersionUID = 1;
-
-	private SpinnerNumberModel arity;
-
-	private JCheckBox parallel;
 
 	private JCheckBox partitionBox;
 
 	private JComboBox partitionMenu;
 
 	/**
-	 * Pop up a dialog to define the arity of a relation.
+	 * Pop up a dialog to choose a column.
 	 * 
-	 * @param startvalue
-	 *            the initial preselected arity.
-	 * @param title
-	 *            the title to give the dialog.
-	 * @param label
-	 *            the title to give the arity selector.
-	 * @param forceParallel
-	 *            <tt>true</tt> if parallelism is not optional.
 	 * @param partitionOptions
 	 *            a list (possibly empty) of options available for attaching a
 	 *            partition table to this compound relation. Each option is a
 	 *            fully qualified partition column name.
+	 * @param title
+	 *            the title to give the dialog.
+	 * @param startvalue
+	 *            the initial preselected arity.
 	 */
-	public CompoundRelationDialog(final CompoundRelationDefinition startvalue,
-			final String title, final String label,
-			final boolean forceParallel, final Collection partitionOptions) {
+	public PartitionSelectionDialog(
+			final Collection partitionOptions,final String title, final String startvalue) {
 		// Create the base dialog.
 		super();
 		this.setTitle(title);
@@ -103,27 +87,15 @@ public class CompoundRelationDialog extends JDialog {
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
-		// Set up the arity spinner field.
-		this.arity = new SpinnerNumberModel(startvalue.getN(), 1, 10, 1);
-		final JSpinner spinner = new JSpinner(this.arity);
-		this.parallel = new JCheckBox(Resources.get("parallelLabel"));
-
-		// Set up the check box to turn it on and off.
-		final JCheckBox checkbox = new JCheckBox();
-		if (startvalue.getN() > 1)
-			checkbox.setSelected(true);
-		this.parallel.setSelected(startvalue.isParallel());
-		this.parallel.setEnabled(!forceParallel && startvalue.getN() > 1);
-
 		// Create the partition stuff.
 		this.partitionBox = new JCheckBox(Resources.get("partitionLabel"));
 		this.partitionMenu = new JComboBox();
 		if (partitionOptions.size() > 0) {
 			for (final Iterator i = partitionOptions.iterator(); i.hasNext();)
 				this.partitionMenu.addItem((String) i.next());
-			this.partitionBox.setSelected(startvalue.getPartition() != null);
-			if (startvalue.getPartition() != null)
-				this.partitionMenu.setSelectedItem(startvalue.getPartition());
+			this.partitionBox.setSelected(startvalue != null);
+			if (startvalue != null)
+				this.partitionMenu.setSelectedItem(startvalue);
 			else 
 				this.partitionMenu.setSelectedIndex(0); // Default.
 		} else {
@@ -136,21 +108,8 @@ public class CompoundRelationDialog extends JDialog {
 		final JButton close = new JButton(Resources.get("closeButton"));
 		final JButton execute = new JButton(Resources.get("updateButton"));
 
-		// Input fields.
-		JPanel field = new JPanel();
-		field.add(checkbox);
-		field.add(new JLabel(label));
-		field.add(spinner);
-		field.add(new JLabel(Resources.get("compoundRelationSpinnerLabel")));
-		content.add(field, fieldConstraints);
-
-		// Parallel button.
-		field = new JPanel();
-		field.add(this.parallel);
-		content.add(field, fieldConstraints);
-
 		// Partition stuff.
-		field = new JPanel();
+		JPanel field = new JPanel();
 		field.add(this.partitionBox);
 		field.add(this.partitionMenu);
 		content.add(field, fieldConstraints);
@@ -161,43 +120,11 @@ public class CompoundRelationDialog extends JDialog {
 		field.add(execute);
 		content.add(field, fieldLastRowConstraints);
 
-		// Intercept the spinner.
-		spinner.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				if (CompoundRelationDialog.this.getArity() <= 1) {
-					checkbox.setSelected(false);
-					CompoundRelationDialog.this.parallel.setSelected(false);
-					CompoundRelationDialog.this.parallel.setEnabled(false);
-					CompoundRelationDialog.this.partitionBox.setSelected(false);
-					CompoundRelationDialog.this.partitionBox.setEnabled(false);
-					CompoundRelationDialog.this.partitionMenu.setEnabled(false);
-				} else {
-					checkbox.setSelected(true);
-					if (forceParallel)
-						CompoundRelationDialog.this.parallel.setSelected(true);
-					CompoundRelationDialog.this.parallel
-							.setEnabled(!forceParallel);
-					CompoundRelationDialog.this.partitionBox.setEnabled(true);
-					CompoundRelationDialog.this.partitionMenu.setEnabled(true);
-				}
-			}
-		});
-		// Intercept the checkbox.
-		checkbox.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				if (checkbox.isSelected()
-						&& CompoundRelationDialog.this.getArity() == 1)
-					CompoundRelationDialog.this.arity.setValue(new Integer(2));
-				else
-					CompoundRelationDialog.this.arity.setValue(new Integer(1));
-			}
-		});
-
 		// Intercept the partition checkbox.
 		this.partitionBox.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				CompoundRelationDialog.this.partitionMenu
-						.setEnabled(CompoundRelationDialog.this.partitionBox
+				PartitionSelectionDialog.this.partitionMenu
+						.setEnabled(PartitionSelectionDialog.this.partitionBox
 								.isSelected());
 			}
 		});
@@ -207,14 +134,10 @@ public class CompoundRelationDialog extends JDialog {
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
-				CompoundRelationDialog.this.arity.setValue(new Integer(
-						startvalue.getN()));
-				CompoundRelationDialog.this.setVisible(false);
-				CompoundRelationDialog.this.partitionBox.setSelected(startvalue
-						.getPartition() != null);
-				if (startvalue.getPartition() != null)
-					CompoundRelationDialog.this.partitionMenu
-							.setSelectedItem(startvalue.getPartition());
+				PartitionSelectionDialog.this.partitionBox.setSelected(startvalue != null);
+				if (startvalue != null)
+					PartitionSelectionDialog.this.partitionMenu.setSelectedItem(startvalue);
+				PartitionSelectionDialog.this.setVisible(false);
 			}
 		});
 
@@ -222,8 +145,8 @@ public class CompoundRelationDialog extends JDialog {
 		// then closes the dialog.
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (CompoundRelationDialog.this.validateFields())
-					CompoundRelationDialog.this.setVisible(false);
+				if (PartitionSelectionDialog.this.validateFields())
+					PartitionSelectionDialog.this.setVisible(false);
 			}
 		});
 
@@ -235,26 +158,6 @@ public class CompoundRelationDialog extends JDialog {
 
 		// Move ourselves.
 		this.setLocationRelativeTo(null);
-	}
-
-	/**
-	 * Get the arity the user selected.
-	 * 
-	 * @return the selected arity.
-	 */
-	public int getArity() {
-		return this.arity.getNumber().intValue();
-	}
-
-	/**
-	 * If the user ticked the parallel relation box, indicating that this
-	 * relation should be treated as a fork point, this will return
-	 * <tt>true</tt>.
-	 * 
-	 * @return <tt>true</tt> if the user ticked the parallel box.
-	 */
-	public boolean getParallel() {
-		return this.parallel.isSelected();
 	}
 
 	/**
@@ -271,10 +174,8 @@ public class CompoundRelationDialog extends JDialog {
 		// List of messages to display, if any are necessary.
 		final List messages = new ArrayList();
 
-		// Must enter something in the arity box.
-		if (this.arity.getNumber() == null)
-			messages.add(Resources.get("fieldIsEmpty", Resources.get("arity")));
-
+		// No validation required yet.
+		
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(null,

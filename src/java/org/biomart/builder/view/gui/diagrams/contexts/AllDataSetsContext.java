@@ -74,7 +74,11 @@ public class AllDataSetsContext implements DiagramContext {
 				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else
 				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
-			
+
+			// Update dotted line (partitioned).
+			((DataSetComponent) component).setRestricted(((DataSet)object)
+					.getDataSetModifications().isDatasetPartition());
+
 			((DataSetComponent) component).setRenameable(true);
 			((DataSetComponent) component).setSelectable(true);
 		}
