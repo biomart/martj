@@ -66,7 +66,9 @@ public interface PartitionTable {
 	 *            the partition of the schema we are getting rows from, if the
 	 *            table needs it (<tt>null</tt> otherwise). This value is
 	 *            used when establishing a connection to the schema. See
-	 *            {@link JDBCSchema#getConnection(String)}
+	 *            {@link JDBCSchema#getConnection(String)}. If <tt>null</tt>
+	 *            is passed when it needs a non-null value then it should use 
+	 *            a sensible default.
 	 * @throws PartitionException
 	 *             if anything went wrong.
 	 */
@@ -164,6 +166,11 @@ public interface PartitionTable {
 	 */
 	public void setSubDivision(final List columns, final String name)
 			throws PartitionException;
+	
+	/**
+	 * Removes the subdivision, if any.
+	 */
+	public void removeSubDivision();
 
 	/**
 	 * Obtain the name used for the subdivision.
@@ -324,6 +331,12 @@ public interface PartitionTable {
 				}
 			};
 		}
+		
+		public void removeSubDivision() {
+			this.subdivision = null;
+			this.subdivisionCols = null;
+			this.subdivisionName = null;
+		}
 
 		public String getSubdivisionName() {
 			return this.subdivisionName;
@@ -395,6 +408,10 @@ public interface PartitionTable {
 				throws PartitionException;
 
 		public void removeColumn(String name) throws PartitionException {
+			// Throw exception if immutable.
+			if (!this.getColumn(name).isMutable())
+				throw new PartitionException(Resources
+						.get("partitionChangeMutableCol"));
 			// Throw exception if subdivide references it.
 			if (this.subdivisionCols.contains(name))
 				throw new PartitionException(Resources
@@ -407,6 +424,10 @@ public interface PartitionTable {
 			// Don't bother if the two are the same.
 			if (oldName == newName || oldName.equals(newName))
 				return;
+			// Throw exception if immutable.
+			if (!this.getColumn(name).isMutable())
+				throw new PartitionException(Resources
+						.get("partitionChangeMutableCol"));
 			// Throw exception if new name is already used in col or
 			// subdivide.
 			if (this.columnMap.containsKey(newName)
@@ -421,6 +442,28 @@ public interface PartitionTable {
 
 		public String toString() {
 			return this.getName();
+		}
+		
+		/**
+		 * This kind of partition table selects values from a column
+		 * and/or associated joined tables.
+		 */
+		public static class SelectFromTable extends AbstractPartitionTable {
+			/**
+			 * Create a new table with a given name.
+			 * 
+			 * @param name
+			 *            the name.       
+			 */
+			protected SelectFromTable(final String name) {
+				super(name);
+				// TODO Initial column selection and addition.
+			}
+			
+			protected List getRows(String schemaPartition) throws PartitionException {
+				// TODO Auto-generated method stub
+				return null;
+			}			
 		}
 	}
 

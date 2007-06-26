@@ -37,10 +37,10 @@ import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllPartitionTablesDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.AllPartitionTablesContext;
-import org.biomart.builder.view.gui.panels.PartitionTablePanel;
 import org.biomart.common.model.PartitionTable;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.panels.PartitionTablePanel;
 
 /**
  * This tabset contains definitions of partition tables.
@@ -317,14 +317,21 @@ public class PartitionTableTabSet extends JTabbedPane {
 		this.allPartitionTablesDiagram.recalculateDiagram();
 	}
 
+	private PartitionTable showAddTableDialog() {
+		// TODO This pops up a dialog with a type chooser and
+		// tblmodpanel in it then uses the create() and validate()
+		// methods to do things, and also asks for a name.
+		return null;
+	}
+
 	/**
 	 * Asks user to define a new partition table, then adds it.
 	 */
 	public void requestAddPartitionTable() {
 		// Pop up a dialog to get the details of the new table, then
 		// obtain a copy of that table.
-		final PartitionTable partition = null; // TODO A creation dialog.
-
+		final PartitionTable partition = this.showAddTableDialog();
+		
 		// If no schema was defined, ignore the request.
 		if (partition == null)
 			return;
@@ -433,7 +440,6 @@ public class PartitionTableTabSet extends JTabbedPane {
 		this.requestRenamePartitionTable(partition, this
 				.askUserForName(Resources.get("requestPartitionTableName"),
 						partition.getName()));
-
 	}
 
 	/**

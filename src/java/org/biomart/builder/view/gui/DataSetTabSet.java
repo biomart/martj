@@ -57,7 +57,6 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
-import org.biomart.builder.view.gui.dialogs.PartitionSelectionDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
@@ -69,6 +68,7 @@ import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.dialogs.PartitionSelectionDialog;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
