@@ -441,6 +441,18 @@ public class Mart {
 	public Collection getSchemas() {
 		return this.schemas.values();
 	}
+	
+	/**
+	 * Obtain all tables from all schemas.
+	 * 
+	 * @return all tables.
+	 */
+	public Collection getAllTables() {
+		final List tables = new ArrayList();
+		for (final Iterator i = this.getSchemas().iterator(); i.hasNext(); )
+			tables.addAll(((Schema)i.next()).getTables());
+		return tables;
+	}
 
 	/**
 	 * Removes a partition table from the set which this mart includes.
@@ -857,8 +869,24 @@ public class Mart {
 			((Schema) i.next()).synchronise();
 		// Then, synchronise datasets.
 		this.synchroniseDataSets();
+		this.synchronisePartitionTables();
 	}
 
+	/**
+	 * Bring all partition tables up to date with schema changes.
+	 */
+	public void synchronisePartitionTables() {
+		final List dead = new ArrayList();
+		for (final Iterator i = this.partitionTables.entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			if (!((PartitionTable)entry.getValue()).synchronize())
+				dead.add((PartitionTable)entry.getValue());
+		}
+		for (final Iterator i = dead.iterator(); i.hasNext(); ) {
+			this.removePartitionTable((PartitionTable)i.next());
+		}
+	}
+	
 	/**
 	 * Using the descriptor (table[.subtable[.subtable]*]*.column) return the
 	 * actual column from a {@link PartitionTable}.

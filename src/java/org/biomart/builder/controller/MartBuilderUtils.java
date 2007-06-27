@@ -167,6 +167,7 @@ public class MartBuilderUtils {
 			throws SQLException, DataModelException {
 		CommonUtils.synchroniseSchema(schema);
 		mart.synchroniseDataSets(schema);
+		mart.synchronisePartitionTables();
 	}
 
 	/**

@@ -18,15 +18,23 @@
 
 package org.biomart.common.model;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.biomart.builder.exceptions.PartitionException;
+import org.biomart.common.model.PartitionTable.PartitionColumn.FixedColumn;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Resources;
 
@@ -37,8 +45,8 @@ import org.biomart.common.resources.Resources;
  * itself also has a unique name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public interface PartitionTable {
@@ -67,12 +75,14 @@ public interface PartitionTable {
 	 *            table needs it (<tt>null</tt> otherwise). This value is
 	 *            used when establishing a connection to the schema. See
 	 *            {@link JDBCSchema#getConnection(String)}. If <tt>null</tt>
-	 *            is passed when it needs a non-null value then it should use 
-	 *            a sensible default.
+	 *            is passed when it needs a non-null value then it should use a
+	 *            sensible default.
+	 * @param limit
+	 *            the maximum number of rows to return, or -1 for no limit.
 	 * @throws PartitionException
 	 *             if anything went wrong.
 	 */
-	public void prepareRows(final String schemaPartition)
+	public void prepareRows(final String schemaPartition, final int limit)
 			throws PartitionException;
 
 	/**
@@ -87,7 +97,7 @@ public interface PartitionTable {
 
 	/**
 	 * Return the current row. If {@link #nextRow()} has not been called since
-	 * {@link #prepareRows(String)} was called, or you are calling this after a
+	 * {@link #prepareRows(String, int)} was called, or you are calling this after a
 	 * failed call to {@link #nextRow()} then you will get an exception.
 	 * 
 	 * @return the current row.
@@ -121,6 +131,18 @@ public interface PartitionTable {
 	 *             will not have been performed yet.
 	 */
 	public void renameColumn(final String oldName, final String newName)
+			throws PartitionException;
+
+	/**
+	 * Rename the subdivision.
+	 * 
+	 * @param newName
+	 *            the new name.
+	 * @throws PartitionException
+	 *             if the new name cannot be used. If this is thrown, the rename
+	 *             will not have been performed yet.
+	 */
+	public void renameSubdivision(final String newName)
 			throws PartitionException;
 
 	/**
@@ -166,7 +188,7 @@ public interface PartitionTable {
 	 */
 	public void setSubDivision(final List columns, final String name)
 			throws PartitionException;
-	
+
 	/**
 	 * Removes the subdivision, if any.
 	 */
@@ -204,6 +226,14 @@ public interface PartitionTable {
 	 */
 	public PartitionTable replicate(final String newName)
 			throws PartitionException;
+
+	/**
+	 * Update ourselves to match current schema and dataset values.
+	 * 
+	 * @return <tt>true</tt> if we survive, <tt>false</tt> if we should be
+	 *         deleted.
+	 */
+	public boolean synchronize();
 
 	/**
 	 * An abstract implementation from which others will extend. Anonymous inner
@@ -325,13 +355,13 @@ public interface PartitionTable {
 					this.columnMap = columnMapPointer;
 				}
 
-				public List getRows(final String ignoreMe)
-						throws PartitionException {
+				protected List getRows(final String ignoreMe,
+						final int ignoreMeToo) throws PartitionException {
 					return currentSubRows;
 				}
 			};
 		}
-		
+
 		public void removeSubDivision() {
 			this.subdivision = null;
 			this.subdivisionCols = null;
@@ -386,10 +416,10 @@ public interface PartitionTable {
 			return true;
 		}
 
-		public void prepareRows(String schemaPartition)
+		public void prepareRows(final String schemaPartition, final int limit)
 				throws PartitionException {
 			this.currentRow = null;
-			this.rows = this.getRows(schemaPartition);
+			this.rows = this.getRows(schemaPartition, limit);
 			this.rowIterator = 0;
 		}
 
@@ -400,12 +430,14 @@ public interface PartitionTable {
 		 * @param schemaPartition
 		 *            the partition to get rows for, or <tt>null</tt> if not
 		 *            to bother.
+		 * @param limit
+		 *            the maximum number of rows, or -1 for unlimited.
 		 * @return the rows. Never <tt>null</tt> but may be empty.
 		 * @throws PartitionException
 		 *             if the rows couldn't be obtained.
 		 */
-		protected abstract List getRows(String schemaPartition)
-				throws PartitionException;
+		protected abstract List getRows(final String schemaPartition,
+				final int limit) throws PartitionException;
 
 		public void removeColumn(String name) throws PartitionException {
 			// Throw exception if immutable.
@@ -431,7 +463,7 @@ public interface PartitionTable {
 			// Throw exception if new name is already used in col or
 			// subdivide.
 			if (this.columnMap.containsKey(newName)
-					|| newName.equals(this.name + '.' + this.subdivisionName))
+					|| newName.equals(this.subdivisionName))
 				throw new PartitionException(Resources.get(
 						"partitionColumnNameTaken", newName));
 			final PartitionColumn col = (PartitionColumn) this.columnMap
@@ -440,30 +472,196 @@ public interface PartitionTable {
 			this.columnMap.put(newName, col);
 		}
 
+		public void renameSubdivision(String newName) throws PartitionException {
+			// Don't bother if the two are the same.
+			if (newName.equals(this.subdivisionName))
+				return;
+			// Throw exception if new name is already used in col or
+			// subdivide.
+			if (this.columnMap.containsKey(newName))
+				throw new PartitionException(Resources.get(
+						"partitionSubdivisionNameTaken", newName));
+			this.subdivisionName = newName;
+			this.subdivision.setName(newName);
+		}
+
 		public String toString() {
 			return this.getName();
 		}
-		
+
+		public boolean synchronize() {
+			// We don't care.
+			return true;
+		}
+
 		/**
-		 * This kind of partition table selects values from a column
-		 * and/or associated joined tables.
+		 * This kind of partition table selects values from a column and/or
+		 * associated joined tables.
 		 */
-		public static class SelectFromTable extends AbstractPartitionTable {
+		public static class SelectPartitionTable extends AbstractPartitionTable {
+
+			private Table table;
+
+			private final Set initialSelectColumns = new HashSet();
+
 			/**
 			 * Create a new table with a given name.
 			 * 
 			 * @param name
-			 *            the name.       
+			 *            the name.
 			 */
-			protected SelectFromTable(final String name) {
+			public SelectPartitionTable(final String name) {
 				super(name);
-				// TODO Initial column selection and addition.
 			}
-			
-			protected List getRows(String schemaPartition) throws PartitionException {
-				// TODO Auto-generated method stub
-				return null;
-			}			
+
+			/**
+			 * Set the table we are working with.
+			 * 
+			 * @param table
+			 *            the table.
+			 */
+			public void setTable(final Table table) {
+				this.table = table;
+				this.initialSelectColumns.clear();
+			}
+
+			/**
+			 * Obtain the table we are working with.
+			 * 
+			 * @return the table.
+			 */
+			public Table getTable() {
+				return this.table;
+			}
+
+			/**
+			 * Set the columns we will select from our table.
+			 * 
+			 * @param columns
+			 *            the columns.
+			 * @throws PartitionException
+			 *             if something went wrong, e.g. they are from a
+			 *             different table, or none were provided.
+			 */
+			public void setInitialSelectColumns(final Collection columns)
+					throws PartitionException {
+				if (columns == null || columns.isEmpty())
+					throw new PartitionException(Resources
+							.get("initialSelectColumnsEmpty"));
+				for (final Iterator i = columns.iterator(); i.hasNext();) {
+					final Column col = (Column) i.next();
+					if (!col.getTable().equals(this.getTable()))
+						throw new PartitionException(Resources
+								.get("initialSelectColumnMismatch"));
+				}
+				this.initialSelectColumns.clear();
+				this.initialSelectColumns.addAll(columns);
+				// Convert to FixedColumn representations.
+				this.columnMap.clear();
+				for (final Iterator i = this.initialSelectColumns.iterator(); i
+						.hasNext();) {
+					final String name = ((Column) i.next()).getName();
+					this.addColumn(name, new FixedColumn(this, name));
+				}
+			}
+
+			/**
+			 * Obtain the columns we will be selecting.
+			 * 
+			 * @return the columns.
+			 */
+			public Collection getInitialSelectColumns() {
+				return this.initialSelectColumns;
+			}
+
+			public boolean synchronize() {
+				// Replace with identical new object.
+				this.table = this.table.getSchema().getTableByName(
+						this.table.getName());
+				if (this.table == null)
+					return false;
+				final Set newCols = new HashSet();
+				for (final Iterator i = this.initialSelectColumns.iterator(); i
+						.hasNext();) {
+					final Column col = (Column) i.next();
+					final Column newCol = this.table.getColumnByName(col
+							.getName());
+					if (newCol != null)
+						newCols.add(newCol);
+				}
+				this.initialSelectColumns.clear();
+				this.initialSelectColumns.addAll(newCols);
+				return this.initialSelectColumns.isEmpty();
+			}
+
+			protected List getRows(String schemaPartition, final int limit)
+					throws PartitionException {
+				if (this.initialSelectColumns.isEmpty())
+					throw new PartitionException(Resources
+							.get("initialColumnsNotSpecified"));
+
+				// Obtain schema.
+				final Schema schema = this.getTable().getSchema();
+				if (!(schema instanceof JDBCSchema))
+					return Collections.EMPTY_LIST;
+				final JDBCSchema jdbc = (JDBCSchema) schema;
+
+				Connection conn = null;
+				final List rows = new ArrayList();
+				int rowNum = 0;
+
+				try {
+					conn = jdbc.getConnection(schemaPartition);
+					// Construct SQL statement.
+					final StringBuffer sql = new StringBuffer();
+					sql.append("select ");
+					for (final Iterator i = this.initialSelectColumns
+							.iterator(); i.hasNext();) {
+						final Column col = (Column) i.next();
+						sql.append(col.getName());
+						if (i.hasNext())
+							sql.append(',');
+					}
+					sql.append(" from ");
+					sql.append(schemaPartition == null ? table.getSchema()
+							.getName() : (String) table.getSchema()
+							.getPartitions().get(schemaPartition));
+					sql.append('.');
+					sql.append(this.table.getName());
+
+					// Run it.
+					final PreparedStatement stmt = conn.prepareStatement(sql
+							.toString());
+					stmt.execute();
+					final ResultSet rs = stmt.getResultSet();
+					while (rs.next() && (limit == -1 || rowNum < limit)) {
+						// Read rows.
+						final PartitionRow row = new PartitionRow(this,
+								rowNum++) {
+							public String getValue(String columnName)
+									throws PartitionException {
+								try {
+									return rs.getString(columnName);
+								} catch (final SQLException e) {
+									throw new PartitionException(e);
+								}
+							}
+						};
+						rows.add(row);
+					}
+				} catch (final SQLException e) {
+					throw new PartitionException(e);
+				} finally {
+					if (conn != null)
+						try {
+							conn.close();
+						} catch (final SQLException e2) {
+							// Don't care.
+						}
+				}
+
+				return rows;
+			}
 		}
 	}
 
@@ -596,7 +794,7 @@ public interface PartitionTable {
 
 			private Pattern compiled = null;
 
-			private final String sourceColumnName;
+			private String sourceColumnName = null;
 
 			/**
 			 * Construct a new column that is going to be added to this table
@@ -606,14 +804,9 @@ public interface PartitionTable {
 			 *            the table.
 			 * @param name
 			 *            the name of this column.
-			 * @param sourceColumnName
-			 *            the column that will provide data for this regex to
-			 *            work with.
 			 */
-			public RegexColumn(final PartitionTable table, final String name,
-					final String sourceColumnName) {
+			public RegexColumn(final PartitionTable table, final String name) {
 				super(table, name);
-				this.sourceColumnName = sourceColumnName;
 			}
 
 			public boolean isMutable() {
@@ -624,9 +817,20 @@ public interface PartitionTable {
 			 * Which column are we going to use to source data for our regexes
 			 * to transform?
 			 * 
+			 * @param name
+			 *            the column name.
+			 */
+			public void setSourceColumn(final String name) {
+				this.sourceColumnName = name;
+			}
+
+			/**
+			 * Which column are we going to use to source data for our regexes
+			 * to transform?
+			 * 
 			 * @return the column name.
 			 */
-			public String getSourceColumnName() {
+			public String getSourceColumn() {
 				return this.sourceColumnName;
 			}
 
@@ -687,8 +891,8 @@ public interface PartitionTable {
 			 */
 			public FakeColumn() {
 				super(new AbstractPartitionTable("__FAKE__TABLE__") {
-					protected List getRows(String schemaPartition)
-							throws PartitionException {
+					protected List getRows(final String schemaPartition,
+							final int ignoreLimit) throws PartitionException {
 						final List rows = new ArrayList();
 						rows.add(new PartitionRow(this, 0) {
 							public String getValue(final String columnName)

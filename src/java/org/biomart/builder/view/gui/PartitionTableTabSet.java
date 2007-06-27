@@ -34,20 +34,23 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
 import org.biomart.builder.controller.MartBuilderUtils;
+import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllPartitionTablesDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.AllPartitionTablesContext;
+import org.biomart.builder.view.gui.dialogs.AddPartitionTableDialog;
+import org.biomart.builder.view.gui.panels.PartitionTablePanel;
 import org.biomart.common.model.PartitionTable;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
-import org.biomart.common.view.gui.panels.PartitionTablePanel;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
  * This tabset contains definitions of partition tables.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class PartitionTableTabSet extends JTabbedPane {
@@ -318,9 +321,14 @@ public class PartitionTableTabSet extends JTabbedPane {
 	}
 
 	private PartitionTable showAddTableDialog() {
-		// TODO This pops up a dialog with a type chooser and
-		// tblmodpanel in it then uses the create() and validate()
-		// methods to do things, and also asks for a name.
+		try {
+			final AddPartitionTableDialog dialog = new AddPartitionTableDialog(
+					this.getMartTab());
+			if (dialog.definePartitionTable())
+				return dialog.create();
+		} catch (final PartitionException pe) {
+			StackTrace.showStackTrace(pe);
+		}
 		return null;
 	}
 
@@ -331,7 +339,7 @@ public class PartitionTableTabSet extends JTabbedPane {
 		// Pop up a dialog to get the details of the new table, then
 		// obtain a copy of that table.
 		final PartitionTable partition = this.showAddTableDialog();
-		
+
 		// If no schema was defined, ignore the request.
 		if (partition == null)
 			return;

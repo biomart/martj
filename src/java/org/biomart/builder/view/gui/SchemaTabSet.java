@@ -96,7 +96,6 @@ public class SchemaTabSet extends JTabbedPane {
 	public SchemaTabSet(final MartTab martTab) {
 		super();
 
-
 		// Remember the mart tabset we are shown inside.
 		this.martTab = martTab;
 
@@ -272,7 +271,7 @@ public class SchemaTabSet extends JTabbedPane {
 		this.removeTabAt(tabIndex);
 		this.schemaToDiagram[0].remove(index);
 		this.schemaToDiagram[1].remove(index);
-		
+
 		// Update the all-schemas diagram.
 		this.recalculateOverviewDiagram();
 
@@ -1105,7 +1104,9 @@ public class SchemaTabSet extends JTabbedPane {
 
 				SchemaTabSet.this.recalculateAllSchemaDiagrams();
 				SchemaTabSet.this.martTab.getDataSetTabSet()
-						.recalculateAllDataSetDiagrams();
+						.recalculateDataSetTabs();
+				SchemaTabSet.this.martTab.getPartitionTableTabSet()
+						.recalculatePartitionTableTabs();
 
 				// Update the modified status for this tabset.
 				SchemaTabSet.this.martTab.getMartTabSet()
@@ -1130,7 +1131,9 @@ public class SchemaTabSet extends JTabbedPane {
 
 				SchemaTabSet.this.recalculateSchemaDiagram(schema);
 				SchemaTabSet.this.martTab.getDataSetTabSet()
-						.recalculateAffectedDataSetDiagrams(schema);
+						.recalculateDataSetTabs();
+				SchemaTabSet.this.martTab.getPartitionTableTabSet()
+						.recalculatePartitionTableTabs();
 
 				// Update the modified status for this tabset.
 				SchemaTabSet.this.martTab.getMartTabSet()

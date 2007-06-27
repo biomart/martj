@@ -107,7 +107,7 @@ Inter-schema (external) relations (if any)
 
 Partition Tables (if any)
 =========================
-<xsl:apply-templates select="./partitionTable"/>
+<xsl:apply-templates select="./selectPartitionTable"/>
 
 Datasets
 ========
@@ -173,9 +173,13 @@ Relation:
          To: <xsl:apply-templates select="key('ids',@secondKeyId)"/></xsl:template>
 
 <!-- PARTITION TABLES -->
-<xsl:template match="partitionTable">
+<xsl:template match="selectPartitionTable">
 
 Name: <xsl:value-of select="@name"/>
+Focused on: 
+  Schema: <xsl:apply-templates select="key('ids',@tableId)/../@name"/> 
+   Table: <xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@tableId"/></xsl:call-template>
+ Columns: <xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@columnIds"/></xsl:call-template>
 <xsl:apply-templates select="./fixedColumn"/>
 <xsl:apply-templates select="./regexColumn"/>
 <xsl:apply-templates select="./subPartitionTable"/>

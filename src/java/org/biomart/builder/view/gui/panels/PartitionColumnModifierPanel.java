@@ -16,14 +16,20 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.view.gui.panels;
+package org.biomart.builder.view.gui.panels;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.common.exceptions.BioMartError;
@@ -44,6 +50,8 @@ import org.biomart.common.resources.Resources;
 public abstract class PartitionColumnModifierPanel extends JPanel {
 
 	private final PartitionColumn column;
+
+	private final PartitionTable table;
 
 	/**
 	 * Internal layout helper.
@@ -68,15 +76,19 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 	/**
 	 * Construct a new panel.
 	 * 
+	 * @param table
+	 *            the table to attach to.
 	 * @param column
 	 *            the partition column to represent. If <tt>null</tt> then it
 	 *            should start with a blank sheet, return <tt>false</tt> for
 	 *            {@link #isMutable()}, and return something meaningful from
-	 *            {@link #create(PartitionTable, String)}.
+	 *            {@link #create(String)}.
 	 */
-	public PartitionColumnModifierPanel(final PartitionColumn column) {
+	public PartitionColumnModifierPanel(final PartitionTable table,
+			final PartitionColumn column) {
 		super(new GridBagLayout());
 		this.column = column;
+		this.table = table;
 
 		// Create constraints for labels that are not in the last row.
 		this.labelConstraints = new GridBagConstraints();
@@ -107,6 +119,15 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 	 */
 	protected PartitionColumn getColumn() {
 		return this.column;
+	}
+
+	/**
+	 * Obtain the partition table we are working with.
+	 * 
+	 * @return the table.
+	 */
+	protected PartitionTable getTable() {
+		return this.table;
 	}
 
 	/**
@@ -144,16 +165,14 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 	 * Create a new column based on the new values from the fields displayed,
 	 * which belongs to the given table.
 	 * 
-	 * @param table
-	 *            the table to attach to.
 	 * @param name
 	 *            the name to give the column.
 	 * @return the new column.
 	 * @throws PartitionException
 	 *             if it cannot do it.
 	 */
-	public abstract PartitionColumn create(final PartitionTable table,
-			final String name) throws PartitionException;
+	public abstract PartitionColumn create(final String name)
+			throws PartitionException;
 
 	/**
 	 * A panel for modifiying fixed columns.
@@ -166,11 +185,14 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 		/**
 		 * Construct a new panel.
 		 * 
+		 * @param table
+		 *            the parent table.
 		 * @param column
 		 *            the partition column to represent.
 		 */
-		public FixedColumnModifierPanel(final FixedColumn column) {
-			super(column);
+		public FixedColumnModifierPanel(final PartitionTable table,
+				final FixedColumn column) {
+			super(table, column);
 			this.add(new JLabel(Resources.get("fixedColumnNoChangeLabel")),
 					this.fieldLastRowConstraints);
 		}
@@ -192,8 +214,8 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 			return true;
 		}
 
-		public PartitionColumn create(final PartitionTable table,
-				final String name) throws PartitionException {
+		public PartitionColumn create(final String name)
+				throws PartitionException {
 			// Don't even think about it.
 			throw new BioMartError();
 		}
@@ -207,14 +229,42 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 
 		private static final long serialVersionUID = 1L;
 
+		private JComboBox sourceColumn;
+
+		private JTextField matchRegex;
+
+		private JTextField replaceRegex;
+
 		/**
 		 * Construct a new panel.
 		 * 
+		 * @param table
+		 *            the parent table for this column.
 		 * @param column
 		 *            the partition column to represent.
 		 */
-		public RegexColumnModifierPanel(final RegexColumn column) {
-			super(column);
+		public RegexColumnModifierPanel(final PartitionTable table,
+				final RegexColumn column) {
+			super(table, column);
+
+			// First line = source column.
+			this.add(new JLabel(Resources.get("regexColumnSourceColumnLabel")),
+					this.labelConstraints);
+			this.sourceColumn = new JComboBox();
+			for (final Iterator i = table.getColumnNames().iterator(); i
+					.hasNext();)
+				this.sourceColumn.addItem((String) i.next());
+			this.add(this.sourceColumn, this.fieldConstraints);
+			// Second line = matching regex.
+			this.add(new JLabel(Resources.get("regexColumnMatchRegexLabel")),
+					this.labelConstraints);
+			this.matchRegex = new JTextField(30);
+			this.add(this.matchRegex, this.fieldConstraints);
+			// Third line = replacing regex.
+			this.add(new JLabel(Resources.get("regexColumnReplaceRegexLabel")),
+					this.labelLastRowConstraints);
+			this.replaceRegex = new JTextField(30);
+			this.add(this.replaceRegex, this.fieldLastRowConstraints);
 		}
 
 		public boolean isMutable() {
@@ -222,22 +272,60 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 		}
 
 		public void reset() {
-			// TODO
+			if (this.getColumn() == null) {
+				this.sourceColumn.setSelectedIndex(0);
+				this.matchRegex.setText(".*");
+				this.replaceRegex.setText("$1");
+			} else {
+				final RegexColumn rcol = (RegexColumn) this.getColumn();
+				this.sourceColumn.setSelectedItem(rcol.getSourceColumn());
+				this.matchRegex.setText(rcol.getRegexMatch());
+				this.replaceRegex.setText(rcol.getRegexReplace());
+			}
 		}
 
 		public void update() throws PartitionException {
-			// TODO
+			final RegexColumn rcol = (RegexColumn) this.getColumn();
+			rcol.setSourceColumn((String) this.sourceColumn.getSelectedItem());
+			rcol.setRegexMatch(this.matchRegex.getText().trim());
+			rcol.setRegexReplace(this.replaceRegex.getText().trim());
 		}
 
 		public boolean validateInput() {
-			// TODO
-			return true;
+			// A placeholder to hold the validation messages, if any.
+			final List messages = new ArrayList();
+
+			// Check name is present.
+			if (this.isEmpty(this.matchRegex.getText()))
+				messages.add(Resources.get("regexColumnMatchRegexEmpty"));
+
+			// Check name is present.
+			if (this.isEmpty(this.replaceRegex.getText()))
+				messages.add(Resources.get("regexColumnReplaceRegexEmpty"));
+
+			// If there any messages, display them.
+			if (!messages.isEmpty())
+				JOptionPane.showMessageDialog(null, messages
+						.toArray(new String[0]), Resources
+						.get("validationTitle"),
+						JOptionPane.INFORMATION_MESSAGE);
+
+			// Validation succeeds if there are no messages.
+			return messages.isEmpty();
 		}
 
-		public PartitionColumn create(final PartitionTable table,
-				final String name) throws PartitionException {
-			// TODO
-			return null;
+		private boolean isEmpty(final String string) {
+			// Strings are empty if they are null or all whitespace.
+			return string == null || string.trim().length() == 0;
+		}
+
+		public PartitionColumn create(final String name)
+				throws PartitionException {
+			final RegexColumn rcol = new RegexColumn(this.getTable(), name);
+			rcol.setSourceColumn((String) this.sourceColumn.getSelectedItem());
+			rcol.setRegexMatch(this.matchRegex.getText().trim());
+			rcol.setRegexReplace(this.replaceRegex.getText().trim());
+			return rcol;
 		}
 	}
 }

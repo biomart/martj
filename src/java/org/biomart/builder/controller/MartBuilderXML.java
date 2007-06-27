@@ -27,7 +27,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -72,8 +71,8 @@ import org.biomart.common.model.Key.ForeignKey;
 import org.biomart.common.model.Key.GenericForeignKey;
 import org.biomart.common.model.Key.GenericPrimaryKey;
 import org.biomart.common.model.Key.PrimaryKey;
-import org.biomart.common.model.PartitionTable.AbstractPartitionTable;
 import org.biomart.common.model.PartitionTable.PartitionColumn;
+import org.biomart.common.model.PartitionTable.AbstractPartitionTable.SelectPartitionTable;
 import org.biomart.common.model.PartitionTable.PartitionColumn.FixedColumn;
 import org.biomart.common.model.PartitionTable.PartitionColumn.RegexColumn;
 import org.biomart.common.model.Relation.Cardinality;
@@ -661,10 +660,28 @@ public class MartBuilderXML extends DefaultHandler {
 				.hasNext();) {
 			final PartitionTable pt = (PartitionTable) psi.next();
 			Log.debug("Writing partition table: " + pt);
-			this.openElement("partitionTable", xmlWriter);
+			
+			String partitionTableType;
+			if (pt instanceof SelectPartitionTable)
+				partitionTableType = "selectPartitionTable";
+			else
+				throw new BioMartError(); // Never happens!
+			
+			this.openElement(partitionTableType, xmlWriter);
 			this.writeAttribute("name", pt.getName(), xmlWriter);
 
-			// TODO Different types!
+			if (pt instanceof SelectPartitionTable) {
+				// Table ID and Column IDs.
+				this.writeAttribute("tableId",
+						(String) this.reverseMappedObjects
+								.get(((SelectPartitionTable)pt).getTable()), xmlWriter);
+				final List columnIds = new ArrayList();
+				for (final Iterator kci = ((SelectPartitionTable)pt).getInitialSelectColumns().iterator(); kci
+						.hasNext();)
+					columnIds.add(this.reverseMappedObjects.get(kci.next()));
+				this.writeListAttribute("columnIds", (String[]) columnIds
+						.toArray(new String[0]), xmlWriter);
+			}
 
 			// Columns
 			for (final Iterator z = pt.getColumnNames().iterator(); z.hasNext();) {
@@ -683,7 +700,7 @@ public class MartBuilderXML extends DefaultHandler {
 				if (col instanceof RegexColumn) {
 					final RegexColumn rc = (RegexColumn) col;
 					this.writeAttribute("sourceColumn", rc
-							.getSourceColumnName(), xmlWriter);
+							.getSourceColumn(), xmlWriter);
 					this.writeAttribute("regexMatch", rc.getRegexMatch(),
 							xmlWriter);
 					this.writeAttribute("regexReplace", rc.getRegexReplace(),
@@ -716,7 +733,7 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 
 			// Finish partition table.
-			this.closeElement("partitionTable", xmlWriter);
+			this.closeElement(partitionTableType, xmlWriter);
 		}
 
 		// Write out datasets.
@@ -2009,17 +2026,24 @@ public class MartBuilderXML extends DefaultHandler {
 		}
 
 		// PartitionTable (anywhere)
-		else if ("partitionTable".equals(eName)) {
+		else if ("selectPartitionTable".equals(eName)) {
 			try {
 				final String name = (String) attributes.get("name");
 
-				// Construct the dataset.
-				// TODO Different types! Abstract just temporary.
-				final PartitionTable pt = new AbstractPartitionTable(name) {
-					public List getRows(final String schema) {
-						return Collections.EMPTY_LIST;
-					}
-				};
+				// Get the table and initial cols.
+				final Table table = (Table) this.mappedObjects
+				.get(attributes.get("tableId"));
+				// Decode the column IDs from the comma-separated list.
+				final String[] initialColIds = this.readListAttribute(
+						(String) attributes.get("columnIds"), false);
+				final List initialCols = new ArrayList();
+				for (int i = 0; i < initialColIds.length; i++)
+					initialCols.add(this.mappedObjects.get(initialColIds[i]));
+				
+				// Construct the table.
+				final SelectPartitionTable pt = new SelectPartitionTable(name);
+				pt.setTable(table);
+				pt.setInitialSelectColumns(initialCols);
 				this.constructedMart.addPartitionTable(pt);
 				element = pt;
 			} catch (final Exception e) {
@@ -2094,7 +2118,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String regexReplace = (String) attributes
 						.get("regexReplace");
 
-				final RegexColumn regex = new RegexColumn(w, name, sourceColumn);
+				final RegexColumn regex = new RegexColumn(w, name);
+				regex.setSourceColumn(sourceColumn);
 				regex.setRegexMatch(regexMatch);
 				regex.setRegexReplace(regexReplace);
 				w.addColumn(name, regex);

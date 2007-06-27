@@ -54,13 +54,13 @@ import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.MartRunnerConnectionDialog;
-import org.biomart.builder.view.gui.dialogs.MartRunnerMonitorDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.dialogs.ViewTextDialog;
+import org.biomart.runner.view.gui.dialogs.MartRunnerMonitorDialog;
 
 /**
  * Displays a set of tabs, one per mart currently loaded. Each tab keeps track

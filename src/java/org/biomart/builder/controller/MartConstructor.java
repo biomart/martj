@@ -299,7 +299,7 @@ public interface MartConstructor {
 						.getDataSetModifications().getDatasetPartition())
 						: new FakeColumn();
 				datasetPartition.getPartitionTable().prepareRows(
-						(String) schemaPartition.getKey());
+						(String) schemaPartition.getKey(), -1);
 				while (datasetPartition.getPartitionTable().nextRow()) {
 					for (final Iterator i = this.getTablesToProcess(dataset)
 							.iterator(); i.hasNext();) {
@@ -314,7 +314,7 @@ public interface MartConstructor {
 									: new FakeColumn();
 							datasetTablePartition.getPartitionTable()
 									.prepareRows(
-											(String) schemaPartition.getKey());
+											(String) schemaPartition.getKey(), -1);
 							while (datasetTablePartition.getPartitionTable()
 									.nextRow()) {
 								if (!this
@@ -852,7 +852,7 @@ public interface MartConstructor {
 						&& compoundPartition.getColumnName() != null) {
 					if (ljtu.getSchemaRelationIteration() == 0)
 						compoundPartition.getPartitionTable().prepareRows(
-								schemaPartition);
+								schemaPartition, -1);
 					compoundPartition.getPartitionTable().nextRow();
 				}
 			}

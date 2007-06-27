@@ -22,7 +22,7 @@
 # since: 0.1
 -->
 
-<!ELEMENT mart (jdbcSchema+,partitionTable*,dataset*,relation*)>
+<!ELEMENT mart (jdbcSchema+,selectPartitionTable*,dataset*,relation*)>
 <!ATTLIST mart outputSchema CDATA #IMPLIED>
 <!ATTLIST mart outputHost CDATA #IMPLIED>
 <!ATTLIST mart outputPort CDATA #IMPLIED>
@@ -63,8 +63,10 @@
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
-<!ELEMENT partitionTable (fixedColumn*,regexColumn*,subPartitionTable*)>
-<!ATTLIST partitionTable name CDATA #REQUIRED>
+<!ELEMENT selectPartitionTable (fixedColumn*,regexColumn*,subPartitionTable*)>
+<!ATTLIST selectPartitionTable name CDATA #REQUIRED>
+<!ATTLIST selectPartitionTable tableId IDREF #REQUIRED>
+<!ATTLIST selectPartitionTable columnIds IDREFS #REQUIRED>
 
 <!ELEMENT subPartitionTable EMPTY>
 <!ATTLIST subPartitionTable name CDATA #REQUIRED>

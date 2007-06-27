@@ -16,17 +16,33 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.view.gui.panels;
+package org.biomart.builder.view.gui.panels;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
+import javax.swing.DefaultListModel;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 
 import org.biomart.builder.exceptions.PartitionException;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.PartitionTable;
-import org.biomart.common.model.PartitionTable.AbstractPartitionTable.SelectFromTable;
+import org.biomart.common.model.Table;
+import org.biomart.common.model.PartitionTable.AbstractPartitionTable.SelectPartitionTable;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -156,20 +172,53 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 
 	/**
 	 * This panel type represents the modifications possible to a
-	 * {@link SelectFromTable} table which gets data from a relational table.
+	 * {@link SelectPartitionTable} table which gets data from a relational
+	 * table.
 	 */
 	public static class SelectFromModifierPanel extends
 			PartitionTableModifierPanel {
 		private static final long serialVersionUID = 1;
+
+		private JComboBox tableChoice;
+
+		private JList columnChoices;
 
 		/**
 		 * Construct a new modification panel.
 		 * 
 		 * @param table
 		 *            the table we are displaying.
+		 * @param allTables
+		 *            the tables to allow choices from.
 		 */
-		public SelectFromModifierPanel(final SelectFromTable table) {
+		public SelectFromModifierPanel(final SelectPartitionTable table,
+				final Collection allTables) {
 			super(table);
+
+			// First line is label and table selector.
+			this.add(new JLabel(Resources.get("selectFromInitialTableLabel")), this.labelConstraints);
+			this.tableChoice = new JComboBox(allTables.toArray());
+			this.add(this.tableChoice, this.fieldConstraints);
+			// Second line is label and column multiselect.
+			this.add(new JLabel(Resources.get("selectFromInitialColsLabel")),
+					this.labelLastRowConstraints);
+			final DefaultListModel columns = new DefaultListModel();
+			this.columnChoices = new JList(columns);
+			this.columnChoices
+					.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+			this.add(new JScrollPane(this.columnChoices), this.fieldLastRowConstraints);
+			// Listener on table selector changes columns in second line.
+			this.tableChoice.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					columns.clear();
+					final Object obj = SelectFromModifierPanel.this.tableChoice
+							.getSelectedItem();
+					if (obj != null)
+						for (final Iterator i = ((Table) obj).getColumns()
+								.iterator(); i.hasNext();)
+							columns.addElement(i.next());
+				}
+			});
 		}
 
 		public String getType() {
@@ -177,26 +226,63 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 		}
 
 		public boolean isMutable() {
-			return false;
+			return true;
 		}
 
 		public void reset() {
-			// TODO
+			if (this.getTable() == null) {
+				this.tableChoice.setSelectedIndex(0);
+			} else {
+				this.tableChoice.setSelectedItem(((SelectPartitionTable) this
+						.getTable()).getTable());
+				final int indexes[] = new int[((SelectPartitionTable) this
+						.getTable()).getInitialSelectColumns().size()];
+				int pos = 0;
+				for (int i = 0; i < this.columnChoices.getModel().getSize(); i++) {
+					final Column col = (Column) this.columnChoices.getModel()
+							.getElementAt(i);
+					if (((SelectPartitionTable) this.getTable())
+							.getInitialSelectColumns().contains(col))
+						indexes[pos++] = i;
+				}
+				this.columnChoices.setSelectedIndices(indexes);
+			}
 		}
 
 		public void update() throws PartitionException {
-			// TODO
+			final SelectPartitionTable pt = (SelectPartitionTable) this
+					.getTable();
+			pt.setTable((Table) this.tableChoice.getSelectedItem());
+			pt.setInitialSelectColumns(Arrays.asList(this.columnChoices
+					.getSelectedValues()));
 		}
 
 		public boolean validateInput() {
-			// TODO
-			return true;
+			// A placeholder to hold the validation messages, if any.
+			final List messages = new ArrayList();
+
+			// Check columns are present.
+			if (this.columnChoices.getSelectedValues().length < 1)
+				messages.add(Resources.get("initialSelectColumnsEmpty"));
+
+			// If there any messages, display them.
+			if (!messages.isEmpty())
+				JOptionPane.showMessageDialog(null, messages
+						.toArray(new String[0]), Resources
+						.get("validationTitle"),
+						JOptionPane.INFORMATION_MESSAGE);
+
+			// Validation succeeds if there are no messages.
+			return messages.isEmpty();
 		}
 
 		public PartitionTable create(final String name)
 				throws PartitionException {
-			// TODO Create a new one.
-			return null;
+			final SelectPartitionTable pt = new SelectPartitionTable(name);
+			pt.setTable((Table) this.tableChoice.getSelectedItem());
+			pt.setInitialSelectColumns(Arrays.asList(this.columnChoices
+					.getSelectedValues()));
+			return pt;
 		}
 	}
 }
