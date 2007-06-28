@@ -39,7 +39,7 @@ echo "Starting MartBuilder please wait .... "
 # Note: If you get Java "Out of memory" errors, try increasing the numbers
 # in the -Xmx and -Xms parameters in the java command below. For performance
 # sake it is best if they are both the same value.
-java -Xmx256m -Xms256m -ea -cp $TMP_CLASSPATH org.biomart.builder.view.gui.MartBuilder $@
+java -Xmx512m -Xms256m -ea -cp $TMP_CLASSPATH org.biomart.builder.view.gui.MartBuilder $@
 
 
 
