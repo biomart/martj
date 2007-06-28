@@ -355,7 +355,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 				}
 
 				// Resize the diagram to fit the components.
-				ExplainTableDialog.this.transformation.validate();
+				ExplainTableDialog.this.transformation.revalidate();
 			}
 		}.start();
 	}

@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.runner.view.gui.dialogs;
+package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -881,7 +881,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 					JobPlanPanel.this.messages.setText(messages);
 
 					// Redraw.
-					JobPlanPanel.this.validate();
+					JobPlanPanel.this.revalidate();
 				}
 			});
 

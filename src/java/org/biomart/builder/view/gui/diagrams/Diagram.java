@@ -705,7 +705,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		// Reset our size to the minimum.
 		this.setSize(this.getPreferredSize());
 		// Update ourselves.
-		this.validate();
+		this.revalidate();
 	}
 
 	public Dimension getPreferredSize() {

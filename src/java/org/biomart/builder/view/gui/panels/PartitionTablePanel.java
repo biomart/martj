@@ -20,6 +20,7 @@ package org.biomart.builder.view.gui.panels;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -85,7 +86,7 @@ public class PartitionTablePanel extends JPanel {
 	/**
 	 * The color we use for our background.
 	 */
-	public static final Color BACKGROUND_COLOUR = Color.PINK;
+	public static final Color BACKGROUND_COLOUR = Color.LIGHT_GRAY;
 
 	private final PartitionTable partitionTable;
 
@@ -154,6 +155,17 @@ public class PartitionTablePanel extends JPanel {
 		final Set badColumns = new HashSet();
 		final DefaultListModel availableColumns = new DefaultListModel();
 		final DefaultListModel selectedColumns = new DefaultListModel();
+		final DefaultComboBoxModel columns = new DefaultComboBoxModel(this
+				.getPartitionTable().getColumnNames().toArray());
+
+		// Initial available columns.
+		final List availCols = new ArrayList(this.getPartitionTable()
+				.getColumnNames());
+		for (PartitionTable parent = this.getPartitionTable(); parent != null; parent = parent
+				.getSubdivision())
+			availCols.removeAll(parent.getSubdivisionCols());
+		for (final Iterator i = availCols.iterator(); i.hasNext();)
+			availableColumns.addElement((String) i.next());
 
 		// Create Preview panel - multi-column display.
 		final DefaultTableModel previewData = new DefaultTableModel();
@@ -166,17 +178,22 @@ public class PartitionTablePanel extends JPanel {
 					.getAllTables());
 		else
 			throw new BioMartError(); // Should never happen.
+		tableMods.setOpaque(false);
+		tableMods.reset();
 		JLabel label = new JLabel(Resources.get("partitionTableTypeLabel"));
 		this.add(label, this.labelConstraints);
 		JPanel field = new JPanel();
 		field.add(new JLabel(tableMods.getType()));
 		// Table modifications panel.
 		final JPanel tableModsPanel = new JPanel(new GridBagLayout());
+		tableModsPanel.setOpaque(false);
 		final JPanel tableModsHolder = new JPanel();
+		tableModsHolder.setOpaque(false);
 		tableModsHolder.add(tableMods);
 		tableModsHolder.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
 		tableModsPanel.add(tableModsHolder, this.fieldConstraints);
 		field.add(tableModsPanel);
+		field.setOpaque(false);
 		this.add(field, this.fieldConstraints);
 		// Update/Reset buttons below modifier panel inside tableModsPanel.
 		tableModsPanel.add(new JLabel(), this.labelLastRowConstraints);
@@ -189,20 +206,43 @@ public class PartitionTablePanel extends JPanel {
 		resetTableMods.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
 				tableMods.reset();
+				PartitionTablePanel.this.updatePreview(previewData);
 			}
 		});
 		updateTableMods.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
+				final List unavailCols = new ArrayList();
+				for (PartitionTable parent = PartitionTablePanel.this
+						.getPartitionTable(); parent != null; parent = parent
+						.getSubdivision())
+					unavailCols.addAll(parent.getSubdivisionCols());
 				try {
+					while (columns.getSize() > 0) {
+						final String col = (String) columns.getElementAt(0);
+						badColumns.add(col);
+						columns.removeElement(col);
+						availableColumns.removeElement(col);
+					}
 					tableMods.update();
 					PartitionTablePanel.this.updatePreview(previewData);
 				} catch (final PartitionException pe) {
 					StackTrace.showStackTrace(pe);
+				} finally {
+					for (final Iterator i = PartitionTablePanel.this
+							.getPartitionTable().getColumnNames().iterator(); i
+							.hasNext();) {
+						final String col = (String) i.next();
+						badColumns.remove(col);
+						columns.addElement(col);
+						if (!unavailCols.contains(col))
+							availableColumns.addElement(col);
+					}
 				}
 			}
 		});
 		field.add(resetTableMods);
 		field.add(updateTableMods);
+		field.setOpaque(false);
 		tableModsPanel.add(field, this.fieldLastRowConstraints);
 
 		// Column selector and modifier panel.
@@ -212,7 +252,9 @@ public class PartitionTablePanel extends JPanel {
 
 		// Sub-panel on right is modifier panel.
 		final JPanel columnModsPanel = new JPanel(new GridBagLayout());
+		columnModsPanel.setOpaque(false);
 		final JPanel columnModsHolder = new JPanel();
+		columnModsHolder.setOpaque(false);
 		columnModsHolder.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
 		columnModsPanel.add(columnModsHolder, this.fieldConstraints);
 		// Update/Reset buttons below modifier panel inside columnModsPanel.
@@ -241,18 +283,19 @@ public class PartitionTablePanel extends JPanel {
 		});
 		field.add(resetColumnMods);
 		field.add(updateColumnMods);
+		field.setOpaque(false);
 		columnModsPanel.add(field, this.fieldLastRowConstraints);
 
 		// Sub-panel on left is selector panel.
 		final JPanel columnNamePanel = new JPanel(new GridBagLayout());
+		columnNamePanel.setOpaque(false);
 		// Add column drop-down.
 		final JComboBox columnList = new JComboBox();
-		final DefaultComboBoxModel columns = new DefaultComboBoxModel(this
-				.getPartitionTable().getColumnNames().toArray());
 		columnList.setModel(columns);
 		columnNamePanel.add(columnList, this.fieldConstraints);
 		// Add add/remove/rename buttons in sub-panel.
 		final JPanel buttonPanel = new JPanel();
+		buttonPanel.setOpaque(false);
 		// Create and add buttons to buttonPanel.
 		final JButton addButton = new JButton(Resources.get("addButton"));
 		final JButton renameButton = new JButton(Resources.get("renameButton"));
@@ -269,15 +312,16 @@ public class PartitionTablePanel extends JPanel {
 					return;
 				try {
 					PartitionTablePanel.this.getPartitionTable().addColumn(
-							col.getColumnName(), col);
+							col.getName(), col);
+					columns.addElement(col.getName());
+					PartitionTablePanel.this.updatePreview(previewData);
+					availableColumns.addElement(col.getName());
+					badColumns.remove(col.getName());
+					columnList.setSelectedItem(col.getName());
+					PartitionTablePanel.this.revalidate();
 				} catch (final PartitionException e) {
-					// Never happens.
-					throw new BioMartError(e);
+					StackTrace.showStackTrace(e);
 				}
-				columns.addElement(col.getColumnName());
-				PartitionTablePanel.this.updatePreview(previewData);
-				availableColumns.addElement(col.getColumnName());
-				badColumns.remove(col.getColumnName());
 			}
 		});
 		renameButton.addActionListener(new ActionListener() {
@@ -295,19 +339,19 @@ public class PartitionTablePanel extends JPanel {
 					try {
 						PartitionTablePanel.this.getPartitionTable()
 								.renameColumn((String) obj, newName);
+						int pos = columns.getIndexOf(obj);
+						columns.insertElementAt(newName, pos);
+						columns.removeElement(obj);
+						PartitionTablePanel.this.updatePreview(previewData);
+						pos = availableColumns.indexOf(obj);
+						availableColumns.insertElementAt(newName, pos);
+						availableColumns.removeElement(obj);
+						badColumns.add(obj);
+						badColumns.remove(newName);
+						PartitionTablePanel.this.revalidate();
 					} catch (final PartitionException e) {
-						// Never happens.
-						throw new BioMartError(e);
+						StackTrace.showStackTrace(e);
 					}
-					int pos = columns.getIndexOf(obj);
-					columns.insertElementAt(newName, pos);
-					columns.removeElement(obj);
-					PartitionTablePanel.this.updatePreview(previewData);
-					pos = availableColumns.indexOf(obj);
-					availableColumns.insertElementAt(newName, pos);
-					availableColumns.removeElement(obj);
-					badColumns.add(obj);
-					badColumns.remove(newName);
 				}
 			}
 		});
@@ -319,14 +363,14 @@ public class PartitionTablePanel extends JPanel {
 					try {
 						PartitionTablePanel.this.getPartitionTable()
 								.removeColumn((String) obj);
+						columns.removeElement(obj);
+						PartitionTablePanel.this.updatePreview(previewData);
+						availableColumns.removeElement(obj);
+						badColumns.add(obj);
+						PartitionTablePanel.this.revalidate();
 					} catch (final PartitionException e) {
-						// Never happens.
-						throw new BioMartError(e);
+						StackTrace.showStackTrace(e);
 					}
-					columns.removeElement(obj);
-					PartitionTablePanel.this.updatePreview(previewData);
-					availableColumns.removeElement(obj);
-					badColumns.add(obj);
 				}
 			}
 		});
@@ -337,47 +381,54 @@ public class PartitionTablePanel extends JPanel {
 			public void actionPerformed(final ActionEvent evt) {
 				final Object obj = columnList.getSelectedItem();
 				if (obj != null) {
-					final PartitionColumn col;
 					try {
-						col = PartitionTablePanel.this.getPartitionTable()
-								.getColumn((String) obj);
+						final PartitionColumn col = PartitionTablePanel.this
+								.getPartitionTable().getColumn((String) obj);
+						if (col instanceof RegexColumn)
+							PartitionTablePanel.this.columnMods = new RegexColumnModifierPanel(
+									PartitionTablePanel.this
+											.getPartitionTable(),
+									(RegexColumn) col);
+						else if (col instanceof FixedColumn)
+							PartitionTablePanel.this.columnMods = new FixedColumnModifierPanel(
+									PartitionTablePanel.this
+											.getPartitionTable(),
+									(FixedColumn) col);
+						else
+							throw new BioMartError(); // Never happens.
+						PartitionTablePanel.this.columnMods.setOpaque(false);
+						// Remove and replace column mods panel.
+						PartitionTablePanel.this.columnMods.reset();
+						columnModsHolder.removeAll();
+						columnModsHolder
+								.add(PartitionTablePanel.this.columnMods);
+						// Update update/reset buttons.
+						resetColumnMods
+								.setEnabled(PartitionTablePanel.this.columnMods
+										.isMutable());
+						updateColumnMods
+								.setEnabled(PartitionTablePanel.this.columnMods
+										.isMutable());
+						renameButton
+								.setEnabled(PartitionTablePanel.this.columnMods
+										.isMutable());
+						removeButton
+								.setEnabled(PartitionTablePanel.this.columnMods
+										.isMutable());
+						PartitionTablePanel.this.revalidate();
 					} catch (final PartitionException e) {
-						// Never happens.
-						throw new BioMartError(e);
+						StackTrace.showStackTrace(e);
 					}
-					if (col instanceof RegexColumn)
-						PartitionTablePanel.this.columnMods = new RegexColumnModifierPanel(
-								PartitionTablePanel.this.getPartitionTable(),
-								(RegexColumn) col);
-					else if (col instanceof FixedColumn)
-						PartitionTablePanel.this.columnMods = new FixedColumnModifierPanel(
-								PartitionTablePanel.this.getPartitionTable(),
-								(FixedColumn) col);
-					else
-						throw new BioMartError(); // Never happens.
-					// Remove and replace column mods panel.
-					columnModsHolder.removeAll();
-					columnModsHolder.add(PartitionTablePanel.this.columnMods);
-					PartitionTablePanel.this.columnMods.reset();
-					// Update update/reset buttons.
-					resetColumnMods
-							.setEnabled(PartitionTablePanel.this.columnMods
-									.isMutable());
-					updateColumnMods
-							.setEnabled(PartitionTablePanel.this.columnMods
-									.isMutable());
-					renameButton.setEnabled(PartitionTablePanel.this.columnMods
-							.isMutable());
-					removeButton.setEnabled(PartitionTablePanel.this.columnMods
-							.isMutable());
 				}
 			}
 		});
+		columnList.setSelectedIndex(0);
 
 		// Add sub-panels to main panel.
 		field = new JPanel();
 		field.add(columnNamePanel);
 		field.add(columnModsPanel);
+		field.setOpaque(false);
 		this.add(field, this.fieldConstraints);
 
 		// Subdivision panel.
@@ -393,6 +444,7 @@ public class PartitionTablePanel extends JPanel {
 
 		// Left hand panel has drop-down and selector.
 		final JPanel subdivNamePanel = new JPanel(new GridBagLayout());
+		subdivNamePanel.setOpaque(false);
 		final JComboBox subdivList = new JComboBox();
 		final List initialSubdivs = new ArrayList();
 		final List initialUsedCols = new ArrayList();
@@ -410,6 +462,7 @@ public class PartitionTablePanel extends JPanel {
 		subdivNamePanel.add(subdivList, this.fieldConstraints);
 		// Add add/remove/rename buttons in sub-panel.
 		final JPanel subdivButtonPanel = new JPanel();
+		subdivButtonPanel.setOpaque(false);
 		// Create and add buttons to buttonPanel.
 		final JButton subdivAddButton = new JButton(Resources.get("addButton"));
 		final JButton subdivRenameButton = new JButton(Resources
@@ -423,9 +476,11 @@ public class PartitionTablePanel extends JPanel {
 		subdivAddButton.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
 				// Work out new subdivision.
+				final String[] availBits = new String[availableColumns.size()];
+				for (int i = 0; i < availBits.length; i++)
+					availBits[i] = (String) availableColumns.get(i);
 				final String[] newSubdiv = PartitionTablePanel.this
-						.showAddSubdivisionDialog((String[]) availableColumns
-								.toArray());
+						.showAddSubdivisionDialog(availBits);
 				if (newSubdiv == null)
 					return;
 				final String subdivName = newSubdiv[0];
@@ -446,6 +501,7 @@ public class PartitionTablePanel extends JPanel {
 					subdivs.addElement(subdivName);
 					// Select newly added subdiv.
 					subdivs.setSelectedItem(subdivName);
+					PartitionTablePanel.this.revalidate();
 				} catch (final PartitionException e) {
 					StackTrace.showStackTrace(e);
 				}
@@ -470,6 +526,7 @@ public class PartitionTablePanel extends JPanel {
 						final int pos = subdivs.getIndexOf(obj);
 						subdivs.insertElementAt(newName, pos);
 						subdivs.removeElement(obj);
+						PartitionTablePanel.this.revalidate();
 					} catch (final PartitionException e) {
 						StackTrace.showStackTrace(e);
 					}
@@ -495,6 +552,7 @@ public class PartitionTablePanel extends JPanel {
 					// Remove subdivision.
 					PartitionTablePanel.this.selectedSubdivParent
 							.removeSubDivision();
+					PartitionTablePanel.this.revalidate();
 				}
 			}
 		});
@@ -529,11 +587,15 @@ public class PartitionTablePanel extends JPanel {
 					subdivRenameButton.setEnabled(false);
 					subdivRemoveButton.setEnabled(false);
 				}
+				PartitionTablePanel.this.revalidate();
 			}
 		});
+		if (subdivList.getItemCount() > 0)
+			subdivList.setSelectedIndex(0);
 
 		// Sub-panel on right describes subdivided columns.
 		final Box listPanel = Box.createHorizontalBox();
+		listPanel.setOpaque(false);
 
 		// Create the table column list, and the buttons
 		// to move columns to/from the selected column list.
@@ -545,6 +607,7 @@ public class PartitionTablePanel extends JPanel {
 
 		// Left-hand side goes the table columns that are unused.
 		final JPanel leftListPanel = new JPanel(new BorderLayout());
+		leftListPanel.setOpaque(false);
 		// Label at the top.
 		leftListPanel.add(new JLabel(Resources.get("columnsAvailableLabel")),
 				BorderLayout.PAGE_START);
@@ -554,6 +617,7 @@ public class PartitionTablePanel extends JPanel {
 		leftListPanel.setBorder(new EmptyBorder(2, 2, 2, 2));
 		// Buttons down the right-hand-side, vertically.
 		final Box leftButtonPanel = Box.createVerticalBox();
+		leftButtonPanel.setOpaque(false);
 		leftButtonPanel.add(listInsertButton);
 		leftButtonPanel.add(listRemoveButton);
 		leftButtonPanel.setBorder(new EmptyBorder(2, 2, 2, 2));
@@ -562,6 +626,7 @@ public class PartitionTablePanel extends JPanel {
 
 		// Right-hand side goes the key columns that are used.
 		final JPanel rightListPanel = new JPanel(new BorderLayout());
+		rightListPanel.setOpaque(false);
 		// Label at the top.
 		rightListPanel.add(new JLabel(Resources.get("keyColumnsLabel")),
 				BorderLayout.PAGE_START);
@@ -590,7 +655,8 @@ public class PartitionTablePanel extends JPanel {
 				final Object selected = selectedColList.getSelectedValue();
 				if (selected != null) {
 					// Move a column from key to table.
-					if (!badColumns.contains(selected))
+					if (!badColumns.contains(selected)
+							&& !availableColumns.contains(selected))
 						availableColumns.addElement(selected);
 					selectedColumns.removeElement(selected);
 					PartitionTablePanel.this.selectedSubdivParent
@@ -605,13 +671,18 @@ public class PartitionTablePanel extends JPanel {
 		listPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED));
 		field.add(subdivNamePanel);
 		field.add(listPanel);
+		field.setOpaque(false);
 		this.add(field, this.fieldConstraints);
 
 		// Add preview panel and update it too.
+		PartitionTablePanel.this.updatePreview(previewData);
 		this.add(new JLabel(Resources.get("previewLabel")),
 				this.labelLastRowConstraints);
 		final JTable table = new JTable(previewData);
+		table.setGridColor(Color.LIGHT_GRAY); // Mac OSX.
 		table.setEnabled(false);
+		// Arbitrary table size.
+		table.setPreferredScrollableViewportSize(new Dimension(300, 150));
 		this.add(new JScrollPane(table), this.fieldLastRowConstraints);
 	}
 
@@ -644,6 +715,8 @@ public class PartitionTablePanel extends JPanel {
 		while (previewData.getRowCount() > 0)
 			previewData.removeRow(0);
 		// Populate new data.
+		previewData.setColumnIdentifiers(this.getPartitionTable()
+				.getColumnNames().toArray());
 		try {
 			this.getPartitionTable().prepareRows(null,
 					PartitionTablePanel.PREVIEW_ROW_COUNT);

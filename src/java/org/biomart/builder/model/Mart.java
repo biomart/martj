@@ -875,16 +875,10 @@ public class Mart {
 	/**
 	 * Bring all partition tables up to date with schema changes.
 	 */
-	public void synchronisePartitionTables() {
-		final List dead = new ArrayList();
-		for (final Iterator i = this.partitionTables.entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
-			if (!((PartitionTable)entry.getValue()).synchronize())
-				dead.add((PartitionTable)entry.getValue());
-		}
-		for (final Iterator i = dead.iterator(); i.hasNext(); ) {
-			this.removePartitionTable((PartitionTable)i.next());
-		}
+	public void synchronisePartitionTables() {	
+		Log.debug("Synchronising all partition tables");
+		for (final Iterator i = this.partitionTables.values().iterator(); i.hasNext(); ) 
+			((PartitionTable)i.next()).synchronize();
 	}
 	
 	/**
@@ -933,7 +927,7 @@ public class Mart {
 					nextDollar);
 			final PartitionColumn col = this.getPartitionColumn(alias);
 			if (col != null)
-				resolvedExpression.replace("\\$" + alias + "\\$", col
+				resolvedExpression = resolvedExpression.replace("$" + alias + "$", col
 						.getValueForRow(col.getPartitionTable().currentRow()));
 			previousDollar = nextDollar;
 			nextDollar = expression.indexOf('$', previousDollar + 1);

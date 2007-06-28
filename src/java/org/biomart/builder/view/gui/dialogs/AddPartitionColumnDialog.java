@@ -37,7 +37,6 @@ import javax.swing.JTextField;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.view.gui.panels.PartitionColumnModifierPanel;
 import org.biomart.builder.view.gui.panels.PartitionColumnModifierPanel.RegexColumnModifierPanel;
-import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.PartitionTable;
 import org.biomart.common.model.PartitionTable.PartitionColumn;
 import org.biomart.common.resources.Resources;
@@ -62,7 +61,7 @@ public class AddPartitionColumnDialog extends JDialog {
 	private PartitionColumnModifierPanel panel;
 
 	private JTextField name;
-	
+
 	private final PartitionTable table;
 
 	/**
@@ -84,7 +83,9 @@ public class AddPartitionColumnDialog extends JDialog {
 
 	/**
 	 * Creates but does not show a column partition dialog.
-	 * @param table the table this column is for.
+	 * 
+	 * @param table
+	 *            the table this column is for.
 	 */
 	public AddPartitionColumnDialog(final PartitionTable table) {
 		// Creates the basic dialog.
@@ -122,36 +123,35 @@ public class AddPartitionColumnDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create type chooser, name field, and panel holder.
-		content.add(new JLabel(Resources.get("partitionColumnTypeLabel")), labelConstraints);
+		content.add(new JLabel(Resources.get("partitionColumnTypeLabel")),
+				labelConstraints);
 		final JComboBox typeChooser = new JComboBox();
 		// Populate type list.
-		typeChooser.addItem(Resources.get("selectFromPartitionTableType"));
+		typeChooser.addItem(Resources.get("regexColumnType"));
 		// Add to dialog.
 		content.add(typeChooser, fieldConstraints);
-		content.add(new JLabel(Resources.get("regexColumnType")), labelConstraints);
+		content.add(new JLabel(Resources.get("partitionColumnNameLabel")),
+				labelConstraints);
 		this.name = new JTextField(20);
 		content.add(this.name, fieldConstraints);
 		final JPanel panelHolder = new JPanel();
 		content.add(panelHolder, fieldConstraints);
 		// Listener on type chooser updates panel holder.
 		typeChooser.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
+			public void actionPerformed(final ActionEvent evt) {
 				final Object obj = typeChooser.getSelectedItem();
+				panelHolder.removeAll();
 				if (obj != null) {
-					panelHolder.removeAll();
 					// Add new sub-panel based on selection.
 					if (obj.equals(Resources.get("regexColumnType"))) {
 						AddPartitionColumnDialog.this.panel = new RegexColumnModifierPanel(
 								AddPartitionColumnDialog.this.table, null);
 						panelHolder.add(AddPartitionColumnDialog.this.panel);
-					} else
-						// Never happens.
-						throw new BioMartError();
+					}
 				}
+				AddPartitionColumnDialog.this.pack();
 			}
 		});
-		// Select first option on type chooser.
-		typeChooser.setSelectedIndex(0);
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
@@ -185,6 +185,9 @@ public class AddPartitionColumnDialog extends JDialog {
 
 		// Make the execute button the default button.
 		this.getRootPane().setDefaultButton(this.execute);
+		
+		// Select first option on type chooser.
+		typeChooser.setSelectedItem(Resources.get("regexColumnType"));
 
 		// Set the size of the dialog.
 		this.pack();
@@ -224,8 +227,7 @@ public class AddPartitionColumnDialog extends JDialog {
 	 * @throws PartitionException
 	 *             if it could not be created.
 	 */
-	public PartitionColumn create()
-			throws PartitionException {
+	public PartitionColumn create() throws PartitionException {
 		return this.panel.create(this.name.getText().trim());
 	}
 }

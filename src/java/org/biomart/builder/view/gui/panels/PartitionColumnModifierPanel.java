@@ -252,8 +252,11 @@ public abstract class PartitionColumnModifierPanel extends JPanel {
 					this.labelConstraints);
 			this.sourceColumn = new JComboBox();
 			for (final Iterator i = table.getColumnNames().iterator(); i
-					.hasNext();)
-				this.sourceColumn.addItem((String) i.next());
+					.hasNext();) {
+				final String sourceCol = (String)i.next();
+				if (column==null || !sourceCol.equals(column.getName()))
+					this.sourceColumn.addItem(sourceCol);
+			}
 			this.add(this.sourceColumn, this.fieldConstraints);
 			// Second line = matching regex.
 			this.add(new JLabel(Resources.get("regexColumnMatchRegexLabel")),

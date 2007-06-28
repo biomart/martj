@@ -41,8 +41,8 @@ import org.biomart.common.resources.Resources;
  * A dialog which allows the user to choose a partition column, or none at all.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class PartitionSelectionDialog extends JDialog {
@@ -64,8 +64,8 @@ public class PartitionSelectionDialog extends JDialog {
 	 * @param startvalue
 	 *            the initial preselected arity.
 	 */
-	public PartitionSelectionDialog(
-			final Collection partitionOptions,final String title, final String startvalue) {
+	public PartitionSelectionDialog(final Collection partitionOptions,
+			final String title, final String startvalue) {
 		// Create the base dialog.
 		super();
 		this.setTitle(title);
@@ -96,7 +96,7 @@ public class PartitionSelectionDialog extends JDialog {
 			this.partitionBox.setSelected(startvalue != null);
 			if (startvalue != null)
 				this.partitionMenu.setSelectedItem(startvalue);
-			else 
+			else
 				this.partitionMenu.setSelectedIndex(0); // Default.
 		} else {
 			this.partitionBox.setSelected(false);
@@ -128,15 +128,24 @@ public class PartitionSelectionDialog extends JDialog {
 								.isSelected());
 			}
 		});
+		this.partitionMenu.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				PartitionSelectionDialog.this.partitionBox
+						.setSelected(PartitionSelectionDialog.this.partitionMenu
+								.getSelectedIndex() >= 0);
+			}
+		});
 
 		// Intercept the close button, which closes the dialog
 		// without taking any action.
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
-				PartitionSelectionDialog.this.partitionBox.setSelected(startvalue != null);
+				PartitionSelectionDialog.this.partitionBox
+						.setSelected(startvalue != null);
 				if (startvalue != null)
-					PartitionSelectionDialog.this.partitionMenu.setSelectedItem(startvalue);
+					PartitionSelectionDialog.this.partitionMenu
+							.setSelectedItem(startvalue);
 				PartitionSelectionDialog.this.setVisible(false);
 			}
 		});
@@ -175,7 +184,7 @@ public class PartitionSelectionDialog extends JDialog {
 		final List messages = new ArrayList();
 
 		// No validation required yet.
-		
+
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())
 			JOptionPane.showMessageDialog(null,

@@ -32,6 +32,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 
@@ -127,7 +128,7 @@ public class AddPartitionSubdivisionDialog extends JDialog {
 		this.cols.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		content.add(new JLabel(Resources.get("partitionSubdivisionColsLabel")),
 				labelConstraints);
-		content.add(this.cols, fieldConstraints);
+		content.add(new JScrollPane(this.cols), fieldConstraints);
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));

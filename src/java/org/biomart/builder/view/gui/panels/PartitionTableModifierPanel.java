@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -182,6 +183,8 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 		private JComboBox tableChoice;
 
 		private JList columnChoices;
+		
+		private JCheckBox distinct;
 
 		/**
 		 * Construct a new modification panel.
@@ -201,12 +204,12 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 			this.add(this.tableChoice, this.fieldConstraints);
 			// Second line is label and column multiselect.
 			this.add(new JLabel(Resources.get("selectFromInitialColsLabel")),
-					this.labelLastRowConstraints);
+					this.labelConstraints);
 			final DefaultListModel columns = new DefaultListModel();
 			this.columnChoices = new JList(columns);
 			this.columnChoices
 					.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-			this.add(new JScrollPane(this.columnChoices), this.fieldLastRowConstraints);
+			this.add(new JScrollPane(this.columnChoices), this.fieldConstraints);
 			// Listener on table selector changes columns in second line.
 			this.tableChoice.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
@@ -219,6 +222,10 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 							columns.addElement(i.next());
 				}
 			});
+			// Third line is distinct checkbox.
+			this.add(new JLabel(), this.labelLastRowConstraints);
+			this.distinct = new JCheckBox(Resources.get("selectFromDistinctLabel"));
+			this.add(this.distinct, this.fieldLastRowConstraints);
 		}
 
 		public String getType() {
@@ -233,6 +240,8 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 			if (this.getTable() == null) {
 				this.tableChoice.setSelectedIndex(0);
 			} else {
+				this.distinct.setSelected(((SelectPartitionTable) this
+						.getTable()).isDistinct());
 				this.tableChoice.setSelectedItem(((SelectPartitionTable) this
 						.getTable()).getTable());
 				final int indexes[] = new int[((SelectPartitionTable) this
@@ -255,6 +264,7 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 			pt.setTable((Table) this.tableChoice.getSelectedItem());
 			pt.setInitialSelectColumns(Arrays.asList(this.columnChoices
 					.getSelectedValues()));
+			pt.setDistinct(this.distinct.isSelected());
 		}
 
 		public boolean validateInput() {
@@ -282,6 +292,7 @@ public abstract class PartitionTableModifierPanel extends JPanel {
 			pt.setTable((Table) this.tableChoice.getSelectedItem());
 			pt.setInitialSelectColumns(Arrays.asList(this.columnChoices
 					.getSelectedValues()));
+			pt.setDistinct(this.distinct.isSelected());
 			return pt;
 		}
 	}

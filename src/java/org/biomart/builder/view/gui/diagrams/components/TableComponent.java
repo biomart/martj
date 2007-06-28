@@ -200,7 +200,7 @@ public class TableComponent extends BoxShapedComponent {
 				else
 					TableComponent.this.setState(Boolean.TRUE);
 				// Recalculate the diagram.
-				TableComponent.this.getDiagram().invalidate();
+				TableComponent.this.getDiagram().revalidate();
 			}
 		});
 

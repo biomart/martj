@@ -38,7 +38,6 @@ import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.panels.PartitionTableModifierPanel;
 import org.biomart.builder.view.gui.panels.PartitionTableModifierPanel.SelectFromModifierPanel;
-import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.PartitionTable;
 import org.biomart.common.resources.Resources;
 
@@ -82,7 +81,9 @@ public class AddPartitionTableDialog extends JDialog {
 
 	/**
 	 * Creates but does not show a table partition dialog.
-	 * @param martTab the mart tab we are working within.
+	 * 
+	 * @param martTab
+	 *            the mart tab we are working within.
 	 */
 	public AddPartitionTableDialog(final MartTab martTab) {
 		// Creates the basic dialog.
@@ -119,37 +120,33 @@ public class AddPartitionTableDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create type chooser, name field, and panel holder.
-		content.add(new JLabel(Resources.get("partitionTableTypeLabel")), labelConstraints);
+		content.add(new JLabel(Resources.get("partitionTableTypeLabel")),
+				labelConstraints);
 		final JComboBox typeChooser = new JComboBox();
 		// Populate type list.
 		typeChooser.addItem(Resources.get("selectFromPartitionTableType"));
 		// Add to dialog.
 		content.add(typeChooser, fieldConstraints);
-		content.add(new JLabel(Resources.get("partitionTableNameLabel")), labelConstraints);
+		content.add(new JLabel(Resources.get("partitionTableNameLabel")),
+				labelConstraints);
 		this.name = new JTextField(20);
 		content.add(this.name, fieldConstraints);
 		final JPanel panelHolder = new JPanel();
 		content.add(panelHolder, fieldConstraints);
 		// Listener on type chooser updates panel holder.
 		typeChooser.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
+			public void actionPerformed(final ActionEvent evt) {
 				final Object obj = typeChooser.getSelectedItem();
-				if (obj != null) {
-					panelHolder.removeAll();
-					// Add new sub-panel based on selection.
-					if (obj.equals(Resources
-							.get("selectFromPartitionTableType"))) {
-						AddPartitionTableDialog.this.panel = new SelectFromModifierPanel(
-								null, martTab.getMart().getAllTables());
-						panelHolder.add(AddPartitionTableDialog.this.panel);
-					} else
-						// Never happens.
-						throw new BioMartError();
+				panelHolder.removeAll();
+				// Add new sub-panel based on selection.
+				if (Resources.get("selectFromPartitionTableType").equals(obj)) {
+					AddPartitionTableDialog.this.panel = new SelectFromModifierPanel(
+							null, martTab.getMart().getAllTables());
+					panelHolder.add(AddPartitionTableDialog.this.panel);
 				}
+				AddPartitionTableDialog.this.pack();
 			}
 		});
-		// Select first option on type chooser.
-		typeChooser.setSelectedIndex(0);
 
 		// Create the buttons.
 		this.cancel = new JButton(Resources.get("cancelButton"));
@@ -183,6 +180,9 @@ public class AddPartitionTableDialog extends JDialog {
 
 		// Make the execute button the default button.
 		this.getRootPane().setDefaultButton(this.execute);
+
+		// Select first option on type chooser.
+		typeChooser.setSelectedItem(Resources.get("selectFromPartitionTableType"));
 
 		// Set the size of the dialog.
 		this.pack();

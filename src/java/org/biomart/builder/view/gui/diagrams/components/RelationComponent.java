@@ -378,7 +378,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 							: RelationComponent.ONE_MANY;
 		// Force repaint of area if stroke changed.
 		if (oldStroke != this.stroke) {
-			this.invalidate();
+			this.revalidate();
 			this.repaint(this.getBounds());
 		}
 	}

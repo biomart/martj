@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -97,8 +98,8 @@ public interface PartitionTable {
 
 	/**
 	 * Return the current row. If {@link #nextRow()} has not been called since
-	 * {@link #prepareRows(String, int)} was called, or you are calling this after a
-	 * failed call to {@link #nextRow()} then you will get an exception.
+	 * {@link #prepareRows(String, int)} was called, or you are calling this
+	 * after a failed call to {@link #nextRow()} then you will get an exception.
 	 * 
 	 * @return the current row.
 	 * @throws PartitionException
@@ -162,8 +163,7 @@ public interface PartitionTable {
 	 *            the column name.
 	 * @return the definition.
 	 * @throws PartitionException
-	 *             if there is no such column, or the column has been 'adopted'
-	 *             by a subdivision.
+	 *             if there is no such column.
 	 */
 	public PartitionColumn getColumn(final String name)
 			throws PartitionException;
@@ -204,7 +204,7 @@ public interface PartitionTable {
 	/**
 	 * Obtain the columns used for the subdivision.
 	 * 
-	 * @return the columns.
+	 * @return the columns. Never <tt>null</tt> but may be empty.
 	 */
 	public List getSubdivisionCols();
 
@@ -229,11 +229,8 @@ public interface PartitionTable {
 
 	/**
 	 * Update ourselves to match current schema and dataset values.
-	 * 
-	 * @return <tt>true</tt> if we survive, <tt>false</tt> if we should be
-	 *         deleted.
 	 */
-	public boolean synchronize();
+	public void synchronize();
 
 	/**
 	 * An abstract implementation from which others will extend. Anonymous inner
@@ -325,8 +322,7 @@ public interface PartitionTable {
 
 		public PartitionColumn getColumn(String name) throws PartitionException {
 			// Throw exception if it does not exist or is subdivided.
-			if (!this.columnMap.containsKey(name)
-					|| this.subdivisionCols.contains(name))
+			if (!this.columnMap.containsKey(name))
 				throw new PartitionException(Resources.get(
 						"partitionNoSuchColumn", name));
 			return (PartitionColumn) this.columnMap.get(name);
@@ -364,7 +360,7 @@ public interface PartitionTable {
 
 		public void removeSubDivision() {
 			this.subdivision = null;
-			this.subdivisionCols = null;
+			this.subdivisionCols.clear();
 			this.subdivisionName = null;
 		}
 
@@ -392,7 +388,7 @@ public interface PartitionTable {
 			// Update current row.
 			this.currentRow = (PartitionRow) this.rows.get(this.rowIterator++);
 			// Set up the sub-division table.
-			if (this.subdivisionCols != null) {
+			if (!this.subdivisionCols.isEmpty()) {
 				this.currentSubRows.clear();
 				this.currentSubRows.add(this.currentRow);
 				// Keep adding rows till find one not same.
@@ -404,8 +400,9 @@ public interface PartitionTable {
 							.hasNext()
 							&& keepGoing;) {
 						final String subColName = (String) i.next();
-						keepGoing &= this.currentRow.getValue(subColName)
-								.equals(subRow.getValue(subColName));
+						keepGoing &= this.columnMap.containsKey(subColName)
+								&& this.currentRow.getValue(subColName).equals(
+										subRow.getValue(subColName));
 					}
 					if (keepGoing) {
 						this.currentSubRows.add(subRow);
@@ -457,7 +454,7 @@ public interface PartitionTable {
 			if (oldName == newName || oldName.equals(newName))
 				return;
 			// Throw exception if immutable.
-			if (!this.getColumn(name).isMutable())
+			if (!this.getColumn(oldName).isMutable())
 				throw new PartitionException(Resources
 						.get("partitionChangeMutableCol"));
 			// Throw exception if new name is already used in col or
@@ -489,9 +486,8 @@ public interface PartitionTable {
 			return this.getName();
 		}
 
-		public boolean synchronize() {
+		public void synchronize() {
 			// We don't care.
-			return true;
 		}
 
 		/**
@@ -504,6 +500,8 @@ public interface PartitionTable {
 
 			private final Set initialSelectColumns = new HashSet();
 
+			private boolean distinct = false;
+
 			/**
 			 * Create a new table with a given name.
 			 * 
@@ -512,6 +510,27 @@ public interface PartitionTable {
 			 */
 			public SelectPartitionTable(final String name) {
 				super(name);
+			}
+
+			/**
+			 * Are we using 'distinct' in our SQL query? Defaults to
+			 * <tt>false</tt> or off.
+			 * 
+			 * @param distinct
+			 *            <tt>true</tt> if distinct should be used.
+			 */
+			public void setDistinct(final boolean distinct) {
+				this.distinct = distinct;
+			}
+
+			/**
+			 * Are we using 'distinct' in our SQL query? Defaults to
+			 * <tt>false</tt> or off.
+			 * 
+			 * @return <tt>true</tt> if distinct is used.
+			 */
+			public boolean isDistinct() {
+				return this.distinct;
 			}
 
 			/**
@@ -554,10 +573,13 @@ public interface PartitionTable {
 						throw new PartitionException(Resources
 								.get("initialSelectColumnMismatch"));
 				}
+				// Convert to FixedColumn representations.
+				for (final Iterator i = this.columnMap.keySet().iterator(); i
+						.hasNext();)
+					if (this.columnMap.get(i.next()) instanceof FixedColumn)
+						i.remove();
 				this.initialSelectColumns.clear();
 				this.initialSelectColumns.addAll(columns);
-				// Convert to FixedColumn representations.
-				this.columnMap.clear();
 				for (final Iterator i = this.initialSelectColumns.iterator(); i
 						.hasNext();) {
 					final String name = ((Column) i.next()).getName();
@@ -574,12 +596,10 @@ public interface PartitionTable {
 				return this.initialSelectColumns;
 			}
 
-			public boolean synchronize() {
+			public void synchronize() {
 				// Replace with identical new object.
 				this.table = this.table.getSchema().getTableByName(
 						this.table.getName());
-				if (this.table == null)
-					return false;
 				final Set newCols = new HashSet();
 				for (final Iterator i = this.initialSelectColumns.iterator(); i
 						.hasNext();) {
@@ -591,7 +611,6 @@ public interface PartitionTable {
 				}
 				this.initialSelectColumns.clear();
 				this.initialSelectColumns.addAll(newCols);
-				return this.initialSelectColumns.isEmpty();
 			}
 
 			protected List getRows(String schemaPartition, final int limit)
@@ -606,15 +625,17 @@ public interface PartitionTable {
 					return Collections.EMPTY_LIST;
 				final JDBCSchema jdbc = (JDBCSchema) schema;
 
+				// Connect.
 				Connection conn = null;
 				final List rows = new ArrayList();
 				int rowNum = 0;
-
 				try {
 					conn = jdbc.getConnection(schemaPartition);
 					// Construct SQL statement.
 					final StringBuffer sql = new StringBuffer();
 					sql.append("select ");
+					if (this.distinct)
+						sql.append("distinct ");
 					for (final Iterator i = this.initialSelectColumns
 							.iterator(); i.hasNext();) {
 						final Column col = (Column) i.next();
@@ -623,9 +644,8 @@ public interface PartitionTable {
 							sql.append(',');
 					}
 					sql.append(" from ");
-					sql.append(schemaPartition == null ? table.getSchema()
-							.getName() : (String) table.getSchema()
-							.getPartitions().get(schemaPartition));
+					sql.append(schemaPartition == null ? jdbc
+							.getDatabaseSchema() : schemaPartition);
 					sql.append('.');
 					sql.append(this.table.getName());
 
@@ -634,17 +654,22 @@ public interface PartitionTable {
 							.toString());
 					stmt.execute();
 					final ResultSet rs = stmt.getResultSet();
+					final Set colNames = new HashSet();
+					for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++)
+						colNames.add(rs.getMetaData().getColumnName(i));
 					while (rs.next() && (limit == -1 || rowNum < limit)) {
 						// Read rows.
+						final Map rowCols = new HashMap();
+						for (final Iterator i = colNames.iterator(); i
+								.hasNext();) {
+							final String colName = (String) i.next();
+							rowCols.put(colName, rs.getObject(colName));
+						}
 						final PartitionRow row = new PartitionRow(this,
 								rowNum++) {
 							public String getValue(String columnName)
 									throws PartitionException {
-								try {
-									return rs.getString(columnName);
-								} catch (final SQLException e) {
-									throw new PartitionException(e);
-								}
+								return "" + rowCols.get(columnName);
 							}
 						};
 						rows.add(row);
@@ -682,7 +707,7 @@ public interface PartitionTable {
 		 * 
 		 * @return the column name.
 		 */
-		public String getColumnName();
+		public String getName();
 
 		/**
 		 * Rename this column. Don't use - use the
@@ -740,7 +765,7 @@ public interface PartitionTable {
 				this.name = name;
 			}
 
-			public String getColumnName() {
+			public String getName() {
 				return this.name;
 			}
 
@@ -778,7 +803,7 @@ public interface PartitionTable {
 				if (!row.getPartitionTable().equals(this.getPartitionTable()))
 					throw new PartitionException(Resources
 							.get("partitionRowColMismatch"));
-				return row.getValue(this.getColumnName());
+				return row.getValue(this.getName());
 			}
 		}
 
@@ -786,7 +811,7 @@ public interface PartitionTable {
 		 * A regex column has values based on applying a regex to a value from
 		 * another column.
 		 */
-		public static class RegexColumn extends FixedColumn {
+		public static class RegexColumn extends AbstractColumn {
 
 			private String regexMatch = null;
 
@@ -875,7 +900,9 @@ public interface PartitionTable {
 
 			public String getValueForRow(final PartitionRow row)
 					throws PartitionException {
-				return this.compiled.matcher(super.getValueForRow(row))
+				return this.compiled.matcher(
+						this.getPartitionTable().getColumn(
+								this.sourceColumnName).getValueForRow(row))
 						.replaceAll(this.regexReplace);
 			}
 		}
@@ -950,7 +977,7 @@ public interface PartitionTable {
 		}
 
 		/**
-		 * Return the value in the given column.
+		 * Return the value in the given column. If null, returns "null".
 		 * 
 		 * @param columnName
 		 *            the column.

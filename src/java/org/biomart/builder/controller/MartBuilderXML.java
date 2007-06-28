@@ -660,24 +660,28 @@ public class MartBuilderXML extends DefaultHandler {
 				.hasNext();) {
 			final PartitionTable pt = (PartitionTable) psi.next();
 			Log.debug("Writing partition table: " + pt);
-			
+
 			String partitionTableType;
 			if (pt instanceof SelectPartitionTable)
 				partitionTableType = "selectPartitionTable";
 			else
 				throw new BioMartError(); // Never happens!
-			
+
 			this.openElement(partitionTableType, xmlWriter);
 			this.writeAttribute("name", pt.getName(), xmlWriter);
 
 			if (pt instanceof SelectPartitionTable) {
+				this.writeAttribute("distinct", 
+						Boolean.toString(((SelectPartitionTable) pt).isDistinct())
+						, xmlWriter);
 				// Table ID and Column IDs.
 				this.writeAttribute("tableId",
 						(String) this.reverseMappedObjects
-								.get(((SelectPartitionTable)pt).getTable()), xmlWriter);
+								.get(((SelectPartitionTable) pt).getTable()),
+						xmlWriter);
 				final List columnIds = new ArrayList();
-				for (final Iterator kci = ((SelectPartitionTable)pt).getInitialSelectColumns().iterator(); kci
-						.hasNext();)
+				for (final Iterator kci = ((SelectPartitionTable) pt)
+						.getInitialSelectColumns().iterator(); kci.hasNext();)
 					columnIds.add(this.reverseMappedObjects.get(kci.next()));
 				this.writeListAttribute("columnIds", (String[]) columnIds
 						.toArray(new String[0]), xmlWriter);
@@ -692,21 +696,22 @@ public class MartBuilderXML extends DefaultHandler {
 				} catch (final PartitionException pe) {
 					throw new BioMartError(pe); // Should never happen!
 				}
-				String colType = "fixedColumn";
-				if (col instanceof RegexColumn)
-					colType = "regexColumn";
-				this.openElement(colType, xmlWriter);
-				this.writeAttribute("name", pt.getName(), xmlWriter);
 				if (col instanceof RegexColumn) {
-					final RegexColumn rc = (RegexColumn) col;
-					this.writeAttribute("sourceColumn", rc
-							.getSourceColumn(), xmlWriter);
-					this.writeAttribute("regexMatch", rc.getRegexMatch(),
-							xmlWriter);
-					this.writeAttribute("regexReplace", rc.getRegexReplace(),
-							xmlWriter);
+					this.openElement("regexColumn", xmlWriter);
+					this.writeAttribute("name", col.getName(), xmlWriter);
+					if (col instanceof RegexColumn) {
+						final RegexColumn rc = (RegexColumn) col;
+						this.writeAttribute("sourceColumn", rc
+								.getSourceColumn(), xmlWriter);
+						this.writeAttribute("regexMatch", rc.getRegexMatch(),
+								xmlWriter);
+						this.writeAttribute("regexReplace", rc
+								.getRegexReplace(), xmlWriter);
+					}
+					this.closeElement("regexColumn", xmlWriter);
+				} else if (col instanceof FixedColumn) {
+					// Ignore Fixed Columns - they're automatic.
 				}
-				this.closeElement(colType, xmlWriter);
 			}
 
 			// Subdivisions.
@@ -2030,18 +2035,21 @@ public class MartBuilderXML extends DefaultHandler {
 			try {
 				final String name = (String) attributes.get("name");
 
+				final boolean distinct = Boolean.valueOf(
+						(String) attributes.get("distinct")).booleanValue();
 				// Get the table and initial cols.
-				final Table table = (Table) this.mappedObjects
-				.get(attributes.get("tableId"));
+				final Table table = (Table) this.mappedObjects.get(attributes
+						.get("tableId"));
 				// Decode the column IDs from the comma-separated list.
 				final String[] initialColIds = this.readListAttribute(
 						(String) attributes.get("columnIds"), false);
 				final List initialCols = new ArrayList();
 				for (int i = 0; i < initialColIds.length; i++)
 					initialCols.add(this.mappedObjects.get(initialColIds[i]));
-				
+
 				// Construct the table.
 				final SelectPartitionTable pt = new SelectPartitionTable(name);
+				pt.setDistinct(distinct);
 				pt.setTable(table);
 				pt.setInitialSelectColumns(initialCols);
 				this.constructedMart.addPartitionTable(pt);
@@ -2072,27 +2080,6 @@ public class MartBuilderXML extends DefaultHandler {
 				while (lastParent.getSubdivision() != null)
 					lastParent = lastParent.getSubdivision();
 				w.setSubDivision(Arrays.asList(subdivisionColumns), name);
-			} catch (final Exception e) {
-				if (e instanceof SAXException)
-					throw (SAXException) e;
-				else
-					throw new SAXException(e);
-			}
-		}
-
-		// Sub-partition (inside partition table)
-		else if ("fixedColumn".equals(eName)) {
-			// What partition does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof PartitionTable))
-				throw new SAXException(Resources
-						.get("fixedColumnOutsidePartitionTable"));
-			final PartitionTable w = (PartitionTable) this.objectStack.peek();
-
-			try {
-				final String name = (String) attributes.get("name");
-
-				w.addColumn(name, new FixedColumn(w, name));
 			} catch (final Exception e) {
 				if (e instanceof SAXException)
 					throw (SAXException) e;

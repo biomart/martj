@@ -849,7 +849,7 @@ public interface MartConstructor {
 				final PartitionColumn compoundPartition = dataset.getMart().getPartitionColumn(compoundDef
 						.getPartition());
 				if (compoundPartition != null
-						&& compoundPartition.getColumnName() != null) {
+						&& compoundPartition.getName() != null) {
 					if (ljtu.getSchemaRelationIteration() == 0)
 						compoundPartition.getPartitionTable().prepareRows(
 								schemaPartition, -1);
@@ -1099,9 +1099,9 @@ public interface MartConstructor {
 				finalName.append(schemaPartitionPrefix);
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
-			if (datasetPartition.getColumnName() != null) {
+			if (datasetPartition.getName() != null) {
 				finalName.append(datasetPartition.getPartitionTable()
-						.getColumn(datasetPartition.getColumnName())
+						.getColumn(datasetPartition.getName())
 						.getValueForRow(
 								datasetPartition.getPartitionTable()
 										.currentRow()));
@@ -1129,13 +1129,13 @@ public interface MartConstructor {
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("subclassSuffix"));
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-				if (datasetTablePartition.getColumnName() != null) {
+				if (datasetTablePartition.getName() != null) {
+					finalName.append(Resources.get("tablenameSubSep"));
 					finalName.append(datasetTablePartition.getPartitionTable()
-							.getColumn(datasetTablePartition.getColumnName())
+							.getColumn(datasetTablePartition.getName())
 							.getValueForRow(
 									datasetTablePartition.getPartitionTable()
 											.currentRow()));
-					finalName.append(Resources.get("tablenameSubSep"));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));
@@ -1159,9 +1159,9 @@ public interface MartConstructor {
 				final StringBuffer sb = new StringBuffer();
 				sb.append(dsTable.getModifiedName());
 				sb.append(Resources.get("tablenameSubSep"));
-				if (datasetTablePartition.getColumnName() != null) {
+				if (datasetTablePartition.getName() != null) {
 					sb.append(datasetTablePartition.getPartitionTable()
-							.getColumn(datasetTablePartition.getColumnName())
+							.getColumn(datasetTablePartition.getName())
 							.getValueForRow(
 									datasetTablePartition.getPartitionTable()
 											.currentRow()));
@@ -1198,9 +1198,9 @@ public interface MartConstructor {
 				finalName.append(schemaPartitionPrefix);
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
-			if (datasetPartition.getColumnName() != null) {
+			if (datasetPartition.getName() != null) {
 				finalName.append(datasetPartition.getPartitionTable()
-						.getColumn(datasetPartition.getColumnName())
+						.getColumn(datasetPartition.getName())
 						.getValueForRow(
 								datasetPartition.getPartitionTable()
 										.currentRow()));
@@ -1216,13 +1216,13 @@ public interface MartConstructor {
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("subclassSuffix"));
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-				if (datasetTablePartition.getColumnName() != null) {
+				if (datasetTablePartition.getName() != null) {
+					finalName.append(Resources.get("tablenameSubSep"));
 					finalName.append(datasetTablePartition.getPartitionTable()
-							.getColumn(datasetTablePartition.getColumnName())
+							.getColumn(datasetTablePartition.getName())
 							.getValueForRow(
 									datasetTablePartition.getPartitionTable()
 											.currentRow()));
-					finalName.append(Resources.get("tablenameSubSep"));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));

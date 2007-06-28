@@ -63,17 +63,15 @@
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
-<!ELEMENT selectPartitionTable (fixedColumn*,regexColumn*,subPartitionTable*)>
+<!ELEMENT selectPartitionTable (regexColumn*,subPartitionTable*)>
 <!ATTLIST selectPartitionTable name CDATA #REQUIRED>
 <!ATTLIST selectPartitionTable tableId IDREF #REQUIRED>
 <!ATTLIST selectPartitionTable columnIds IDREFS #REQUIRED>
+<!ATTLIST selectPartitionTable distinct (true|false) #REQUIRED>
 
 <!ELEMENT subPartitionTable EMPTY>
 <!ATTLIST subPartitionTable name CDATA #REQUIRED>
 <!ATTLIST subPartitionTable subdivisionColumns CDATA #IMPLIED>
-
-<!ELEMENT fixedColumn EMPTY>
-<!ATTLIST fixedColumn name CDATA #REQUIRED>
 
 <!ELEMENT regexColumn EMPTY>
 <!ATTLIST regexColumn name CDATA #REQUIRED>
