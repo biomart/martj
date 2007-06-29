@@ -180,7 +180,7 @@ public class SaveDDLDialog extends JDialog {
 		this.datasetsList
 				.setPrototypeCellValue("012345678901234567890123456789");
 
-		// Create a file chooser for finding the DDL/ZIP file we will save.
+		// Create a file chooser for finding the DDL file we will save.
 		this.outputFileChooser = new JFileChooser() {
 			private static final long serialVersionUID = 1L;
 
@@ -188,7 +188,7 @@ public class SaveDDLDialog extends JDialog {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
 					final String filename = file.getName();
-					final String extension = Resources.get("zipExtension");
+					final String extension = Resources.get("ddlExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -201,7 +201,7 @@ public class SaveDDLDialog extends JDialog {
 		this.outputFileChooser.setCurrentDirectory(currentDir == null ? null
 				: new File(currentDir));
 		this.outputFileChooser.setFileFilter(new FileFilter() {
-			// Accepts only files ending in ".zip" or ".ddl".
+			// Accepts only files ending in ".zip".
 			public boolean accept(final File f) {
 				return f.isDirectory()
 						|| f.getName().toLowerCase().endsWith(
@@ -209,7 +209,7 @@ public class SaveDDLDialog extends JDialog {
 			}
 
 			public String getDescription() {
-				return Resources.get("ZipDDLFileFilterDescription");
+				return Resources.get("ZIPDDLFileFilterDescription");
 			}
 		});
 		final JLabel outputFileLabel = new JLabel(Resources

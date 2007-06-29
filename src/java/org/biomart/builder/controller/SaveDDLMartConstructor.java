@@ -82,8 +82,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 * mart and outputting DDL to a file.
 	 * 
 	 * @param outputFile
-	 *            the file to write the DDL to. Single-file granularity will
-	 *            write this file in plain text. Multi-file granularity will
+	 *            the file to write the DDL to. Multi-file granularity will
 	 *            write this file as a gzipped tar archive containing many plain
 	 *            text files.
 	 */
