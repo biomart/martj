@@ -37,7 +37,6 @@ import javax.swing.event.MenuListener;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
-import org.biomart.common.model.PartitionTable;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
@@ -154,15 +153,7 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem indexOptimiser;
 
-		private JMenuItem addPartitionTable;
-
-		private JMenuItem renamePartitionTable;
-
-		private JMenuItem replicatePartitionTable;
-
-		private JMenuItem removePartitionTable;
-
-		private JMenuItem removeAllPartitionTables;
+		private JMenuItem convertPartitionTable;
 
 		/**
 		 * Constructor calls super then sets up our menu items.
@@ -362,6 +353,13 @@ public class MartBuilder extends BioMartGUI {
 					"suggestInvisibleDatasetsMnemonic").charAt(0));
 			this.extendDataset.addActionListener(this);
 
+			// Convert dataset.
+			this.convertPartitionTable = new JCheckBoxMenuItem(Resources
+					.get("convertPartitionTableTitle"));
+			this.convertPartitionTable.setMnemonic(Resources.get(
+					"convertPartitionTableMnemonic").charAt(0));
+			this.convertPartitionTable.addActionListener(this);
+
 			// Make a submenu for the optimiser type.
 			this.optimiseDatasetSubmenu = new JMenu(Resources
 					.get("optimiserTitle"));
@@ -398,44 +396,6 @@ public class MartBuilder extends BioMartGUI {
 					"indexOptimiserMnemonic").charAt(0));
 			this.indexOptimiser.addActionListener(this);
 			this.optimiseDatasetSubmenu.add(this.indexOptimiser);
-
-			// Add new partition table.
-			this.addPartitionTable = new JMenuItem(Resources
-					.get("addPartitionTableTitle"), new ImageIcon(Resources
-					.getResourceAsURL("add.gif")));
-			this.addPartitionTable.setMnemonic(Resources.get(
-					"closeMartMnemonic").charAt(0));
-			this.addPartitionTable.addActionListener(this);
-
-			// Rename partition table.
-			this.renamePartitionTable = new JMenuItem(Resources
-					.get("renamePartitionTableTitle"));
-			this.renamePartitionTable.setMnemonic(Resources.get(
-					"renamePartitionTableMnemonic").charAt(0));
-			this.renamePartitionTable.addActionListener(this);
-
-			// Replicate partition table.
-			this.replicatePartitionTable = new JMenuItem(Resources
-					.get("replicatePartitionTableTitle"));
-			this.replicatePartitionTable.setMnemonic(Resources.get(
-					"replicatePartitionTableMnemonic").charAt(0));
-			this.replicatePartitionTable.addActionListener(this);
-
-			// Remove partition table.
-			this.removePartitionTable = new JMenuItem(Resources
-					.get("removePartitionTableTitle"), new ImageIcon(Resources
-					.getResourceAsURL("cut.gif")));
-			this.removePartitionTable.setMnemonic(Resources.get(
-					"removePartitionTableMnemonic").charAt(0));
-			this.removePartitionTable.addActionListener(this);
-
-			// Remove all partition tables.
-			this.removeAllPartitionTables = new JMenuItem(Resources
-					.get("removeAllPartitionTablesTitle"), new ImageIcon(
-					Resources.getResourceAsURL("cut.gif")));
-			this.removeAllPartitionTables.setMnemonic(Resources.get(
-					"removeAllPartitionTablesMnemonic").charAt(0));
-			this.removeAllPartitionTables.addActionListener(this);
 
 			// Construct the file menu.
 			final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
@@ -493,6 +453,8 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.add(this.partitionDataset);
 			datasetMenu.add(this.optimiseDatasetSubmenu);
 			datasetMenu.addSeparator();
+			datasetMenu.add(this.convertPartitionTable);
+			datasetMenu.addSeparator();
 			datasetMenu.add(this.explainDataset);
 			datasetMenu.add(this.saveDatasetDDL);
 			datasetMenu.addSeparator();
@@ -501,18 +463,6 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.add(this.removeDataset);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.extendDataset);
-
-			// Construct the dataset menu.
-			final JMenu partitionTableMenu = new JMenu(Resources
-					.get("partitionTableMenuTitle"));
-			partitionTableMenu.setMnemonic(Resources.get(
-					"partitionTableMenuMnemonic").charAt(0));
-			partitionTableMenu.add(this.addPartitionTable);
-			partitionTableMenu.add(this.removeAllPartitionTables);
-			partitionTableMenu.addSeparator();
-			partitionTableMenu.add(this.renamePartitionTable);
-			partitionTableMenu.add(this.replicatePartitionTable);
-			partitionTableMenu.add(this.removePartitionTable);
 
 			// Add a listener which checks which options to enable each time the
 			// menu is opened. This mean that if no mart is currently selected,
@@ -671,7 +621,9 @@ public class MartBuilder extends BioMartGUI {
 					MartBuilderMenuBar.this.partitionDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.partitionDataset
-							.setSelected(ds != null && ds.getDataSetModifications().isDatasetPartition());
+							.setSelected(ds != null
+									&& ds.getDataSetModifications()
+											.isDatasetPartition());
 					MartBuilderMenuBar.this.explainDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.saveDatasetDDL
@@ -686,6 +638,10 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.optimiseDatasetSubmenu
 							.setEnabled(ds != null);
+					MartBuilderMenuBar.this.convertPartitionTable
+							.setEnabled(ds != null);
+					MartBuilderMenuBar.this.convertPartitionTable
+							.setSelected(ds != null && ds.isPartitionTable());
 				}
 			});
 			this.optimiseDatasetSubmenu.addMenuListener(new MenuListener() {
@@ -719,45 +675,11 @@ public class MartBuilder extends BioMartGUI {
 					}
 				}
 			});
-			partitionTableMenu.addMenuListener(new MenuListener() {
-				public void menuCanceled(final MenuEvent e) {
-				} // Interface requirement.
-
-				public void menuDeselected(final MenuEvent e) {
-				} // Interface requirement.
-
-				public void menuSelected(final MenuEvent e) {
-					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
-							.getSelectedMartTab() == null)
-						hasMart = false;
-					MartBuilderMenuBar.this.removeAllPartitionTables
-							.setEnabled(hasMart
-									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
-											.getSelectedMartTab()
-											.getPartitionTableTabSet()
-											.getComponentCount() > 1);
-					final PartitionTable ds;
-					if (hasMart)
-						ds = MartBuilderMenuBar.this.getMartBuilder().martTabSet
-								.getSelectedMartTab().getPartitionTableTabSet()
-								.getSelectedPartitionTable();
-					else
-						ds = null;
-					MartBuilderMenuBar.this.renamePartitionTable
-							.setEnabled(ds != null);
-					MartBuilderMenuBar.this.replicatePartitionTable
-							.setEnabled(ds != null);
-					MartBuilderMenuBar.this.removePartitionTable
-							.setEnabled(ds != null);
-				}
-			});
 
 			// Adds the menus to the menu bar.
 			this.add(martMenu);
 			this.add(schemaMenu);
 			this.add(datasetMenu);
-			this.add(partitionTableMenu);
 		}
 
 		private MartBuilder getMartBuilder() {
@@ -855,6 +777,12 @@ public class MartBuilder extends BioMartGUI {
 						.getSelectedDataSet();
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestModifyDataSetPartition(ds);
+			} else if (e.getSource() == this.convertPartitionTable) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestConvertPartitionTable(ds);
 			} else if (e.getSource() == this.explainDataset) {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
@@ -902,36 +830,6 @@ public class MartBuilder extends BioMartGUI {
 				else
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestNoIndexOptimiser(ds);
-			}
-			// Partition table menu.
-			else if (e.getSource() == this.addPartitionTable)
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getPartitionTableTabSet().requestAddPartitionTable();
-			else if (e.getSource() == this.removeAllPartitionTables)
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getPartitionTableTabSet()
-						.requestRemoveAllPartitionTables();
-			else if (e.getSource() == this.renamePartitionTable) {
-				final PartitionTable ds = this.getMartBuilder().martTabSet
-						.getSelectedMartTab().getPartitionTableTabSet()
-						.getSelectedPartitionTable();
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getPartitionTableTabSet().requestRenamePartitionTable(
-								ds);
-			} else if (e.getSource() == this.replicatePartitionTable) {
-				final PartitionTable ds = this.getMartBuilder().martTabSet
-						.getSelectedMartTab().getPartitionTableTabSet()
-						.getSelectedPartitionTable();
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getPartitionTableTabSet()
-						.requestReplicatePartitionTable(ds);
-			} else if (e.getSource() == this.removePartitionTable) {
-				final PartitionTable ds = this.getMartBuilder().martTabSet
-						.getSelectedMartTab().getPartitionTableTabSet()
-						.getSelectedPartitionTable();
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getPartitionTableTabSet().requestRemovePartitionTable(
-								ds);
 			}
 			// Others
 			else

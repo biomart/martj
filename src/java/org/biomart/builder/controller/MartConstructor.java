@@ -53,6 +53,8 @@ import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
+import org.biomart.builder.model.PartitionTable.PartitionColumn;
+import org.biomart.builder.model.PartitionTable.PartitionColumn.FakeColumn;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -64,8 +66,6 @@ import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.PartitionTable.PartitionColumn;
-import org.biomart.common.model.PartitionTable.PartitionColumn.FakeColumn;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -294,9 +294,10 @@ public interface MartConstructor {
 
 				// Loop over dataset partitions.
 				final PartitionColumn datasetPartition = dataset
-						.getDataSetModifications().isDatasetPartition() ? dataset.getMart().getPartitionColumn(
-								dataset
-						.getDataSetModifications().getDatasetPartition())
+						.getDataSetModifications().isDatasetPartition() ? dataset
+						.getMart().getPartitionColumn(
+								dataset.getDataSetModifications()
+										.getDatasetPartition())
 						: new FakeColumn();
 				datasetPartition.getPartitionTable().prepareRows(
 						(String) schemaPartition.getKey(), -1);
@@ -308,13 +309,16 @@ public interface MartConstructor {
 							// Loop over dataset table partitions.
 							final PartitionColumn datasetTablePartition = dataset
 									.getDataSetModifications()
-									.isTablePartition(dsTable) ? dataset.getMart().getPartitionColumn(dataset
-									.getDataSetModifications()
-									.getTablePartition(dsTable))
+									.isTablePartition(dsTable) ? dataset
+									.getMart()
+									.getPartitionColumn(
+											dataset.getDataSetModifications()
+													.getTablePartition(dsTable))
 									: new FakeColumn();
 							datasetTablePartition.getPartitionTable()
 									.prepareRows(
-											(String) schemaPartition.getKey(), -1);
+											(String) schemaPartition.getKey(),
+											-1);
 							while (datasetTablePartition.getPartitionTable()
 									.nextRow()) {
 								if (!this
@@ -846,8 +850,8 @@ public interface MartConstructor {
 				final CompoundRelationDefinition compoundDef = dataset
 						.getSchemaModifications().getCompoundRelation(dsTable,
 								ljtu.getSchemaRelation());
-				final PartitionColumn compoundPartition = dataset.getMart().getPartitionColumn(compoundDef
-						.getPartition());
+				final PartitionColumn compoundPartition = dataset.getMart()
+						.getPartitionColumn(compoundDef.getPartition());
 				if (compoundPartition != null
 						&& compoundPartition.getName() != null) {
 					if (ljtu.getSchemaRelationIteration() == 0)
@@ -1101,7 +1105,7 @@ public interface MartConstructor {
 			}
 			if (datasetPartition.getName() != null) {
 				finalName.append(datasetPartition.getPartitionTable()
-						.getColumn(datasetPartition.getName())
+						.getSelectedColumn(datasetPartition.getName())
 						.getValueForRow(
 								datasetPartition.getPartitionTable()
 										.currentRow()));
@@ -1131,11 +1135,9 @@ public interface MartConstructor {
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				if (datasetTablePartition.getName() != null) {
 					finalName.append(Resources.get("tablenameSubSep"));
-					finalName.append(datasetTablePartition.getPartitionTable()
-							.getColumn(datasetTablePartition.getName())
-							.getValueForRow(
-									datasetTablePartition.getPartitionTable()
-											.currentRow()));
+					finalName.append(datasetTablePartition
+							.getValueForRow(datasetTablePartition
+									.getPartitionTable().currentRow()));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));
@@ -1160,11 +1162,9 @@ public interface MartConstructor {
 				sb.append(dsTable.getModifiedName());
 				sb.append(Resources.get("tablenameSubSep"));
 				if (datasetTablePartition.getName() != null) {
-					sb.append(datasetTablePartition.getPartitionTable()
-							.getColumn(datasetTablePartition.getName())
-							.getValueForRow(
-									datasetTablePartition.getPartitionTable()
-											.currentRow()));
+					sb.append(datasetTablePartition
+							.getValueForRow(datasetTablePartition
+									.getPartitionTable().currentRow()));
 					sb.append(Resources.get("tablenameSubSep"));
 				}
 				if (++counter > 0) {
@@ -1199,11 +1199,9 @@ public interface MartConstructor {
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
 			if (datasetPartition.getName() != null) {
-				finalName.append(datasetPartition.getPartitionTable()
-						.getColumn(datasetPartition.getName())
-						.getValueForRow(
-								datasetPartition.getPartitionTable()
-										.currentRow()));
+				finalName.append(datasetPartition
+						.getValueForRow(datasetPartition.getPartitionTable()
+								.currentRow()));
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
 			finalName.append(dsTable.getSchema().getName());
@@ -1218,11 +1216,9 @@ public interface MartConstructor {
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				if (datasetTablePartition.getName() != null) {
 					finalName.append(Resources.get("tablenameSubSep"));
-					finalName.append(datasetTablePartition.getPartitionTable()
-							.getColumn(datasetTablePartition.getName())
-							.getValueForRow(
-									datasetTablePartition.getPartitionTable()
-											.currentRow()));
+					finalName.append(datasetTablePartition
+							.getValueForRow(datasetTablePartition
+									.getPartitionTable().currentRow()));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));

@@ -1105,8 +1105,6 @@ public class SchemaTabSet extends JTabbedPane {
 				SchemaTabSet.this.recalculateAllSchemaDiagrams();
 				SchemaTabSet.this.martTab.getDataSetTabSet()
 						.recalculateDataSetTabs();
-				SchemaTabSet.this.martTab.getPartitionTableTabSet()
-						.recalculatePartitionTableTabs();
 
 				// Update the modified status for this tabset.
 				SchemaTabSet.this.martTab.getMartTabSet()
@@ -1132,8 +1130,6 @@ public class SchemaTabSet extends JTabbedPane {
 				SchemaTabSet.this.recalculateSchemaDiagram(schema);
 				SchemaTabSet.this.martTab.getDataSetTabSet()
 						.recalculateDataSetTabs();
-				SchemaTabSet.this.martTab.getPartitionTableTabSet()
-						.recalculatePartitionTableTabs();
 
 				// Update the modified status for this tabset.
 				SchemaTabSet.this.martTab.getMartTabSet()

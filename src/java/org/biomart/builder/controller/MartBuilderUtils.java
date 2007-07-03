@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
@@ -40,7 +39,6 @@ import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
-import org.biomart.common.model.PartitionTable;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
@@ -167,7 +165,6 @@ public class MartBuilderUtils {
 			throws SQLException, DataModelException {
 		CommonUtils.synchroniseSchema(schema);
 		mart.synchroniseDataSets(schema);
-		mart.synchronisePartitionTables();
 	}
 
 	/**
@@ -205,19 +202,6 @@ public class MartBuilderUtils {
 	 */
 	public static void setOutputPort(final Mart mart, final String outputPort) {
 		mart.setOutputPort(outputPort);
-	}
-
-	/**
-	 * Adds a partition to a mart.
-	 * 
-	 * @param mart
-	 *            the mart to add the schema to.
-	 * @param partition
-	 *            the partition to add to the mart.
-	 */
-	public static void addPartitionTableToMart(final Mart mart,
-			final PartitionTable partition) {
-		mart.addPartitionTable(partition);
 	}
 
 	/**
@@ -921,21 +905,6 @@ public class MartBuilderUtils {
 	}
 
 	/**
-	 * Drops a partition table from a mart. Normally you'd expect this kind of
-	 * routine to throw {@link AssociationException}s, but not here, because we
-	 * don't care if the table never existed in the first place.
-	 * 
-	 * @param mart
-	 *            the mart to remove the table from.
-	 * @param partition
-	 *            the partition table to drop.
-	 */
-	public static void removePartitionTableFromMart(final Mart mart,
-			final PartitionTable partition) {
-		mart.removePartitionTable(partition);
-	}
-
-	/**
 	 * Drops a dataset from a mart. Normally you'd expect this kind of routine
 	 * to throw {@link AssociationException}s, but not here, because we don't
 	 * care if the dataset never existed in the first place.
@@ -1032,22 +1001,6 @@ public class MartBuilderUtils {
 	public static void removeSchemaFromMart(final Mart mart, final Schema schema)
 			throws SQLException, DataModelException {
 		mart.removeSchema(schema);
-	}
-
-	/**
-	 * Renames a partition within a mart.
-	 * 
-	 * @param mart
-	 *            the mart to rename the dataset in.
-	 * @param partition
-	 *            the partition to rename.
-	 * @param newName
-	 *            the new name to give the partition. If it is the same as the
-	 *            old name, no action is taken.
-	 */
-	public static void renamePartitionTable(final Mart mart,
-			final PartitionTable partition, final String newName) {
-		mart.renamePartitionTable(partition, newName);
 	}
 
 	/**
@@ -1161,28 +1114,6 @@ public class MartBuilderUtils {
 		final Schema newSchema = schema.replicate(newName);
 		mart.addSchema(newSchema);
 		return newSchema;
-	}
-
-	/**
-	 * Creates an exact copy of a partition table within the mart, giving it the
-	 * name specified.
-	 * 
-	 * @param mart
-	 *            the mart to create the copy of the partition in.
-	 * @param partition
-	 *            the partition to copy.
-	 * @param newName
-	 *            the name to give the copy of the partition.
-	 * @return the copy of the partition.
-	 * @throws PartitionException
-	 *             if it is not possible.
-	 */
-	public static PartitionTable replicatePartitionTable(final Mart mart,
-			final PartitionTable partition, final String newName)
-			throws PartitionException {
-		final PartitionTable newPartition = partition.replicate(newName);
-		mart.addPartitionTable(newPartition);
-		return newPartition;
 	}
 
 	/**

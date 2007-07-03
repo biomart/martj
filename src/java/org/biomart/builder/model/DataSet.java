@@ -18,9 +18,13 @@
 
 package org.biomart.builder.model;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,11 +32,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
+import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.PartitionTable.AbstractPartitionTable;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
@@ -82,6 +89,10 @@ public class DataSet extends GenericSchema {
 
 	private boolean invisible;
 
+	private boolean isPartitionTable;
+
+	private PartitionTable partitionTable;
+
 	private final Mart mart;
 
 	private final Collection includedRelations;
@@ -124,6 +135,158 @@ public class DataSet extends GenericSchema {
 		this.dsMods = new DataSetModificationSet(this);
 		this.includedRelations = new HashSet();
 		this.includedSchemas = new HashSet();
+		this.isPartitionTable = false;
+		this.partitionTable = null;
+	}
+
+	/**
+	 * Is this dataset a partition table?
+	 * 
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isPartitionTable() {
+		return this.isPartitionTable;
+	}
+
+	/**
+	 * Convert/Revert partition table status.
+	 * 
+	 * @param isPartitionTable
+	 *            <tt>true</tt> if this dataset is to be a partition table.
+	 * @throws PartitionException
+	 *             if this dataset cannot be converted. You should use
+	 *             {@link #isConvertableToPartitionTable()} to check first
+	 *             before calling this if you want to avoid the exception.
+	 */
+	public void setPartitionTable(final boolean isPartitionTable)
+			throws PartitionException {
+		this.isPartitionTable = isPartitionTable;
+		if (isPartitionTable)
+			this.partitionTable = new AbstractPartitionTable() {
+
+				// Keep map in alphabetical order.
+				private final Map allCols = new TreeMap();
+
+				public String getName() {
+					return DataSet.this.getName();
+				}
+
+				public Collection getAllColumnNames() {
+					if (this.allCols.isEmpty())
+						for (final Iterator i = DataSet.this.getMainTable()
+								.getColumns().iterator(); i.hasNext();) {
+							final DataSetColumn col = (DataSetColumn) i.next();
+							this.allCols.put(col.getModifiedName(), col
+									.getName());
+						}
+					return this.allCols.keySet();
+				}
+
+				protected List getRows(String schemaPartition, final int limit)
+						throws PartitionException {
+					if (this.getSelectedColumnNames().isEmpty())
+						throw new PartitionException(Resources
+								.get("initialColumnsNotSpecified"));
+
+					// Obtain schema.
+					final Schema schema = DataSet.this.getMainTable()
+							.getSchema();
+					if (!(schema instanceof JDBCSchema))
+						return Collections.EMPTY_LIST;
+					final JDBCSchema jdbc = (JDBCSchema) schema;
+
+					// Connect.
+					Connection conn = null;
+					final List rows = new ArrayList();
+					int rowNum = 0;
+					try {
+						conn = jdbc.getConnection(schemaPartition);
+						// Construct SQL statement.
+						final StringBuffer sql = new StringBuffer();
+						sql.append("select distinct ");
+						// TODO Make a map of columns in statement to
+						// named columns in results. Use allCols to
+						// map modified names back to real names in
+						// order to track down dataset column objects.
+						// Update position map with column modified names.
+						// Keys are column names, values are integers.
+						int nextCol = 1; // ResultSet is 1-indexed.
+						final Map positionMap = new HashMap();
+
+						// Run it.
+						final PreparedStatement stmt = conn
+								.prepareStatement(sql.toString());
+						stmt.execute();
+						final ResultSet rs = stmt.getResultSet();
+						while (rs.next()
+								&& (limit == PartitionTable.UNLIMITED_ROWS || rowNum < limit)) {
+							// Read rows.
+							final Map rowCols = new HashMap();
+							// Populate rowCols with column names as
+							// keys and values as objects.
+							for (final Iterator i = positionMap.entrySet()
+									.iterator(); i.hasNext();) {
+								final Map.Entry entry = (Map.Entry) i.next();
+								rowCols.put(entry.getKey(), rs
+										.getObject(((Integer) entry.getValue())
+												.intValue()));
+							}
+							// Build the row from rowCols.
+							final PartitionRow row = new PartitionRow(this,
+									rowNum++) {
+								public String getValue(String columnName)
+										throws PartitionException {
+									return "" + rowCols.get(columnName);
+								}
+							};
+							rows.add(row);
+						}
+					} catch (final SQLException e) {
+						throw new PartitionException(e);
+					} finally {
+						if (conn != null)
+							try {
+								conn.close();
+							} catch (final SQLException e2) {
+								// Don't care.
+							}
+					}
+
+					return rows;
+				}
+			};
+		else
+			this.partitionTable = null;
+	}
+
+	/**
+	 * Check to see if this dataset is convertable to partition table status.
+	 * 
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isConvertableToPartitionTable() {
+		// The answer is yes, but only if our main table has no
+		// group-by expression columns and nothing uses partitions.
+		if (this.dsMods.isDatasetPartition()
+				|| !this.dsMods.getTablePartitions().isEmpty())
+			return false;
+		final Collection exprs = (Collection) this.dsMods
+				.getExpressionColumns().get(this.getMainTable().getName());
+		if (exprs != null)
+			for (final Iterator i = exprs.iterator(); i.hasNext();)
+				if (((ExpressionColumnDefinition) i.next()).isGroupBy())
+					return false;
+		return true;
+	}
+
+	/**
+	 * Get the partition table representation of this dataset.
+	 * 
+	 * @return a {@link PartitionTable} object providing partition table data
+	 *         based on this dataset's main table.
+	 */
+	public PartitionTable asPartitionTable() {
+		return this.partitionTable;
 	}
 
 	/**

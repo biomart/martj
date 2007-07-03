@@ -34,16 +34,15 @@ import java.util.TreeSet;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
-import org.biomart.common.model.PartitionTable;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
-import org.biomart.common.model.PartitionTable.PartitionColumn;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -58,10 +57,6 @@ import org.biomart.common.resources.Resources;
  */
 public class Mart {
 	private static final long serialVersionUID = 1L;
-
-	// OK to use map, as keys are strings and never change.
-	// Use tree map to keep them in alphabetical order.
-	private final Map partitionTables = new TreeMap();
 
 	// OK to use map, as keys are strings and never change.
 	// Use tree map to keep them in alphabetical order.
@@ -306,26 +301,6 @@ public class Mart {
 	}
 
 	/**
-	 * Adds a partition table to the mart.
-	 * 
-	 * @param partitionTable
-	 *            the table to add.
-	 */
-	public void addPartitionTable(final PartitionTable partitionTable) {
-		Log.debug("Adding partition table " + partitionTable);
-		String name = partitionTable.getName();
-		final String baseName = partitionTable.getName();
-		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.partitionTables.containsKey(name); name = baseName
-				+ "_" + i++)
-			;
-		partitionTable.setName(name);
-		Log.debug("Unique name is " + name);
-		// Add it.
-		this.partitionTables.put(partitionTable.getName(), partitionTable);
-	}
-
-	/**
 	 * Adds a schema to the set which this mart includes. It is renamed if one
 	 * with that name already exists.
 	 * 
@@ -368,27 +343,6 @@ public class Mart {
 	}
 
 	/**
-	 * Returns the partition table object with the given name.
-	 * 
-	 * @param name
-	 *            the name to look for.
-	 * @return a partition table object matching the specified name.
-	 */
-	public PartitionTable getPartitionTableByName(final String name) {
-		return (PartitionTable) this.partitionTables.get(name);
-	}
-
-	/**
-	 * Returns the set of partition table objects which this mart includes. The
-	 * set may be empty but it is never <tt>null</tt>.
-	 * 
-	 * @return a set of partition table objects.
-	 */
-	public Collection getPartitionTables() {
-		return this.partitionTables.values();
-	}
-
-	/**
 	 * Returns the set of partition column names which this mart includes. The
 	 * set may be empty but it is never <tt>null</tt>.
 	 * 
@@ -398,23 +352,13 @@ public class Mart {
 	 */
 	public Collection getPartitionColumnNames() {
 		final List colNames = new ArrayList();
-		// Iterate over every table and recurse.
-		for (final Iterator i = this.getPartitionTables().iterator(); i
-				.hasNext();) {
-			PartitionTable tab = (PartitionTable) i.next();
-			String prefix = null;
-			do {
-				if (prefix == null)
-					prefix = tab.getName();
-				else
-					prefix += "." + tab.getName();
-				for (final Iterator j = tab.getColumnNames().iterator(); j
-						.hasNext();) {
-					final String colName = (String) j.next();
-					colNames.add(prefix + "." + colName);
-				}
-			} while ((tab = tab.getSubdivision()) != null);
+		for (final Iterator i = this.getDataSets().iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
+			if (ds.isPartitionTable())
+				colNames.addAll(ds.asPartitionTable().getSelectedColumnNames());
 		}
+		while (colNames.contains(PartitionTable.DIV_COLUMN))
+			colNames.remove(PartitionTable.DIV_COLUMN);
 		// Tidy up.
 		Collections.sort(colNames);
 		return colNames;
@@ -441,7 +385,7 @@ public class Mart {
 	public Collection getSchemas() {
 		return this.schemas.values();
 	}
-	
+
 	/**
 	 * Obtain all tables from all schemas.
 	 * 
@@ -449,20 +393,9 @@ public class Mart {
 	 */
 	public Collection getAllTables() {
 		final List tables = new ArrayList();
-		for (final Iterator i = this.getSchemas().iterator(); i.hasNext(); )
-			tables.addAll(((Schema)i.next()).getTables());
+		for (final Iterator i = this.getSchemas().iterator(); i.hasNext();)
+			tables.addAll(((Schema) i.next()).getTables());
 		return tables;
-	}
-
-	/**
-	 * Removes a partition table from the set which this mart includes.
-	 * 
-	 * @param partitionTable
-	 *            the partition table to remove.
-	 */
-	public void removePartitionTable(final PartitionTable partitionTable) {
-		Log.debug("Removing partitionTable " + partitionTable);
-		this.partitionTables.remove(partitionTable.getName());
 	}
 
 	/**
@@ -519,31 +452,6 @@ public class Mart {
 		this.datasets.remove(dataset.getName());
 		dataset.setName(name);
 		this.datasets.put(name, dataset);
-	}
-
-	/**
-	 * Renames a partition table. This call cascades to the table itself and
-	 * renames that too.
-	 * 
-	 * @param partitionTable
-	 *            the partition table to rename.
-	 * @param name
-	 *            the new name for it.
-	 */
-	public void renamePartitionTable(final PartitionTable partitionTable,
-			String name) {
-		Log.debug("Renaming partition table " + partitionTable + " as " + name);
-		final String baseName = name;
-		// Check we don't have one by this name already. Alias if we do.
-		for (int i = 1; this.partitionTables.containsKey(name)
-				&& !name.equals(partitionTable.getName()); name = baseName
-				+ "_" + i++)
-			;
-		Log.debug("Unique name is " + name);
-		// Rename it.
-		this.partitionTables.remove(partitionTable.getName());
-		partitionTable.setName(name);
-		this.partitionTables.put(name, partitionTable);
 	}
 
 	/**
@@ -869,21 +777,11 @@ public class Mart {
 			((Schema) i.next()).synchronise();
 		// Then, synchronise datasets.
 		this.synchroniseDataSets();
-		this.synchronisePartitionTables();
 	}
 
 	/**
-	 * Bring all partition tables up to date with schema changes.
-	 */
-	public void synchronisePartitionTables() {	
-		Log.debug("Synchronising all partition tables");
-		for (final Iterator i = this.partitionTables.values().iterator(); i.hasNext(); ) 
-			((PartitionTable)i.next()).synchronize();
-	}
-	
-	/**
-	 * Using the descriptor (table[.subtable[.subtable]*]*.column) return the
-	 * actual column from a {@link PartitionTable}.
+	 * Using the descriptor (table.column) return the actual column from a
+	 * {@link PartitionTable} or subdivision thereof.
 	 * 
 	 * @param descriptor
 	 *            the descriptor.
@@ -891,16 +789,12 @@ public class Mart {
 	 */
 	public PartitionColumn getPartitionColumn(final String descriptor) {
 		final String[] parts = descriptor.split("\\.");
-		PartitionTable table = this.getPartitionTableByName(parts[0]);
-		for (int i = 1; table != null && i < parts.length; i++) {
-			if (parts[i].equals(table.getSubdivisionName()))
-				table = table.getSubdivision();
-			else
-				try {
-					return table.getColumn(parts[i]);
-				} catch (final PartitionException pe) {
-					return null;
-				}
+		PartitionTable table = this.getDataSetByName(parts[0])
+				.asPartitionTable();
+		try {
+			return table.getSelectedColumn(parts[1]);
+		} catch (final PartitionException pe) {
+			// Ignore.
 		}
 		return null;
 	}
@@ -927,30 +821,12 @@ public class Mart {
 					nextDollar);
 			final PartitionColumn col = this.getPartitionColumn(alias);
 			if (col != null)
-				resolvedExpression = resolvedExpression.replace("$" + alias + "$", col
-						.getValueForRow(col.getPartitionTable().currentRow()));
+				resolvedExpression = resolvedExpression.replace("$" + alias
+						+ "$", col.getValueForRow(col.getPartitionTable()
+						.currentRow()));
 			previousDollar = nextDollar;
 			nextDollar = expression.indexOf('$', previousDollar + 1);
 		}
 		return resolvedExpression;
-	}
-
-	/**
-	 * Obtain a list of all partition table column aliases available
-	 * 
-	 * @return a list of all partition table aliases available.
-	 */
-	public Collection listAllPartitionTableColumns() {
-		final List aliases = new ArrayList();
-		final List tables = new ArrayList();
-		tables.addAll(this.getPartitionTables());
-		for (int i = 0; i < tables.size(); i++) {
-			final PartitionTable pt = (PartitionTable) tables.get(i);
-			for (final Iterator j = pt.getColumnNames().iterator(); j.hasNext();)
-				aliases.add(pt.getName() + "." + j.next());
-			if (pt.getSubdivision() != null)
-				tables.add(pt.getSubdivision());
-		}
-		return aliases;
 	}
 }

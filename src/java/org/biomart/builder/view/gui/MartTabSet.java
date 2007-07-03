@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,6 +52,7 @@ import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.MartRunnerConnectionDialog;
@@ -154,7 +156,6 @@ public class MartTabSet extends JTabbedPane {
 		// Within that tab, select the all-schemas and all-datasets tabs.
 		martTab.getDataSetTabSet().setSelectedIndex(0);
 		martTab.getSchemaTabSet().setSelectedIndex(0);
-		martTab.getPartitionTableTabSet().setSelectedIndex(0);
 	}
 
 	/**
@@ -463,7 +464,13 @@ public class MartTabSet extends JTabbedPane {
 
 		// If the mart has no datasets, ignore the request.
 		final Mart mart = currentMartTab.getMart();
-		final Collection datasets = mart.getDataSets();
+		final Collection datasets = new ArrayList(mart.getDataSets());
+		// Remove partition table datasets from the list.
+		for (final Iterator i = datasets.iterator(); i.hasNext(); ) {
+			final DataSet ds = (DataSet)i.next();
+			if (ds.isPartitionTable())
+				i.remove();
+		}
 		if (datasets.size() == 0)
 			JOptionPane.showMessageDialog(null, Resources
 					.get("noDatasetsToGenerate"),
@@ -781,8 +788,6 @@ public class MartTabSet extends JTabbedPane {
 
 		private SchemaTabSet schemaTabSet;
 
-		private PartitionTableTabSet partitionTableTabSet;
-
 		/**
 		 * Constructs a new tab in the tabbed pane that represents the given
 		 * mart.
@@ -809,12 +814,6 @@ public class MartTabSet extends JTabbedPane {
 			final JPanel headerPanel = new JPanel(new BorderLayout());
 			final JPanel buttonsPanel = new JPanel();
 			headerPanel.add(buttonsPanel, BorderLayout.CENTER);
-
-			// Add the Biomart logo to the buttons panel.
-			final JLabel logo = new JLabel(new ImageIcon(Resources
-					.getResourceAsURL("biomart-logo.gif")));
-			logo.setBorder(new EmptyBorder(2, 2, 2, 2));
-			headerPanel.add(logo, BorderLayout.NORTH);
 
 			// Create the Run DDL button.
 			final JButton runDDL = new JButton(Resources.get("runDDLButton"),
@@ -854,6 +853,12 @@ public class MartTabSet extends JTabbedPane {
 			});
 			buttonsPanel.add(this.schemaButton);
 
+			// Add the Biomart logo to the buttons panel.
+			final JLabel logo = new JLabel(new ImageIcon(Resources
+					.getResourceAsURL("biomart-logo.gif")));
+			logo.setBorder(new EmptyBorder(2, 2, 2, 2));
+			buttonsPanel.add(logo);
+
 			// Create the dataset tabset.
 			this.datasetTabSet = new DataSetTabSet(this);
 
@@ -875,33 +880,10 @@ public class MartTabSet extends JTabbedPane {
 			});
 			buttonsPanel.add(this.datasetButton);
 
-			// Create the partition table tabset.
-			this.partitionTableTabSet = new PartitionTableTabSet(this);
-
-			// Partition table card.
-			this.displayArea.add(this.partitionTableTabSet,
-					"PARTITIONTABLE_EDITOR_CARD");
-
-			// Create the button that selects the dataset card.
-			this.partitionTableButton = new JRadioButton(Resources
-					.get("partitionTableEditorButtonName"));
-			this.partitionTableButton.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent e) {
-					if (e.getSource() == MartTab.this.partitionTableButton) {
-						final CardLayout cards = (CardLayout) MartTab.this.displayArea
-								.getLayout();
-						cards.show(MartTab.this.displayArea,
-								"PARTITIONTABLE_EDITOR_CARD");
-					}
-				}
-			});
-			buttonsPanel.add(this.partitionTableButton);
-
 			// Make buttons mutually exclusive.
 			final ButtonGroup buttons = new ButtonGroup();
 			buttons.add(this.schemaButton);
 			buttons.add(this.datasetButton);
-			buttons.add(this.partitionTableButton);
 
 			// Add the buttons panel, and the display area containing the cards,
 			// to the panel.
@@ -948,16 +930,6 @@ public class MartTabSet extends JTabbedPane {
 		 */
 		public SchemaTabSet getSchemaTabSet() {
 			return this.schemaTabSet;
-		}
-
-		/**
-		 * Obtain the tabbed pane set inside this one that represents the
-		 * partition tables in this mart.
-		 * 
-		 * @return the tabbed pane set showing the partition table in this mart.
-		 */
-		public PartitionTableTabSet getPartitionTableTabSet() {
-			return this.partitionTableTabSet;
 		}
 
 		/**

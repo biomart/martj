@@ -105,10 +105,6 @@ Inter-schema (external) relations (if any)
 ==========================================
 <xsl:apply-templates select="./relation"/> 
 
-Partition Tables (if any)
-=========================
-<xsl:apply-templates select="./selectPartitionTable"/>
-
 Datasets
 ========
 <xsl:apply-templates select="./dataset"/> 
@@ -172,32 +168,6 @@ Relation:
          From: <xsl:apply-templates select="key('ids',@firstKeyId)"/>           
          To: <xsl:apply-templates select="key('ids',@secondKeyId)"/></xsl:template>
 
-<!-- PARTITION TABLES -->
-<xsl:template match="selectPartitionTable">
-
-Name: <xsl:value-of select="@name"/>
-Focused on: 
-      Schema: <xsl:apply-templates select="key('ids',@tableId)/../@name"/> 
-       Table: <xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@tableId"/></xsl:call-template>
-     Columns: <xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@columnIds"/></xsl:call-template>
-Distinct values?: <xsl:value-of select="@distinct"/>
-<xsl:apply-templates select="./regexColumn"/>
-<xsl:apply-templates select="./subPartitionTable"/>
-
-</xsl:template>
-
-<xsl:template match="regexColumn">
-Regex column: <xsl:value-of select="@name"/>
-  Source column name: <xsl:value-of select="key('ids',@sourceColumnId)/@cardinality"/> 
-  Regex for matching: <xsl:value-of select="@regexMatch"/>
-  Regex for replacing: <xsl:value-of select="@regexReplace"/>
-</xsl:template>
-
-<xsl:template match="subPartitionTable">
-Subdivision:
-  Name: <xsl:value-of select="@name"/>
-  Columns: <xsl:value-of select="@subdivisionColumns"/></xsl:template>
-
 <!-- DATASETS -->
 <xsl:template match="/mart/dataset">
 
@@ -212,6 +182,7 @@ Optimiser type: <xsl:value-of select="@optimiser"/>
 Optimisers indexed?: <xsl:value-of select="@indexOptimiser"/>
 Invisible?: <xsl:value-of select="@invisible"/>
 <xsl:if test="@partition">Partition using: <xsl:value-of select="@partition"/></xsl:if>
+<xsl:if test="@partition">Is a partition table?: <xsl:value-of select="@isPartitionTable"/></xsl:if>
 
 Dataset-wide modifications (if-any)
 ------------------------------------
@@ -225,6 +196,14 @@ Table-level modifications (if any)
 
 
 <!-- DATASET AND SCHEMA MODS -->
+
+<xsl:template match="partitionRegex">
+
+Regex on partition column: <xsl:value-of select="@name"/>
+  Match:   <xsl:value-of select="@match"/>
+  Replace: <xsl:value-of select="@replace"/>
+
+</xsl:template>
 
 <xsl:template match="dimensionPartition">
 

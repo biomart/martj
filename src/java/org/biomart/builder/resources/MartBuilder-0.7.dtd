@@ -22,7 +22,7 @@
 # since: 0.1
 -->
 
-<!ELEMENT mart (jdbcSchema+,selectPartitionTable*,dataset*,relation*)>
+<!ELEMENT mart (jdbcSchema+,dataset*,relation*)>
 <!ATTLIST mart outputSchema CDATA #IMPLIED>
 <!ATTLIST mart outputHost CDATA #IMPLIED>
 <!ATTLIST mart outputPort CDATA #IMPLIED>
@@ -63,34 +63,25 @@
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
-<!ELEMENT selectPartitionTable (regexColumn*,subPartitionTable*)>
-<!ATTLIST selectPartitionTable name CDATA #REQUIRED>
-<!ATTLIST selectPartitionTable tableId IDREF #REQUIRED>
-<!ATTLIST selectPartitionTable columnIds IDREFS #REQUIRED>
-<!ATTLIST selectPartitionTable distinct (true|false) #REQUIRED>
-
-<!ELEMENT subPartitionTable EMPTY>
-<!ATTLIST subPartitionTable name CDATA #REQUIRED>
-<!ATTLIST subPartitionTable subdivisionColumns CDATA #IMPLIED>
-
-<!ELEMENT regexColumn EMPTY>
-<!ATTLIST regexColumn name CDATA #REQUIRED>
-<!ATTLIST regexColumn sourceColumn CDATA #REQUIRED>
-<!ATTLIST regexColumn regexMatch CDATA #REQUIRED>
-<!ATTLIST regexColumn regexReplace CDATA #REQUIRED>
-
 <!ELEMENT dataset (
-compoundRelation*,subclassRelation*,maskedColumn*,
+partitionRegex*,compoundRelation*,subclassRelation*,maskedColumn*,
 indexedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,loopbackRelation*,forcedRelation*,restrictedTable*,
 restrictedRelation*,expressionColumn*,directionalRelation*,renamedTable*,
-renamedColumn*,distinctRows*)>
+renamedColumn*,distinctRows*,dimensionPartition*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL|COLUMN_BOOL_NULL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
 <!ATTLIST dataset indexOptimiser (true|false) #REQUIRED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
 <!ATTLIST dataset partition CDATA #IMPLIED>
+<!ATTLIST dataset isPartitionTable (true|false) #IMPLIED>
+<!ATTLIST dataset selectedColumns CDATA #REQUIRED>
+
+<!ELEMENT partitionRegex EMPTY>
+<!ATTLIST partitionRegex name CDATA #REQUIRED>
+<!ATTLIST partitionRegex match CDATA #REQUIRED>
+<!ATTLIST partitionRegex replace CDATA #REQUIRED>
 
 <!ELEMENT subclassRelation EMPTY>
 <!ATTLIST subclassRelation relationId IDREF #REQUIRED>

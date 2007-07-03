@@ -48,6 +48,7 @@ import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
 import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
+import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
@@ -58,6 +59,7 @@ import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionSelectionDialog;
+import org.biomart.builder.view.gui.dialogs.PartitionTableDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
@@ -164,6 +166,9 @@ public class DataSetTabSet extends JTabbedPane {
 		if (selectDataset) {
 			// Fake a click on the dataset tab.
 			this.setSelectedIndex(this.indexOfTab(dataset.getName()));
+			this.setBackgroundAt(this.indexOfTab(dataset.getName()), dataset
+					.isPartitionTable() ? DataSetComponent.PARTITION_BACKGROUND
+					: null);
 			this.martTab.selectDataSetEditor();
 		}
 
@@ -480,9 +485,15 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to show the dialog for.
 	 */
 	public void requestCreateDDL(final DataSet dataset) {
+		// If it is a partition table dataset, refuse.
+		if (dataset.isPartitionTable())
+			JOptionPane.showMessageDialog(this, Resources
+					.get("noDDLForPartitionTable"), Resources
+					.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
 		// Open the DDL creation dialog and let it do it's stuff.
-		(new SaveDDLDialog(this.martTab, Collections.singleton(dataset),
-				SaveDDLDialog.VIEW_DDL)).setVisible(true);
+		else
+			(new SaveDDLDialog(this.martTab, Collections.singleton(dataset),
+					SaveDDLDialog.VIEW_DDL)).setVisible(true);
 	}
 
 	/**
@@ -1239,6 +1250,30 @@ public class DataSetTabSet extends JTabbedPane {
 						.requestChangeModifiedStatus(true);
 			}
 		}.start();
+	}
+
+	/**
+	 * Pop up a dialog explaining the current partition table conversion status
+	 * of this dataset. The dialog will do any updating necessary and return a
+	 * flag indicating this.
+	 * 
+	 * @param ds
+	 *            the dataset to modify partition table info for.
+	 */
+	public void requestConvertPartitionTable(final DataSet ds) {
+		if (PartitionTableDialog.modifyDataSet(ds)) {
+			// Change the tab colour of the dataset as appropriate.
+			this.setBackgroundAt(this.indexOfTab(ds.getName()), ds
+					.isPartitionTable() ? DataSetComponent.PARTITION_BACKGROUND
+					: null);
+			
+			// Update the overview diagram.
+			DataSetTabSet.this.repaintOverviewDiagram();
+
+			// Update the modified status for this tabset.
+			DataSetTabSet.this.martTab.getMartTabSet()
+					.requestChangeModifiedStatus(true);
+		}
 	}
 
 	/**
