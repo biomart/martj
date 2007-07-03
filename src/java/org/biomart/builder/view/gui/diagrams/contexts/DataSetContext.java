@@ -41,6 +41,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
+import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
@@ -138,8 +139,12 @@ public class DataSetContext extends SchemaContext {
 			final DataSetTableType tableType = ((DataSetTable) object)
 					.getType();
 
+			// Highlight partitioned main tables.
+			if (tableType.equals(DataSetTableType.MAIN) && this.getDataSet().isPartitionTable())
+				component.setBackground(DataSetComponent.PARTITION_BACKGROUND);
+			
 			// Fade MASKED DIMENSION relations.
-			if (this.getDataSet().getDataSetModifications().isMaskedTable(
+			else if (this.getDataSet().getDataSetModifications().isMaskedTable(
 					(DataSetTable) object)) {
 				component.setVisible(!this.hideMasked);
 				component.setForeground(TableComponent.MASKED_COLOUR);

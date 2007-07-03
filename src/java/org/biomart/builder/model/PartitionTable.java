@@ -31,6 +31,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.common.model.Schema.JDBCSchema;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -348,6 +349,7 @@ public interface PartitionTable {
 
 		public void prepareRows(final String schemaPartition, final int limit)
 				throws PartitionException {
+			Log.debug("Preparing rows");
 			this.currentRow = null;
 			this.rows = this.getRows(schemaPartition, limit);
 			this.rowIterator = 0;
@@ -428,15 +430,10 @@ public interface PartitionTable {
 		 *            the row.
 		 * @return the value.
 		 * @throws PartitionException
-		 *             if there were problems getting the value, or if the row
-		 *             and column are not on the same table.
+		 *             if there were problems getting the value.
 		 */
 		public String getValueForRow(final PartitionRow row)
 				throws PartitionException {
-			// Check row+col in same table, exception if not.
-			if (!row.getPartitionTable().equals(this.getPartitionTable()))
-				throw new PartitionException(Resources
-						.get("partitionRowColMismatch"));
 			if (this.compiled != null)
 				return this.compiled.matcher(row.getValue(this.getName()))
 						.replaceAll(this.regexReplace);

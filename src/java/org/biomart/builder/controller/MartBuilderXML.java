@@ -861,27 +861,19 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("tableId",
 							(String) this.reverseMappedObjects.get(entry2
 									.getKey()), xmlWriter);
-					final StringBuffer rels = new StringBuffer();
 					final StringBuffer cols = new StringBuffer();
 					final StringBuffer names = new StringBuffer();
 					for (final Iterator z = restrict.getAliases().entrySet()
 							.iterator(); z.hasNext();) {
 						Map.Entry entry3 = (Map.Entry) z.next();
-						final Object[] crPair = (Object[]) entry3.getKey();
-						if (crPair[0] != null)
-							rels.append((String) this.reverseMappedObjects
-									.get(crPair[0]));
 						cols.append((String) this.reverseMappedObjects
-								.get(crPair[1]));
+								.get((Column) entry3.getKey()));
 						names.append((String) entry3.getValue());
 						if (z.hasNext()) {
-							rels.append(',');
 							cols.append(',');
 							names.append(',');
 						}
 					}
-					this.writeAttribute("aliasRelationIds", rels.toString(),
-							xmlWriter);
 					this.writeAttribute("aliasColumnIds", cols.toString(),
 							xmlWriter);
 					this.writeAttribute("aliasNames", names.toString(),
@@ -1819,21 +1811,16 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Get the aliases to use for the first table.
 				final Map aliases = new HashMap();
-				String[] aliasRelationIds = this.readListAttribute(
-						(String) attributes.get("aliasRelationIds"), true);
 				final String[] aliasColumnIds = this.readListAttribute(
 						(String) attributes.get("aliasColumnIds"), false);
 				// Remove
 				final String[] aliasNames = this.readListAttribute(
 						(String) attributes.get("aliasNames"), false);
 				for (int i = 0; i < aliasColumnIds.length; i++) {
-					final Relation wrel = aliasRelationIds[i] != null ? (Relation) this.mappedObjects
-							.get(aliasRelationIds[i])
-							: null;
 					final Column wcol = (Column) this.mappedObjects
 							.get(aliasColumnIds[i]);
 					if (wcol != null)
-						aliases.put(new Object[] { wrel, wcol }, aliasNames[i]);
+						aliases.put(wcol, aliasNames[i]);
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");

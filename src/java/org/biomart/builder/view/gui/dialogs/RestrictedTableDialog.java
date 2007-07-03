@@ -24,7 +24,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -38,11 +37,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.biomart.builder.model.SchemaModificationSet;
-import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel.CRPairStringTablePanel;
+import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -119,22 +117,10 @@ public class RestrictedTableDialog extends JDialog {
 		this.hard = new JCheckBox(Resources.get("hardLabel"));
 
 		// Work out what column/relation pairs are available to us.
-		final List colsAvailable = new ArrayList();
-		for (final Iterator j = table.getColumns().iterator(); j.hasNext();)
-			colsAvailable.add(new Object[] { null, j.next() });
-		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
-			final Relation rel = (Relation) i.next();
-			if (rel.isOneToMany()
-					&& rel.getManyKey().getTable().equals(table)
-					&& rel.getOneKey().getTable().getSchema().equals(
-							table.getSchema()))
-				for (final Iterator j = rel.getOneKey().getTable().getColumns()
-						.iterator(); j.hasNext();)
-					colsAvailable.add(new Object[] { rel, j.next() });
-		}
+		final List colsAvailable = new ArrayList(table.getColumns());
 
 		// Table aliases.
-		this.columnAliasModel = new CRPairStringTablePanel(
+		this.columnAliasModel = new ColumnStringTablePanel(
 				template == null ? null : template.getAliases(), colsAvailable) {
 			private static final long serialVersionUID = 1L;
 

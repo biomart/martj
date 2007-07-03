@@ -48,7 +48,6 @@ import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
 import org.biomart.builder.view.gui.diagrams.DataSetDiagram;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
-import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
@@ -166,9 +165,6 @@ public class DataSetTabSet extends JTabbedPane {
 		if (selectDataset) {
 			// Fake a click on the dataset tab.
 			this.setSelectedIndex(this.indexOfTab(dataset.getName()));
-			this.setBackgroundAt(this.indexOfTab(dataset.getName()), dataset
-					.isPartitionTable() ? DataSetComponent.PARTITION_BACKGROUND
-					: null);
 			this.martTab.selectDataSetEditor();
 		}
 
@@ -566,6 +562,15 @@ public class DataSetTabSet extends JTabbedPane {
 				.getMart().getPartitionColumnNames(), Resources
 				.get("datasetPartitionTitle"), ds.getDataSetModifications()
 				.getDatasetPartition());
+		// TODO Below is optional extra 'wizard' thingy - not compulsory.
+		// TODO Ask which column in dataset main table to apply this to,
+		// then automatically set up a table restriction on the table
+		// sourcing that column.
+		// Make it a hard restriction.
+		// If the selected partition column has subdivisions, recursively
+		// ask which column to apply each to until asked to stop, and
+		// create partition-linked compound relations and table restrictions 
+		// as appropriate.
 		dialog.setVisible(true);
 		new LongProcess() {
 			public void run() throws Exception {
@@ -597,6 +602,14 @@ public class DataSetTabSet extends JTabbedPane {
 				.getMart().getPartitionColumnNames(), Resources
 				.get("datasetTablePartitionTitle"), ds
 				.getDataSetModifications().getTablePartition(dsTable));
+		// TODO Below is optional extra 'wizard' thingy - not compulsory.
+		// TODO Ask which column in dimension table to apply this to,
+		// then automatically set up a table restriction on the
+		// table sourcing that column. Make it a hard restriction.
+		// If the selected partition column has subdivisions, recursively
+		// ask which column to apply each to until asked to stop, and
+		// create partition-linked compound relations and table restrictions 
+		// as appropriate.
 		dialog.setVisible(true);
 		new LongProcess() {
 			public void run() throws Exception {
@@ -1263,9 +1276,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestConvertPartitionTable(final DataSet ds) {
 		if (PartitionTableDialog.modifyDataSet(ds)) {
 			// Change the tab colour of the dataset as appropriate.
-			this.setBackgroundAt(this.indexOfTab(ds.getName()), ds
-					.isPartitionTable() ? DataSetComponent.PARTITION_BACKGROUND
-					: null);
+			DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 			
 			// Update the overview diagram.
 			DataSetTabSet.this.repaintOverviewDiagram();

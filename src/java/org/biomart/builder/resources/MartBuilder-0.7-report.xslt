@@ -61,27 +61,6 @@
   </xsl:choose>
 </xsl:template>
 
-<xsl:template name="threeColumnPrintoutWithTwoIds">
-  <xsl:param name="str1"/>
-  <xsl:param name="str2"/>
-  <xsl:param name="str3"/>
-  <xsl:choose>
-    <xsl:when test="contains($str1,',')">
-      <xsl:value-of select="key('ids',substring-before($str1,','))/@name"/> [<xsl:apply-templates select="key('ids',substring-before($str2,','))"/>] => <xsl:value-of select="substring-before($str3,',')"/>
-<xsl:text><!-- This prints a blank line -->
-</xsl:text>
-      <xsl:call-template name="twoColumnPrintout">
-        <xsl:with-param name="str1" select="substring-after($str1,',')"/>
-        <xsl:with-param name="str2" select="substring-after($str2,',')"/>
-        <xsl:with-param name="str3" select="substring-after($str3,',')"/>
-      </xsl:call-template>
-    </xsl:when>
-    <xsl:otherwise>
-      <xsl:value-of select="key('ids',$str1)/@name"/> [<xsl:apply-templates select="key('ids',$str2)"/>] => <xsl:value-of select="$str3"/>
-    </xsl:otherwise>
-  </xsl:choose>
-</xsl:template>
-
 
 <!-- MART -->
 <xsl:template match="/mart">
@@ -307,7 +286,7 @@ Restricted table:
          Schema: <xsl:value-of select="key('ids',@tableId)/../@name"/>
           Table: <xsl:value-of select="key('ids',@tableId)/@name"/>
 Aliases:
-<xsl:call-template name="threeColumnPrintoutWithTwoIds"><xsl:with-param name="str1" select="@aliasColumnIds"/><xsl:with-param name="str2" select="@aliasRelationIds"/><xsl:with-param name="str3" select="@aliasNames"/></xsl:call-template>
+<xsl:call-template name="twoColumnPrintoutWithOneId"><xsl:with-param name="str1" select="@aliasColumnIds"/><xsl:with-param name="str2" select="@aliasNames"/></xsl:call-template>
 Expression:
 <xsl:value-of select="@expression"/>
 Hard restriction?: <xsl:value-of select="@hard"/>

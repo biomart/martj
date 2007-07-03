@@ -21,7 +21,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,10 +39,7 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Column;
 import org.biomart.common.model.DataLink;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Table;
 import org.biomart.common.model.DataLink.JDBCDataLink;
 
 /**
@@ -102,14 +98,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String fromTableSchema = action.getSchema();
 		final String fromTableName = action.getTable();
 
-		// Work out additional tables to include in this.
-		char additionalTable = 'f';
-		final Map additionalRels = new HashMap();
-		if (action.getTableRestriction() != null)
-			for (final Iterator i = action.getTableRestriction()
-					.getAdditionalRelations().iterator(); i.hasNext();)
-				additionalRels.put((Relation) i.next(), "" + additionalTable++);
-
 		statements.add("set search_path=" + createTableSchema + ","
 				+ fromTableSchema + ",pg_catalog");
 
@@ -130,35 +118,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
-		for (final Iterator k = additionalRels.entrySet().iterator(); k
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) k.next();
-			final Relation rel = (Relation) entry.getKey();
-			final Table tbl = (Table) rel.getOneKey().getTable();
-			sb.append(" inner join ");
-			sb.append(fromTableSchema);
-			sb.append(".");
-			sb.append(tbl.getName());
-			sb.append(" as ");
-			sb.append((String) entry.getValue());
-			sb.append(" on ");
-			final List aCols = rel.getManyKey().getColumns();
-			final List joinCols = rel.getOneKey().getColumns();
-			for (int i = 0; i < aCols.size(); i++) {
-				if (i > 0)
-					sb.append(" and ");
-				sb.append("a.");
-				sb.append(((Column) aCols.get(i)).getName());
-				sb.append('=');
-				sb.append((String) entry.getValue());
-				sb.append('.');
-				sb.append(((Column) joinCols.get(i)).getName());
-			}
-		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" where ");
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					additionalRels, "a", action.getResolvedTableRestriction()));
+					"a", action.getResolvedTableRestriction()));
 		}
 
 		statements.add(sb.toString());
@@ -293,14 +256,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		// Work out additional tables to include in this.
-		char additionalTable = 'f';
-		final Map additionalRels = new HashMap();
-		if (action.getTableRestriction() != null)
-			for (final Iterator i = action.getTableRestriction()
-					.getAdditionalRelations().iterator(); i.hasNext();)
-				additionalRels.put((Relation) i.next(), "" + additionalTable++);
-
 		final String joinType = action.getRelationRestriction() != null
 				&& action.getRelationRestriction().isHard()
 				|| action.getTableRestriction() != null
@@ -341,44 +296,14 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
 					action.isRelationRestrictionLeftIsFirst(),
+					!action.isRelationRestrictionLeftIsFirst(),
 					action.getRelationRestrictionPreviousUnit(), action.getResolvedRelationRestriction()));
 		}
-		if (action.getTableRestriction() != null && additionalRels.isEmpty()) {
+		if (action.getTableRestriction() != null) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					additionalRels, "b", action.getResolvedTableRestriction()));
+					"b", action.getResolvedTableRestriction()));
 			sb.append(')');
-		}
-		for (final Iterator k = additionalRels.entrySet().iterator(); k
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) k.next();
-			final Relation rel = (Relation) entry.getKey();
-			final Table tbl = (Table) rel.getOneKey().getTable();
-			sb.append(" " + joinType + " join ");
-			sb.append(trgtSchemaName);
-			sb.append(".");
-			sb.append(tbl.getName());
-			sb.append(' ');
-			sb.append((String) entry.getValue());
-			sb.append(" on ");
-			final List aCols = rel.getManyKey().getColumns();
-			final List joinCols = rel.getOneKey().getColumns();
-			for (int i = 0; i < aCols.size(); i++) {
-				if (i > 0)
-					sb.append(" and ");
-				sb.append("b.");
-				sb.append('.');
-				sb.append(((Column) aCols.get(i)).getName());
-				sb.append('=');
-				sb.append((String) entry.getValue());
-				sb.append('.');
-				sb.append(((Column) joinCols.get(i)).getName());
-			}
-		}
-		if (action.getTableRestriction() != null && !additionalRels.isEmpty()) {
-			sb.append(" where ");
-			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					additionalRels, "b", action.getResolvedTableRestriction()));
 		}
 
 		statements.add(sb.toString());

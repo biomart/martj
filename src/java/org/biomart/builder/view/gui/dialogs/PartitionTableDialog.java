@@ -43,8 +43,11 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
 import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.table.DefaultTableModel;
 
@@ -297,8 +300,7 @@ public class PartitionTableDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				final Object selected = keyColList.getSelectedValue();
 				if (selected != null) {
-					final int currIndex = PartitionTableDialog.this.selectedColumns
-							.indexOf(selected);
+					final int currIndex = keyColList.getSelectedIndex();
 					if (currIndex > 0) {
 						// Swap the selected item with the one above it.
 						final Object swap = PartitionTableDialog.this.selectedColumns
@@ -319,8 +321,7 @@ public class PartitionTableDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				final Object selected = keyColList.getSelectedValue();
 				if (selected != null) {
-					final int currIndex = PartitionTableDialog.this.selectedColumns
-							.indexOf(selected);
+					final int currIndex = keyColList.getSelectedIndex();
 					if (currIndex < PartitionTableDialog.this.selectedColumns
 							.size() - 1) {
 						// Swap the selected item with the one below it.
@@ -374,9 +375,47 @@ public class PartitionTableDialog extends JDialog {
 		this.previewData = new DefaultTableModel();
 		final JTable previewTable = new JTable(this.previewData);
 		previewTable.setEnabled(false);
+		previewTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		previewTable.setPreferredScrollableViewportSize(colPanel
+				.getPreferredSize());
 		showHide.add(new JLabel(Resources.get("previewLabel")),
 				labelLastRowConstraints);
 		showHide.add(new JScrollPane(previewTable), fieldLastRowConstraints);
+
+		// If the user rearranges the columns in the preview data,
+		// mirror in the selected columns.
+		previewTable.getColumnModel().addColumnModelListener(
+				new TableColumnModelListener() {
+
+					public void columnAdded(TableColumnModelEvent e) {
+						// Don't care.
+					}
+
+					public void columnMarginChanged(ChangeEvent e) {
+						// Don't care.
+					}
+
+					public void columnMoved(TableColumnModelEvent e) {
+						selectedColumns.clear();
+						for (int i = 0; i < previewTable.getColumnCount(); i++)
+							selectedColumns.addElement(previewTable
+									.getColumnName(i));
+						try {
+							dataset.asPartitionTable().setSelectedColumnNames(
+									getNewSelectedColumns());
+						} catch (final PartitionException pe) {
+							StackTrace.showStackTrace(pe);
+						}
+					}
+
+					public void columnRemoved(TableColumnModelEvent e) {
+						// Don't care.
+					}
+
+					public void columnSelectionChanged(ListSelectionEvent e) {
+						// Don't care.
+					}
+				});
 
 		// Intercept the partition checkbox to update the available cols
 		// list.
@@ -384,7 +423,6 @@ public class PartitionTableDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				showHide.setVisible(PartitionTableDialog.this.partition
 						.isSelected());
-				PartitionTableDialog.this.pack();
 				try {
 					dataset
 							.setPartitionTable(PartitionTableDialog.this.partition
@@ -399,7 +437,15 @@ public class PartitionTableDialog extends JDialog {
 					}
 				} catch (final PartitionException pe) {
 					StackTrace.showStackTrace(pe);
-					PartitionTableDialog.this.partition.doClick();
+					try {
+						dataset.setPartitionTable(false);
+					} catch (final PartitionException pe2) {
+						StackTrace.showStackTrace(pe2);
+					} finally {
+						PartitionTableDialog.this.setVisible(false);
+					}
+				} finally {
+					PartitionTableDialog.this.pack();
 				}
 			}
 		});
@@ -505,7 +551,6 @@ public class PartitionTableDialog extends JDialog {
 				// Add an entry to the data model using list.toArray();
 				this.previewData.addRow(rowData.toArray());
 			}
-			this.pack();
 		} catch (final PartitionException pe) {
 			StackTrace.showStackTrace(pe);
 		}

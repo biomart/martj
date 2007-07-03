@@ -1366,15 +1366,8 @@ public class SchemaModificationSet {
 
 		/**
 		 * Returns the expression, <i>with</i> substitution. This value is
-		 * RDBMS-specific. The prefix map must contain two entries. Each entry
-		 * relates to one of the keys of a relation. The key of the map is the
-		 * key of the relation, and the value is the prefix to use in the
-		 * substituion, eg. "a" if columns for the table for that key should be
-		 * prefixed as "a.mycolumn".
+		 * RDBMS-specific.
 		 * 
-		 * @param additionalRels
-		 *            contains the map of table prefixes to use for tables
-		 *            joined by relations off the primary table involved.
 		 * @param tablePrefix
 		 *            the prefix to use for the table in the expression.
 		 * @param resolvedExpr
@@ -1384,44 +1377,19 @@ public class SchemaModificationSet {
 		 *            {@link #getExpression()} instead.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final Map additionalRels,
-				final String tablePrefix, final String resolvedExpr) {
+		public String getSubstitutedExpression(final String tablePrefix,
+				final String resolvedExpr) {
 			Log.debug("Calculating restricted table expression");
 			String sub = resolvedExpr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
-				final Object[] crPair = (Object[]) entry.getKey();
-				final Relation rel = (Relation) crPair[0];
-				final Column col = (Column) crPair[1];
-				final String tp;
-				if (rel == null)
-					tp = tablePrefix;
-				else
-					tp = (String) additionalRels.get(rel);
+				final Column col = (Column) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
-				sub = sub.replaceAll(alias, tp + "." + col.getName());
+				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
-		}
-
-		/**
-		 * Return the set of additional relations involved in this expression.
-		 * 
-		 * @return the set of relations.
-		 */
-		public Collection getAdditionalRelations() {
-			final Collection pairs = new HashSet();
-			for (final Iterator i = this.aliases.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final Object[] crPair = (Object[]) entry.getKey();
-				if (crPair[0] == null)
-					continue;
-				pairs.add(crPair[0]);
-			}
-			return pairs;
 		}
 
 		/**
@@ -1539,6 +1507,8 @@ public class SchemaModificationSet {
 		 *            the prefix to use for the LHS table in the expression.
 		 * @param leftIsDataSet
 		 *            if the LHS side is a dataset table.
+		 * @param rightIsDataSet
+		 *            if the RHS side is a dataset table.
 		 * @param mappingUnit
 		 *            the transformation unit this restriction will use to
 		 *            translate columns into dataset column equivalents.
@@ -1551,6 +1521,7 @@ public class SchemaModificationSet {
 		 */
 		public String getSubstitutedExpression(final String leftTablePrefix,
 				final String rightTablePrefix, final boolean leftIsDataSet,
+				final boolean rightIsDataSet,
 				final TransformationUnit mappingUnit, final String resolvedExpr) {
 			Log.debug("Calculating restricted table expression");
 			String sub = resolvedExpr;
@@ -1571,7 +1542,7 @@ public class SchemaModificationSet {
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, rightTablePrefix
 						+ "."
-						+ (!leftIsDataSet ? mappingUnit
+						+ (rightIsDataSet ? mappingUnit
 								.getDataSetColumnFor(col).getModifiedName()
 								: col.getName()));
 			}

@@ -354,11 +354,13 @@ public class Mart {
 		final List colNames = new ArrayList();
 		for (final Iterator i = this.getDataSets().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
-			if (ds.isPartitionTable())
-				colNames.addAll(ds.asPartitionTable().getSelectedColumnNames());
+			if (ds.isPartitionTable()) 
+				for (final Iterator j = ds.asPartitionTable().getSelectedColumnNames().iterator(); j.hasNext(); ) {
+					final String col = (String)j.next();
+					if (!col.equals(PartitionTable.DIV_COLUMN))
+						colNames.add(ds.getName()+"."+col);
+				}
 		}
-		while (colNames.contains(PartitionTable.DIV_COLUMN))
-			colNames.remove(PartitionTable.DIV_COLUMN);
 		// Tidy up.
 		Collections.sort(colNames);
 		return colNames;

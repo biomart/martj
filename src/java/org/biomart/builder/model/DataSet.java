@@ -40,6 +40,9 @@ import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.PartitionTable.AbstractPartitionTable;
+import org.biomart.builder.model.PartitionTable.PartitionRow;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
+import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
@@ -187,76 +190,221 @@ public class DataSet extends GenericSchema {
 					if (this.getSelectedColumnNames().isEmpty())
 						throw new PartitionException(Resources
 								.get("initialColumnsNotSpecified"));
-
-					// Obtain schema.
-					final Schema schema = DataSet.this.getMainTable()
-							.getSchema();
-					if (!(schema instanceof JDBCSchema))
-						return Collections.EMPTY_LIST;
-					final JDBCSchema jdbc = (JDBCSchema) schema;
-
-					// Connect.
-					Connection conn = null;
-					final List rows = new ArrayList();
-					int rowNum = 0;
-					try {
-						conn = jdbc.getConnection(schemaPartition);
-						// Construct SQL statement.
-						final StringBuffer sql = new StringBuffer();
-						sql.append("select distinct ");
-						// TODO Make a map of columns in statement to
-						// named columns in results. Use allCols to
-						// map modified names back to real names in
-						// order to track down dataset column objects.
-						// Update position map with column modified names.
-						// Keys are column names, values are integers.
-						int nextCol = 1; // ResultSet is 1-indexed.
-						final Map positionMap = new HashMap();
-
-						// Run it.
-						final PreparedStatement stmt = conn
-								.prepareStatement(sql.toString());
-						stmt.execute();
-						final ResultSet rs = stmt.getResultSet();
-						while (rs.next()
-								&& (limit == PartitionTable.UNLIMITED_ROWS || rowNum < limit)) {
-							// Read rows.
-							final Map rowCols = new HashMap();
-							// Populate rowCols with column names as
-							// keys and values as objects.
-							for (final Iterator i = positionMap.entrySet()
-									.iterator(); i.hasNext();) {
-								final Map.Entry entry = (Map.Entry) i.next();
-								rowCols.put(entry.getKey(), rs
-										.getObject(((Integer) entry.getValue())
-												.intValue()));
-							}
-							// Build the row from rowCols.
-							final PartitionRow row = new PartitionRow(this,
-									rowNum++) {
-								public String getValue(String columnName)
-										throws PartitionException {
-									return "" + rowCols.get(columnName);
-								}
-							};
-							rows.add(row);
-						}
-					} catch (final SQLException e) {
-						throw new PartitionException(e);
-					} finally {
-						if (conn != null)
-							try {
-								conn.close();
-							} catch (final SQLException e2) {
-								// Don't care.
-							}
-					}
-
-					return rows;
+					return DataSet.this.getRowsBySimpleSQL(this,
+							schemaPartition, limit);
 				}
 			};
 		else
 			this.partitionTable = null;
+	}
+
+	private List getRowsBySimpleSQL(final PartitionTable pt,
+			String schemaPartition, final int limit) throws PartitionException {
+		Log.debug("Loading rows by simple SQL");
+
+		// Obtain schema.
+		final Schema schema = DataSet.this.getMainTable().getFocusTable()
+				.getSchema();
+		if (!(schema instanceof JDBCSchema))
+			return Collections.EMPTY_LIST;
+		final JDBCSchema jdbc = (JDBCSchema) schema;
+		final String usablePartition = schemaPartition == null ? jdbc
+				.getDatabaseSchema() : schemaPartition;
+
+		// Connect.
+		Connection conn = null;
+		final List rows = new ArrayList();
+		int rowNum = 0;
+		try {
+			conn = jdbc.getConnection(schemaPartition);
+			// Construct SQL statement.
+			Log.debug("Building SQL");
+			final StringBuffer sql = new StringBuffer();
+
+			// This is generic SQL and should not need any dialects.
+
+			// Make a map of columns in statement to
+			// named columns in results. Use allCols to
+			// map modified names back to real names in
+			// order to track down dataset column objects.
+			// Update position map with column modified names.
+			// Keys are column names, values are integers.
+			int nextCol = 1; // ResultSet is 1-indexed.
+			final Map positionMap = new HashMap();
+			final StringBuffer sqlSel = new StringBuffer();
+			sqlSel.append("select distinct ");
+			final StringBuffer sqlFrom = new StringBuffer();
+			sqlFrom.append(" from ");
+			final StringBuffer sqlWhere = new StringBuffer();
+			sqlWhere.append(" where ");
+			for (final Iterator i = DataSet.this.getMainTable()
+					.getTransformationUnits().iterator(); i.hasNext()
+					&& positionMap.size() < pt.getSelectedColumnNames().size();) {
+				final TransformationUnit tu = (TransformationUnit) i.next();
+				if (tu instanceof SelectFromTable) {
+					// JoinTable extends SelectFromTable.
+					// Add the unit to the from clause.
+					final Table selTab = ((SelectFromTable) tu).getTable();
+					final String selSch = selTab.getSchema().equals(schema) ? usablePartition
+							: ((JDBCSchema) selTab.getSchema())
+									.getDatabaseSchema();
+					Key prevKey = null;
+					Table prevTab = null;
+					String prevSch = null;
+					if (tu instanceof JoinTable) {
+						prevKey = ((JoinTable) tu).getSchemaSourceKey();
+						prevTab = prevKey.getTable();
+						prevSch = prevTab.getSchema().equals(schema) ? usablePartition
+								: ((JDBCSchema) prevTab.getSchema())
+										.getDatabaseSchema();
+						sqlFrom.append(',');
+					}
+					sqlFrom.append(selSch);
+					sqlFrom.append('.');
+					sqlFrom.append(selTab.getName());
+					if (tu instanceof JoinTable) {
+						final JoinTable jtu = (JoinTable) tu;
+						final StringBuffer lhs = new StringBuffer();
+						final StringBuffer rhs = new StringBuffer();
+						if (prevKey.equals(jtu.getSchemaRelation()
+								.getFirstKey())) {
+							lhs.append(prevSch);
+							rhs.append(selSch);
+							lhs.append('.');
+							rhs.append('.');
+							lhs.append(prevTab.getName());
+							rhs.append(selTab.getName());
+						} else {
+							lhs.append(selSch);
+							rhs.append(prevSch);
+							lhs.append('.');
+							rhs.append('.');
+							lhs.append(selTab.getName());
+							rhs.append(prevTab.getName());
+						}
+						// Append join info to where clause.
+						if (!sqlWhere.toString().equals(" where "))
+							sqlWhere.append(" and ");
+						for (int k = 0; k < prevKey.getColumnNames().size(); k++) {
+							if (k > 0)
+								sqlWhere.append(" and ");
+							sqlWhere.append(prevKey.equals(jtu
+									.getSchemaRelation().getFirstKey()) ? lhs
+									.toString() : rhs.toString());
+							sqlWhere.append('.');
+							sqlWhere.append(prevKey.getColumnNames().get(k));
+							sqlWhere.append('=');
+							sqlWhere.append(prevKey.equals(jtu
+									.getSchemaRelation().getFirstKey()) ? rhs
+									.toString() : lhs.toString());
+							sqlWhere.append('.');
+							sqlWhere.append(jtu.getSchemaSourceKey()
+									.getColumnNames().get(k));
+						}
+						// Add any rel restrictions to where clause.
+						if (this.schemaMods.isRestrictedRelation(this
+								.getMainTable(), jtu.getSchemaRelation())) {
+							final RestrictedRelationDefinition rr = this.schemaMods
+									.getRestrictedRelation(this.getMainTable(),
+											jtu.getSchemaRelation(),
+											jtu.getSchemaRelationIteration());
+							sqlWhere.append(" and ");
+							sqlWhere.append(rr.getSubstitutedExpression(lhs
+									.toString(), rhs.toString(), false, false,
+									jtu, rr.getExpression()));
+						}
+					}
+					// Add any table restrictions to where clause.
+					if (this.schemaMods.isRestrictedTable(this.getMainTable(),
+							selTab)) {
+						final RestrictedTableDefinition rt = this.schemaMods
+								.getRestrictedTable(this.getMainTable(), selTab);
+						if (!sqlWhere.toString().equals(" where "))
+							sqlWhere.append(" and ");
+						sqlWhere
+								.append(rt.getSubstitutedExpression(
+										selSch + "."
+												+ selTab.getName(), rt
+												.getExpression()));
+					}
+					// If any unit columns match selected columns,
+					// add them to the select statement and their
+					// position to the index map.
+					for (final Iterator j = tu.getNewColumnNameMap().entrySet()
+							.iterator(); j.hasNext();) {
+						final Map.Entry entry = (Map.Entry) j.next();
+						final DataSetColumn dsCol = (DataSetColumn) entry
+								.getValue();
+						if (pt.getSelectedColumnNames().contains(
+								dsCol.getModifiedName())) {
+							final String col = (String) entry.getKey();
+							if (nextCol > 1)
+								sqlSel.append(',');
+							sqlSel.append(selSch);
+							sqlSel.append('.');
+							sqlSel.append(selTab.getName());
+							sqlSel.append('.');
+							sqlSel.append(col);
+							positionMap.put(new Integer(nextCol++), dsCol
+									.getModifiedName());
+						}
+					}
+				} else
+					throw new PartitionException(Resources
+							.get("cannotDoBasicSQL"));
+			}
+
+			// Build SQL.
+			sql.append(sqlSel);
+			sql.append(sqlFrom);
+			if (!sqlWhere.toString().equals(" where "))
+				sql.append(sqlWhere);
+			sql.append(" order by ");
+			for (int i = 0; i < positionMap.size(); i++) {
+				if (i>0)
+					sql.append(',');
+				sql.append(i+1);
+			}
+
+			// Run it.
+			Log.debug("About to run SQL: " + sql.toString());
+			final PreparedStatement stmt = conn
+					.prepareStatement(sql.toString());
+			stmt.execute();
+			final ResultSet rs = stmt.getResultSet();
+			while (rs.next()
+					&& (limit == PartitionTable.UNLIMITED_ROWS || rowNum < limit)) {
+				// Read rows.
+				final Map rowCols = new HashMap();
+				// Populate rowCols with column names as
+				// keys and values as objects.
+				for (final Iterator i = positionMap.entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					rowCols.put(entry.getValue(), rs.getObject(((Integer) entry
+							.getKey()).intValue()));
+				}
+				// Build the row from rowCols.
+				final PartitionRow row = new PartitionRow(pt, rowNum++) {
+					public String getValue(String columnName)
+							throws PartitionException {
+						return "" + rowCols.get(columnName);
+					}
+				};
+				rows.add(row);
+			}
+		} catch (final SQLException e) {
+			throw new PartitionException(e);
+		} finally {
+			if (conn != null)
+				try {
+					conn.close();
+				} catch (final SQLException e2) {
+					// Don't care.
+				}
+		}
+
+		return rows;
 	}
 
 	/**
@@ -266,17 +414,12 @@ public class DataSet extends GenericSchema {
 	 */
 	public boolean isConvertableToPartitionTable() {
 		// The answer is yes, but only if our main table has no
-		// group-by expression columns and nothing uses partitions.
-		if (this.dsMods.isDatasetPartition()
-				|| !this.dsMods.getTablePartitions().isEmpty())
-			return false;
-		final Collection exprs = (Collection) this.dsMods
-				.getExpressionColumns().get(this.getMainTable().getName());
-		if (exprs != null)
-			for (final Iterator i = exprs.iterator(); i.hasNext();)
-				if (((ExpressionColumnDefinition) i.next()).isGroupBy())
-					return false;
-		return true;
+		// group-by expression columns and nothing uses partitions
+		// and there are no compound relations.
+		return !(this.dsMods.isDatasetPartition()
+				|| !this.dsMods.getTablePartitions().isEmpty()
+				|| !this.schemaMods.getCompoundRelations().isEmpty() || !this.dsMods
+				.getExpressionColumns().isEmpty());
 	}
 
 	/**

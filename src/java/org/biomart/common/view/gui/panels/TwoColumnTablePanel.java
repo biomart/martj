@@ -18,7 +18,6 @@
 package org.biomart.common.view.gui.panels;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -28,7 +27,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -37,20 +35,14 @@ import java.util.Map;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.ListCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
 import org.biomart.common.model.Column.GenericColumn;
-import org.biomart.common.resources.Resources;
 
 /**
  * This panel represents a two-column table which can contain the entries of a
@@ -554,143 +546,6 @@ public abstract class TwoColumnTablePanel extends JPanel {
 				for (final Iterator i = this.getSortedColumns(values)
 						.iterator(); i.hasNext();)
 					this.editor.addItem(i.next());
-			}
-			return this.editor;
-		}
-	}
-
-	/**
-	 * This class displays a drop-down in the first column of the table which
-	 * consists of a column+relation pair, and a plain string in the second
-	 * column. The column+relation pair is in the form of an array of
-	 * {@link Object}s with 2 elements. The first element is the relation, the
-	 * second is the column.
-	 */
-	public abstract static class CRPairStringTablePanel extends
-			StringStringTablePanel {
-		private JComboBox editor;
-
-		/**
-		 * Constructs the table based on the given values.
-		 * 
-		 * @param values
-		 *            the values to display in the table, or <tt>null</tt> if
-		 *            none.
-		 * @param crPairs
-		 *            the collection of column+relation pairs to display in the
-		 *            drop-down in the first column.
-		 */
-		public CRPairStringTablePanel(final Map values, final Collection crPairs) {
-			super(values, crPairs, null);
-		}
-
-		/**
-		 * Sorts the column-relation pairs by ordering based on the
-		 * {@link Column#getName()} output for the column in each pair, sorted
-		 * using {@link String#compareTo(Object)}.
-		 * 
-		 * @param crPairs
-		 *            the pairs to sort.
-		 * @return the sorted pairs.
-		 */
-		protected Collection getSortedColumns(final Collection crPairs) {
-			final List cols = new ArrayList(crPairs);
-			Collections.sort(cols, new Comparator() {
-				public int compare(final Object a, final Object b) {
-					final String first = ((Object[]) a)[1].toString();
-					final String second = ((Object[]) b)[1].toString();
-					final int result = first.compareTo(second);
-					return result == 0 ? -1 : result;
-				}
-			});
-			return cols;
-		}
-
-		/**
-		 * Gets a reference to the editor used to display the drop-down in the
-		 * first column.
-		 * 
-		 * @return the editor used.
-		 */
-		protected JComboBox getFirstColumnEditor() {
-			return this.editor;
-		}
-
-		public Class getFirstColumnType() {
-			return Object[].class;
-		}
-
-		public Object getNewRowFirstColumn() {
-			return this.editor.getItemAt(0);
-		}
-
-		public TableCellRenderer getFirstColumnRenderer() {
-			return new TableCellRenderer() {
-				public Component getTableCellRendererComponent(JTable table,
-						Object value, boolean isSelected, boolean hasFocus,
-						int row, int column) {
-					final Object[] crPair = (Object[]) value;
-					final JLabel label = new JLabel();
-					// We only show the relation part if it is not null.
-					if (crPair[0] == null)
-						label.setText(crPair[1].toString());
-					else {
-						final Key key = ((Relation) crPair[0])
-								.getKeyForTable(((Column) crPair[1]).getTable());
-						label.setText(crPair[1].toString() + "("
-								+ Resources.get("via") + " "
-								+ key.getColumnNames() + ")");
-					}
-					label.setOpaque(true);
-					label.setFont(table.getFont());
-					if (isSelected) {
-						label.setBackground(table.getSelectionBackground());
-						label.setForeground(table.getSelectionForeground());
-					} else {
-						label.setBackground(table.getBackground());
-						label.setForeground(table.getForeground());
-					}
-					return label;
-				}
-			};
-		}
-
-		public JComboBox getFirstColumnEditor(final Collection values) {
-			if (this.editor == null) {
-				this.editor = new JComboBox();
-				for (final Iterator i = this.getSortedColumns(values)
-						.iterator(); i.hasNext();)
-					this.editor.addItem(i.next());
-				this.editor.setRenderer(new ListCellRenderer() {
-					public Component getListCellRendererComponent(
-							final JList list, final Object value,
-							final int index, final boolean isSelected,
-							final boolean cellHasFocus) {
-						final Object[] crPair = (Object[]) value;
-						final JLabel label = new JLabel();
-						// We only show the relation part if it is not null.
-						if (crPair[0] == null)
-							label.setText(crPair[1].toString());
-						else {
-							final Key key = ((Relation) crPair[0])
-									.getKeyForTable(((Column) crPair[1])
-											.getTable());
-							label.setText(crPair[1].toString() + "("
-									+ Resources.get("via") + " "
-									+ key.getColumnNames() + ")");
-						}
-						label.setOpaque(true);
-						label.setFont(list.getFont());
-						if (isSelected) {
-							label.setBackground(list.getSelectionBackground());
-							label.setForeground(list.getSelectionForeground());
-						} else {
-							label.setBackground(list.getBackground());
-							label.setForeground(list.getForeground());
-						}
-						return label;
-					}
-				});
 			}
 			return this.editor;
 		}

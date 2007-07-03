@@ -66,7 +66,7 @@ public class DataSetComponent extends BoxShapedComponent {
 	/**
 	 * Background for partition datasets.
 	 */
-	public static Color PARTITION_BACKGROUND = Color.PINK;
+	public static Color PARTITION_BACKGROUND = Color.RED;
 
 	private GridBagConstraints constraints;
 

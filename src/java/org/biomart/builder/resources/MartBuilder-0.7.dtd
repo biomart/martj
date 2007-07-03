@@ -139,7 +139,6 @@ renamedColumn*,distinctRows*,dimensionPartition*)>
 <!ELEMENT restrictedTable EMPTY>
 <!ATTLIST restrictedTable tableKey CDATA #REQUIRED>
 <!ATTLIST restrictedTable tableId IDREF #REQUIRED>
-<!ATTLIST restrictedTable aliasRelationIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable expression CDATA #REQUIRED>
