@@ -76,6 +76,8 @@ they have been changed again SINCE this report feature was added.
 Default target schema for SQL output: <xsl:choose><xsl:when test="@outputSchema"><xsl:value-of select="@outputSchema"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 Default host/port for remote host output: <xsl:choose><xsl:when test="@outputHost"><xsl:value-of select="@outputHost"/>/<xsl:value-of select="@outputPort"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 
+Table/column name case: <xsl:choose><xsl:when test="@nameCase==1">UPPER</xsl:when><xsl:when test="@nameCase==2">lower</xsl:when><xsl:otherwise>Mixed</xsl:otherwise></xsl:choose>
+
 Schemas
 =======
 <xsl:apply-templates select="./jdbcSchema"/> 

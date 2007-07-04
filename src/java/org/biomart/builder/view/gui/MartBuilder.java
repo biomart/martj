@@ -36,6 +36,7 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
@@ -155,6 +156,14 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem convertPartitionTable;
 
+		private JMenu nameCaseSubmenu;
+
+		private JRadioButtonMenuItem nameCaseMixed;
+
+		private JRadioButtonMenuItem nameCaseUpper;
+
+		private JRadioButtonMenuItem nameCaseLower;
+
 		/**
 		 * Constructor calls super then sets up our menu items.
 		 * 
@@ -218,6 +227,37 @@ public class MartBuilder extends BioMartGUI {
 			this.closeMart.setMnemonic(Resources.get("closeMartMnemonic")
 					.charAt(0));
 			this.closeMart.addActionListener(this);
+
+			// Make a submenu for the name case type.
+			this.nameCaseSubmenu = new JMenu(Resources.get("caseTitle"));
+			this.nameCaseSubmenu.setMnemonic(Resources.get("caseMnemonic")
+					.charAt(0));
+			final ButtonGroup optGroupNC = new ButtonGroup();
+			// Loop through the case types to create the submenu.
+			// Mixed
+			this.nameCaseMixed = new JRadioButtonMenuItem(Resources
+					.get("caseMixedTitle"));
+			this.nameCaseMixed.setMnemonic(Resources.get("caseMixedMnemonic")
+					.charAt(0));
+			this.nameCaseMixed.addActionListener(this);
+			optGroupNC.add(this.nameCaseMixed);
+			this.nameCaseSubmenu.add(this.nameCaseMixed);
+			// Upper
+			this.nameCaseUpper = new JRadioButtonMenuItem(Resources
+					.get("caseUpperTitle"));
+			this.nameCaseUpper.setMnemonic(Resources.get("caseUpperMnemonic")
+					.charAt(0));
+			this.nameCaseUpper.addActionListener(this);
+			optGroupNC.add(this.nameCaseUpper);
+			// Lower
+			this.nameCaseSubmenu.add(this.nameCaseLower);
+			this.nameCaseLower = new JRadioButtonMenuItem(Resources
+					.get("caseLowerTitle"));
+			this.nameCaseLower.setMnemonic(Resources.get("caseLowerMnemonic")
+					.charAt(0));
+			this.nameCaseLower.addActionListener(this);
+			optGroupNC.add(this.nameCaseLower);
+			this.nameCaseSubmenu.add(this.nameCaseLower);
 
 			// Add new schema.
 			this.addSchema = new JMenuItem(Resources.get("addSchemaTitle"),
@@ -420,8 +460,9 @@ public class MartBuilder extends BioMartGUI {
 			final JMenu martMenu = new JMenu(Resources.get("martMenuTitle"));
 			martMenu.setMnemonic(Resources.get("martMenuMnemonic").charAt(0));
 			martMenu.add(this.saveDDL);
-			martMenu.addSeparator();
 			martMenu.add(this.martReport);
+			martMenu.addSeparator();
+			martMenu.add(this.nameCaseSubmenu);
 			martMenu.addSeparator();
 			martMenu.add(this.monitorHost);
 
@@ -455,8 +496,8 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.convertPartitionTable);
 			datasetMenu.addSeparator();
-			datasetMenu.add(this.explainDataset);
 			datasetMenu.add(this.saveDatasetDDL);
+			datasetMenu.add(this.explainDataset);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.renameDataset);
 			datasetMenu.add(this.replicateDataset);
@@ -496,6 +537,23 @@ public class MartBuilder extends BioMartGUI {
 											.getSelectedMartTab().getMart()
 											.getDataSets().size() > 0);
 					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
+					MartBuilderMenuBar.this.nameCaseSubmenu.setEnabled(hasMart);
+					if (hasMart) {
+						final Mart mart = MartBuilderMenuBar.this
+								.getMartBuilder().martTabSet
+								.getSelectedMartTab().getMart();
+						switch (mart.getCase()) {
+						case Mart.USE_UPPER_CASE:
+							MartBuilderMenuBar.this.nameCaseUpper
+									.setSelected(true);
+						case Mart.USE_LOWER_CASE:
+							MartBuilderMenuBar.this.nameCaseLower
+									.setSelected(true);
+						default:
+							MartBuilderMenuBar.this.nameCaseMixed
+									.setSelected(true);
+						}
+					}
 				}
 			});
 			fileMenu.addMenuListener(new MenuListener() {
@@ -704,6 +762,15 @@ public class MartBuilder extends BioMartGUI {
 				this.getMartBuilder().martTabSet.requestReport();
 			else if (e.getSource() == this.monitorHost)
 				this.getMartBuilder().martTabSet.requestMonitorRemoteHost();
+			else if (e.getSource() == this.nameCaseLower)
+				this.getMartBuilder().martTabSet
+						.requestChangeNameCase(Mart.USE_LOWER_CASE);
+			else if (e.getSource() == this.nameCaseUpper)
+				this.getMartBuilder().martTabSet
+						.requestChangeNameCase(Mart.USE_UPPER_CASE);
+			else if (e.getSource() == this.nameCaseMixed)
+				this.getMartBuilder().martTabSet
+						.requestChangeNameCase(Mart.USE_MIXED_CASE);
 			// Schema menu.
 			else if (e.getSource() == this.addSchema)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()

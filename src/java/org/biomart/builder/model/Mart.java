@@ -73,10 +73,41 @@ public class Mart {
 	private String outputPort = null;
 
 	/**
-	 * This constructor does nothing except log a message saying the mart has
-	 * been created.
+	 * Constant referring to table and column name conversion.
 	 */
-	public Mart() {
+	public static final int USE_MIXED_CASE = 0;
+
+	/**
+	 * Constant referring to table and column name conversion.
+	 */
+	public static final int USE_UPPER_CASE = 1;
+
+	/**
+	 * Constant referring to table and column name conversion.
+	 */
+	public static final int USE_LOWER_CASE = 2;
+
+	private int nameCase = Mart.USE_MIXED_CASE;
+
+	/**
+	 * What case to use for table and column names? Mixed is default.
+	 * 
+	 * @return one of {@link #USE_LOWER_CASE}, {@link #USE_UPPER_CASE}, or
+	 *         {@link #USE_MIXED_CASE}.
+	 */
+	public int getCase() {
+		return this.nameCase;
+	}
+
+	/**
+	 * What case to use for table and column names? Mixed is default.
+	 * 
+	 * @param nameCase
+	 *            one of {@link #USE_LOWER_CASE}, {@link #USE_UPPER_CASE}, or
+	 *            {@link #USE_MIXED_CASE}.
+	 */
+	public void setCase(final int nameCase) {
+		this.nameCase = nameCase;
 	}
 
 	/**
@@ -354,11 +385,12 @@ public class Mart {
 		final List colNames = new ArrayList();
 		for (final Iterator i = this.getDataSets().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
-			if (ds.isPartitionTable()) 
-				for (final Iterator j = ds.asPartitionTable().getSelectedColumnNames().iterator(); j.hasNext(); ) {
-					final String col = (String)j.next();
+			if (ds.isPartitionTable())
+				for (final Iterator j = ds.asPartitionTable()
+						.getSelectedColumnNames().iterator(); j.hasNext();) {
+					final String col = (String) j.next();
 					if (!col.equals(PartitionTable.DIV_COLUMN))
-						colNames.add(ds.getName()+"."+col);
+						colNames.add(ds.getName() + "." + col);
 				}
 		}
 		// Tidy up.

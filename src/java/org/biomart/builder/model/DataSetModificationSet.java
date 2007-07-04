@@ -286,14 +286,15 @@ public class DataSetModificationSet {
 	 *            the table (must be a dimension).
 	 * @param partition
 	 *            the partition to set on it. Use <tt>null</tt> to clear it.
-	 *            @throws ValidationException if it cannot be done.
+	 * @throws ValidationException
+	 *             if it cannot be done.
 	 */
 	public void setTablePartition(final DataSetTable table,
 			final String partition) throws ValidationException {
 		// Throw exception if not a dimension.
 		if (!table.getType().equals(DataSetTableType.DIMENSION))
 			throw new ValidationException(Resources
-					.get("cannotPartitionNonDimension"));		
+					.get("cannotPartitionNonDimension"));
 		if (partition == null)
 			this.datasetTablePartitions.remove(table.getName());
 		else
@@ -319,8 +320,7 @@ public class DataSetModificationSet {
 	 * @return the partition definition.
 	 */
 	public String getTablePartition(final DataSetTable table) {
-		return (String) this.datasetTablePartitions
-				.get(table.getName());
+		return (String) this.datasetTablePartitions.get(table.getName());
 	}
 
 	/**
@@ -718,9 +718,10 @@ public class DataSetModificationSet {
 				final Map.Entry entry = (Map.Entry) i.next();
 				final String col = (String) entry.getKey();
 				final String alias = ":" + (String) entry.getValue();
+				final DataSetColumn dsCol = (DataSetColumn) dsTable
+						.getColumnByName(col);
 				sub = sub.replaceAll(alias, prefix != null ? prefix + "."
-						+ dsTable.getModifiedName(col) : dsTable
-						.getModifiedName(col));
+						+ dsCol.getModifiedName() : dsCol.getModifiedName());
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;

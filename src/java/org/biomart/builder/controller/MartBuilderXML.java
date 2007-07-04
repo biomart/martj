@@ -650,6 +650,7 @@ public class MartBuilderXML extends DefaultHandler {
 		this.writeAttribute("outputSchema", mart.getOutputSchema(), xmlWriter);
 		this.writeAttribute("outputHost", mart.getOutputHost(), xmlWriter);
 		this.writeAttribute("outputPort", mart.getOutputPort(), xmlWriter);
+		this.writeAttribute("nameCase", ""+mart.getCase(), xmlWriter);
 
 		// Write out each schema.
 		final Set externalRelations = new HashSet();
@@ -1179,6 +1180,7 @@ public class MartBuilderXML extends DefaultHandler {
 			mart.setOutputSchema((String) attributes.get("outputSchema"));
 			mart.setOutputHost((String) attributes.get("outputHost"));
 			mart.setOutputPort((String) attributes.get("outputPort"));
+			mart.setCase(Integer.parseInt((String) attributes.get("nameCase")));
 			element = this.constructedMart = mart;
 		}
 

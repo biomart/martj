@@ -40,6 +40,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.PartitionTable.AbstractPartitionTable;
+import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionRow;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -321,11 +322,8 @@ public class DataSet extends GenericSchema {
 								.getRestrictedTable(this.getMainTable(), selTab);
 						if (!sqlWhere.toString().equals(" where "))
 							sqlWhere.append(" and ");
-						sqlWhere
-								.append(rt.getSubstitutedExpression(
-										selSch + "."
-												+ selTab.getName(), rt
-												.getExpression()));
+						sqlWhere.append(rt.getSubstitutedExpression(selSch
+								+ "." + selTab.getName(), rt.getExpression()));
 					}
 					// If any unit columns match selected columns,
 					// add them to the select statement and their
@@ -361,9 +359,9 @@ public class DataSet extends GenericSchema {
 				sql.append(sqlWhere);
 			sql.append(" order by ");
 			for (int i = 0; i < positionMap.size(); i++) {
-				if (i>0)
+				if (i > 0)
 					sql.append(',');
-				sql.append(i+1);
+				sql.append(i + 1);
 			}
 
 			// Run it.
@@ -1092,6 +1090,8 @@ public class DataSet extends GenericSchema {
 					newDataSet.getSchemaModifications());
 			this.getDataSetModifications().replicate(
 					newDataSet.getDataSetModifications());
+			newDataSet.setPartitionTable(this.isPartitionTable);
+			this.asPartitionTable().replicate(newDataSet.asPartitionTable());
 			this.mart.addDataSet(newDataSet);
 
 			// Synchronise it.
@@ -1274,8 +1274,17 @@ public class DataSet extends GenericSchema {
 		public String getModifiedName() {
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
-			return mods.isColumnRename(this) ? mods.getColumnRename(this)
-					: this.getName();
+			final String name = mods.isColumnRename(this) ? mods
+					.getColumnRename(this) : this.getName();
+			// UC/LC/Mixed?
+			switch (((DataSet) this.getTable().getSchema()).getMart().getCase()) {
+			case Mart.USE_LOWER_CASE:
+				return name.toLowerCase();
+			case Mart.USE_UPPER_CASE:
+				return name.toUpperCase();
+			default:
+				return name;
+			}
 		}
 
 		/**
@@ -1785,20 +1794,17 @@ public class DataSet extends GenericSchema {
 		public String getModifiedName() {
 			final DataSetModificationSet mods = ((DataSet) this.getSchema())
 					.getDataSetModifications();
-			return mods.isTableRename(this) ? mods.getTableRename(this) : this
-					.getName();
-		}
-
-		/**
-		 * Return this modified name including any renames etc.
-		 * 
-		 * @param columnName
-		 *            the column name to look up the modified name for.
-		 * @return the modified name.
-		 */
-		public String getModifiedName(String columnName) {
-			return ((DataSetColumn) this.getColumnByName(columnName))
-					.getModifiedName();
+			final String name = mods.isTableRename(this) ? mods
+					.getTableRename(this) : this.getName();
+			// UC/LC/Mixed?
+			switch (((DataSet) this.getSchema()).getMart().getCase()) {
+			case Mart.USE_LOWER_CASE:
+				return name.toLowerCase();
+			case Mart.USE_UPPER_CASE:
+				return name.toUpperCase();
+			default:
+				return name;
+			}
 		}
 
 		/**

@@ -466,8 +466,8 @@ public class MartTabSet extends JTabbedPane {
 		final Mart mart = currentMartTab.getMart();
 		final Collection datasets = new ArrayList(mart.getDataSets());
 		// Remove partition table datasets from the list.
-		for (final Iterator i = datasets.iterator(); i.hasNext(); ) {
-			final DataSet ds = (DataSet)i.next();
+		for (final Iterator i = datasets.iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
 			if (ds.isPartitionTable())
 				i.remove();
 		}
@@ -763,6 +763,32 @@ public class MartTabSet extends JTabbedPane {
 		// Update the tab title to indicate modification status.
 		this.setTitleAt(this.getSelectedIndex(), this.suggestTabName(
 				currentMart, true));
+	}
+
+	/**
+	 * Change the name case for the selected mart.
+	 * 
+	 * @param nameCase
+	 *            the new case.
+	 */
+	public void requestChangeNameCase(final int nameCase) {
+		// If nothing selected, refuse.
+		if (this.getSelectedMartTab() == null)
+			return;
+
+		// Work out if we already have a file for this mart. If not,
+		// do a save-as instead.
+		final Mart currentMart = this.getSelectedMartTab().getMart();
+		new LongProcess() {
+			public void run() throws Exception {
+				// Save it.
+				MartBuilderUtils.setCase(currentMart, nameCase);
+
+				// Sync ds tabs.
+				MartTabSet.this.getSelectedMartTab().getDataSetTabSet()
+						.recalculateDataSetTabs();
+			}
+		}.start();
 	}
 
 	/**

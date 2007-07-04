@@ -34,6 +34,7 @@ import org.biomart.builder.exceptions.ListenerException;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -1143,7 +1144,16 @@ public interface MartConstructor {
 				finalName.append(Resources.get("dimensionSuffix"));
 			} else
 				throw new BioMartError();
-			return finalName.toString().replaceAll("\\W+", "");
+			final String name = finalName.toString().replaceAll("\\W+", "");
+			// UC/LC/Mixed?
+			switch (((DataSet) dsTable.getSchema()).getMart().getCase()) {
+			case Mart.USE_LOWER_CASE:
+				return name.toLowerCase();
+			case Mart.USE_UPPER_CASE:
+				return name.toUpperCase();
+			default:
+				return name;
+			}
 		}
 
 		private String getOptimiserColumnName(
@@ -1184,9 +1194,17 @@ public interface MartConstructor {
 				name = sb.toString();
 			} while (((Collection) this.uniqueOptCols.get(parent))
 					.contains(name));
+			name = name.replaceAll("\\W+", "");
+			// UC/LC/Mixed?
+			switch (((DataSet) dsTable.getSchema()).getMart().getCase()) {
+			case Mart.USE_LOWER_CASE:
+				name = name.toLowerCase();
+			case Mart.USE_UPPER_CASE:
+				name = name.toUpperCase();
+			}
 			// Store the name above in the unique list for the parent.
 			((Collection) this.uniqueOptCols.get(parent)).add(name);
-			return name.toString().replaceAll("\\W+", "");
+			return name;
 		}
 
 		private String getFinalName(final String schemaPartitionPrefix,
@@ -1225,7 +1243,16 @@ public interface MartConstructor {
 			} else
 				throw new BioMartError();
 			// Remove any non-[char/number/underscore] symbols.
-			return finalName.toString().replaceAll("\\W+", "");
+			final String name = finalName.toString().replaceAll("\\W+", "");
+			// UC/LC/Mixed?
+			switch (((DataSet) dsTable.getSchema()).getMart().getCase()) {
+			case Mart.USE_LOWER_CASE:
+				return name.toLowerCase();
+			case Mart.USE_UPPER_CASE:
+				return name.toUpperCase();
+			default:
+				return name;
+			}
 		}
 
 		private void issueListenerEvent(final int event)

@@ -149,6 +149,17 @@ public interface PartitionTable {
 			throws PartitionException;
 
 	/**
+	 * Make a copy of ourselves in the target.
+	 * 
+	 * @param target
+	 *            the target to copy ourselves to.
+	 * @throws PartitionException
+	 *             if it went wrong.
+	 */
+	public void replicate(final PartitionTable target)
+			throws PartitionException;
+
+	/**
 	 * An abstract implementation from which others will extend. Anonymous inner
 	 * classes extending this will probably provide SQL-based data rows, for
 	 * instance.
@@ -189,6 +200,20 @@ public interface PartitionTable {
 			return this.currentRow;
 		}
 
+		public void replicate(final PartitionTable target)
+				throws PartitionException {
+			target.setSelectedColumnNames(this.getSelectedColumnNames());
+			for (final Iterator i = this.getSelectedColumnNames().iterator(); i
+					.hasNext();) {
+				final String colName = (String) i.next();
+				final PartitionColumn ourPcol = this.getSelectedColumn(colName);
+				final PartitionColumn theirPcol = target
+						.getSelectedColumn(colName);
+				theirPcol.setRegexMatch(ourPcol.getRegexMatch());
+				theirPcol.setRegexReplace(ourPcol.getRegexReplace());
+			}
+		}
+
 		public PartitionColumn getSelectedColumn(final String name)
 				throws PartitionException {
 			// Throw exception if it does not exist or is subdivided.
@@ -218,11 +243,14 @@ public interface PartitionTable {
 				final String col = (String) i.next();
 				if (col.equals(PartitionTable.DIV_COLUMN)) {
 					// Don't allow back-to-back divs.
-					if (previous.equals(col)) continue;
+					if (previous.equals(col))
+						continue;
 					// Don't allow div-at-end.
-					else if (!i.hasNext()) continue;
+					else if (!i.hasNext())
+						continue;
 					// Don't allow div-at-start.
-					else if ("".equals(previous)) continue;
+					else if ("".equals(previous))
+						continue;
 				}
 				this.selectedCols.add(col);
 				previous = col;
@@ -449,7 +477,7 @@ public interface PartitionTable {
 		 */
 		public void setRegexMatch(final String regexMatch) {
 			this.regexMatch = regexMatch;
-			if (this.regexMatch!=null)
+			if (this.regexMatch != null)
 				try {
 					this.compiled = Pattern.compile(this.regexMatch);
 				} catch (final PatternSyntaxException pe) {

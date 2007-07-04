@@ -56,6 +56,28 @@ import org.biomart.common.model.Relation.GenericRelation;
  * @since 0.6
  */
 public class MartBuilderUtils {
+
+	/**
+	 * Change the mart to use table/column names in the given format, then syncs
+	 * all datasets.
+	 * 
+	 * @param mart
+	 *            the names to use.
+	 * @param nameCase
+	 *            the case of the name to use.
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 */
+	public static void setCase(final Mart mart, final int nameCase)
+			throws SQLException, DataModelException {
+		mart.setCase(nameCase);
+		mart.synchroniseDataSets();
+	}
+
 	/**
 	 * Attempts to create a foreign key on a table given a set of columns. The
 	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
