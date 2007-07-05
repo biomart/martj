@@ -427,6 +427,8 @@ public class PartitionTableDialog extends JDialog {
 					}
 
 					public void columnMoved(final TableColumnModelEvent e) {
+						if (e.getFromIndex() == e.getToIndex())
+							return;
 						PartitionTableDialog.this.selectedColumns.clear();
 						for (int i = 0; i < previewTable.getColumnCount(); i++)
 							PartitionTableDialog.this.selectedColumns
@@ -565,7 +567,13 @@ public class PartitionTableDialog extends JDialog {
 			while (this.previewData.getRowCount() > 0)
 				this.previewData.removeRow(0);
 			// No new cols? Don't go any further.
-			if (selectedCols.size() < 1)
+			final List trueSelectedCols = new ArrayList();
+			for (final Iterator i = selectedCols.iterator(); i.hasNext();) {
+				final String col = (String) i.next();
+				if (!col.equals(PartitionTable.DIV_COLUMN))
+					trueSelectedCols.add(col);
+			}
+			if (trueSelectedCols.size() < 1)
 				return;
 			// Get the rows.
 			try {
@@ -575,7 +583,7 @@ public class PartitionTableDialog extends JDialog {
 				ds.asPartitionTable().prepareRows(null,
 						PartitionTableDialog.PREVIEW_ROWS);
 			}
-			while (ds.asPartitionTable().nextRow()) {
+			while (ds.asPartitionTable().nudgeRow()) {
 				final PartitionRow row = ds.asPartitionTable().currentRow();
 				final List rowData = new ArrayList();
 				for (final Iterator i = selectedCols.iterator(); i.hasNext();) {
