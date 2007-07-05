@@ -464,7 +464,7 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(compound);
-		if (incorrect || relationMasked)
+		if (incorrect || relationMasked || this.dataset.isPartitionTable())
 			compound.setEnabled(false);
 		if (relationCompounded)
 			compound.setSelected(true);

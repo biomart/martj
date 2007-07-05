@@ -471,6 +471,7 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(expression);
+			expression.setEnabled(!this.getDataSet().isPartitionTable());
 
 			contextMenu.addSeparator();
 
