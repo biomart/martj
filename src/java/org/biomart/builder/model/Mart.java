@@ -383,19 +383,39 @@ public class Mart {
 	 */
 	public Collection getPartitionColumnNames() {
 		final List colNames = new ArrayList();
-		for (final Iterator i = this.getDataSets().iterator(); i.hasNext();) {
-			final DataSet ds = (DataSet) i.next();
-			if (ds.isPartitionTable())
-				for (final Iterator j = ds.asPartitionTable()
-						.getSelectedColumnNames().iterator(); j.hasNext();) {
-					final String col = (String) j.next();
-					if (!col.equals(PartitionTable.DIV_COLUMN))
-						colNames.add(ds.getName() + "." + col);
-				}
+		for (final Iterator i = this.getPartitionTableNames().iterator(); i
+				.hasNext();) {
+			final PartitionTable pt = this.getPartitionTable((String) i.next());
+			for (final Iterator j = pt.getSelectedColumnNames().iterator(); j
+					.hasNext();) {
+				final String col = (String) j.next();
+				if (!col.equals(PartitionTable.DIV_COLUMN))
+					colNames.add(pt.getName() + "." + col);
+			}
 		}
 		// Tidy up.
 		Collections.sort(colNames);
 		return colNames;
+	}
+
+	/**
+	 * Returns the set of partition table names which this mart includes. The
+	 * set may be empty but it is never <tt>null</tt>.
+	 * 
+	 * @return a set of partition table names (as strings). Each name returned
+	 *         is fully qualified and ready to pass to
+	 *         {@link #getPartitionTable(String)}.
+	 */
+	public Collection getPartitionTableNames() {
+		final List tblNames = new ArrayList();
+		for (final Iterator i = this.getDataSets().iterator(); i.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
+			if (ds.isPartitionTable())
+				tblNames.add(ds.getName());
+		}
+		// Tidy up.
+		Collections.sort(tblNames);
+		return tblNames;
 	}
 
 	/**
@@ -814,6 +834,19 @@ public class Mart {
 	}
 
 	/**
+	 * Using the descriptor (table name) return the actual table from a
+	 * {@link PartitionTable}.
+	 * 
+	 * @param descriptor
+	 *            the descriptor.
+	 * @return the table.
+	 */
+	public PartitionTable getPartitionTable(final String descriptor) {
+		final String[] parts = descriptor.split("\\.");
+		return this.getDataSetByName(parts[0]).asPartitionTable();
+	}
+
+	/**
 	 * Using the descriptor (table.column) return the actual column from a
 	 * {@link PartitionTable} or subdivision thereof.
 	 * 
@@ -823,8 +856,7 @@ public class Mart {
 	 */
 	public PartitionColumn getPartitionColumn(final String descriptor) {
 		final String[] parts = descriptor.split("\\.");
-		PartitionTable table = this.getDataSetByName(parts[0])
-				.asPartitionTable();
+		PartitionTable table = this.getPartitionTable(parts[0]);
 		try {
 			return table.getSelectedColumn(parts[1]);
 		} catch (final PartitionException pe) {
@@ -835,9 +867,9 @@ public class Mart {
 
 	/**
 	 * Resolve and replace all partition references in the expression and return
-	 * the resolved expression. Partition references are enclosed in $ signs and
-	 * are in the form $table[.subtable[.subtable]*]*.column$. Any $ sections
-	 * that do not resolve to a valid partition are ignored and left intact.
+	 * the resolved expression. Partition references are enclosed in % signs and
+	 * are in the form %table.column%. Any % sections that do not resolve to a
+	 * valid partition are ignored and left intact.
 	 * 
 	 * @param expression
 	 *            the expression to resolve.
@@ -848,18 +880,18 @@ public class Mart {
 	public String resolveExpression(final String expression)
 			throws PartitionException {
 		String resolvedExpression = expression;
-		int previousDollar = expression.indexOf('$');
-		int nextDollar = expression.indexOf('$', previousDollar + 1);
+		int previousDollar = expression.indexOf('%');
+		int nextDollar = expression.indexOf('%', previousDollar + 1);
 		while (nextDollar != -1) {
 			final String alias = expression.substring(previousDollar + 1,
 					nextDollar);
 			final PartitionColumn col = this.getPartitionColumn(alias);
 			if (col != null)
-				resolvedExpression = resolvedExpression.replace("$" + alias
-						+ "$", col.getValueForRow(col.getPartitionTable()
+				resolvedExpression = resolvedExpression.replace("%" + alias
+						+ "%", col.getValueForRow(col.getPartitionTable()
 						.currentRow()));
 			previousDollar = nextDollar;
-			nextDollar = expression.indexOf('$', previousDollar + 1);
+			nextDollar = expression.indexOf('%', previousDollar + 1);
 		}
 		return resolvedExpression;
 	}

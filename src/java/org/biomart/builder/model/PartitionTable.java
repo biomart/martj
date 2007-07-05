@@ -178,7 +178,10 @@ public interface PartitionTable {
 
 		private List rows = null;
 
-		private final List currentSubRows = new ArrayList();
+		/**
+		 * Internal use only, for subdivision tables only.
+		 */
+		protected final List subRows = new ArrayList();
 
 		/**
 		 * Internal use only, by anonymous subclass.
@@ -305,7 +308,7 @@ public interface PartitionTable {
 
 					protected List getRows(String schemaPartition, int limit)
 							throws PartitionException {
-						return currentSubRows;
+						return this.subRows;
 					}
 
 					public Collection getAllColumnNames() {
@@ -351,8 +354,8 @@ public interface PartitionTable {
 			this.currentRow = (PartitionRow) this.rows.get(this.rowIterator++);
 			// Set up the sub-division tables.
 			if (this.subdivision != null) {
-				this.currentSubRows.clear();
-				this.currentSubRows.add(this.currentRow);
+				this.subdivision.subRows.clear();
+				this.subdivision.subRows.add(this.currentRow);
 				// Keep adding rows till find one not same.
 				boolean keepGoing = true;
 				while (keepGoing && this.rowIterator < this.rows.size()) {
@@ -367,7 +370,7 @@ public interface PartitionTable {
 										subRow.getValue(subColName));
 					}
 					if (keepGoing) {
-						this.currentSubRows.add(subRow);
+						this.subdivision.subRows.add(subRow);
 						this.rowIterator++;
 					}
 				}

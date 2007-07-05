@@ -140,9 +140,10 @@ public class DataSetContext extends SchemaContext {
 					.getType();
 
 			// Highlight partitioned main tables.
-			if (tableType.equals(DataSetTableType.MAIN) && this.getDataSet().isPartitionTable())
+			if (tableType.equals(DataSetTableType.MAIN)
+					&& this.getDataSet().isPartitionTable())
 				component.setBackground(DataSetComponent.PARTITION_BACKGROUND);
-			
+
 			// Fade MASKED DIMENSION relations.
 			else if (this.getDataSet().getDataSetModifications().isMaskedTable(
 					(DataSetTable) object)) {
@@ -170,8 +171,12 @@ public class DataSetContext extends SchemaContext {
 
 			// Update dotted line (partitioned).
 			((TableComponent) component).setRestricted(this.dataset
-					.getDataSetModifications().isTablePartition((DataSetTable) object));
-			
+					.getDataSetModifications().isTablePartition(
+							(DataSetTable) object)
+					|| (((DataSetTable) object).getType().equals(
+							DataSetTableType.MAIN) && this.dataset
+							.getDataSetModifications().isDatasetPartition()));
+
 			((TableComponent) component).setRenameable(true);
 			((TableComponent) component).setSelectable(true);
 		}
@@ -311,8 +316,7 @@ public class DataSetContext extends SchemaContext {
 						final boolean isMasked = DataSetContext.this
 								.getDataSet().getDataSetModifications()
 								.isMaskedColumn(column);
-						if (!isMasked 
-								&& !(column instanceof ExpressionColumn))
+						if (!isMasked && !(column instanceof ExpressionColumn))
 							columns.add(column);
 					}
 					DataSetContext.this.getMartTab().getDataSetTabSet()
@@ -471,22 +475,24 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.addSeparator();
 
 			// The table can be distincted by using this option.
-			final JCheckBoxMenuItem distinct = new JCheckBoxMenuItem(
-					Resources.get("distinctTableTitle"));
-			distinct.setMnemonic(Resources.get("distinctTableMnemonic")
-					.charAt(0));
+			final JCheckBoxMenuItem distinct = new JCheckBoxMenuItem(Resources
+					.get("distinctTableTitle"));
+			distinct.setMnemonic(Resources.get("distinctTableMnemonic").charAt(
+					0));
 			distinct.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					if (distinct.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestDistinctTable(
-										DataSetContext.this.getDataSet(),
-										table);
+										DataSetContext.this.getDataSet(), table);
 					else
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestUndistinctTable(
-										DataSetContext.this.getDataSet(),
-										table);
+										DataSetContext.this.getDataSet(), table);
 				}
 			});
 			contextMenu.add(distinct);
@@ -595,12 +601,12 @@ public class DataSetContext extends SchemaContext {
 					compound.setEnabled(false);
 				if (isCompound)
 					compound.setSelected(true);
-				
+
 				// The partition option.
 				final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(
 						Resources.get("partitionDimensionTitle"));
-				partition.setMnemonic(Resources
-						.get("partitionDimensionMnemonic").charAt(0));
+				partition.setMnemonic(Resources.get(
+						"partitionDimensionMnemonic").charAt(0));
 				partition.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
@@ -616,6 +622,24 @@ public class DataSetContext extends SchemaContext {
 					partition.setEnabled(false);
 				if (isPartition)
 					partition.setSelected(true);
+
+				// The partition wizard option.
+				final JMenuItem partitionWizard = new JMenuItem(Resources
+						.get("partitionWizardDimensionTitle"));
+				partitionWizard.setMnemonic(Resources.get(
+						"partitionWizardDimensionMnemonic").charAt(0));
+				partitionWizard.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestDimensionPartitionWizard(table);
+						partition.setSelected(DataSetContext.this.dataset
+								.getDataSetModifications().isTablePartition(
+										table));
+					}
+				});
+				contextMenu.add(partitionWizard);
+				if (isMasked || isMerged)
+					partition.setEnabled(false);
 			}
 
 			// Subclass tables have their own options too.

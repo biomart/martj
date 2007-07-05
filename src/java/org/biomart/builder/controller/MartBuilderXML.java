@@ -650,7 +650,7 @@ public class MartBuilderXML extends DefaultHandler {
 		this.writeAttribute("outputSchema", mart.getOutputSchema(), xmlWriter);
 		this.writeAttribute("outputHost", mart.getOutputHost(), xmlWriter);
 		this.writeAttribute("outputPort", mart.getOutputPort(), xmlWriter);
-		this.writeAttribute("nameCase", ""+mart.getCase(), xmlWriter);
+		this.writeAttribute("nameCase", "" + mart.getCase(), xmlWriter);
 
 		// Write out each schema.
 		final Set externalRelations = new HashSet();
@@ -685,7 +685,7 @@ public class MartBuilderXML extends DefaultHandler {
 						xmlWriter);
 			else
 				this.writeAttribute("isPartitionTable", Boolean.toString(ds
-					.isPartitionTable()), xmlWriter);
+						.isPartitionTable()), xmlWriter);
 			if (ds.isPartitionTable())
 				this.writeListAttribute("selectedColumns", (String[]) ds
 						.asPartitionTable().getSelectedColumnNames().toArray(
@@ -703,8 +703,7 @@ public class MartBuilderXML extends DefaultHandler {
 					if (pcol.getRegexMatch() != null
 							&& pcol.getRegexReplace() != null) {
 						this.openElement("partitionRegex", xmlWriter);
-						this.writeAttribute("name", pcol.getName(),
-								xmlWriter);
+						this.writeAttribute("name", pcol.getName(), xmlWriter);
 						this.writeAttribute("match", pcol.getRegexMatch(),
 								xmlWriter);
 						this.writeAttribute("replace", pcol.getRegexReplace(),
@@ -1180,7 +1179,10 @@ public class MartBuilderXML extends DefaultHandler {
 			mart.setOutputSchema((String) attributes.get("outputSchema"));
 			mart.setOutputHost((String) attributes.get("outputHost"));
 			mart.setOutputPort((String) attributes.get("outputPort"));
-			mart.setCase(Integer.parseInt((String) attributes.get("nameCase")));
+			// Need check to be safe against pre-0.7 versions.
+			if (attributes.containsKey("nameCase"))
+				mart.setCase(Integer.parseInt((String) attributes
+						.get("nameCase")));
 			element = this.constructedMart = mart;
 		}
 
@@ -1966,7 +1968,7 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// Partition regex (inside dataset) 
+		// Partition regex (inside dataset)
 		else if ("partitionRegex".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
@@ -1978,15 +1980,17 @@ public class MartBuilderXML extends DefaultHandler {
 			final String name = (String) attributes.get("name");
 			final String match = (String) attributes.get("match");
 			final String replace = (String) attributes.get("replace");
-			
+
 			try {
-				w.asPartitionTable().getSelectedColumn(name).setRegexMatch(match);
-				w.asPartitionTable().getSelectedColumn(name).setRegexReplace(replace);
+				w.asPartitionTable().getSelectedColumn(name).setRegexMatch(
+						match);
+				w.asPartitionTable().getSelectedColumn(name).setRegexReplace(
+						replace);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
 		}
-		
+
 		// DataSet (anywhere).
 		else if ("dataset".equals(eName))
 			try {
@@ -2053,7 +2057,8 @@ public class MartBuilderXML extends DefaultHandler {
 				ds.setIndexOptimiser(index);
 				ds.setPartitionTable(isPartitionTable);
 				if (isPartitionTable)
-					ds.asPartitionTable().setSelectedColumnNames(Arrays.asList(selectedColumns));
+					ds.asPartitionTable().setSelectedColumnNames(
+							Arrays.asList(selectedColumns));
 				ds.getDataSetModifications().setDatasetPartition(partition);
 				element = ds;
 			} catch (final Exception e) {

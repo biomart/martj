@@ -38,6 +38,7 @@ import javax.swing.event.MenuListener;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
@@ -164,6 +165,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JRadioButtonMenuItem nameCaseLower;
 
+		private JMenuItem partitionDSWizard;
+
 		/**
 		 * Constructor calls super then sets up our menu items.
 		 * 
@@ -249,8 +252,8 @@ public class MartBuilder extends BioMartGUI {
 					.charAt(0));
 			this.nameCaseUpper.addActionListener(this);
 			optGroupNC.add(this.nameCaseUpper);
+			this.nameCaseSubmenu.add(this.nameCaseUpper);
 			// Lower
-			this.nameCaseSubmenu.add(this.nameCaseLower);
 			this.nameCaseLower = new JRadioButtonMenuItem(Resources
 					.get("caseLowerTitle"));
 			this.nameCaseLower.setMnemonic(Resources.get("caseLowerMnemonic")
@@ -347,6 +350,13 @@ public class MartBuilder extends BioMartGUI {
 			this.partitionDataset.setMnemonic(Resources.get(
 					"partitionDataSetMnemonic").charAt(0));
 			this.partitionDataset.addActionListener(this);
+
+			// Partition dataset.
+			this.partitionDSWizard = new JMenuItem(Resources
+					.get("partitionWizardDataSetTitle"));
+			this.partitionDSWizard.setMnemonic(Resources.get(
+					"partitionWizardDataSetMnemonic").charAt(0));
+			this.partitionDSWizard.addActionListener(this);
 
 			// Explain dataset.
 			this.explainDataset = new JMenuItem(Resources
@@ -492,6 +502,7 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.invisibleDataset);
 			datasetMenu.add(this.partitionDataset);
+			datasetMenu.add(this.partitionDSWizard);
 			datasetMenu.add(this.optimiseDatasetSubmenu);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.convertPartitionTable);
@@ -538,22 +549,33 @@ public class MartBuilder extends BioMartGUI {
 											.getDataSets().size() > 0);
 					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
 					MartBuilderMenuBar.this.nameCaseSubmenu.setEnabled(hasMart);
-					if (hasMart) {
-						final Mart mart = MartBuilderMenuBar.this
-								.getMartBuilder().martTabSet
-								.getSelectedMartTab().getMart();
-						switch (mart.getCase()) {
+				}
+			});
+			this.nameCaseSubmenu.addMenuListener(new MenuListener() {
+				public void menuCanceled(final MenuEvent e) {
+				} // Interface requirement.
+
+				public void menuDeselected(final MenuEvent e) {
+				} // Interface requirement.
+
+				public void menuSelected(final MenuEvent e) {
+					final MartTab martTab = MartBuilderMenuBar.this
+							.getMartBuilder().martTabSet.getSelectedMartTab();
+					if (martTab != null)
+						switch (martTab.getMart().getCase()) {
 						case Mart.USE_UPPER_CASE:
 							MartBuilderMenuBar.this.nameCaseUpper
 									.setSelected(true);
+							break;
 						case Mart.USE_LOWER_CASE:
 							MartBuilderMenuBar.this.nameCaseLower
 									.setSelected(true);
+							break;
 						default:
 							MartBuilderMenuBar.this.nameCaseMixed
 									.setSelected(true);
+							break;
 						}
-					}
 				}
 			});
 			fileMenu.addMenuListener(new MenuListener() {
@@ -682,6 +704,8 @@ public class MartBuilder extends BioMartGUI {
 							.setSelected(ds != null
 									&& ds.getDataSetModifications()
 											.isDatasetPartition());
+					MartBuilderMenuBar.this.partitionDSWizard
+							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.explainDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.saveDatasetDDL
@@ -844,6 +868,12 @@ public class MartBuilder extends BioMartGUI {
 						.getSelectedDataSet();
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestModifyDataSetPartition(ds);
+			} else if (e.getSource() == this.partitionDSWizard) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestDataSetPartitionWizard(ds);
 			} else if (e.getSource() == this.convertPartitionTable) {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()

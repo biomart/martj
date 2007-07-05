@@ -36,6 +36,7 @@ import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.PartitionTable;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
@@ -301,7 +302,8 @@ public interface MartConstructor {
 										.getDatasetPartition())
 						: new FakeColumn();
 				datasetPartition.getPartitionTable().prepareRows(
-						(String) schemaPartition.getKey(), -1);
+						(String) schemaPartition.getKey(),
+						PartitionTable.UNLIMITED_ROWS);
 				while (datasetPartition.getPartitionTable().nextRow()) {
 					for (final Iterator i = this.getTablesToProcess(dataset)
 							.iterator(); i.hasNext();) {
@@ -319,7 +321,7 @@ public interface MartConstructor {
 							datasetTablePartition.getPartitionTable()
 									.prepareRows(
 											(String) schemaPartition.getKey(),
-											-1);
+											PartitionTable.UNLIMITED_ROWS);
 							while (datasetTablePartition.getPartitionTable()
 									.nextRow()) {
 								if (!this
@@ -856,8 +858,8 @@ public interface MartConstructor {
 				if (compoundPartition != null
 						&& compoundPartition.getName() != null) {
 					if (ljtu.getSchemaRelationIteration() == 0)
-						compoundPartition.getPartitionTable().prepareRows(
-								schemaPartition, -1);
+						compoundPartition.getPartitionTable().prepareRows(schemaPartition,
+								PartitionTable.UNLIMITED_ROWS);
 					compoundPartition.getPartitionTable().nextRow();
 				}
 			}
@@ -1199,8 +1201,10 @@ public interface MartConstructor {
 			switch (((DataSet) dsTable.getSchema()).getMart().getCase()) {
 			case Mart.USE_LOWER_CASE:
 				name = name.toLowerCase();
+				break;
 			case Mart.USE_UPPER_CASE:
 				name = name.toUpperCase();
+				break;
 			}
 			// Store the name above in the unique list for the parent.
 			((Collection) this.uniqueOptCols.get(parent)).add(name);

@@ -48,8 +48,8 @@ import org.biomart.common.resources.Resources;
  * followed by the transformation process.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class CompoundRelationDialog extends JDialog {
@@ -104,13 +104,14 @@ public class CompoundRelationDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Set up the arity spinner field.
-		this.arity = new SpinnerNumberModel(startvalue.getN(), 1, 10, 1);
+		this.arity = new SpinnerNumberModel(startvalue.getN(), 1,
+				Integer.MAX_VALUE, 1);
 		final JSpinner spinner = new JSpinner(this.arity);
 		this.parallel = new JCheckBox(Resources.get("parallelLabel"));
 
 		// Set up the check box to turn it on and off.
 		final JCheckBox checkbox = new JCheckBox();
-		if (startvalue.getN() > 1)
+		if (startvalue.getPartition()!=null || startvalue.getN()>1)
 			checkbox.setSelected(true);
 		this.parallel.setSelected(startvalue.isParallel());
 		this.parallel.setEnabled(!forceParallel && startvalue.getN() > 1);
@@ -124,7 +125,7 @@ public class CompoundRelationDialog extends JDialog {
 			this.partitionBox.setSelected(startvalue.getPartition() != null);
 			if (startvalue.getPartition() != null)
 				this.partitionMenu.setSelectedItem(startvalue.getPartition());
-			else 
+			else
 				this.partitionMenu.setSelectedIndex(0); // Default.
 		} else {
 			this.partitionBox.setSelected(false);
@@ -185,10 +186,7 @@ public class CompoundRelationDialog extends JDialog {
 		// Intercept the checkbox.
 		checkbox.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (checkbox.isSelected()
-						&& CompoundRelationDialog.this.getArity() == 1)
-					CompoundRelationDialog.this.arity.setValue(new Integer(2));
-				else
+				if (!checkbox.isSelected())
 					CompoundRelationDialog.this.arity.setValue(new Integer(1));
 			}
 		});

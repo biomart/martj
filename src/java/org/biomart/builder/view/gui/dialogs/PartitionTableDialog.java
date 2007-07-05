@@ -19,6 +19,7 @@
 package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -44,6 +45,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableColumnModelEvent;
@@ -87,6 +90,8 @@ public class PartitionTableDialog extends JDialog {
 	private JButton execute;
 
 	private JButton cancel;
+
+	private JTextField previewRowCount;
 
 	private boolean cancelled;
 
@@ -370,10 +375,36 @@ public class PartitionTableDialog extends JDialog {
 			}
 		});
 
+		// Next area is preview row count.
+		this.previewRowCount = new JTextField(5);
+		this.previewRowCount.setText("" + PartitionTableDialog.PREVIEW_ROWS);
+		showHide.add(new JLabel(Resources.get("previewRowCountLabel")),
+				labelConstraints);
+		showHide.add(this.previewRowCount, fieldConstraints);
+		this.previewRowCount.getDocument().addDocumentListener(
+				new DocumentListener() {
+					public void changedUpdate(final DocumentEvent e) {
+						this.changed();
+					}
+
+					public void insertUpdate(final DocumentEvent e) {
+						this.changed();
+					}
+
+					public void removeUpdate(final DocumentEvent e) {
+						this.changed();
+					}
+
+					private void changed() {
+						PartitionTableDialog.this.updatePreviewPanel(dataset);
+					}
+				});
+
 		// Second area (bottom) is preview panel. Populated on opening,
 		// and on each change.
 		this.previewData = new DefaultTableModel();
 		final JTable previewTable = new JTable(this.previewData);
+		previewTable.setGridColor(Color.LIGHT_GRAY); // Mac OSX.
 		previewTable.setEnabled(false);
 		previewTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		previewTable.setPreferredScrollableViewportSize(colPanel
@@ -387,32 +418,34 @@ public class PartitionTableDialog extends JDialog {
 		previewTable.getColumnModel().addColumnModelListener(
 				new TableColumnModelListener() {
 
-					public void columnAdded(TableColumnModelEvent e) {
+					public void columnAdded(final TableColumnModelEvent e) {
 						// Don't care.
 					}
 
-					public void columnMarginChanged(ChangeEvent e) {
+					public void columnMarginChanged(final ChangeEvent e) {
 						// Don't care.
 					}
 
-					public void columnMoved(TableColumnModelEvent e) {
-						selectedColumns.clear();
+					public void columnMoved(final TableColumnModelEvent e) {
+						PartitionTableDialog.this.selectedColumns.clear();
 						for (int i = 0; i < previewTable.getColumnCount(); i++)
-							selectedColumns.addElement(previewTable
-									.getColumnName(i));
+							PartitionTableDialog.this.selectedColumns
+									.addElement(previewTable.getColumnName(i));
 						try {
 							dataset.asPartitionTable().setSelectedColumnNames(
-									getNewSelectedColumns());
+									PartitionTableDialog.this
+											.getNewSelectedColumns());
 						} catch (final PartitionException pe) {
 							StackTrace.showStackTrace(pe);
 						}
 					}
 
-					public void columnRemoved(TableColumnModelEvent e) {
+					public void columnRemoved(final TableColumnModelEvent e) {
 						// Don't care.
 					}
 
-					public void columnSelectionChanged(ListSelectionEvent e) {
+					public void columnSelectionChanged(
+							final ListSelectionEvent e) {
 						// Don't care.
 					}
 				});
@@ -535,8 +568,13 @@ public class PartitionTableDialog extends JDialog {
 			if (selectedCols.size() < 1)
 				return;
 			// Get the rows.
-			ds.asPartitionTable().prepareRows(null,
-					PartitionTableDialog.PREVIEW_ROWS);
+			try {
+				ds.asPartitionTable().prepareRows(null,
+						Integer.parseInt(this.previewRowCount.getText()));
+			} catch (final NumberFormatException nfe) {
+				ds.asPartitionTable().prepareRows(null,
+						PartitionTableDialog.PREVIEW_ROWS);
+			}
 			while (ds.asPartitionTable().nextRow()) {
 				final PartitionRow row = ds.asPartitionTable().currentRow();
 				final List rowData = new ArrayList();

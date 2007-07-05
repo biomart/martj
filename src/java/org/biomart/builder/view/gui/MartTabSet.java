@@ -786,7 +786,7 @@ public class MartTabSet extends JTabbedPane {
 
 				// Sync ds tabs.
 				MartTabSet.this.getSelectedMartTab().getDataSetTabSet()
-						.recalculateDataSetTabs();
+						.recalculateAllDataSetDiagrams();
 			}
 		}.start();
 	}

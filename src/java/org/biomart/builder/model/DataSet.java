@@ -40,7 +40,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.PartitionTable.AbstractPartitionTable;
-import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionRow;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
