@@ -56,8 +56,7 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.PartitionTable.PartitionColumn;
-import org.biomart.builder.model.PartitionTable.PartitionColumn.FakeColumn;
-import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -295,45 +294,40 @@ public interface MartConstructor {
 						schemaPartition.getKey());
 
 				// Loop over dataset partitions.
-				final PartitionColumn datasetPartition = dataset
-						.getDataSetModifications().isDatasetPartition() ? dataset
-						.getMart().getPartitionColumn(
-								dataset.getDataSetModifications()
-										.getDatasetPartition())
-						: new FakeColumn();
-				datasetPartition.getPartitionTable().prepareRows(
-						(String) schemaPartition.getKey(),
-						PartitionTable.UNLIMITED_ROWS);
-				while (datasetPartition.getPartitionTable().nextRow()) {
+				final PartitionTableApplication dsPta = dataset.getMart()
+						.getPartitionTableForDataSet(dataset);
+				boolean fakeDSPartition = dsPta == null;
+				if (!fakeDSPartition)
+					dsPta.getNamePartitionCol().getPartitionTable()
+							.prepareRows((String) schemaPartition.getKey(),
+									PartitionTable.UNLIMITED_ROWS);
+				while (fakeDSPartition ? true : (dsPta != null && dsPta
+						.getPartitionTable().nextRow())) {
+					fakeDSPartition = false;
 					for (final Iterator i = this.getTablesToProcess(dataset)
 							.iterator(); i.hasNext();) {
 						final DataSetTable dsTable = (DataSetTable) i.next();
 						if (!droppedTables.contains(dsTable.getParent())) {
 							// Loop over dataset table partitions.
-							final PartitionColumn datasetTablePartition = dataset
-									.getDataSetModifications()
-									.isTablePartition(dsTable) ? dataset
-									.getMart()
-									.getPartitionColumn(
-											dataset.getDataSetModifications()
-													.getTablePartition(dsTable))
-									: new FakeColumn();
-							datasetTablePartition.getPartitionTable()
-									.prepareRows(
-											(String) schemaPartition.getKey(),
-											PartitionTable.UNLIMITED_ROWS);
-							while (datasetTablePartition.getPartitionTable()
-									.nextRow()) {
-								if (!this
-										.makeActionsForDatasetTable(
-												templateSchema,
+							final PartitionTableApplication dmPta = dataset
+									.getMart().getPartitionTableForDimension(
+											dsTable);
+							boolean fakeDMPartition = dmPta == null;
+							if (!fakeDMPartition)
+								dmPta.getNamePartitionCol().getPartitionTable()
+										.prepareRows(
 												(String) schemaPartition
 														.getKey(),
-												(String) schemaPartition
-														.getValue(),
-												datasetPartition,
-												datasetTablePartition, dataset,
-												dsTable))
+												PartitionTable.UNLIMITED_ROWS);
+							while (fakeDMPartition ? true
+									: (dmPta != null && dmPta
+											.getPartitionTable().nextRow())) {
+								fakeDMPartition = false;
+								if (!this.makeActionsForDatasetTable(
+										templateSchema,
+										(String) schemaPartition.getKey(),
+										(String) schemaPartition.getValue(),
+										dsPta, dmPta, dataset, dsTable))
 									droppedTables.add(dsTable);
 							}
 						}
@@ -392,13 +386,13 @@ public interface MartConstructor {
 
 		private boolean makeActionsForDatasetTable(final Schema templateSchema,
 				final String schemaPartition, final String schemaPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
-				final DataSet dataset, final DataSetTable dsTable)
-				throws ListenerException, SQLException, PartitionException {
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta, final DataSet dataset,
+				final DataSetTable dsTable) throws ListenerException,
+				SQLException, PartitionException {
 			Log.debug("Creating actions for table " + dsTable);
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					datasetPartition, datasetTablePartition, dsTable);
+					dsPta, dmPta, dsTable);
 			final String tempName = "TEMP";
 			String previousTempTable = null;
 			boolean firstJoin = true;
@@ -414,10 +408,9 @@ public interface MartConstructor {
 				// Translate TU to Action.
 				// Expression?
 				if (tu instanceof Expression) {
-					if (!this.doExpression(schemaPrefix, datasetPartition,
-							datasetTablePartition, dataset, dsTable,
-							(Expression) tu, previousTempTable, tempTable,
-							droppedCols)) {
+					if (!this.doExpression(schemaPrefix, dsPta, dmPta, dataset,
+							dsTable, (Expression) tu, previousTempTable,
+							tempTable, droppedCols)) {
 						// Skip to next action to prevent non-existent
 						// new temp table from getting dropped.
 						continue;
@@ -426,16 +419,14 @@ public interface MartConstructor {
 				// Left-join?
 				else if (tu instanceof JoinTable)
 					requiresFinalLeftJoin |= this.doJoinTable(templateSchema,
-							schemaPartition, schemaPrefix, datasetPartition,
-							datasetTablePartition, dataset, dsTable,
-							(JoinTable) tu, previousTempTable, tempTable,
-							droppedCols);
+							schemaPartition, schemaPrefix, dsPta, dmPta,
+							dataset, dsTable, (JoinTable) tu,
+							previousTempTable, tempTable, droppedCols);
 
 				// Select-from?
 				else if (tu instanceof SelectFromTable)
 					this.doSelectFromTable(templateSchema, schemaPartition,
-							schemaPrefix, datasetPartition,
-							datasetTablePartition, dataset, dsTable,
+							schemaPrefix, dsPta, dmPta, dataset, dsTable,
 							(SelectFromTable) tu, tempTable);
 
 				else
@@ -471,18 +462,17 @@ public interface MartConstructor {
 			}
 
 			// Do final set of actions for table once per partition.
-			final String finalName = this.getFinalName(schemaPrefix,
-					datasetPartition, datasetTablePartition, dsTable);
+			final String finalName = this.getFinalName(schemaPrefix, dsPta,
+					dmPta, dsTable);
 
 			// Do a final left-join against the parent to reinstate
 			// any potentially missing rows.
 			if (requiresFinalLeftJoin
 					&& !dsTable.getType().equals(DataSetTableType.MAIN)) {
 				final String tempTable = tempName + this.tempNameCount++;
-				this.doParentLeftJoin(schemaPrefix, datasetPartition,
-						datasetTablePartition, dataset, dsTable,
-						finalCombinedName, previousTempTable, tempTable,
-						droppedCols);
+				this.doParentLeftJoin(schemaPrefix, dsPta, dmPta, dataset,
+						dsTable, finalCombinedName, previousTempTable,
+						tempTable, droppedCols);
 				previousTempTable = tempTable;
 			}
 
@@ -552,20 +542,20 @@ public interface MartConstructor {
 					.getDataSetOptimiserType().isTable() ? DataSetOptimiserType.TABLE_INHERIT
 					: DataSetOptimiserType.COLUMN_INHERIT)
 					: dataset.getDataSetOptimiserType();
-			this.doOptimiseTable(schemaPrefix, datasetPartition,
-					datasetTablePartition, dataset, dsTable, oType, !dsTable
-							.getType().equals(DataSetTableType.DIMENSION)
+			this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset, dsTable,
+					oType, !dsTable.getType()
+							.equals(DataSetTableType.DIMENSION)
 							&& dataset.getDataSetOptimiserType().isTable());
 			return true;
 		}
 
 		private void doParentLeftJoin(final String schemaPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
-				final DataSet dataset, final DataSetTable dsTable,
-				final String finalCombinedName, final String previousTempTable,
-				final String tempTable, final Set droppedCols)
-				throws ListenerException, PartitionException {
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta, final DataSet dataset,
+				final DataSetTable dsTable, final String finalCombinedName,
+				final String previousTempTable, final String tempTable,
+				final Set droppedCols) throws ListenerException,
+				PartitionException {
 			// Work out the parent table.
 			final DataSetTable parent = dsTable.getParent();
 			// Work out what columns to take from each side.
@@ -599,8 +589,8 @@ public interface MartConstructor {
 			// Make the join.
 			final LeftJoin action = new LeftJoin(this.datasetSchemaName,
 					finalCombinedName);
-			action.setLeftTable(this.getFinalName(schemaPrefix,
-					datasetPartition, datasetTablePartition, parent));
+			action.setLeftTable(this.getFinalName(schemaPrefix, dsPta, dmPta,
+					parent));
 			action.setRightSchema(this.datasetSchemaName);
 			action.setRightTable(previousTempTable);
 			action.setLeftJoinColumns(leftJoinCols);
@@ -634,19 +624,19 @@ public interface MartConstructor {
 		}
 
 		private void doOptimiseTable(final String schemaPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
-				final DataSet dataset, final DataSetTable dsTable,
-				final DataSetOptimiserType oType, final boolean createTable)
-				throws ListenerException, PartitionException {
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta, final DataSet dataset,
+				final DataSetTable dsTable, final DataSetOptimiserType oType,
+				final boolean createTable) throws ListenerException,
+				PartitionException {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					datasetPartition, datasetTablePartition, dsTable);
+					dsPta, dmPta, dsTable);
 			if (createTable) {
 				// Tables are same name, but use 'bool' or 'count'
 				// instead of 'main'
 				final String optTable = this.getOptimiserTableName(
-						schemaPrefix, datasetPartition, datasetTablePartition,
-						dsTable, dataset.getDataSetOptimiserType());
+						schemaPrefix, dsPta, dmPta, dsTable, dataset
+								.getDataSetOptimiserType());
 				// The key cols are those from the primary key.
 				final List keyCols = new ArrayList();
 				for (final Iterator y = dsTable.getPrimaryKey().getColumns()
@@ -672,8 +662,7 @@ public interface MartConstructor {
 								.getModifiedName());
 					create.setCopyKey(parentKeyCols);
 					create.setCopyTable(this.getOptimiserTableName(
-							schemaPrefix, datasetPartition,
-							datasetTablePartition, parent, dataset
+							schemaPrefix, dsPta, dmPta, parent, dataset
 									.getDataSetOptimiserType()));
 				}
 				this.issueAction(create);
@@ -690,8 +679,8 @@ public interface MartConstructor {
 				final DataSetTable parent = dsTable.getParent();
 				// Set up the column on the dimension parent.
 				final String optTable = this.getOptimiserTableName(
-						schemaPrefix, datasetPartition, datasetTablePartition,
-						parent, dataset.getDataSetOptimiserType());
+						schemaPrefix, dsPta, dmPta, parent, dataset
+								.getDataSetOptimiserType());
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
 				// where at least one child non-key col is non-null.
@@ -714,9 +703,8 @@ public interface MartConstructor {
 
 				// Columns are dimension table names with '_bool' or
 				// '_count' appended.
-				final String optCol = this.getOptimiserColumnName(
-						datasetPartition, datasetTablePartition, parent,
-						dsTable, oType);
+				final String optCol = this.getOptimiserColumnName(dsPta, dmPta,
+						parent, dsTable, oType);
 
 				// Do the bool/count update.
 				final UpdateOptimiser update = new UpdateOptimiser(
@@ -724,7 +712,7 @@ public interface MartConstructor {
 				update.setKeyColumns(keyCols);
 				update.setNonNullColumns(nonNullCols);
 				update.setSourceTableName(this.getFinalName(schemaPrefix,
-						datasetPartition, datasetTablePartition, dsTable));
+						dsPta, dmPta, dsTable));
 				update.setOptTableName(optTable);
 				update.setOptColumnName(optCol);
 				update.setCountNotBool(!oType.isBool());
@@ -744,14 +732,14 @@ public interface MartConstructor {
 
 		private void doSelectFromTable(final Schema templateSchema,
 				final String schemaPartition, final String schemaPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
-				final DataSet dataset, final DataSetTable dsTable,
-				final SelectFromTable stu, final String tempTable)
-				throws SQLException, ListenerException, PartitionException {
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta, final DataSet dataset,
+				final DataSetTable dsTable, final SelectFromTable stu,
+				final String tempTable) throws SQLException, ListenerException,
+				PartitionException {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					datasetPartition, datasetTablePartition, dsTable);
+					dsPta, dmPta, dsTable);
 
 			final Table sourceTable = stu.getTable();
 			// Make sure that we use the same partition on the RHS
@@ -775,9 +763,9 @@ public interface MartConstructor {
 			// Source tables are always main or subclass and
 			// therefore are never partitioned.
 			final String table = sourceTable instanceof DataSetTable ? this
-					.getFinalName(schemaPrefix, datasetPartition,
-							datasetTablePartition, (DataSetTable) sourceTable)
-					: stu.getTable().getName();
+					.getFinalName(schemaPrefix, dsPta, dmPta,
+							(DataSetTable) sourceTable) : stu.getTable()
+					.getName();
 			final Map selectCols = new HashMap();
 			// Select columns from parent table.
 			for (final Iterator k = stu.getNewColumnNameMap().entrySet()
@@ -793,6 +781,7 @@ public interface MartConstructor {
 											.getModifiedName()
 											: entry.getKey(), col
 											.getModifiedName());
+
 			}
 			// Add to selectCols all the inherited has columns, if
 			// this is not a dimension table and the optimiser type is not a
@@ -818,13 +807,52 @@ public interface MartConstructor {
 			action.setTable(table);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
+
+			// For each of the getNewColumnNameMap cols that are in the
+			// current ptable application, add a restriction for that col
+			// using current ptable column value.
+			for (final Iterator i = stu.getNewColumnNameMap().entrySet()
+					.iterator(); i.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final DataSetColumn dsCol = (DataSetColumn) entry.getValue();
+				// If this is a dimension, look up DM PT,
+				// otherwise if this is the main table, look up DS PT,
+				// otherwise don't do it at all.
+				PartitionTableApplication pta = null;
+				if (dsTable.getType().equals(DataSetTableType.DIMENSION)
+						&& dmPta != null)
+					pta = dmPta;
+				else if (dsTable.getType().equals(DataSetTableType.MAIN)
+						&& dsPta != null)
+					pta = dsPta;
+				if (pta != null) {
+					final PartitionColumn pcol = pta
+							.getPartitionColForDSCol(dsCol);
+					if (pcol != null) {
+						// If not partitioning on same table
+						// as ds or dm pt, then prepare and nextRow() it.
+						if (pta.getNamePartitionCol().getPartitionTable() != pcol
+								.getPartitionTable()) {
+							pcol.getPartitionTable().prepareRows(
+									schemaPartition,
+									PartitionTable.UNLIMITED_ROWS);
+							pcol.getPartitionTable().nextRow();
+						}
+						// Apply restriction.
+						action.getPartitionRestrictions().put(
+								entry.getKey(),
+								pcol.getValueForRow(pcol.getPartitionTable()
+										.currentRow()));
+					}
+				}
+			}
+
+			// Table restriction.
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
 					stu.getTable())) {
 				final RestrictedTableDefinition def = dataset
 						.getSchemaModifications().getRestrictedTable(dsTable,
 								stu.getTable());
-				action.setResolvedTableRestriction(dataset.getMart()
-						.resolveExpression(def.getExpression()));
 				action.setTableRestriction(def);
 			}
 			this.issueAction(action);
@@ -832,37 +860,15 @@ public interface MartConstructor {
 
 		private boolean doJoinTable(final Schema templateSchema,
 				final String schemaPartition, final String schemaPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
-				final DataSet dataset, final DataSetTable dsTable,
-				final JoinTable ljtu, final String previousTempTable,
-				final String tempTable, final Set droppedCols)
-				throws SQLException, ListenerException, PartitionException {
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta, final DataSet dataset,
+				final DataSetTable dsTable, final JoinTable ljtu,
+				final String previousTempTable, final String tempTable,
+				final Set droppedCols) throws SQLException, ListenerException,
+				PartitionException {
 			boolean requiresFinalLeftJoin = false;
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					datasetPartition, datasetTablePartition, dsTable);
-
-			// Check to see if relationIteration was compounded
-			// using a PartitionTable. If it was, obtain that partition table
-			// and call nextRow() on it before continuing, so that references
-			// to that table resolve to the correct row. If this is first time
-			// for that join relation (relationIteration=0) call prepareRows
-			// first specifying schema partition.
-			if (dataset.getSchemaModifications().isCompoundRelation(dsTable,
-					ljtu.getSchemaRelation())) {
-				final CompoundRelationDefinition compoundDef = dataset
-						.getSchemaModifications().getCompoundRelation(dsTable,
-								ljtu.getSchemaRelation());
-				final PartitionColumn compoundPartition = dataset.getMart()
-						.getPartitionColumn(compoundDef.getPartition());
-				if (compoundPartition != null
-						&& compoundPartition.getName() != null) {
-					if (ljtu.getSchemaRelationIteration() == 0)
-						compoundPartition.getPartitionTable().prepareRows(schemaPartition,
-								PartitionTable.UNLIMITED_ROWS);
-					compoundPartition.getPartitionTable().nextRow();
-				}
-			}
+					dsPta, dmPta, dsTable);
 
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
@@ -922,13 +928,51 @@ public interface MartConstructor {
 			action.setRightJoinColumns(rightJoinCols);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
+
+			// For each of the getNewColumnNameMap cols that are in the
+			// current ptable application, add a restriction for that col
+			// using current ptable column value.
+			for (final Iterator i = ljtu.getNewColumnNameMap().entrySet()
+					.iterator(); i.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final DataSetColumn dsCol = (DataSetColumn) entry.getValue();
+
+				PartitionTableApplication pta = null;
+				if (dsTable.getType().equals(DataSetTableType.DIMENSION)
+						&& dmPta != null)
+					pta = dmPta;
+				else if (dsTable.getType().equals(DataSetTableType.MAIN)
+						&& dsPta != null)
+					pta = dsPta;
+				if (pta != null) {
+					final PartitionColumn pcol = pta
+							.getPartitionColForDSCol(dsCol);
+					if (pcol != null) {
+						// If not partitioning on same table
+						// as ds or dm pt, then prepare and nextRow() it.
+						if (pta.getNamePartitionCol().getPartitionTable() != pcol
+								.getPartitionTable()) {
+							if (ljtu.getSchemaRelationIteration() == 0)
+								pcol.getPartitionTable().prepareRows(
+										schemaPartition,
+										PartitionTable.UNLIMITED_ROWS);
+							pcol.getPartitionTable().nextRow();
+						}
+						// Apply restriction.
+						action.getPartitionRestrictions().put(
+								entry.getKey(),
+								pcol.getValueForRow(pcol.getPartitionTable()
+										.currentRow()));
+					}
+				}
+			}
+
+			// Table restriction.
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
 					ljtu.getTable())) {
 				final RestrictedTableDefinition def = dataset
 						.getSchemaModifications().getRestrictedTable(dsTable,
 								ljtu.getTable());
-				action.setResolvedTableRestriction(dataset.getMart()
-						.resolveExpression(def.getExpression()));
 				action.setTableRestriction(def);
 				requiresFinalLeftJoin |= def.isHard();
 			}
@@ -944,8 +988,6 @@ public interface MartConstructor {
 						.getSchemaModifications().getRestrictedRelation(
 								dsTable, ljtu.getSchemaRelation(),
 								ljtu.getSchemaRelationIteration());
-				action.setResolvedRelationRestriction(dataset.getMart()
-						.resolveExpression(def.getExpression()));
 				// Add the restriction.
 				action.setRelationRestrictionPreviousUnit(ljtu
 						.getPreviousUnit());
@@ -960,15 +1002,15 @@ public interface MartConstructor {
 		}
 
 		private boolean doExpression(final String schemaPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
-				final DataSet dataset, final DataSetTable dsTable,
-				final Expression etu, final String previousTempTable,
-				final String tempTable, final Set droppedCols)
-				throws ListenerException, PartitionException {
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta, final DataSet dataset,
+				final DataSetTable dsTable, final Expression etu,
+				final String previousTempTable, final String tempTable,
+				final Set droppedCols) throws ListenerException,
+				PartitionException {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					datasetPartition, datasetTablePartition, dsTable);
+					dsPta, dmPta, dsTable);
 			// Some useful stuff.
 			boolean useXTable = false;
 			final String xTableName = tempTable + "X";
@@ -1032,12 +1074,8 @@ public interface MartConstructor {
 							groupByCols.addAll(hasCols);
 					}
 					// Add the column to the list to be generated.
-					final String resolvedExpr = dataset.getMart()
-							.resolveExpression(
-									expr
-											.getSubstitutedExpression(dsTable,
-													null));
-					exprCols.put(expCol.getModifiedName(), resolvedExpr);
+					exprCols.put(expCol.getModifiedName(), expr
+							.getSubstitutedExpression(dsTable, null));
 				}
 
 				// None left to do here? Don't do any then!
@@ -1097,8 +1135,8 @@ public interface MartConstructor {
 
 		private String getOptimiserTableName(
 				final String schemaPartitionPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta,
 				final DataSetTable dsTable, final DataSetOptimiserType oType)
 				throws PartitionException {
 			final StringBuffer finalName = new StringBuffer();
@@ -1106,12 +1144,10 @@ public interface MartConstructor {
 				finalName.append(schemaPartitionPrefix);
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
-			if (datasetPartition.getName() != null) {
-				finalName.append(datasetPartition.getPartitionTable()
-						.getSelectedColumn(datasetPartition.getName())
-						.getValueForRow(
-								datasetPartition.getPartitionTable()
-										.currentRow()));
+			if (dsPta != null) {
+				final PartitionColumn pcol = dsPta.getNamePartitionCol();
+				finalName.append(pcol.getValueForRow(pcol.getPartitionTable()
+						.currentRow()));
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
 			finalName.append(dsTable.getSchema().getName());
@@ -1136,11 +1172,11 @@ public interface MartConstructor {
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("subclassSuffix"));
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-				if (datasetTablePartition.getName() != null) {
+				if (dmPta != null) {
 					finalName.append(Resources.get("tablenameSubSep"));
-					finalName.append(datasetTablePartition
-							.getValueForRow(datasetTablePartition
-									.getPartitionTable().currentRow()));
+					final PartitionColumn pcol = dmPta.getNamePartitionCol();
+					finalName.append(pcol.getValueForRow(pcol
+							.getPartitionTable().currentRow()));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));
@@ -1159,8 +1195,8 @@ public interface MartConstructor {
 		}
 
 		private String getOptimiserColumnName(
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta,
 				final DataSetTable parent, final DataSetTable dsTable,
 				final DataSetOptimiserType oType) throws PartitionException {
 			// Set up storage for unique names if required.
@@ -1173,10 +1209,10 @@ public interface MartConstructor {
 				final StringBuffer sb = new StringBuffer();
 				sb.append(dsTable.getModifiedName());
 				sb.append(Resources.get("tablenameSubSep"));
-				if (datasetTablePartition.getName() != null) {
-					sb.append(datasetTablePartition
-							.getValueForRow(datasetTablePartition
-									.getPartitionTable().currentRow()));
+				if (dsPta != null) {
+					final PartitionColumn pcol = dsPta.getNamePartitionCol();
+					sb.append(pcol.getValueForRow(pcol.getPartitionTable()
+							.currentRow()));
 					sb.append(Resources.get("tablenameSubSep"));
 				}
 				if (++counter > 0) {
@@ -1212,18 +1248,18 @@ public interface MartConstructor {
 		}
 
 		private String getFinalName(final String schemaPartitionPrefix,
-				final PartitionColumn datasetPartition,
-				final PartitionColumn datasetTablePartition,
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta,
 				final DataSetTable dsTable) throws PartitionException {
 			final StringBuffer finalName = new StringBuffer();
 			if (schemaPartitionPrefix != null) {
 				finalName.append(schemaPartitionPrefix);
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
-			if (datasetPartition.getName() != null) {
-				finalName.append(datasetPartition
-						.getValueForRow(datasetPartition.getPartitionTable()
-								.currentRow()));
+			if (dsPta != null) {
+				final PartitionColumn pcol = dsPta.getNamePartitionCol();
+				finalName.append(pcol.getValueForRow(pcol.getPartitionTable()
+						.currentRow()));
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
 			finalName.append(dsTable.getSchema().getName());
@@ -1236,11 +1272,11 @@ public interface MartConstructor {
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("subclassSuffix"));
 			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-				if (datasetTablePartition.getName() != null) {
+				if (dmPta != null) {
 					finalName.append(Resources.get("tablenameSubSep"));
-					finalName.append(datasetTablePartition
-							.getValueForRow(datasetTablePartition
-									.getPartitionTable().currentRow()));
+					final PartitionColumn pcol = dmPta.getNamePartitionCol();
+					finalName.append(pcol.getValueForRow(pcol
+							.getPartitionTable().currentRow()));
 				}
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));

@@ -1370,17 +1370,11 @@ public class SchemaModificationSet {
 		 * 
 		 * @param tablePrefix
 		 *            the prefix to use for the table in the expression.
-		 * @param resolvedExpr
-		 *            the resolved expression (with all partition aliases
-		 *            resolved and replaced) for working on. If you are not
-		 *            using partitions, just pass in the result from
-		 *            {@link #getExpression()} instead.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final String tablePrefix,
-				final String resolvedExpr) {
+		public String getSubstitutedExpression(final String tablePrefix) {
 			Log.debug("Calculating restricted table expression");
-			String sub = resolvedExpr;
+			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
@@ -1512,19 +1506,14 @@ public class SchemaModificationSet {
 		 * @param mappingUnit
 		 *            the transformation unit this restriction will use to
 		 *            translate columns into dataset column equivalents.
-		 * @param resolvedExpr
-		 *            the resolved expression (with all partition aliases
-		 *            resolved and replaced) for working on. If you are not
-		 *            using partitions, just pass in the result from
-		 *            {@link #getExpression()} instead.
 		 * @return the substituted expression.
 		 */
 		public String getSubstitutedExpression(final String leftTablePrefix,
 				final String rightTablePrefix, final boolean leftIsDataSet,
 				final boolean rightIsDataSet,
-				final TransformationUnit mappingUnit, final String resolvedExpr) {
+				final TransformationUnit mappingUnit) {
 			Log.debug("Calculating restricted table expression");
-			String sub = resolvedExpr;
+			String sub = this.expr;
 			for (final Iterator i = this.leftAliases.entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
@@ -1572,8 +1561,6 @@ public class SchemaModificationSet {
 
 		private final boolean parallel;
 
-		private final String partition;
-
 		/**
 		 * This constructor gives the compound relation an arity and a flag
 		 * indicating whether to follow the multiple copies in parallel or
@@ -1585,16 +1572,11 @@ public class SchemaModificationSet {
 		 * @param parallel
 		 *            whether this is a parallel (<tt>true</tt>) or serial (<tt>false</tt>)
 		 *            compounding.
-		 * @param partition
-		 *            the partition definition, if any. Use <tt>null</tt> for
-		 *            none.
 		 */
-		public CompoundRelationDefinition(final int n, final boolean parallel,
-				final String partition) {
+		public CompoundRelationDefinition(final int n, final boolean parallel) {
 			// Remember the settings.
 			this.n = n;
 			this.parallel = parallel;
-			this.partition = partition;
 		}
 
 		/**
@@ -1613,16 +1595,6 @@ public class SchemaModificationSet {
 		 */
 		public boolean isParallel() {
 			return this.parallel;
-		}
-
-		/**
-		 * Is this compound relation associated with a partition?
-		 * 
-		 * @return the partition definition if it is, or <tt>null</tt>
-		 *         otherwise.
-		 */
-		public String getPartition() {
-			return this.partition;
 		}
 	}
 }

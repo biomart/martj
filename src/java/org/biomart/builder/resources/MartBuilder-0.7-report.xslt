@@ -90,6 +90,10 @@ Datasets
 ========
 <xsl:apply-templates select="./dataset"/> 
 
+Partition Tables
+================
+<xsl:apply-templates select="./datasetPartitionTable"/>
+
 
 =============
 END OF REPORT
@@ -162,8 +166,6 @@ Focused on:
 Optimiser type: <xsl:value-of select="@optimiser"/>
 Optimisers indexed?: <xsl:value-of select="@indexOptimiser"/>
 Invisible?: <xsl:value-of select="@invisible"/>
-<xsl:if test="@partition">Partition using: <xsl:value-of select="@partition"/></xsl:if>
-<xsl:if test="@partition">Is a partition table?: <xsl:value-of select="@isPartitionTable"/></xsl:if>
 
 Dataset-wide modifications (if-any)
 ------------------------------------
@@ -175,23 +177,33 @@ Table-level modifications (if any)
 
 </xsl:template>
 
+<!-- PARTITION TABLES -->
+<xsl:template match="/mart/datasetPartitionTable">
+
+Partition Table
++++++++++++++++
+
+Based on dataset: <xsl:value-of select="@name"/>
+Selected columns: <xsl:value-of select="@selectedColumns"/>
+
+Regex columns
+-------------
+
+<xsl:apply-templates select="./partitionRegex"/> 
+
+Dataset applications
+--------------------
+
+<xsl:apply-templates select="./datasetApplication"/> 
+
+Dimension applications
+----------------------
+
+<xsl:apply-templates select="./dimensionApplication"/> 
+
+</xsl:template>
 
 <!-- DATASET AND SCHEMA MODS -->
-
-<xsl:template match="partitionRegex">
-
-Regex on partition column: <xsl:value-of select="@name"/>
-  Match:   <xsl:value-of select="@match"/>
-  Replace: <xsl:value-of select="@replace"/>
-
-</xsl:template>
-
-<xsl:template match="dimensionPartition">
-
-Dimension table: <xsl:value-of select="@tableKey"/>
-Partition using: <xsl:value-of select="@partition"/>
-
-</xsl:template>
 
 <xsl:template match="subclassRelation">
 
@@ -205,7 +217,6 @@ Number of times compounded (arity): <xsl:value-of select="@n"/>
 Compound in parallel?: <xsl:value-of select="@parallel"/>
 <xsl:if test="not(@tableKey='__DATASET_WIDE__')">
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
-<xsl:if test="@partition">Partition using: <xsl:value-of select="@partition"/></xsl:if>
 </xsl:template>
 
 <xsl:template match="directionalRelation">
@@ -310,5 +321,36 @@ Hard restriction?: <xsl:value-of select="@hard"/>
 <xsl:if test="not(@tableKey='__DATASET_WIDE__')">
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>
+
+
+<!-- PARTITION TABLE SECTIONS -->
+
+<xsl:template match="partitionRegex">
+
+Regex on partition column: <xsl:value-of select="@name"/>
+  Match:   <xsl:value-of select="@match"/>
+  Replace: <xsl:value-of select="@replace"/>
+
+</xsl:template>
+
+
+<xsl:template match="datasetApplication">
+
+Applied to dataset: <xsl:value-of select="@name"/>
+  Name column: <xsl:value-of select="@nameColumn"/>
+  Mappings: <xsl:call-template name="twoColumnPrintout"><xsl:with-param name="str1" select="@pCols"/><xsl:with-param name="str2" select="@dsCols"/></xsl:call-template>
+
+</xsl:template>
+
+
+<xsl:template match="dimensionApplication">
+
+Applied to dataset: <xsl:value-of select="@name"/>
+  Dimension: <xsl:value-of select="@dimension"/>
+  Name column: <xsl:value-of select="@nameColumn"/>
+  Mappings: <xsl:call-template name="twoColumnPrintout"><xsl:with-param name="str1" select="@pCols"/><xsl:with-param name="str2" select="@dsCols"/></xsl:call-template>
+
+</xsl:template>
+
 
 </xsl:stylesheet>

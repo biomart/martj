@@ -19,6 +19,7 @@
 package org.biomart.builder.model;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -509,9 +510,7 @@ public abstract class MartConstructorAction {
 
 		private TransformationUnit relationRestrictionPreviousUnit;
 		
-		private String resolvedTableRestriction;
-		
-		private String resolvedRelationRestriction;
+		private Map partitionRestrictions = new HashMap();
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -528,6 +527,14 @@ public abstract class MartConstructorAction {
 		public String getStatusMessage() {
 			return Resources.get("mcMerge", new String[] { this.getLeftTable(),
 					this.getRightTable(), this.getResultTable() });
+		}
+		
+		/**
+		 * Get the mutable map of partition restrictions to apply.
+		 * @return the map.
+		 */
+		public Map getPartitionRestrictions() {
+			return this.partitionRestrictions;
 		}
 
 		/**
@@ -696,34 +703,6 @@ public abstract class MartConstructorAction {
 		public void setRelationRestrictionPreviousUnit(
 				TransformationUnit relationRestrictionPreviousUnit) {
 			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
-		}
-
-		/**
-		 * @return the resolvedRelationRestriction
-		 */
-		public String getResolvedRelationRestriction() {
-			return resolvedRelationRestriction;
-		}
-
-		/**
-		 * @param resolvedRelationRestriction the resolvedRelationRestriction to set
-		 */
-		public void setResolvedRelationRestriction(String resolvedRelationRestriction) {
-			this.resolvedRelationRestriction = resolvedRelationRestriction;
-		}
-
-		/**
-		 * @return the resolvedTableRestriction
-		 */
-		public String getResolvedTableRestriction() {
-			return resolvedTableRestriction;
-		}
-
-		/**
-		 * @param resolvedTableRestriction the resolvedTableRestriction to set
-		 */
-		public void setResolvedTableRestriction(String resolvedTableRestriction) {
-			this.resolvedTableRestriction = resolvedTableRestriction;
 		}
 	}
 
@@ -927,7 +906,7 @@ public abstract class MartConstructorAction {
 
 		private RestrictedTableDefinition tableRestriction;
 		
-		private String resolvedTableRestriction;
+		private Map partitionRestrictions = new HashMap();
 
 		/**
 		 * Creates a new Select action.
@@ -944,6 +923,14 @@ public abstract class MartConstructorAction {
 		public String getStatusMessage() {
 			return Resources.get("mcCreate", new String[] {
 					this.getResultTable(), this.getTable() });
+		}
+		
+		/**
+		 * Get the mutable map of partition restrictions to apply.
+		 * @return the map.
+		 */
+		public Map getPartitionRestrictions() {
+			return this.partitionRestrictions;
 		}
 
 		/**
@@ -1020,20 +1007,6 @@ public abstract class MartConstructorAction {
 		public void setTableRestriction(
 				RestrictedTableDefinition tableRestriction) {
 			this.tableRestriction = tableRestriction;
-		}
-
-		/**
-		 * @return the resovledTableRestriction
-		 */
-		public String getResolvedTableRestriction() {
-			return resolvedTableRestriction;
-		}
-
-		/**
-		 * @param resovledTableRestriction the resovledTableRestriction to set
-		 */
-		public void setResolvedTableRestriction(String resovledTableRestriction) {
-			this.resolvedTableRestriction = resovledTableRestriction;
 		}
 	}
 

@@ -70,16 +70,17 @@ public class AllDataSetsContext implements DiagramContext {
 		if (object instanceof DataSet) {
 
 			// Set the background colour.
-			if (((DataSet)object).isPartitionTable())
+			if (((DataSet) object).isPartitionTable())
 				component.setBackground(DataSetComponent.PARTITION_BACKGROUND);
-			else if (((DataSet)object).getInvisible())
+			else if (((DataSet) object).getInvisible())
 				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else
 				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 			// Update dotted line (partitioned).
-			((DataSetComponent) component).setRestricted(((DataSet)object)
-					.getDataSetModifications().isDatasetPartition());
+			((DataSetComponent) component)
+					.setRestricted(this.getMartTab().getMart()
+							.getPartitionTableForDataSet((DataSet) object) != null);
 
 			((DataSetComponent) component).setRenameable(true);
 			((DataSetComponent) component).setSelectable(true);

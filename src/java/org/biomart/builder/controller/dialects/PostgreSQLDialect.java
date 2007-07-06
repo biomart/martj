@@ -118,10 +118,21 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
-		if (action.getTableRestriction() != null) {
+		if (action.getTableRestriction() != null || !action.getPartitionRestrictions().isEmpty()) 
 			sb.append(" where ");
+		for (final Iterator i = action.getPartitionRestrictions().entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			sb.append("a.");
+			sb.append((String)entry.getKey());
+			sb.append("='");
+			sb.append((String)entry.getValue());
+			sb.append('\'');
+			if (i.hasNext() || action.getTableRestriction()!=null)
+				sb.append(" and ");
+		}
+		if (action.getTableRestriction() != null) {
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					"a", action.getResolvedTableRestriction()));
+					"a"));
 		}
 
 		statements.add(sb.toString());
@@ -297,13 +308,21 @@ public class PostgreSQLDialect extends DatabaseDialect {
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
 					action.isRelationRestrictionLeftIsFirst(),
 					!action.isRelationRestrictionLeftIsFirst(),
-					action.getRelationRestrictionPreviousUnit(), action.getResolvedRelationRestriction()));
+					action.getRelationRestrictionPreviousUnit()));
 		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" and (");
 			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					"b", action.getResolvedTableRestriction()));
+					"b"));
 			sb.append(')');
+		}		
+		for (final Iterator i = action.getPartitionRestrictions().entrySet().iterator(); i.hasNext(); ) {
+			final Map.Entry entry = (Map.Entry)i.next();
+			sb.append(" and b.");
+			sb.append((String)entry.getKey());
+			sb.append("='");
+			sb.append((String)entry.getValue());
+			sb.append('\'');
 		}
 
 		statements.add(sb.toString());

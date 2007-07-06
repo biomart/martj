@@ -35,6 +35,7 @@ import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.PartitionTable.PartitionColumn;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column;
@@ -866,10 +867,8 @@ public class Mart {
 	}
 
 	/**
-	 * Resolve and replace all partition references in the expression and return
-	 * the resolved expression. Partition references are enclosed in % signs and
-	 * are in the form %table.column%. Any % sections that do not resolve to a
-	 * valid partition are ignored and left intact.
+	 * Resolve partition column references and return the current value for that
+	 * reference. Partition references are in the form table.column.
 	 * 
 	 * @param expression
 	 *            the expression to resolve.
@@ -877,22 +876,50 @@ public class Mart {
 	 * @throws PartitionException
 	 *             if any alias could not be resolved into a value.
 	 */
-	public String resolveExpression(final String expression)
+	public String currentValueFor(final String expression)
 			throws PartitionException {
-		String resolvedExpression = expression;
-		int previousDollar = expression.indexOf('%');
-		int nextDollar = expression.indexOf('%', previousDollar + 1);
-		while (nextDollar != -1) {
-			final String alias = expression.substring(previousDollar + 1,
-					nextDollar);
-			final PartitionColumn col = this.getPartitionColumn(alias);
-			if (col != null)
-				resolvedExpression = resolvedExpression.replace("%" + alias
-						+ "%", col.getValueForRow(col.getPartitionTable()
-						.currentRow()));
-			previousDollar = nextDollar;
-			nextDollar = expression.indexOf('%', previousDollar + 1);
+		final PartitionColumn col = this.getPartitionColumn(expression);
+		if (col != null)
+			return col.getValueForRow(col.getPartitionTable().currentRow());
+		return null;
+	}
+
+	/**
+	 * If the dataset has had a partition applied to it, return it.
+	 * 
+	 * @param ds
+	 *            the dataset to check.
+	 * @return the partition application.
+	 */
+	public PartitionTableApplication getPartitionTableForDataSet(
+			final DataSet ds) {
+		for (final Iterator i = this.getPartitionTableNames().iterator(); i
+				.hasNext();) {
+			final PartitionTable pt = (PartitionTable) this
+					.getPartitionTable((String) i.next());
+			if (pt.getApplication(ds) != null)
+				return pt.getApplication(ds);
 		}
-		return resolvedExpression;
+		return null;
+	}
+
+	/**
+	 * If the dimension has had a partition applied to it, return it.
+	 * 
+	 * @param dm
+	 *            the dimension to check.
+	 * @return the partition application.
+	 */
+	public PartitionTableApplication getPartitionTableForDimension(
+			final DataSetTable dm) {
+		for (final Iterator i = this.getPartitionTableNames().iterator(); i
+				.hasNext();) {
+			final PartitionTable pt = (PartitionTable) this
+					.getPartitionTable((String) i.next());
+			if (pt.getApplication((DataSet) dm.getSchema(), dm.getName()) != null)
+				return pt
+						.getApplication((DataSet) dm.getSchema(), dm.getName());
+		}
+		return null;
 	}
 }

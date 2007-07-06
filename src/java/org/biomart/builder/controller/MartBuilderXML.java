@@ -55,6 +55,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.PartitionTable.PartitionColumn;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -680,49 +681,6 @@ public class MartBuilderXML extends DefaultHandler {
 					.toString(ds.getInvisible()), xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
-			if (dsMods.isDatasetPartition())
-				this.writeAttribute("partition", dsMods.getDatasetPartition(),
-						xmlWriter);
-			else
-				this.writeAttribute("isPartitionTable", Boolean.toString(ds
-						.isPartitionTable()), xmlWriter);
-			if (ds.isPartitionTable())
-				this.writeListAttribute("selectedColumns", (String[]) ds
-						.asPartitionTable().getSelectedColumnNames().toArray(
-								new String[0]), xmlWriter);
-
-			// Write out partition regex columns.
-			if (ds.isPartitionTable())
-				for (final Iterator i = ds.asPartitionTable()
-						.getSelectedColumnNames().iterator(); i.hasNext();) {
-					final String colName = (String) i.next();
-					if (colName.equals(PartitionTable.DIV_COLUMN))
-						continue;
-					final PartitionColumn pcol = (PartitionColumn) ds
-							.asPartitionTable().getSelectedColumn(colName);
-					if (pcol.getRegexMatch() != null
-							&& pcol.getRegexReplace() != null) {
-						this.openElement("partitionRegex", xmlWriter);
-						this.writeAttribute("name", pcol.getName(), xmlWriter);
-						this.writeAttribute("match", pcol.getRegexMatch(),
-								xmlWriter);
-						this.writeAttribute("replace", pcol.getRegexReplace(),
-								xmlWriter);
-						this.closeElement("partitionRegex", xmlWriter);
-					}
-				}
-
-			// Write out dataset and dimension partitions.
-			for (final Iterator x = dsMods.getTablePartitions().entrySet()
-					.iterator(); x.hasNext();) {
-				final Map.Entry entry = (Map.Entry) x.next();
-				this.openElement("dimensionPartition", xmlWriter);
-				this.writeAttribute("tableKey", (String) entry.getKey(),
-						xmlWriter);
-				this.writeAttribute("partition", (String) entry.getValue(),
-						xmlWriter);
-				this.closeElement("dimensionPartition", xmlWriter);
-			}
 
 			// Write out subclass relations inside dataset. Can go before or
 			// after.
@@ -945,9 +903,6 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("n", "" + def.getN(), xmlWriter);
 					this.writeAttribute("parallel", "" + def.isParallel(),
 							xmlWriter);
-					if (def.getPartition() != null)
-						this.writeAttribute("partition", def.getPartition(),
-								xmlWriter);
 					this.closeElement("compoundRelation", xmlWriter);
 				}
 			}
@@ -1069,6 +1024,101 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Finish dataset.
 			this.closeElement("dataset", xmlWriter);
+		}
+
+		// Write out partition tables.
+		for (final Iterator dsi = mart.getPartitionTableNames().iterator(); dsi
+				.hasNext();) {
+			final PartitionTable pt = mart.getPartitionTable((String) dsi
+					.next());
+			Log.debug("Writing dataset partition table: " + pt);
+
+			this.openElement("datasetPartitionTable", xmlWriter);
+			this.writeAttribute("name", pt.getName(), xmlWriter);
+			this
+					.writeListAttribute("selectedColumns", (String[]) pt
+							.getSelectedColumnNames().toArray(new String[0]),
+							xmlWriter);
+
+			// Write out partition regex columns.
+			for (final Iterator i = pt.getSelectedColumnNames().iterator(); i
+					.hasNext();) {
+				final String colName = (String) i.next();
+				if (colName.equals(PartitionTable.DIV_COLUMN))
+					continue;
+				final PartitionColumn pcol = (PartitionColumn) pt
+						.getSelectedColumn(colName);
+				if (pcol.getRegexMatch() != null
+						&& pcol.getRegexReplace() != null) {
+					this.openElement("partitionRegex", xmlWriter);
+					this.writeAttribute("name", pcol.getName(), xmlWriter);
+					this.writeAttribute("match", pcol.getRegexMatch(),
+							xmlWriter);
+					this.writeAttribute("replace", pcol.getRegexReplace(),
+							xmlWriter);
+					this.closeElement("partitionRegex", xmlWriter);
+				}
+			}
+
+			// Write out dataset applications.
+			for (final Iterator j = pt.getAllDataSetApplications().entrySet()
+					.iterator(); j.hasNext();) {
+				final Map.Entry entry = (Map.Entry) j.next();
+				final DataSet target = (DataSet) entry.getKey();
+				final PartitionTableApplication pta = (PartitionTableApplication) entry
+						.getValue();
+				this.openElement("datasetApplication", xmlWriter);
+				this.writeAttribute("name", target.getName(), xmlWriter);
+				this.writeAttribute("nameColumn", pta.getNameCol(), xmlWriter);
+				final List pCols = new ArrayList();
+				final List dsCols = new ArrayList();
+				for (final Iterator k = pta.getPartitionCols().entrySet()
+						.iterator(); k.hasNext();) {
+					final Map.Entry entry2 = (Map.Entry) k.next();
+					pCols.add(entry2.getKey());
+					dsCols.add(entry2.getValue());
+				}
+				this.writeListAttribute("pCols", (String[]) pCols
+						.toArray(new String[0]), xmlWriter);
+				this.writeListAttribute("dsCols", (String[]) dsCols
+						.toArray(new String[0]), xmlWriter);
+				this.closeElement("datasetApplication", xmlWriter);
+			}
+
+			// Write out dimension applications.
+			for (final Iterator j = pt.getAllDimensionApplications().entrySet()
+					.iterator(); j.hasNext();) {
+				final Map.Entry entry = (Map.Entry) j.next();
+				final DataSet target = (DataSet) entry.getKey();
+				for (final Iterator l = ((Map) entry.getValue()).entrySet()
+						.iterator(); l.hasNext();) {
+					final Map.Entry entry3 = (Map.Entry) l.next();
+					final PartitionTableApplication pta = (PartitionTableApplication) entry3
+							.getValue();
+					this.openElement("dimensionApplication", xmlWriter);
+					this.writeAttribute("name", target.getName(), xmlWriter);
+					this.writeAttribute("dimension", (String) entry3.getKey(),
+							xmlWriter);
+					this.writeAttribute("nameColumn", pta.getNameCol(),
+							xmlWriter);
+					final List pCols = new ArrayList();
+					final List dsCols = new ArrayList();
+					for (final Iterator k = pta.getPartitionCols().entrySet()
+							.iterator(); k.hasNext();) {
+						final Map.Entry entry2 = (Map.Entry) k.next();
+						pCols.add(entry2.getKey());
+						dsCols.add(entry2.getValue());
+					}
+					this.writeListAttribute("pCols", (String[]) pCols
+							.toArray(new String[0]), xmlWriter);
+					this.writeListAttribute("dsCols", (String[]) dsCols
+							.toArray(new String[0]), xmlWriter);
+					this.closeElement("dimensionApplication", xmlWriter);
+				}
+			}
+
+			// Finish dataset partition table.
+			this.closeElement("datasetPartitionTable", xmlWriter);
 		}
 
 		// Write out relations. Must come last as datasets themselves
@@ -1535,21 +1585,6 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// Dimension partition (inside dataset).
-		else if ("dimensionPartition".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("dimensionPartitionOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-			final String tableKey = (String) attributes.get("tableKey");
-			final String partition = (String) attributes.get("partition");
-			if (tableKey != null && partition != null)
-				w.getDataSetModifications().getTablePartitions().put(tableKey,
-						partition);
-		}
-
 		// Compound Relation (inside dataset).
 		else if ("compoundRelation".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -1567,7 +1602,6 @@ public class MartBuilderXML extends DefaultHandler {
 				final Integer n = Integer.valueOf((String) attributes.get("n"));
 				final boolean parallel = Boolean.valueOf(
 						(String) attributes.get("parallel")).booleanValue();
-				final String partition = (String) attributes.get("partition");
 
 				// Compound it.
 				if (rel != null && tableKey != null && n != null) {
@@ -1577,7 +1611,7 @@ public class MartBuilderXML extends DefaultHandler {
 						compMap.put(tableKey, new HashMap());
 					((Map) compMap.get(tableKey)).put(rel,
 							new CompoundRelationDefinition(n.intValue(),
-									parallel, partition));
+									parallel));
 				}
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -1968,29 +2002,6 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// Partition regex (inside dataset)
-		else if ("partitionRegex".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("partitionRegexOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			final String name = (String) attributes.get("name");
-			final String match = (String) attributes.get("match");
-			final String replace = (String) attributes.get("replace");
-
-			try {
-				w.asPartitionTable().getSelectedColumn(name).setRegexMatch(
-						match);
-				w.asPartitionTable().getSelectedColumn(name).setRegexReplace(
-						replace);
-			} catch (final Exception e) {
-				throw new SAXException(e);
-			}
-		}
-
 		// DataSet (anywhere).
 		else if ("dataset".equals(eName))
 			try {
@@ -2006,12 +2017,6 @@ public class MartBuilderXML extends DefaultHandler {
 				final boolean index = Boolean.valueOf(
 						(String) attributes.get("indexOptimiser"))
 						.booleanValue();
-				final String partition = (String) attributes.get("partition");
-				final boolean isPartitionTable = Boolean.valueOf(
-						(String) attributes.get("isPartitionTable"))
-						.booleanValue();
-				final String[] selectedColumns = this.readListAttribute(
-						(String) attributes.get("selectedColumns"), false);
 
 				// Construct the dataset.
 				final DataSet ds = new DataSet(this.constructedMart,
@@ -2055,11 +2060,6 @@ public class MartBuilderXML extends DefaultHandler {
 				ds.setDataSetOptimiserType(opt);
 				ds.setInvisible(invisible);
 				ds.setIndexOptimiser(index);
-				ds.setPartitionTable(isPartitionTable);
-				if (isPartitionTable)
-					ds.asPartitionTable().setSelectedColumnNames(
-							Arrays.asList(selectedColumns));
-				ds.getDataSetModifications().setDatasetPartition(partition);
 				element = ds;
 			} catch (final Exception e) {
 				if (e instanceof SAXException)
@@ -2067,7 +2067,101 @@ public class MartBuilderXML extends DefaultHandler {
 				else
 					throw new SAXException(e);
 			}
-		else
+
+		// DataSet partition table (anywhere).
+		else if ("datasetPartitionTable".equals(eName))
+			try {
+				// Convert a dataset into a partition table.
+				final DataSet ds = this.constructedMart
+						.getDataSetByName((String) attributes.get("name"));
+				final String[] selectedColumns = this.readListAttribute(
+						(String) attributes.get("selectedColumns"), false);
+				ds.setPartitionTable(true);
+				ds.asPartitionTable().setSelectedColumnNames(
+						Arrays.asList(selectedColumns));
+				element = ds.asPartitionTable();
+			} catch (final Exception e) {
+				if (e instanceof SAXException)
+					throw (SAXException) e;
+				else
+					throw new SAXException(e);
+			}
+
+		// Partition regex (inside partition table)
+		else if ("partitionRegex".equals(eName)) {
+			// What pt does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof PartitionTable))
+				throw new SAXException(Resources
+						.get("partitionRegexOutsidePartitionTable"));
+			final PartitionTable pt = (PartitionTable) this.objectStack.peek();
+
+			final String name = (String) attributes.get("name");
+			final String match = (String) attributes.get("match");
+			final String replace = (String) attributes.get("replace");
+
+			try {
+				pt.getSelectedColumn(name).setRegexMatch(match);
+				pt.getSelectedColumn(name).setRegexReplace(replace);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Dataset application (inside partition table)
+		else if ("datasetApplication".equals(eName)) {
+			// What pt does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof PartitionTable))
+				throw new SAXException(Resources
+						.get("datasetApplicationOutsidePartitionTable"));
+			final PartitionTable pt = (PartitionTable) this.objectStack.peek();
+
+			final DataSet ds = this.constructedMart
+					.getDataSetByName((String) attributes.get("name"));
+			final String nameCol = (String) attributes.get("nameColumn");
+			final String[] pCols = this.readListAttribute((String) attributes
+					.get("pCols"), false);
+			final String[] dsCols = this.readListAttribute((String) attributes
+					.get("dsCols"), false);
+
+			final PartitionTableApplication pta = new PartitionTableApplication(
+					pt, ds, null);
+			pta.setNameCol(nameCol);
+			final Map parts = new HashMap();
+			for (int i = 0; i < pCols.length; i++)
+				parts.put(pCols[i], dsCols[i]);
+			pta.setPartitionCols(parts);
+			pt.applyTo(ds, pta);
+		}
+
+		// Dimension application (inside partition table)
+		else if ("dimensionApplication".equals(eName)) {
+			// What pt does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof PartitionTable))
+				throw new SAXException(Resources
+						.get("dimensionApplicationOutsidePartitionTable"));
+			final PartitionTable pt = (PartitionTable) this.objectStack.peek();
+
+			final DataSet ds = this.constructedMart
+					.getDataSetByName((String) attributes.get("name"));
+			final String nameCol = (String) attributes.get("nameColumn");
+			final String dimension = (String) attributes.get("dimension");
+			final String[] pCols = this.readListAttribute((String) attributes
+					.get("pCols"), false);
+			final String[] dsCols = this.readListAttribute((String) attributes
+					.get("dsCols"), false);
+
+			final PartitionTableApplication pta = new PartitionTableApplication(
+					pt, ds, dimension);
+			pta.setNameCol(nameCol);
+			final Map parts = new HashMap();
+			for (int i = 0; i < pCols.length; i++)
+				parts.put(pCols[i], dsCols[i]);
+			pta.setPartitionCols(parts);
+			pt.applyTo(ds, dimension, pta);
+		} else
 			throw new SAXException(Resources.get("unknownTag", eName));
 
 		// Stick the element on the stack so that the next element

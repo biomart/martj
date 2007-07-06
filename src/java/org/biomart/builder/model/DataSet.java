@@ -41,6 +41,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.PartitionTable.AbstractPartitionTable;
 import org.biomart.builder.model.PartitionTable.PartitionRow;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -63,6 +64,7 @@ import org.biomart.common.model.Relation.GenericRelation;
 import org.biomart.common.model.Schema.GenericSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.InverseMap;
 
 /**
  * A {@link DataSet} instance serves two purposes. First, it contains lists of
@@ -223,6 +225,14 @@ public class DataSet extends GenericSchema {
 
 			// This is generic SQL and should not need any dialects.
 
+			final List trueSelectedCols = new ArrayList();
+			for (final Iterator i = pt.getSelectedColumnNames().iterator(); i
+					.hasNext();) {
+				final String col = (String) i.next();
+				if (!col.equals(PartitionTable.DIV_COLUMN))
+					trueSelectedCols.add(col);
+			}
+
 			// Make a map of columns in statement to
 			// named columns in results. Use allCols to
 			// map modified names back to real names in
@@ -239,7 +249,7 @@ public class DataSet extends GenericSchema {
 			sqlWhere.append(" where ");
 			for (final Iterator i = DataSet.this.getMainTable()
 					.getTransformationUnits().iterator(); i.hasNext()
-					&& positionMap.size() < pt.getSelectedColumnNames().size();) {
+					&& positionMap.size() < trueSelectedCols.size();) {
 				final TransformationUnit tu = (TransformationUnit) i.next();
 				if (tu instanceof SelectFromTable) {
 					// JoinTable extends SelectFromTable.
@@ -311,7 +321,7 @@ public class DataSet extends GenericSchema {
 							sqlWhere.append(" and ");
 							sqlWhere.append(rr.getSubstitutedExpression(lhs
 									.toString(), rhs.toString(), false, false,
-									jtu, rr.getExpression()));
+									jtu));
 						}
 					}
 					// Add any table restrictions to where clause.
@@ -322,7 +332,7 @@ public class DataSet extends GenericSchema {
 						if (!sqlWhere.toString().equals(" where "))
 							sqlWhere.append(" and ");
 						sqlWhere.append(rt.getSubstitutedExpression(selSch
-								+ "." + selTab.getName(), rt.getExpression()));
+								+ "." + selTab.getName()));
 					}
 					// If any unit columns match selected columns,
 					// add them to the select statement and their
@@ -332,8 +342,7 @@ public class DataSet extends GenericSchema {
 						final Map.Entry entry = (Map.Entry) j.next();
 						final DataSetColumn dsCol = (DataSetColumn) entry
 								.getValue();
-						if (pt.getSelectedColumnNames().contains(
-								dsCol.getModifiedName())) {
+						if (trueSelectedCols.contains(dsCol.getModifiedName())) {
 							final String col = (String) entry.getKey();
 							if (nextCol > 1)
 								sqlSel.append(',');
@@ -357,10 +366,13 @@ public class DataSet extends GenericSchema {
 			if (!sqlWhere.toString().equals(" where "))
 				sql.append(sqlWhere);
 			sql.append(" order by ");
-			for (int i = 0; i < positionMap.size(); i++) {
-				if (i > 0)
+			final Map inversePositions = new InverseMap(positionMap);
+			for (final Iterator i = trueSelectedCols.iterator(); i.hasNext();) {
+				final Integer position = (Integer) inversePositions
+						.get((String) i.next());
+				sql.append(position.intValue());
+				if (i.hasNext())
 					sql.append(',');
-				sql.append(i + 1);
 			}
 
 			// Run it.
@@ -413,10 +425,14 @@ public class DataSet extends GenericSchema {
 		// The answer is yes, but only if our main table has no
 		// group-by expression columns and nothing uses partitions
 		// and there are no compound relations.
-		return !(this.dsMods.isDatasetPartition()
-				|| !this.dsMods.getTablePartitions().isEmpty()
-				|| !this.schemaMods.getCompoundRelations().isEmpty() || !this.dsMods
-				.getExpressionColumns().isEmpty());
+		boolean hasPDims = false;
+		for (final Iterator i = this.getTables().iterator(); i.hasNext()
+				&& !hasPDims;)
+			hasPDims |= this.mart
+					.getPartitionTableForDimension((DataSetTable) i.next()) == null;
+		return this.mart.getPartitionTableForDataSet(this) == null && !hasPDims
+				&& this.schemaMods.getCompoundRelations().isEmpty()
+				&& this.dsMods.getExpressionColumns().isEmpty();
 	}
 
 	/**
@@ -476,11 +492,14 @@ public class DataSet extends GenericSchema {
 	 *            instance, it could be the 1:M relation between the realTable
 	 *            parameter of this call, and the realTable parameter of the
 	 *            main table call to this method.
+	 * @throws PartitionException
+	 *             if partitioning is in use and went wrong.
 	 */
 	private void generateDataSetTable(final DataSetTableType type,
 			final DataSetTable parentDSTable, final Table realTable,
 			final List sourceDSCols, final Relation sourceRelation,
-			final Map subclassCount, final int relationIteration) {
+			final Map subclassCount, final int relationIteration)
+			throws PartitionException {
 		Log.debug("Creating dataset table for " + realTable
 				+ " with parent relation " + sourceRelation + " as a " + type);
 		// Create the empty dataset table.
@@ -573,6 +592,8 @@ public class DataSet extends GenericSchema {
 			for (final Iterator j = ((Schema) i.next()).getRelations()
 					.iterator(); j.hasNext();) {
 				final Relation rel = (Relation) j.next();
+				// Partition compounding is dealt with separately
+				// and does not need to be included here.
 				int compounded = this.schemaMods.isCompoundRelation(dsTable,
 						rel) ? this.schemaMods
 						.getCompoundRelation(dsTable, rel).getN() : 1;
@@ -731,6 +752,8 @@ public class DataSet extends GenericSchema {
 	 *            the dimension queue, <tt>false</tt> if we should just ignore
 	 *            them. This is useful for preventing dimensions from gaining
 	 *            dimensions of their own.
+	 * @throws PartitionException
+	 *             if partitioning is in use and went wrong.
 	 */
 	private void processTable(final TransformationUnit previousUnit,
 			final DataSetTable dsTable, final List dsTablePKCols,
@@ -738,7 +761,7 @@ public class DataSet extends GenericSchema {
 			final List dimensionQ, final List sourceDataSetCols,
 			final Relation sourceRelation, final Map relationCount,
 			final Map subclassCount, final boolean makeDimensions,
-			final int relationIteration) {
+			final int relationIteration) throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
 
 		// Remember the schema.
@@ -968,12 +991,30 @@ public class DataSet extends GenericSchema {
 				final boolean skipCompound = this.schemaMods
 						.isLoopbackRelation(dsTable, r)
 						&& r.getManyKey().equals(r.getKeyForTable(mergeTable));
-				if (!skipCompound
-						&& this.schemaMods.isCompoundRelation(dsTable, r)
-						&& this.schemaMods.getCompoundRelation(dsTable, r)
-								.isParallel())
-					childCompounded = this.schemaMods.getCompoundRelation(
-							dsTable, r).getN();
+				if (!skipCompound) {
+					if (this.schemaMods.isCompoundRelation(dsTable, r)
+							&& this.schemaMods.getCompoundRelation(dsTable, r)
+									.isParallel())
+						childCompounded = this.schemaMods.getCompoundRelation(
+								dsTable, r).getN();
+					else {
+						// Work out partition compounding. Table
+						// applies within a dimension, where dataset does
+						// not apply, but outside a dimension only dataset 
+						// applies.
+						PartitionTableApplication usefulPart = this.mart
+								.getPartitionTableForDimension(dsTable);
+						if (usefulPart == null && dsTable.equals(this.getMainTable()))
+							usefulPart = this.mart
+									.getPartitionTableForDataSet(this);
+						if (usefulPart == null)
+							childCompounded = 1;
+						else {
+							usefulPart.syncCounts();
+							childCompounded = usefulPart.getCompound(r);
+						}
+					}
+				}
 				for (int k = 0; k < childCompounded; k++)
 					normalQ.add(new Object[] {
 							r,
@@ -1164,8 +1205,12 @@ public class DataSet extends GenericSchema {
 		this.includedSchemas.clear();
 
 		// Generate the main table. It will recursively generate all the others.
-		this.generateDataSetTable(DataSetTableType.MAIN, null, this
-				.getRealCentralTable(), null, null, new HashMap(), 0);
+		try {
+			this.generateDataSetTable(DataSetTableType.MAIN, null, this
+					.getRealCentralTable(), null, null, new HashMap(), 0);
+		} catch (final PartitionException pe) {
+			throw new DataModelException(pe);
+		}
 
 		// Update the modification sets.
 		this.dsMods.synchronise();

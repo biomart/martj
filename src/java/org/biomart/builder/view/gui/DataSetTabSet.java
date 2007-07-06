@@ -57,9 +57,7 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
-import org.biomart.builder.view.gui.dialogs.PartitionSelectionDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionTableDialog;
-import org.biomart.builder.view.gui.dialogs.PartitionTableWizardDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
@@ -559,73 +557,12 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestDimensionPartitionWizard(final DataSetTable dim) {
 		// Create wizard dialog (specify dimension version)
-		final PartitionTableWizardDialog dialog = new PartitionTableWizardDialog(
-				dim);
-		dialog.setVisible(true);
-		if (!dialog.wasCancelled())
-			new LongProcess() {
-				public void run() throws Exception {
-					// Do the partition.
-					dialog.applyPartitioning();
-
-					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram((DataSet) dim
-							.getSchema(), dim);
-
-					// Update the modified status for this tabset.
-					DataSetTabSet.this.martTab.getMartTabSet()
-							.requestChangeModifiedStatus(true);
-				}
-			}.start();
-	}
-
-	/**
-	 * Run the partition dataset wizard.
-	 * 
-	 * @param ds
-	 *            the dataset to apply the wizard to.
-	 */
-	public void requestDataSetPartitionWizard(final DataSet ds) {
-		// Create wizard dialog (specify dataset version)
-		final PartitionTableWizardDialog dialog = new PartitionTableWizardDialog(
-				ds);
-		dialog.setVisible(true);
-		if (!dialog.wasCancelled())
-			new LongProcess() {
-				public void run() throws Exception {
-					// Do the partition.
-					dialog.applyPartitioning();
-
-					// And the overview.
-					DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
-
-					// Update the modified status for this tabset.
-					DataSetTabSet.this.martTab.getMartTabSet()
-							.requestChangeModifiedStatus(true);
-				}
-			}.start();
-	}
-
-	/**
-	 * Pops up a dialog with details of the dataset partition table, which
-	 * allows the user to modify it.
-	 * 
-	 * @param ds
-	 *            the dataset to modify partitions for.
-	 */
-	public void requestModifyDataSetPartition(final DataSet ds) {
-		final PartitionSelectionDialog dialog = new PartitionSelectionDialog(ds
-				.getMart().getPartitionColumnNames(), Resources
-				.get("datasetPartitionTitle"), ds.getDataSetModifications()
-				.getDatasetPartition());
-		dialog.setVisible(true);
+		PartitionTableDialog.showForDimension(dim);
 		new LongProcess() {
 			public void run() throws Exception {
-				// Do the partition.
-				MartBuilderUtils.partitionDataSet(ds, dialog.getPartition());
-
 				// And the overview.
-				DataSetTabSet.this.repaintOverviewDiagram();
+				DataSetTabSet.this.recalculateDataSetDiagram((DataSet) dim
+						.getSchema(), dim);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()
@@ -635,29 +572,17 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Pops up a dialog with details of the dataset table partition table, which
-	 * allows the user to modify it.
+	 * Run the partition dataset wizard.
 	 * 
 	 * @param ds
-	 *            the host dataset.
-	 * @param dsTable
-	 *            the dataset table to modify partitions for.
+	 *            the dataset to apply the wizard to.
 	 */
-	public void requestModifyDataSetTablePartition(final DataSet ds,
-			final DataSetTable dsTable) {
-		final PartitionSelectionDialog dialog = new PartitionSelectionDialog(ds
-				.getMart().getPartitionColumnNames(), Resources
-				.get("datasetTablePartitionTitle"), ds
-				.getDataSetModifications().getTablePartition(dsTable));
-		dialog.setVisible(true);
+	public void requestDataSetPartitionWizard(final DataSet ds) {
+		PartitionTableDialog.showForDataSet(ds);
 		new LongProcess() {
 			public void run() throws Exception {
-				// Do the partition.
-				MartBuilderUtils.partitionDataSetTable(ds, dsTable, dialog
-						.getPartition());
-
-				// And the diagram.
-				DataSetTabSet.this.repaintDataSetDiagram(ds, null);
+				// And the overview.
+				DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()
@@ -878,7 +803,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (!ds.getSchemaModifications().isSubclassedRelation(relation))
 			return;
 		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
-				false, null);
+				false);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
 			def = ds.getSchemaModifications()
 					.getCompoundRelation(dst, relation);
@@ -892,26 +817,21 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
-		final String partition = dialog.getPartition();
 
 		// Skip altogether if no change.
-		if (newN == def.getN()
-				&& newParallel == def.isParallel()
-				&& (partition == def.getPartition() || (partition != null && partition
-						.equals(def.getPartition()))))
+		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
 		new LongProcess() {
 			public void run() throws Exception {
 				// Do the work.
-				if (newN <= 1 && partition==null)
+				if (newN <= 1)
 					// Uncompound the relation.
 					MartBuilderUtils.uncompoundRelation(ds, relation);
 				else
 					// Compound the relation.
 					MartBuilderUtils.compoundRelation(ds, relation,
-							new CompoundRelationDefinition(newN, newParallel,
-									partition));
+							new CompoundRelationDefinition(newN, newParallel));
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
@@ -936,7 +856,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// Work out if it is already compounded.
 		final Relation relation = dst.getFocusRelation();
 		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
-				false, null);
+				false);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
 			def = ds.getSchemaModifications()
 					.getCompoundRelation(dst, relation);
@@ -950,26 +870,21 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
-		final String partition = dialog.getPartition();
 
 		// Skip altogether if no change.
-		if (newN == def.getN()
-				&& newParallel == def.isParallel()
-				&& (partition == def.getPartition() || (partition != null && partition
-						.equals(def.getPartition()))))
+		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
 		new LongProcess() {
 			public void run() throws Exception {
 				// Do the work.
-				if (newN <= 1 && partition==null)
+				if (newN <= 1)
 					// Uncompound the relation.
 					MartBuilderUtils.uncompoundRelation(ds, relation);
 				else
 					// Compound the relation.
 					MartBuilderUtils.compoundRelation(ds, relation,
-							new CompoundRelationDefinition(newN, newParallel,
-									partition));
+							new CompoundRelationDefinition(newN, newParallel));
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(ds, relation);
@@ -1050,7 +965,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dst, final Relation relation) {
 		// Work out if it is already compounded.
 		CompoundRelationDefinition def = new CompoundRelationDefinition(1,
-				false, null);
+				false);
 		if (ds.getSchemaModifications().isCompoundRelation(dst, relation))
 			def = ds.getSchemaModifications()
 					.getCompoundRelation(dst, relation);
@@ -1064,19 +979,15 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
-		final String partition = dialog.getPartition();
 
 		// Skip altogether if no change.
-		if (newN == def.getN()
-				&& newParallel == def.isParallel()
-				&& (partition == def.getPartition() || (partition != null && partition
-						.equals(def.getPartition()))))
+		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
 		new LongProcess() {
 			public void run() throws Exception {
 				// Do the work.
-				if (newN <= 1 && partition==null) {
+				if (newN <= 1) {
 					// Uncompound the relation.
 					if (dst != null)
 						MartBuilderUtils.uncompoundRelation(dst, relation);
@@ -1085,12 +996,10 @@ public class DataSetTabSet extends JTabbedPane {
 				} else // Compound the relation.
 				if (dst != null)
 					MartBuilderUtils.compoundRelation(dst, relation,
-							new CompoundRelationDefinition(newN, newParallel,
-									partition));
+							new CompoundRelationDefinition(newN, newParallel));
 				else
 					MartBuilderUtils.compoundRelation(ds, relation,
-							new CompoundRelationDefinition(newN, newParallel,
-									partition));
+							new CompoundRelationDefinition(newN, newParallel));
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(
@@ -1313,17 +1222,20 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to modify partition table info for.
 	 */
 	public void requestConvertPartitionTable(final DataSet ds) {
-		if (PartitionTableDialog.modifyDataSet(ds)) {
-			// Change the tab colour of the dataset as appropriate.
-			DataSetTabSet.this.repaintDataSetDiagram(ds, null);
+		new PartitionTableDialog(ds).setVisible(true);
+		new LongProcess() {
+			public void run() throws Exception {
+				// Change the tab colour of the dataset as appropriate.
+				DataSetTabSet.this.repaintDataSetDiagram(ds, null);
 
-			// Update the overview diagram.
-			DataSetTabSet.this.repaintOverviewDiagram();
+				// Update the overview diagram.
+				DataSetTabSet.this.repaintOverviewDiagram();
 
-			// Update the modified status for this tabset.
-			DataSetTabSet.this.martTab.getMartTabSet()
-					.requestChangeModifiedStatus(true);
-		}
+				// Update the modified status for this tabset.
+				DataSetTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
+			}
+		}.start();
 	}
 
 	/**

@@ -65,24 +65,16 @@
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 
 <!ELEMENT dataset (
-partitionRegex*,compoundRelation*,subclassRelation*,maskedColumn*,
+compoundRelation*,subclassRelation*,maskedColumn*,
 indexedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,loopbackRelation*,forcedRelation*,restrictedTable*,
 restrictedRelation*,expressionColumn*,directionalRelation*,renamedTable*,
-renamedColumn*,distinctRows*,dimensionPartition*)>
+renamedColumn*,distinctRows*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL|COLUMN_BOOL_NULL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
 <!ATTLIST dataset indexOptimiser (true|false) #REQUIRED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
-<!ATTLIST dataset partition CDATA #IMPLIED>
-<!ATTLIST dataset isPartitionTable (true|false) #IMPLIED>
-<!ATTLIST dataset selectedColumns CDATA #REQUIRED>
-
-<!ELEMENT partitionRegex EMPTY>
-<!ATTLIST partitionRegex name CDATA #REQUIRED>
-<!ATTLIST partitionRegex match CDATA #REQUIRED>
-<!ATTLIST partitionRegex replace CDATA #REQUIRED>
 
 <!ELEMENT subclassRelation EMPTY>
 <!ATTLIST subclassRelation relationId IDREF #REQUIRED>
@@ -92,7 +84,6 @@ renamedColumn*,distinctRows*,dimensionPartition*)>
 <!ATTLIST compoundRelation relationId IDREF #REQUIRED>
 <!ATTLIST compoundRelation n CDATA #REQUIRED>
 <!ATTLIST compoundRelation parallel (true|false) #REQUIRED>
-<!ATTLIST compoundRelation partition CDATA #IMPLIED>
 
 <!ELEMENT directionalRelation EMPTY>
 <!ATTLIST directionalRelation tableKey CDATA #REQUIRED>
@@ -164,6 +155,25 @@ renamedColumn*,distinctRows*,dimensionPartition*)>
 <!ATTLIST expressionColumn expression CDATA #REQUIRED>
 <!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>
 
-<!ELEMENT dimensionPartition EMPTY>
-<!ATTLIST dimensionPartition tableKey CDATA #REQUIRED>
-<!ATTLIST dimensionPartition partition CDATA #REQUIRED>
+<!ELEMENT datasetPartitionTable (
+partitionRegex*,datasetApplication*,dimensionApplication*)>
+<!ATTLIST datasetPartitionTable name CDATA #REQUIRED>
+<!ATTLIST datasetPartitionTable selectedColumns CDATA #REQUIRED>
+
+<!ELEMENT partitionRegex EMPTY>
+<!ATTLIST partitionRegex name CDATA #REQUIRED>
+<!ATTLIST partitionRegex match CDATA #REQUIRED>
+<!ATTLIST partitionRegex replace CDATA #REQUIRED>
+
+<!ELEMENT datasetApplication EMPTY>
+<!ATTLIST datasetApplication name CDATA #REQUIRED>
+<!ATTLIST datasetApplication nameColumn CDATA #REQUIRED>
+<!ATTLIST datasetApplication pCols CDATA #REQUIRED>
+<!ATTLIST datasetApplication dsCols CDATA #REQUIRED>
+
+<!ELEMENT dimensionApplication EMPTY>
+<!ATTLIST dimensionApplication name CDATA #REQUIRED>
+<!ATTLIST dimensionApplication dimension CDATA #REQUIRED>
+<!ATTLIST dimensionApplication nameColumn CDATA #REQUIRED>
+<!ATTLIST dimensionApplication pCols CDATA #REQUIRED>
+<!ATTLIST dimensionApplication dsCols CDATA #REQUIRED>

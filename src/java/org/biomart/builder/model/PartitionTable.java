@@ -30,9 +30,14 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.biomart.builder.exceptions.PartitionException;
+import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.TransformationUnit.JoinTable;
+import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.InverseMap;
 
 /**
  * The partition table interface allows lists of values to be stored, with those
@@ -87,7 +92,9 @@ public interface PartitionTable {
 			throws PartitionException;
 
 	/**
-	 * Move to the next row, or the first row if not yet called.
+	 * Move to the next row, or the first row if not yet called. This will skip
+	 * over all rows with an identical set of values used to define any
+	 * subdivision.
 	 * 
 	 * @return <tt>true</tt> if it could, or <tt>false</tt> if there are no
 	 *         more.
@@ -95,6 +102,17 @@ public interface PartitionTable {
 	 *             if anything went wrong.
 	 */
 	public boolean nextRow() throws PartitionException;
+
+	/**
+	 * Move to the next row, or the first row if not yet called. This will not
+	 * skip over multiple rows with the same subdivision-defining values.
+	 * 
+	 * @return <tt>true</tt> if it could, or <tt>false</tt> if there are no
+	 *         more.
+	 * @throws PartitionException
+	 *             if anything went wrong.
+	 */
+	public boolean nudgeRow() throws PartitionException;
 
 	/**
 	 * Return the current row. If {@link #nextRow()} has not been called since
@@ -160,6 +178,87 @@ public interface PartitionTable {
 			throws PartitionException;
 
 	/**
+	 * Apply this partition table to the given dataset using the given
+	 * definition. If the definition is null, apply using defaults.
+	 * 
+	 * @param ds
+	 *            the dataset.
+	 * @param appl
+	 *            the application definition (null for default).
+	 */
+	public void applyTo(final DataSet ds, final PartitionTableApplication appl);
+
+	/**
+	 * Apply this partition table to the given dimension using the given
+	 * definition. If the definition is null, apply using defaults.
+	 * 
+	 * @param ds
+	 *            the dataset.
+	 * @param dimension
+	 *            the dimension.
+	 * @param appl
+	 *            the application definition (null for default).
+	 */
+	public void applyTo(final DataSet ds, final String dimension,
+			final PartitionTableApplication appl);
+
+	/**
+	 * Gets the current definition of how this partition table is applied to the
+	 * dataset.
+	 * 
+	 * @param ds
+	 *            the dataset.
+	 * @return the definition.
+	 */
+	public PartitionTableApplication getApplication(final DataSet ds);
+
+	/**
+	 * Gets the current definition of how this partition table is applied to the
+	 * dimension.
+	 * 
+	 * @param ds
+	 *            the dataset.
+	 * @param dimension
+	 *            the dimension.
+	 * @return the definition.
+	 */
+	public PartitionTableApplication getApplication(final DataSet ds,
+			final String dimension);
+
+	/**
+	 * Remove this partition table from a dataset.
+	 * 
+	 * @param ds
+	 *            the dataset.
+	 */
+	public void removeFrom(final DataSet ds);
+
+	/**
+	 * Remove this partition table from a dimension.
+	 * 
+	 * @param ds
+	 *            the dataset.
+	 * @param dimension
+	 *            the dimension.
+	 */
+	public void removeFrom(final DataSet ds, final String dimension);
+
+	/**
+	 * Get a map of all instances where this is applied to a dataset.
+	 * 
+	 * @return keys are datasets, values are application definitions.
+	 */
+	public Map getAllDataSetApplications();
+
+	/**
+	 * Get a map of all instances where this is applied to a dimension.
+	 * 
+	 * @return keys are datasets, values are nested maps where keys are
+	 *         dimension names and values are application definitions.
+	 */
+	public Map getAllDimensionApplications();
+
+	/**
 	 * An abstract implementation from which others will extend. Anonymous inner
 	 * classes extending this will probably provide SQL-based data rows, for
 	 * instance.
@@ -195,6 +294,58 @@ public interface PartitionTable {
 
 		private AbstractPartitionTable subdivision = null;
 
+		private Map dsApplications = new HashMap();
+
+		private Map dmApplications = new HashMap();
+
+		public void applyTo(final DataSet ds,
+				final PartitionTableApplication appl) {
+			this.dsApplications.put(ds,
+					appl == null ? PartitionTableApplication.createDefault(
+							this, ds) : appl);
+		}
+
+		public void applyTo(final DataSet ds, final String dimension,
+				final PartitionTableApplication appl) {
+			if (!this.dmApplications.containsKey(ds))
+				this.dmApplications.put(ds, new HashMap());
+			((Map) this.dmApplications.get(ds)).put(dimension,
+					appl == null ? PartitionTableApplication.createDefault(
+							this, ds, dimension) : appl);
+		}
+
+		public PartitionTableApplication getApplication(final DataSet ds) {
+			return (PartitionTableApplication) this.dsApplications.get(ds);
+		}
+
+		public PartitionTableApplication getApplication(final DataSet ds,
+				final String dimension) {
+			if (!this.dmApplications.containsKey(ds))
+				return null;
+			return (PartitionTableApplication) ((Map) this.dmApplications
+					.get(ds)).get(dimension);
+		}
+
+		public void removeFrom(final DataSet ds) {
+			this.dsApplications.remove(ds);
+		}
+
+		public void removeFrom(final DataSet ds, final String dimension) {
+			if (!this.dmApplications.containsKey(ds))
+				return;
+			((Map) this.dmApplications.get(ds)).remove(dimension);
+			if (((Map) this.dmApplications.get(ds)).isEmpty())
+				this.dmApplications.remove(ds);
+		}
+
+		public Map getAllDataSetApplications() {
+			return this.dsApplications;
+		}
+
+		public Map getAllDimensionApplications() {
+			return this.dmApplications;
+		}
+
 		public PartitionRow currentRow() throws PartitionException {
 			// Exception if currentRow is null.
 			if (this.currentRow == null)
@@ -215,6 +366,9 @@ public interface PartitionTable {
 				theirPcol.setRegexMatch(ourPcol.getRegexMatch());
 				theirPcol.setRegexReplace(ourPcol.getRegexReplace());
 			}
+			// Note that we do NOT replicate applications. That would
+			// not make sense - cannot apply two partition tables to
+			// a single target!
 		}
 
 		public PartitionColumn getSelectedColumn(final String name)
@@ -341,7 +495,16 @@ public interface PartitionTable {
 			}
 		}
 
+		public boolean nudgeRow() throws PartitionException {
+			return this.getNextRow(true);
+		}
+
 		public boolean nextRow() throws PartitionException {
+			return this.getNextRow(false);
+		}
+
+		private boolean getNextRow(final boolean nudge)
+				throws PartitionException {
 			// If row iterator is negative, throw exception.
 			if (this.rowIterator < 0)
 				throw new PartitionException(Resources
@@ -357,7 +520,7 @@ public interface PartitionTable {
 				this.subdivision.subRows.clear();
 				this.subdivision.subRows.add(this.currentRow);
 				// Keep adding rows till find one not same.
-				boolean keepGoing = true;
+				boolean keepGoing = !nudge;
 				while (keepGoing && this.rowIterator < this.rows.size()) {
 					final PartitionRow subRow = (PartitionRow) this.rows
 							.get(this.rowIterator);
@@ -607,6 +770,235 @@ public interface PartitionTable {
 
 		public int compareTo(final Object obj) {
 			return this.getRowNumber() - ((PartitionRow) obj).getRowNumber();
+		}
+	}
+
+	/**
+	 * Defines how a partition table is applied in real life.
+	 */
+	public static class PartitionTableApplication {
+		private final PartitionTable pt;
+
+		private String nameCol;
+
+		private final Map partitionCols = new HashMap();
+
+		private final Map compound = new HashMap();
+
+		private final DataSet ds;
+
+		private final String dimension;
+
+		/**
+		 * Construct a new, empty, partition table application.
+		 * 
+		 * @param pt
+		 *            the partition table.
+		 * @param ds
+		 *            the dataset to apply to.
+		 * @param dimension
+		 *            the dimension (optional) to apply to.
+		 */
+		public PartitionTableApplication(final PartitionTable pt,
+				final DataSet ds, final String dimension) {
+			this.pt = pt;
+			this.ds = ds;
+			this.dimension = dimension;
+		}
+
+		/**
+		 * What table is this applying?
+		 * 
+		 * @return the table.
+		 */
+		public PartitionTable getPartitionTable() {
+			return this.pt;
+		}
+
+		/**
+		 * Change which column this application uses for unique naming.
+		 * 
+		 * @param nameCol
+		 *            the name column.
+		 */
+		public void setNameCol(final String nameCol) {
+			this.nameCol = nameCol;
+		}
+
+		/**
+		 * Get which column this application uses for unique naming. This is
+		 * just the column name - it is not the dot form.
+		 * 
+		 * @return the name column.
+		 */
+		public String getNameCol() {
+			return this.nameCol;
+		}
+
+		/**
+		 * Obtain a immutable map containing keys (partition table columns) to
+		 * dataset column mappings. Both key and value are strings.
+		 * <p>
+		 * Partition column names are just column names - not the dot form.
+		 * 
+		 * @return the map.
+		 */
+		public Map getPartitionCols() {
+			return Collections.unmodifiableMap(this.partitionCols);
+		}
+
+		/**
+		 * Get the name selection col resolved to a real column.
+		 * 
+		 * @return the real naming column.
+		 * @throws PartitionException
+		 *             if it cannot.
+		 */
+		public PartitionColumn getNamePartitionCol() throws PartitionException {
+			return this.getPartitionTable()
+					.getSelectedColumn(this.getNameCol());
+		}
+
+		/**
+		 * Get the given dataset column resolved to a real partitoin column, or
+		 * null if it doesn't resolve.
+		 * 
+		 * @param dsCol
+		 *            the dataset column to resolve.
+		 * @return the resolved partition column.
+		 * @throws PartitionException
+		 *             if it cannot.
+		 */
+		public PartitionColumn getPartitionColForDSCol(final DataSetColumn dsCol)
+				throws PartitionException {
+			final String pcol = (String) new InverseMap(this.partitionCols)
+					.get(dsCol.getName());
+			if (pcol != null)
+				return this.getPartitionTable().getSelectedColumn(pcol);
+			return null;
+		}
+
+		/**
+		 * Set an immutable map containing keys (partition table columns) to
+		 * dataset column mappings.
+		 * 
+		 * @param partitionCols
+		 *            the map.
+		 */
+		public void setPartitionCols(final Map partitionCols) {
+			this.partitionCols.clear();
+			this.partitionCols.putAll(partitionCols);
+		}
+
+		/**
+		 * Update the compound relation counts internally.
+		 * 
+		 * @throws PartitionException
+		 *             if it goes wrong.
+		 */
+		public void syncCounts() throws PartitionException {
+			// Get real partition table for each alias and count rows.
+			for (final Iterator i = partitionCols.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final String partitionCol = (String) entry.getKey();
+				final PartitionTable realPT = this.pt.getSelectedColumn(
+						partitionCol).getPartitionTable();
+				int compound = 0;
+				realPT.prepareRows(null, PartitionTable.UNLIMITED_ROWS);
+				while (realPT.nextRow())
+					compound++;
+				// Work out the source relation for this dataset column.
+				Relation rel = null;
+				final String dsColName = (String) entry.getValue();
+				final DataSetTable dsTbl = this.dimension == null ? this.ds
+						.getMainTable() : (DataSetTable) this.ds
+						.getTableByName(this.dimension);
+				final DataSetColumn dsCol = (DataSetColumn) dsTbl
+						.getColumnByName(dsColName);
+				for (final Iterator j = dsTbl.getTransformationUnits()
+						.iterator(); rel == null && j.hasNext();) {
+					final TransformationUnit tu = (TransformationUnit) j.next();
+					if (tu.getNewColumnNameMap().values().contains(dsCol)
+							&& tu instanceof JoinTable)
+						rel = ((JoinTable) tu).getSchemaRelation();
+				}
+				if (rel != null)
+					this.compound.put(rel, new Integer(compound));
+			}
+		}
+
+		/**
+		 * How many times does the given relation cause the partition to get
+		 * repeated?
+		 * 
+		 * @param rel
+		 *            the relation to check.
+		 * @return the number of times.
+		 */
+		public int getCompound(final Relation rel) {
+			return this.isCompound(rel) ? ((Integer) this.compound
+					.get(rel)).intValue() : 1;
+		}
+
+		/**
+		 * Does the given relation cause the partition to get repeated?
+		 * 
+		 * @param rel
+		 *            the relation to check.
+		 * @return the number of times.
+		 */
+		public boolean isCompound(final Relation rel) {
+			return this.compound.containsKey(rel);
+		}
+
+		/**
+		 * Create a default application based on the given dataset.
+		 * 
+		 * @param pt
+		 *            the partition table.
+		 * @param ds
+		 *            the dataset.
+		 * @return the default application.
+		 */
+		public static PartitionTableApplication createDefault(
+				final PartitionTable pt, final DataSet ds) {
+			final PartitionTableApplication pa = new PartitionTableApplication(
+					pt, ds, ds.getMainTable().getName());
+			final String ptCol = (String) pt.getSelectedColumnNames()
+					.iterator().next();
+			pa.setNameCol(ptCol);
+			final Map map = new HashMap();
+			map.put(ptCol, ((DataSetColumn) ds.getMainTable().getColumns()
+					.iterator().next()).getName());
+			pa.setPartitionCols(map);
+			return pa;
+		}
+
+		/**
+		 * Create a default application based on the given dimension.
+		 * 
+		 * @param pt
+		 *            the partition table.
+		 * @param ds
+		 *            the dataset.
+		 * @param dimension
+		 *            the dimension.
+		 * @return the default application.
+		 */
+		public static PartitionTableApplication createDefault(
+				final PartitionTable pt, final DataSet ds,
+				final String dimension) {
+			final PartitionTableApplication pa = new PartitionTableApplication(
+					pt, ds, dimension);
+			final String ptCol = (String) pt.getSelectedColumnNames()
+					.iterator().next();
+			pa.setNameCol(ptCol);
+			final Map map = new HashMap();
+			map.put(ptCol, ((DataSetColumn) ds.getTableByName(dimension)
+					.getColumns().iterator().next()).getName());
+			pa.setPartitionCols(map);
+			return pa;
 		}
 	}
 }
