@@ -773,7 +773,19 @@ public class Mart {
 	public void synchroniseDataSets(final Schema affected,
 			final Schema otherAffected) throws SQLException, DataModelException {
 		Log.debug("Synchronising all datasets");
-		for (final Iterator i = this.datasets.values().iterator(); i.hasNext();) {
+		final List PTables = new ArrayList();
+		for (final Iterator i = this.getPartitionTableNames().iterator(); i.hasNext(); ) 
+			PTables.add(this.getDataSetByName((String)i.next()));
+		final List nonPTables = new ArrayList(this.datasets.values());
+		nonPTables.removeAll(PTables);
+		// Do the work - PTables first.
+		this.doSynchroniseDatasets(affected, otherAffected, PTables);
+		this.doSynchroniseDatasets(affected, otherAffected, nonPTables);
+	}
+
+	private void doSynchroniseDatasets(final Schema affected,
+			final Schema otherAffected, final Collection datasets) throws SQLException, DataModelException {
+		for (final Iterator i = datasets.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 
 			// Has the table gone?
@@ -787,7 +799,7 @@ public class Mart {
 				ds.synchronise();
 		}
 	}
-
+	
 	/**
 	 * Sync all datasets.
 	 * 
