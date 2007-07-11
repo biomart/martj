@@ -50,7 +50,7 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	private static final long serialVersionUID = 1;
 
-	private static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
+	private static final Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
 	 * Background for invisible datasets.
@@ -61,7 +61,7 @@ public class DataSetComponent extends BoxShapedComponent {
 	 * Background for visible datasets.
 	 */
 	public static Color VISIBLE_BACKGROUND = Color.YELLOW;
-	
+
 	/**
 	 * Background for partition datasets.
 	 */

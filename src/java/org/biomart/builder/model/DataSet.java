@@ -40,8 +40,10 @@ import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.PartitionTable.AbstractPartitionTable;
+import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionRow;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -187,8 +189,8 @@ public class DataSet extends GenericSchema {
 					return this.allCols.keySet();
 				}
 
-				protected List getRows(String schemaPartition, final int limit)
-						throws PartitionException {
+				protected List getRows(final String schemaPartition,
+						final int limit) throws PartitionException {
 					if (this.getSelectedColumnNames().isEmpty())
 						throw new PartitionException(Resources
 								.get("initialColumnsNotSpecified"));
@@ -201,7 +203,8 @@ public class DataSet extends GenericSchema {
 	}
 
 	private List getRowsBySimpleSQL(final PartitionTable pt,
-			String schemaPartition, final int limit) throws PartitionException {
+			final String schemaPartition, final int limit)
+			throws PartitionException {
 		Log.debug("Loading rows by simple SQL");
 
 		// Obtain schema.
@@ -342,7 +345,7 @@ public class DataSet extends GenericSchema {
 						final Map.Entry entry = (Map.Entry) j.next();
 						final DataSetColumn dsCol = (DataSetColumn) entry
 								.getValue();
-						if (trueSelectedCols.contains(dsCol.getModifiedName())) {
+						if (trueSelectedCols.contains(dsCol.getName())) {
 							final String col = (String) entry.getKey();
 							if (nextCol > 1)
 								sqlSel.append(',');
@@ -352,7 +355,7 @@ public class DataSet extends GenericSchema {
 							sqlSel.append('.');
 							sqlSel.append(col);
 							positionMap.put(new Integer(nextCol++), dsCol
-									.getModifiedName());
+									.getName());
 						}
 					}
 				} else
@@ -368,8 +371,8 @@ public class DataSet extends GenericSchema {
 			sql.append(" order by ");
 			final Map inversePositions = new InverseMap(positionMap);
 			for (final Iterator i = trueSelectedCols.iterator(); i.hasNext();) {
-				final Integer position = (Integer) inversePositions
-						.get((String) i.next());
+				final Integer position = (Integer) inversePositions.get(i
+						.next());
 				sql.append(position.intValue());
 				if (i.hasNext())
 					sql.append(',');
@@ -559,7 +562,7 @@ public class DataSet extends GenericSchema {
 					continue;
 				// Only unfiltered columns reach this point. Create a copy of
 				// the column.
-				InheritedColumn dsCol = new InheritedColumn(dsTable,
+				final InheritedColumn dsCol = new InheritedColumn(dsTable,
 						parentDSCol);
 				dsTable.addColumn(dsCol);
 				parentTU.getNewColumnNameMap()
@@ -610,7 +613,8 @@ public class DataSet extends GenericSchema {
 		this.processTable(parentTU, dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
 				relationCount, subclassCount, !type
-						.equals(DataSetTableType.DIMENSION), relationIteration);
+						.equals(DataSetTableType.DIMENSION),
+				Collections.EMPTY_LIST, relationIteration);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -628,11 +632,12 @@ public class DataSet extends GenericSchema {
 			final TransformationUnit previousUnit = (TransformationUnit) tuple[3];
 			final boolean makeDimensions = ((Boolean) tuple[4]).booleanValue();
 			final int iteration = ((Integer) tuple[5]).intValue();
-			final Map newRelationCounts = (Map) tuple[6];
+			final List nameCols = (List) tuple[6];
+			final Map newRelationCounts = (Map) tuple[7];
 			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable,
 					normalQ, subclassQ, dimensionQ, newSourceDSCols,
 					mergeSourceRelation, newRelationCounts, subclassCount,
-					makeDimensions, iteration);
+					makeDimensions, nameCols, iteration);
 		}
 
 		// Create the primary key on this table, but only if it has one.
@@ -752,6 +757,9 @@ public class DataSet extends GenericSchema {
 	 *            the dimension queue, <tt>false</tt> if we should just ignore
 	 *            them. This is useful for preventing dimensions from gaining
 	 *            dimensions of their own.
+	 * @param nameCols
+	 *            the list of partition columns to prefix the new dataset
+	 *            columns with.
 	 * @throws PartitionException
 	 *             if partitioning is in use and went wrong.
 	 */
@@ -761,7 +769,8 @@ public class DataSet extends GenericSchema {
 			final List dimensionQ, final List sourceDataSetCols,
 			final Relation sourceRelation, final Map relationCount,
 			final Map subclassCount, final boolean makeDimensions,
-			final int relationIteration) throws PartitionException {
+			final List nameCols, final int relationIteration)
+			throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
 
 		// Remember the schema.
@@ -827,8 +836,14 @@ public class DataSet extends GenericSchema {
 			if (includeMergeTablePK && mergeTablePK.getColumns().contains(c)
 					&& !colName.endsWith(Resources.get("keySuffix")))
 				colName = colName + Resources.get("keySuffix");
+			// Add partitioning prefixes.
+			for (final Iterator k = nameCols.iterator(); k.hasNext();)
+				colName = ((PartitionColumn) k.next()).getName() + "#"
+						+ relationIteration + Resources.get("columnnameSep")
+						+ colName;
 			final WrappedColumn wc = new WrappedColumn(c, colName, dsTable,
 					sourceRelation);
+			wc.setPartitionCols(nameCols);
 			tu.getNewColumnNameMap().put(c.getName(), wc);
 			dsTable.addColumn(wc);
 
@@ -971,12 +986,14 @@ public class DataSet extends GenericSchema {
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
 			if (followRelation || forceFollowRelation) {
+				final List nextNameCols = new ArrayList(nameCols);
 				this.includedRelations.add(r);
 				dsTable.includedRelations.add(r);
 
-				final Key sourceKey = (this.schemaMods.isDirectionalRelation(
-						dsTable, r) && r.getFirstKey().getTable().equals(
-						r.getSecondKey().getTable())) ? this.schemaMods
+				final Key sourceKey = this.schemaMods.isDirectionalRelation(
+						dsTable, r)
+						&& r.getFirstKey().getTable().equals(
+								r.getSecondKey().getTable()) ? this.schemaMods
 						.getDirectionalRelation(dsTable, r) : r
 						.getKeyForTable(mergeTable);
 				final Key targetKey = r.getOtherKey(sourceKey);
@@ -991,7 +1008,7 @@ public class DataSet extends GenericSchema {
 				final boolean skipCompound = this.schemaMods
 						.isLoopbackRelation(dsTable, r)
 						&& r.getManyKey().equals(r.getKeyForTable(mergeTable));
-				if (!skipCompound) {
+				if (!skipCompound)
 					if (this.schemaMods.isCompoundRelation(dsTable, r)
 							&& this.schemaMods.getCompoundRelation(dsTable, r)
 									.isParallel())
@@ -1000,21 +1017,33 @@ public class DataSet extends GenericSchema {
 					else {
 						// Work out partition compounding. Table
 						// applies within a dimension, where dataset does
-						// not apply, but outside a dimension only dataset 
+						// not apply, but outside a dimension only dataset
 						// applies.
 						PartitionTableApplication usefulPart = this.mart
 								.getPartitionTableForDimension(dsTable);
-						if (usefulPart == null && dsTable.equals(this.getMainTable()))
+						if (usefulPart == null
+								&& dsTable.equals(this.getMainTable()))
 							usefulPart = this.mart
 									.getPartitionTableForDataSet(this);
 						if (usefulPart == null)
 							childCompounded = 1;
 						else {
-							usefulPart.syncCounts();
-							childCompounded = usefulPart.getCompound(r);
+							// Make sure the partition is up-to-date
+							// and includes the relation we're working on.
+							usefulPart.syncCounts(dsTable, r);
+							// Get the row information for the relation.
+							final PartitionAppliedRow prow = usefulPart
+									.getAppliedRowForRelation(r);
+							if (prow == null)
+								childCompounded = 1;
+							else {
+								childCompounded = prow.getCompound();
+								nextNameCols.add(usefulPart.getPartitionTable()
+										.getSelectedColumn(
+												prow.getNamePartitionCol()));
+							}
 						}
 					}
-				}
 				for (int k = 0; k < childCompounded; k++)
 					normalQ.add(new Object[] {
 							r,
@@ -1023,7 +1052,7 @@ public class DataSet extends GenericSchema {
 							tu,
 							Boolean.valueOf(makeDimensions && r.isOneToOne()
 									|| forceFollowRelation), new Integer(k),
-							new HashMap(relationCount) });
+							nextNameCols, new HashMap(relationCount) });
 			}
 		}
 	}
@@ -1250,6 +1279,10 @@ public class DataSet extends GenericSchema {
 
 		private boolean expressionDependency;
 
+		private String partitionedName = null;
+
+		private final List partitionCols = new ArrayList();
+
 		/**
 		 * This constructor gives the column a name.
 		 * 
@@ -1269,6 +1302,64 @@ public class DataSet extends GenericSchema {
 			// Set up default mask/partition values.
 			this.keyDependency = false;
 			this.expressionDependency = false;
+		}
+
+		/**
+		 * Update the partition column list on this column.
+		 * 
+		 * @param partCols
+		 *            the new list of partition columns that apply.
+		 */
+		public void setPartitionCols(final List partCols) {
+			this.partitionCols.clear();
+			this.partitionCols.addAll(partCols);
+		}
+
+		/**
+		 * Fixes the name of this column to what it will be after partitioning
+		 * has been applied using the current rows.
+		 * 
+		 * @throws PartitionException
+		 *             if it could not get the values.
+		 */
+		public void fixPartitionedName() throws PartitionException {
+			final StringBuffer buf = new StringBuffer();
+			for (final Iterator i = this.partitionCols.iterator(); i.hasNext();) {
+				final PartitionColumn pcol = (PartitionColumn) i.next();
+				buf.append(pcol.getValueForRow(pcol.getPartitionTable()
+						.currentRow()));
+				buf.append(Resources.get("columnnameSep"));
+			}
+			String rest = this.getModifiedName();
+			if (rest.indexOf("__") >= 0)
+				rest = rest.substring(rest.lastIndexOf("__") + 2);
+			buf.append(rest);
+			this.partitionedName = buf.toString();
+			// UC/LC/Mixed?
+			switch (((DataSet) this.getTable().getSchema()).getMart().getCase()) {
+			case Mart.USE_LOWER_CASE:
+				this.partitionedName = this.partitionedName.toLowerCase();
+				break;
+			case Mart.USE_UPPER_CASE:
+				this.partitionedName = this.partitionedName.toUpperCase();
+				break;
+			default:
+				// Leave as-is.
+				break;
+			}
+		}
+
+		/**
+		 * Get the name of this column after partitioning has been applied. Must
+		 * call {@link #fixPartitionedName()} first else it will delegate to
+		 * {@link #getModifiedName()}.
+		 * 
+		 * @return the partitioned name.
+		 */
+		public String getPartitionedName() {
+			if (this.partitionedName == null)
+				return this.getModifiedName();
+			return this.partitionedName;
 		}
 
 		/**

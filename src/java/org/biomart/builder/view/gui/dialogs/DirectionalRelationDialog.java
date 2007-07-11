@@ -41,13 +41,13 @@ import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
 
 /**
- * A dialog which allows the user to choose which end of a relation it must
- * be followed from. The transformation will then always follow this relation
- * from that end and ignore it from the other.
+ * A dialog which allows the user to choose which end of a relation it must be
+ * followed from. The transformation will then always follow this relation from
+ * that end and ignore it from the other.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class DirectionalRelationDialog extends JDialog {
@@ -114,7 +114,7 @@ public class DirectionalRelationDialog extends JDialog {
 
 		// Intercept the drop-down.
 		this.chosenKey.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
+			public void itemStateChanged(final ItemEvent e) {
 				if (DirectionalRelationDialog.this.getChosenKey() == null)
 					checkbox.setSelected(false);
 				else

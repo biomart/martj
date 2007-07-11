@@ -105,7 +105,7 @@ public class CompoundRelationDialog extends JDialog {
 
 		// Set up the check box to turn it on and off.
 		final JCheckBox checkbox = new JCheckBox();
-		if (startvalue.getN()>1)
+		if (startvalue.getN() > 1)
 			checkbox.setSelected(true);
 		this.parallel.setSelected(startvalue.isParallel());
 		this.parallel.setEnabled(!forceParallel && startvalue.getN() > 1);
@@ -135,7 +135,7 @@ public class CompoundRelationDialog extends JDialog {
 
 		// Intercept the spinner.
 		spinner.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
+			public void stateChanged(final ChangeEvent e) {
 				if (CompoundRelationDialog.this.getArity() <= 1) {
 					checkbox.setSelected(false);
 					CompoundRelationDialog.this.parallel.setSelected(false);

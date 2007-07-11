@@ -104,8 +104,8 @@ public class MartTabSet extends JTabbedPane {
 			public File getSelectedFile() {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
-					String filename = file.getName();
-					String extension = Resources.get("xmlExtension");
+					final String filename = file.getName();
+					final String extension = Resources.get("xmlExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename
@@ -340,7 +340,8 @@ public class MartTabSet extends JTabbedPane {
 						// unmodified default tab?
 						MartTab defaultTab = MartTabSet.this
 								.getSelectedMartTab();
-						int defaultIndex = MartTabSet.this.getSelectedIndex();
+						final int defaultIndex = MartTabSet.this
+								.getSelectedIndex();
 						if (MartTabSet.this.getComponentCount() > 1
 								|| defaultTab != null
 								&& !MartTabSet.this.getTitleAt(defaultIndex)
@@ -400,7 +401,7 @@ public class MartTabSet extends JTabbedPane {
 				// Do we need to close the existing unsaved
 				// unmodified default tab?
 				MartTab defaultTab = MartTabSet.this.getSelectedMartTab();
-				int defaultIndex = MartTabSet.this.getSelectedIndex();
+				final int defaultIndex = MartTabSet.this.getSelectedIndex();
 				if (MartTabSet.this.getComponentCount() > 1
 						|| defaultTab != null
 						&& !MartTabSet.this.getTitleAt(defaultIndex).equals(
@@ -638,9 +639,9 @@ public class MartTabSet extends JTabbedPane {
 	 * monitors that host.
 	 */
 	public void requestMonitorRemoteHost() {
-		MartRunnerConnectionDialog d = new MartRunnerConnectionDialog(this
-				.getSelectedMartTab() == null ? null : this
-				.getSelectedMartTab().getMart());
+		final MartRunnerConnectionDialog d = new MartRunnerConnectionDialog(
+				this.getSelectedMartTab() == null ? null : this
+						.getSelectedMartTab().getMart());
 		d.setVisible(true);
 		// Cancelled by user?
 		if (d.getHost() == null)
@@ -799,8 +800,6 @@ public class MartTabSet extends JTabbedPane {
 		private static final long serialVersionUID = 1;
 
 		private JRadioButton datasetButton;
-
-		private JRadioButton partitionTableButton;
 
 		private DataSetTabSet datasetTabSet;
 
@@ -974,16 +973,6 @@ public class MartTabSet extends JTabbedPane {
 			// May get called before button has been created.
 			if (this.schemaButton != null && !this.schemaButton.isSelected())
 				this.schemaButton.doClick();
-		}
-
-		/**
-		 * Fakes a click on the partition table editor radio button.
-		 */
-		public void selectPartitionTableEditor() {
-			// May get called before button has been created.
-			if (this.partitionTableButton != null
-					&& !this.partitionTableButton.isSelected())
-				this.partitionTableButton.doClick();
 		}
 	}
 }

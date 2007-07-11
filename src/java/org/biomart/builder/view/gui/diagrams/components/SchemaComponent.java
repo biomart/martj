@@ -53,9 +53,9 @@ import org.biomart.common.resources.Resources;
 public class SchemaComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private static Color BACKGROUND_COLOUR = Color.YELLOW;
+	private static final Color BACKGROUND_COLOUR = Color.YELLOW;
 
-	private static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
+	private static final Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	private GridBagConstraints constraints;
 

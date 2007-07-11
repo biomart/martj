@@ -366,7 +366,7 @@ public interface Relation extends Comparable {
 			this.secondKey = secondKey;
 			this.setCardinality(cardinality);
 			this.status = ComponentStatus.INFERRED;
-			
+
 			// Check the keys have the same number of columns.
 			if (firstKey.countColumns() != secondKey.countColumns())
 				throw new AssociationException(Resources
@@ -378,18 +378,19 @@ public interface Relation extends Comparable {
 			// Cannot place a relation on an FK to this table if it
 			// already has relations.
 			if (firstKey.getTable().equals(secondKey.getTable())
-					&& ((firstKey instanceof ForeignKey && firstKey
-							.getRelations().size() > 0) || (secondKey instanceof ForeignKey && secondKey
-							.getRelations().size() > 0)))
+					&& (firstKey instanceof ForeignKey
+							&& firstKey.getRelations().size() > 0 || secondKey instanceof ForeignKey
+							&& secondKey.getRelations().size() > 0))
 				throw new AssociationException(Resources
 						.get("fkToThisOnceOrOthers"));
 			// Cannot place a relation on an FK to another table if
 			// it already has a relation to this table (it will have
 			// only one due to previous check).
-			if ((!firstKey.getTable().equals(secondKey.getTable()))
-					&& (firstKey.getRelations().size() == 1 && ((Relation) firstKey
-							.getRelations().iterator().next()).getOtherKey(
-							firstKey).getTable().equals(firstKey.getTable())))
+			if (!firstKey.getTable().equals(secondKey.getTable())
+					&& firstKey.getRelations().size() == 1
+					&& ((Relation) firstKey.getRelations().iterator().next())
+							.getOtherKey(firstKey).getTable().equals(
+									firstKey.getTable()))
 				throw new AssociationException(Resources
 						.get("fkToThisOnceOrOthers"));
 
@@ -418,10 +419,10 @@ public interface Relation extends Comparable {
 				return false;
 			final Relation r = (Relation) o;
 			// Check that not same keys are involved.
-			return (r.getFirstKey().equals(this.secondKey) && r.getSecondKey()
-					.equals(this.firstKey))
-					|| (r.getFirstKey().equals(this.firstKey) && r
-							.getSecondKey().equals(this.secondKey));
+			return r.getFirstKey().equals(this.secondKey)
+					&& r.getSecondKey().equals(this.firstKey)
+					|| r.getFirstKey().equals(this.firstKey)
+					&& r.getSecondKey().equals(this.secondKey);
 		}
 
 		public Cardinality getCardinality() {
@@ -496,12 +497,12 @@ public interface Relation extends Comparable {
 		}
 
 		public Key getKeyForTable(final Table table) {
-			return (this.firstKey.getTable().equals(table)) ? this.firstKey
+			return this.firstKey.getTable().equals(table) ? this.firstKey
 					: this.secondKey;
 		}
 
 		public Key getKeyForSchema(final Schema schema) {
-			return (this.firstKey.getTable().getSchema().equals(schema)) ? this.firstKey
+			return this.firstKey.getTable().getSchema().equals(schema) ? this.firstKey
 					: this.secondKey;
 		}
 

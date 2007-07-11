@@ -34,8 +34,8 @@ import org.biomart.common.resources.Resources;
  * name.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public interface Column extends Comparable {

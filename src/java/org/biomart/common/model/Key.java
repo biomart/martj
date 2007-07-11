@@ -42,8 +42,8 @@ import org.biomart.common.resources.Resources;
  * {@link ComponentStatus#INFERRED}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public interface Key extends Comparable {
@@ -162,7 +162,7 @@ public interface Key extends Comparable {
 		}
 
 		public String getName() {
-			return super.getName() + " {"+Resources.get("fkPrefix")+"}";
+			return super.getName() + " {" + Resources.get("fkPrefix") + "}";
 		}
 	}
 
@@ -270,12 +270,12 @@ public interface Key extends Comparable {
 		public List getColumns() {
 			return this.columns;
 		}
-		
+
 		public String getName() {
 			final StringBuffer sb = new StringBuffer();
 			sb.append(this.getTable() == null ? "<undef>" : this.getTable()
 					.toString());
-			sb.append(" "+this.getColumnNames());
+			sb.append(" " + this.getColumnNames());
 			return sb.toString();
 		}
 
@@ -333,7 +333,7 @@ public interface Key extends Comparable {
 				else
 					try {
 						r.setStatus(ComponentStatus.INFERRED_INCORRECT);
-					} catch (AssociationException e) {
+					} catch (final AssociationException e) {
 						// Never happens.
 						throw new BioMartError(e);
 					}
@@ -381,7 +381,7 @@ public interface Key extends Comparable {
 		 * Always returns the output from {@link #getName()}.
 		 */
 		public String toString() {
-			return ""+this.getName();
+			return "" + this.getName();
 		}
 	}
 
@@ -403,7 +403,7 @@ public interface Key extends Comparable {
 		}
 
 		public String getName() {
-			return super.getName() + " {"+Resources.get("pkPrefix")+"}";
+			return super.getName() + " {" + Resources.get("pkPrefix") + "}";
 		}
 	}
 

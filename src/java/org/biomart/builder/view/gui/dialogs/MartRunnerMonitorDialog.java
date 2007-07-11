@@ -390,7 +390,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			Font font = MartRunnerMonitorDialog.PLAIN_FONT;
 			// Sections are given text labels.
 			if (value instanceof SectionNode) {
-				final JobStatus status = (((SectionNode) value).getSection())
+				final JobStatus status = ((SectionNode) value).getSection()
 						.getStatus();
 				// White/Cyan stripes.
 				bgColor = row % 2 == 0 ? Color.WHITE
@@ -404,7 +404,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			}
 			// Actions are given text labels.
 			else if (value instanceof ActionNode) {
-				final JobStatus status = (((ActionNode) value).getAction())
+				final JobStatus status = ((ActionNode) value).getAction()
 						.getStatus();
 				// White/Cyan stripes.
 				bgColor = row % 2 == 0 ? Color.WHITE
@@ -1045,7 +1045,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			}
 		}
 
-		public void treeWillCollapse(TreeExpansionEvent event)
+		public void treeWillCollapse(final TreeExpansionEvent event)
 				throws ExpandVetoException {
 			// Remove children.
 			final Object collapsedNode = event.getPath().getLastPathComponent();
@@ -1053,7 +1053,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 				((SectionNode) collapsedNode).collapsed();
 		}
 
-		public void treeWillExpand(TreeExpansionEvent event)
+		public void treeWillExpand(final TreeExpansionEvent event)
 				throws ExpandVetoException {
 			// Insert children.
 			final Object expandedNode = event.getPath().getLastPathComponent();

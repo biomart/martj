@@ -23,8 +23,8 @@ package org.biomart.builder.exceptions;
  * construction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class ListenerException extends ConstructorException {
@@ -39,8 +39,8 @@ public class ListenerException extends ConstructorException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>ListenerException</tt> with the
-	 * specified detail message.
+	 * Constructs an instance of <tt>ListenerException</tt> with the specified
+	 * detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -50,8 +50,8 @@ public class ListenerException extends ConstructorException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>ListenerException</tt> with the
-	 * specified detail message and cause.
+	 * Constructs an instance of <tt>ListenerException</tt> with the specified
+	 * detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
@@ -63,8 +63,8 @@ public class ListenerException extends ConstructorException {
 	}
 
 	/**
-	 * Constructs an instance of <tt>ListenerException</tt> with the
-	 * specified cause.
+	 * Constructs an instance of <tt>ListenerException</tt> with the specified
+	 * cause.
 	 * 
 	 * @param t
 	 *            the underlying cause.

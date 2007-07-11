@@ -645,7 +645,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 					// If the component actually exists, which it may not if the
 					// diagram has been dynamically updated elsewhere, remember
-					// the state, else remove the current component because it is
+					// the state, else remove the current component because it
+					// is
 					// not relevant.
 					if (comp != null)
 						states.put(object, comp.getState());
@@ -657,7 +658,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				Diagram.this.doRecalculateDiagram();
 
 				// Reapply all the states. The methods of the Map interface use
-				// equals() to compare objects, so any objects in the new diagram
+				// equals() to compare objects, so any objects in the new
+				// diagram
 				// which match the old objects in the old diagram will inherit
 				// the state from the old objects.
 				for (final Iterator i = states.entrySet().iterator(); i

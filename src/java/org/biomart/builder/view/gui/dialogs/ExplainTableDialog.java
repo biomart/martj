@@ -118,7 +118,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	private JPanel transformation;
 
-	private List transformationTableComponents = new ArrayList();
+	private final List transformationTableComponents = new ArrayList();
 
 	private TransformationContext transformationContext;
 
@@ -258,7 +258,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 				ExplainTableDialog.this.transformationTableComponents.clear();
 
 				// Keep track of columns counted so far.
-				List columnsSoFar = new ArrayList();
+				final List columnsSoFar = new ArrayList();
 
 				// Count our steps.
 				int stepNumber = 1;
@@ -334,7 +334,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 								ExplainTableDialog.this.labelConstraints);
 						diagram
 								.setDiagramContext(ExplainTableDialog.this.transformationContext);
-						JPanel field = new JPanel();
+						final JPanel field = new JPanel();
 						field.add(diagram);
 						ExplainTableDialog.this.transformation.add(field,
 								ExplainTableDialog.this.fieldConstraints);

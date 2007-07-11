@@ -57,7 +57,7 @@ import org.biomart.common.resources.Resources;
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private static Color BACKGROUND_COLOUR = Color.PINK;
+	private static final Color BACKGROUND_COLOUR = Color.PINK;
 
 	/**
 	 * Border colour for all unpartitioned tables.
@@ -69,9 +69,9 @@ public class TableComponent extends BoxShapedComponent {
 	 */
 	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
-	private static Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
+	private static final Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
 
-	private static Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
+	private static final Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	private JComponent columnsListPanel;
 
@@ -134,7 +134,7 @@ public class TableComponent extends BoxShapedComponent {
 		this.add(name);
 
 		// Add the schema name label.
-		JLabel label = new JLabel(this.getTable().getSchema().getName());
+		final JLabel label = new JLabel(this.getTable().getSchema().getName());
 		label.setFont(TableComponent.ITALIC_FONT);
 		this.layout.setConstraints(label, this.constraints);
 		this.add(label);
@@ -232,9 +232,8 @@ public class TableComponent extends BoxShapedComponent {
 				name.append(originalName);
 				name.append(')');
 			}
-		} else {
+		} else
 			name.append(this.getEditableName());
-		}
 		return name.toString();
 	}
 

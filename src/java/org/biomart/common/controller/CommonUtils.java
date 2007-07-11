@@ -87,7 +87,7 @@ public class CommonUtils {
 	 */
 	public static JDBCSchema createJDBCSchema(final String driverClassName,
 			final String url, final String schemaName, final String username,
-			String password, final String name, final boolean keyGuessing) {
+			final String password, final String name, final boolean keyGuessing) {
 		return new JDBCSchema(driverClassName, url, schemaName, username,
 				password, name, keyGuessing);
 	}

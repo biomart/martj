@@ -66,10 +66,10 @@ public abstract class BioMartGUI extends JFrame {
 	 * look-and-feel to use. Details of where this file is can be found in
 	 * {@link Settings}.
 	 */
-	protected BioMartGUI() {		
+	protected BioMartGUI() {
 		// Create the window.
 		super(Resources.get("GUITitle", Resources.BIOMART_VERSION));
-		System.out.println("..."+Settings.getApplication()+" started.");
+		System.out.println("..." + Settings.getApplication() + " started.");
 		// Set some nice Mac stuff.
 		if (this.isMac()) {
 			try {

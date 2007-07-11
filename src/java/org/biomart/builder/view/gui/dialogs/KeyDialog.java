@@ -49,8 +49,8 @@ import org.biomart.common.resources.Resources;
  * move those columns around, thus editing the key.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public class KeyDialog extends JDialog {

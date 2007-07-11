@@ -58,8 +58,8 @@ import org.biomart.common.view.gui.LongProcess;
  * search and save it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class ViewTextDialog extends JFrame {
@@ -115,27 +115,27 @@ public class ViewTextDialog extends JFrame {
 		// Attach a mouse listener to the editor pane that
 		// will open the menu on demand.
 		editorPane.addMouseListener(new MouseListener() {
-			public void mouseReleased(MouseEvent e) {
+			public void mouseReleased(final MouseEvent e) {
 				this.handleMouse(e);
 			}
 
-			public void mouseClicked(MouseEvent e) {
+			public void mouseClicked(final MouseEvent e) {
 				this.handleMouse(e);
 			}
 
-			public void mousePressed(MouseEvent e) {
+			public void mousePressed(final MouseEvent e) {
 				this.handleMouse(e);
 			}
 
-			public void mouseEntered(MouseEvent e) {
+			public void mouseEntered(final MouseEvent e) {
 				this.handleMouse(e);
 			}
 
-			public void mouseExited(MouseEvent e) {
+			public void mouseExited(final MouseEvent e) {
 				this.handleMouse(e);
 			}
 
-			private void handleMouse(MouseEvent e) {
+			private void handleMouse(final MouseEvent e) {
 				if (e.isPopupTrigger()) {
 					copy.setEnabled(editorPane.getSelectedText() != null);
 					menu.show(e.getComponent(), e.getX(), e.getY());

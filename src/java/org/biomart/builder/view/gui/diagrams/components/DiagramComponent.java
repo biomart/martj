@@ -32,8 +32,8 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * interest to the diagram (for instance keys for relations).
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public interface DiagramComponent {
@@ -45,8 +45,8 @@ public interface DiagramComponent {
 	public JPopupMenu getContextMenu();
 
 	/**
-	 * Construct a context menu for the model object to be used when
-	 * multiple items are selected at once.
+	 * Construct a context menu for the model object to be used when multiple
+	 * items are selected at once.
 	 * 
 	 * @return the popup menu.
 	 */

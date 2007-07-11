@@ -406,7 +406,7 @@ public class SaveDDLDialog extends JDialog {
 						final Object data, final MartConstructorAction action)
 						throws ListenerException {
 					if (event == MartConstructorListener.CONSTRUCTION_ENDED
-							&& cr.getFailureException() == null) {
+							&& cr.getFailureException() == null)
 						if (SaveDDLDialog.this.outputFormat.getSelectedItem()
 								.equals(SaveDDLDialog.VIEW_DDL))
 							ViewTextDialog
@@ -422,7 +422,6 @@ public class SaveDDLDialog extends JDialog {
 													.getText(),
 											SaveDDLDialog.this.runDDLPort
 													.getText(), true);
-					}
 				}
 			});
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);

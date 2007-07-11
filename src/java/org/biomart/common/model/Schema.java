@@ -477,7 +477,7 @@ public interface Schema extends Comparable, DataLink {
 			return this.toString().hashCode();
 		}
 
-		public void removeTableByName(String tableName) {
+		public void removeTableByName(final String tableName) {
 			Log
 					.debug("Removing table " + tableName + " from "
 							+ this.getName());
@@ -795,7 +795,7 @@ public interface Schema extends Comparable, DataLink {
 				public void run() {
 					try {
 						JDBCSchema.this.closeConnection();
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						// We don't care if it fails, so ignore it.
 					}
 				}
@@ -1502,7 +1502,7 @@ public interface Schema extends Comparable, DataLink {
 				try {
 					Log.debug("Closing dead JDBC connection");
 					this.connection.close();
-				} catch (SQLException e) {
+				} catch (final SQLException e) {
 					// We don't care. Ignore it.
 				} finally {
 					this.connection = null;
@@ -1611,7 +1611,7 @@ public interface Schema extends Comparable, DataLink {
 				// Reset the cached database connection.
 				try {
 					this.closeConnection();
-				} catch (SQLException e) {
+				} catch (final SQLException e) {
 					// We don't care.
 				}
 			}
@@ -1624,7 +1624,7 @@ public interface Schema extends Comparable, DataLink {
 				// Reset the cached database connection.
 				try {
 					this.closeConnection();
-				} catch (SQLException e) {
+				} catch (final SQLException e) {
 					// We don't care.
 				}
 			}
@@ -1636,7 +1636,7 @@ public interface Schema extends Comparable, DataLink {
 				// Reset the cached database connection.
 				try {
 					this.closeConnection();
-				} catch (SQLException e) {
+				} catch (final SQLException e) {
 					// We don't care.
 				}
 			}
@@ -1649,7 +1649,7 @@ public interface Schema extends Comparable, DataLink {
 				// Reset the cached database connection.
 				try {
 					this.closeConnection();
-				} catch (SQLException e) {
+				} catch (final SQLException e) {
 					// We don't care.
 				}
 			}
@@ -1661,7 +1661,7 @@ public interface Schema extends Comparable, DataLink {
 				// Reset the cached database connection.
 				try {
 					this.closeConnection();
-				} catch (SQLException e) {
+				} catch (final SQLException e) {
 					// We don't care.
 				}
 			}

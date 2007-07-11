@@ -35,8 +35,8 @@ import org.biomart.common.view.gui.OpenBrowser.OpenBrowserLabel;
  * A dialog which shows the about info.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class AboutDialog extends JDialog {

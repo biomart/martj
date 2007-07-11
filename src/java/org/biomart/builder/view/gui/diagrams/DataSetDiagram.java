@@ -40,8 +40,8 @@ import org.biomart.common.model.Schema;
  * {@link SchemaDiagram} can be reused for displaying datasets.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public class DataSetDiagram extends Diagram {

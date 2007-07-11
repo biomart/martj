@@ -59,8 +59,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * validation of input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public abstract class SchemaConnectionPanel extends JPanel {
@@ -520,8 +520,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 				// Construct a JDBCSchema based on them.
 				final JDBCSchema schema = CommonUtils.createJDBCSchema(
-						driverClassName, url,
-						schemaName, username, password, name, false);
+						driverClassName, url, schemaName, username, password,
+						name, false);
 
 				// Return that schema.
 				return schema;

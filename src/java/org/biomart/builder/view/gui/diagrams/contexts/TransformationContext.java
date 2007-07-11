@@ -60,53 +60,65 @@ public class TransformationContext extends DataSetContext {
 		super(martTab, dataset);
 	}
 
-	public void customiseAppearance(final JComponent component, Object object) {
+	public void customiseAppearance(final JComponent component,
+			final Object object) {
 		// Don't process fake tables.
 		if (object instanceof FakeTable || object instanceof FakeSchema)
 			return;
 
 		// Convert tables to real tables then process.
 		else if (object instanceof RealisedTable) {
-			final Table actualTbl = ((RealisedTable)object).getTable();
-			final ExplainContext explCon = ((RealisedTable)object).getExplainContext();
+			final Table actualTbl = ((RealisedTable) object).getTable();
+			final ExplainContext explCon = ((RealisedTable) object)
+					.getExplainContext();
 			// Call the ExplainContext method for this table.
 			explCon.customiseAppearance(component, actualTbl);
 		}
 
 		// Convert relations to real relations then process.
 		else if (object instanceof RealisedRelation) {
-			final Relation actualRel = ((RealisedRelation)object).getRelation();
-			final int actualRelIt = ((RealisedRelation)object).getRelationIteration();
-			final ExplainContext explCon = ((RealisedRelation)object).getExplainContext();
+			final Relation actualRel = ((RealisedRelation) object)
+					.getRelation();
+			final int actualRelIt = ((RealisedRelation) object)
+					.getRelationIteration();
+			final ExplainContext explCon = ((RealisedRelation) object)
+					.getExplainContext();
 			// Call the ExplainContext method for this relation.
-			explCon.customiseRelationAppearance(component, actualRel, actualRelIt);
+			explCon.customiseRelationAppearance(component, actualRel,
+					actualRelIt);
 		}
 
 		// Just process everything else.
 		else
 			super.customiseAppearance(component, object);
 	}
-	
-	public void populateContextMenu(final JPopupMenu contextMenu, Object object) {
+
+	public void populateContextMenu(final JPopupMenu contextMenu,
+			final Object object) {
 		// Don't process fake tables.
 		if (object instanceof FakeTable || object instanceof FakeSchema)
 			return;
 
 		// Convert tables to real tables then process.
 		else if (object instanceof RealisedTable) {
-			final Table actualTbl = ((RealisedTable)object).getTable();
-			final ExplainContext explCon = ((RealisedTable)object).getExplainContext();
+			final Table actualTbl = ((RealisedTable) object).getTable();
+			final ExplainContext explCon = ((RealisedTable) object)
+					.getExplainContext();
 			// Call the ExplainContext method for this table.
 			explCon.populateContextMenu(contextMenu, actualTbl);
 		}
 
 		// Convert relations to real relations then process.
 		else if (object instanceof RealisedRelation) {
-			final Relation actualRel = ((RealisedRelation)object).getRelation();
-			final int actualRelIt = ((RealisedRelation)object).getRelationIteration();
-			final ExplainContext explCon = ((RealisedRelation)object).getExplainContext();
+			final Relation actualRel = ((RealisedRelation) object)
+					.getRelation();
+			final int actualRelIt = ((RealisedRelation) object)
+					.getRelationIteration();
+			final ExplainContext explCon = ((RealisedRelation) object)
+					.getExplainContext();
 			// Call the ExplainContext method for this relation.
-			explCon.populateRelationContextMenu(contextMenu, actualRel, actualRelIt);
+			explCon.populateRelationContextMenu(contextMenu, actualRel,
+					actualRelIt);
 		}
 
 		// Just process everything else.

@@ -358,7 +358,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 								+ this.dataset + "/" + tableName
 								+ Resources.get("ddlExtension");
 						Log.debug("Starting entry " + entryFilename);
-						ZipEntry entry = new ZipEntry(entryFilename);
+						final ZipEntry entry = new ZipEntry(entryFilename);
 						entry.setTime(System.currentTimeMillis());
 						this.outputZipStream.putNextEntry(entry);
 						// What actions are for this table?
@@ -390,7 +390,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						this.outputZipStream.closeEntry();
 					}
 					// Write the dataset manifest.
-					ZipEntry entry = new ZipEntry(this.partition + "/"
+					final ZipEntry entry = new ZipEntry(this.partition + "/"
 							+ this.dataset + "/"
 							+ Resources.get("datasetManifest"));
 					entry.setTime(System.currentTimeMillis());

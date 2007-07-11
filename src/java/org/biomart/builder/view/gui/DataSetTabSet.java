@@ -254,12 +254,11 @@ public class DataSetTabSet extends JTabbedPane {
 		// Update the overview diagram.
 		this.recalculateOverviewDiagram();
 
-		if (select) {
+		if (select)
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.
 			this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1,
 					0));
-		}
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -560,9 +559,13 @@ public class DataSetTabSet extends JTabbedPane {
 		PartitionTableDialog.showForDimension(dim);
 		new LongProcess() {
 			public void run() throws Exception {
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram((DataSet) dim
-						.getSchema(), dim);
+				// Recalculate all datasets.
+				MartBuilderUtils.synchroniseMartDataSets(DataSetTabSet.this
+						.getMartTab().getMart());
+				DataSetTabSet.this.recalculateAllDataSetDiagrams();
+
+				// And repaint the overview.
+				DataSetTabSet.this.repaintOverviewDiagram();
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()
@@ -581,8 +584,13 @@ public class DataSetTabSet extends JTabbedPane {
 		PartitionTableDialog.showForDataSet(ds);
 		new LongProcess() {
 			public void run() throws Exception {
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram(ds, null);
+				// Recalculate all datasets.
+				MartBuilderUtils.synchroniseMartDataSets(DataSetTabSet.this
+						.getMartTab().getMart());
+				DataSetTabSet.this.recalculateAllDataSetDiagrams();
+
+				// And repaint the overview.
+				DataSetTabSet.this.repaintOverviewDiagram();
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()
@@ -1020,14 +1028,14 @@ public class DataSetTabSet extends JTabbedPane {
 			return 0;
 
 		// Work out possible options.
-		int maxIndex = dataset.getSchemaModifications().getCompoundRelation(
-				dsTable, relation).getN();
+		final int maxIndex = dataset.getSchemaModifications()
+				.getCompoundRelation(dsTable, relation).getN();
 		final Integer[] options = new Integer[maxIndex];
 		for (int i = 0; i < options.length; i++)
 			options[i] = new Integer(i + 1);
 
 		// Return -1 if cancelled.
-		Integer selIndex = (Integer) JOptionPane.showInputDialog(null,
+		final Integer selIndex = (Integer) JOptionPane.showInputDialog(null,
 				Resources.get("compoundRelationIndex"), Resources
 						.get("questionTitle"), JOptionPane.QUESTION_MESSAGE,
 				null, options, options[0]);
@@ -1225,10 +1233,12 @@ public class DataSetTabSet extends JTabbedPane {
 		new PartitionTableDialog(ds).setVisible(true);
 		new LongProcess() {
 			public void run() throws Exception {
-				// Change the tab colour of the dataset as appropriate.
-				DataSetTabSet.this.repaintDataSetDiagram(ds, null);
+				// Recalculate all datasets.
+				MartBuilderUtils.synchroniseMartDataSets(DataSetTabSet.this
+						.getMartTab().getMart());
+				DataSetTabSet.this.recalculateAllDataSetDiagrams();
 
-				// Update the overview diagram.
+				// And repaint the overview.
 				DataSetTabSet.this.repaintOverviewDiagram();
 
 				// Update the modified status for this tabset.

@@ -275,12 +275,11 @@ public class SchemaTabSet extends JTabbedPane {
 		// Update the all-schemas diagram.
 		this.recalculateOverviewDiagram();
 
-		if (select) {
+		if (select)
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.
 			this.setSelectedIndex(currentTab == 0 ? 0 : Math.max(tabIndex - 1,
 					0));
-		}
 	}
 
 	protected void processMouseEvent(final MouseEvent evt) {
@@ -1152,7 +1151,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void setDiagramContext(final DiagramContext diagramContext) {
 		this.diagramContext = diagramContext;
 		this.allSchemasDiagram.setDiagramContext(diagramContext);
-		for (Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext();)
+		for (final Iterator i = this.schemaToDiagram[1].iterator(); i.hasNext();)
 			((Diagram) i.next()).setDiagramContext(diagramContext);
 	}
 }

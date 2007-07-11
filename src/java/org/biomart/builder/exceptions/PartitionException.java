@@ -19,12 +19,12 @@
 package org.biomart.builder.exceptions;
 
 /**
- * This is a basic {@link Exception} for all exceptions to do with
- * partition tables.
+ * This is a basic {@link Exception} for all exceptions to do with partition
+ * tables.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class PartitionException extends MartBuilderException {

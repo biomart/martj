@@ -62,7 +62,7 @@ public class ColumnComponent extends BoxShapedComponent {
 	 */
 	public static Color NORMAL_FG_COLOUR = Color.BLACK;
 
-	private static Font NORMAL_FONT = Font.decode("SansSerif-PLAIN-10");
+	private static final Font NORMAL_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	/**
 	 * Constant referring to normal column background colour.

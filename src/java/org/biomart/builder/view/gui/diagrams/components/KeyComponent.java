@@ -69,9 +69,9 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
 public class KeyComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private static Color PK_BACKGROUND_COLOUR = Color.CYAN;
+	private static final Color PK_BACKGROUND_COLOUR = Color.CYAN;
 
-	private static Color FK_BACKGROUND_COLOUR = Color.YELLOW;
+	private static final Color FK_BACKGROUND_COLOUR = Color.YELLOW;
 
 	/**
 	 * Constant referring to handmade key colour.
@@ -88,7 +88,7 @@ public class KeyComponent extends BoxShapedComponent {
 	 */
 	public static Color NORMAL_COLOUR = Color.DARK_GRAY;
 
-	private static Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
+	private static final Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-10");
 
 	private GridBagConstraints constraints;
 
@@ -159,7 +159,7 @@ public class KeyComponent extends BoxShapedComponent {
 				if (KeyComponent.this.isDraggable())
 					try {
 						Transferable transferable = new KeyTransferable(
-								((KeyComponent)e.getComponent()).getKey());
+								((KeyComponent) e.getComponent()).getKey());
 						e.startDrag(DragSource.DefaultLinkNoDrop, transferable,
 								dsListener);
 					} catch (final Throwable t) {
@@ -307,17 +307,17 @@ public class KeyComponent extends BoxShapedComponent {
 			return KeyTransferable.flavors;
 		}
 
-		public boolean isDataFlavorSupported(DataFlavor flavor) {
+		public boolean isDataFlavorSupported(final DataFlavor flavor) {
 			return KeyTransferable.flavorList.contains(flavor);
 		}
 
 		private Key key;
 
-		private KeyTransferable(Key key) {
+		private KeyTransferable(final Key key) {
 			this.key = key;
 		}
 
-		public Object getTransferData(DataFlavor flavor)
+		public Object getTransferData(final DataFlavor flavor)
 				throws UnsupportedFlavorException, IOException {
 			if (KeyTransferable.keyFlavor.equals(flavor))
 				return this.key;

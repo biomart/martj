@@ -61,6 +61,27 @@
   </xsl:choose>
 </xsl:template>
 
+<xsl:template name="threeColumnPrintout">
+  <xsl:param name="str1"/>
+  <xsl:param name="str2"/>
+  <xsl:param name="str3"/>
+  <xsl:choose>
+    <xsl:when test="contains($str1,',')">
+      <xsl:value-of select="substring-before($str1,',')"/> => <xsl:value-of select="substring-before($str2,',')"/> => <xsl:value-of select="substring-before($str3,',')"/>
+<xsl:text><!-- This prints a blank line -->
+</xsl:text>
+      <xsl:call-template name="twoColumnPrintout">
+        <xsl:with-param name="str1" select="substring-after($str1,',')"/>
+        <xsl:with-param name="str2" select="substring-after($str2,',')"/>
+        <xsl:with-param name="str3" select="substring-after($str3,',')"/>
+      </xsl:call-template>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="$str1"/> => <xsl:value-of select="$str2"/> => <xsl:value-of select="$str3"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
 
 <!-- MART -->
 <xsl:template match="/mart">
@@ -76,7 +97,7 @@ they have been changed again SINCE this report feature was added.
 Default target schema for SQL output: <xsl:choose><xsl:when test="@outputSchema"><xsl:value-of select="@outputSchema"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 Default host/port for remote host output: <xsl:choose><xsl:when test="@outputHost"><xsl:value-of select="@outputHost"/>/<xsl:value-of select="@outputPort"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 
-Table/column name case: <xsl:choose><xsl:when test="@nameCase==1">UPPER</xsl:when><xsl:when test="@nameCase==2">lower</xsl:when><xsl:otherwise>Mixed</xsl:otherwise></xsl:choose>
+Table/column name case: <xsl:choose><xsl:when test="@nameCase=1">UPPER</xsl:when><xsl:when test="@nameCase=2">lower</xsl:when><xsl:otherwise>Mixed</xsl:otherwise></xsl:choose>
 
 Schemas
 =======
@@ -191,15 +212,10 @@ Regex columns
 
 <xsl:apply-templates select="./partitionRegex"/> 
 
-Dataset applications
---------------------
+Applications
+------------
 
-<xsl:apply-templates select="./datasetApplication"/> 
-
-Dimension applications
-----------------------
-
-<xsl:apply-templates select="./dimensionApplication"/> 
+<xsl:apply-templates select="./partitionApplication"/> 
 
 </xsl:template>
 
@@ -334,21 +350,11 @@ Regex on partition column: <xsl:value-of select="@name"/>
 </xsl:template>
 
 
-<xsl:template match="datasetApplication">
+<xsl:template match="partitionApplication">
 
-Applied to dataset: <xsl:value-of select="@name"/>
-  Name column: <xsl:value-of select="@nameColumn"/>
-  Mappings: <xsl:call-template name="twoColumnPrintout"><xsl:with-param name="str1" select="@pCols"/><xsl:with-param name="str2" select="@dsCols"/></xsl:call-template>
-
-</xsl:template>
-
-
-<xsl:template match="dimensionApplication">
-
-Applied to dataset: <xsl:value-of select="@name"/>
-  Dimension: <xsl:value-of select="@dimension"/>
-  Name column: <xsl:value-of select="@nameColumn"/>
-  Mappings: <xsl:call-template name="twoColumnPrintout"><xsl:with-param name="str1" select="@pCols"/><xsl:with-param name="str2" select="@dsCols"/></xsl:call-template>
+Applied to dataset: <xsl:value-of select="@name"/><xsl:if test="@dimension">
+  Dimension: <xsl:value-of select="@dimension"/></xsl:if>
+  Mappings: <xsl:call-template name="threeColumnPrintout"><xsl:with-param name="str1" select="@pCols"/><xsl:with-param name="str2" select="@dsCols"/><xsl:with-param name="str3" select="@nameCols"/></xsl:call-template>
 
 </xsl:template>
 

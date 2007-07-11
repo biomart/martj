@@ -38,8 +38,8 @@ import javax.swing.JLabel;
  * tutorial</a>.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class OpenBrowser {
@@ -50,12 +50,13 @@ public class OpenBrowser {
 	 * @param url
 	 *            the URL to open.
 	 */
-	public static void openURL(String url) {
-		String osName = System.getProperty("os.name").toLowerCase();
+	public static void openURL(final String url) {
+		final String osName = System.getProperty("os.name").toLowerCase();
 		try {
 			if (osName.startsWith("mac")) {
-				Class fileMgr = Class.forName("com.apple.eio.FileManager");
-				Method openURL = fileMgr.getDeclaredMethod("openURL",
+				final Class fileMgr = Class
+						.forName("com.apple.eio.FileManager");
+				final Method openURL = fileMgr.getDeclaredMethod("openURL",
 						new Class[] { String.class });
 				openURL.invoke(null, new Object[] { url });
 			} else if (osName.startsWith("windows"))
@@ -63,7 +64,7 @@ public class OpenBrowser {
 						"rundll32 url.dll,FileProtocolHandler " + url);
 			else {
 				// assume Unix or Linux
-				String[] browsers = { "firefox", "opera", "konqueror",
+				final String[] browsers = { "firefox", "opera", "konqueror",
 						"mozilla", "netscape" };
 				String browser = null;
 				for (int count = 0; count < browsers.length && browser == null; count++)
@@ -74,7 +75,7 @@ public class OpenBrowser {
 				if (browser != null)
 					Runtime.getRuntime().exec(new String[] { browser, url });
 			}
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			// We don't really care if it fails. Tough luck.
 		}
 	}
@@ -114,7 +115,7 @@ public class OpenBrowser {
 			this.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			this.setForeground(Color.BLUE);
 			this.addMouseListener(new MouseAdapter() {
-				public void mouseClicked(MouseEvent me) {
+				public void mouseClicked(final MouseEvent me) {
 					OpenBrowser.openURL(url);
 				}
 			});

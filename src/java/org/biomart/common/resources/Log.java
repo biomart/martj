@@ -90,7 +90,7 @@ public class Log {
 		try {
 			Log.logger.addAppender(new RollingFileAppender(Log.defaultLayout,
 					(new File(logDir, "error.log")).getPath(), true));
-		} catch (Throwable t) {
+		} catch (final Throwable t) {
 			// Fall-back to the defaults if we can't write to file.
 			Log.logger.addAppender(Log.defaultAppender);
 			Log.warn("No rolling logger", t);
@@ -114,7 +114,7 @@ public class Log {
 			final Properties log4jProps = new Properties();
 			log4jProps.load(new FileInputStream(log4jPropsFile));
 			PropertyConfigurator.configure(log4jProps);
-		} catch (Throwable t) {
+		} catch (final Throwable t) {
 			Log.warn("No custom logger", t);
 		}
 	}
@@ -134,7 +134,7 @@ public class Log {
 	 * @param message
 	 *            the message to log.
 	 */
-	public static void debug(Object message) {
+	public static void debug(final Object message) {
 		Log.logger.debug(message);
 	}
 
@@ -146,7 +146,7 @@ public class Log {
 	 * @param t
 	 *            the error stack trace.
 	 */
-	public static void debug(Object message, Throwable t) {
+	public static void debug(final Object message, final Throwable t) {
 		Log.logger.debug(message, t);
 	}
 
@@ -156,7 +156,7 @@ public class Log {
 	 * @param message
 	 *            the message to log.
 	 */
-	public static void info(Object message) {
+	public static void info(final Object message) {
 		Log.logger.info(message);
 	}
 
@@ -168,7 +168,7 @@ public class Log {
 	 * @param t
 	 *            the error stack trace.
 	 */
-	public static void info(Object message, Throwable t) {
+	public static void info(final Object message, final Throwable t) {
 		Log.logger.debug(message, t);
 	}
 
@@ -178,7 +178,7 @@ public class Log {
 	 * @param message
 	 *            the message to log.
 	 */
-	public static void warn(Object message) {
+	public static void warn(final Object message) {
 		Log.logger.warn(message);
 	}
 
@@ -190,7 +190,7 @@ public class Log {
 	 * @param t
 	 *            the error stack trace.
 	 */
-	public static void warn(Object message, Throwable t) {
+	public static void warn(final Object message, final Throwable t) {
 		Log.logger.warn(message, t);
 	}
 
@@ -200,7 +200,7 @@ public class Log {
 	 * @param message
 	 *            the message to log.
 	 */
-	public static void error(Object message) {
+	public static void error(final Object message) {
 		Log.logger.error(message);
 	}
 
@@ -212,7 +212,7 @@ public class Log {
 	 * @param t
 	 *            the error stack trace.
 	 */
-	public static void error(Object message, Throwable t) {
+	public static void error(final Object message, final Throwable t) {
 		Log.logger.error(message, t);
 	}
 
@@ -222,7 +222,7 @@ public class Log {
 	 * @param message
 	 *            the message to log.
 	 */
-	public static void fatal(Object message) {
+	public static void fatal(final Object message) {
 		Log.logger.fatal(message);
 	}
 
@@ -234,7 +234,7 @@ public class Log {
 	 * @param t
 	 *            the error stack trace.
 	 */
-	public static void fatal(Object message, Throwable t) {
+	public static void fatal(final Object message, final Throwable t) {
 		Log.logger.fatal(message, t);
 	}
 

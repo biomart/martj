@@ -178,7 +178,7 @@ public class PartitionSchemaDialog extends JDialog {
 				final String newRegex = PartitionSchemaDialog.this.getRegex();
 				final String newExpr = PartitionSchemaDialog.this
 						.getExpression();
-				if (newRegex != null && newExpr != null) {
+				if (newRegex != null && newExpr != null)
 					try {
 						template.setPartitionRegex(newRegex);
 						template.setPartitionNameExpression(newExpr);
@@ -198,7 +198,6 @@ public class PartitionSchemaDialog extends JDialog {
 						template.setPartitionRegex(oldRegex);
 						template.setPartitionNameExpression(oldExpr);
 					}
-				}
 			}
 		};
 		this.regex.getDocument().addDocumentListener(dl);

@@ -96,8 +96,8 @@ public abstract class DataSetColumnStringTablePanel extends
 		// excludes optimiser columns.
 		for (final Iterator i = columns.iterator(); i.hasNext();) {
 			final DataSetColumn col = (DataSetColumn) i.next();
-			if (this.dontIncludeThis == null || !col
-					.equals(this.dontIncludeThis))
+			if (this.dontIncludeThis == null
+					|| !col.equals(this.dontIncludeThis))
 				sortedCols.put(col.getModifiedName(), col);
 		}
 		return sortedCols.values();
@@ -109,9 +109,9 @@ public abstract class DataSetColumnStringTablePanel extends
 
 	public TableCellRenderer getFirstColumnRenderer() {
 		return new TableCellRenderer() {
-			public Component getTableCellRendererComponent(JTable table,
-					Object value, boolean isSelected, boolean hasFocus,
-					int row, int column) {
+			public Component getTableCellRendererComponent(final JTable table,
+					final Object value, final boolean isSelected,
+					final boolean hasFocus, final int row, final int column) {
 				final DataSetColumn col = (DataSetColumn) value;
 				final JLabel label = new JLabel();
 				// As for ColumnString but uses the modified name.

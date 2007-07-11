@@ -25,8 +25,8 @@ import org.biomart.common.exceptions.BioMartException;
  * exceptions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public class MartBuilderException extends BioMartException {

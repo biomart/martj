@@ -158,23 +158,23 @@ public class DataSetContext extends SchemaContext {
 				component.setForeground(TableComponent.MASKED_COLOUR);
 
 			// Highlight DIMENSION tables.
-			else if (tableType.equals(DataSetTableType.DIMENSION)) {
+			else if (tableType.equals(DataSetTableType.DIMENSION))
 				// Is it compounded?
 				((TableComponent) component).setCompounded(this.dataset
 						.getSchemaModifications().isCompoundRelation(null,
 								((DataSetTable) object).getFocusRelation()));
-			}
-
-			// All others are normal.
 			else
 				component.setForeground(TableComponent.NORMAL_COLOUR);
 
 			// Update dotted line (partitioned).
-			((TableComponent) component).setRestricted(this.getMartTab().getMart().
-					getPartitionTableForDimension((DataSetTable) object)!=null
-					|| (((DataSetTable) object).getType().equals(
-							DataSetTableType.MAIN) && this.getMartTab().getMart().getPartitionTableForDataSet(this.dataset)!=null));
-			
+			((TableComponent) component).setRestricted(this.getMartTab()
+					.getMart().getPartitionTableForDimension(
+							(DataSetTable) object) != null
+					|| ((DataSetTable) object).getType().equals(
+							DataSetTableType.MAIN)
+					&& this.getMartTab().getMart().getPartitionTableForDataSet(
+							this.dataset) != null);
+
 			((TableComponent) component).setRenameable(true);
 			((TableComponent) component).setSelectable(true);
 		}
@@ -495,7 +495,7 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(distinct);
-			if (dataset.getDataSetModifications().isDistinctTable(table))
+			if (this.dataset.getDataSetModifications().isDistinctTable(table))
 				distinct.setSelected(true);
 
 			final boolean isMasked = this.getDataSet()

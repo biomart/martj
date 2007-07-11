@@ -31,10 +31,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
@@ -299,7 +297,7 @@ public class Mart {
 			try {
 				suggestedDataSet.getSchemaModifications()
 						.setSubclassedRelation(r);
-			} catch (ValidationException e) {
+			} catch (final ValidationException e) {
 				// Eh? We asked for it, dammit!
 				throw new BioMartError(e);
 			}
@@ -378,9 +376,7 @@ public class Mart {
 	 * Returns the set of partition column names which this mart includes. The
 	 * set may be empty but it is never <tt>null</tt>.
 	 * 
-	 * @return a set of partition column names (as strings). Each name returned
-	 *         is fully qualified and ready to pass to
-	 *         {@link #getPartitionColumn(String)}.
+	 * @return a set of partition column names (as strings).
 	 */
 	public Collection getPartitionColumnNames() {
 		final List colNames = new ArrayList();
@@ -774,8 +770,9 @@ public class Mart {
 			final Schema otherAffected) throws SQLException, DataModelException {
 		Log.debug("Synchronising all datasets");
 		final List PTables = new ArrayList();
-		for (final Iterator i = this.getPartitionTableNames().iterator(); i.hasNext(); ) 
-			PTables.add(this.getDataSetByName((String)i.next()));
+		for (final Iterator i = this.getPartitionTableNames().iterator(); i
+				.hasNext();)
+			PTables.add(this.getDataSetByName((String) i.next()));
 		final List nonPTables = new ArrayList(this.datasets.values());
 		nonPTables.removeAll(PTables);
 		// Do the work - PTables first.
@@ -784,7 +781,8 @@ public class Mart {
 	}
 
 	private void doSynchroniseDatasets(final Schema affected,
-			final Schema otherAffected, final Collection datasets) throws SQLException, DataModelException {
+			final Schema otherAffected, final Collection datasets)
+			throws SQLException, DataModelException {
 		for (final Iterator i = datasets.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 
@@ -799,7 +797,7 @@ public class Mart {
 				ds.synchronise();
 		}
 	}
-	
+
 	/**
 	 * Sync all datasets.
 	 * 
@@ -855,45 +853,7 @@ public class Mart {
 	 * @return the table.
 	 */
 	public PartitionTable getPartitionTable(final String descriptor) {
-		final String[] parts = descriptor.split("\\.");
-		return this.getDataSetByName(parts[0]).asPartitionTable();
-	}
-
-	/**
-	 * Using the descriptor (table.column) return the actual column from a
-	 * {@link PartitionTable} or subdivision thereof.
-	 * 
-	 * @param descriptor
-	 *            the descriptor.
-	 * @return the column.
-	 */
-	public PartitionColumn getPartitionColumn(final String descriptor) {
-		final String[] parts = descriptor.split("\\.");
-		PartitionTable table = this.getPartitionTable(parts[0]);
-		try {
-			return table.getSelectedColumn(parts[1]);
-		} catch (final PartitionException pe) {
-			// Ignore.
-		}
-		return null;
-	}
-
-	/**
-	 * Resolve partition column references and return the current value for that
-	 * reference. Partition references are in the form table.column.
-	 * 
-	 * @param expression
-	 *            the expression to resolve.
-	 * @return the resolved expression.
-	 * @throws PartitionException
-	 *             if any alias could not be resolved into a value.
-	 */
-	public String currentValueFor(final String expression)
-			throws PartitionException {
-		final PartitionColumn col = this.getPartitionColumn(expression);
-		if (col != null)
-			return col.getValueForRow(col.getPartitionTable().currentRow());
-		return null;
+		return this.getDataSetByName(descriptor).asPartitionTable();
 	}
 
 	/**
@@ -907,10 +867,9 @@ public class Mart {
 			final DataSet ds) {
 		for (final Iterator i = this.getPartitionTableNames().iterator(); i
 				.hasNext();) {
-			final PartitionTable pt = (PartitionTable) this
-					.getPartitionTable((String) i.next());
-			if (pt.getApplication(ds) != null)
-				return pt.getApplication(ds);
+			final PartitionTable pt = this.getPartitionTable((String) i.next());
+			if (pt.getApplication(ds, PartitionTable.NO_DIMENSION) != null)
+				return pt.getApplication(ds, PartitionTable.NO_DIMENSION);
 		}
 		return null;
 	}
@@ -926,8 +885,7 @@ public class Mart {
 			final DataSetTable dm) {
 		for (final Iterator i = this.getPartitionTableNames().iterator(); i
 				.hasNext();) {
-			final PartitionTable pt = (PartitionTable) this
-					.getPartitionTable((String) i.next());
+			final PartitionTable pt = this.getPartitionTable((String) i.next());
 			if (pt.getApplication((DataSet) dm.getSchema(), dm.getName()) != null)
 				return pt
 						.getApplication((DataSet) dm.getSchema(), dm.getName());

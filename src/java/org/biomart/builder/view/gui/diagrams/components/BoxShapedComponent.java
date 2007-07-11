@@ -110,9 +110,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 			BoxShapedComponent.BOX_LINEWIDTH, BasicStroke.CAP_ROUND,
 			BasicStroke.JOIN_ROUND, BoxShapedComponent.BOX_MITRE_TRIM);
 
-	private static Color SELECTED_COLOUR = Color.WHITE;
+	private static final Color SELECTED_COLOUR = Color.WHITE;
 
-	private static Color RENAMING_BORDER_COLOUR = Color.BLACK;
+	private static final Color RENAMING_BORDER_COLOUR = Color.BLACK;
 
 	private Diagram diagram;
 
@@ -193,7 +193,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	protected void paintBorder(final Graphics g) {
 		final Graphics2D g2d = (Graphics2D) g;
 		// Override the stroke so that we get dotted outlines when appropriate.
-		if (this.stroke!=null)
+		if (this.stroke != null)
 			g2d.setStroke(this.stroke);
 		super.paintBorder(g2d);
 	}
@@ -366,7 +366,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * @param renameable
 	 *            <tt>true</tt> if they can.
 	 */
-	public void setRenameable(boolean renameable) {
+	public void setRenameable(final boolean renameable) {
 		this.renameable = renameable;
 	}
 
@@ -385,7 +385,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * @param selectable
 	 *            <tt>true</tt> if they can.
 	 */
-	public void setSelectable(boolean selectable) {
+	public void setSelectable(final boolean selectable) {
 		this.selectable = selectable;
 	}
 
@@ -404,7 +404,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * @param draggable
 	 *            <tt>true</tt> if they can.
 	 */
-	public void setDraggable(boolean draggable) {
+	public void setDraggable(final boolean draggable) {
 		this.draggable = draggable;
 	}
 
@@ -443,7 +443,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.name.getActionMap().put("enterPressed", new AbstractAction() {
 			private static final long serialVersionUID = 1L;
 
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				if (BoxShapedComponent.this.isBeingRenamed())
 					BoxShapedComponent.this.doRename();
 			}
@@ -453,30 +453,30 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.name.getActionMap().put("escapePressed", new AbstractAction() {
 			private static final long serialVersionUID = 1L;
 
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				if (BoxShapedComponent.this.isBeingRenamed())
 					BoxShapedComponent.this.cancelRename();
 			}
 		});
 		this.name.addMouseListener(new MouseListener() {
 
-			public void mouseClicked(MouseEvent e) {
+			public void mouseClicked(final MouseEvent e) {
 				BoxShapedComponent.this.processEvent(e);
 			}
 
-			public void mouseEntered(MouseEvent e) {
+			public void mouseEntered(final MouseEvent e) {
 				BoxShapedComponent.this.processEvent(e);
 			}
 
-			public void mouseExited(MouseEvent e) {
+			public void mouseExited(final MouseEvent e) {
 				BoxShapedComponent.this.processEvent(e);
 			}
 
-			public void mousePressed(MouseEvent e) {
+			public void mousePressed(final MouseEvent e) {
 				BoxShapedComponent.this.processEvent(e);
 			}
 
-			public void mouseReleased(MouseEvent e) {
+			public void mouseReleased(final MouseEvent e) {
 				BoxShapedComponent.this.processEvent(e);
 			}
 

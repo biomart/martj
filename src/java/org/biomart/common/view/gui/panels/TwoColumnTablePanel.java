@@ -187,17 +187,17 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 
 		// Display the table and buttons as two parts of a single panel.
-		JPanel tableField = new JPanel();
+		final JPanel tableField = new JPanel();
 		tableField.add(new JScrollPane(table));
 		if (this.insert != null || this.remove != null) {
-			JPanel field = new JPanel();
+			final JPanel field = new JPanel();
 			if (this.insert != null)
 				field.add(this.insert);
 			if (this.remove != null)
 				field.add(this.remove);
 			this.add(tableField, fieldConstraints);
 			this.add(field, fieldLastRowConstraints);
-		} 
+		}
 		// If cannot insert/remove then also cannot change.
 		else {
 			this.add(tableField, fieldLastRowConstraints);

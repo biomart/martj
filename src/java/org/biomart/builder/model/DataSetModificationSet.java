@@ -365,9 +365,19 @@ public class DataSetModificationSet {
 				baseName = name.substring(0, name.indexOf(keySuffix));
 			else if (!col.getName().endsWith(keySuffix))
 				keySuffix = "";
+			name = baseName + keySuffix;
+			// Now, if the old name has a partition prefix, and the
+			// new one doesn't, reinstate or replace it.
+			if (col.getName().indexOf("__") >= 0) {
+				System.err.println("Col: " + col.getName());
+				if (name.indexOf("__") >= 0)
+					name = name.substring(name.lastIndexOf("__") + 2);
+				name = col.getName().substring(0,
+						col.getName().lastIndexOf("__") + 2)
+						+ name;
+			}
 			// Now simply check to see if the name is used, and
 			// then add an incrementing number to it until it is unique.
-			name = baseName + keySuffix;
 			for (int i = 1; ((Map) this.renamedColumns.get(tableKey))
 					.containsValue(name)
 					|| col.getTable().getColumnByName(name) != null; name = baseName

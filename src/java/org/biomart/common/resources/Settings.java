@@ -59,7 +59,7 @@ public class Settings {
 	 * App reference for MartRunner.
 	 */
 	public static final String MARTRUNNER = "martrunner";
-	
+
 	private static String application;
 
 	// Insert more app references as more apps are built.
@@ -109,15 +109,15 @@ public class Settings {
 		if (!Settings.appDir.exists())
 			Settings.appDir.mkdir();
 		// Set up the logger.
-		Log.configure(app, appDir);
+		Log.configure(app, Settings.appDir);
 		// Use it to log application startup.
-		Log.info("Started "+app);
+		Log.info("Started " + app);
 		// Make the class cache directory.
 		Settings.classCacheDir = new File(Settings.appDir, "cache");
 		if (!Settings.classCacheDir.exists())
 			Settings.classCacheDir.mkdir();
 	}
-	
+
 	/**
 	 * Gets the current application
 	 * 
@@ -168,7 +168,7 @@ public class Settings {
 					classDir.mkdir();
 					// Remove existing files.
 					Log.debug("Clearing existing class cache files");
-					File[] files = classDir.listFiles();
+					final File[] files = classDir.listFiles();
 					for (int j = 0; j < files.length; j++)
 						files[j].delete();
 					// Save current set. Must use Map.Entry else each

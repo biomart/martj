@@ -159,7 +159,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.getName(), tempSourceSchema, this.stu.getTable(), this
 					.getExplainContext());
 			tempSourceSchema.addTable(tempSource);
-			for (Iterator i = this.stu.getNewColumnNameMap().values()
+			for (final Iterator i = this.stu.getNewColumnNameMap().values()
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
@@ -220,7 +220,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.get("dummyTempTableName")
 					+ " " + this.getStep(), tempSourceSchema);
 			tempSourceSchema.addTable(tempSource);
-			for (Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
+			for (final Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			Key tempSourceKey;
 			if (this.ltu.getSchemaSourceKey() instanceof ForeignKey) {
@@ -228,7 +228,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						.getSourceDataSetColumns());
 				try {
 					tempSource.addForeignKey((ForeignKey) tempSourceKey);
-				} catch (AssociationException e) {
+				} catch (final AssociationException e) {
 					// Really should never happen.
 					throw new BioMartError(e);
 				}
@@ -247,7 +247,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final Table tempTarget = new RealisedTable(realTarget.getName(),
 					tempTargetSchema, realTarget, this.getExplainContext());
 			tempTargetSchema.addTable(tempTarget);
-			for (Iterator i = this.ltu.getNewColumnNameMap().values()
+			for (final Iterator i = this.ltu.getNewColumnNameMap().values()
 					.iterator(); i.hasNext();)
 				tempTarget.addColumn((Column) i.next());
 			Key tempTargetKey;
@@ -256,7 +256,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						.getColumns());
 				try {
 					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
-				} catch (AssociationException e) {
+				} catch (final AssociationException e) {
 					// Really should never happen.
 					throw new BioMartError(e);
 				}
@@ -278,7 +278,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-			} catch (AssociationException e) {
+			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
 			}
@@ -343,7 +343,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.get("dummyTempTableName")
 					+ " " + this.getStep(), tempSourceSchema);
 			tempSourceSchema.addTable(tempSource);
-			for (Iterator i = this.etu.getNewColumnNameMap().values()
+			for (final Iterator i = this.etu.getNewColumnNameMap().values()
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
@@ -364,10 +364,10 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		private final int relationIteration;
 
 		private final ExplainContext explainContext;
-		
+
 		/**
-		 * Use this constant to refer to a relation that covers
-		 * all iterations, not just the realised one.
+		 * Use this constant to refer to a relation that covers all iterations,
+		 * not just the realised one.
 		 */
 		public static final int NO_ITERATION = -1;
 
@@ -390,8 +390,9 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *             if the relation could not be established.
 		 */
 		public RealisedRelation(final Key sourceKey, final Key targetKey,
-				final Relation.Cardinality cardinality, final Relation relation,
-				final int relationIteration, final ExplainContext explainContext)
+				final Relation.Cardinality cardinality,
+				final Relation relation, final int relationIteration,
+				final ExplainContext explainContext)
 				throws AssociationException {
 			super(sourceKey, targetKey, cardinality);
 			this.relation = relation;
@@ -403,21 +404,21 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 * @return the explainContext
 		 */
 		public ExplainContext getExplainContext() {
-			return explainContext;
+			return this.explainContext;
 		}
 
 		/**
 		 * @return the relation
 		 */
 		public Relation getRelation() {
-			return relation;
+			return this.relation;
 		}
 
 		/**
 		 * @return the relationIteration
 		 */
 		public int getRelationIteration() {
-			return relationIteration;
+			return this.relationIteration;
 		}
 	}
 
@@ -453,14 +454,14 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 * @return the explainContext
 		 */
 		public ExplainContext getExplainContext() {
-			return explainContext;
+			return this.explainContext;
 		}
 
 		/**
 		 * @return the table
 		 */
 		public Table getTable() {
-			return table;
+			return this.table;
 		}
 	}
 

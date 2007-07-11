@@ -118,22 +118,23 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				sb.append(',');
 		}
 		sb.append(" from " + fromTableSchema + "." + fromTableName + " as a");
-		if (action.getTableRestriction() != null || !action.getPartitionRestrictions().isEmpty()) 
+		if (action.getTableRestriction() != null
+				|| !action.getPartitionRestrictions().isEmpty())
 			sb.append(" where ");
-		for (final Iterator i = action.getPartitionRestrictions().entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
+		for (final Iterator i = action.getPartitionRestrictions().entrySet()
+				.iterator(); i.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
 			sb.append("a.");
-			sb.append((String)entry.getKey());
+			sb.append((String) entry.getKey());
 			sb.append("='");
-			sb.append((String)entry.getValue());
+			sb.append((String) entry.getValue());
 			sb.append('\'');
-			if (i.hasNext() || action.getTableRestriction()!=null)
+			if (i.hasNext() || action.getTableRestriction() != null)
 				sb.append(" and ");
 		}
-		if (action.getTableRestriction() != null) {
-			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					"a"));
-		}
+		if (action.getTableRestriction() != null)
+			sb.append(action.getTableRestriction()
+					.getSubstitutedExpression("a"));
 
 		statements.add(sb.toString());
 	}
@@ -270,7 +271,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String joinType = action.getRelationRestriction() != null
 				&& action.getRelationRestriction().isHard()
 				|| action.getTableRestriction() != null
-				&& action.getTableRestriction().isHard() ? "inner" : "left";
+				&& action.getTableRestriction().isHard()
+				|| !action.getPartitionRestrictions().isEmpty() ? "inner"
+				: "left";
 
 		statements.add("set search_path=" + srcSchemaName + ","
 				+ trgtSchemaName + ",pg_catalog");
@@ -312,16 +315,17 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" and (");
-			sb.append(action.getTableRestriction().getSubstitutedExpression(
-					"b"));
+			sb.append(action.getTableRestriction()
+					.getSubstitutedExpression("b"));
 			sb.append(')');
-		}		
-		for (final Iterator i = action.getPartitionRestrictions().entrySet().iterator(); i.hasNext(); ) {
-			final Map.Entry entry = (Map.Entry)i.next();
+		}
+		for (final Iterator i = action.getPartitionRestrictions().entrySet()
+				.iterator(); i.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
 			sb.append(" and b.");
-			sb.append((String)entry.getKey());
+			sb.append((String) entry.getKey());
 			sb.append("='");
-			sb.append((String)entry.getValue());
+			sb.append((String) entry.getValue());
 			sb.append('\'');
 		}
 
@@ -465,11 +469,10 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			}
 		}
 		statements.add(sb.toString());
-		if (action.getCopyTable() != null) {
+		if (action.getCopyTable() != null)
 			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext();)
 				statements.add("alter table " + schemaName + "." + optTableName
 						+ " drop column " + (String) i.next());
-		}
 	}
 
 	/**

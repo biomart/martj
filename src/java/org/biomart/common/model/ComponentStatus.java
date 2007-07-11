@@ -26,8 +26,8 @@ import java.util.Map;
  * know about it.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- * 		    $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public class ComponentStatus implements Comparable {
@@ -120,6 +120,6 @@ public class ComponentStatus implements Comparable {
 	 * The function outputs the result of {@link #getName()}.
 	 */
 	public String toString() {
-		return ""+this.getName();
+		return "" + this.getName();
 	}
 }

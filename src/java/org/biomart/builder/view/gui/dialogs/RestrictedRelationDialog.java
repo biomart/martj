@@ -153,7 +153,7 @@ public class RestrictedRelationDialog extends JDialog {
 		JPanel field = new JPanel();
 		field.add(this.lcolumnAliasModel);
 		content.add(field, fieldConstraints);
-		
+
 		// Second table aliases.
 		this.rcolumnAliasModel = new ColumnStringTablePanel(
 				template == null ? null : template.getRightAliases(), relation

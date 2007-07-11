@@ -83,7 +83,7 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 		this.setTitle(Resources.get("suggestInvisibleDataSetDialogTitle"));
 		this.setModal(true);
 
-		// Create the content pane to store the create dialog panel.		
+		// Create the content pane to store the create dialog panel.
 		final JPanel content = new JPanel(new GridBagLayout());
 		this.setContentPane(content);
 

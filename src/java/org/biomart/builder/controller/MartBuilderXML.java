@@ -56,6 +56,7 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
@@ -403,7 +404,7 @@ public class MartBuilderXML extends DefaultHandler {
 	}
 
 	private String[] readListAttribute(final String string,
-			boolean blankIsSingleNull) {
+			final boolean blankIsSingleNull) {
 		if (string == null || string.length() == 0)
 			return blankIsSingleNull ? new String[] { null } : new String[0];
 		final String[] values = string.split("\\s*,\\s*", -1);
@@ -632,7 +633,7 @@ public class MartBuilderXML extends DefaultHandler {
 			PartitionException {
 		// Write the headers.
 		xmlWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-		if (writeDTD) {
+		if (writeDTD)
 			xmlWriter.write("<!DOCTYPE mart PUBLIC \""
 					+ MartBuilderXML.DTD_PUBLIC_ID_START
 					+ MartBuilderXML.CURRENT_DTD_VERSION
@@ -640,7 +641,6 @@ public class MartBuilderXML extends DefaultHandler {
 					+ MartBuilderXML.DTD_URL_START
 					+ MartBuilderXML.CURRENT_DTD_VERSION
 					+ MartBuilderXML.DTD_URL_END + "\">\n");
-		}
 
 		// Initialise the ID counter.
 		this.reverseMappedObjects = new HashMap();
@@ -823,7 +823,7 @@ public class MartBuilderXML extends DefaultHandler {
 					final StringBuffer names = new StringBuffer();
 					for (final Iterator z = restrict.getAliases().entrySet()
 							.iterator(); z.hasNext();) {
-						Map.Entry entry3 = (Map.Entry) z.next();
+						final Map.Entry entry3 = (Map.Entry) z.next();
 						cols.append((String) this.reverseMappedObjects
 								.get((Column) entry3.getKey()));
 						names.append((String) entry3.getValue());
@@ -862,7 +862,7 @@ public class MartBuilderXML extends DefaultHandler {
 					final StringBuffer names = new StringBuffer();
 					for (final Iterator z = expcol.getAliases().entrySet()
 							.iterator(); z.hasNext();) {
-						Map.Entry entry3 = (Map.Entry) z.next();
+						final Map.Entry entry3 = (Map.Entry) z.next();
 						cols.append((String) entry3.getKey());
 						names.append((String) entry3.getValue());
 						if (z.hasNext()) {
@@ -955,7 +955,7 @@ public class MartBuilderXML extends DefaultHandler {
 						final StringBuffer lnames = new StringBuffer();
 						for (final Iterator a = restrict.getLeftAliases()
 								.entrySet().iterator(); a.hasNext();) {
-							Map.Entry entry4 = (Map.Entry) a.next();
+							final Map.Entry entry4 = (Map.Entry) a.next();
 							lcols.append((String) this.reverseMappedObjects
 									.get((Column) entry4.getKey()));
 							lnames.append((String) entry4.getValue());
@@ -972,7 +972,7 @@ public class MartBuilderXML extends DefaultHandler {
 						final StringBuffer rnames = new StringBuffer();
 						for (final Iterator a = restrict.getRightAliases()
 								.entrySet().iterator(); a.hasNext();) {
-							Map.Entry entry4 = (Map.Entry) a.next();
+							final Map.Entry entry4 = (Map.Entry) a.next();
 							rcols.append((String) this.reverseMappedObjects
 									.get((Column) entry4.getKey()));
 							rnames.append((String) entry4.getValue());
@@ -1060,33 +1060,8 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 			}
 
-			// Write out dataset applications.
-			for (final Iterator j = pt.getAllDataSetApplications().entrySet()
-					.iterator(); j.hasNext();) {
-				final Map.Entry entry = (Map.Entry) j.next();
-				final DataSet target = (DataSet) entry.getKey();
-				final PartitionTableApplication pta = (PartitionTableApplication) entry
-						.getValue();
-				this.openElement("datasetApplication", xmlWriter);
-				this.writeAttribute("name", target.getName(), xmlWriter);
-				this.writeAttribute("nameColumn", pta.getNameCol(), xmlWriter);
-				final List pCols = new ArrayList();
-				final List dsCols = new ArrayList();
-				for (final Iterator k = pta.getPartitionCols().entrySet()
-						.iterator(); k.hasNext();) {
-					final Map.Entry entry2 = (Map.Entry) k.next();
-					pCols.add(entry2.getKey());
-					dsCols.add(entry2.getValue());
-				}
-				this.writeListAttribute("pCols", (String[]) pCols
-						.toArray(new String[0]), xmlWriter);
-				this.writeListAttribute("dsCols", (String[]) dsCols
-						.toArray(new String[0]), xmlWriter);
-				this.closeElement("datasetApplication", xmlWriter);
-			}
-
-			// Write out dimension applications.
-			for (final Iterator j = pt.getAllDimensionApplications().entrySet()
+			// Write out applications.
+			for (final Iterator j = pt.getAllApplications().entrySet()
 					.iterator(); j.hasNext();) {
 				final Map.Entry entry = (Map.Entry) j.next();
 				final DataSet target = (DataSet) entry.getKey();
@@ -1095,25 +1070,28 @@ public class MartBuilderXML extends DefaultHandler {
 					final Map.Entry entry3 = (Map.Entry) l.next();
 					final PartitionTableApplication pta = (PartitionTableApplication) entry3
 							.getValue();
-					this.openElement("dimensionApplication", xmlWriter);
+					this.openElement("partitionApplication", xmlWriter);
 					this.writeAttribute("name", target.getName(), xmlWriter);
 					this.writeAttribute("dimension", (String) entry3.getKey(),
 							xmlWriter);
-					this.writeAttribute("nameColumn", pta.getNameCol(),
-							xmlWriter);
 					final List pCols = new ArrayList();
 					final List dsCols = new ArrayList();
-					for (final Iterator k = pta.getPartitionCols().entrySet()
+					final List nameCols = new ArrayList();
+					for (final Iterator k = pta.getPartitionAppliedRows()
 							.iterator(); k.hasNext();) {
-						final Map.Entry entry2 = (Map.Entry) k.next();
-						pCols.add(entry2.getKey());
-						dsCols.add(entry2.getValue());
+						final PartitionAppliedRow prow = (PartitionAppliedRow) k
+								.next();
+						pCols.add(prow.getPartitionCol());
+						dsCols.add(prow.getRootDataSetCol());
+						nameCols.add(prow.getNamePartitionCol());
 					}
 					this.writeListAttribute("pCols", (String[]) pCols
 							.toArray(new String[0]), xmlWriter);
 					this.writeListAttribute("dsCols", (String[]) dsCols
 							.toArray(new String[0]), xmlWriter);
-					this.closeElement("dimensionApplication", xmlWriter);
+					this.writeListAttribute("nameCols", (String[]) nameCols
+							.toArray(new String[0]), xmlWriter);
+					this.closeElement("partitionApplication", xmlWriter);
 				}
 			}
 
@@ -1149,8 +1127,8 @@ public class MartBuilderXML extends DefaultHandler {
 		this.objectStack.pop();
 	}
 
-	public InputSource resolveEntity(String publicId, String systemId)
-			throws SAXException {
+	public InputSource resolveEntity(final String publicId,
+			final String systemId) throws SAXException {
 		Log.debug("Resolving XML entity " + publicId + " " + systemId);
 		// If the public ID is our own DTD version, then we can use our
 		// own copy of the DTD in our resources bundle.
@@ -2108,58 +2086,32 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// Dataset application (inside partition table)
-		else if ("datasetApplication".equals(eName)) {
+		// Partition application (inside partition table)
+		else if ("partitionApplication".equals(eName)) {
 			// What pt does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof PartitionTable))
 				throw new SAXException(Resources
-						.get("datasetApplicationOutsidePartitionTable"));
+						.get("partitionApplicationOutsidePartitionTable"));
 			final PartitionTable pt = (PartitionTable) this.objectStack.peek();
 
 			final DataSet ds = this.constructedMart
 					.getDataSetByName((String) attributes.get("name"));
-			final String nameCol = (String) attributes.get("nameColumn");
-			final String[] pCols = this.readListAttribute((String) attributes
-					.get("pCols"), false);
-			final String[] dsCols = this.readListAttribute((String) attributes
-					.get("dsCols"), false);
-
-			final PartitionTableApplication pta = new PartitionTableApplication(
-					pt, ds, null);
-			pta.setNameCol(nameCol);
-			final Map parts = new HashMap();
-			for (int i = 0; i < pCols.length; i++)
-				parts.put(pCols[i], dsCols[i]);
-			pta.setPartitionCols(parts);
-			pt.applyTo(ds, pta);
-		}
-
-		// Dimension application (inside partition table)
-		else if ("dimensionApplication".equals(eName)) {
-			// What pt does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof PartitionTable))
-				throw new SAXException(Resources
-						.get("dimensionApplicationOutsidePartitionTable"));
-			final PartitionTable pt = (PartitionTable) this.objectStack.peek();
-
-			final DataSet ds = this.constructedMart
-					.getDataSetByName((String) attributes.get("name"));
-			final String nameCol = (String) attributes.get("nameColumn");
 			final String dimension = (String) attributes.get("dimension");
 			final String[] pCols = this.readListAttribute((String) attributes
 					.get("pCols"), false);
 			final String[] dsCols = this.readListAttribute((String) attributes
 					.get("dsCols"), false);
+			final String[] nameCols = this.readListAttribute(
+					(String) attributes.get("nameCols"), false);
 
 			final PartitionTableApplication pta = new PartitionTableApplication(
-					pt, ds, dimension);
-			pta.setNameCol(nameCol);
-			final Map parts = new HashMap();
+					pt);
+			final List parts = new ArrayList();
 			for (int i = 0; i < pCols.length; i++)
-				parts.put(pCols[i], dsCols[i]);
-			pta.setPartitionCols(parts);
+				parts.add(new PartitionAppliedRow(pCols[i], dsCols[i],
+						nameCols[i]));
+			pta.setPartitionAppliedRows(parts);
 			pt.applyTo(ds, dimension, pta);
 		} else
 			throw new SAXException(Resources.get("unknownTag", eName));

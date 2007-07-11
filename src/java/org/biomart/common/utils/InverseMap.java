@@ -28,8 +28,8 @@ import java.util.Set;
  * This class defines an inverse view of a map.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class InverseMap implements Map {
@@ -51,11 +51,11 @@ public class InverseMap implements Map {
 		this.map.clear();
 	}
 
-	public boolean containsKey(Object key) {
+	public boolean containsKey(final Object key) {
 		return this.map.containsValue(key);
 	}
 
-	public boolean containsValue(Object value) {
+	public boolean containsValue(final Object value) {
 		return this.map.containsKey(value);
 	}
 
@@ -76,7 +76,7 @@ public class InverseMap implements Map {
 					return this.value;
 				}
 
-				public Object setValue(Object value) {
+				public Object setValue(final Object value) {
 					final Object oldValue = this.value;
 					InverseMap.this.map.put(me.getKey(), value);
 					this.value = value;
@@ -87,7 +87,7 @@ public class InverseMap implements Map {
 		return entries;
 	}
 
-	public Object get(Object key) {
+	public Object get(final Object key) {
 		for (final Iterator i = this.map.entrySet().iterator(); i.hasNext();) {
 			final Map.Entry me = (Map.Entry) i.next();
 			if (me.getValue().equals(key))
@@ -104,20 +104,20 @@ public class InverseMap implements Map {
 		return new HashSet(this.map.values());
 	}
 
-	public Object put(Object key, Object value) {
+	public Object put(final Object key, final Object value) {
 		final Object oldValue = this.get(key);
 		this.map.put(value, key);
 		return oldValue;
 	}
 
-	public void putAll(Map t) {
+	public void putAll(final Map t) {
 		for (final Iterator i = t.entrySet().iterator(); i.hasNext();) {
 			final Map.Entry me = (Map.Entry) i.next();
 			this.map.put(me.getValue(), me.getKey());
 		}
 	}
 
-	public Object remove(Object key) {
+	public Object remove(final Object key) {
 		for (final Iterator i = this.map.entrySet().iterator(); i.hasNext();) {
 			final Map.Entry me = (Map.Entry) i.next();
 			if (me.getValue().equals(key)) {

@@ -27,8 +27,8 @@ import org.biomart.common.resources.Settings;
  * BioMart Java CLI appliaction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public abstract class BioMartCLI {
@@ -51,8 +51,8 @@ public abstract class BioMartCLI {
 	 */
 	protected void launch() {
 		// Start the application.
-		Log.info("Launching command line application");	
-		System.out.println("..."+Settings.getApplication()+" started.");
+		Log.info("Launching command line application");
+		System.out.println("..." + Settings.getApplication() + " started.");
 		// Start work.
 		boolean moreInput = true;
 		while (moreInput)

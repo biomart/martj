@@ -52,8 +52,8 @@ import org.biomart.common.view.gui.panels.SchemaConnectionPanel.JDBCSchemaConnec
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public class SchemaConnectionDialog extends JDialog {
@@ -178,7 +178,7 @@ public class SchemaConnectionDialog extends JDialog {
 		this.name = new JComboBox();
 		this.name.setEditable(true);
 		this.name.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(final ActionEvent e) {
 				// Identify which schema to copy settings from.
 				final Object obj = SchemaConnectionDialog.this.name
 						.getSelectedItem();

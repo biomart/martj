@@ -64,17 +64,19 @@ public class Resources {
 	 *            <tt>messages.properties</tt> and other resources requested
 	 *            from now on will be found in this location.
 	 */
-	public static void setResourceLocation(String location) {
+	public static void setResourceLocation(final String location) {
 		Resources.location = location;
 		final String resourcesFileName = location + "/messages";
-		Log.info("Loading resources from "+resourcesFileName);
+		Log.info("Loading resources from " + resourcesFileName);
 		Resources.bundle = ResourceBundle.getBundle(resourcesFileName);
 		Log.info("Done loading resources");
 	}
 
 	/**
 	 * Obtain a resource value given the key for it.
-	 * @param key the key to lookup.
+	 * 
+	 * @param key
+	 *            the key to lookup.
 	 * @return the value found, or <tt>null</tt> if not found.
 	 */
 	private static String getValue(final String key) {
@@ -82,7 +84,7 @@ public class Resources {
 		if (Resources.bundle != null)
 			try {
 				value = Resources.bundle.getString(key);
-			} catch (MissingResourceException e) {
+			} catch (final MissingResourceException e) {
 				value = null;
 			}
 		if (value == null)

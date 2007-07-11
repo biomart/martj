@@ -57,6 +57,7 @@ import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
 import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -301,8 +302,8 @@ public interface MartConstructor {
 					dsPta.getNamePartitionCol().getPartitionTable()
 							.prepareRows((String) schemaPartition.getKey(),
 									PartitionTable.UNLIMITED_ROWS);
-				while (fakeDSPartition ? true : (dsPta != null && dsPta
-						.getPartitionTable().nextRow())) {
+				while (fakeDSPartition ? true : dsPta != null
+						&& dsPta.getPartitionTable().nextRow()) {
 					fakeDSPartition = false;
 					for (final Iterator i = this.getTablesToProcess(dataset)
 							.iterator(); i.hasNext();) {
@@ -319,9 +320,8 @@ public interface MartConstructor {
 												(String) schemaPartition
 														.getKey(),
 												PartitionTable.UNLIMITED_ROWS);
-							while (fakeDMPartition ? true
-									: (dmPta != null && dmPta
-											.getPartitionTable().nextRow())) {
+							while (fakeDMPartition ? true : dmPta != null
+									&& dmPta.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
 								if (!this.makeActionsForDatasetTable(
 										templateSchema,
@@ -410,11 +410,10 @@ public interface MartConstructor {
 				if (tu instanceof Expression) {
 					if (!this.doExpression(schemaPrefix, dsPta, dmPta, dataset,
 							dsTable, (Expression) tu, previousTempTable,
-							tempTable, droppedCols)) {
+							tempTable, droppedCols))
 						// Skip to next action to prevent non-existent
 						// new temp table from getting dropped.
 						continue;
-					}
 				}
 				// Left-join?
 				else if (tu instanceof JoinTable)
@@ -491,16 +490,16 @@ public interface MartConstructor {
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
 				if (col.isRequiredInterim() && !col.isRequiredFinal())
-					dropCols.add(col.getModifiedName());
+					dropCols.add(col.getPartitionedName());
 				// Create index if required.
-				else if (!droppedCols.contains(col.getModifiedName())
+				else if (!droppedCols.contains(col.getPartitionedName())
 						&& dataset.getDataSetModifications().isIndexedColumn(
 								col)) {
 					final Index index = new Index(this.datasetSchemaName,
 							finalCombinedName);
 					index.setTable(previousTempTable);
 					index.setColumns(Collections.singletonList(col
-							.getModifiedName()));
+							.getPartitionedName()));
 					this.issueAction(index);
 				}
 			}
@@ -525,7 +524,9 @@ public interface MartConstructor {
 				final List keyCols = new ArrayList();
 				for (final Iterator k = key.getColumns().iterator(); k
 						.hasNext();)
-					keyCols.add(((DataSetColumn) k.next()).getModifiedName());
+					keyCols
+							.add(((DataSetColumn) k.next())
+									.getPartitionedName());
 				final Index index = new Index(this.datasetSchemaName,
 						finalCombinedName);
 				index.setTable(finalName);
@@ -538,9 +539,9 @@ public interface MartConstructor {
 			// If this is a subclass table, then the optimiser
 			// type is always COUNT_INHERIT or COUNT_INHERIT_TABLE.
 			final DataSetOptimiserType oType = dsTable.getType().equals(
-					DataSetTableType.MAIN_SUBCLASS) ? (dataset
+					DataSetTableType.MAIN_SUBCLASS) ? dataset
 					.getDataSetOptimiserType().isTable() ? DataSetOptimiserType.TABLE_INHERIT
-					: DataSetOptimiserType.COLUMN_INHERIT)
+					: DataSetOptimiserType.COLUMN_INHERIT
 					: dataset.getDataSetOptimiserType();
 			this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset, dsTable,
 					oType, !dsTable.getType()
@@ -565,12 +566,13 @@ public interface MartConstructor {
 			final List rightSelectCols = new ArrayList();
 			for (final Iterator x = parent.getPrimaryKey().getColumns()
 					.iterator(); x.hasNext();)
-				leftJoinCols.add(((DataSetColumn) x.next()).getModifiedName());
+				leftJoinCols.add(((DataSetColumn) x.next())
+						.getPartitionedName());
 			for (final Iterator x = dsTable.getColumns().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
 				if (col.isRequiredInterim())
-					rightSelectCols.add(col.getModifiedName());
+					rightSelectCols.add(col.getPartitionedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
 			rightSelectCols.removeAll(droppedCols);
@@ -641,7 +643,9 @@ public interface MartConstructor {
 				final List keyCols = new ArrayList();
 				for (final Iterator y = dsTable.getPrimaryKey().getColumns()
 						.iterator(); y.hasNext();)
-					keyCols.add(((DataSetColumn) y.next()).getModifiedName());
+					keyCols
+							.add(((DataSetColumn) y.next())
+									.getPartitionedName());
 
 				// Work out the parent.
 				final DataSetTable parent = dsTable.getType().equals(
@@ -659,7 +663,7 @@ public interface MartConstructor {
 					for (final Iterator y = parent.getPrimaryKey().getColumns()
 							.iterator(); y.hasNext();)
 						parentKeyCols.add(((DataSetColumn) y.next())
-								.getModifiedName());
+								.getPartitionedName());
 					create.setCopyKey(parentKeyCols);
 					create.setCopyTable(this.getOptimiserTableName(
 							schemaPrefix, dsPta, dmPta, parent, dataset
@@ -687,7 +691,9 @@ public interface MartConstructor {
 				final List keyCols = new ArrayList();
 				for (final Iterator y = parent.getPrimaryKey().getColumns()
 						.iterator(); y.hasNext();)
-					keyCols.add(((DataSetColumn) y.next()).getModifiedName());
+					keyCols
+							.add(((DataSetColumn) y.next())
+									.getPartitionedName());
 				final List nonNullCols = new ArrayList();
 				for (final Iterator y = dsTable.getColumns().iterator(); y
 						.hasNext();) {
@@ -697,7 +703,7 @@ public interface MartConstructor {
 					// columns as they can genuinely be null.
 					if (!dataset.getDataSetModifications().isMaskedColumn(col)
 							&& !(col instanceof ExpressionColumn))
-						nonNullCols.add(col.getModifiedName());
+						nonNullCols.add(col.getPartitionedName());
 				}
 				nonNullCols.removeAll(keyCols);
 
@@ -740,6 +746,50 @@ public interface MartConstructor {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
+			final Select action = new Select(this.datasetSchemaName,
+					finalCombinedName);
+
+			// If this is a dimension, look up DM PT,
+			// otherwise if this is the main table, look up DS PT,
+			// otherwise don't do it at all.
+			PartitionTableApplication pta = null;
+			if (dsTable.getType().equals(DataSetTableType.DIMENSION)
+					&& dmPta != null)
+				pta = dmPta;
+			else if (dsTable.getType().equals(DataSetTableType.MAIN)
+					&& dsPta != null)
+				pta = dsPta;
+			if (pta != null) {
+				// This is a select, so we are dealing with the first row
+				// only.
+				final PartitionAppliedRow prow = (PartitionAppliedRow) pta
+						.getPartitionAppliedRows().get(0);
+				// The naming column will also always be the first row,
+				// which will be on pta itself, so we don't need to
+				// initialise the table as it has already been done.
+				final PartitionColumn pcol = pta.getPartitionTable()
+						.getSelectedColumn(prow.getPartitionCol());
+				// For each of the getNewColumnNameMap cols that are in the
+				// current ptable application, add a restriction for that col
+				// using current ptable column value.
+				for (final Iterator i = stu.getNewColumnNameMap().entrySet()
+						.iterator(); i.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					final DataSetColumn dsCol = (DataSetColumn) entry
+							.getValue();
+					// Only apply this to the dsCol which matches
+					// the partition row's ds col.
+					if (dsCol.getName().equals(prow.getRootDataSetCol())
+							|| dsCol.getName().endsWith(
+									Resources.get("columnnameSep")
+											+ prow.getRootDataSetCol()))
+						// Apply restriction.
+						action.getPartitionRestrictions().put(
+								entry.getKey(),
+								pcol.getValueForRow(pcol.getPartitionTable()
+										.currentRow()));
+				}
+			}
 
 			final Table sourceTable = stu.getTable();
 			// Make sure that we use the same partition on the RHS
@@ -772,15 +822,16 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
+				col.fixPartitionedName();
 				if (col.isRequiredInterim())
 					selectCols
 							.put(
 									sourceTable instanceof DataSetTable ? ((DataSetColumn) sourceTable
 											.getColumnByName((String) entry
 													.getKey()))
-											.getModifiedName()
+											.getPartitionedName()
 											: entry.getKey(), col
-											.getModifiedName());
+											.getPartitionedName());
 
 			}
 			// Add to selectCols all the inherited has columns, if
@@ -801,51 +852,10 @@ public interface MartConstructor {
 				}
 			}
 			// Do the select.
-			final Select action = new Select(this.datasetSchemaName,
-					finalCombinedName);
 			action.setSchema(schema);
 			action.setTable(table);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
-
-			// For each of the getNewColumnNameMap cols that are in the
-			// current ptable application, add a restriction for that col
-			// using current ptable column value.
-			for (final Iterator i = stu.getNewColumnNameMap().entrySet()
-					.iterator(); i.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final DataSetColumn dsCol = (DataSetColumn) entry.getValue();
-				// If this is a dimension, look up DM PT,
-				// otherwise if this is the main table, look up DS PT,
-				// otherwise don't do it at all.
-				PartitionTableApplication pta = null;
-				if (dsTable.getType().equals(DataSetTableType.DIMENSION)
-						&& dmPta != null)
-					pta = dmPta;
-				else if (dsTable.getType().equals(DataSetTableType.MAIN)
-						&& dsPta != null)
-					pta = dsPta;
-				if (pta != null) {
-					final PartitionColumn pcol = pta
-							.getPartitionColForDSCol(dsCol);
-					if (pcol != null) {
-						// If not partitioning on same table
-						// as ds or dm pt, then prepare and nextRow() it.
-						if (pta.getNamePartitionCol().getPartitionTable() != pcol
-								.getPartitionTable()) {
-							pcol.getPartitionTable().prepareRows(
-									schemaPartition,
-									PartitionTable.UNLIMITED_ROWS);
-							pcol.getPartitionTable().nextRow();
-						}
-						// Apply restriction.
-						action.getPartitionRestrictions().put(
-								entry.getKey(),
-								pcol.getValueForRow(pcol.getPartitionTable()
-										.currentRow()));
-					}
-				}
-			}
 
 			// Table restriction.
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
@@ -866,9 +876,57 @@ public interface MartConstructor {
 				final String previousTempTable, final String tempTable,
 				final Set droppedCols) throws SQLException, ListenerException,
 				PartitionException {
+
 			boolean requiresFinalLeftJoin = false;
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
+			final Join action = new Join(this.datasetSchemaName,
+					finalCombinedName);
+
+			PartitionTableApplication pta = null;
+			if (dsTable.getType().equals(DataSetTableType.DIMENSION)
+					&& dmPta != null)
+				pta = dmPta;
+			else if (dsTable.getType().equals(DataSetTableType.MAIN)
+					&& dsPta != null)
+				pta = dsPta;
+			if (pta != null) {
+				// This is a join, so we look up row by relation.
+				final PartitionAppliedRow prow = pta
+						.getAppliedRowForRelation(ljtu.getSchemaRelation());
+				// It might not have one after all.
+				if (prow != null) {
+					// Look up the table that the naming column is on. It
+					// will be a subtable which needs initialising on the
+					// first pass, and next rowing on all passes.
+					final PartitionColumn pcol = pta.getPartitionTable()
+							.getSelectedColumn(prow.getPartitionCol());
+					final PartitionTable ptbl = pcol.getPartitionTable();
+					if (ljtu.getSchemaRelationIteration() == 0)
+						ptbl.prepareRows(schemaPartition,
+								PartitionTable.UNLIMITED_ROWS);
+					ptbl.nextRow();
+					// For each of the getNewColumnNameMap cols that are in the
+					// current ptable application, add a restriction for that
+					// col using current ptable column value.
+					for (final Iterator i = ljtu.getNewColumnNameMap()
+							.entrySet().iterator(); i.hasNext();) {
+						final Map.Entry entry = (Map.Entry) i.next();
+						final DataSetColumn dsCol = (DataSetColumn) entry
+								.getValue();
+						// Only apply this to the dsCol which matches
+						// the partition row's ds col.
+						if (dsCol.getName().equals(prow.getRootDataSetCol())
+								|| dsCol.getName().endsWith(
+										Resources.get("columnnameSep")
+												+ prow.getRootDataSetCol()))
+							// Apply restriction.
+							action.getPartitionRestrictions().put(
+									entry.getKey(),
+									pcol.getValueForRow(ptbl.currentRow()));
+					}
+				}
+			}
 
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
@@ -898,7 +956,7 @@ public interface MartConstructor {
 			for (final Iterator k = ljtu.getSourceDataSetColumns().iterator(); k
 					.hasNext();) {
 				final String joinCol = ((DataSetColumn) k.next())
-						.getModifiedName();
+						.getPartitionedName();
 				if (droppedCols.contains(joinCol)) {
 					droppedCols.addAll(ljtu.getNewColumnNameMap().values());
 					return false;
@@ -909,8 +967,9 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
+				col.fixPartitionedName();
 				if (col.isRequiredInterim())
-					selectCols.put(entry.getKey(), col.getModifiedName());
+					selectCols.put(entry.getKey(), col.getPartitionedName());
 			}
 			// Index the left-hand side of the join.
 			final Index index = new Index(this.datasetSchemaName,
@@ -919,8 +978,6 @@ public interface MartConstructor {
 			index.setColumns(leftJoinCols);
 			this.issueAction(index);
 			// Make the join.
-			final Join action = new Join(this.datasetSchemaName,
-					finalCombinedName);
 			action.setLeftTable(previousTempTable);
 			action.setRightSchema(rightSchema);
 			action.setRightTable(rightTable);
@@ -928,44 +985,6 @@ public interface MartConstructor {
 			action.setRightJoinColumns(rightJoinCols);
 			action.setSelectColumns(selectCols);
 			action.setResultTable(tempTable);
-
-			// For each of the getNewColumnNameMap cols that are in the
-			// current ptable application, add a restriction for that col
-			// using current ptable column value.
-			for (final Iterator i = ljtu.getNewColumnNameMap().entrySet()
-					.iterator(); i.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final DataSetColumn dsCol = (DataSetColumn) entry.getValue();
-
-				PartitionTableApplication pta = null;
-				if (dsTable.getType().equals(DataSetTableType.DIMENSION)
-						&& dmPta != null)
-					pta = dmPta;
-				else if (dsTable.getType().equals(DataSetTableType.MAIN)
-						&& dsPta != null)
-					pta = dsPta;
-				if (pta != null) {
-					final PartitionColumn pcol = pta
-							.getPartitionColForDSCol(dsCol);
-					if (pcol != null) {
-						// If not partitioning on same table
-						// as ds or dm pt, then prepare and nextRow() it.
-						if (pta.getNamePartitionCol().getPartitionTable() != pcol
-								.getPartitionTable()) {
-							if (ljtu.getSchemaRelationIteration() == 0)
-								pcol.getPartitionTable().prepareRows(
-										schemaPartition,
-										PartitionTable.UNLIMITED_ROWS);
-							pcol.getPartitionTable().nextRow();
-						}
-						// Apply restriction.
-						action.getPartitionRestrictions().put(
-								entry.getKey(),
-								pcol.getValueForRow(pcol.getPartitionTable()
-										.currentRow()));
-					}
-				}
-			}
 
 			// Table restriction.
 			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
@@ -1020,7 +1039,7 @@ public interface MartConstructor {
 			for (final Iterator z = dsTable.getColumns().iterator(); z
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) z.next();
-				final String colName = col.getModifiedName();
+				final String colName = col.getPartitionedName();
 				if (col.isRequiredInterim() && !droppedCols.contains(colName)
 						&& !(col instanceof ExpressionColumn))
 					selectCols.add(colName);
@@ -1051,7 +1070,7 @@ public interface MartConstructor {
 							.iterator(); k.hasNext() && !usesDroppedCols;) {
 						final String exprAlias = (String) k.next();
 						if (droppedCols.contains(exprAlias)) {
-							droppedCols.add(expCol.getModifiedName());
+							droppedCols.add(expCol.getPartitionedName());
 							usesDroppedCols = true;
 						}
 					}
@@ -1062,7 +1081,7 @@ public interface MartConstructor {
 						for (final Iterator x = dsTable.getColumns().iterator(); x
 								.hasNext();) {
 							final DataSetColumn col = (DataSetColumn) x.next();
-							final String colName = col.getModifiedName();
+							final String colName = col.getPartitionedName();
 							if (expr.getAliases().keySet().contains(
 									col.getName())
 									|| !selectCols.contains(colName))

@@ -32,8 +32,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  * so anything displayed can be customised.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public interface DiagramContext {

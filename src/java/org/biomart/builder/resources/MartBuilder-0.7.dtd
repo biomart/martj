@@ -156,7 +156,7 @@ renamedColumn*,distinctRows*)>
 <!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>
 
 <!ELEMENT datasetPartitionTable (
-partitionRegex*,datasetApplication*,dimensionApplication*)>
+partitionRegex*,partitionApplication*)>
 <!ATTLIST datasetPartitionTable name CDATA #REQUIRED>
 <!ATTLIST datasetPartitionTable selectedColumns CDATA #REQUIRED>
 
@@ -165,15 +165,9 @@ partitionRegex*,datasetApplication*,dimensionApplication*)>
 <!ATTLIST partitionRegex match CDATA #REQUIRED>
 <!ATTLIST partitionRegex replace CDATA #REQUIRED>
 
-<!ELEMENT datasetApplication EMPTY>
-<!ATTLIST datasetApplication name CDATA #REQUIRED>
-<!ATTLIST datasetApplication nameColumn CDATA #REQUIRED>
-<!ATTLIST datasetApplication pCols CDATA #REQUIRED>
-<!ATTLIST datasetApplication dsCols CDATA #REQUIRED>
-
-<!ELEMENT dimensionApplication EMPTY>
-<!ATTLIST dimensionApplication name CDATA #REQUIRED>
-<!ATTLIST dimensionApplication dimension CDATA #REQUIRED>
-<!ATTLIST dimensionApplication nameColumn CDATA #REQUIRED>
-<!ATTLIST dimensionApplication pCols CDATA #REQUIRED>
-<!ATTLIST dimensionApplication dsCols CDATA #REQUIRED>
+<!ELEMENT partitionApplication EMPTY>
+<!ATTLIST partitionApplication name CDATA #REQUIRED>
+<!ATTLIST partitionApplication dimension CDATA #IMPLIED>
+<!ATTLIST partitionApplication pCols CDATA #REQUIRED>
+<!ATTLIST partitionApplication dsCols CDATA #REQUIRED>
+<!ATTLIST partitionApplication nameCols CDATA #REQUIRED>
