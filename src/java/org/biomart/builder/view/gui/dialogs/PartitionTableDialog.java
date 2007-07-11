@@ -29,6 +29,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,7 @@ import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.PartitionTable;
+import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
@@ -72,7 +74,9 @@ import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionRow;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
+import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
@@ -743,6 +747,10 @@ public class PartitionTableDialog extends JDialog {
 				// Add an entry to the data model using list.toArray();
 				this.previewData.addRow(rowData.toArray());
 			}
+			// Re-select the current applied item in order
+			// to update available columns.
+			this.appliedList
+					.setSelectedItem(this.appliedList.getSelectedItem());
 		} catch (final PartitionException pe) {
 			StackTrace.showStackTrace(pe);
 		}
@@ -768,20 +776,30 @@ public class PartitionTableDialog extends JDialog {
 			// prefix stripped if necessary. But, it selects real
 			// names (with stripped prefixes) in background.
 			final Map dsColMap = new TreeMap();
-			for (final Iterator i = dsTable.getColumns().iterator(); i
+			final Map dsRelMap = new HashMap();
+			for (final Iterator j = dsTable.getTransformationUnits().iterator(); j
 					.hasNext();) {
-				final DataSetColumn dsCol = (DataSetColumn) i.next();
-				if (dsCol instanceof WrappedColumn
-						|| dsCol instanceof InheritedColumn) {
-					String root = dsCol.getName();
-					if (root.indexOf("__") >= 0)
-						root = root.substring(root.lastIndexOf("__") + 2);
-					String display = dsCol.getModifiedName();
-					if (display.indexOf("__") >= 0)
-						display = display
-								.substring(display.lastIndexOf("__") + 2);
-					if (!dsColMap.containsKey(root))
-						dsColMap.put(root, display);
+				final TransformationUnit tu = (TransformationUnit) j.next();
+				final Relation rel = (tu instanceof JoinTable) ? ((JoinTable) tu)
+						.getSchemaRelation()
+						: null;
+				for (final Iterator i = tu.getNewColumnNameMap().values()
+						.iterator(); i.hasNext();) {
+					final DataSetColumn dsCol = (DataSetColumn) i.next();
+					if (dsCol instanceof WrappedColumn
+							|| dsCol instanceof InheritedColumn) {
+						String root = dsCol.getName();
+						if (root.indexOf("__") >= 0)
+							root = root.substring(root.lastIndexOf("__") + 2);
+						String display = dsCol.getModifiedName();
+						if (display.indexOf("__") >= 0)
+							display = display.substring(display
+									.lastIndexOf("__") + 2);
+						if (!dsColMap.containsKey(root)) {
+							dsColMap.put(root, display);
+							dsRelMap.put(root, rel);
+						}
+					}
 				}
 			}
 			final List dsColList = new ArrayList(dsColMap.keySet());
@@ -832,10 +850,10 @@ public class PartitionTableDialog extends JDialog {
 							final JList list, final Object value,
 							final int index, final boolean isSelected,
 							final boolean cellHasFocus) {
-						final String col = (String) value;
+						final String key = (String) value;
 						final JLabel label = new JLabel();
-						if (col != null)
-							label.setText((String) dsColMap.get(col));
+						if (key != null)
+							label.setText((String) dsColMap.get(key));
 						else
 							label.setText(Resources
 									.get("partitionDSUnselected"));
@@ -922,17 +940,17 @@ public class PartitionTableDialog extends JDialog {
 						final List parts = new ArrayList();
 						for (int i = 0; i < WizardPanel.this.ptLevels.size()
 								&& ((JComboBox) WizardPanel.this.dsLevels
-										.get(i)).getSelectedItem() != null; i++)
-							parts
-									.add(new PartitionAppliedRow(
-											(String) ((JComboBox) WizardPanel.this.ptLevels
-													.get(i)).getSelectedItem(),
-											(String) ((JComboBox) WizardPanel.this.dsLevels
-													.get(i)).getSelectedItem(),
-											(String) ((JComboBox) WizardPanel.this.nameLevels
-													.get(i)).getSelectedItem()));
-
-						;
+										.get(i)).getSelectedItem() != null; i++) {
+							final String ptCol = (String) ((JComboBox) WizardPanel.this.ptLevels
+									.get(i)).getSelectedItem();
+							final String dsCol = (String) ((JComboBox) WizardPanel.this.dsLevels
+									.get(i)).getSelectedItem();
+							final String nameCol = (String) ((JComboBox) WizardPanel.this.nameLevels
+									.get(i)).getSelectedItem();
+							parts.add(new PartitionAppliedRow(ptCol, dsCol,
+									nameCol, (Relation) dsRelMap.get(dsCol)));
+							;
+						}
 						pta.setPartitionAppliedRows(parts);
 					}
 				}

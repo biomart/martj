@@ -1076,6 +1076,7 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					final List pCols = new ArrayList();
 					final List dsCols = new ArrayList();
+					final List rels = new ArrayList();
 					final List nameCols = new ArrayList();
 					for (final Iterator k = pta.getPartitionAppliedRows()
 							.iterator(); k.hasNext();) {
@@ -1083,11 +1084,15 @@ public class MartBuilderXML extends DefaultHandler {
 								.next();
 						pCols.add(prow.getPartitionCol());
 						dsCols.add(prow.getRootDataSetCol());
+						rels.add((String) this.reverseMappedObjects.get(prow
+								.getRelation()));
 						nameCols.add(prow.getNamePartitionCol());
 					}
 					this.writeListAttribute("pCols", (String[]) pCols
 							.toArray(new String[0]), xmlWriter);
 					this.writeListAttribute("dsCols", (String[]) dsCols
+							.toArray(new String[0]), xmlWriter);
+					this.writeListAttribute("relationIds", (String[]) rels
 							.toArray(new String[0]), xmlWriter);
 					this.writeListAttribute("nameCols", (String[]) nameCols
 							.toArray(new String[0]), xmlWriter);
@@ -2102,6 +2107,11 @@ public class MartBuilderXML extends DefaultHandler {
 					.get("pCols"), false);
 			final String[] dsCols = this.readListAttribute((String) attributes
 					.get("dsCols"), false);
+			final String[] relIds = this.readListAttribute((String) attributes
+					.get("relationIds"), false);
+			final Relation[] rels = new Relation[relIds.length];
+			for (int i = 0; i < relIds.length; i++)
+				rels[i] = (Relation) this.mappedObjects.get(relIds[i]);
 			final String[] nameCols = this.readListAttribute(
 					(String) attributes.get("nameCols"), false);
 
@@ -2110,7 +2120,7 @@ public class MartBuilderXML extends DefaultHandler {
 			final List parts = new ArrayList();
 			for (int i = 0; i < pCols.length; i++)
 				parts.add(new PartitionAppliedRow(pCols[i], dsCols[i],
-						nameCols[i]));
+						nameCols[i], rels[i]));
 			pta.setPartitionAppliedRows(parts);
 			pt.applyTo(ds, dimension, pta);
 		} else

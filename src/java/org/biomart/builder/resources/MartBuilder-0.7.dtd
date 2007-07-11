@@ -170,4 +170,5 @@ partitionRegex*,partitionApplication*)>
 <!ATTLIST partitionApplication dimension CDATA #IMPLIED>
 <!ATTLIST partitionApplication pCols CDATA #REQUIRED>
 <!ATTLIST partitionApplication dsCols CDATA #REQUIRED>
+<!ATTLIST partitionApplication relationIds IDREFS #REQUIRED>
 <!ATTLIST partitionApplication nameCols CDATA #REQUIRED>

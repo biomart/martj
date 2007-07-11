@@ -188,7 +188,7 @@ public class SaveDDLDialog extends JDialog {
 				File file = super.getSelectedFile();
 				if (file != null && !file.exists()) {
 					final String filename = file.getName();
-					final String extension = Resources.get("ddlExtension");
+					final String extension = Resources.get("zipExtension");
 					if (!filename.endsWith(extension)
 							&& filename.indexOf('.') < 0)
 						file = new File(file.getParentFile(), filename

@@ -33,8 +33,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.TransformationUnit.JoinTable;
+import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
@@ -269,14 +268,15 @@ public interface PartitionTable {
 		private final Map dmApplications = new HashMap();
 
 		public void applyTo(final DataSet ds, String dimension,
-				final PartitionTableApplication appl) {
+				PartitionTableApplication appl) {
 			if (dimension == null)
 				dimension = PartitionTable.NO_DIMENSION;
 			if (!this.dmApplications.containsKey(ds))
 				this.dmApplications.put(ds, new HashMap());
-			((Map) this.dmApplications.get(ds)).put(dimension,
-					appl == null ? PartitionTableApplication.createDefault(
-							this, ds, dimension) : appl);
+			if (appl == null)
+				appl = PartitionTableApplication.createDefault(this, ds,
+						dimension);
+			((Map) this.dmApplications.get(ds)).put(dimension, appl);
 		}
 
 		public PartitionTableApplication getApplication(final DataSet ds,
@@ -416,7 +416,7 @@ public interface PartitionTable {
 						this.groupCols = new ArrayList(currentGroupCols);
 					}
 
-					protected List getRows(String schemaPartition, int limit)
+					protected List getRows(String schemaPartition)
 							throws PartitionException {
 						return this.subRows;
 					}
@@ -504,7 +504,7 @@ public interface PartitionTable {
 				throws PartitionException {
 			Log.debug("Preparing rows");
 			this.currentRow = null;
-			this.rows = new ArrayList(this.getRows(schemaPartition, limit));
+			this.rows = new ArrayList(this.getRows(schemaPartition));
 			// Iterate over rows, apply transforms, drop duplicates.
 			final Set seen = new HashSet();
 			for (final Iterator i = this.rows.iterator(); i.hasNext();) {
@@ -522,6 +522,10 @@ public interface PartitionTable {
 				else
 					i.remove();
 			}
+			if (limit != PartitionTable.UNLIMITED_ROWS
+					&& this.rows.size() > limit)
+				this.rows = this.rows.subList(0, limit);
+			Collections.sort(this.rows);
 			this.rowIterator = 0;
 		}
 
@@ -534,15 +538,12 @@ public interface PartitionTable {
 		 * @param schemaPartition
 		 *            the partition to get rows for, or <tt>null</tt> if not
 		 *            to bother.
-		 * @param limit
-		 *            the maximum number of rows, or {@link #UNLIMITED_ROWS} for
-		 *            unlimited.
 		 * @return the rows. Never <tt>null</tt> but may be empty.
 		 * @throws PartitionException
 		 *             if the rows couldn't be obtained.
 		 */
-		protected abstract List getRows(final String schemaPartition,
-				final int limit) throws PartitionException;
+		protected abstract List getRows(final String schemaPartition)
+				throws PartitionException;
 
 		public String toString() {
 			return this.getName();
@@ -676,10 +677,10 @@ public interface PartitionTable {
 						return Collections.EMPTY_LIST;
 					}
 
-					protected List getRows(final String schemaPartition,
-							final int ignoreLimit) throws PartitionException {
+					protected List getRows(final String schemaPartition)
+							throws PartitionException {
 						final List rows = new ArrayList();
-						rows.add(new PartitionRow(this, 0) {
+						rows.add(new PartitionRow(this) {
 							public String getValue(final String columnName)
 									throws PartitionException {
 								// Should never get called. If it does,
@@ -698,7 +699,6 @@ public interface PartitionTable {
 	 * This class defines how rows of the table will behave.
 	 */
 	public static abstract class PartitionRow implements Comparable {
-		private final int rowNumber;
 
 		private final PartitionTable table;
 
@@ -708,30 +708,18 @@ public interface PartitionTable {
 		 * 
 		 * @param table
 		 *            the table this row belongs to.
-		 * @param rowNumber
-		 *            the row number.
 		 */
-		protected PartitionRow(final PartitionTable table, final int rowNumber) {
+		protected PartitionRow(final PartitionTable table) {
 			this.table = table;
-			this.rowNumber = rowNumber;
 		}
 
 		/**
-		 * Find out which table this column belongs to.
+		 * Find out which table this row belongs to.
 		 * 
 		 * @return the table.
 		 */
 		public PartitionTable getPartitionTable() {
 			return this.table;
-		}
-
-		/**
-		 * Return the number of the current row within the table.
-		 * 
-		 * @return the number.
-		 */
-		public int getRowNumber() {
-			return this.rowNumber;
 		}
 
 		/**
@@ -747,7 +735,24 @@ public interface PartitionTable {
 				throws PartitionException;
 
 		public int compareTo(final Object obj) {
-			return this.getRowNumber() - ((PartitionRow) obj).getRowNumber();
+			final PartitionRow them = (PartitionRow) obj;
+			for (final Iterator i = this.getPartitionTable()
+					.getSelectedColumnNames().iterator(); i.hasNext();) {
+				final String colName = (String) i.next();
+				if (colName.equals(PartitionTable.DIV_COLUMN))
+					continue;
+				try {
+					final PartitionColumn col = this.getPartitionTable()
+							.getSelectedColumn(colName);
+					if (!col.getValueForRow(this).equals(
+							col.getValueForRow(them)))
+						return col.getValueForRow(this).compareTo(
+								col.getValueForRow(them));
+				} catch (final PartitionException pe) {
+					throw new BioMartError(pe);
+				}
+			}
+			return 0;
 		}
 	}
 
@@ -770,6 +775,22 @@ public interface PartitionTable {
 		}
 
 		/**
+		 * For a given relation, obtain the row that applies it.
+		 * 
+		 * @param rel
+		 *            the relation.
+		 * @return the applied row.
+		 */
+		public PartitionAppliedRow getAppliedRowForRelation(final Relation rel) {
+			for (final Iterator i = this.partitions.iterator(); i.hasNext();) {
+				final PartitionAppliedRow row = (PartitionAppliedRow) i.next();
+				if (row.getRelation() != null && row.getRelation().equals(rel))
+					return row;
+			}
+			return null;
+		}
+
+		/**
 		 * What table is this applying?
 		 * 
 		 * @return the table.
@@ -785,23 +806,6 @@ public interface PartitionTable {
 		 */
 		public List getPartitionAppliedRows() {
 			return this.partitions;
-		}
-
-		/**
-		 * Given a relation, find out which row of our partition table rows
-		 * applies to it.
-		 * 
-		 * @param rel
-		 *            the relation to find.
-		 * @return the applied row, or null if none of them match.
-		 */
-		public PartitionAppliedRow getAppliedRowForRelation(final Relation rel) {
-			for (final Iterator i = this.partitions.iterator(); i.hasNext();) {
-				final PartitionAppliedRow row = (PartitionAppliedRow) i.next();
-				if (row.getRelation() != null && row.getRelation().equals(rel))
-					return row;
-			}
-			return null;
 		}
 
 		/**
@@ -832,16 +836,10 @@ public interface PartitionTable {
 		/**
 		 * Update the compound relation counts internally.
 		 * 
-		 * @param dsTable
-		 *            the dataset table being built when sync is called.
-		 * @param rel
-		 *            the relation currently being looked at when sync is
-		 *            called.
 		 * @throws PartitionException
 		 *             if it goes wrong.
 		 */
-		public void syncCounts(final DataSetTable dsTable, final Relation rel)
-				throws PartitionException {
+		public void syncCounts() throws PartitionException {
 			// Get real partition table for each alias and count rows.
 			for (int i = 0; i < this.partitions.size(); i++) {
 				final PartitionAppliedRow prow = (PartitionAppliedRow) this.partitions
@@ -853,41 +851,7 @@ public interface PartitionTable {
 				realPT.prepareRows(null, PartitionTable.UNLIMITED_ROWS);
 				while (realPT.nextRow())
 					compound++;
-				// Work out the source relation for this dataset column.
 				prow.setCompound(compound);
-				// Set default relation of null.
-				Relation relToUse = null;
-				// Iterate over TU in dsTable.
-				for (final Iterator j = dsTable.getTransformationUnits()
-						.iterator(); relToUse == null && j.hasNext();) {
-					final TransformationUnit tu = (TransformationUnit) j.next();
-					// If TU is Join TU, iterate over cols.
-					if (tu instanceof JoinTable) {
-						final JoinTable jtu = (JoinTable) tu;
-						for (final Iterator k = jtu.getNewColumnNameMap()
-								.values().iterator(); relToUse == null
-								&& k.hasNext();) {
-							final DataSetColumn dsCol = (DataSetColumn) k
-									.next();
-							// If col matches ds col from row, update relation.
-							if (dsCol.getName()
-									.equals(prow.getRootDataSetCol())
-									|| dsCol.getName().endsWith(
-											Resources.get("columnnameSep")
-													+ prow.getRootDataSetCol()))
-								relToUse = jtu.getSchemaRelation();
-						}
-					}
-				}
-				// If relation is still null, and previous was not null,
-				// set to default relation.
-				if (relToUse == null
-						&& i == 1
-						|| i > 1
-						&& ((PartitionAppliedRow) this.partitions.get(i - 1))
-								.getRelation() != null)
-					relToUse = rel;
-				prow.setRelation(relToUse);
 			}
 		}
 
@@ -906,10 +870,12 @@ public interface PartitionTable {
 					pt);
 			final String ptCol = (String) pt.getSelectedColumnNames()
 					.iterator().next();
-			pa.setPartitionAppliedRows(Collections
-					.singletonList(new PartitionAppliedRow(ptCol,
-							((DataSetColumn) ds.getMainTable().getColumns()
-									.iterator().next()).getName(), ptCol)));
+			pa
+					.setPartitionAppliedRows(Collections
+							.singletonList(new PartitionAppliedRow(ptCol,
+									((DataSetColumn) ds.getMainTable()
+											.getColumns().iterator().next())
+											.getName(), ptCol, null)));
 			return pa;
 		}
 
@@ -935,7 +901,7 @@ public interface PartitionTable {
 					.singletonList(new PartitionAppliedRow(ptCol,
 							((DataSetColumn) ds.getTableByName(dimension)
 									.getColumns().iterator().next()).getName(),
-							ptCol)));
+							ptCol, null)));
 			return pa;
 		}
 
@@ -946,13 +912,13 @@ public interface PartitionTable {
 		public static class PartitionAppliedRow {
 			private int compound;
 
-			private Relation relation;
-
 			private final String partitionCol;
 
 			private final String rootDataSetCol;
 
 			private final String namePartitionCol;
+
+			private final Relation relation;
 
 			/**
 			 * Construct a row of data from a single partition table.
@@ -964,14 +930,18 @@ public interface PartitionTable {
 			 *            a root name (not including the {0}*__ prefix).
 			 * @param namePartitionCol
 			 *            the column providing data to be used in the prefix.
+			 * @param relation
+			 *            the relation that provides the dataset column this
+			 *            refers to.
 			 */
 			public PartitionAppliedRow(final String partitionCol,
-					final String rootDataSetCol, final String namePartitionCol) {
+					final String rootDataSetCol, final String namePartitionCol,
+					final Relation relation) {
 				this.compound = 1;
-				this.relation = null;
 				this.partitionCol = partitionCol;
 				this.rootDataSetCol = rootDataSetCol;
 				this.namePartitionCol = namePartitionCol;
+				this.relation = relation;
 			}
 
 			/**
@@ -987,21 +957,6 @@ public interface PartitionTable {
 			 */
 			public void setCompound(final int compound) {
 				this.compound = compound;
-			}
-
-			/**
-			 * @return the relation
-			 */
-			public Relation getRelation() {
-				return this.relation;
-			}
-
-			/**
-			 * @param relation
-			 *            the relation to set
-			 */
-			public void setRelation(final Relation relation) {
-				this.relation = relation;
 			}
 
 			/**
@@ -1023,6 +978,13 @@ public interface PartitionTable {
 			 */
 			public String getRootDataSetCol() {
 				return this.rootDataSetCol;
+			}
+
+			/**
+			 * @return the relation
+			 */
+			public Relation getRelation() {
+				return relation;
 			}
 		}
 	}
