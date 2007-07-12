@@ -522,10 +522,10 @@ public interface PartitionTable {
 				else
 					i.remove();
 			}
+			Collections.sort(this.rows);
 			if (limit != PartitionTable.UNLIMITED_ROWS
 					&& this.rows.size() > limit)
 				this.rows = this.rows.subList(0, limit);
-			Collections.sort(this.rows);
 			this.rowIterator = 0;
 		}
 
