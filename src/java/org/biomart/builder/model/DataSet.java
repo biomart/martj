@@ -188,7 +188,8 @@ public class DataSet extends GenericSchema {
 					return this.allCols.keySet();
 				}
 
-				protected List getRows(final String schemaPartition) throws PartitionException {
+				protected List getRows(final String schemaPartition)
+						throws PartitionException {
 					if (this.getSelectedColumnNames().isEmpty())
 						throw new PartitionException(Resources
 								.get("initialColumnsNotSpecified"));
@@ -201,8 +202,7 @@ public class DataSet extends GenericSchema {
 	}
 
 	private List getRowsBySimpleSQL(final PartitionTable pt,
-			final String schemaPartition)
-			throws PartitionException {
+			final String schemaPartition) throws PartitionException {
 		Log.debug("Loading rows by simple SQL");
 
 		// Obtain schema.
@@ -601,7 +601,8 @@ public class DataSet extends GenericSchema {
 				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
 				relationCount, subclassCount, !type
 						.equals(DataSetTableType.DIMENSION),
-				Collections.EMPTY_LIST, Collections.EMPTY_LIST, relationIteration);
+				Collections.EMPTY_LIST, Collections.EMPTY_LIST,
+				relationIteration, 0);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -625,7 +626,7 @@ public class DataSet extends GenericSchema {
 			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable,
 					normalQ, subclassQ, dimensionQ, newSourceDSCols,
 					mergeSourceRelation, newRelationCounts, subclassCount,
-					makeDimensions, nameCols, nameColSuffixes, iteration);
+					makeDimensions, nameCols, nameColSuffixes, iteration, i+1);
 		}
 
 		// Create the primary key on this table, but only if it has one.
@@ -748,6 +749,8 @@ public class DataSet extends GenericSchema {
 	 * @param nameCols
 	 *            the list of partition columns to prefix the new dataset
 	 *            columns with.
+	 *            @param queuePos this position in the queue to insert
+	 *            the next steps at.
 	 * @throws PartitionException
 	 *             if partitioning is in use and went wrong.
 	 */
@@ -757,8 +760,8 @@ public class DataSet extends GenericSchema {
 			final List dimensionQ, final List sourceDataSetCols,
 			final Relation sourceRelation, final Map relationCount,
 			final Map subclassCount, final boolean makeDimensions,
-			final List nameCols, final List nameColSuffixes, final int relationIteration)
-			throws PartitionException {
+			final List nameCols, final List nameColSuffixes,
+			final int relationIteration, int queuePos) throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
 
 		// Remember the schema.
@@ -826,11 +829,10 @@ public class DataSet extends GenericSchema {
 				colName = colName + Resources.get("keySuffix");
 			// Add partitioning prefixes.
 			for (int k = 0; k < nameCols.size(); k++) {
-				final PartitionColumn pcol = (PartitionColumn)nameCols.get(k);
-				final String suffix = (String)nameColSuffixes.get(k);
-				colName = pcol.getName() + "#"
-				+ suffix + Resources.get("columnnameSep")
-				+ colName;
+				final PartitionColumn pcol = (PartitionColumn) nameCols.get(k);
+				final String suffix = (String) nameColSuffixes.get(k);
+				colName = pcol.getName() + "#" + suffix
+						+ Resources.get("columnnameSep") + colName;
 			}
 			final WrappedColumn wc = new WrappedColumn(c, colName, dsTable,
 					sourceRelation);
@@ -979,7 +981,7 @@ public class DataSet extends GenericSchema {
 			if (followRelation || forceFollowRelation) {
 				final List nextNameCols = new ArrayList(nameCols);
 				final Map nextNameColSuffixes = new HashMap();
-				nextNameColSuffixes.put(""+0, new ArrayList(nameColSuffixes));
+				nextNameColSuffixes.put("" + 0, new ArrayList(nameColSuffixes));
 				this.includedRelations.add(r);
 				dsTable.includedRelations.add(r);
 
@@ -1021,34 +1023,44 @@ public class DataSet extends GenericSchema {
 						if (usefulPart == null)
 							childCompounded = 1;
 						else {
-							usefulPart.syncCounts();
-							// Get the row information for the relation.
-							final PartitionAppliedRow prow = usefulPart
-									.getAppliedRowForRelation(r);
-							if (prow == null)
-								childCompounded = 1;
-							else {
+							// When partitioning second level, only fork at top.
+							if (usefulPart.getPartitionAppliedRows().size() > 1
+									&& previousUnit == null) {
+								usefulPart.syncCounts();
+								// Get the row information for the relation.
+								final PartitionAppliedRow prow = (PartitionAppliedRow) usefulPart
+										.getPartitionAppliedRows().get(1);
 								childCompounded = prow.getCompound();
 								nextNameCols.add(usefulPart.getPartitionTable()
 										.getSelectedColumn(
 												prow.getNamePartitionCol()));
 								for (int k = 0; k < childCompounded; k++) {
-									final List nextList = new ArrayList(nameColSuffixes);
-									nextList.add(""+k);
-									nextNameColSuffixes.put(""+k, nextList);
+									final List nextList = new ArrayList(
+											nameColSuffixes);
+									nextList.add("" + k);
+									nextNameColSuffixes.put("" + k, nextList);
 								}
-							}
+							} else
+								childCompounded = 1;
 						}
 					}
+				// Insert first one at next position in queue
+				// after current position. This creates multiple 
+				// top-down paths, rather than sideways-spanning trees of 
+				// actions. (If this queue were a graph, doing it this way 
+				// makes it depth-first as opposed to breadth-first).
+				// The queue position is incremented so that they remain
+				// in order - else they'd end up reversed.
 				for (int k = 0; k < childCompounded; k++)
-					normalQ.add(new Object[] {
+					normalQ.add(queuePos++, new Object[] {
 							r,
 							newSourceDSCols,
 							targetKey.getTable(),
 							tu,
 							Boolean.valueOf(makeDimensions && r.isOneToOne()
 									|| forceFollowRelation), new Integer(k),
-							nextNameCols, nextNameColSuffixes.get(""+k), new HashMap(relationCount) });
+							nextNameCols, nextNameColSuffixes.get("" + k),
+							new HashMap(relationCount) });
 			}
 		}
 	}
@@ -1230,7 +1242,8 @@ public class DataSet extends GenericSchema {
 		this.includedSchemas.clear();
 
 		try {
-			// Generate the main table. It will recursively generate all the others.
+			// Generate the main table. It will recursively generate all the
+			// others.
 			this.generateDataSetTable(DataSetTableType.MAIN, null, this
 					.getRealCentralTable(), null, null, new HashMap(), 0);
 		} catch (final PartitionException pe) {

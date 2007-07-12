@@ -692,10 +692,11 @@ public class PartitionTableDialog extends JDialog {
 			for (final Iterator i = ds.asPartitionTable().getAllColumnNames()
 					.iterator(); i.hasNext();)
 				this.availableColumns.addElement(i.next());
+		// Only allow div if not already used.
+		this.availableColumns.addElement(PartitionTable.DIV_COLUMN);
 		for (final Iterator i = this.getNewSelectedColumns().iterator(); i
 				.hasNext();)
 			this.availableColumns.removeElement(i.next());
-		this.availableColumns.addElement(PartitionTable.DIV_COLUMN);
 	}
 
 	private void updateSelectedColumns(final DataSet ds) {

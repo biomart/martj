@@ -308,7 +308,9 @@ public interface MartConstructor {
 					for (final Iterator i = this.getTablesToProcess(dataset)
 							.iterator(); i.hasNext();) {
 						final DataSetTable dsTable = (DataSetTable) i.next();
-						if (!droppedTables.contains(dsTable.getParent())) {
+						if (!droppedTables.contains(dsTable.getParent())
+								&& !dataset.getDataSetModifications()
+										.isMaskedTable(dsTable)) {
 							// Loop over dataset table partitions.
 							final PartitionTableApplication dmPta = dataset
 									.getMart().getPartitionTableForDimension(
@@ -400,6 +402,7 @@ public interface MartConstructor {
 			final Set droppedCols = new HashSet();
 
 			// Use the transformation units to create the basic table.
+			Relation firstJoinRel = null;
 			for (final Iterator j = dsTable.getTransformationUnits().iterator(); j
 					.hasNext();) {
 				final TransformationUnit tu = (TransformationUnit) j.next();
@@ -416,11 +419,14 @@ public interface MartConstructor {
 						continue;
 				}
 				// Left-join?
-				else if (tu instanceof JoinTable)
+				else if (tu instanceof JoinTable) {
+					if (firstJoinRel == null)
+						firstJoinRel = ((JoinTable) tu).getSchemaRelation();
 					requiresFinalLeftJoin |= this.doJoinTable(templateSchema,
 							schemaPartition, schemaPrefix, dsPta, dmPta,
-							dataset, dsTable, (JoinTable) tu,
+							dataset, dsTable, (JoinTable) tu, firstJoinRel,
 							previousTempTable, tempTable, droppedCols);
+				}
 
 				// Select-from?
 				else if (tu instanceof SelectFromTable)
@@ -789,6 +795,15 @@ public interface MartConstructor {
 								pcol.getValueForRow(pcol.getPartitionTable()
 										.currentRow()));
 				}
+				// PrepareRow on subdivision, if any.
+				if (pta.getPartitionAppliedRows().size() > 1) {
+					final PartitionAppliedRow subprow = (PartitionAppliedRow) pta
+							.getPartitionAppliedRows().get(1);
+					pta.getPartitionTable().getSelectedColumn(
+							subprow.getNamePartitionCol()).getPartitionTable()
+							.prepareRows(schemaPartition,
+									PartitionTable.UNLIMITED_ROWS);
+				}
 			}
 
 			final Table sourceTable = stu.getTable();
@@ -873,9 +888,9 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final JoinTable ljtu,
-				final String previousTempTable, final String tempTable,
-				final Set droppedCols) throws SQLException, ListenerException,
-				PartitionException {
+				final Relation firstJoinRel, final String previousTempTable,
+				final String tempTable, final Set droppedCols)
+				throws SQLException, ListenerException, PartitionException {
 
 			boolean requiresFinalLeftJoin = false;
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
@@ -891,6 +906,24 @@ public interface MartConstructor {
 					&& dsPta != null)
 				pta = dsPta;
 			if (pta != null) {
+				// If this is first relation after select table
+				// (note first relation, not first join) then apply
+				// next row to any subdiv table present.
+				if (pta.getPartitionAppliedRows().size() > 1) {
+					final PartitionAppliedRow prow = (PartitionAppliedRow) pta
+							.getPartitionAppliedRows().get(1);
+					// A test to see if this is the first relation
+					// after the select (regardless of how many times this
+					// relation has been seen).
+					boolean nudgeRow = firstJoinRel.equals(ljtu
+							.getSchemaRelation());
+					if (nudgeRow)
+						pta.getPartitionTable().getSelectedColumn(
+								prow.getNamePartitionCol()).getPartitionTable()
+								.nextRow();
+				}
+				// For all relations, if this is the one
+				// that some subdiv partition applies to, then apply it.
 				// This is a join, so we look up row by relation.
 				final PartitionAppliedRow prow = pta
 						.getAppliedRowForRelation(ljtu.getSchemaRelation());
@@ -902,10 +935,6 @@ public interface MartConstructor {
 					final PartitionColumn pcol = pta.getPartitionTable()
 							.getSelectedColumn(prow.getPartitionCol());
 					final PartitionTable ptbl = pcol.getPartitionTable();
-					if (ljtu.getSchemaRelationIteration() == 0)
-						ptbl.prepareRows(schemaPartition,
-								PartitionTable.UNLIMITED_ROWS);
-					ptbl.nextRow();
 					// For each of the getNewColumnNameMap cols that are in the
 					// current ptable application, add a restriction for that
 					// col using current ptable column value.
