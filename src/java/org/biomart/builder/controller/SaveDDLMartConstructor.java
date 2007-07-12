@@ -340,16 +340,16 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					this.outputFileStream.flush();
 					this.outputFileStream.close();
 				} else if (event == MartConstructorListener.DATASET_STARTED) {
+					// Clear out action map ready for next dataset.
 					this.dataset = (String) data;
 					Log.debug("Dataset " + this.dataset + " starting");
+					this.actions.clear();
 				} else if (event == MartConstructorListener.PARTITION_STARTED) {
-					// Clear out action map ready for next dataset.
 					this.partition = (String) data;
 					Log.debug("Partition " + this.partition + " starting");
-					this.actions.clear();
-				} else if (event == MartConstructorListener.PARTITION_ENDED) {
+				} else if (event == MartConstructorListener.DATASET_ENDED) {
 					// Write out one file per table in files.
-					Log.debug("Partition ending");
+					Log.debug("Dataset ending");
 					for (final Iterator i = this.actions.entrySet().iterator(); i
 							.hasNext();) {
 						final Map.Entry actionEntry = (Map.Entry) i.next();
@@ -490,16 +490,17 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					MartRunnerProtocol.Client.endJob(this.outputHost,
 							this.outputPort, this.job);
 				} else if (event == MartConstructorListener.DATASET_STARTED) {
+					// Clear out action map ready for next dataset.
 					this.dataset = (String) data;
 					Log.debug("Dataset " + this.dataset + " starting");
+					this.actions.clear();
 				} else if (event == MartConstructorListener.PARTITION_STARTED) {
 					// Clear out action map ready for next dataset.
 					this.partition = (String) data;
 					Log.debug("Partition " + this.partition + " starting");
-					this.actions.clear();
-				} else if (event == MartConstructorListener.PARTITION_ENDED) {
+				} else if (event == MartConstructorListener.DATASET_ENDED) {
 					// Write out one file per table in files.
-					Log.debug("Partition ending, writing actions now");
+					Log.debug("Dataset ending, writing actions now");
 					for (final Iterator i = this.actions.entrySet().iterator(); i
 							.hasNext();) {
 						final Map.Entry actionEntry = (Map.Entry) i.next();

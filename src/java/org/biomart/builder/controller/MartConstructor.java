@@ -250,6 +250,8 @@ public interface MartConstructor {
 
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
+			final PartitionTableApplication dsPta = dataset.getMart()
+					.getPartitionTableForDataSet(dataset);
 
 			// Is it partitioned?
 			Collection schemaPartitions = templateSchema.getPartitions()
@@ -277,6 +279,9 @@ public interface MartConstructor {
 			// schema partition.
 			double stepPercent = 100.0 / dataset.getTables().size()
 					/ schemaPartitions.size();
+			if (dsPta != null)
+				stepPercent /= ((PartitionAppliedRow) dsPta
+						.getPartitionAppliedRows().get(0)).getCompound();
 
 			// Divide the progress step size by the number of datasets.
 			stepPercent /= totalDataSetCount;
@@ -295,8 +300,6 @@ public interface MartConstructor {
 						schemaPartition.getKey());
 
 				// Loop over dataset partitions.
-				final PartitionTableApplication dsPta = dataset.getMart()
-						.getPartitionTableForDataSet(dataset);
 				boolean fakeDSPartition = dsPta == null;
 				if (!fakeDSPartition)
 					dsPta.getNamePartitionCol().getPartitionTable()
@@ -305,12 +308,21 @@ public interface MartConstructor {
 				while (fakeDSPartition ? true : dsPta != null
 						&& dsPta.getPartitionTable().nextRow()) {
 					fakeDSPartition = false;
+					// Make more specific.
+					String partitionedDataSetName = dataset.getName();
+					if (dsPta != null)
+						partitionedDataSetName = dsPta.getNamePartitionCol()
+								.getValueForRow(
+										dsPta.getPartitionTable().currentRow())
+								+ Resources.get("tablenameSubSep")
+								+ partitionedDataSetName;
+					this.issueListenerEvent(
+							MartConstructorListener.DATASET_STARTED,
+							partitionedDataSetName);
 					for (final Iterator i = this.getTablesToProcess(dataset)
 							.iterator(); i.hasNext();) {
 						final DataSetTable dsTable = (DataSetTable) i.next();
-						if (!droppedTables.contains(dsTable.getParent())
-								&& !dataset.getDataSetModifications()
-										.isMaskedTable(dsTable)) {
+						if (!droppedTables.contains(dsTable.getParent())) {
 							// Loop over dataset table partitions.
 							final PartitionTableApplication dmPta = dataset
 									.getMart().getPartitionTableForDimension(
@@ -340,6 +352,9 @@ public interface MartConstructor {
 						// Check not cancelled.
 						this.checkCancelled();
 					}
+					this.issueListenerEvent(
+							MartConstructorListener.DATASET_ENDED,
+							partitionedDataSetName);
 				}
 
 				this.issueListenerEvent(
@@ -369,7 +384,10 @@ public interface MartConstructor {
 							.getTable();
 					if (!tablesToProcess.contains(dsTab)
 							&& !dataset.getDataSetModifications()
-									.isMaskedTable(dsTab))
+									.isMaskedTable(dsTab)
+							&& (dsTab.getFocusRelation() != null && !dataset
+									.getSchemaModifications().isMergedRelation(
+											dsTab.getFocusRelation())))
 						if (dsTab.getType().equals(DataSetTableType.DIMENSION))
 							nextDims.add(dsTab);
 						else
@@ -1401,18 +1419,9 @@ public interface MartConstructor {
 					// mart. Build actions for each one.
 					final DataSet ds = (DataSet) j.next();
 					try {
-						this.issueListenerEvent(
-								MartConstructorListener.DATASET_STARTED, ds
-										.getName());
 						this.makeActionsForDataset(ds, totalDataSetCount);
 					} catch (final Throwable t) {
 						throw t;
-					} finally {
-						// Make sure the helper always gets a chance to
-						// tidy up, even if an exception is thrown.
-						this.issueListenerEvent(
-								MartConstructorListener.DATASET_ENDED, ds
-										.getName());
 					}
 				}
 				this
