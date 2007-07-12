@@ -78,6 +78,7 @@ import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
@@ -712,55 +713,66 @@ public class PartitionTableDialog extends JDialog {
 	}
 
 	private void updatePreviewPanel(final DataSet ds) {
-		try {
-			// Update ds with new ones.
-			final List selectedCols = this.getNewSelectedColumns();
-			ds.asPartitionTable().setSelectedColumnNames(selectedCols);
-			// Update preview data column headers.
-			this.previewData.setColumnIdentifiers(selectedCols.toArray());
-			// Clear preview data model.
-			while (this.previewData.getRowCount() > 0)
-				this.previewData.removeRow(0);
-			// No new cols? Don't go any further.
-			final List trueSelectedCols = new ArrayList();
-			for (final Iterator i = selectedCols.iterator(); i.hasNext();) {
-				final String col = (String) i.next();
-				if (!col.equals(PartitionTable.DIV_COLUMN))
-					trueSelectedCols.add(col);
-			}
-			if (trueSelectedCols.size() < 1)
-				return;
-			// Get the rows.
-			try {
-				ds.asPartitionTable().prepareRows(null,
-						Integer.parseInt(this.previewRowCount.getText()));
-			} catch (final NumberFormatException nfe) {
-				ds.asPartitionTable().prepareRows(null,
-						PartitionTableDialog.PREVIEW_ROWS);
-			}
-			while (ds.asPartitionTable().nudgeRow()) {
-				final PartitionRow row = ds.asPartitionTable().currentRow();
-				final List rowData = new ArrayList();
+		new LongProcess() {
+			public void run() throws Exception {
+				// Update ds with new ones.
+				final List selectedCols = PartitionTableDialog.this
+						.getNewSelectedColumns();
+				ds.asPartitionTable().setSelectedColumnNames(selectedCols);
+				// Update preview data column headers.
+				PartitionTableDialog.this.previewData
+						.setColumnIdentifiers(selectedCols.toArray());
+				// Clear preview data model.
+				while (PartitionTableDialog.this.previewData.getRowCount() > 0)
+					PartitionTableDialog.this.previewData.removeRow(0);
+				// No new cols? Don't go any further.
+				final List trueSelectedCols = new ArrayList();
 				for (final Iterator i = selectedCols.iterator(); i.hasNext();) {
 					final String col = (String) i.next();
-					if (col.equals(PartitionTable.DIV_COLUMN))
-						rowData.add("->");
-					else
-						rowData.add(row.getPartitionTable().getSelectedColumn(
-								col).getValueForRow(row));
+					if (!col.equals(PartitionTable.DIV_COLUMN))
+						trueSelectedCols.add(col);
 				}
-				// Add an entry to the data model using list.toArray();
-				this.previewData.addRow(rowData.toArray());
+				if (trueSelectedCols.size() < 1)
+					return;
+				// Get the rows.
+				try {
+					ds
+							.asPartitionTable()
+							.prepareRows(
+									null,
+									Integer
+											.parseInt(PartitionTableDialog.this.previewRowCount
+													.getText()));
+				} catch (final NumberFormatException nfe) {
+					ds.asPartitionTable().prepareRows(null,
+							PartitionTableDialog.PREVIEW_ROWS);
+				}
+				while (ds.asPartitionTable().nudgeRow()) {
+					final PartitionRow row = ds.asPartitionTable().currentRow();
+					final List rowData = new ArrayList();
+					for (final Iterator i = selectedCols.iterator(); i
+							.hasNext();) {
+						final String col = (String) i.next();
+						if (col.equals(PartitionTable.DIV_COLUMN))
+							rowData.add("->");
+						else
+							rowData
+									.add(row.getPartitionTable()
+											.getSelectedColumn(col)
+											.getValueForRow(row));
+					}
+					// Add an entry to the data model using list.toArray();
+					PartitionTableDialog.this.previewData.addRow(rowData
+							.toArray());
+				}
+				// Re-select the current applied item in order
+				// to update available columns.
+				if (PartitionTableDialog.this.wizardPanel != null) {
+					PartitionTableDialog.this.wizardPanel.recalculate();
+					PartitionTableDialog.this.pack();
+				}
 			}
-			// Re-select the current applied item in order
-			// to update available columns.
-			if (this.wizardPanel != null) {
-				this.wizardPanel.recalculate();
-				this.pack();
-			}
-		} catch (final PartitionException pe) {
-			StackTrace.showStackTrace(pe);
-		}
+		}.start();
 	}
 
 	private static class WizardPanel extends JPanel {
@@ -860,7 +872,7 @@ public class PartitionTableDialog extends JDialog {
 				this.ptLevels.add(ptCombo);
 				final JComboBox dsCombo = new JComboBox(dsColList.toArray());
 				// Remove null option from first row.
-				if (currLevel==0)
+				if (currLevel == 0)
 					dsCombo.removeItemAt(0);
 				dsCombo.setRenderer(new ListCellRenderer() {
 					public Component getListCellRendererComponent(

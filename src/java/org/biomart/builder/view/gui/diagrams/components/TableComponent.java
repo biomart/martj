@@ -171,21 +171,27 @@ public class TableComponent extends BoxShapedComponent {
 							.getModifiedName() : col.getName(), col);
 		}
 
-		// Add columns to the list one by one, as column sub-components.
-		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
-			final Column col = (Column) i.next();
-			final ColumnComponent colComponent = new ColumnComponent(col, this
-					.getDiagram());
+		// GridBagLayout has a maximum number of components (512).
+		if (sortedColMap.size() <= 500)
+			// Add columns to the list one by one, as column sub-components.
+			for (final Iterator i = sortedColMap.values().iterator(); i
+					.hasNext();) {
+				final Column col = (Column) i.next();
+				final ColumnComponent colComponent = new ColumnComponent(col,
+						this.getDiagram());
 
-			// Add it as a sub-component (internal representation only).
-			this.addSubComponent(col, colComponent);
-			this.getSubComponents().putAll(colComponent.getSubComponents());
+				// Add it as a sub-component (internal representation only).
+				this.addSubComponent(col, colComponent);
+				this.getSubComponents().putAll(colComponent.getSubComponents());
 
-			// Physically add it to the list of columns.
-			columnsListPanelLayout.setConstraints(colComponent,
-					this.constraints);
-			this.columnsListPanel.add(colComponent);
-		}
+				// Physically add it to the list of columns.
+				columnsListPanelLayout.setConstraints(colComponent,
+						this.constraints);
+				this.columnsListPanel.add(colComponent);
+			}
+		else
+			this.columnsListPanel.add(new JLabel(Resources.get(
+					"tooManyColsToDisplay", "500")));
 		this.layout.setConstraints(this.columnsListPanel, this.constraints);
 
 		// Show/hide the columns panel with a button.
