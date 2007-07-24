@@ -568,10 +568,11 @@ public interface MartConstructor {
 					.getDataSetOptimiserType().isTable() ? DataSetOptimiserType.TABLE_INHERIT
 					: DataSetOptimiserType.COLUMN_INHERIT
 					: dataset.getDataSetOptimiserType();
-			this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset, dsTable,
-					oType, !dsTable.getType()
-							.equals(DataSetTableType.DIMENSION)
-							&& dataset.getDataSetOptimiserType().isTable());
+			if (!oType.equals(DataSetOptimiserType.NONE))
+				this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
+						dsTable, oType, !dsTable.getType().equals(
+								DataSetTableType.DIMENSION)
+								&& dataset.getDataSetOptimiserType().isTable());
 			return true;
 		}
 
@@ -596,7 +597,7 @@ public interface MartConstructor {
 			for (final Iterator x = dsTable.getColumns().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
-				if (col.isRequiredInterim())
+				if (col.isRequiredFinal())
 					rightSelectCols.add(col.getPartitionedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
@@ -1309,7 +1310,7 @@ public interface MartConstructor {
 				final StringBuffer sb = new StringBuffer();
 				sb.append(dsTable.getModifiedName());
 				sb.append(Resources.get("tablenameSubSep"));
-				if (dsPta != null) {
+				if (dmPta != null) {
 					final PartitionColumn pcol = dsPta.getNamePartitionCol();
 					sb.append(pcol.getValueForRow(pcol.getPartitionTable()
 							.currentRow()));
