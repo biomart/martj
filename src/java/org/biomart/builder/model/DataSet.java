@@ -211,13 +211,14 @@ public class DataSet extends GenericSchema {
 		if (!(schema instanceof JDBCSchema))
 			return Collections.EMPTY_LIST;
 		final JDBCSchema jdbc = (JDBCSchema) schema;
-		final String usablePartition = schemaPartition == null ? jdbc
-				.getDatabaseSchema() : schemaPartition;
 
 		// Connect.
 		Connection conn = null;
 		final List rows = new ArrayList();
 		try {
+			final String usablePartition = jdbc.getPartitions().containsKey(
+					schemaPartition) ? schemaPartition : jdbc
+					.getDatabaseSchema();
 			conn = jdbc.getConnection(schemaPartition);
 			// Construct SQL statement.
 			Log.debug("Building SQL");
@@ -247,6 +248,7 @@ public class DataSet extends GenericSchema {
 			sqlFrom.append(" from ");
 			final StringBuffer sqlWhere = new StringBuffer();
 			sqlWhere.append(" where ");
+			String prevSch = null;
 			for (final Iterator i = DataSet.this.getMainTable()
 					.getTransformationUnits().iterator(); i.hasNext()
 					&& positionMap.size() < trueSelectedCols.size();) {
@@ -260,13 +262,9 @@ public class DataSet extends GenericSchema {
 									.getDatabaseSchema();
 					Key prevKey = null;
 					Table prevTab = null;
-					String prevSch = null;
 					if (tu instanceof JoinTable) {
 						prevKey = ((JoinTable) tu).getSchemaSourceKey();
 						prevTab = prevKey.getTable();
-						prevSch = prevTab.getSchema().equals(schema) ? usablePartition
-								: ((JDBCSchema) prevTab.getSchema())
-										.getDatabaseSchema();
 						sqlFrom.append(',');
 					}
 					sqlFrom.append(selSch);
@@ -355,6 +353,7 @@ public class DataSet extends GenericSchema {
 									.getName());
 						}
 					}
+					prevSch = selSch;
 				} else
 					throw new PartitionException(Resources
 							.get("cannotDoBasicSQL"));
@@ -623,10 +622,12 @@ public class DataSet extends GenericSchema {
 			final List nameCols = (List) tuple[6];
 			final List nameColSuffixes = (List) tuple[7];
 			final Map newRelationCounts = (Map) tuple[8];
-			this.processTable(previousUnit, dsTable, dsTablePKCols, mergeTable,
-					normalQ, subclassQ, dimensionQ, newSourceDSCols,
-					mergeSourceRelation, newRelationCounts, subclassCount,
-					makeDimensions, nameCols, nameColSuffixes, iteration, i+1);
+			this
+					.processTable(previousUnit, dsTable, dsTablePKCols,
+							mergeTable, normalQ, subclassQ, dimensionQ,
+							newSourceDSCols, mergeSourceRelation,
+							newRelationCounts, subclassCount, makeDimensions,
+							nameCols, nameColSuffixes, iteration, i + 1);
 		}
 
 		// Create the primary key on this table, but only if it has one.
@@ -749,8 +750,8 @@ public class DataSet extends GenericSchema {
 	 * @param nameCols
 	 *            the list of partition columns to prefix the new dataset
 	 *            columns with.
-	 *            @param queuePos this position in the queue to insert
-	 *            the next steps at.
+	 * @param queuePos
+	 *            this position in the queue to insert the next steps at.
 	 * @throws PartitionException
 	 *             if partitioning is in use and went wrong.
 	 */
@@ -761,7 +762,8 @@ public class DataSet extends GenericSchema {
 			final Relation sourceRelation, final Map relationCount,
 			final Map subclassCount, final boolean makeDimensions,
 			final List nameCols, final List nameColSuffixes,
-			final int relationIteration, int queuePos) throws PartitionException {
+			final int relationIteration, int queuePos)
+			throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
 
 		// Remember the schema.
@@ -1045,9 +1047,9 @@ public class DataSet extends GenericSchema {
 						}
 					}
 				// Insert first one at next position in queue
-				// after current position. This creates multiple 
-				// top-down paths, rather than sideways-spanning trees of 
-				// actions. (If this queue were a graph, doing it this way 
+				// after current position. This creates multiple
+				// top-down paths, rather than sideways-spanning trees of
+				// actions. (If this queue were a graph, doing it this way
 				// makes it depth-first as opposed to breadth-first).
 				// The queue position is incremented so that they remain
 				// in order - else they'd end up reversed.

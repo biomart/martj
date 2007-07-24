@@ -331,7 +331,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		if (action.getLoopbackDiffSource()!=null) {
 			sb.append(" and a.");
 			sb.append(action.getLoopbackDiffSource());
-			sb.append("!=b.");
+			sb.append("<>b.");
 			sb.append(action.getLoopbackDiffTarget());
 		}
 

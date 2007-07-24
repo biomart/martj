@@ -835,16 +835,18 @@ public interface MartConstructor {
 				schema = schemaPartition;
 			else {
 				final Map sParts = ((JDBCSchema) sourceTable.getSchema())
-				.getPartitions();
+						.getPartitions();
 				if (sParts.isEmpty())
-					schema = schemaPartition;
+					schema = ((JDBCSchema) sourceTable.getSchema())
+							.getDatabaseSchema();
 				else
-				for (final Iterator i = sParts.entrySet().iterator(); i
-						.hasNext() && schema == null;) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					if (entry.getValue().equals(schemaPrefix))
-						schema = (String) entry.getKey();
-				}
+					for (final Iterator i = sParts.entrySet().iterator(); i
+							.hasNext()
+							&& schema == null;) {
+						final Map.Entry entry = (Map.Entry) i.next();
+						if (entry.getValue().equals(schemaPrefix))
+							schema = (String) entry.getKey();
+					}
 				if (schema == null) // Can never happen.
 					throw new BioMartError();
 			}
@@ -986,18 +988,19 @@ public interface MartConstructor {
 			if (ljtu.getTable().getSchema() == templateSchema)
 				rightSchema = schemaPartition;
 			else {
-				final Map ljParts = ((JDBCSchema) ljtu.getTable()
-						.getSchema()).getPartitions();
+				final Map ljParts = ((JDBCSchema) ljtu.getTable().getSchema())
+						.getPartitions();
 				if (ljParts.isEmpty())
-					rightSchema = schemaPartition;
+					rightSchema = ((JDBCSchema) ljtu.getTable().getSchema())
+							.getDatabaseSchema();
 				else
-				for (final Iterator i = ljParts.entrySet().iterator(); i
-						.hasNext()
-						&& rightSchema == null;) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					if (entry.getValue().equals(schemaPrefix))
-						rightSchema = (String) entry.getKey();
-				}
+					for (final Iterator i = ljParts.entrySet().iterator(); i
+							.hasNext()
+							&& rightSchema == null;) {
+						final Map.Entry entry = (Map.Entry) i.next();
+						if (entry.getValue().equals(schemaPrefix))
+							rightSchema = (String) entry.getKey();
+					}
 				if (rightSchema == null) {
 					droppedCols.addAll(ljtu.getNewColumnNameMap().values());
 					return false;
