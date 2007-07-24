@@ -57,12 +57,14 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
+import org.biomart.builder.view.gui.dialogs.LoopbackRelationDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionTableDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
@@ -1202,13 +1204,42 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestLoopbackRelation(final DataSet ds,
 			final DataSetTable dst, final Relation relation) {
+
+		// Work out if it is already compounded.
+		final boolean isLooped = ds.getSchemaModifications()
+				.isLoopbackRelation(dst, relation);
+		final Column loopedCol = ds.getSchemaModifications()
+				.getLoopbackRelation(dst, relation);
+
+		// Pop up a dialog and update 'compound'.
+		final LoopbackRelationDialog dialog = new LoopbackRelationDialog(
+				isLooped, loopedCol, relation.getManyKey().getTable()
+						.getColumns());
+		dialog.setLocationRelativeTo(null);
+		dialog.setVisible(true);
+		final Column newLoopedCol = dialog.getLoopbackDiffColumn();
+		final boolean newIsLooped = dialog.isLoopback();
+
+		// Skip altogether if no change.
+		if (newLoopedCol == loopedCol && newIsLooped == isLooped)
+			return;
+
 		new LongProcess() {
 			public void run() throws Exception {
-				// Force the relation.
+				// Do the work.
+				if (!newIsLooped) {
+					// Uncompound the relation.
+					if (dst != null)
+						MartBuilderUtils.unloopbackRelation(dst, relation);
+					else
+						MartBuilderUtils.unloopbackRelation(ds, relation);
+				} else // Compound the relation.
 				if (dst != null)
-					MartBuilderUtils.loopbackRelation(dst, relation);
+					MartBuilderUtils.loopbackRelation(dst, relation,
+							newLoopedCol);
 				else
-					MartBuilderUtils.loopbackRelation(ds, relation);
+					MartBuilderUtils.loopbackRelation(ds, relation,
+							newLoopedCol);
 
 				// And the overview.
 				DataSetTabSet.this.recalculateDataSetDiagram(
@@ -1879,37 +1910,6 @@ public class DataSetTabSet extends JTabbedPane {
 
 				// And the overview.
 				DataSetTabSet.this.repaintDataSetDiagram(ds, null);
-
-				// Update the modified status for this tabset.
-				DataSetTabSet.this.martTab.getMartTabSet()
-						.requestChangeModifiedStatus(true);
-			}
-		}.start();
-	}
-
-	/**
-	 * Asks that a relation be unloopbacked.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dst
-	 *            the table to work with.
-	 * @param relation
-	 *            the schema relation to unloopback.
-	 */
-	public void requestUnloopbackRelation(final DataSet ds,
-			final DataSetTable dst, final Relation relation) {
-		new LongProcess() {
-			public void run() throws Exception {
-				// Unmasks the relation.
-				if (dst != null)
-					MartBuilderUtils.unloopbackRelation(dst, relation);
-				else
-					MartBuilderUtils.unloopbackRelation(ds, relation);
-
-				// And the overview.
-				DataSetTabSet.this.recalculateDataSetDiagram(
-						dst != null ? (DataSet) dst.getSchema() : ds, relation);
 
 				// Update the modified status for this tabset.
 				DataSetTabSet.this.martTab.getMartTabSet()

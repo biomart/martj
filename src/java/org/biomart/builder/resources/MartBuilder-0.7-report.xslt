@@ -290,6 +290,8 @@ Merged relation: <xsl:apply-templates select="key('ids',@relationId)"/>
 Loopback relation: <xsl:apply-templates select="key('ids',@relationId)"/>
 <xsl:if test="not(@tableKey='__DATASET_WIDE__')">
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+<xsl:if test="@diffColumnId">
+  Differentiating column: <xsl:apply-templates select="key('ids',@diffColumnId)"/></xsl:if>
 </xsl:template>
 
 <xsl:template match="forcedRelation">

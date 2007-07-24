@@ -791,15 +791,19 @@ public class MartBuilderXML extends DefaultHandler {
 			for (final Iterator x = schemaMods.getLoopbackRelations()
 					.entrySet().iterator(); x.hasNext();) {
 				final Map.Entry entry = (Map.Entry) x.next();
-				for (final Iterator y = ((Collection) entry.getValue())
+				for (final Iterator y = ((Map) entry.getValue()).entrySet()
 						.iterator(); y.hasNext();) {
-					final Relation r = (Relation) y.next();
+					final Map.Entry entry2 = (Map.Entry) y.next();
 					this.openElement("loopbackRelation", xmlWriter);
 					this.writeAttribute("tableKey", (String) entry.getKey(),
 							xmlWriter);
 					this.writeAttribute("relationId",
-							(String) this.reverseMappedObjects.get(r),
-							xmlWriter);
+							(String) this.reverseMappedObjects.get(entry2
+									.getKey()), xmlWriter);
+					if (entry2.getValue() != null)
+						this.writeAttribute("diffColumnId",
+								(String) this.reverseMappedObjects.get(entry2
+										.getValue()), xmlWriter);
 					this.closeElement("loopbackRelation", xmlWriter);
 				}
 			}
@@ -1672,6 +1676,9 @@ public class MartBuilderXML extends DefaultHandler {
 				// Look up the relation.
 				final Relation rel = (Relation) this.mappedObjects
 						.get(attributes.get("relationId"));
+				final Column col = attributes.containsKey("diffColumnId") ? (Column) this.mappedObjects
+						.get(attributes.get("diffColumnId"))
+						: null;
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Mask it.
@@ -1679,8 +1686,8 @@ public class MartBuilderXML extends DefaultHandler {
 					final Map fMap = w.getSchemaModifications()
 							.getLoopbackRelations();
 					if (!fMap.containsKey(tableKey))
-						fMap.put(tableKey, new HashSet());
-					((Collection) fMap.get(tableKey)).add(rel);
+						fMap.put(tableKey, new HashMap());
+					((Map) fMap.get(tableKey)).put(rel, col);
 				}
 			} catch (final Exception e) {
 				throw new SAXException(e);

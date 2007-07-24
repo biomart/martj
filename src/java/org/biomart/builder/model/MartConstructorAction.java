@@ -516,6 +516,10 @@ public abstract class MartConstructorAction {
 		private TransformationUnit relationRestrictionPreviousUnit;
 
 		private final Map partitionRestrictions = new HashMap();
+		
+		private String loopbackDiffSource;
+
+		private String loopbackDiffTarget;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -711,6 +715,34 @@ public abstract class MartConstructorAction {
 		public void setRelationRestrictionPreviousUnit(
 				final TransformationUnit relationRestrictionPreviousUnit) {
 			this.relationRestrictionPreviousUnit = relationRestrictionPreviousUnit;
+		}
+
+		/**
+		 * @return the loopbackDiffSource
+		 */
+		public String getLoopbackDiffSource() {
+			return loopbackDiffSource;
+		}
+
+		/**
+		 * @param loopbackDiffSource the loopbackDiffSource to set
+		 */
+		public void setLoopbackDiffSource(String loopbackDiffSource) {
+			this.loopbackDiffSource = loopbackDiffSource;
+		}
+
+		/**
+		 * @return the loopbackDiffTarget
+		 */
+		public String getLoopbackDiffTarget() {
+			return loopbackDiffTarget;
+		}
+
+		/**
+		 * @param loopbackDiffTarget the loopbackDiffTarget to set
+		 */
+		public void setLoopbackDiffTarget(String loopbackDiffTarget) {
+			this.loopbackDiffTarget = loopbackDiffTarget;
 		}
 	}
 

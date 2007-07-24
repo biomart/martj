@@ -713,12 +713,14 @@ public class SchemaModificationSet {
 	 * 
 	 * @param relation
 	 *            the relation.
+	 * @param diff
+	 *            the column to differentiate when looping back. Optional.
 	 * @throws ValidationException
 	 *             if it cannot be done logically.
 	 */
-	public void setLoopbackRelation(final Relation relation)
+	public void setLoopbackRelation(final Relation relation, final Column diff)
 			throws ValidationException {
-		this.setLoopbackRelation(SchemaModificationSet.DATASET, relation);
+		this.setLoopbackRelation(SchemaModificationSet.DATASET, relation, diff);
 	}
 
 	/**
@@ -728,26 +730,29 @@ public class SchemaModificationSet {
 	 *            the dataset table.
 	 * @param relation
 	 *            the relation.
+	 * @param diff
+	 *            the column to differentiate when looping back. Optional.
 	 * @throws ValidationException
 	 *             if it cannot be done logically.
 	 */
 	public void setLoopbackRelation(final DataSetTable table,
-			final Relation relation) throws ValidationException {
-		this.setLoopbackRelation(table.getName(), relation);
+			final Relation relation, final Column diff)
+			throws ValidationException {
+		this.setLoopbackRelation(table.getName(), relation, diff);
 	}
 
 	private void setLoopbackRelation(final String tableName,
-			final Relation relation) throws ValidationException {
+			final Relation relation, final Column diff)
+			throws ValidationException {
 
 		// Check that the relation is a 1:M relation.
 		if (!relation.isOneToMany())
 			throw new ValidationException(Resources.get("subclassNotOneMany"));
 
 		if (!this.loopbackRelations.containsKey(tableName))
-			this.loopbackRelations.put(tableName, new HashSet());
-		final Collection masks = (Collection) this.loopbackRelations
-				.get(tableName);
-		masks.add(relation);
+			this.loopbackRelations.put(tableName, new HashMap());
+		final Map masks = (Map) this.loopbackRelations.get(tableName);
+		masks.put(relation, diff);
 	}
 
 	/**
@@ -773,9 +778,9 @@ public class SchemaModificationSet {
 	public void unsetLoopbackRelation(final DataSetTable table,
 			final Relation relation) throws ValidationException {
 		// Complain if asked to unmask globally masked relation.
-		final Collection globalIncs = (Collection) this.loopbackRelations
+		final Map globalIncs = (Map) this.loopbackRelations
 				.get(SchemaModificationSet.DATASET);
-		if (globalIncs != null && globalIncs.contains(relation))
+		if (globalIncs != null && globalIncs.containsKey(relation))
 			throw new ValidationException(Resources
 					.get("relationLoopedBackGlobally"));
 		this.unsetLoopbackRelation(table.getName(), relation);
@@ -787,8 +792,7 @@ public class SchemaModificationSet {
 		if (!this.isLoopbackRelation(tableName, relation))
 			return;
 		if (this.loopbackRelations.containsKey(tableName)) {
-			final Collection incs = (Collection) this.loopbackRelations
-					.get(tableName);
+			final Map incs = (Map) this.loopbackRelations.get(tableName);
 			incs.remove(relation);
 			if (incs.isEmpty())
 				this.loopbackRelations.remove(tableName);
@@ -814,12 +818,37 @@ public class SchemaModificationSet {
 
 	private boolean isLoopbackRelation(final String tableName,
 			final Relation relation) {
-		final Collection globalIncs = (Collection) this.loopbackRelations
+		final Map globalIncs = (Map) this.loopbackRelations
 				.get(SchemaModificationSet.DATASET);
-		final Collection incs = (Collection) this.loopbackRelations
-				.get(tableName);
-		return incs != null && incs.contains(relation) || globalIncs != null
-				&& globalIncs.contains(relation);
+		final Map incs = (Map) this.loopbackRelations.get(tableName);
+		return incs != null && incs.containsKey(relation) || globalIncs != null
+				&& globalIncs.containsKey(relation);
+	}
+
+	/**
+	 * Get the diff column for the loopbacked relation. May be null.
+	 * 
+	 * @param table
+	 *            the dataset table to check.
+	 * @param relation
+	 *            the relation.
+	 * @return the diff column.
+	 */
+	public Column getLoopbackRelation(final DataSetTable table,
+			final Relation relation) {
+		return this
+				.getLoopbackRelation(
+						table == null ? SchemaModificationSet.DATASET : table
+								.getName(), relation);
+	}
+
+	private Column getLoopbackRelation(final String tableName,
+			final Relation relation) {
+		final Map globalIncs = (Map) this.loopbackRelations
+				.get(SchemaModificationSet.DATASET);
+		final Map incs = (Map) this.loopbackRelations.get(tableName);
+		return (Column) (incs != null ? incs.get(relation) : globalIncs
+				.get(relation));
 	}
 
 	/**
@@ -1254,7 +1283,14 @@ public class SchemaModificationSet {
 		target.subclassedRelations.clear();
 		target.subclassedRelations.addAll(this.subclassedRelations);
 		target.loopbackRelations.clear();
-		target.loopbackRelations.putAll(this.loopbackRelations);
+		// We have to use an iterator because of nested maps.
+		for (final Iterator i = this.loopbackRelations.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			target.loopbackRelations.put(entry.getKey(), new HashMap());
+			((Map) target.loopbackRelations.get(entry.getKey()))
+					.putAll((Map) entry.getValue());
+		}
 		target.maskedRelations.clear();
 		target.maskedRelations.putAll(this.maskedRelations);
 		target.forceIncludeRelations.clear();

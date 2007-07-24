@@ -328,6 +328,12 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append((String) entry.getValue());
 			sb.append('\'');
 		}
+		if (action.getLoopbackDiffSource()!=null) {
+			sb.append(" and a.");
+			sb.append(action.getLoopbackDiffSource());
+			sb.append("!=b.");
+			sb.append(action.getLoopbackDiffTarget());
+		}
 
 		statements.add(sb.toString());
 	}

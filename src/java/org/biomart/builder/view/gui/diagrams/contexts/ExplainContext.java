@@ -404,16 +404,9 @@ public class ExplainContext extends SchemaContext {
 				.charAt(0));
 		loopback.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				if (loopback.isSelected())
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestLoopbackRelation(
-									ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation);
-				else
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestUnloopbackRelation(
-									ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation);
+				ExplainContext.this.getMartTab().getDataSetTabSet()
+						.requestLoopbackRelation(ExplainContext.this.dataset,
+								ExplainContext.this.datasetTable, relation);
 			}
 		});
 		contextMenu.add(loopback);

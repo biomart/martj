@@ -37,6 +37,7 @@ import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition
 import org.biomart.common.controller.CommonUtils;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -773,6 +774,8 @@ public class MartBuilderUtils {
 	 *            the dataset table to loopback the relation in.
 	 * @param relation
 	 *            the relation to loopback.
+	 * @param diff
+	 *            the optional differentiating column.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -781,10 +784,10 @@ public class MartBuilderUtils {
 	 *             if the operation is not allowed.
 	 */
 	public static void loopbackRelation(final DataSetTable datasetTable,
-			final Relation relation) throws SQLException, DataModelException,
-			ValidationException {
+			final Relation relation, final Column diff) throws SQLException,
+			DataModelException, ValidationException {
 		((DataSet) datasetTable.getSchema()).getSchemaModifications()
-				.setLoopbackRelation(datasetTable, relation);
+				.setLoopbackRelation(datasetTable, relation, diff);
 		((DataSet) datasetTable.getSchema()).synchronise();
 	}
 
@@ -796,6 +799,8 @@ public class MartBuilderUtils {
 	 *            the dataset to loopback the relation in.
 	 * @param relation
 	 *            the relation to loopback.
+	 * @param diff
+	 *            the optional differentiating column.
 	 * @throws SQLException
 	 *             if the dataset could not be synchronised.
 	 * @throws DataModelException
@@ -804,9 +809,9 @@ public class MartBuilderUtils {
 	 *             if the operation is not allowed.
 	 */
 	public static void loopbackRelation(final DataSet dataset,
-			final Relation relation) throws SQLException, DataModelException,
-			ValidationException {
-		dataset.getSchemaModifications().setLoopbackRelation(relation);
+			final Relation relation, final Column diff) throws SQLException,
+			DataModelException, ValidationException {
+		dataset.getSchemaModifications().setLoopbackRelation(relation, diff);
 		dataset.synchronise();
 	}
 

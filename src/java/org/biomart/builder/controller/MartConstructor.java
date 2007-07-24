@@ -64,6 +64,7 @@ import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Schema;
@@ -462,7 +463,7 @@ public interface MartConstructor {
 					this.issueAction(action);
 				}
 
-				if (tu instanceof JoinTable && !firstJoin) {
+				if (tu instanceof JoinTable && firstJoin) {
 					if (!droppedCols.isEmpty()
 							&& !dsTable.getType().equals(DataSetTableType.MAIN)) {
 						// If first join of non-MAIN table produced droppedCols
@@ -833,9 +834,13 @@ public interface MartConstructor {
 			else if (sourceTable.getSchema() == templateSchema)
 				schema = schemaPartition;
 			else {
-				for (final Iterator i = ((JDBCSchema) sourceTable.getSchema())
-						.getPartitions().entrySet().iterator(); i.hasNext()
-						&& schema == null;) {
+				final Map sParts = ((JDBCSchema) sourceTable.getSchema())
+				.getPartitions();
+				if (sParts.isEmpty())
+					schema = schemaPartition;
+				else
+				for (final Iterator i = sParts.entrySet().iterator(); i
+						.hasNext() && schema == null;) {
 					final Map.Entry entry = (Map.Entry) i.next();
 					if (entry.getValue().equals(schemaPrefix))
 						schema = (String) entry.getKey();
@@ -981,8 +986,12 @@ public interface MartConstructor {
 			if (ljtu.getTable().getSchema() == templateSchema)
 				rightSchema = schemaPartition;
 			else {
-				for (final Iterator i = ((JDBCSchema) ljtu.getTable()
-						.getSchema()).getPartitions().entrySet().iterator(); i
+				final Map ljParts = ((JDBCSchema) ljtu.getTable()
+						.getSchema()).getPartitions();
+				if (ljParts.isEmpty())
+					rightSchema = schemaPartition;
+				else
+				for (final Iterator i = ljParts.entrySet().iterator(); i
 						.hasNext()
 						&& rightSchema == null;) {
 					final Map.Entry entry = (Map.Entry) i.next();
@@ -1043,10 +1052,11 @@ public interface MartConstructor {
 				requiresFinalLeftJoin |= def.isHard();
 			}
 			// Don't add restriction if loopback relation from M end.
-			final boolean loopback = ljtu.getSchemaRelation().isOneToMany()
+			final boolean loopbackManyEnd = dataset.getSchemaModifications()
+					.isLoopbackRelation(dsTable, ljtu.getSchemaRelation())
 					&& ljtu.getSchemaSourceKey().equals(
-							ljtu.getSchemaRelation().getOneKey());
-			if (!loopback
+							ljtu.getSchemaRelation().getManyKey());
+			if (!loopbackManyEnd
 					&& dataset.getSchemaModifications().isRestrictedRelation(
 							dsTable, ljtu.getSchemaRelation(),
 							ljtu.getSchemaRelationIteration())) {
@@ -1062,6 +1072,27 @@ public interface MartConstructor {
 								ljtu.getSchemaSourceKey()));
 				action.setRelationRestriction(def);
 				requiresFinalLeftJoin |= def.isHard();
+			}
+			// If this is a loopback from the one end, add the optional
+			// differentiation column.
+			final boolean loopbackOneEnd = dataset.getSchemaModifications()
+					.isLoopbackRelation(dsTable, ljtu.getSchemaRelation())
+					&& ljtu.getSchemaSourceKey().equals(
+							ljtu.getSchemaRelation().getOneKey());
+			if (loopbackOneEnd) {
+				// Identify the differentiation column.
+				final Column diffCol = dataset.getSchemaModifications()
+						.getLoopbackRelation(dsTable, ljtu.getSchemaRelation());
+				if (diffCol != null) {
+					// Identify the differentiation column from the
+					// previous unit's selected columns.
+					final String prevDsColName = ljtu.getPreviousUnit()
+							.getDataSetColumnFor(diffCol).getPartitionedName();
+					// Add both to the transformation unit to become
+					// a new restriction later.
+					action.setLoopbackDiffSource(prevDsColName);
+					action.setLoopbackDiffTarget(diffCol.getName());
+				}
 			}
 			this.issueAction(action);
 			return requiresFinalLeftJoin;

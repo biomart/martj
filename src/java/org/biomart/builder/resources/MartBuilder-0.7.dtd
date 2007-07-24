@@ -120,6 +120,7 @@ renamedColumn*,distinctRows*)>
 <!ELEMENT loopbackRelation EMPTY>
 <!ATTLIST loopbackRelation tableKey CDATA #REQUIRED>
 <!ATTLIST loopbackRelation relationId IDREF #REQUIRED>
+<!ATTLIST loopbackRelation diffColumnId IDREF #REQUIRED>
 
 <!ELEMENT forcedRelation EMPTY>
 <!ATTLIST forcedRelation tableKey CDATA #REQUIRED>
