@@ -597,7 +597,7 @@ public interface MartConstructor {
 			for (final Iterator x = dsTable.getColumns().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
-				if (col.isRequiredFinal())
+				if (col.isRequiredInterim())
 					rightSelectCols.add(col.getPartitionedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
