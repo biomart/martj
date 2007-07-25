@@ -871,8 +871,7 @@ public class SchemaTabSet extends JTabbedPane {
 						// user can edit it and retry syncing it, rather
 						// than
 						// having to add it all over again.
-						// Create and add the tab representing this schema.
-						SchemaTabSet.this.addSchemaTab(schema, true);
+						SchemaTabSet.this.recalculateSchemaDiagram(schema);
 
 						// Update the modified status for this tabset.
 						SchemaTabSet.this.martTab.getMartTabSet()
