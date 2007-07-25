@@ -1393,8 +1393,6 @@ public class DataSet extends GenericSchema {
 		 * @return <tt>true</tt> if it is.
 		 */
 		public boolean isRequiredFinal() {
-			if (this.keyDependency)
-				return true;
 			final DataSetModificationSet mods = ((DataSet) this.getTable()
 					.getSchema()).getDataSetModifications();
 			// If appears in aliases on any group-by expression column
