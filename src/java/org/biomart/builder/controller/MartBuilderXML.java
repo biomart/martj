@@ -661,6 +661,9 @@ public class MartBuilderXML extends DefaultHandler {
 			externalRelations.addAll(schema.getRelations());
 		}
 
+		// Write out relations.
+		this.writeRelations(externalRelations, true, xmlWriter);
+
 		// Write out datasets.
 		for (final Iterator dsi = mart.getDataSets().iterator(); dsi.hasNext();) {
 			final DataSet ds = (DataSet) dsi.next();
@@ -1107,11 +1110,6 @@ public class MartBuilderXML extends DefaultHandler {
 			// Finish dataset partition table.
 			this.closeElement("datasetPartitionTable", xmlWriter);
 		}
-
-		// Write out relations. Must come last as datasets themselves
-		// can have relations, and the datasets would not be defined until
-		// this point has been reached.
-		this.writeRelations(externalRelations, true, xmlWriter);
 
 		// Finished! Close the mart tag.
 		this.closeElement("mart", xmlWriter);

@@ -1208,8 +1208,8 @@ public class DataSetTabSet extends JTabbedPane {
 		// Work out if it is already compounded.
 		final boolean isLooped = ds.getSchemaModifications()
 				.isLoopbackRelation(dst, relation);
-		final Column loopedCol = ds.getSchemaModifications()
-				.getLoopbackRelation(dst, relation);
+		final Column loopedCol = isLooped ? ds.getSchemaModifications()
+				.getLoopbackRelation(dst, relation) : null;
 
 		// Pop up a dialog and update 'compound'.
 		final LoopbackRelationDialog dialog = new LoopbackRelationDialog(

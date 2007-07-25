@@ -390,7 +390,7 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(mask);
-		if (incorrect || relationCompounded || !relationMasked
+		if (incorrect || !relationMasked
 				&& !relationIncluded)
 			mask.setEnabled(false);
 		if (relationMasked)

@@ -1036,16 +1036,16 @@ public class DataSet extends GenericSchema {
 								nextNameCols.add(usefulPart.getPartitionTable()
 										.getSelectedColumn(
 												prow.getNamePartitionCol()));
-								for (int k = 0; k < childCompounded; k++) {
-									final List nextList = new ArrayList(
-											nameColSuffixes);
-									nextList.add("" + k);
-									nextNameColSuffixes.put("" + k, nextList);
-								}
 							} else
 								childCompounded = 1;
 						}
 					}
+				for (int k = 1; k <= childCompounded; k++) {
+					final List nextList = new ArrayList(
+							nameColSuffixes);
+					nextList.add("" + k);
+					nextNameColSuffixes.put("" + k, nextList);
+				}
 				// Insert first one at next position in queue
 				// after current position. This creates multiple
 				// top-down paths, rather than sideways-spanning trees of

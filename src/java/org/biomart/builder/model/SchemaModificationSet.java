@@ -847,8 +847,8 @@ public class SchemaModificationSet {
 		final Map globalIncs = (Map) this.loopbackRelations
 				.get(SchemaModificationSet.DATASET);
 		final Map incs = (Map) this.loopbackRelations.get(tableName);
-		return (Column) (incs != null ? incs.get(relation) : globalIncs
-				.get(relation));
+		return (Column) (incs != null ? incs.get(relation)
+				: (globalIncs != null ? globalIncs.get(relation) : null));
 	}
 
 	/**

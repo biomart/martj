@@ -22,7 +22,7 @@
 # since: 0.1
 -->
 
-<!ELEMENT mart (jdbcSchema+,dataset*,relation*)>
+<!ELEMENT mart (jdbcSchema+,relation*,dataset*)>
 <!ATTLIST mart outputSchema CDATA #IMPLIED>
 <!ATTLIST mart outputHost CDATA #IMPLIED>
 <!ATTLIST mart outputPort CDATA #IMPLIED>
