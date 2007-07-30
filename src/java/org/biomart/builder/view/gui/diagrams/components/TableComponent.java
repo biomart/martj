@@ -63,6 +63,11 @@ public class TableComponent extends BoxShapedComponent {
 	 * Border colour for all unpartitioned tables.
 	 */
 	public static Color NORMAL_COLOUR = Color.BLACK;
+	
+	/**
+	 * Border colour for all ignored tables.
+	 */
+	public static Color IGNORE_COLOUR = Color.RED;
 
 	/**
 	 * Border colour for masked tables.

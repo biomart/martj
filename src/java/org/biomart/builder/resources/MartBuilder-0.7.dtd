@@ -49,6 +49,7 @@
 <!ELEMENT table (column+,primaryKey?,foreignKey*)>
 <!ATTLIST table id ID #REQUIRED>
 <!ATTLIST table name CDATA #REQUIRED>
+<!ATTLIST table ignore (true|false) #IMPLIED>
 
 <!ELEMENT column EMPTY>
 <!ATTLIST column id ID #REQUIRED>
@@ -75,6 +76,7 @@ renamedColumn*,distinctRows*)>
 <!ATTLIST dataset optimiser (COLUMN|COLUMN_INHERIT|COLUMN_BOOL|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL|COLUMN_BOOL_NULL_INHERIT|TABLE|TABLE_INHERIT|TABLE_BOOL|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
 <!ATTLIST dataset indexOptimiser (true|false) #REQUIRED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
+<!ATTLIST dataset masked (true|false) #IMPLIED>
 
 <!ELEMENT subclassRelation EMPTY>
 <!ATTLIST subclassRelation relationId IDREF #REQUIRED>

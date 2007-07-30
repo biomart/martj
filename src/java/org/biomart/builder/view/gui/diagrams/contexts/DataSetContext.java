@@ -113,7 +113,7 @@ public class DataSetContext extends SchemaContext {
 
 			// Fade MASKED DIMENSION relations.
 			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					target)) {
+					target) || this.getDataSet().isMasked()) {
 				component.setVisible(!this.hideMasked);
 				component.setForeground(RelationComponent.MASKED_COLOUR);
 			}
@@ -150,6 +150,10 @@ public class DataSetContext extends SchemaContext {
 				component.setVisible(!this.hideMasked);
 				component.setForeground(TableComponent.MASKED_COLOUR);
 			}
+			
+			// Fade MASKED datasets.
+			else if (this.getDataSet().isMasked())
+				((TableComponent)component).setForeground(TableComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION tables.
 			else if (this.getDataSet().getSchemaModifications()
@@ -163,6 +167,7 @@ public class DataSetContext extends SchemaContext {
 				((TableComponent) component).setCompounded(this.dataset
 						.getSchemaModifications().isCompoundRelation(null,
 								((DataSetTable) object).getFocusRelation()));
+			
 			else
 				component.setForeground(TableComponent.NORMAL_COLOUR);
 

@@ -80,6 +80,30 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Ignore a table.
+	 * 
+	 * @param table
+	 *            the table to ignore.
+	 * @param ignore
+	 *            ignore it?
+	 */
+	public static void ignoreTable(final Table table, final boolean ignore) {
+		table.setIgnore(ignore);
+	}
+
+	/**
+	 * Mask a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to mask.
+	 * @param masked
+	 *            mask it?
+	 */
+	public static void maskDataSet(final DataSet dataset, final boolean masked) {
+		dataset.setMasked(masked);
+	}
+
+	/**
 	 * Attempts to create a foreign key on a table given a set of columns. The
 	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
 	 * 

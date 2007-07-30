@@ -282,6 +282,23 @@ public interface Schema extends Comparable, DataLink {
 	public Map getPartitions() throws SQLException;
 
 	/**
+	 * Return the first n rows for a table starting from a given offset.
+	 * 
+	 * @param table
+	 *            the table to get rows from.
+	 * @param offset
+	 *            the offset to start selecting from.
+	 * @param count
+	 *            the number of rows to select.
+	 * @return the rows. The list will be empty if the operation is not
+	 *         possible.
+	 * @throws SQLException
+	 *             if anything goes wrong.
+	 */
+	public List getRows(final Table table, final int offset, final int count)
+			throws SQLException;
+
+	/**
 	 * Retrieve the regex used to work out schema partitions. If this regex is
 	 * <tt>null</tt> then no partitioning will be done.
 	 * 
@@ -348,6 +365,11 @@ public interface Schema extends Comparable, DataLink {
 		private final Set internalRelations = new HashSet();
 
 		private final Set externalRelations = new HashSet();
+
+		public List getRows(final Table table, final int offset, final int count)
+				throws SQLException {
+			return Collections.EMPTY_LIST;
+		}
 
 		public String getPartitionRegex() {
 			return this.partitionRegex;
@@ -808,6 +830,38 @@ public interface Schema extends Comparable, DataLink {
 			} finally {
 				super.finalize();
 			}
+		}
+
+		public List getRows(final Table table, final int offset, final int count)
+				throws SQLException {
+			final String tableName = table.getName();
+
+			// Build up a list of column names.
+			final StringBuffer colNames = new StringBuffer();
+			for (final Iterator i = table.getColumns().iterator(); i.hasNext();) {
+				colNames.append(((Column) i.next()).getName());
+				if (i.hasNext())
+					colNames.append(',');
+			}
+
+			// The simple case where we actually do a select.
+			final List results = new ArrayList();
+			final String schemaName = this.getDatabaseSchema();
+			final Connection conn = this.getConnection(null);
+			final ResultSet rs = conn.prepareStatement(
+					"select " + colNames.toString() + " from " + schemaName
+							+ "." + tableName).executeQuery();
+			int rowCount = 0;
+			while (rs.next() && rowCount++ < offset + count) {
+				if (rowCount < offset)
+					continue;
+				final List values = new ArrayList();
+				for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++)
+					values.add(rs.getObject(i));
+				results.add(values);
+			}
+			rs.close();
+			return results;
 		}
 
 		public Map getPartitions() throws SQLException {
@@ -1549,7 +1603,7 @@ public interface Schema extends Comparable, DataLink {
 						this.schemaName = this.schemaName.toUpperCase();
 				}
 				if (!rs.isBeforeFirst()) {
-					rs = dmd.getTables(catalog, this.schemaName.toUpperCase(),
+					rs = dmd.getTables(catalog, this.schemaName.toLowerCase(),
 							"%", null);
 					if (rs.isBeforeFirst())
 						this.schemaName = this.schemaName.toLowerCase();

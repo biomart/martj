@@ -467,9 +467,10 @@ public class MartTabSet extends JTabbedPane {
 		final Mart mart = currentMartTab.getMart();
 		final Collection datasets = new ArrayList(mart.getDataSets());
 		// Remove partition table datasets from the list.
+		// Also remove masked datasets.
 		for (final Iterator i = datasets.iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
-			if (ds.isPartitionTable())
+			if (ds.isPartitionTable() || ds.isMasked())
 				i.remove();
 		}
 		if (datasets.size() == 0)

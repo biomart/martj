@@ -147,6 +147,7 @@ Incorrect keys and relations (if any)
 
 Additional/modified keys and relations (if any)
 -----------------------------------------------
+<xsl:apply-templates select="./table[@ignore='true']"/>
 <xsl:apply-templates select="./table/primaryKey[@status='INFERRED_INCORRECT']"/> 
 <xsl:apply-templates select="./table/foreignKey[@status='INFERRED_INCORRECT']"/> 
 <xsl:apply-templates select="./relation[@status='INFERRED_INCORRECT']"/> 
@@ -166,6 +167,11 @@ Key:
   Table: <xsl:value-of select="../@name"/> 
   Columns: [<xsl:call-template name="idsToNames"><xsl:with-param name="str" select="@columnIds"/></xsl:call-template>]</xsl:template>
 
+<!-- TABLES -->
+<xsl:template match="table">
+Table:
+   Name: <xsl:value-of select="@name"/>
+   Ignore?: <xsl:value-of select="@ignore"/></xsl:template>
 
 <!-- RELATIONS -->
 <xsl:template match="relation">
@@ -187,6 +193,7 @@ Focused on:
 Optimiser type: <xsl:value-of select="@optimiser"/>
 Optimisers indexed?: <xsl:value-of select="@indexOptimiser"/>
 Invisible?: <xsl:value-of select="@invisible"/>
+Masked?: <xsl:value-of select="@masked"/>
 
 Dataset-wide modifications (if-any)
 ------------------------------------

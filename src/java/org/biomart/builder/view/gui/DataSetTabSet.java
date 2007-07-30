@@ -1280,6 +1280,32 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks that a dataset be (un)masked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param masked
+	 *            mask it?
+	 */
+	public void requestMaskDataSet(final DataSet ds, final boolean masked) {
+		new LongProcess() {
+			public void run() throws Exception {
+				MartBuilderUtils.maskDataSet(ds, masked);
+
+				// And the overview.
+				DataSetTabSet.this.repaintDataSetDiagram(ds, null);
+
+				// And the overview.
+				DataSetTabSet.this.repaintOverviewDiagram();
+
+				// Update the modified status for this tabset.
+				DataSetTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
+			}
+		}.start();
+	}
+
+	/**
 	 * Asks that a relation be forced.
 	 * 
 	 * @param ds

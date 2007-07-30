@@ -137,6 +137,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem invisibleDataset;
 
+		private JMenuItem maskedDataset;
+
 		private JMenuItem explainDataset;
 
 		private JMenuItem saveDatasetDDL;
@@ -342,6 +344,13 @@ public class MartBuilder extends BioMartGUI {
 					"invisibleDataSetMnemonic").charAt(0));
 			this.invisibleDataset.addActionListener(this);
 
+			// Masked.
+			this.maskedDataset = new JCheckBoxMenuItem(Resources
+					.get("maskedDataSetTitle"));
+			this.maskedDataset.setMnemonic(Resources.get(
+					"maskedDataSetMnemonic").charAt(0));
+			this.maskedDataset.addActionListener(this);
+
 			// Partition dataset.
 			this.partitionDSWizard = new JMenuItem(Resources
 					.get("partitionWizardDataSetTitle"));
@@ -492,6 +501,7 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.add(this.removeAllDatasets);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.invisibleDataset);
+			datasetMenu.add(this.maskedDataset);
 			datasetMenu.add(this.partitionDSWizard);
 			datasetMenu.add(this.optimiseDatasetSubmenu);
 			datasetMenu.addSeparator();
@@ -687,7 +697,11 @@ public class MartBuilder extends BioMartGUI {
 					MartBuilderMenuBar.this.invisibleDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.invisibleDataset
-							.setSelected(ds != null && ds.getInvisible());
+							.setSelected(ds != null && ds.isInvisible());
+					MartBuilderMenuBar.this.maskedDataset
+							.setEnabled(ds != null);
+					MartBuilderMenuBar.this.maskedDataset
+							.setSelected(ds != null && ds.isMasked());
 					MartBuilderMenuBar.this.partitionDSWizard
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.explainDataset
@@ -846,6 +860,13 @@ public class MartBuilder extends BioMartGUI {
 				else
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getDataSetTabSet().requestVisibleDataSet(ds);
+			} else if (e.getSource() == this.maskedDataset) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestMaskDataSet(ds,
+								this.maskedDataset.isSelected());
 			} else if (e.getSource() == this.partitionDSWizard) {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()

@@ -95,6 +95,8 @@ public class DataSet extends GenericSchema {
 
 	private boolean invisible;
 
+	private boolean masked;
+
 	private boolean isPartitionTable;
 
 	private PartitionTable partitionTable;
@@ -896,6 +898,11 @@ public class DataSet extends GenericSchema {
 							ComponentStatus.INFERRED_INCORRECT))
 				continue;
 
+			// Don't follow relations to ignored tables.
+			if (r.getOtherKey(r.getKeyForTable(mergeTable)).getTable()
+					.isIgnore())
+				continue;
+
 			// Decrement the relation counter.
 			relationCount.put(r, new Integer(((Integer) relationCount.get(r))
 					.intValue() - 1));
@@ -1041,8 +1048,7 @@ public class DataSet extends GenericSchema {
 						}
 					}
 				for (int k = 1; k <= childCompounded; k++) {
-					final List nextList = new ArrayList(
-							nameColSuffixes);
+					final List nextList = new ArrayList(nameColSuffixes);
 					nextList.add("" + k);
 					nextNameColSuffixes.put("" + k, nextList);
 				}
@@ -1142,8 +1148,17 @@ public class DataSet extends GenericSchema {
 	 * 
 	 * @return <tt>true</tt> if it is invisible, <tt>false</tt> otherwise.
 	 */
-	public boolean getInvisible() {
+	public boolean isInvisible() {
 		return this.invisible;
+	}
+
+	/**
+	 * Test to see if this dataset is masked.
+	 * 
+	 * @return <tt>true</tt> if it is masked, <tt>false</tt> otherwise.
+	 */
+	public boolean isMasked() {
+		return this.masked;
 	}
 
 	/**
@@ -1217,6 +1232,17 @@ public class DataSet extends GenericSchema {
 	public void setInvisible(final boolean invisible) {
 		Log.debug("Setting invisible flag in " + this.getName());
 		this.invisible = invisible;
+	}
+
+	/**
+	 * Sets the maskedness of this dataset.
+	 * 
+	 * @param masked
+	 *            <tt>true</tt> if it is masked, <tt>false</tt> otherwise.
+	 */
+	public void setMasked(final boolean masked) {
+		Log.debug("Setting masked flag in " + this.getName());
+		this.masked = masked;
 	}
 
 	/**

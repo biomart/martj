@@ -549,6 +549,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.openElement("table", xmlWriter);
 			this.writeAttribute("id", tableMappedID, xmlWriter);
 			this.writeAttribute("name", table.getName(), xmlWriter);
+			this.writeAttribute("ignore", Boolean
+					.toString(table.isIgnore()), xmlWriter);
 
 			// Write out columns inside each table.
 			for (final Iterator ci = table.getColumns().iterator(); ci
@@ -681,7 +683,9 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("optimiser", ds.getDataSetOptimiserType()
 					.getName(), xmlWriter);
 			this.writeAttribute("invisible", Boolean
-					.toString(ds.getInvisible()), xmlWriter);
+					.toString(ds.isInvisible()), xmlWriter);
+			this.writeAttribute("masked", Boolean
+					.toString(ds.isMasked()), xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
 
@@ -1275,11 +1279,14 @@ public class MartBuilderXML extends DefaultHandler {
 			// Get the name and id as these are common features.
 			final String id = (String) attributes.get("id");
 			final String name = (String) attributes.get("name");
+			final boolean ignore = Boolean.valueOf(
+					(String) attributes.get("ignore")).booleanValue();
 
 			// Generic schema?
 			if (schema instanceof GenericSchema)
 				try {
 					final Table table = new GenericTable(name, schema);
+					table.setIgnore(ignore);
 					schema.addTable(table);
 					element = table;
 				} catch (final Exception e) {
@@ -1999,6 +2006,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String name = (String) attributes.get("name");
 				final boolean invisible = Boolean.valueOf(
 						(String) attributes.get("invisible")).booleanValue();
+				final boolean masked = Boolean.valueOf(
+						(String) attributes.get("masked")).booleanValue();
 				final Table centralTable = (Table) this.mappedObjects
 						.get(attributes.get("centralTableId"));
 				final String optType = (String) attributes.get("optimiser");
@@ -2047,6 +2056,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// schema settings.
 				ds.setDataSetOptimiserType(opt);
 				ds.setInvisible(invisible);
+				ds.setMasked(masked);
 				ds.setIndexOptimiser(index);
 				element = ds;
 			} catch (final Exception e) {

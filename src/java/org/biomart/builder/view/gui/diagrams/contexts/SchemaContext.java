@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -82,6 +83,14 @@ public class SchemaContext implements DiagramContext {
 		if (object instanceof Table) {
 			final TableComponent tblcomp = (TableComponent) component;
 			tblcomp.setRestricted(false);
+
+			// Fade out all ignored tables.
+			if (((Table) object).isIgnore())
+				component.setForeground(TableComponent.IGNORE_COLOUR);
+
+			// All others are normal.
+			else
+				component.setForeground(TableComponent.NORMAL_COLOUR);
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.
@@ -99,8 +108,11 @@ public class SchemaContext implements DiagramContext {
 			// Is it loopback?
 			((RelationComponent) component).setLoopback(false);
 
-			// Fade out all INFERRED_INCORRECT relations.
-			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+			// Fade out all INFERRED_INCORRECT relations and those which
+			// head to ignored tables.
+			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
+					|| relation.getFirstKey().getTable().isIgnore()
+					|| relation.getSecondKey().getTable().isIgnore())
 				component.setForeground(RelationComponent.INCORRECT_COLOUR);
 
 			// Highlight all HANDMADE relations.
@@ -170,6 +182,21 @@ public class SchemaContext implements DiagramContext {
 			// Separator.
 			contextMenu.addSeparator();
 
+			// Menu option to show first few rows.
+			final JMenuItem showRows = new JMenuItem(Resources.get(
+					"showRowsTitle", table.getName()));
+			showRows.setMnemonic(Resources.get("showRowsMnemonic").charAt(0));
+			showRows.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getSchemaTabSet()
+							.requestShowRows(table, 0, 10);
+				}
+			});
+			contextMenu.add(showRows);
+
+			// Separator.
+			contextMenu.addSeparator();
+
 			// Menu item to create a primary key. If it already has one, disable
 			// the option.
 			final JMenuItem pk = new JMenuItem(Resources
@@ -196,6 +223,22 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(fk);
+
+			// Separator.
+			contextMenu.addSeparator();
+
+			// Menu item to ignore the entire table.
+			final JCheckBoxMenuItem ignore = new JCheckBoxMenuItem(Resources
+					.get("ignoreTableTitle"));
+			ignore.setMnemonic(Resources.get("ignoreTableMnemonic").charAt(0));
+			ignore.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getSchemaTabSet()
+							.requestIgnoreTable(table, ignore.isSelected());
+				}
+			});
+			ignore.setSelected(table.isIgnore());
+			contextMenu.add(ignore);
 		}
 
 		// Relations have their own menus too.

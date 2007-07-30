@@ -223,6 +223,18 @@ public interface Table extends Comparable {
 	 *            the new primary key of this table.
 	 */
 	public void setPrimaryKey(PrimaryKey primaryKey);
+	
+	/**
+	 * Ignore this table?
+	 * @param ignore <tt>true</tt> if this table is to be ignored.
+	 */
+	public void setIgnore(final boolean ignore);
+	
+	/**
+	 * Ignore this table?
+	 * @return <tt>true</tt> if this table is to be ignored.
+	 */
+	public boolean isIgnore();
 
 	/**
 	 * The generic implementation of table provides basic methods for working
@@ -248,6 +260,8 @@ public interface Table extends Comparable {
 		private final Set internalRelations = new HashSet();
 
 		private final Set externalRelations = new HashSet();
+		
+		private boolean ignore = false;
 
 		/**
 		 * The constructor sets up an empty table representation with the given
@@ -271,6 +285,14 @@ public interface Table extends Comparable {
 			this.name = name;
 		}
 
+		public void setIgnore(final boolean ignore) {
+			this.ignore = ignore;
+		}
+		
+		public boolean isIgnore() {
+			return this.ignore;
+		}
+		
 		public void addRelation(final Relation relation) {
 			this.relations.add(relation);
 			if (relation.isExternal())

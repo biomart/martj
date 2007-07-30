@@ -72,7 +72,9 @@ public class AllDataSetsContext implements DiagramContext {
 			// Set the background colour.
 			if (((DataSet) object).isPartitionTable())
 				component.setBackground(DataSetComponent.PARTITION_BACKGROUND);
-			else if (((DataSet) object).getInvisible())
+			else if (((DataSet) object).isMasked())
+				component.setBackground(DataSetComponent.MASKED_BACKGROUND);
+			else if (((DataSet) object).isInvisible())
 				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else
 				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);

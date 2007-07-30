@@ -55,7 +55,7 @@ public class DataSetComponent extends BoxShapedComponent {
 	/**
 	 * Background for invisible datasets.
 	 */
-	public static Color INVISIBLE_BACKGROUND = Color.LIGHT_GRAY;
+	public static Color INVISIBLE_BACKGROUND = Color.WHITE;
 
 	/**
 	 * Background for visible datasets.
@@ -66,6 +66,11 @@ public class DataSetComponent extends BoxShapedComponent {
 	 * Background for partition datasets.
 	 */
 	public static Color PARTITION_BACKGROUND = Color.RED;
+
+	/**
+	 * Background for masked datasets.
+	 */
+	public static Color MASKED_BACKGROUND = Color.LIGHT_GRAY;
 
 	private GridBagConstraints constraints;
 
@@ -207,8 +212,23 @@ public class DataSetComponent extends BoxShapedComponent {
 									DataSetComponent.this.getDataSet());
 			}
 		});
-		invisible.setSelected(this.getDataSet().getInvisible());
+		invisible.setSelected(this.getDataSet().isInvisible());
 		contextMenu.add(invisible);
+
+		// Masked menu option.
+		final JMenuItem masked = new JCheckBoxMenuItem(Resources
+				.get("maskedDataSetTitle"));
+		masked.setMnemonic(Resources.get("maskedDataSetMnemonic").charAt(0));
+		masked.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				DataSetComponent.this.getDiagram().getMartTab()
+						.getDataSetTabSet().requestMaskDataSet(
+								DataSetComponent.this.getDataSet(),
+								masked.isSelected());
+			}
+		});
+		masked.setSelected(this.getDataSet().isMasked());
+		contextMenu.add(masked);
 
 		// Return it. Will be further adapted by a listener elsewhere.
 		return contextMenu;
