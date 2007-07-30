@@ -398,7 +398,8 @@ public class DataSetTabSet extends JTabbedPane {
 		for (final Iterator i = this.martTab.getMart().getDataSets().iterator(); i
 				.hasNext();) {
 			final DataSet dataset = (DataSet) i.next();
-			if (!this.datasetToDiagram[0].contains(dataset))
+			if (!this.datasetToDiagram[0].contains(dataset)
+					&& !dataset.isMasked())
 				this.addDataSetTab(dataset, false);
 		}
 
@@ -408,7 +409,8 @@ public class DataSetTabSet extends JTabbedPane {
 		final List ourDataSets = new ArrayList(this.datasetToDiagram[0]);
 		for (final Iterator i = ourDataSets.iterator(); i.hasNext();) {
 			final DataSet dataset = (DataSet) i.next();
-			if (!this.martTab.getMart().getDataSets().contains(dataset))
+			if (!this.martTab.getMart().getDataSets().contains(dataset)
+					|| dataset.isMasked())
 				this.removeDataSetTab(dataset, false);
 		}
 	}
@@ -1292,8 +1294,11 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() throws Exception {
 				MartBuilderUtils.maskDataSet(ds, masked);
 
-				// And the overview.
+				// And the diagram.
 				DataSetTabSet.this.repaintDataSetDiagram(ds, null);
+
+				// And the tabs.
+				DataSetTabSet.this.recalculateDataSetTabs();
 
 				// And the overview.
 				DataSetTabSet.this.repaintOverviewDiagram();

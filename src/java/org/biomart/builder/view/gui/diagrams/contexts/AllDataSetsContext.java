@@ -18,19 +18,14 @@
 
 package org.biomart.builder.view.gui.diagrams.contexts;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Collection;
-import java.util.Iterator;
 
 import javax.swing.JComponent;
-import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
-import org.biomart.common.resources.Resources;
 
 /**
  * Provides the context menus and colour schemes to use when viewing the all
@@ -91,42 +86,7 @@ public class AllDataSetsContext implements DiagramContext {
 
 	public void populateMultiContextMenu(final JPopupMenu contextMenu,
 			final Collection selectedItems, final Class clazz) {
-		// Menu for multiple dataset objects.
-		if (DataSet.class.isAssignableFrom(clazz)) {
-			// Visible.
-			final JMenuItem visible = new JMenuItem(Resources
-					.get("uninvisibleGroupDataSetTitle"));
-			visible.setMnemonic(Resources
-					.get("uninvisibleGroupDataSetMnemonic").charAt(0));
-			visible.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					for (final Iterator i = selectedItems.iterator(); i
-							.hasNext();) {
-						final DataSet ds = (DataSet) i.next();
-						AllDataSetsContext.this.getMartTab().getDataSetTabSet()
-								.requestVisibleDataSet(ds);
-					}
-				}
-			});
-			contextMenu.add(visible);
-
-			// Invisible.
-			final JMenuItem invisible = new JMenuItem(Resources
-					.get("invisibleGroupDataSetTitle"));
-			invisible.setMnemonic(Resources
-					.get("invisibleGroupDataSetMnemonic").charAt(0));
-			invisible.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					for (final Iterator i = selectedItems.iterator(); i
-							.hasNext();) {
-						final DataSet ds = (DataSet) i.next();
-						AllDataSetsContext.this.getMartTab().getDataSetTabSet()
-								.requestInvisibleDataSet(ds);
-					}
-				}
-			});
-			contextMenu.add(invisible);
-		}
+		// Nothing else to do.
 	}
 
 	public void populateContextMenu(final JPopupMenu contextMenu,

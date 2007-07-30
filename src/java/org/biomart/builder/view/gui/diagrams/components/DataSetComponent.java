@@ -110,7 +110,8 @@ public class DataSetComponent extends BoxShapedComponent {
 	protected void processMouseEvent(final MouseEvent evt) {
 		boolean eventProcessed = false;
 		// Is it a right-click?
-		if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() >= 2) {
+		if (evt.getButton() == MouseEvent.BUTTON1 && evt.getClickCount() >= 2
+				&& !this.getDataSet().isMasked()) {
 			final int index = DataSetComponent.this.getDiagram().getMartTab()
 					.getDataSetTabSet().indexOfTab(
 							DataSetComponent.this.getDataSet().getName());
@@ -146,6 +147,7 @@ public class DataSetComponent extends BoxShapedComponent {
 						.getDataSetTabSet().setSelectedIndex(index);
 			}
 		});
+		showTables.setEnabled(!this.getDataSet().isMasked());
 		contextMenu.add(showTables);
 
 		// Add a separator.
