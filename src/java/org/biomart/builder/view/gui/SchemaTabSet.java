@@ -772,7 +772,8 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestIgnoreTable(final Table table, final boolean ignored) {
 		new LongProcess() {
 			public void run() throws Exception {
-				MartBuilderUtils.ignoreTable(table, ignored);
+				MartBuilderUtils.ignoreTable(SchemaTabSet.this.getMartTab()
+						.getMart(), table, ignored);
 
 				// And the overview.
 				SchemaTabSet.this.repaintSchemaDiagram(table.getSchema());

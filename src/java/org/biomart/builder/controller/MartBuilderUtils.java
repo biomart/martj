@@ -82,13 +82,21 @@ public class MartBuilderUtils {
 	/**
 	 * Ignore a table.
 	 * 
+	 * @param mart
+	 *            the mart we are working with.
 	 * @param table
 	 *            the table to ignore.
 	 * @param ignore
 	 *            ignore it?
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
 	 */
-	public static void ignoreTable(final Table table, final boolean ignore) {
+	public static void ignoreTable(final Mart mart, final Table table,
+			final boolean ignore) throws SQLException, DataModelException {
 		table.setIgnore(ignore);
+		mart.synchroniseDataSets(table.getSchema());
 	}
 
 	/**
