@@ -1829,7 +1829,7 @@ System.out.println ("getting driver "+ driver);
 				String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
 				if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
 					dsv.setVersion(newDatasetVersion);
-					if (dsv.getDisplayName().indexOf("(") > 0){
+					if (dsv.getDisplayName()!=null && dsv.getDisplayName().indexOf("(") > 0){
 						String newDisplayName = dsv.getDisplayName().split("\\(")[0]+"("+newDatasetVersion+")";
 						dsv.setDisplayName(newDisplayName);
 					}
