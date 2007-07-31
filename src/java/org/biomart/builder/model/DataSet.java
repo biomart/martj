@@ -834,8 +834,8 @@ public class DataSet extends GenericSchema {
 			// Add partitioning prefixes.
 			for (int k = 0; k < nameCols.size(); k++) {
 				final PartitionColumn pcol = (PartitionColumn) nameCols.get(k);
-				final String suffix = (String) nameColSuffixes.get(k);
-				colName = pcol.getName() + "#" + suffix
+				final String suffix = nameColSuffixes.size()<=k? "" : ("#" + (String) nameColSuffixes.get(k));
+				colName = pcol.getName() + suffix
 						+ Resources.get("columnnameSep") + colName;
 			}
 			final WrappedColumn wc = new WrappedColumn(c, colName, dsTable,
