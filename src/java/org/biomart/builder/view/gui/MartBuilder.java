@@ -22,8 +22,10 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.ButtonGroup;
@@ -594,12 +596,15 @@ public class MartBuilder extends BioMartGUI {
 					while (fileMenu.getMenuComponentCount() > firstRecentFileEntry)
 						fileMenu.remove(fileMenu
 								.getMenuComponent(firstRecentFileEntry));
-					final Collection names = Settings
+					final List names = Settings
 							.getHistoryNamesForClass(MartTabSet.class);
-					int position = 1;
-					if (names.size() > 1)
-						fileMenu.addSeparator();
-					for (final Iterator i = names.iterator(); i.hasNext(); position++) {
+					// We have to build this and reverse it separately 
+					// else the action of getting properties moves each
+					// item to the top of the recently-accessed list, and
+					// therefore flips the entire list at each menu request.
+					final List newItems = new ArrayList();
+					int position = names.size();
+					for (final Iterator i = names.iterator(); i.hasNext(); position--) {
 						final String name = (String) i.next();
 						final File location = new File((String) Settings
 								.getHistoryProperties(MartTabSet.class, name)
@@ -613,7 +618,14 @@ public class MartBuilder extends BioMartGUI {
 										.requestLoadMart(location);
 							}
 						});
-						fileMenu.add(file);
+						newItems.add(file);
+					}
+					if (newItems.size() > 1) {
+						fileMenu.addSeparator();
+						Collections.reverse(newItems);
+						for (final Iterator i = newItems.iterator(); i
+								.hasNext();)
+							fileMenu.add((JMenuItem) i.next());
 					}
 				}
 			});

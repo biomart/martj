@@ -21,12 +21,12 @@ package org.biomart.common.resources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -44,8 +44,8 @@ import java.util.Properties;
  * <tt>cache</tt> should be left alone.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public class Settings {
@@ -205,10 +205,11 @@ public class Settings {
 	 * @return the names of the properties sets in the history that match that
 	 *         class. May be empty but never <tt>null</tt>.
 	 */
-	public static Collection getHistoryNamesForClass(final Class clazz) {
+	public static List getHistoryNamesForClass(final Class clazz) {
 		final Map map = (Map) Settings.classCache.get(clazz);
 		// Use copy of map keys in order to prevent concurrent modifications.
-		return map == null ? Collections.EMPTY_SET : new HashSet(map.keySet());
+		return map == null ? Collections.EMPTY_LIST
+				: new ArrayList(map.keySet());
 	}
 
 	/**
