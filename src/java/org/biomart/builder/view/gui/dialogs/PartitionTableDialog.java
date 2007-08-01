@@ -28,6 +28,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,6 +61,7 @@ import javax.swing.event.TableColumnModelListener;
 import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.table.DefaultTableModel;
 
+import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
@@ -75,7 +77,9 @@ import org.biomart.builder.model.PartitionTable.PartitionRow;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
+import org.biomart.builder.view.gui.DataSetTabSet;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.model.Column;
 import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
@@ -86,8 +90,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * modify the way it behaves as such.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.7
  */
 public class PartitionTableDialog extends JDialog {
@@ -105,8 +109,6 @@ public class PartitionTableDialog extends JDialog {
 	private DefaultTableModel previewData;
 
 	private JCheckBox partition;
-
-	private JButton execute;
 
 	private JTextField previewRowCount;
 
@@ -196,7 +198,7 @@ public class PartitionTableDialog extends JDialog {
 		// the remaining two panels.
 		this.partition = new JCheckBox(Resources.get("partitionTableCheckbox"));
 		content.add(this.partition, fieldConstraints);
-		content.add(showHide, fieldConstraints);
+		content.add(showHide, fieldLastRowConstraints);
 
 		// Put the two halves of the dialog side-by-side in a horizontal box.
 		final Box colPanel = Box.createHorizontalBox();
@@ -656,28 +658,9 @@ public class PartitionTableDialog extends JDialog {
 		});
 		showHide.add(appliedPanel, fieldLastRowConstraints);
 
-		// Create the cancel and OK buttons.
-		this.execute = new JButton(Resources.get("closeButton"));
-
-		// Add the buttons to the dialog.
-		final JLabel label = new JLabel();
-		content.add(label, labelLastRowConstraints);
-		content.add(this.execute, fieldLastRowConstraints);
-
-		// Intercept the execute button and use it to create
-		// the appropriate partition type, then close the dialog.
-		this.execute.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent e) {
-				PartitionTableDialog.this.setVisible(false);
-			}
-		});
-
 		// Select an applied item.
 		if (preselect != null)
 			this.appliedList.setSelectedItem(preselect);
-
-		// Make the execute button the default button.
-		this.getRootPane().setDefaultButton(this.execute);
 
 		// Set size of window.
 		this.pack();
@@ -1025,27 +1008,81 @@ public class PartitionTableDialog extends JDialog {
 	 * table. It then applies a default application to the dimension and opens
 	 * the editor with that application selected.
 	 * 
+	 * @param tabSet
+	 *            the data set tab set we are showing in.
 	 * @param dimension
 	 *            the dimension we want to run the wizard on.
 	 */
-	public static void showForDimension(final DataSetTable dimension) {
+	public static void showForDimension(final DataSetTabSet tabSet,
+			final DataSetTable dimension) {
 		final Mart mart = ((DataSet) dimension.getSchema()).getMart();
 		// Does it already have a partition table? Select that one.
 		PartitionTableApplication pta = mart
 				.getPartitionTableForDimension(dimension);
 		if (pta == null) {
 			// If not, select an existing one.
-			final String name = (String) JOptionPane.showInputDialog(null,
-					Resources.get("wizardSelectPartitionTable"), Resources
-							.get("questionTitle"),
-					JOptionPane.QUESTION_MESSAGE, null, mart
-							.getPartitionTableNames().toArray(), null);
+			final List options = new ArrayList(mart.getPartitionTableNames());
+			options.add(0, Resources.get("createNewPartitionTable"));
+			String name = (String) JOptionPane.showInputDialog(null, Resources
+					.get("wizardSelectPartitionTable"), Resources
+					.get("questionTitle"), JOptionPane.QUESTION_MESSAGE, null,
+					options.toArray(), null);
+			WrappedColumn autoCol = null;
+			Column sourceCol = null;
 			if (name == null)
 				return;
+			else if (name.equals(Resources.get("createNewPartitionTable"))) {
+				// New dialog asking for a column to use from
+				// the currently selected table.
+				final Map newOptions = new TreeMap();
+				for (final Iterator i = dimension.getColumns().iterator(); i
+						.hasNext();) {
+					final DataSetColumn dsCol = (DataSetColumn) i.next();
+					if (dsCol instanceof WrappedColumn)
+						newOptions.put(dsCol.getModifiedName(), dsCol);
+				}
+				final String colName = (String) JOptionPane.showInputDialog(
+						null, Resources.get("wizardCreatePartitionTable"),
+						Resources.get("questionTitle"),
+						JOptionPane.QUESTION_MESSAGE, null, newOptions.keySet()
+								.toArray(), null);
+				if (colName == null)
+					return;
+				// Magically build a dataset and new partition table
+				// based on the selected column.
+				autoCol = (WrappedColumn) newOptions.get(colName);
+				sourceCol = autoCol.getWrappedColumn();
+				try {
+					final Collection candidates = MartBuilderUtils
+							.suggestDataSets(mart, Collections
+									.singletonList(sourceCol.getTable()));
+					final DataSet ds = (DataSet) candidates.iterator().next();
+					ds.setPartitionTable(true);
+					name = ds.getName();
+					ds.asPartitionTable().setSelectedColumnNames(
+							Collections.singletonList(sourceCol.getName()));
+					// Update tabs in DataSetTabSet.
+					tabSet.recalculateDataSetTabs();
+
+				} catch (final Exception e) {
+					StackTrace.showStackTrace(e);
+					return;
+				}
+			}
 			final PartitionTable pt = mart.getPartitionTable(name);
 			// Make a default definition and add to selected partition table.
 			pta = PartitionTableApplication.createDefault(pt,
 					(DataSet) dimension.getSchema(), dimension.getName());
+			// If autoCol has been set, use it to modify the
+			// partition table application.
+			if (autoCol != null) {
+				final PartitionAppliedRow row = new PartitionAppliedRow(
+						sourceCol.getName(), autoCol.getName(), sourceCol
+								.getName(), ((DataSetTable) autoCol.getTable())
+								.getFocusRelation());
+				pta.getPartitionAppliedRows().clear();
+				pta.getPartitionAppliedRows().add(row);
+			}
 			pt.applyTo((DataSet) dimension.getSchema(), dimension.getName(),
 					pta);
 		}

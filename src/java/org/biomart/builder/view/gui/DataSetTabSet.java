@@ -560,7 +560,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestDimensionPartitionWizard(final DataSetTable dim) {
 		// Create wizard dialog (specify dimension version)
-		PartitionTableDialog.showForDimension(dim);
+		PartitionTableDialog.showForDimension(this, dim);
 		new LongProcess() {
 			public void run() throws Exception {
 				// Recalculate all datasets.
