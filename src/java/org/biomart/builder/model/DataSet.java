@@ -1185,7 +1185,8 @@ public class DataSet extends GenericSchema {
 			this.getDataSetModifications().replicate(
 					newDataSet.getDataSetModifications());
 			newDataSet.setPartitionTable(this.isPartitionTable);
-			this.asPartitionTable().replicate(newDataSet.asPartitionTable());
+			if (this.isPartitionTable())
+				this.asPartitionTable().replicate(newDataSet.asPartitionTable());
 			this.mart.addDataSet(newDataSet);
 
 			// Synchronise it.
