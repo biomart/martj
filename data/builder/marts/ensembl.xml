@@ -880,49 +880,64 @@
 		<maskedTable tableKey="misc_feature_misc_set"/>
 		<maskedTable tableKey="misc_attrib"/>
 	</dataset>
-	<dataset name="object_xref" centralTableId="339" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
-		<maskedRelation tableKey="object_xref" relationId="685"/>
-		<maskedRelation tableKey="object_xref" relationId="734"/>
+	<dataset name="object_xref_2" centralTableId="339" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
 		<maskedRelation tableKey="object_xref" relationId="700"/>
 		<maskedRelation tableKey="object_xref" relationId="701"/>
-		<maskedRelation tableKey="object_xref" relationId="703"/>
 		<maskedRelation tableKey="object_xref" relationId="702"/>
-		<maskedRelation tableKey="object_xref" relationId="739"/>
-		<maskedRelation tableKey="object_xref" relationId="740"/>
-		<maskedRelation tableKey="object_xref" relationId="690"/>
-		<maskedRelation tableKey="object_xref" relationId="741"/>
-		<maskedRelation tableKey="object_xref" relationId="742"/>
+		<maskedRelation tableKey="object_xref" relationId="704"/>
+		<maskedRelation tableKey="object_xref" relationId="667"/>
 		<maskedRelation tableKey="object_xref" relationId="708"/>
 		<maskedRelation tableKey="object_xref" relationId="670"/>
+		<maskedRelation tableKey="object_xref" relationId="709"/>
 		<maskedRelation tableKey="object_xref" relationId="710"/>
 		<maskedRelation tableKey="object_xref" relationId="711"/>
 		<maskedRelation tableKey="object_xref" relationId="713"/>
-		<maskedRelation tableKey="object_xref" relationId="746"/>
-		<maskedRelation tableKey="object_xref" relationId="747"/>
+		<maskedRelation tableKey="object_xref" relationId="714"/>
+		<maskedRelation tableKey="object_xref" relationId="671"/>
+		<maskedRelation tableKey="object_xref" relationId="716"/>
 		<maskedRelation tableKey="object_xref" relationId="717"/>
 		<maskedRelation tableKey="object_xref" relationId="718"/>
-		<maskedRelation tableKey="object_xref" relationId="693"/>
+		<maskedRelation tableKey="object_xref" relationId="672"/>
+		<maskedRelation tableKey="object_xref" relationId="673"/>
 		<maskedRelation tableKey="object_xref" relationId="674"/>
 		<maskedRelation tableKey="object_xref" relationId="720"/>
-		<maskedRelation tableKey="object_xref" relationId="750"/>
-		<maskedRelation tableKey="object_xref" relationId="675"/>
 		<maskedRelation tableKey="object_xref" relationId="722"/>
-		<maskedRelation tableKey="object_xref" relationId="695"/>
-		<maskedRelation tableKey="object_xref" relationId="752"/>
-		<maskedRelation tableKey="object_xref" relationId="753"/>
-		<maskedRelation tableKey="object_xref" relationId="728"/>
-		<maskedRelation tableKey="object_xref" relationId="755"/>
+		<maskedRelation tableKey="object_xref" relationId="675"/>
+		<maskedRelation tableKey="object_xref" relationId="676"/>
+		<maskedRelation tableKey="object_xref" relationId="677"/>
+		<maskedRelation tableKey="object_xref" relationId="726"/>
 		<maskedRelation tableKey="object_xref" relationId="729"/>
-		<maskedRelation tableKey="object_xref" relationId="678"/>
-		<maskedRelation tableKey="object_xref" relationId="756"/>
 		<maskedRelation tableKey="object_xref" relationId="679"/>
 		<maskedRelation tableKey="object_xref" relationId="680"/>
 		<maskedRelation tableKey="object_xref" relationId="730"/>
 		<maskedRelation tableKey="object_xref" relationId="731"/>
+		<maskedRelation tableKey="object_xref" relationId="684"/>
+		<maskedRelation tableKey="object_xref" relationId="734"/>
+		<maskedRelation tableKey="object_xref" relationId="685"/>
+		<maskedRelation tableKey="object_xref" relationId="686"/>
+		<maskedRelation tableKey="object_xref" relationId="739"/>
+		<maskedRelation tableKey="object_xref" relationId="740"/>
+		<maskedRelation tableKey="object_xref" relationId="689"/>
+		<maskedRelation tableKey="object_xref" relationId="688"/>
+		<maskedRelation tableKey="object_xref" relationId="690"/>
+		<maskedRelation tableKey="object_xref" relationId="742"/>
+		<maskedRelation tableKey="object_xref" relationId="746"/>
+		<maskedRelation tableKey="object_xref" relationId="745"/>
+		<maskedRelation tableKey="object_xref" relationId="747"/>
+		<maskedRelation tableKey="object_xref" relationId="693"/>
+		<maskedRelation tableKey="object_xref" relationId="750"/>
+		<maskedRelation tableKey="object_xref" relationId="751"/>
+		<maskedRelation tableKey="object_xref" relationId="696"/>
+		<maskedRelation tableKey="object_xref" relationId="752"/>
+		<maskedRelation tableKey="object_xref" relationId="753"/>
+		<maskedRelation tableKey="object_xref" relationId="755"/>
+		<maskedRelation tableKey="object_xref" relationId="697"/>
+		<maskedRelation tableKey="object_xref" relationId="756"/>
+		<maskedRelation tableKey="object_xref" relationId="757"/>
 		<maskedRelation tableKey="object_xref" relationId="698"/>
 		<maskedRelation tableKey="object_xref" relationId="760"/>
+		<maskedRelation tableKey="object_xref" relationId="699"/>
 		<maskedTable tableKey="go_xref"/>
-		<expressionColumn tableKey="object_xref" colKey="expression_1" aliasColumnNames="ensembl_object_type" aliasNames="col1" expression=":col1=&quot;Translation&quot;" groupBy="false"/>
 	</dataset>
 	<dataset name="oligo_feature" centralTableId="354" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="prediction_exon" centralTableId="380" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
@@ -950,8 +965,8 @@
 	<dataset name="regulatory_search_region" centralTableId="493" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="repeat_feature" centralTableId="513" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="simple_feature" centralTableId="541" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
-	<datasetPartitionTable name="object_xref" selectedColumns="db_name">
-		<partitionApplication name="gene" dimension="object_xref" pCols="db_name" dsCols="db_name" relationIds="669" nameCols="db_name"/>
+	<datasetPartitionTable name="object_xref_2" selectedColumns="db_name">
+		<partitionApplication name="gene" dimension="object_xref_2" pCols="db_name" dsCols="db_name" relationIds="669" nameCols="db_name"/>
 	</datasetPartitionTable>
 	<datasetPartitionTable name="protein_feature" selectedColumns="logic_name">
 		<partitionApplication name="gene" dimension="protein_feature" pCols="logic_name" dsCols="logic_name" relationIds="693" nameCols="logic_name"/>
