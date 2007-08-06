@@ -1138,10 +1138,21 @@
 	<relation id="1026" cardinality="M" firstKeyId="931" secondKeyId="579" status="HANDMADE"/>
 	<dataset name="variation" centralTableId="932" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
 		<subclassRelation relationId="999"/>
+		<maskedColumn tableKey="tmp_individual_genotype_single_bp" colKey="mother_individual_sample_id"/>
+		<maskedColumn tableKey="tmp_individual_genotype_single_bp" colKey="gender"/>
+		<maskedColumn tableKey="tmp_individual_genotype_single_bp" colKey="individual_type_id"/>
+		<maskedColumn tableKey="tmp_individual_genotype_single_bp" colKey="father_individual_sample_id"/>
+		<maskedColumn tableKey="tmp_individual_genotype_single_bp" colKey="description"/>
+		<maskedColumn tableKey="tmp_individual_genotype_single_bp" colKey="size"/>
+		<maskedRelation tableKey="tmp_individual_genotype_single_bp" relationId="990"/>
+		<maskedRelation tableKey="tmp_individual_genotype_single_bp" relationId="1011"/>
 		<maskedTable tableKey="allele_group_allele"/>
 		<maskedTable tableKey="population_genotype"/>
 		<maskedTable tableKey="variation_group_variation"/>
 		<maskedTable tableKey="tagged_variation_feature"/>
 		<maskedTable tableKey="individual_genotype_multiple_bp"/>
+		<maskedTable tableKey="allele"/>
+		<renamedTable tableKey="individual_genotype_multiple_bp" newName="polymorphic_strain"/>
+		<renamedTable tableKey="tmp_individual_genotype_single_bp" newName="snp_strain"/>
 	</dataset>
 </mart>
