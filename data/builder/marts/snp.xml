@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mart PUBLIC "-//EBI//DTD MartBuilder 0.7-//EBI//DTD MartBuilder " "http://www.biomart.org/DTD/MartBuilder-0.7.dtd">
 <mart nameCase="0">
-	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_core_45_36g" schemaName="homo_sapiens_core_45_36g" username="anonymous" name="ensembl" keyguessing="true">
+	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/mus_musculus_core_45_36f" schemaName="mus_musculus_core_45_36f" username="anonymous" name="ensembl_mouse" keyguessing="true">
 		<table id="1" name="alt_allele" ignore="false">
 			<column id="2" name="gene_id"/>
 			<column id="3" name="alt_allele_id"/>
@@ -738,102 +738,102 @@
 			<primaryKey id="661" columnIds="655" status="INFERRED"/>
 			<foreignKey id="662" columnIds="658" status="INFERRED"/>
 		</table>
-		<relation id="663" cardinality="M" firstKeyId="464" secondKeyId="483" status="INFERRED"/>
-		<relation id="664" cardinality="M" firstKeyId="21" secondKeyId="234" status="INFERRED"/>
-		<relation id="665" cardinality="1" firstKeyId="189" secondKeyId="216" status="INFERRED"/>
-		<relation id="666" cardinality="M" firstKeyId="579" secondKeyId="610" status="INFERRED"/>
-		<relation id="667" cardinality="M" firstKeyId="189" secondKeyId="469" status="INFERRED"/>
-		<relation id="668" cardinality="M" firstKeyId="532" secondKeyId="539" status="INFERRED"/>
-		<relation id="669" cardinality="M" firstKeyId="143" secondKeyId="158" status="INFERRED"/>
-		<relation id="670" cardinality="M" firstKeyId="511" secondKeyId="525" status="INFERRED"/>
-		<relation id="671" cardinality="M" firstKeyId="261" secondKeyId="201" status="INFERRED"/>
-		<relation id="672" cardinality="M" firstKeyId="443" secondKeyId="459" status="INFERRED"/>
-		<relation id="673" cardinality="M" firstKeyId="532" secondKeyId="127" status="INFERRED"/>
-		<relation id="674" cardinality="M" firstKeyId="54" secondKeyId="207" status="INFERRED"/>
-		<relation id="675" cardinality="M" firstKeyId="86" secondKeyId="103" status="INFERRED"/>
-		<relation id="676" cardinality="M" firstKeyId="170" secondKeyId="662" status="INFERRED"/>
-		<relation id="677" cardinality="M" firstKeyId="21" secondKeyId="450" status="INFERRED"/>
-		<relation id="678" cardinality="M" firstKeyId="532" secondKeyId="144" status="INFERRED"/>
-		<relation id="679" cardinality="M" firstKeyId="21" secondKeyId="281" status="INFERRED"/>
-		<relation id="680" cardinality="1" firstKeyId="344" secondKeyId="235" status="INFERRED"/>
-		<relation id="681" cardinality="M" firstKeyId="579" secondKeyId="630" status="INFERRED"/>
-		<relation id="682" cardinality="M" firstKeyId="21" secondKeyId="503" status="INFERRED"/>
-		<relation id="683" cardinality="M" firstKeyId="251" secondKeyId="292" status="INFERRED"/>
-		<relation id="684" cardinality="M" firstKeyId="532" secondKeyId="420" status="INFERRED"/>
-		<relation id="685" cardinality="M" firstKeyId="532" secondKeyId="392" status="INFERRED"/>
-		<relation id="686" cardinality="M" firstKeyId="532" secondKeyId="325" status="INFERRED"/>
-		<relation id="687" cardinality="M" firstKeyId="61" secondKeyId="311" status="INFERRED"/>
-		<relation id="688" cardinality="1" firstKeyId="609" secondKeyId="624" status="INFERRED"/>
-		<relation id="689" cardinality="M" firstKeyId="21" secondKeyId="550" status="INFERRED"/>
-		<relation id="690" cardinality="M" firstKeyId="532" secondKeyId="71" status="INFERRED"/>
-		<relation id="691" cardinality="M" firstKeyId="261" secondKeyId="560" status="INFERRED"/>
-		<relation id="692" cardinality="M" firstKeyId="532" secondKeyId="526" status="INFERRED"/>
-		<relation id="693" cardinality="M" firstKeyId="21" secondKeyId="419" status="INFERRED"/>
-		<relation id="694" cardinality="M" firstKeyId="609" secondKeyId="435" status="INFERRED"/>
-		<relation id="695" cardinality="M" firstKeyId="464" secondKeyId="470" status="INFERRED"/>
-		<relation id="696" cardinality="M" firstKeyId="609" secondKeyId="616" status="INFERRED"/>
-		<relation id="697" cardinality="M" firstKeyId="532" secondKeyId="582" status="INFERRED"/>
-		<relation id="698" cardinality="M" firstKeyId="54" secondKeyId="615" status="INFERRED"/>
-		<relation id="699" cardinality="M" firstKeyId="661" secondKeyId="345" status="INFERRED"/>
-		<relation id="700" cardinality="M" firstKeyId="532" secondKeyId="484" status="INFERRED"/>
-		<relation id="701" cardinality="M" firstKeyId="143" secondKeyId="565" status="INFERRED"/>
+		<relation id="663" cardinality="M" firstKeyId="21" secondKeyId="503" status="INFERRED"/>
+		<relation id="664" cardinality="M" firstKeyId="609" secondKeyId="435" status="INFERRED"/>
+		<relation id="665" cardinality="M" firstKeyId="54" secondKeyId="615" status="INFERRED"/>
+		<relation id="666" cardinality="M" firstKeyId="609" secondKeyId="616" status="INFERRED"/>
+		<relation id="667" cardinality="M" firstKeyId="579" secondKeyId="159" status="INFERRED"/>
+		<relation id="668" cardinality="M" firstKeyId="579" secondKeyId="588" status="INFERRED"/>
+		<relation id="669" cardinality="M" firstKeyId="532" secondKeyId="191" status="INFERRED"/>
+		<relation id="670" cardinality="M" firstKeyId="54" secondKeyId="587" status="INFERRED"/>
+		<relation id="671" cardinality="M" firstKeyId="464" secondKeyId="470" status="INFERRED"/>
+		<relation id="672" cardinality="M" firstKeyId="21" secondKeyId="102" status="INFERRED"/>
+		<relation id="673" cardinality="1" firstKeyId="609" secondKeyId="624" status="INFERRED"/>
+		<relation id="674" cardinality="M" firstKeyId="532" secondKeyId="582" status="INFERRED"/>
+		<relation id="675" cardinality="M" firstKeyId="532" secondKeyId="392" status="INFERRED"/>
+		<relation id="676" cardinality="1" firstKeyId="189" secondKeyId="216" status="INFERRED"/>
+		<relation id="677" cardinality="M" firstKeyId="532" secondKeyId="144" status="INFERRED"/>
+		<relation id="678" cardinality="M" firstKeyId="21" secondKeyId="363" status="INFERRED"/>
+		<relation id="679" cardinality="1" firstKeyId="344" secondKeyId="235" status="INFERRED"/>
+		<relation id="680" cardinality="M" firstKeyId="21" secondKeyId="482" status="INFERRED"/>
+		<relation id="681" cardinality="M" firstKeyId="271" secondKeyId="301" status="INFERRED"/>
+		<relation id="682" cardinality="M" firstKeyId="661" secondKeyId="345" status="INFERRED"/>
+		<relation id="683" cardinality="M" firstKeyId="532" secondKeyId="484" status="INFERRED"/>
+		<relation id="684" cardinality="M" firstKeyId="511" secondKeyId="525" status="INFERRED"/>
+		<relation id="685" cardinality="M" firstKeyId="21" secondKeyId="281" status="INFERRED"/>
+		<relation id="686" cardinality="M" firstKeyId="443" secondKeyId="451" status="INFERRED"/>
+		<relation id="687" cardinality="M" firstKeyId="21" secondKeyId="524" status="INFERRED"/>
+		<relation id="688" cardinality="M" firstKeyId="324" secondKeyId="330" status="INFERRED"/>
+		<relation id="689" cardinality="M" firstKeyId="189" secondKeyId="208" status="INFERRED"/>
+		<relation id="690" cardinality="M" firstKeyId="21" secondKeyId="450" status="INFERRED"/>
+		<relation id="691" cardinality="M" firstKeyId="464" secondKeyId="483" status="INFERRED"/>
+		<relation id="692" cardinality="M" firstKeyId="532" secondKeyId="420" status="INFERRED"/>
+		<relation id="693" cardinality="M" firstKeyId="54" secondKeyId="538" status="INFERRED"/>
+		<relation id="694" cardinality="M" firstKeyId="261" secondKeyId="201" status="INFERRED"/>
+		<relation id="695" cardinality="M" firstKeyId="300" secondKeyId="294" status="INFERRED"/>
+		<relation id="696" cardinality="M" firstKeyId="579" secondKeyId="471" status="INFERRED"/>
+		<relation id="697" cardinality="M" firstKeyId="532" secondKeyId="551" status="INFERRED"/>
+		<relation id="698" cardinality="M" firstKeyId="532" secondKeyId="364" status="INFERRED"/>
+		<relation id="699" cardinality="M" firstKeyId="189" secondKeyId="5" status="INFERRED"/>
+		<relation id="700" cardinality="M" firstKeyId="532" secondKeyId="325" status="INFERRED"/>
+		<relation id="701" cardinality="M" firstKeyId="189" secondKeyId="629" status="INFERRED"/>
 		<relation id="702" cardinality="M" firstKeyId="532" secondKeyId="452" status="INFERRED"/>
-		<relation id="703" cardinality="M" firstKeyId="532" secondKeyId="247" status="INFERRED"/>
-		<relation id="704" cardinality="M" firstKeyId="189" secondKeyId="629" status="INFERRED"/>
-		<relation id="705" cardinality="M" firstKeyId="271" secondKeyId="282" status="INFERRED"/>
-		<relation id="706" cardinality="M" firstKeyId="21" secondKeyId="363" status="INFERRED"/>
-		<relation id="707" cardinality="M" firstKeyId="21" secondKeyId="524" status="INFERRED"/>
-		<relation id="708" cardinality="M" firstKeyId="189" secondKeyId="208" status="INFERRED"/>
-		<relation id="709" cardinality="M" firstKeyId="21" secondKeyId="126" status="INFERRED"/>
-		<relation id="710" cardinality="M" firstKeyId="579" secondKeyId="471" status="INFERRED"/>
-		<relation id="711" cardinality="M" firstKeyId="271" secondKeyId="301" status="INFERRED"/>
-		<relation id="712" cardinality="M" firstKeyId="579" secondKeyId="601" status="INFERRED"/>
-		<relation id="713" cardinality="M" firstKeyId="54" secondKeyId="538" status="INFERRED"/>
-		<relation id="714" cardinality="M" firstKeyId="170" secondKeyId="645" status="INFERRED"/>
-		<relation id="715" cardinality="M" firstKeyId="532" secondKeyId="283" status="INFERRED"/>
-		<relation id="716" cardinality="1" firstKeyId="143" secondKeyId="152" status="INFERRED"/>
-		<relation id="717" cardinality="M" firstKeyId="579" secondKeyId="588" status="INFERRED"/>
-		<relation id="718" cardinality="M" firstKeyId="54" secondKeyId="316" status="INFERRED"/>
-		<relation id="719" cardinality="M" firstKeyId="21" secondKeyId="79" status="INFERRED"/>
-		<relation id="720" cardinality="M" firstKeyId="324" secondKeyId="330" status="INFERRED"/>
-		<relation id="721" cardinality="M" firstKeyId="78" secondKeyId="70" status="INFERRED"/>
-		<relation id="722" cardinality="M" firstKeyId="61" secondKeyId="533" status="INFERRED"/>
-		<relation id="723" cardinality="M" firstKeyId="401" secondKeyId="391" status="INFERRED"/>
-		<relation id="724" cardinality="M" firstKeyId="651" secondKeyId="646" status="INFERRED"/>
-		<relation id="725" cardinality="M" firstKeyId="344" secondKeyId="220" status="INFERRED"/>
-		<relation id="726" cardinality="M" firstKeyId="21" secondKeyId="402" status="INFERRED"/>
-		<relation id="727" cardinality="M" firstKeyId="21" secondKeyId="28" status="INFERRED"/>
-		<relation id="728" cardinality="M" firstKeyId="532" secondKeyId="104" status="INFERRED"/>
-		<relation id="729" cardinality="M" firstKeyId="532" secondKeyId="48" status="INFERRED"/>
-		<relation id="730" cardinality="M" firstKeyId="21" secondKeyId="580" status="INFERRED"/>
-		<relation id="731" cardinality="M" firstKeyId="21" secondKeyId="644" status="INFERRED"/>
-		<relation id="732" cardinality="M" firstKeyId="189" secondKeyId="5" status="INFERRED"/>
-		<relation id="733" cardinality="M" firstKeyId="324" secondKeyId="317" status="INFERRED"/>
-		<relation id="734" cardinality="M" firstKeyId="443" secondKeyId="451" status="INFERRED"/>
-		<relation id="735" cardinality="M" firstKeyId="378" secondKeyId="202" status="INFERRED"/>
-		<relation id="736" cardinality="M" firstKeyId="352" secondKeyId="373" status="INFERRED"/>
-		<relation id="737" cardinality="M" firstKeyId="532" secondKeyId="504" status="INFERRED"/>
-		<relation id="738" cardinality="M" firstKeyId="21" secondKeyId="434" status="INFERRED"/>
-		<relation id="739" cardinality="M" firstKeyId="271" secondKeyId="293" status="INFERRED"/>
-		<relation id="740" cardinality="M" firstKeyId="54" secondKeyId="587" status="INFERRED"/>
-		<relation id="741" cardinality="M" firstKeyId="21" secondKeyId="482" status="INFERRED"/>
-		<relation id="742" cardinality="M" firstKeyId="661" secondKeyId="175" status="INFERRED"/>
-		<relation id="743" cardinality="1" firstKeyId="532" secondKeyId="109" status="INFERRED"/>
-		<relation id="744" cardinality="M" firstKeyId="532" secondKeyId="403" status="INFERRED"/>
-		<relation id="745" cardinality="M" firstKeyId="532" secondKeyId="191" status="INFERRED"/>
-		<relation id="746" cardinality="M" firstKeyId="21" secondKeyId="190" status="INFERRED"/>
-		<relation id="747" cardinality="M" firstKeyId="300" secondKeyId="294" status="INFERRED"/>
-		<relation id="748" cardinality="1" firstKeyId="579" secondKeyId="596" status="INFERRED"/>
-		<relation id="749" cardinality="M" firstKeyId="532" secondKeyId="551" status="INFERRED"/>
-		<relation id="750" cardinality="M" firstKeyId="21" secondKeyId="102" status="INFERRED"/>
-		<relation id="751" cardinality="1" firstKeyId="532" secondKeyId="133" status="INFERRED"/>
-		<relation id="752" cardinality="M" firstKeyId="481" secondKeyId="491" status="INFERRED"/>
-		<relation id="753" cardinality="M" firstKeyId="338" secondKeyId="331" status="INFERRED"/>
-		<relation id="754" cardinality="M" firstKeyId="579" secondKeyId="159" status="INFERRED"/>
-		<relation id="755" cardinality="M" firstKeyId="532" secondKeyId="364" status="INFERRED"/>
-		<relation id="756" cardinality="M" firstKeyId="189" secondKeyId="581" status="INFERRED"/>
+		<relation id="703" cardinality="M" firstKeyId="532" secondKeyId="283" status="INFERRED"/>
+		<relation id="704" cardinality="M" firstKeyId="261" secondKeyId="560" status="INFERRED"/>
+		<relation id="705" cardinality="1" firstKeyId="143" secondKeyId="152" status="INFERRED"/>
+		<relation id="706" cardinality="M" firstKeyId="481" secondKeyId="491" status="INFERRED"/>
+		<relation id="707" cardinality="1" firstKeyId="532" secondKeyId="109" status="INFERRED"/>
+		<relation id="708" cardinality="M" firstKeyId="54" secondKeyId="316" status="INFERRED"/>
+		<relation id="709" cardinality="M" firstKeyId="189" secondKeyId="469" status="INFERRED"/>
+		<relation id="710" cardinality="M" firstKeyId="324" secondKeyId="317" status="INFERRED"/>
+		<relation id="711" cardinality="M" firstKeyId="21" secondKeyId="580" status="INFERRED"/>
+		<relation id="712" cardinality="M" firstKeyId="579" secondKeyId="610" status="INFERRED"/>
+		<relation id="713" cardinality="M" firstKeyId="251" secondKeyId="292" status="INFERRED"/>
+		<relation id="714" cardinality="M" firstKeyId="21" secondKeyId="402" status="INFERRED"/>
+		<relation id="715" cardinality="M" firstKeyId="532" secondKeyId="403" status="INFERRED"/>
+		<relation id="716" cardinality="M" firstKeyId="532" secondKeyId="526" status="INFERRED"/>
+		<relation id="717" cardinality="M" firstKeyId="21" secondKeyId="644" status="INFERRED"/>
+		<relation id="718" cardinality="M" firstKeyId="401" secondKeyId="391" status="INFERRED"/>
+		<relation id="719" cardinality="M" firstKeyId="54" secondKeyId="207" status="INFERRED"/>
+		<relation id="720" cardinality="M" firstKeyId="21" secondKeyId="190" status="INFERRED"/>
+		<relation id="721" cardinality="M" firstKeyId="143" secondKeyId="565" status="INFERRED"/>
+		<relation id="722" cardinality="M" firstKeyId="21" secondKeyId="434" status="INFERRED"/>
+		<relation id="723" cardinality="M" firstKeyId="338" secondKeyId="331" status="INFERRED"/>
+		<relation id="724" cardinality="M" firstKeyId="579" secondKeyId="601" status="INFERRED"/>
+		<relation id="725" cardinality="M" firstKeyId="86" secondKeyId="103" status="INFERRED"/>
+		<relation id="726" cardinality="M" firstKeyId="651" secondKeyId="646" status="INFERRED"/>
+		<relation id="727" cardinality="M" firstKeyId="532" secondKeyId="127" status="INFERRED"/>
+		<relation id="728" cardinality="M" firstKeyId="61" secondKeyId="533" status="INFERRED"/>
+		<relation id="729" cardinality="1" firstKeyId="579" secondKeyId="596" status="INFERRED"/>
+		<relation id="730" cardinality="M" firstKeyId="271" secondKeyId="293" status="INFERRED"/>
+		<relation id="731" cardinality="M" firstKeyId="532" secondKeyId="539" status="INFERRED"/>
+		<relation id="732" cardinality="M" firstKeyId="532" secondKeyId="504" status="INFERRED"/>
+		<relation id="733" cardinality="M" firstKeyId="143" secondKeyId="158" status="INFERRED"/>
+		<relation id="734" cardinality="M" firstKeyId="532" secondKeyId="247" status="INFERRED"/>
+		<relation id="735" cardinality="M" firstKeyId="443" secondKeyId="459" status="INFERRED"/>
+		<relation id="736" cardinality="M" firstKeyId="21" secondKeyId="79" status="INFERRED"/>
+		<relation id="737" cardinality="M" firstKeyId="170" secondKeyId="645" status="INFERRED"/>
+		<relation id="738" cardinality="M" firstKeyId="170" secondKeyId="662" status="INFERRED"/>
+		<relation id="739" cardinality="M" firstKeyId="21" secondKeyId="234" status="INFERRED"/>
+		<relation id="740" cardinality="M" firstKeyId="78" secondKeyId="70" status="INFERRED"/>
+		<relation id="741" cardinality="M" firstKeyId="61" secondKeyId="311" status="INFERRED"/>
+		<relation id="742" cardinality="M" firstKeyId="344" secondKeyId="220" status="INFERRED"/>
+		<relation id="743" cardinality="M" firstKeyId="352" secondKeyId="373" status="INFERRED"/>
+		<relation id="744" cardinality="M" firstKeyId="21" secondKeyId="419" status="INFERRED"/>
+		<relation id="745" cardinality="M" firstKeyId="532" secondKeyId="104" status="INFERRED"/>
+		<relation id="746" cardinality="M" firstKeyId="21" secondKeyId="28" status="INFERRED"/>
+		<relation id="747" cardinality="M" firstKeyId="532" secondKeyId="71" status="INFERRED"/>
+		<relation id="748" cardinality="M" firstKeyId="532" secondKeyId="48" status="INFERRED"/>
+		<relation id="749" cardinality="M" firstKeyId="21" secondKeyId="126" status="INFERRED"/>
+		<relation id="750" cardinality="M" firstKeyId="189" secondKeyId="581" status="INFERRED"/>
+		<relation id="751" cardinality="M" firstKeyId="661" secondKeyId="175" status="INFERRED"/>
+		<relation id="752" cardinality="M" firstKeyId="378" secondKeyId="202" status="INFERRED"/>
+		<relation id="753" cardinality="M" firstKeyId="271" secondKeyId="282" status="INFERRED"/>
+		<relation id="754" cardinality="M" firstKeyId="579" secondKeyId="630" status="INFERRED"/>
+		<relation id="755" cardinality="1" firstKeyId="532" secondKeyId="133" status="INFERRED"/>
+		<relation id="756" cardinality="M" firstKeyId="21" secondKeyId="550" status="INFERRED"/>
 	</jdbcSchema>
-	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/homo_sapiens_variation_45_36g" schemaName="homo_sapiens_variation_45_36g" username="anonymous" name="variation" keyguessing="true">
+	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/mus_musculus_variation_45_36f" schemaName="mus_musculus_variation_45_36f" username="anonymous" name="variation_mouse" keyguessing="true">
 		<table id="757" name="allele" ignore="false">
 			<column id="758" name="allele_id"/>
 			<column id="759" name="variation_id"/>
@@ -995,133 +995,153 @@
 			<column id="895" name="version"/>
 			<primaryKey id="896" columnIds="893" status="INFERRED"/>
 		</table>
-		<table id="897" name="tagged_variation_feature" ignore="false">
-			<column id="898" name="variation_feature_id"/>
-			<column id="899" name="sample_id"/>
-			<primaryKey id="900" columnIds="898,899" status="INFERRED"/>
-			<foreignKey id="901" columnIds="899" status="INFERRED"/>
-			<foreignKey id="902" columnIds="898" status="INFERRED"/>
+		<table id="897" name="strain_gtype_final" ignore="false">
+			<column id="898" name="variation_id"/>
+			<column id="899" name="sample_id1"/>
+			<column id="900" name="sample_name1"/>
+			<column id="901" name="allele_string"/>
+			<column id="902" name="sample_name2"/>
+			<column id="903" name="count"/>
+			<column id="904" name="sample_id2"/>
+			<foreignKey id="905" columnIds="898" status="INFERRED"/>
 		</table>
-		<table id="903" name="transcript_variation" ignore="false">
-			<column id="904" name="translation_end"/>
-			<column id="905" name="variation_feature_id"/>
-			<column id="906" name="transcript_variation_id"/>
-			<column id="907" name="consequence_type"/>
-			<column id="908" name="peptide_allele_string"/>
-			<column id="909" name="translation_start"/>
-			<column id="910" name="cdna_end"/>
-			<column id="911" name="transcript_id"/>
-			<column id="912" name="cdna_start"/>
-			<primaryKey id="913" columnIds="906" status="INFERRED"/>
-			<foreignKey id="914" columnIds="905" status="INFERRED"/>
-			<foreignKey id="915" columnIds="911" status="HANDMADE"/>
+		<table id="906" name="tagged_variation_feature" ignore="false">
+			<column id="907" name="variation_feature_id"/>
+			<column id="908" name="sample_id"/>
+			<primaryKey id="909" columnIds="907,908" status="INFERRED"/>
+			<foreignKey id="910" columnIds="908" status="INFERRED"/>
+			<foreignKey id="911" columnIds="907" status="INFERRED"/>
 		</table>
-		<table id="916" name="variation" ignore="false">
-			<column id="917" name="validation_status"/>
-			<column id="918" name="variation_id"/>
-			<column id="919" name="source_id"/>
-			<column id="920" name="ancestral_allele"/>
-			<column id="921" name="name"/>
-			<primaryKey id="922" columnIds="918" status="INFERRED"/>
-			<foreignKey id="923" columnIds="919" status="INFERRED"/>
+		<table id="912" name="tmp_individual_genotype_single_bp" ignore="false">
+			<column id="913" name="allele_2"/>
+			<column id="914" name="variation_id"/>
+			<column id="915" name="sample_id"/>
+			<column id="916" name="allele_1"/>
+			<foreignKey id="917" columnIds="915" status="INFERRED"/>
+			<foreignKey id="918" columnIds="914" status="INFERRED"/>
 		</table>
-		<table id="924" name="variation_feature" ignore="false">
-			<column id="925" name="variation_id"/>
-			<column id="926" name="seq_region_start"/>
-			<column id="927" name="consequence_type"/>
-			<column id="928" name="source_id"/>
-			<column id="929" name="seq_region_end"/>
-			<column id="930" name="seq_region_strand"/>
-			<column id="931" name="seq_region_id"/>
-			<column id="932" name="validation_status"/>
-			<column id="933" name="variation_feature_id"/>
-			<column id="934" name="map_weight"/>
-			<column id="935" name="allele_string"/>
-			<column id="936" name="flags"/>
-			<column id="937" name="variation_name"/>
-			<primaryKey id="938" columnIds="933" status="INFERRED"/>
-			<foreignKey id="939" columnIds="928" status="INFERRED"/>
-			<foreignKey id="940" columnIds="925" status="INFERRED"/>
+		<table id="919" name="transcript_variation" ignore="false">
+			<column id="920" name="translation_end"/>
+			<column id="921" name="variation_feature_id"/>
+			<column id="922" name="transcript_variation_id"/>
+			<column id="923" name="consequence_type"/>
+			<column id="924" name="peptide_allele_string"/>
+			<column id="925" name="translation_start"/>
+			<column id="926" name="cdna_end"/>
+			<column id="927" name="transcript_id"/>
+			<column id="928" name="cdna_start"/>
+			<primaryKey id="929" columnIds="922" status="INFERRED"/>
+			<foreignKey id="930" columnIds="921" status="INFERRED"/>
+			<foreignKey id="931" columnIds="927" status="HANDMADE"/>
 		</table>
-		<table id="941" name="variation_group" ignore="false">
-			<column id="942" name="type"/>
-			<column id="943" name="variation_group_id"/>
+		<table id="932" name="variation" ignore="false">
+			<column id="933" name="validation_status"/>
+			<column id="934" name="variation_id"/>
+			<column id="935" name="source_id"/>
+			<column id="936" name="ancestral_allele"/>
+			<column id="937" name="name"/>
+			<primaryKey id="938" columnIds="934" status="INFERRED"/>
+			<foreignKey id="939" columnIds="935" status="INFERRED"/>
+		</table>
+		<table id="940" name="variation_feature" ignore="false">
+			<column id="941" name="variation_id"/>
+			<column id="942" name="seq_region_start"/>
+			<column id="943" name="consequence_type"/>
 			<column id="944" name="source_id"/>
-			<column id="945" name="name"/>
-			<primaryKey id="946" columnIds="943" status="INFERRED"/>
-			<foreignKey id="947" columnIds="944" status="INFERRED"/>
+			<column id="945" name="seq_region_end"/>
+			<column id="946" name="seq_region_strand"/>
+			<column id="947" name="seq_region_id"/>
+			<column id="948" name="validation_status"/>
+			<column id="949" name="variation_feature_id"/>
+			<column id="950" name="map_weight"/>
+			<column id="951" name="allele_string"/>
+			<column id="952" name="flags"/>
+			<column id="953" name="variation_name"/>
+			<primaryKey id="954" columnIds="949" status="INFERRED"/>
+			<foreignKey id="955" columnIds="944" status="INFERRED"/>
+			<foreignKey id="956" columnIds="941" status="INFERRED"/>
 		</table>
-		<table id="948" name="variation_group_feature" ignore="false">
-			<column id="949" name="seq_region_id"/>
-			<column id="950" name="variation_group_feature_id"/>
-			<column id="951" name="seq_region_start"/>
-			<column id="952" name="variation_group_id"/>
-			<column id="953" name="variation_group_name"/>
-			<column id="954" name="seq_region_end"/>
-			<column id="955" name="seq_region_strand"/>
-			<primaryKey id="956" columnIds="950" status="INFERRED"/>
-			<foreignKey id="957" columnIds="952" status="INFERRED"/>
+		<table id="957" name="variation_group" ignore="false">
+			<column id="958" name="type"/>
+			<column id="959" name="variation_group_id"/>
+			<column id="960" name="source_id"/>
+			<column id="961" name="name"/>
+			<primaryKey id="962" columnIds="959" status="INFERRED"/>
+			<foreignKey id="963" columnIds="960" status="INFERRED"/>
 		</table>
-		<table id="958" name="variation_group_variation" ignore="false">
-			<column id="959" name="variation_id"/>
-			<column id="960" name="variation_group_id"/>
-			<foreignKey id="961" columnIds="959" status="INFERRED"/>
-			<foreignKey id="962" columnIds="960" status="INFERRED"/>
+		<table id="964" name="variation_group_feature" ignore="false">
+			<column id="965" name="seq_region_id"/>
+			<column id="966" name="variation_group_feature_id"/>
+			<column id="967" name="seq_region_start"/>
+			<column id="968" name="variation_group_id"/>
+			<column id="969" name="variation_group_name"/>
+			<column id="970" name="seq_region_end"/>
+			<column id="971" name="seq_region_strand"/>
+			<primaryKey id="972" columnIds="966" status="INFERRED"/>
+			<foreignKey id="973" columnIds="968" status="INFERRED"/>
 		</table>
-		<table id="963" name="variation_synonym" ignore="false">
-			<column id="964" name="moltype"/>
-			<column id="965" name="variation_id"/>
-			<column id="966" name="source_id"/>
-			<column id="967" name="variation_synonym_id"/>
-			<column id="968" name="name"/>
-			<primaryKey id="969" columnIds="967" status="INFERRED"/>
-			<foreignKey id="970" columnIds="966" status="INFERRED"/>
-			<foreignKey id="971" columnIds="965" status="INFERRED"/>
+		<table id="974" name="variation_group_variation" ignore="false">
+			<column id="975" name="variation_id"/>
+			<column id="976" name="variation_group_id"/>
+			<foreignKey id="977" columnIds="975" status="INFERRED"/>
+			<foreignKey id="978" columnIds="976" status="INFERRED"/>
 		</table>
-		<relation id="972" cardinality="M" firstKeyId="794" secondKeyId="799" status="INFERRED"/>
-		<relation id="973" cardinality="M" firstKeyId="896" secondKeyId="947" status="INFERRED"/>
-		<relation id="974" cardinality="M" firstKeyId="938" secondKeyId="902" status="INFERRED"/>
-		<relation id="975" cardinality="M" firstKeyId="922" secondKeyId="782" status="INFERRED"/>
-		<relation id="976" cardinality="M" firstKeyId="883" secondKeyId="866" status="INFERRED"/>
-		<relation id="977" cardinality="1" firstKeyId="883" secondKeyId="857" status="INFERRED"/>
-		<relation id="978" cardinality="M" firstKeyId="883" secondKeyId="835" status="INFERRED"/>
-		<relation id="979" cardinality="M" firstKeyId="883" secondKeyId="774" status="INFERRED"/>
-		<relation id="980" cardinality="M" firstKeyId="844" secondKeyId="828" status="INFERRED"/>
-		<relation id="981" cardinality="M" firstKeyId="922" secondKeyId="765" status="INFERRED"/>
-		<relation id="982" cardinality="1" firstKeyId="922" secondKeyId="800" status="INFERRED"/>
-		<relation id="983" cardinality="M" firstKeyId="883" secondKeyId="890" status="INFERRED"/>
-		<relation id="984" cardinality="M" firstKeyId="946" secondKeyId="957" status="INFERRED"/>
-		<relation id="985" cardinality="M" firstKeyId="896" secondKeyId="923" status="INFERRED"/>
-		<relation id="986" cardinality="M" firstKeyId="896" secondKeyId="970" status="INFERRED"/>
-		<relation id="987" cardinality="M" firstKeyId="896" secondKeyId="891" status="INFERRED"/>
-		<relation id="988" cardinality="M" firstKeyId="896" secondKeyId="775" status="INFERRED"/>
-		<relation id="989" cardinality="M" firstKeyId="922" secondKeyId="971" status="INFERRED"/>
-		<relation id="990" cardinality="M" firstKeyId="883" secondKeyId="901" status="INFERRED"/>
-		<relation id="991" cardinality="M" firstKeyId="883" secondKeyId="790" status="INFERRED"/>
-		<relation id="992" cardinality="M" firstKeyId="896" secondKeyId="819" status="INFERRED"/>
-		<relation id="993" cardinality="M" firstKeyId="946" secondKeyId="776" status="INFERRED"/>
-		<relation id="994" cardinality="M" firstKeyId="922" secondKeyId="961" status="INFERRED"/>
-		<relation id="995" cardinality="M" firstKeyId="922" secondKeyId="867" status="INFERRED"/>
-		<relation id="996" cardinality="M" firstKeyId="883" secondKeyId="764" status="INFERRED"/>
-		<relation id="997" cardinality="M" firstKeyId="922" secondKeyId="836" status="INFERRED"/>
-		<relation id="998" cardinality="M" firstKeyId="946" secondKeyId="962" status="INFERRED"/>
-		<relation id="999" cardinality="M" firstKeyId="946" secondKeyId="820" status="INFERRED"/>
-		<relation id="1000" cardinality="M" firstKeyId="938" secondKeyId="914" status="INFERRED"/>
-		<relation id="1001" cardinality="1" firstKeyId="883" secondKeyId="829" status="INFERRED"/>
-		<relation id="1002" cardinality="M" firstKeyId="922" secondKeyId="940" status="INFERRED"/>
-		<relation id="1003" cardinality="M" firstKeyId="896" secondKeyId="939" status="INFERRED"/>
-		<relation id="1004" cardinality="M" firstKeyId="773" secondKeyId="781" status="INFERRED"/>
-		<relation id="1005" cardinality="M" firstKeyId="883" secondKeyId="877" status="INFERRED"/>
-		<relation id="1006" cardinality="1" firstKeyId="922" secondKeyId="812" status="INFERRED"/>
+		<table id="979" name="variation_synonym" ignore="false">
+			<column id="980" name="moltype"/>
+			<column id="981" name="variation_id"/>
+			<column id="982" name="source_id"/>
+			<column id="983" name="variation_synonym_id"/>
+			<column id="984" name="name"/>
+			<primaryKey id="985" columnIds="983" status="INFERRED"/>
+			<foreignKey id="986" columnIds="982" status="INFERRED"/>
+			<foreignKey id="987" columnIds="981" status="INFERRED"/>
+		</table>
+		<relation id="988" cardinality="M" firstKeyId="962" secondKeyId="820" status="INFERRED"/>
+		<relation id="989" cardinality="M" firstKeyId="883" secondKeyId="917" status="INFERRED"/>
+		<relation id="990" cardinality="1" firstKeyId="883" secondKeyId="857" status="INFERRED"/>
+		<relation id="991" cardinality="M" firstKeyId="896" secondKeyId="891" status="INFERRED"/>
+		<relation id="992" cardinality="M" firstKeyId="954" secondKeyId="930" status="INFERRED"/>
+		<relation id="993" cardinality="M" firstKeyId="773" secondKeyId="781" status="INFERRED"/>
+		<relation id="994" cardinality="M" firstKeyId="962" secondKeyId="776" status="INFERRED"/>
+		<relation id="995" cardinality="M" firstKeyId="938" secondKeyId="987" status="INFERRED"/>
+		<relation id="996" cardinality="M" firstKeyId="938" secondKeyId="905" status="INFERRED"/>
+		<relation id="997" cardinality="M" firstKeyId="883" secondKeyId="877" status="INFERRED"/>
+		<relation id="998" cardinality="M" firstKeyId="896" secondKeyId="775" status="INFERRED"/>
+		<relation id="999" cardinality="M" firstKeyId="938" secondKeyId="956" status="INFERRED"/>
+		<relation id="1000" cardinality="M" firstKeyId="883" secondKeyId="866" status="INFERRED"/>
+		<relation id="1001" cardinality="M" firstKeyId="896" secondKeyId="939" status="INFERRED"/>
+		<relation id="1002" cardinality="M" firstKeyId="938" secondKeyId="782" status="INFERRED"/>
+		<relation id="1003" cardinality="1" firstKeyId="938" secondKeyId="800" status="INFERRED"/>
+		<relation id="1004" cardinality="M" firstKeyId="896" secondKeyId="986" status="INFERRED"/>
+		<relation id="1005" cardinality="M" firstKeyId="883" secondKeyId="764" status="INFERRED"/>
+		<relation id="1006" cardinality="M" firstKeyId="938" secondKeyId="765" status="INFERRED"/>
+		<relation id="1007" cardinality="M" firstKeyId="883" secondKeyId="774" status="INFERRED"/>
+		<relation id="1008" cardinality="M" firstKeyId="938" secondKeyId="867" status="INFERRED"/>
+		<relation id="1009" cardinality="M" firstKeyId="938" secondKeyId="836" status="INFERRED"/>
+		<relation id="1010" cardinality="M" firstKeyId="896" secondKeyId="963" status="INFERRED"/>
+		<relation id="1011" cardinality="M" firstKeyId="844" secondKeyId="828" status="INFERRED"/>
+		<relation id="1012" cardinality="M" firstKeyId="883" secondKeyId="790" status="INFERRED"/>
+		<relation id="1013" cardinality="1" firstKeyId="883" secondKeyId="829" status="INFERRED"/>
+		<relation id="1014" cardinality="M" firstKeyId="962" secondKeyId="973" status="INFERRED"/>
+		<relation id="1015" cardinality="M" firstKeyId="938" secondKeyId="977" status="INFERRED"/>
+		<relation id="1016" cardinality="M" firstKeyId="883" secondKeyId="890" status="INFERRED"/>
+		<relation id="1017" cardinality="M" firstKeyId="896" secondKeyId="955" status="INFERRED"/>
+		<relation id="1018" cardinality="M" firstKeyId="954" secondKeyId="911" status="INFERRED"/>
+		<relation id="1019" cardinality="1" firstKeyId="938" secondKeyId="812" status="INFERRED"/>
+		<relation id="1020" cardinality="M" firstKeyId="883" secondKeyId="835" status="INFERRED"/>
+		<relation id="1021" cardinality="M" firstKeyId="962" secondKeyId="978" status="INFERRED"/>
+		<relation id="1022" cardinality="M" firstKeyId="883" secondKeyId="910" status="INFERRED"/>
+		<relation id="1023" cardinality="M" firstKeyId="938" secondKeyId="918" status="INFERRED"/>
+		<relation id="1024" cardinality="M" firstKeyId="896" secondKeyId="819" status="INFERRED"/>
+		<relation id="1025" cardinality="M" firstKeyId="794" secondKeyId="799" status="INFERRED"/>
 	</jdbcSchema>
-	<relation id="1007" cardinality="M" firstKeyId="915" secondKeyId="579" status="HANDMADE"/>
-	<dataset name="variation" centralTableId="916" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
-		<subclassRelation relationId="1002"/>
+	<relation id="1026" cardinality="M" firstKeyId="931" secondKeyId="579" status="HANDMADE"/>
+	<dataset name="variation" centralTableId="932" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+		<subclassRelation relationId="999"/>
 		<maskedTable tableKey="allele_group_allele"/>
 		<maskedTable tableKey="population_genotype"/>
 		<maskedTable tableKey="variation_group_variation"/>
 		<maskedTable tableKey="tagged_variation_feature"/>
 		<maskedTable tableKey="individual_genotype_multiple_bp"/>
-		<maskedTable tableKey="allele"/>
 	</dataset>
 </mart>
