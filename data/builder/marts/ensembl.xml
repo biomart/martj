@@ -1679,6 +1679,7 @@
 		<maskedRelation tableKey="object_xref" relationId="704"/>
 		<maskedRelation tableKey="object_xref" relationId="766"/>
 		<maskedTable tableKey="go_xref"/>
+		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="342" aliasNames="col1" expression=":col1=&quot;Gene&quot;" hard="false"/>
 	</dataset>
 	<dataset name="oligo_feature" centralTableId="356" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="prediction_exon" centralTableId="382" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
