@@ -393,9 +393,9 @@ public class MartBuilderXML extends DefaultHandler {
 		final StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < values.length; i++) {
 			final String value = values[i];
+			if (i > 0)
+				sb.append(",");
 			if (value != null) {
-				if (i > 0)
-					sb.append(",");
 				sb.append(values[i].replaceAll(",", "__COMMA__"));
 			}
 		}
@@ -2123,7 +2123,7 @@ public class MartBuilderXML extends DefaultHandler {
 			final String[] dsCols = this.readListAttribute((String) attributes
 					.get("dsCols"), false);
 			final String[] relIds = this.readListAttribute((String) attributes
-					.get("relationIds"), false);
+					.get("relationIds"), true);
 			final Relation[] rels = new Relation[relIds.length];
 			for (int i = 0; i < relIds.length; i++)
 				rels[i] = (Relation) this.mappedObjects.get(relIds[i]);
