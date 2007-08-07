@@ -463,6 +463,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		private String jobId;
 
+		private JobPlan jobPlan = null;
+
 		private final JTextField jobIdField;
 
 		private final JSpinner threadSpinner;
@@ -488,6 +490,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 		private final JTextArea messages;
 
 		private final JButton startJob;
+
+		private final JButton testJob;
 
 		private final JButton stopJob;
 
@@ -605,6 +609,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			headerPanel.add(new JLabel(), labelLastRowConstraints);
 			field = new JPanel();
 			this.startJob = new JButton(Resources.get("startJobButton"));
+			this.testJob = new JButton(Resources.get("testJobButton"));
 			this.stopJob = new JButton(Resources.get("stopJobButton"));
 			// Button listeners to start+stop jobs.
 			this.startJob.addActionListener(new ActionListener() {
@@ -618,6 +623,13 @@ public class MartRunnerMonitorDialog extends JFrame {
 						} catch (final ProtocolException pe) {
 							StackTrace.showStackTrace(pe);
 						}
+				}
+			});
+			this.testJob.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (JobPlanPanel.this.jobId != null)
+						MartRunnerTestDialog
+								.showTests(JobPlanPanel.this.jobPlan);
 				}
 			});
 			this.stopJob.addActionListener(new ActionListener() {
@@ -635,6 +647,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			});
 			field.add(this.startJob);
 			field.add(this.stopJob);
+			field.add(this.testJob);
 			headerPanel.add(field, fieldLastRowConstraints);
 
 			// Create a panel to hold the footer details.
@@ -899,6 +912,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 		}
 
 		private void setNoJob() {
+			this.jobPlan = null;
 			this.jobId = null;
 			this.jobIdField.setText(Resources.get("noJobSelected"));
 			this.threadSpinnerModel.setValue(new Integer(1));
@@ -909,6 +923,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.contactEmail.setEnabled(false);
 			this.updateEmailButton.setEnabled(false);
 			this.startJob.setEnabled(false);
+			this.testJob.setEnabled(false);
 			this.stopJob.setEnabled(false);
 			try {
 				this.treeModel.setJobPlan(null);
@@ -923,6 +938,9 @@ public class MartRunnerMonitorDialog extends JFrame {
 			else
 				new LongProcess() {
 					public void run() throws Exception {
+						// Set job plan.
+						JobPlanPanel.this.jobPlan = jobPlan;
+
 						// Get new job ID.
 						final String jobId = jobPlan.getJobId();
 
@@ -1039,6 +1057,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 				this.planPanel.contactEmail.setText(jobPlan
 						.getContactEmailAddress());
 				this.planPanel.startJob.setEnabled(!jobPlan.getRoot()
+						.getStatus().equals(JobStatus.RUNNING));
+				this.planPanel.testJob.setEnabled(!jobPlan.getRoot()
 						.getStatus().equals(JobStatus.RUNNING));
 				this.planPanel.stopJob.setEnabled(jobPlan.getRoot().getStatus()
 						.equals(JobStatus.RUNNING));
