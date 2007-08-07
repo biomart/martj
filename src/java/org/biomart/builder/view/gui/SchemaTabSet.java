@@ -19,6 +19,7 @@
 package org.biomart.builder.view.gui;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -1150,6 +1151,15 @@ public class SchemaTabSet extends JTabbedPane {
 				// Construct a JTable.
 				final JTable jtable = new JTable(new DefaultTableModel(data,
 						colNames));
+				final Dimension size = new Dimension();
+				size.width = 0;
+				size.height = jtable.getRowHeight() * count;
+				for (int i = 0; i < jtable.getColumnCount(); i++)
+					size.width += jtable.getColumnModel().getColumn(i)
+							.getPreferredWidth();
+				size.width = Math.min(size.width, 800); // Arbitrary.
+				size.height = Math.min(size.height, 200); // Arbitrary.
+				jtable.setPreferredScrollableViewportSize(size);
 				// Display them.
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
