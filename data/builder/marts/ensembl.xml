@@ -1608,6 +1608,118 @@
 		<maskedTable tableKey="misc_feature_misc_set"/>
 		<maskedTable tableKey="misc_attrib"/>
 	</dataset>
+	<dataset name="object_xref" centralTableId="341" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+		<maskedRelation tableKey="object_xref" relationId="739"/>
+		<maskedRelation tableKey="object_xref" relationId="955"/>
+		<maskedRelation tableKey="object_xref" relationId="705"/>
+		<maskedRelation tableKey="object_xref" relationId="706"/>
+		<maskedRelation tableKey="object_xref" relationId="707"/>
+		<maskedRelation tableKey="object_xref" relationId="708"/>
+		<maskedRelation tableKey="object_xref" relationId="957"/>
+		<maskedRelation tableKey="object_xref" relationId="958"/>
+		<maskedRelation tableKey="object_xref" relationId="1233"/>
+		<maskedRelation tableKey="object_xref" relationId="963"/>
+		<maskedRelation tableKey="object_xref" relationId="964"/>
+		<maskedRelation tableKey="object_xref" relationId="694"/>
+		<maskedRelation tableKey="object_xref" relationId="965"/>
+		<maskedRelation tableKey="object_xref" relationId="746"/>
+		<maskedRelation tableKey="object_xref" relationId="966"/>
+		<maskedRelation tableKey="object_xref" relationId="715"/>
+		<maskedRelation tableKey="object_xref" relationId="716"/>
+		<maskedRelation tableKey="object_xref" relationId="751"/>
+		<maskedRelation tableKey="object_xref" relationId="722"/>
+		<maskedRelation tableKey="object_xref" relationId="971"/>
+		<maskedRelation tableKey="object_xref" relationId="727"/>
+		<maskedRelation tableKey="object_xref" relationId="699"/>
+		<maskedRelation tableKey="object_xref" relationId="757"/>
+		<maskedRelation tableKey="object_xref" relationId="733"/>
+		<maskedRelation tableKey="object_xref" relationId="758"/>
+		<maskedRelation tableKey="object_xref" relationId="701"/>
+		<maskedRelation tableKey="object_xref" relationId="760"/>
+		<maskedRelation tableKey="object_xref" relationId="979"/>
+		<maskedRelation tableKey="object_xref" relationId="682"/>
+		<maskedRelation tableKey="object_xref" relationId="761"/>
+		<maskedRelation tableKey="object_xref" relationId="735"/>
+		<maskedRelation tableKey="object_xref" relationId="982"/>
+		<maskedRelation tableKey="object_xref" relationId="736"/>
+		<maskedRelation tableKey="object_xref" relationId="703"/>
+		<maskedRelation tableKey="object_xref" relationId="1234"/>
+		<maskedRelation tableKey="object_xref" relationId="766"/>
+		<maskedTable tableKey="go_xref"/>
+		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="342" aliasNames="col1" expression=":col1=&quot;Translation&quot;" hard="false"/>
+	</dataset>
+	<dataset name="object_xref_1" centralTableId="341" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+		<maskedRelation tableKey="object_xref" relationId="955"/>
+		<maskedRelation tableKey="object_xref" relationId="705"/>
+		<maskedRelation tableKey="object_xref" relationId="706"/>
+		<maskedRelation tableKey="object_xref" relationId="707"/>
+		<maskedRelation tableKey="object_xref" relationId="708"/>
+		<maskedRelation tableKey="object_xref" relationId="957"/>
+		<maskedRelation tableKey="object_xref" relationId="709"/>
+		<maskedRelation tableKey="object_xref" relationId="958"/>
+		<maskedRelation tableKey="object_xref" relationId="1233"/>
+		<maskedRelation tableKey="object_xref" relationId="671"/>
+		<maskedRelation tableKey="object_xref" relationId="964"/>
+		<maskedRelation tableKey="object_xref" relationId="713"/>
+		<maskedRelation tableKey="object_xref" relationId="966"/>
+		<maskedRelation tableKey="object_xref" relationId="674"/>
+		<maskedRelation tableKey="object_xref" relationId="714"/>
+		<maskedRelation tableKey="object_xref" relationId="715"/>
+		<maskedRelation tableKey="object_xref" relationId="718"/>
+		<maskedRelation tableKey="object_xref" relationId="675"/>
+		<maskedRelation tableKey="object_xref" relationId="719"/>
+		<maskedRelation tableKey="object_xref" relationId="721"/>
+		<maskedRelation tableKey="object_xref" relationId="722"/>
+		<maskedRelation tableKey="object_xref" relationId="723"/>
+		<maskedRelation tableKey="object_xref" relationId="676"/>
+		<maskedRelation tableKey="object_xref" relationId="677"/>
+		<maskedRelation tableKey="object_xref" relationId="678"/>
+		<maskedRelation tableKey="object_xref" relationId="725"/>
+		<maskedRelation tableKey="object_xref" relationId="679"/>
+		<maskedRelation tableKey="object_xref" relationId="727"/>
+		<maskedRelation tableKey="object_xref" relationId="680"/>
+		<maskedRelation tableKey="object_xref" relationId="731"/>
+		<maskedRelation tableKey="object_xref" relationId="681"/>
+		<maskedRelation tableKey="object_xref" relationId="733"/>
+		<maskedRelation tableKey="object_xref" relationId="734"/>
+		<maskedRelation tableKey="object_xref" relationId="682"/>
+		<maskedRelation tableKey="object_xref" relationId="683"/>
+		<maskedRelation tableKey="object_xref" relationId="684"/>
+		<maskedRelation tableKey="object_xref" relationId="982"/>
+		<maskedRelation tableKey="object_xref" relationId="688"/>
+		<maskedRelation tableKey="object_xref" relationId="689"/>
+		<maskedRelation tableKey="object_xref" relationId="690"/>
+		<maskedRelation tableKey="object_xref" relationId="744"/>
+		<maskedRelation tableKey="object_xref" relationId="963"/>
+		<maskedRelation tableKey="object_xref" relationId="745"/>
+		<maskedRelation tableKey="object_xref" relationId="693"/>
+		<maskedRelation tableKey="object_xref" relationId="692"/>
+		<maskedRelation tableKey="object_xref" relationId="694"/>
+		<maskedRelation tableKey="object_xref" relationId="965"/>
+		<maskedRelation tableKey="object_xref" relationId="747"/>
+		<maskedRelation tableKey="object_xref" relationId="746"/>
+		<maskedRelation tableKey="object_xref" relationId="750"/>
+		<maskedRelation tableKey="object_xref" relationId="752"/>
+		<maskedRelation tableKey="object_xref" relationId="971"/>
+		<maskedRelation tableKey="object_xref" relationId="697"/>
+		<maskedRelation tableKey="object_xref" relationId="755"/>
+		<maskedRelation tableKey="object_xref" relationId="699"/>
+		<maskedRelation tableKey="object_xref" relationId="756"/>
+		<maskedRelation tableKey="object_xref" relationId="700"/>
+		<maskedRelation tableKey="object_xref" relationId="757"/>
+		<maskedRelation tableKey="object_xref" relationId="701"/>
+		<maskedRelation tableKey="object_xref" relationId="758"/>
+		<maskedRelation tableKey="object_xref" relationId="760"/>
+		<maskedRelation tableKey="object_xref" relationId="979"/>
+		<maskedRelation tableKey="object_xref" relationId="702"/>
+		<maskedRelation tableKey="object_xref" relationId="761"/>
+		<maskedRelation tableKey="object_xref" relationId="762"/>
+		<maskedRelation tableKey="object_xref" relationId="764"/>
+		<maskedRelation tableKey="object_xref" relationId="704"/>
+		<maskedRelation tableKey="object_xref" relationId="766"/>
+		<maskedTable tableKey="go_xref"/>
+		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="342" aliasNames="col1" expression=":col1=&quot;Transcript&quot;" hard="false"/>
+	</dataset>
 	<dataset name="object_xref_2" centralTableId="341" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
 		<maskedRelation tableKey="object_xref" relationId="955"/>
 		<maskedRelation tableKey="object_xref" relationId="705"/>
@@ -1716,6 +1828,12 @@
 		<maskedTable tableKey="individual_genotype_multiple_bp"/>
 		<maskedTable tableKey="allele"/>
 	</dataset>
+	<datasetPartitionTable name="object_xref" selectedColumns="db_name">
+		<partitionApplication name="gene" dimension="object_xref" pCols="db_name" dsCols="db_name" relationIds="673" nameCols="db_name"/>
+	</datasetPartitionTable>
+	<datasetPartitionTable name="object_xref_1" selectedColumns="db_name">
+		<partitionApplication name="gene" dimension="object_xref_1" pCols="db_name" dsCols="object_xref_id" nameCols="db_name"/>
+	</datasetPartitionTable>
 	<datasetPartitionTable name="object_xref_2" selectedColumns="db_name">
 		<partitionApplication name="gene" dimension="object_xref_2" pCols="db_name" dsCols="db_name" relationIds="673" nameCols="db_name"/>
 	</datasetPartitionTable>
