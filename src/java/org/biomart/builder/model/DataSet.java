@@ -308,7 +308,8 @@ public class DataSet extends GenericSchema {
 									.getSchemaRelation().getFirstKey()) ? rhs
 									.toString() : lhs.toString());
 							sqlWhere.append('.');
-							sqlWhere.append(jtu.getSchemaSourceKey()
+							sqlWhere.append(jtu.getSchemaRelation()
+									.getOtherKey(jtu.getSchemaSourceKey())
 									.getColumnNames().get(k));
 						}
 						// Add any rel restrictions to where clause.
@@ -834,7 +835,8 @@ public class DataSet extends GenericSchema {
 			// Add partitioning prefixes.
 			for (int k = 0; k < nameCols.size(); k++) {
 				final PartitionColumn pcol = (PartitionColumn) nameCols.get(k);
-				final String suffix = nameColSuffixes.size()<=k? "" : ("#" + (String) nameColSuffixes.get(k));
+				final String suffix = nameColSuffixes.size() <= k ? ""
+						: ("#" + (String) nameColSuffixes.get(k));
 				colName = pcol.getName() + suffix
 						+ Resources.get("columnnameSep") + colName;
 			}
@@ -1186,7 +1188,8 @@ public class DataSet extends GenericSchema {
 					newDataSet.getDataSetModifications());
 			newDataSet.setPartitionTable(this.isPartitionTable);
 			if (this.isPartitionTable())
-				this.asPartitionTable().replicate(newDataSet.asPartitionTable());
+				this.asPartitionTable()
+						.replicate(newDataSet.asPartitionTable());
 			this.mart.addDataSet(newDataSet);
 
 			// Synchronise it.
