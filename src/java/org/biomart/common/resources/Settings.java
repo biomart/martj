@@ -21,7 +21,10 @@ package org.biomart.common.resources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -83,6 +86,8 @@ public class Settings {
 			"properties");
 
 	private static final Object SAVE_LOCK = new String("__SAVE__LOCK");
+	
+	private static final String manifestName = "__MANIFEST.txt";
 
 	// Create the bits we need on start-up.
 	static {
@@ -175,10 +180,12 @@ public class Settings {
 					// call for map keys and values will change the
 					// structure of the LRU cache map, and hence cause
 					// ConcurrentModificationExceptions.
+					final List manifestList = new ArrayList();
 					for (final Iterator j = ((Map) classCacheEntry.getValue())
 							.entrySet().iterator(); j.hasNext();) {
 						final Map.Entry entry = (Map.Entry) j.next();
 						final String name = (String) entry.getKey();
+						manifestList.add(name);
 						final Properties props = (Properties) entry.getValue();
 						final File propsFile = new File(classDir, name);
 						Log
@@ -187,6 +194,13 @@ public class Settings {
 						props.store(new FileOutputStream(propsFile), Resources
 								.get("settingsCacheHeader"));
 					}
+					// Write manifest speciying order of keys.
+					final File manifest = new File(classDir, Settings.manifestName);
+					final FileOutputStream fos = new FileOutputStream(manifest);
+					final ObjectOutputStream oos = new ObjectOutputStream(fos);
+					oos.writeObject(manifestList);
+					oos.flush();
+					fos.close();
 				}
 			} catch (final Throwable t) {
 				Log.error("Failed to save settings", t);
@@ -286,15 +300,28 @@ public class Settings {
 					Log.debug("Loading class cache for " + clazz.getName());
 					final File classDir = new File(Settings.classCacheDir,
 							classes[i]);
-					final String[] entries = classDir.list();
-					for (int j = 0; j < entries.length; j++) {
+					// Write manifest speciying reverse order of keys.
+					List manifestList;
+					try {
+						final File manifest = new File(classDir, Settings.manifestName);
+						final FileInputStream fis = new FileInputStream(manifest);
+						final ObjectInputStream ois = new ObjectInputStream(fis);
+						manifestList = (List)ois.readObject();
+						fis.close();
+					} catch (final Exception e) {
+						// No manifest? Use natural order instead.
+						manifestList = Arrays.asList(classDir.list());
+					}
+					// Load files in order specified in manifest.
+					for (final Iterator j = manifestList.iterator(); j.hasNext(); ) {
+						final String entry = (String)j.next();
 						final Properties props = new Properties();
-						final File propsFile = new File(classDir, entries[j]);
+						final File propsFile = new File(classDir, entry);
 						Log.debug("Loading properties from "
 								+ propsFile.getPath());
 						props.load(new FileInputStream(propsFile));
 						Settings
-								.saveHistoryProperties(clazz, entries[j], props);
+								.saveHistoryProperties(clazz, entry, props);
 					}
 				} catch (final ClassNotFoundException e) {
 					// Ignore. We don't care as these settings are
