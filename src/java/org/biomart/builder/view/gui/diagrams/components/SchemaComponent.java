@@ -29,6 +29,7 @@ import java.awt.event.MouseEvent;
 import java.util.Iterator;
 
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
@@ -53,7 +54,15 @@ import org.biomart.common.resources.Resources;
 public class SchemaComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private static final Color BACKGROUND_COLOUR = Color.YELLOW;
+	/**
+	 * Normal background colour.
+	 */
+	public static final Color BACKGROUND_COLOUR = Color.YELLOW;
+
+	/**
+	 * Background for masked schemas.
+	 */
+	public static Color MASKED_BACKGROUND = Color.LIGHT_GRAY;
 
 	private static final Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
@@ -175,6 +184,24 @@ public class SchemaComponent extends BoxShapedComponent {
 			}
 		});
 		contextMenu.add(remove);
+
+		// Separator
+		contextMenu.addSeparator();
+
+		// Masked menu option.
+		final JMenuItem masked = new JCheckBoxMenuItem(Resources
+				.get("maskedSchemaTitle"));
+		masked.setMnemonic(Resources.get("maskedSchemaMnemonic").charAt(0));
+		masked.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().requestMaskSchema(
+								SchemaComponent.this.getSchema(),
+								masked.isSelected());
+			}
+		});
+		masked.setSelected(this.getSchema().isMasked());
+		contextMenu.add(masked);
 
 		// Return it. Will be further adapted by a listener elsewhere.
 		return contextMenu;

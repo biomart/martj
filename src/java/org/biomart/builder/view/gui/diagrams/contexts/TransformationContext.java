@@ -94,7 +94,14 @@ public class TransformationContext extends DataSetContext {
 	}
 
 	public boolean isMasked(final Object object) {
-		// Nothing is ever masked here otherwise it wouldn't show up!
+		// Is it a column?
+		if (object instanceof DataSetColumn) {
+
+			if (this.getDataSet().getDataSetModifications().isMaskedColumn(
+					(DataSetColumn) object))
+				return true;
+		}
+		
 		return false;
 	}
 

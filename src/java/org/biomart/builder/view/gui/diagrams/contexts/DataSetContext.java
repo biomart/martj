@@ -105,7 +105,7 @@ public class DataSetContext extends SchemaContext {
 			// Fade MASKED DIMENSION relations.
 			if (this.getDataSet().getDataSetModifications().isMaskedTable(
 					target)
-					|| this.getDataSet().isMasked()) 
+					|| this.getDataSet().isMasked())
 				component.setForeground(RelationComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION relations.
@@ -136,7 +136,7 @@ public class DataSetContext extends SchemaContext {
 
 			// Fade MASKED DIMENSION relations.
 			else if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					(DataSetTable) object)) 
+					(DataSetTable) object))
 				component.setForeground(TableComponent.MASKED_COLOUR);
 
 			// Fade MASKED datasets.
@@ -402,22 +402,18 @@ public class DataSetContext extends SchemaContext {
 
 		// Is it a table?
 		else if (object instanceof DataSetTable) {
-			
+
 			// Fade MASKED DIMENSION relations.
 			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					(DataSetTable) object)) 
+					(DataSetTable) object))
 				return true;
 		}
 
-		// Columns.
+		// Is it a column?
 		else if (object instanceof DataSetColumn) {
 
-			// Which column is it?
-			final DataSetColumn column = (DataSetColumn) object;
-
-			// Fade out all MASKED columns.
-			if (((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isMaskedColumn(column))
+			if (this.getDataSet().getDataSetModifications().isMaskedColumn(
+					(DataSetColumn) object))
 				return true;
 		}
 
@@ -628,7 +624,7 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(partitionWizard);
 				partitionWizard.setSelected(this.getMartTab().getMart()
-						.getPartitionTableForDimension(table)!=null);
+						.getPartitionTableForDimension(table) != null);
 				if (isMasked || isMerged)
 					partitionWizard.setEnabled(false);
 			}

@@ -44,6 +44,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
@@ -562,12 +563,21 @@ public abstract class BoxShapedComponent extends JPanel implements
 	public void updateAppearance() {
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null) {
-			if (this.getDiagram().isMaskedHidden()
-					&& mod.isMasked(this.getObject())) {
-				this.setVisible(false);
-				return;
-			} else
-				mod.customiseAppearance(this, this.getObject());
+			if (mod.isMasked(this.getObject())) {
+				if (this instanceof ColumnComponent) {
+					final TableComponent parent = (TableComponent) SwingUtilities
+							.getAncestorOfClass(TableComponent.class, this);
+					if (parent != null && parent.isHidingMaskedCols()) {
+						this.setVisible(false);
+						return;
+					}
+				} else if (this.getDiagram().isMaskedHidden()) {
+					this.setVisible(false);
+					return;
+				}
+			}
+			this.setVisible(true);
+			mod.customiseAppearance(this, this.getObject());
 		}
 		if (this.indexed)
 			this.stroke = BoxShapedComponent.INDEXED_OUTLINE;
@@ -578,6 +588,5 @@ public abstract class BoxShapedComponent extends JPanel implements
 			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_OUTLINE
 					: BoxShapedComponent.OUTLINE;
 		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
-		this.setVisible(true);
 	}
 }

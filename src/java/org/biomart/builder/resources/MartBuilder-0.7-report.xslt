@@ -137,8 +137,10 @@ Database schema: <xsl:value-of select="@schemaName"/>
 Username: <xsl:value-of select="@username"/>
 Password: <xsl:value-of select="@password"/>
 
-Uses keyguessing?: <xsl:value-of select="@keyguessing"/>
 Schema partitions: <xsl:choose><xsl:when test="@partitionRegex">Regex: <xsl:value-of select="@partitionRegex"/> with naming expression: <xsl:value-of select="@partitionExpression"/></xsl:when><xsl:otherwise>-- none specified --</xsl:otherwise></xsl:choose>
+
+Uses keyguessing?: <xsl:value-of select="@keyguessing"/>
+Masked?: <xsl:value-of select="@masked"/>
 
 Incorrect keys and relations (if any)
 -------------------------------------

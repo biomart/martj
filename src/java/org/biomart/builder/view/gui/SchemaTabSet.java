@@ -111,9 +111,11 @@ public class SchemaTabSet extends JTabbedPane {
 		this.allSchemasDiagram = new AllSchemasDiagram(this.martTab);
 		final JScrollPane scroller = new JScrollPane(this.allSchemasDiagram);
 		scroller.getViewport().setBackground(
-				this.allSchemasDiagram.getBackground());		
-		scroller.getHorizontalScrollBar().addAdjustmentListener(this.allSchemasDiagram);
-		scroller.getVerticalScrollBar().addAdjustmentListener(this.allSchemasDiagram);
+				this.allSchemasDiagram.getBackground());
+		scroller.getHorizontalScrollBar().addAdjustmentListener(
+				this.allSchemasDiagram);
+		scroller.getVerticalScrollBar().addAdjustmentListener(
+				this.allSchemasDiagram);
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
 
 		// Populate the map to hold the relation between schemas and the
@@ -146,7 +148,7 @@ public class SchemaTabSet extends JTabbedPane {
 		scroller.getViewport().setBackground(schemaDiagram.getBackground());
 		scroller.getHorizontalScrollBar().addAdjustmentListener(schemaDiagram);
 		scroller.getVerticalScrollBar().addAdjustmentListener(schemaDiagram);
-		
+
 		// Add a tab containing the scroller, with the same name as the schema.
 		this.addTab(schema.getName(), scroller);
 
@@ -402,7 +404,7 @@ public class SchemaTabSet extends JTabbedPane {
 		for (final Iterator i = this.martTab.getMart().getSchemas().iterator(); i
 				.hasNext();) {
 			final Schema schema = (Schema) i.next();
-			if (!this.schemaToDiagram[0].contains(schema))
+			if (!this.schemaToDiagram[0].contains(schema) && !schema.isMasked())
 				this.addSchemaTab(schema, false);
 		}
 
@@ -412,7 +414,8 @@ public class SchemaTabSet extends JTabbedPane {
 		final List ourSchemas = new ArrayList(this.schemaToDiagram[0]);
 		for (final Iterator i = ourSchemas.iterator(); i.hasNext();) {
 			final Schema schema = (Schema) i.next();
-			if (!this.martTab.getMart().getSchemas().contains(schema))
+			if (!this.martTab.getMart().getSchemas().contains(schema)
+					|| schema.isMasked())
 				this.removeSchemaTab(schema, false);
 		}
 	}
@@ -791,11 +794,46 @@ public class SchemaTabSet extends JTabbedPane {
 
 				// And the overview.
 				SchemaTabSet.this.repaintSchemaDiagram(table.getSchema());
+				SchemaTabSet.this.martTab.getDataSetTabSet()
+						.recalculateDataSetTabs();
 
 				// And the overview.
 				SchemaTabSet.this.repaintOverviewDiagram();
-				SchemaTabSet.this.martTab.getDataSetTabSet()
-						.recalculateAffectedDataSetDiagrams(table.getSchema());
+				SchemaTabSet.this.getMartTab().getDataSetTabSet()
+						.recalculateOverviewDiagram();
+
+				// Update the modified status for this tabset.
+				SchemaTabSet.this.martTab.getMartTabSet()
+						.requestChangeModifiedStatus(true);
+			}
+		}.start();
+	}
+
+	/**
+	 * Asks that a schema be (un)masked.
+	 * 
+	 * @param s
+	 *            the schema we are working with.
+	 * @param masked
+	 *            mask it?
+	 */
+	public void requestMaskSchema(final Schema s, final boolean masked) {
+		new LongProcess() {
+			public void run() throws Exception {
+				MartBuilderUtils.maskSchema(SchemaTabSet.this.getMartTab()
+						.getMart(), s, masked);
+
+				// And the diagram.
+				SchemaTabSet.this.repaintSchemaDiagram(s);
+
+				// And the tabs.
+				SchemaTabSet.this.getMartTab().getDataSetTabSet()
+						.recalculateDataSetTabs();
+				SchemaTabSet.this.recalculateSchemaTabs();
+
+				SchemaTabSet.this.getMartTab().getDataSetTabSet()
+						.recalculateOverviewDiagram();
+				SchemaTabSet.this.repaintOverviewDiagram();
 
 				// Update the modified status for this tabset.
 				SchemaTabSet.this.martTab.getMartTabSet()

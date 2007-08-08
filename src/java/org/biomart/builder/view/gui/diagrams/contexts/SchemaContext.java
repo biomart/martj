@@ -33,10 +33,12 @@ import javax.swing.JRadioButtonMenuItem;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
+import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
+import org.biomart.common.model.Schema;
 import org.biomart.common.model.Table;
 import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
@@ -78,8 +80,17 @@ public class SchemaContext implements DiagramContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
+		// This bit updates schema boxes.
+		if (object instanceof Schema) {
+			final SchemaComponent schcomp = (SchemaComponent) component;
+			if (((Schema)object).isMasked())
+				schcomp.setBackground(SchemaComponent.MASKED_BACKGROUND);
+			else
+				schcomp.setBackground(SchemaComponent.BACKGROUND_COLOUR);
+		}
+		
 		// This bit removes a restricted outline from any restricted tables.
-		if (object instanceof Table) {
+		else if (object instanceof Table) {
 			final TableComponent tblcomp = (TableComponent) component;
 			tblcomp.setRestricted(false);
 
@@ -111,7 +122,9 @@ public class SchemaContext implements DiagramContext {
 			// head to ignored tables.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
 					|| relation.getFirstKey().getTable().isIgnore()
-					|| relation.getSecondKey().getTable().isIgnore())
+					|| relation.getSecondKey().getTable().isIgnore()
+					|| relation.getFirstKey().getTable().getSchema().isMasked()
+					|| relation.getSecondKey().getTable().getSchema().isMasked())
 				component.setForeground(RelationComponent.INCORRECT_COLOUR);
 
 			// Highlight all HANDMADE relations.
@@ -147,9 +160,14 @@ public class SchemaContext implements DiagramContext {
 	}
 
 	public boolean isMasked(final Object object) {
+		
+		if (object instanceof Schema) {
+			if (((Schema)object).isMasked())
+				return true;
+		}
+		
 		// Incorrect and ignored stuff is 'masked'.
-
-		if (object instanceof Table) {
+		else if (object instanceof Table) {
 
 			// Fade out all ignored tables.
 			if (((Table) object).isIgnore())
@@ -163,10 +181,12 @@ public class SchemaContext implements DiagramContext {
 			final Relation relation = (Relation) object;
 
 			// Fade out all INFERRED_INCORRECT relations and those which
-			// head to ignored tables.
+			// head to ignored tables or masked schemas.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
 					|| relation.getFirstKey().getTable().isIgnore()
-					|| relation.getSecondKey().getTable().isIgnore())
+					|| relation.getFirstKey().getTable().isIgnore()
+					|| relation.getFirstKey().getTable().getSchema().isMasked()
+					|| relation.getSecondKey().getTable().getSchema().isMasked())
 				return true;
 
 		}
@@ -216,6 +236,7 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(suggest);
+			suggest.setEnabled(!table.getSchema().isMasked());
 
 			// Separator.
 			contextMenu.addSeparator();
@@ -276,6 +297,7 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			ignore.setSelected(table.isIgnore());
+			ignore.setEnabled(!table.getSchema().isMasked());
 			contextMenu.add(ignore);
 		}
 

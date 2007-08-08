@@ -96,8 +96,6 @@ public class DataSet extends GenericSchema {
 
 	private boolean invisible;
 
-	private boolean masked;
-
 	private boolean isPartitionTable;
 
 	private PartitionTable partitionTable;
@@ -256,7 +254,7 @@ public class DataSet extends GenericSchema {
 					.getTransformationUnits().iterator(); i.hasNext()
 					&& positionMap.size() < trueSelectedCols.size();) {
 				final TransformationUnit tu = (TransformationUnit) i.next();
-				if (tu instanceof SelectFromTable) {					
+				if (tu instanceof SelectFromTable) {
 					// JoinTable extends SelectFromTable.
 					// Skip SkipTables.
 					if (tu instanceof SkipTable)
@@ -545,8 +543,8 @@ public class DataSet extends GenericSchema {
 					// Skip columns that are not in the primary key.
 					final boolean inPK = parentDSTablePK.getColumns().contains(
 							parentDSCol);
-					final boolean inSourceKey = sourceDSCols != null
-							&& sourceDSCols.contains(parentDSCol);
+					final boolean inSourceKey = sourceDSCols
+							.contains(parentDSCol);
 					if (!inPK && !inSourceKey)
 						continue;
 				}
@@ -587,10 +585,10 @@ public class DataSet extends GenericSchema {
 						.iterator(); i.hasNext();) {
 					final ForeignKey parentFK = (ForeignKey) i.next();
 					final List childFKCols = new ArrayList();
-					for (final Iterator j = parentFK.getColumns()
-							.iterator(); j.hasNext();)
-						childFKCols.add(parentTU.getNewColumnNameMap()
-								.get(((DataSetColumn)j.next()).getName()));
+					for (final Iterator j = parentFK.getColumns().iterator(); j
+							.hasNext();)
+						childFKCols.add(parentTU.getNewColumnNameMap().get(
+								((DataSetColumn) j.next()).getName()));
 					try {
 						// Create the child FK.
 						final ForeignKey dsTableFK = new GenericForeignKey(
@@ -904,17 +902,6 @@ public class DataSet extends GenericSchema {
 			if (((Integer) relationCount.get(r)).intValue() <= 0)
 				continue;
 
-			// Don't follow masked relations.
-			if (this.schemaMods.isMaskedRelation(dsTable, r)) {
-				// Make a fake SKIP table unit to show what
-				// might still be possible for the user.
-				final Key skipKey = r.getKeyForTable(mergeTable);
-				final SkipTable stu = new SkipTable(tu, skipKey.getTable(), sourceDataSetCols,
-						skipKey, r, ((Integer) relationCount.get(r)).intValue());
-				dsTable.addTransformationUnit(stu);
-				continue;
-			}
-
 			// Don't follow directional relations from the wrong end.
 			if (this.schemaMods.isDirectionalRelation(dsTable, r)
 					&& !r.getFirstKey().getTable().equals(
@@ -936,6 +923,30 @@ public class DataSet extends GenericSchema {
 			if (r.getOtherKey(r.getKeyForTable(mergeTable)).getTable()
 					.isIgnore())
 				continue;
+
+			// Don't follow relations to masked schemas.
+			if (r.getOtherKey(r.getKeyForTable(mergeTable)).getTable()
+					.getSchema().isMasked())
+				continue;
+
+			// Don't follow masked relations.
+			// NB. This is last so that only masked relations show
+			// up, not those skipped for other reasons.
+			if (this.schemaMods.isMaskedRelation(dsTable, r)) {
+				// Make a fake SKIP table unit to show what
+				// might still be possible for the user.
+				final Key skipKey = r.getKeyForTable(mergeTable);
+				final List newSourceDSCols = new ArrayList();
+				for (final Iterator j = skipKey.getColumns()
+						.iterator(); j.hasNext();)
+					newSourceDSCols.add(tu.getDataSetColumnFor((Column) j
+							.next()));
+				final SkipTable stu = new SkipTable(tu, skipKey.getTable(),
+						newSourceDSCols, skipKey, r, ((Integer) relationCount
+								.get(r)).intValue());
+				dsTable.addTransformationUnit(stu);
+				continue;
+			}
 
 			// Decrement the relation counter.
 			relationCount.put(r, new Integer(((Integer) relationCount.get(r))
@@ -1187,15 +1198,6 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Test to see if this dataset is masked.
-	 * 
-	 * @return <tt>true</tt> if it is masked, <tt>false</tt> otherwise.
-	 */
-	public boolean isMasked() {
-		return this.masked;
-	}
-
-	/**
 	 * Returns the mart of this dataset.
 	 * 
 	 * @return the mart containing this dataset.
@@ -1271,17 +1273,6 @@ public class DataSet extends GenericSchema {
 	}
 
 	/**
-	 * Sets the maskedness of this dataset.
-	 * 
-	 * @param masked
-	 *            <tt>true</tt> if it is masked, <tt>false</tt> otherwise.
-	 */
-	public void setMasked(final boolean masked) {
-		Log.debug("Setting masked flag in " + this.getName());
-		this.masked = masked;
-	}
-
-	/**
 	 * Synchronise this dataset with the schema that is providing its tables.
 	 * Synchronisation means checking the columns and relations and removing any
 	 * that have disappeared. The dataset is then regenerated. After
@@ -1309,13 +1300,32 @@ public class DataSet extends GenericSchema {
 			// Generate the main table. It will recursively generate all the
 			// others.
 			this.generateDataSetTable(DataSetTableType.MAIN, null, this
-					.getRealCentralTable(), null, null, new HashMap(), 0);
+					.getRealCentralTable(), Collections.EMPTY_LIST, null,
+					new HashMap(), 0);
 		} catch (final PartitionException pe) {
 			throw new DataModelException(pe);
 		}
 
 		// Update the modification sets.
 		this.dsMods.synchronise();
+	}
+	
+	public boolean isMasked() {
+		// Is the table or schema ignored?
+		if (this.centralTable.isIgnore()
+				|| this.centralTable.getSchema().isMasked())
+			return true;
+		else
+			return super.isMasked();
+	}
+	
+	public void setMasked(final boolean masked) {
+		// Ignore if the schema is masked or the central
+		// table is masked.
+		if (this.centralTable.isIgnore()
+				|| this.centralTable.getSchema().isMasked())
+			return;
+		super.setMasked(masked);
 	}
 
 	/**

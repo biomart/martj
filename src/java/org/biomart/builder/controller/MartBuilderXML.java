@@ -494,6 +494,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("name", jdbcSchema.getName(), xmlWriter);
 			this.writeAttribute("keyguessing", Boolean.toString(jdbcSchema
 					.isKeyGuessing()), xmlWriter);
+			this.writeAttribute("masked", Boolean.toString(jdbcSchema
+					.isMasked()), xmlWriter);
 
 			// Partitions.
 			this.writeAttribute("partitionRegex", jdbcSchema
@@ -549,8 +551,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.openElement("table", xmlWriter);
 			this.writeAttribute("id", tableMappedID, xmlWriter);
 			this.writeAttribute("name", table.getName(), xmlWriter);
-			this.writeAttribute("ignore", Boolean
-					.toString(table.isIgnore()), xmlWriter);
+			this.writeAttribute("ignore", Boolean.toString(table.isIgnore()),
+					xmlWriter);
 
 			// Write out columns inside each table.
 			for (final Iterator ci = table.getColumns().iterator(); ci
@@ -684,10 +686,10 @@ public class MartBuilderXML extends DefaultHandler {
 							.get(ds.getCentralTable()), xmlWriter);
 			this.writeAttribute("optimiser", ds.getDataSetOptimiserType()
 					.getName(), xmlWriter);
-			this.writeAttribute("invisible", Boolean
-					.toString(ds.isInvisible()), xmlWriter);
-			this.writeAttribute("masked", Boolean
-					.toString(ds.isMasked()), xmlWriter);
+			this.writeAttribute("invisible",
+					Boolean.toString(ds.isInvisible()), xmlWriter);
+			this.writeAttribute("masked", Boolean.toString(ds.isMasked()),
+					xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
 
@@ -1247,6 +1249,8 @@ public class MartBuilderXML extends DefaultHandler {
 			final String name = (String) attributes.get("name");
 			final boolean keyguessing = Boolean.valueOf(
 					(String) attributes.get("keyguessing")).booleanValue();
+			final boolean masked = Boolean.valueOf(
+					(String) attributes.get("masked")).booleanValue();
 
 			// Does it have partitions?
 			final String partitionRegex = (String) attributes
@@ -1258,6 +1262,7 @@ public class MartBuilderXML extends DefaultHandler {
 			try {
 				final Schema schema = new JDBCSchema(driverClassName, url,
 						schemaName, username, password, name, keyguessing);
+				schema.setMasked(masked);
 				schema.setPartitionRegex(partitionRegex);
 				schema.setPartitionNameExpression(partitionExpression);
 				schema.storeInHistory();

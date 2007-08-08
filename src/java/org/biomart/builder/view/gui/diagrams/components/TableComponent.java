@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -38,6 +39,8 @@ import javax.swing.JTextField;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTable;
+import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Table;
@@ -63,7 +66,7 @@ public class TableComponent extends BoxShapedComponent {
 	 * Border colour for all unpartitioned tables.
 	 */
 	public static Color NORMAL_COLOUR = Color.BLACK;
-	
+
 	/**
 	 * Border colour for all ignored tables.
 	 */
@@ -85,6 +88,8 @@ public class TableComponent extends BoxShapedComponent {
 	private GridBagLayout layout;
 
 	private JButton showHide;
+
+	private boolean hidingMaskedCols = false;
 
 	/**
 	 * This constructor makes a new table component, associated with a
@@ -127,6 +132,15 @@ public class TableComponent extends BoxShapedComponent {
 		return (Table) this.getObject();
 	}
 
+	/**
+	 * Is this table component hiding masked columns currently?
+	 * 
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isHidingMaskedCols() {
+		return this.hidingMaskedCols;
+	}
+
 	public void recalculateDiagramComponent() {
 		// Remove all our existing components.
 		this.removeAll();
@@ -135,14 +149,12 @@ public class TableComponent extends BoxShapedComponent {
 		final JTextField name = new JTextField();
 		name.setFont(TableComponent.BOLD_FONT);
 		this.setRenameTextField(name);
-		this.layout.setConstraints(name, this.constraints);
-		this.add(name);
+		this.add(name, this.constraints);
 
 		// Add the schema name label.
 		final JLabel label = new JLabel(this.getTable().getSchema().getName());
 		label.setFont(TableComponent.ITALIC_FONT);
-		this.layout.setConstraints(label, this.constraints);
-		this.add(label);
+		this.add(label, this.constraints);
 
 		// Add a key component as a sub-component of this table,
 		// for each of the foreign keys in the table.
@@ -157,14 +169,11 @@ public class TableComponent extends BoxShapedComponent {
 			this.getSubComponents().putAll(keyComponent.getSubComponents());
 
 			// Physically add it to the table component layout.
-			this.layout.setConstraints(keyComponent, this.constraints);
-			this.add(keyComponent);
+			this.add(keyComponent, this.constraints);
 		}
 
 		// Now the columns, as a vertical list in their own panel.
-		this.columnsListPanel = new JPanel();
-		final GridBagLayout columnsListPanelLayout = new GridBagLayout();
-		this.columnsListPanel.setLayout(columnsListPanelLayout);
+		this.columnsListPanel = new JPanel(new GridBagLayout());
 
 		// Do a bit of sorting to make them alphabetical first.
 		final Map sortedColMap = new TreeMap();
@@ -177,7 +186,26 @@ public class TableComponent extends BoxShapedComponent {
 		}
 
 		// GridBagLayout has a maximum number of components (512).
-		if (sortedColMap.size() <= 500)
+		if (sortedColMap.size() <= 500) {
+			// If dataset table...
+			if (this.getTable() instanceof DataSetTable
+					|| this.getTable() instanceof RealisedTable
+					|| this.getTable() instanceof FakeTable) {
+				final JCheckBox hideMaskedButton = new JCheckBox(Resources
+						.get("hideMaskedTitle"));
+				hideMaskedButton.setFont(TableComponent.BOLD_FONT);
+				this.columnsListPanel.add(hideMaskedButton, this.constraints);
+				hideMaskedButton.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent e) {
+						TableComponent.this.hidingMaskedCols = hideMaskedButton
+								.isSelected();
+						// Recalculate the diagram.
+						TableComponent.this.getDiagram().revalidate();
+						TableComponent.this.getDiagram().repaintDiagram();
+					}
+				});
+			}
+
 			// Add columns to the list one by one, as column sub-components.
 			for (final Iterator i = sortedColMap.values().iterator(); i
 					.hasNext();) {
@@ -190,20 +218,16 @@ public class TableComponent extends BoxShapedComponent {
 				this.getSubComponents().putAll(colComponent.getSubComponents());
 
 				// Physically add it to the list of columns.
-				columnsListPanelLayout.setConstraints(colComponent,
-						this.constraints);
-				this.columnsListPanel.add(colComponent);
+				this.columnsListPanel.add(colComponent, this.constraints);
 			}
-		else
+		} else
 			this.columnsListPanel.add(new JLabel(Resources.get(
 					"tooManyColsToDisplay", "500")));
-		this.layout.setConstraints(this.columnsListPanel, this.constraints);
 
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));
 		this.showHide.setFont(TableComponent.BOLD_FONT);
-		this.layout.setConstraints(this.showHide, this.constraints);
-		this.add(this.showHide);
+		this.add(this.showHide, this.constraints);
 		this.showHide.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (TableComponent.this.getState().equals(Boolean.TRUE))
@@ -215,7 +239,7 @@ public class TableComponent extends BoxShapedComponent {
 				TableComponent.this.getDiagram().repaintDiagram();
 			}
 		});
-		this.showHide.setEnabled(sortedColMap.size()>0);
+		this.showHide.setEnabled(sortedColMap.size() > 0);
 
 		// Set our initial display state as false, which means columns are
 		// hidden.
@@ -255,7 +279,7 @@ public class TableComponent extends BoxShapedComponent {
 		if (state != null && state.equals(Boolean.TRUE)) {
 			if (this.getState() != null
 					&& this.getState().equals(Boolean.FALSE))
-				this.add(this.columnsListPanel);
+				this.add(this.columnsListPanel, this.constraints);
 			this.showHide.setText(Resources.get("hideColumnsButton"));
 		} else {
 			if (this.getState() != null && this.getState().equals(Boolean.TRUE))

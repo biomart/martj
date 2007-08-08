@@ -20,6 +20,7 @@ package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -83,6 +85,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	private static final int MAX_UNITS = Settings.getProperty("maxunits") == null ? 50
 			: Integer.parseInt(Settings.getProperty("maxunits"));
 
+	private JCheckBox maskedHidden;
+
 	/**
 	 * Opens an explanation showing the underlying relations and tables behind a
 	 * specific dataset table.
@@ -119,9 +123,14 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	private JPanel transformation;
 
-	private final List transformationTableComponents = new ArrayList();
+	private final List transformationTableDiagrams = new ArrayList();
 
 	private TransformationContext transformationContext;
+
+	/**
+	 * The background for the masked checkbox.
+	 */
+	public static final Color MASK_BG_COLOR = Color.WHITE;
 
 	private ExplainTableDialog(final MartTab martTab, final DataSetTable dsTable) {
 		// Create the blank dialog, and give it an appropriate title.
@@ -133,6 +142,17 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.tableName = dsTable.getName();
 		this.martTab = martTab;
 		this.schemaTabSet = martTab.getSchemaTabSet();
+
+		// Create the hide masked box.
+		this.maskedHidden = new JCheckBox(Resources.get("hideMaskedTitle"));
+		this.maskedHidden.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				ExplainTableDialog.this.recalculateDialog(null);
+			}
+		});
+		// It has a semi-transparent background with no border.
+		this.maskedHidden.setOpaque(true);
+		this.maskedHidden.setBackground(ExplainTableDialog.MASK_BG_COLOR);
 
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
@@ -247,16 +267,18 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 			public void run() throws Exception {
 				// Keep a note of shown tables.
 				final Map shownTables = new HashMap();
-				for (final Iterator i = ExplainTableDialog.this.transformationTableComponents
+				for (final Iterator i = ExplainTableDialog.this.transformationTableDiagrams
 						.iterator(); i.hasNext();) {
-					final TableComponent comp = (TableComponent) i.next();
+					for (final Iterator j = ((ExplainTransformationDiagram)i.next()).getTableComponents().iterator(); j.hasNext(); ) {
+					final TableComponent comp = (TableComponent) j.next();
 					shownTables.put(((Table) comp.getObject()).getName(), comp
 							.getState());
+					}
 				}
 
 				// Clear the transformation box.
 				ExplainTableDialog.this.transformation.removeAll();
-				ExplainTableDialog.this.transformationTableComponents.clear();
+				ExplainTableDialog.this.transformationTableDiagrams.clear();
 
 				// Keep track of columns counted so far.
 				final List columnsSoFar = new ArrayList();
@@ -277,6 +299,14 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 									+ ExplainTableDialog.MAX_UNITS)),
 							ExplainTableDialog.this.fieldLastRowConstraints);
 				else {
+					// Insert show/hide hidden steps button.
+					ExplainTableDialog.this.transformation.add(new JLabel(),
+							ExplainTableDialog.this.labelConstraints);
+					JPanel field = new JPanel();
+					field.add(ExplainTableDialog.this.maskedHidden);
+					ExplainTableDialog.this.transformation.add(field,
+							ExplainTableDialog.this.fieldConstraints);
+
 					// Iterate over transformation units.
 					for (final Iterator i = units.iterator(); i.hasNext();) {
 						final TransformationUnit tu = (TransformationUnit) i
@@ -297,8 +327,12 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 																	.get("explainExpressionLabel") }));
 							diagram = new ExplainTransformationDiagram.AdditionalColumns(
 									ExplainTableDialog.this.martTab, tu,
-									stepNumber, explainContext);
+									stepNumber, explainContext, shownTables);
 						} else if (tu instanceof SkipTable) {
+							// Don't show these if we're hiding masked things.
+							if (ExplainTableDialog.this.maskedHidden
+									.isSelected())
+								continue;
 							// Temp table to schema table join.
 							label = new JLabel(
 									Resources
@@ -311,7 +345,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 							diagram = new ExplainTransformationDiagram.SkipTempReal(
 									ExplainTableDialog.this.martTab,
 									(SkipTable) tu, columnsSoFar, stepNumber,
-									explainContext);
+									explainContext, shownTables);
 						} else if (tu instanceof JoinTable) {
 							// Temp table to schema table join.
 							label = new JLabel(
@@ -325,7 +359,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 							diagram = new ExplainTransformationDiagram.TempReal(
 									ExplainTableDialog.this.martTab,
 									(JoinTable) tu, columnsSoFar, stepNumber,
-									explainContext);
+									explainContext, shownTables);
 						} else if (tu instanceof SelectFromTable) {
 							// Do a single-step select.
 							label = new JLabel(
@@ -339,33 +373,30 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 							diagram = new ExplainTransformationDiagram.SingleTable(
 									ExplainTableDialog.this.martTab,
 									(SelectFromTable) tu, stepNumber,
-									explainContext);
+									explainContext, shownTables);
 						} else
 							throw new BioMartError();
-						ExplainTableDialog.this.transformationTableComponents
-								.addAll(diagram.getTableComponents());
 						// Display the diagram.
-						ExplainTableDialog.this.transformation.add(label,
-								ExplainTableDialog.this.labelConstraints);
+						ExplainTableDialog.this.transformation
+								.add(
+										label,
+										i.hasNext() ? ExplainTableDialog.this.labelConstraints
+												: ExplainTableDialog.this.labelLastRowConstraints);
 						diagram
 								.setDiagramContext(ExplainTableDialog.this.transformationContext);
-						final JPanel field = new JPanel();
+						field = new JPanel();
 						field.add(diagram);
-						ExplainTableDialog.this.transformation.add(field,
-								ExplainTableDialog.this.fieldConstraints);
+						ExplainTableDialog.this.transformation
+								.add(
+										field,
+										i.hasNext() ? ExplainTableDialog.this.fieldConstraints
+												: ExplainTableDialog.this.fieldLastRowConstraints);
 						// Add columns from this unit to the transformed table.
 						columnsSoFar.addAll(tu.getNewColumnNameMap().values());
 						stepNumber++;
-					}
-
-					// Reinstate shown/hidden columns.
-					for (final Iterator i = ExplainTableDialog.this.transformationTableComponents
-							.iterator(); i.hasNext();) {
-						final TableComponent comp = (TableComponent) i.next();
-						final Object state = shownTables.get(((Table) comp
-								.getObject()).getName());
-						if (state != null)
-							comp.setState(state);
+						// Remember what tables we just added.
+						ExplainTableDialog.this.transformationTableDiagrams
+						.add(diagram);
 					}
 				}
 

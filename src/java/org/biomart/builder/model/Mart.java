@@ -177,8 +177,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, sets the default target JDBC host this mart will output dataset DDL
-	 * to later.
+	 * Optional, sets the default target JDBC host this mart will output dataset
+	 * DDL to later.
 	 * 
 	 * @param overrideHost
 	 *            the target host.
@@ -188,8 +188,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, gets the default target JDBC host this mart will output dataset DDL
-	 * to later.
+	 * Optional, gets the default target JDBC host this mart will output dataset
+	 * DDL to later.
 	 * 
 	 * @return the target host.
 	 */
@@ -198,8 +198,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, sets the default target JDBC port this mart will output dataset DDL
-	 * to later.
+	 * Optional, sets the default target JDBC port this mart will output dataset
+	 * DDL to later.
 	 * 
 	 * @param overridePort
 	 *            the target port.
@@ -209,8 +209,8 @@ public class Mart {
 	}
 
 	/**
-	 * Optional, gets the default target JDBC port this mart will output dataset DDL
-	 * to later.
+	 * Optional, gets the default target JDBC port this mart will output dataset
+	 * DDL to later.
 	 * 
 	 * @return the target port.
 	 */

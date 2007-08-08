@@ -139,6 +139,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 	private JCheckBox maskedHidden;
 
+	private boolean useMaskedHidden = true;
+
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
 	 * the given layout manager. The {@link MartTab#getMart()} method will be
@@ -205,6 +207,16 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		// Set our background.
 		this.setBackground(Diagram.BACKGROUND_COLOUR);
 		this.setOpaque(true);
+	}
+
+	/**
+	 * Do we show the masked hidden button?
+	 * 
+	 * @param useMaskedHidden
+	 *            <tt>true</tt> if we want the masked hidden button.
+	 */
+	public void setUseMaskedHidden(final boolean useMaskedHidden) {
+		this.useMaskedHidden = useMaskedHidden;
 	}
 
 	/**
@@ -694,8 +706,9 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				Diagram.this.doRecalculateDiagram();
 
 				// Set up a floating panel with the hide masked box.
-				Diagram.this.add(Diagram.this.maskedHidden, null,
-						Diagram.TOP_LAYER);
+				if (Diagram.this.useMaskedHidden)
+					Diagram.this.add(Diagram.this.maskedHidden, null,
+							Diagram.TOP_LAYER);
 
 				// Reapply all the states. The methods of the Map interface use
 				// equals() to compare objects, so any objects in the new
@@ -739,7 +752,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				for (final Iterator i = Diagram.this.componentMap.values()
 						.iterator(); i.hasNext();)
 					((DiagramComponent) i.next()).repaintDiagramComponent();
-				Diagram.this.maskedHidden.repaint();
+				if (Diagram.this.useMaskedHidden)
+					Diagram.this.maskedHidden.repaint();
 			}
 		}.start();
 	}
@@ -761,7 +775,10 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * @return the space it needs.
 	 */
 	protected Dimension getMaskedHiddenArea() {
-		return this.maskedHidden.getPreferredSize();
+		if (this.useMaskedHidden)
+			return this.maskedHidden.getPreferredSize();
+		else
+			return new Dimension(0, 0);
 	}
 
 	public Dimension getPreferredSize() {
@@ -858,10 +875,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * @return <tt>true</tt> if we should.
 	 */
 	public boolean isMaskedHidden() {
-		return this.maskedHidden.isSelected();
+		return this.useMaskedHidden && this.maskedHidden.isSelected();
 	}
 
 	public void adjustmentValueChanged(final AdjustmentEvent evt) {
+		if (!this.useMaskedHidden)
+			return;
 		// This panel hangs out top-left regardless of viewport
 		// scrolling.
 		final Dimension buttonSize = this.getMaskedHiddenArea();

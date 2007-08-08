@@ -40,6 +40,7 @@
 <!ATTLIST jdbcSchema keyguessing (true|false) #REQUIRED>
 <!ATTLIST jdbcSchema partitionRegex CDATA #IMPLIED>
 <!ATTLIST jdbcSchema partitionExpression CDATA #IMPLIED>
+<!ATTLIST jdbcSchema masked (true|false) #IMPLIED>
 
 <!ELEMENT relation EMPTY>
 <!ATTLIST relation id ID #REQUIRED>

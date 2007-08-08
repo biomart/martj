@@ -112,6 +112,28 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Mask a schema then syncs the datasets.
+	 * 
+	 * @param mart
+	 *            the mart we are working with.
+	 * @param schema
+	 *            the schema to mask.
+	 * @param masked
+	 *            mask it?
+	 * @throws SQLException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 * @throws DataModelException
+	 *             if anything goes wrong when trying to resync datasets after
+	 *             the change.
+	 */
+	public static void maskSchema(final Mart mart, final Schema schema,
+			final boolean masked) throws SQLException, DataModelException {
+		schema.setMasked(masked);
+		mart.synchroniseDataSets(schema);
+	}
+
+	/**
 	 * Attempts to create a foreign key on a table given a set of columns. The
 	 * new key will have a status of {@link ComponentStatus#HANDMADE}.
 	 * 
@@ -267,7 +289,8 @@ public class MartBuilderUtils {
 	 * @param overrideHost
 	 *            the new override host value.
 	 */
-	public static void setOverrideHost(final Mart mart, final String overrideHost) {
+	public static void setOverrideHost(final Mart mart,
+			final String overrideHost) {
 		mart.setOverrideHost(overrideHost);
 	}
 
@@ -279,7 +302,8 @@ public class MartBuilderUtils {
 	 * @param overridePort
 	 *            the new override port value.
 	 */
-	public static void setOverridePort(final Mart mart, final String overridePort) {
+	public static void setOverridePort(final Mart mart,
+			final String overridePort) {
 		mart.setOverridePort(overridePort);
 	}
 
@@ -556,12 +580,18 @@ public class MartBuilderUtils {
 	 *            the columns to mask.
 	 * @throws ValidationException
 	 *             if the column is not maskable.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
 	 */
 	public static void maskColumns(final DataSet dataset,
-			final Collection columns) throws ValidationException {
+			final Collection columns) throws SQLException, DataModelException,
+			ValidationException {
 		for (final Iterator i = columns.iterator(); i.hasNext();)
 			dataset.getDataSetModifications().setMaskedColumn(
 					(DataSetColumn) i.next());
+		dataset.synchronise();
 	}
 
 	/**
@@ -1517,12 +1547,17 @@ public class MartBuilderUtils {
 	 *            the dataset to unmask the column in.
 	 * @param columns
 	 *            the columns to unmask.
+	 * @throws SQLException
+	 *             if the dataset could not be synchronised.
+	 * @throws DataModelException
+	 *             if the dataset could not be synchronised.
 	 */
 	public static void unmaskColumns(final DataSet dataset,
-			final Collection columns) {
+			final Collection columns) throws SQLException, DataModelException {
 		for (final Iterator i = columns.iterator(); i.hasNext();)
 			dataset.getDataSetModifications().unsetMaskedColumn(
 					(DataSetColumn) i.next());
+		dataset.synchronise();
 	}
 
 	/**

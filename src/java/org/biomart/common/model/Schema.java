@@ -338,6 +338,21 @@ public interface Schema extends Comparable, DataLink {
 	public void setPartitionNameExpression(final String expr);
 
 	/**
+	 * Test to see if this schema is masked.
+	 * 
+	 * @return <tt>true</tt> if it is masked, <tt>false</tt> otherwise.
+	 */
+	public boolean isMasked();
+
+	/**
+	 * Sets the maskedness of this schema.
+	 * 
+	 * @param masked
+	 *            <tt>true</tt> if it is masked, <tt>false</tt> otherwise.
+	 */
+	public void setMasked(final boolean masked);
+
+	/**
 	 * The generic implementation should suffice as the ground for most complex
 	 * implementations. It keeps track of tables it has seen, and performs
 	 * simple lookups for them.
@@ -351,6 +366,8 @@ public interface Schema extends Comparable, DataLink {
 		private static final long serialVersionUID = 1L;
 
 		private boolean keyguessing;
+
+		private boolean masked;
 
 		private String name;
 
@@ -411,6 +428,15 @@ public interface Schema extends Comparable, DataLink {
 		public GenericSchema(final String name, final boolean keyguessing) {
 			this.name = name;
 			this.keyguessing = keyguessing;
+		}
+
+		public boolean isMasked() {
+			return this.masked;
+		}
+
+		public void setMasked(final boolean masked) {
+			Log.debug("Setting masked flag in " + this.getName());
+			this.masked = masked;
 		}
 
 		public void addRelation(final Relation relation) {

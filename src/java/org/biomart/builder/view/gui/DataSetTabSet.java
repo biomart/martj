@@ -432,7 +432,10 @@ public class DataSetTabSet extends JTabbedPane {
 		}
 	}
 
-	private synchronized void recalculateOverviewDiagram() {
+	/**
+	 * Recalculate the overview diagram.
+	 */
+	public synchronized void recalculateOverviewDiagram() {
 		this.allDataSetsDiagram.recalculateDiagram();
 	}
 

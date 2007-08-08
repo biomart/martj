@@ -569,11 +569,10 @@ public interface MartConstructor {
 			// or none if not required.
 			// If this is a subclass table, then the optimiser
 			// type is always COUNT_INHERIT or COUNT_INHERIT_TABLE.
-			final DataSetOptimiserType oType = dsTable.getType().equals(
-					DataSetTableType.MAIN_SUBCLASS) ? dataset
-					.getDataSetOptimiserType().isTable() ? DataSetOptimiserType.TABLE_INHERIT
-					: DataSetOptimiserType.COLUMN_INHERIT
-					: dataset.getDataSetOptimiserType();
+			DataSetOptimiserType oType = dataset.getDataSetOptimiserType();
+			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS))
+				oType = oType.isTable() ? DataSetOptimiserType.TABLE_INHERIT
+						: DataSetOptimiserType.COLUMN_INHERIT;
 			if (!oType.equals(DataSetOptimiserType.NONE))
 				this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
 						dsTable, oType, !dsTable.getType().equals(
@@ -889,6 +888,9 @@ public interface MartConstructor {
 					&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				final Collection hasCols = (Collection) this.uniqueOptCols
 						.get(sourceTable);
+				// FIXME This does not work. Need to add SC opt cols
+				// AFTER SC has fully generated, as until the SC is
+				// generated the col does not exist on parent!
 				if (hasCols != null) {
 					for (final Iterator k = hasCols.iterator(); k.hasNext();) {
 						final String hasCol = (String) k.next();

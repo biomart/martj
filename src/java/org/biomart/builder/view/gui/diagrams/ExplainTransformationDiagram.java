@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -70,6 +71,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 	private final ExplainContext explainContext;
 
+	private final Map shownTables;
+
 	/**
 	 * Creates an empty diagram, using the single-parameter constructor from
 	 * {@link Diagram}.
@@ -83,12 +86,17 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 *            the context used to provide the relation contexts, which are
 	 *            the same as those that appear in the explain diagram in the
 	 *            other tab to the transform view.
+	 * @param shownTables
+	 *            name to state map for initial table states.
 	 */
 	protected ExplainTransformationDiagram(final MartTab martTab,
-			final int step, final ExplainContext explainContext) {
+			final int step, final ExplainContext explainContext,
+			final Map shownTables) {
 		super(new SchemaLayoutManager(), martTab);
 		this.step = step;
 		this.explainContext = explainContext;
+		this.shownTables = shownTables;
+		this.setUseMaskedHidden(false);
 	}
 
 	/**
@@ -98,6 +106,17 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 */
 	protected int getStep() {
 		return this.step;
+	}
+
+	/**
+	 * Get the state for a particular table component.
+	 * 
+	 * @param comp
+	 *            the component.
+	 * @return <tt>null</tt> for no state, an object otherwise.
+	 */
+	protected Object getState(final TableComponent comp) {
+		return this.shownTables.get(comp.getTable().getName());
 	}
 
 	/**
@@ -140,10 +159,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the context used to provide the relation contexts, which
 		 *            are the same as those that appear in the explain diagram
 		 *            in the other tab to the transform view.
+		 * @param shownTables
+		 *            name to state map for initial table states.
 		 */
 		public SingleTable(final MartTab martTab, final SelectFromTable stu,
-				final int step, final ExplainContext explainContext) {
-			super(martTab, step, explainContext);
+				final int step, final ExplainContext explainContext,
+				final Map shownTables) {
+			super(martTab, step, explainContext, shownTables);
 
 			// Remember the params, and calculate the diagram.
 			this.stu = stu;
@@ -153,6 +175,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
 			this.removeAll();
+			this.getTableComponents().clear();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
 			final FakeSchema tempSourceSchema = new FakeSchema(this.stu
@@ -167,6 +190,9 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);
+			final Object tcState = this.getState(tc);
+			if (tcState != null)
+				tc.setState(tcState);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
 		}
@@ -199,11 +225,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the context used to provide the relation contexts, which
 		 *            are the same as those that appear in the explain diagram
 		 *            in the other tab to the transform view.
+		 * @param shownTables
+		 *            name to state map for initial table states.
 		 */
 		public TempReal(final MartTab martTab, final JoinTable ltu,
 				final List lIncludeCols, final int step,
-				final ExplainContext explainContext) {
-			super(martTab, step, explainContext);
+				final ExplainContext explainContext, final Map shownTables) {
+			super(martTab, step, explainContext, shownTables);
 
 			// Remember the columns, and calculate the diagram.
 			this.ltu = ltu;
@@ -214,6 +242,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
 			this.removeAll();
+			this.getTableComponents().clear();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
 			final FakeSchema tempSourceSchema = new FakeSchema(Resources
@@ -289,9 +318,15 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final TableComponent tc1 = new TableComponent(tempSource, this);
 			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc1);
+			final Object tc1State = this.getState(tc1);
+			if (tc1State != null)
+				tc1.setState(tc1State);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
 			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc2);
+			final Object tc2State = this.getState(tc2);
+			if (tc2State != null)
+				tc2.setState(tc2State);
 			// Add relation.
 			final RelationComponent relationComponent = new RelationComponent(
 					tempRelation, this);
@@ -334,11 +369,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the context used to provide the relation contexts, which
 		 *            are the same as those that appear in the explain diagram
 		 *            in the other tab to the transform view.
+		 * @param shownTables
+		 *            name to state map for initial table states.
 		 */
 		public SkipTempReal(final MartTab martTab, final SkipTable ltu,
 				final List lIncludeCols, final int step,
-				final ExplainContext explainContext) {
-			super(martTab, step, explainContext);
+				final ExplainContext explainContext, final Map shownTables) {
+			super(martTab, step, explainContext, shownTables);
 
 			this.setBackground(SkipTempReal.BG_COLOR);
 
@@ -351,6 +388,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
 			this.removeAll();
+			this.getTableComponents().clear();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
 			final FakeSchema tempSourceSchema = new FakeSchema(Resources
@@ -424,9 +462,15 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final TableComponent tc1 = new TableComponent(tempSource, this);
 			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc1);
+			final Object tc1State = this.getState(tc1);
+			if (tc1State != null)
+				tc1.setState(tc1State);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
 			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc2);
+			final Object tc2State = this.getState(tc2);
+			if (tc2State != null)
+				tc2.setState(tc2State);
 			// Add relation.
 			final RelationComponent relationComponent = new RelationComponent(
 					tempRelation, this);
@@ -459,11 +503,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the context used to provide the relation contexts, which
 		 *            are the same as those that appear in the explain diagram
 		 *            in the other tab to the transform view.
+		 * @param shownTables
+		 *            name to state map for initial table states.
 		 */
 		public AdditionalColumns(final MartTab martTab,
 				final TransformationUnit etu, final int step,
-				final ExplainContext explainContext) {
-			super(martTab, step, explainContext);
+				final ExplainContext explainContext, final Map shownTables) {
+			super(martTab, step, explainContext, shownTables);
 
 			// Remember the params, and calculate the diagram.
 			this.etu = etu;
@@ -473,6 +519,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
 			this.removeAll();
+			this.getTableComponents().clear();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
 			final FakeSchema tempSourceSchema = new FakeSchema(Resources
@@ -487,6 +534,9 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);
+			final Object tcState = this.getState(tc);
+			if (tcState != null)
+				tc.setState(tcState);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
 		}
