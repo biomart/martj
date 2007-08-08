@@ -653,6 +653,8 @@ public class MartBuilderXML extends DefaultHandler {
 		this.writeAttribute("outputSchema", mart.getOutputSchema(), xmlWriter);
 		this.writeAttribute("outputHost", mart.getOutputHost(), xmlWriter);
 		this.writeAttribute("outputPort", mart.getOutputPort(), xmlWriter);
+		this.writeAttribute("overrideHost", mart.getOverrideHost(), xmlWriter);
+		this.writeAttribute("overridePort", mart.getOverridePort(), xmlWriter);
 		this.writeAttribute("nameCase", "" + mart.getCase(), xmlWriter);
 
 		// Write out each schema.
@@ -1218,6 +1220,8 @@ public class MartBuilderXML extends DefaultHandler {
 			mart.setOutputSchema((String) attributes.get("outputSchema"));
 			mart.setOutputHost((String) attributes.get("outputHost"));
 			mart.setOutputPort((String) attributes.get("outputPort"));
+			mart.setOverrideHost((String) attributes.get("overrideHost"));
+			mart.setOverridePort((String) attributes.get("overridePort"));
 			// Need check to be safe against pre-0.7 versions.
 			if (attributes.containsKey("nameCase"))
 				mart.setCase(Integer.parseInt((String) attributes

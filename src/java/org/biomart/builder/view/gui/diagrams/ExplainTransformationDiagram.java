@@ -18,6 +18,7 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -26,6 +27,7 @@ import java.util.List;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
+import org.biomart.builder.model.TransformationUnit.SkipTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
@@ -163,7 +165,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.add(tc, new SchemaLayoutConstraint(0), 0);
+			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
@@ -285,15 +287,151 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 			// Add source and target tables.
 			final TableComponent tc1 = new TableComponent(tempSource, this);
-			this.add(tc1, new SchemaLayoutConstraint(1), 0);
+			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc1);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
-			this.add(tc2, new SchemaLayoutConstraint(1), 0);
+			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc2);
 			// Add relation.
 			final RelationComponent relationComponent = new RelationComponent(
 					tempRelation, this);
-			this.add(relationComponent, new SchemaLayoutConstraint(0), -1);
+			this.add(relationComponent, new SchemaLayoutConstraint(0),
+					Diagram.RELATION_LAYER);
+			// Resize the diagram to fit.
+			this.resizeDiagram();
+		}
+	}
+
+	/**
+	 * This version of the class shows a temp table on the left and a real table
+	 * on the right.
+	 */
+	public static class SkipTempReal extends ExplainTransformationDiagram {
+		private static final long serialVersionUID = 1;
+
+		private final SkipTable ltu;
+
+		private final Collection lIncludeCols;
+
+		/**
+		 * The background color for this kind of diagram.
+		 */
+		public static final Color BG_COLOR = new Color(1.0f, 1.0f, 0.8f, 1.0f);
+
+		/**
+		 * Creates a diagram showing the given pair of tables and a relation
+		 * between them. This is a faded-out 'fake' relation.
+		 * 
+		 * @param martTab
+		 *            the mart tab to pass menu events onto.
+		 * @param ltu
+		 *            the transformation to explain.
+		 * @param lIncludeCols
+		 *            the columns to show in the temp table.
+		 * @param step
+		 *            the step of the transformation this diagram represents.
+		 * @param explainContext
+		 *            the context used to provide the relation contexts, which
+		 *            are the same as those that appear in the explain diagram
+		 *            in the other tab to the transform view.
+		 */
+		public SkipTempReal(final MartTab martTab, final SkipTable ltu,
+				final List lIncludeCols, final int step,
+				final ExplainContext explainContext) {
+			super(martTab, step, explainContext);
+
+			this.setBackground(SkipTempReal.BG_COLOR);
+
+			// Remember the columns, and calculate the diagram.
+			this.ltu = ltu;
+			this.lIncludeCols = new ArrayList(lIncludeCols);
+			this.recalculateDiagram();
+		}
+
+		public void doRecalculateDiagram() {
+			// Removes all existing components.
+			this.removeAll();
+			// Create a temp table called TEMP with the given columns
+			// and given foreign key.
+			final FakeSchema tempSourceSchema = new FakeSchema(Resources
+					.get("dummyTempSchemaName"));
+			final Table tempSource = new FakeTable(Resources
+					.get("dummyTempTableName")
+					+ " " + this.getStep(), tempSourceSchema);
+			tempSourceSchema.addTable(tempSource);
+			for (final Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
+				tempSource.addColumn((Column) i.next());
+			Key tempSourceKey;
+			if (this.ltu.getSchemaSourceKey() instanceof ForeignKey) {
+				tempSourceKey = new GenericForeignKey(this.ltu
+						.getSourceDataSetColumns());
+				try {
+					tempSource.addForeignKey((ForeignKey) tempSourceKey);
+				} catch (final AssociationException e) {
+					// Really should never happen.
+					throw new BioMartError(e);
+				}
+			} else {
+				tempSourceKey = new GenericPrimaryKey(this.ltu
+						.getSourceDataSetColumns());
+				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
+			}
+
+			// Create a copy of the target table complete with target key.
+			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
+					this.ltu.getSchemaSourceKey());
+			final Table realTarget = realTargetKey.getTable();
+			final FakeSchema tempTargetSchema = new FakeSchema(realTarget
+					.getSchema().getName());
+			final Table tempTarget = new RealisedTable(realTarget.getName(),
+					tempTargetSchema, realTarget, this.getExplainContext());
+			tempTargetSchema.addTable(tempTarget);
+			// Target table has no columns.
+			Key tempTargetKey;
+			if (realTargetKey instanceof ForeignKey) {
+				tempTargetKey = new GenericForeignKey(realTargetKey
+						.getColumns());
+				try {
+					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
+				} catch (final AssociationException e) {
+					// Really should never happen.
+					throw new BioMartError(e);
+				}
+			} else {
+				tempTargetKey = new GenericPrimaryKey(realTargetKey
+						.getColumns());
+				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
+			}
+
+			// Create a copy of the relation but change to be between the
+			// two fake keys.
+			Relation tempRelation;
+			try {
+				tempRelation = new RealisedRelation(tempSourceKey,
+						tempTargetKey, this.ltu.getSchemaRelation()
+								.getCardinality(),
+						this.ltu.getSchemaRelation(), this.ltu
+								.getSchemaRelationIteration(), this
+								.getExplainContext());
+				// DON'T add to keys else it causes trouble with
+				// the caching system!
+			} catch (final AssociationException e) {
+				// Really should never happen.
+				throw new BioMartError(e);
+			}
+
+			// Add source and target tables.
+			final TableComponent tc1 = new TableComponent(tempSource, this);
+			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
+			this.getTableComponents().add(tc1);
+			final TableComponent tc2 = new TableComponent(tempTarget, this);
+			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
+			this.getTableComponents().add(tc2);
+			// Add relation.
+			final RelationComponent relationComponent = new RelationComponent(
+					tempRelation, this);
+			this.add(relationComponent, new SchemaLayoutConstraint(0),
+					Diagram.RELATION_LAYER);
 			// Resize the diagram to fit.
 			this.resizeDiagram();
 		}
@@ -347,7 +485,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.iterator(); i.hasNext();)
 				tempSource.addColumn((Column) i.next());
 			final TableComponent tc = new TableComponent(tempSource, this);
-			this.add(tc, new SchemaLayoutConstraint(0), 0);
+			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);
 			// Resize the diagram to fit.
 			this.resizeDiagram();

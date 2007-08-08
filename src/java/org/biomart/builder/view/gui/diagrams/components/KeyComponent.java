@@ -81,7 +81,7 @@ public class KeyComponent extends BoxShapedComponent {
 	/**
 	 * Constant referring to incorrect key colour.
 	 */
-	public static Color INCORRECT_COLOUR = Color.RED;
+	public static Color INCORRECT_COLOUR = Color.LIGHT_GRAY;
 
 	/**
 	 * Constant referring to normal key colour.

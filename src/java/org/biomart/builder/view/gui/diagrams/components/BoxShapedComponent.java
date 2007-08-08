@@ -561,8 +561,14 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	public void updateAppearance() {
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
-		if (mod != null)
-			mod.customiseAppearance(this, this.getObject());
+		if (mod != null) {
+			if (this.getDiagram().isMaskedHidden()
+					&& mod.isMasked(this.getObject())) {
+				this.setVisible(false);
+				return;
+			} else
+				mod.customiseAppearance(this, this.getObject());
+		}
 		if (this.indexed)
 			this.stroke = BoxShapedComponent.INDEXED_OUTLINE;
 		else if (this.restricted)
@@ -572,5 +578,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_OUTLINE
 					: BoxShapedComponent.OUTLINE;
 		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
+		this.setVisible(true);
 	}
 }

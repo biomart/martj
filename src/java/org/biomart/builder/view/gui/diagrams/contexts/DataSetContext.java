@@ -38,7 +38,6 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
@@ -47,7 +46,6 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -62,8 +60,6 @@ import org.biomart.common.resources.Resources;
 public class DataSetContext extends SchemaContext {
 	private DataSet dataset;
 
-	private boolean hideMasked = false;
-
 	/**
 	 * Creates a new context that will adapt database objects according to the
 	 * settings in the specified dataset.
@@ -77,11 +73,6 @@ public class DataSetContext extends SchemaContext {
 	public DataSetContext(final MartTab martTab, final DataSet dataset) {
 		super(martTab);
 		this.dataset = dataset;
-	}
-
-	private void changeHideMasked(final boolean masked, final Diagram diagram) {
-		this.hideMasked = masked;
-		diagram.repaintDiagram();
 	}
 
 	/**
@@ -113,10 +104,9 @@ public class DataSetContext extends SchemaContext {
 
 			// Fade MASKED DIMENSION relations.
 			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					target) || this.getDataSet().isMasked()) {
-				component.setVisible(!this.hideMasked);
+					target)
+					|| this.getDataSet().isMasked()) 
 				component.setForeground(RelationComponent.MASKED_COLOUR);
-			}
 
 			// Fade MERGED DIMENSION relations.
 			else if (this.getDataSet().getSchemaModifications()
@@ -146,14 +136,13 @@ public class DataSetContext extends SchemaContext {
 
 			// Fade MASKED DIMENSION relations.
 			else if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					(DataSetTable) object)) {
-				component.setVisible(!this.hideMasked);
+					(DataSetTable) object)) 
 				component.setForeground(TableComponent.MASKED_COLOUR);
-			}
-			
+
 			// Fade MASKED datasets.
 			else if (this.getDataSet().isMasked())
-				((TableComponent)component).setForeground(TableComponent.MASKED_COLOUR);
+				((TableComponent) component)
+						.setForeground(TableComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION tables.
 			else if (this.getDataSet().getSchemaModifications()
@@ -167,7 +156,7 @@ public class DataSetContext extends SchemaContext {
 				((TableComponent) component).setCompounded(this.dataset
 						.getSchemaModifications().isCompoundRelation(null,
 								((DataSetTable) object).getFocusRelation()));
-			
+
 			else
 				component.setForeground(TableComponent.NORMAL_COLOUR);
 
@@ -395,33 +384,51 @@ public class DataSetContext extends SchemaContext {
 		}
 	}
 
+	public boolean isMasked(final Object object) {
+		// Is it a relation?
+		if (object instanceof Relation) {
+			// Which relation is it?
+			final Relation relation = (Relation) object;
+
+			// What tables does it link?
+			final DataSetTable target = (DataSetTable) relation.getManyKey()
+					.getTable();
+
+			// Fade MASKED DIMENSION relations.
+			if (this.getDataSet().getDataSetModifications().isMaskedTable(
+					target))
+				return true;
+		}
+
+		// Is it a table?
+		else if (object instanceof DataSetTable) {
+			
+			// Fade MASKED DIMENSION relations.
+			if (this.getDataSet().getDataSetModifications().isMaskedTable(
+					(DataSetTable) object)) 
+				return true;
+		}
+
+		// Columns.
+		else if (object instanceof DataSetColumn) {
+
+			// Which column is it?
+			final DataSetColumn column = (DataSetColumn) object;
+
+			// Fade out all MASKED columns.
+			if (((DataSet) column.getTable().getSchema())
+					.getDataSetModifications().isMaskedColumn(column))
+				return true;
+		}
+
+		return false;
+	}
+
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 
-		// Is it the diagram background?
-		if (object instanceof Diagram) {
-
-			// Add a separator if the menu is not empty.
-			if (contextMenu.getComponentCount() > 0)
-				contextMenu.addSeparator();
-
-			// Do the show/hide masked tables thing.
-			final JCheckBoxMenuItem showHide = new JCheckBoxMenuItem(Resources
-					.get("hideMaskedDimensionsTitle"));
-			showHide.setMnemonic(Resources.get("hideMaskedDimensionsMnemonic")
-					.charAt(0));
-			showHide.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.changeHideMasked(showHide.isSelected(),
-							(Diagram) object);
-				}
-			});
-			contextMenu.add(showHide);
-			showHide.setSelected(this.hideMasked);
-		}
-
 		// Did the user click on a dataset table?
-		else if (object instanceof DataSetTable) {
+		if (object instanceof DataSetTable) {
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
@@ -565,24 +572,6 @@ public class DataSetContext extends SchemaContext {
 				if (isMasked)
 					removeDM.setSelected(true);
 
-				// The dim table can be subclassed by using this option. This
-				// simply subclasses the relation that caused the dim to exist.
-				final JMenuItem subclass = new JMenuItem(Resources
-						.get("dimToSubclassTitle"));
-				subclass.setMnemonic(Resources.get("dimToSubclassMnemonic")
-						.charAt(0));
-				subclass.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestSubclassRelation(
-										DataSetContext.this.getDataSet(),
-										table.getFocusRelation());
-					}
-				});
-				if (isMerged || isMasked || isCompound)
-					subclass.setEnabled(false);
-				contextMenu.add(subclass);
-
 				// The compound option allows the user to replicate a dimension.
 				final JCheckBoxMenuItem compound = new JCheckBoxMenuItem(
 						Resources.get("replicateDimensionTitle"));
@@ -604,9 +593,31 @@ public class DataSetContext extends SchemaContext {
 				if (isCompound)
 					compound.setSelected(true);
 
+				contextMenu.addSeparator();
+
+				// The dim table can be subclassed by using this option. This
+				// simply subclasses the relation that caused the dim to exist.
+				final JMenuItem subclass = new JMenuItem(Resources
+						.get("dimToSubclassTitle"));
+				subclass.setMnemonic(Resources.get("dimToSubclassMnemonic")
+						.charAt(0));
+				subclass.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestSubclassRelation(
+										DataSetContext.this.getDataSet(),
+										table.getFocusRelation());
+					}
+				});
+				if (isMerged || isMasked || isCompound)
+					subclass.setEnabled(false);
+				contextMenu.add(subclass);
+
+				contextMenu.addSeparator();
+
 				// The partition wizard option.
-				final JMenuItem partitionWizard = new JMenuItem(Resources
-						.get("partitionWizardDimensionTitle"));
+				final JCheckBoxMenuItem partitionWizard = new JCheckBoxMenuItem(
+						Resources.get("partitionWizardDimensionTitle"));
 				partitionWizard.setMnemonic(Resources.get(
 						"partitionWizardDimensionMnemonic").charAt(0));
 				partitionWizard.addActionListener(new ActionListener() {
@@ -616,6 +627,8 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(partitionWizard);
+				partitionWizard.setSelected(this.getMartTab().getMart()
+						.getPartitionTableForDimension(table)!=null);
 				if (isMasked || isMerged)
 					partitionWizard.setEnabled(false);
 			}
@@ -663,13 +676,6 @@ public class DataSetContext extends SchemaContext {
 					compound.setSelected(true);
 				contextMenu.addSeparator();
 			}
-		}
-
-		// Keys have menus too.
-		else if (object instanceof Key) {
-			// Keys behave as though the table had been clicked on.
-			final Table table = ((Key) object).getTable();
-			this.populateContextMenu(contextMenu, table);
 		}
 
 		// Column menu goes here.

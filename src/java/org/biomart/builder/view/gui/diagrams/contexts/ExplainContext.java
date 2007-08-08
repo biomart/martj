@@ -37,7 +37,6 @@ import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -138,6 +137,36 @@ public class ExplainContext extends SchemaContext {
 			// the window context.
 			((KeyComponent) component).setDraggable(false);
 		}
+	}
+
+	public boolean isMasked(final Object object) {
+		if (object instanceof Relation) {
+			final Relation relation = (Relation)object;
+			// Fade out all UNINCLUDED and MASKED relations.
+			final boolean included = this.datasetTable == null ? this.dataset
+					.getIncludedRelations().contains(relation) : this.datasetTable
+					.getIncludedRelations().contains(relation);
+			if (!included
+					|| this.dataset.getSchemaModifications().isMaskedRelation(
+							this.datasetTable, relation))
+				return true;
+		}
+
+		// This section customises table objects.
+		else if (object instanceof Table) {
+			// Fade out UNINCLUDED tables.
+			final boolean isFocus = this.datasetTable != null
+					&& this.datasetTable.getFocusTable().equals(object);
+			final Set included = new HashSet(
+					this.datasetTable != null ? this.datasetTable
+							.getIncludedRelations() : this.dataset
+							.getIncludedRelations());
+			included.retainAll(((Table) object).getRelations());
+			if (included.isEmpty() && !isFocus)
+				return true;
+		}
+		
+		return false;
 	}
 
 	/**
@@ -308,20 +337,6 @@ public class ExplainContext extends SchemaContext {
 			if (!this.dataset.getSchemaModifications().isRestrictedTable(
 					this.datasetTable, table))
 				remove.setEnabled(false);
-		}
-
-		// This submenu applies when keys are clicked on.
-		else if (object instanceof Key) {
-			// Keys simply show the menu for the table they are in.
-			final Table table = ((Key) object).getTable();
-			this.populateContextMenu(contextMenu, table);
-		}
-
-		// This submenu applies when columns are clicked on.
-		else if (object instanceof Column) {
-			// Columns simply show the menu for the table they are in.
-			final Table table = ((Column) object).getTable();
-			this.populateContextMenu(contextMenu, table);
 		}
 	}
 

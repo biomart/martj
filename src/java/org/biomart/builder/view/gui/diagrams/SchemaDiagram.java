@@ -94,13 +94,14 @@ public class SchemaDiagram extends Diagram {
 			final Table t = (Table) i.next();
 			final Collection tRels = t.getInternalRelations();
 			this.add(new TableComponent(t, this), new SchemaLayoutConstraint(
-					tRels.size()), 0);
+					tRels.size()), Diagram.TABLE_LAYER);
 			int indent = 0;
 			for (final Iterator j = tRels.iterator(); j.hasNext();) {
 				final Relation rel = (Relation) j.next();
 				if (!usedRels.contains(rel)) {
 					this.add(new RelationComponent(rel, this),
-							new SchemaLayoutConstraint(indent++), -1);
+							new SchemaLayoutConstraint(indent++),
+							Diagram.RELATION_LAYER);
 					usedRels.add(rel);
 				}
 			}

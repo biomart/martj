@@ -562,6 +562,38 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Sets the override JDBC host on the currently selected mart.
+	 * 
+	 * @param host
+	 *            the new host.
+	 */
+	public void requestSetOverrideHost(final String host) {
+		final String oldOne = this.getSelectedMartTab().getMart()
+				.getOverrideHost();
+		if (oldOne == null || !oldOne.equals(host)) {
+			MartBuilderUtils.setOverrideHost(this.getSelectedMartTab().getMart(),
+					host);
+			this.requestChangeModifiedStatus(true);
+		}
+	}
+
+	/**
+	 * Sets the override JDBC port on the currently selected mart.
+	 * 
+	 * @param port
+	 *            the new port.
+	 */
+	public void requestSetOverridePort(final String port) {
+		final String oldOne = this.getSelectedMartTab().getMart()
+				.getOverridePort();
+		if (oldOne == null || !oldOne.equals(port)) {
+			MartBuilderUtils.setOverridePort(this.getSelectedMartTab().getMart(),
+					port);
+			this.requestChangeModifiedStatus(true);
+		}
+	}
+
+	/**
 	 * Runs the given {@link ConstructorRunnable} and monitors it's progress.
 	 * 
 	 * @param constructor
@@ -846,10 +878,11 @@ public class MartTabSet extends JTabbedPane {
 					new ImageIcon(Resources.getResourceAsURL("run.gif")));
 			runDDL.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent e) {
-					if (e.getSource() == runDDL)
-						MartTab.this.martTabSet.requestRunDDL();
+					MartTab.this.martTabSet.requestRunDDL();
 				}
 			});
+			
+			// Build the DDL+Hide Masked box.
 			final JPanel smallerPanel = new JPanel();
 			smallerPanel.add(runDDL);
 			headerPanel.add(smallerPanel, BorderLayout.SOUTH);

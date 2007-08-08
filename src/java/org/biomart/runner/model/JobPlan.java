@@ -52,7 +52,7 @@ public class JobPlan implements Serializable {
 	private static final int MAX_THREAD_COUNT = Integer.parseInt(Settings
 			.getProperty("maxthreads") == null ? "5" : Settings
 			.getProperty("maxthreads"));
-
+	
 	private String JDBCDriverClassName;
 
 	private String JDBCURL;

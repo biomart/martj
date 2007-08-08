@@ -26,6 +26,8 @@
 <!ATTLIST mart outputSchema CDATA #IMPLIED>
 <!ATTLIST mart outputHost CDATA #IMPLIED>
 <!ATTLIST mart outputPort CDATA #IMPLIED>
+<!ATTLIST mart overrideHost CDATA #IMPLIED>
+<!ATTLIST mart overridePort CDATA #IMPLIED>
 <!ATTLIST mart nameCase CDATA #IMPLIED>
 
 <!ELEMENT jdbcSchema (table+,relation*)>

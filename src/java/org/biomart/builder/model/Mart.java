@@ -71,6 +71,10 @@ public class Mart {
 
 	private String outputPort = null;
 
+	private String overrideHost = null;
+
+	private String overridePort = null;
+
 	/**
 	 * Constant referring to table and column name conversion.
 	 */
@@ -170,6 +174,48 @@ public class Mart {
 	 */
 	public String getOutputPort() {
 		return this.outputPort;
+	}
+
+	/**
+	 * Optional, sets the default target JDBC host this mart will output dataset DDL
+	 * to later.
+	 * 
+	 * @param overrideHost
+	 *            the target host.
+	 */
+	public void setOverrideHost(final String overrideHost) {
+		this.overrideHost = overrideHost;
+	}
+
+	/**
+	 * Optional, gets the default target JDBC host this mart will output dataset DDL
+	 * to later.
+	 * 
+	 * @return the target host.
+	 */
+	public String getOverrideHost() {
+		return this.overrideHost;
+	}
+
+	/**
+	 * Optional, sets the default target JDBC port this mart will output dataset DDL
+	 * to later.
+	 * 
+	 * @param overridePort
+	 *            the target port.
+	 */
+	public void setOverridePort(final String overridePort) {
+		this.overridePort = overridePort;
+	}
+
+	/**
+	 * Optional, gets the default target JDBC port this mart will output dataset DDL
+	 * to later.
+	 * 
+	 * @return the target port.
+	 */
+	public String getOverridePort() {
+		return this.overridePort;
 	}
 
 	/**

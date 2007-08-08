@@ -26,7 +26,9 @@ import java.awt.LayoutManager2;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +73,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 	private int tableCount;
 
+	private final Collection fixedComps;
+
 	/**
 	 * Sets up some defaults for the layout, ready for use.
 	 */
@@ -82,6 +86,7 @@ public class SchemaLayoutManager implements LayoutManager2 {
 		this.rowWidths = new ArrayList();
 		this.rows = new ArrayList();
 		this.relations = new ArrayList();
+		this.fixedComps = new HashSet();
 		this.tableCount = 0;
 	}
 
@@ -133,8 +138,12 @@ public class SchemaLayoutManager implements LayoutManager2 {
 			if (this.sizeKnown)
 				return;
 
-			this.size.height = 0;
-			this.size.width = 0;
+			// Assumption that we are laying out a diagram.
+			final Dimension maskedButton = ((Diagram) parent)
+					.getMaskedHiddenArea();
+
+			this.size.height = maskedButton.height;
+			this.size.width = maskedButton.width;
 			this.prefSizes.clear();
 
 			for (int rowNum = 0; rowNum < this.rows.size(); rowNum++) {
@@ -181,10 +190,10 @@ public class SchemaLayoutManager implements LayoutManager2 {
 	public void addLayoutComponent(final Component comp,
 			final Object constraints) {
 		synchronized (comp.getTreeLock()) {
-			if (comp instanceof RelationComponent && constraints != null) {
+			if (comp instanceof RelationComponent) {
 				this.relations.add(comp);
 				this.constraints.put(comp, constraints);
-			} else if (comp instanceof DiagramComponent && constraints != null
+			} else if (comp instanceof DiagramComponent
 					&& constraints instanceof SchemaLayoutConstraint) {
 
 				this.constraints.put(comp, constraints);
@@ -242,13 +251,16 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 				this.size.height += newRowHeight - oldRowHeight;
 				this.size.width = Math.max(this.size.width, newRowWidth);
-			}
+			} else
+				this.fixedComps.add(comp);
 		}
 	}
 
 	public void removeLayoutComponent(final Component comp) {
 		synchronized (comp.getTreeLock()) {
-			if (comp instanceof RelationComponent) {
+			if (this.fixedComps.contains(comp))
+				this.fixedComps.remove(comp);
+			else if (comp instanceof RelationComponent) {
 				this.relations.remove(comp);
 				this.constraints.remove(comp);
 			} else {
@@ -314,7 +326,15 @@ public class SchemaLayoutManager implements LayoutManager2 {
 		// Work out how big we are.
 		this.calculateSize(parent);
 		synchronized (parent.getTreeLock()) {
-			int nextY = SchemaLayoutManager.TABLE_PADDING;
+
+			// Fixed components are ignored. The parent should lay
+			// them out.
+
+			// Assumption that we are laying out a diagram.
+			final Dimension maskedButton = ((Diagram) parent)
+					.getMaskedHiddenArea();
+
+			int nextY = SchemaLayoutManager.TABLE_PADDING + maskedButton.height;
 
 			// Layout each row in turn.
 			for (int rowNum = 0; rowNum < this.rows.size(); rowNum++) {
@@ -357,11 +377,12 @@ public class SchemaLayoutManager implements LayoutManager2 {
 					continue;
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				int firstKeyInsetX = firstKeyRectangle.x;
-				if (firstKey.getParent().getParent() instanceof SchemaComponent)
-					firstKeyInsetX += firstKey.getParent().getBounds().x;
 				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey
 						.getParent(), firstKeyRectangle, parent);
-				while (firstKeyRectangle.y >= firstRowBottom)
+				if (firstKey.getParent().getParent() instanceof SchemaComponent)
+					firstKeyInsetX += firstKey.getParent().getBounds().x;
+				while (firstKeyRectangle.y >= firstRowBottom
+						&& firstRowNum < this.rows.size() - 1)
 					firstRowBottom += ((Integer) this.rowHeights
 							.get(++firstRowNum)).intValue();
 
@@ -374,11 +395,12 @@ public class SchemaLayoutManager implements LayoutManager2 {
 					continue;
 				Rectangle secondKeyRectangle = secondKey.getBounds();
 				int secondKeyInsetX = secondKeyRectangle.x;
-				if (secondKey.getParent().getParent() instanceof SchemaComponent)
-					secondKeyInsetX += secondKey.getParent().getBounds().x;
 				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey
 						.getParent(), secondKeyRectangle, parent);
-				while (secondKeyRectangle.y >= secondRowBottom)
+				if (secondKey.getParent().getParent() instanceof SchemaComponent)
+					secondKeyInsetX += secondKey.getParent().getBounds().x;
+				while (secondKeyRectangle.y >= secondRowBottom
+						&& secondRowNum < this.rows.size() - 1)
 					secondRowBottom += ((Integer) this.rowHeights
 							.get(++secondRowNum)).intValue();
 

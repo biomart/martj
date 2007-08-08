@@ -63,6 +63,7 @@ import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
+import org.biomart.builder.model.TransformationUnit.SkipTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Key;
@@ -436,6 +437,11 @@ public interface MartConstructor {
 						// Skip to next action to prevent non-existent
 						// new temp table from getting dropped.
 						continue;
+				}
+				// Skip?
+				else if (tu instanceof SkipTable) {
+					// Ignore.
+					continue;
 				}
 				// Left-join?
 				else if (tu instanceof JoinTable) {

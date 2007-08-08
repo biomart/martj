@@ -84,6 +84,14 @@ public class AllDataSetsContext implements DiagramContext {
 		}
 	}
 
+	public boolean isMasked(final Object object) {
+		if (object instanceof DataSet) {
+			if (((DataSet) object).isMasked())
+				return true;
+		}		
+		return false;
+	}
+
 	public void populateMultiContextMenu(final JPopupMenu contextMenu,
 			final Collection selectedItems, final Class clazz) {
 		// Nothing else to do.

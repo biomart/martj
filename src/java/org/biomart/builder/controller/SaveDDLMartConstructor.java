@@ -77,6 +77,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 	private String outputPort;
 
+	private String overrideHost;
+
+	private String overridePort;
+
 	/**
 	 * Creates a constructor that, when requested, will begin constructing a
 	 * mart and outputting DDL to a file.
@@ -94,6 +98,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		this.outputStringBuffer = null;
 		this.outputHost = null;
 		this.outputPort = null;
+		this.overrideHost = null;
+		this.overridePort = null;
 	}
 
 	/**
@@ -113,6 +119,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		this.outputFile = null;
 		this.outputHost = null;
 		this.outputPort = null;
+		this.overrideHost = null;
+		this.overridePort = null;
 	}
 
 	/**
@@ -123,13 +131,20 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	 *            the host to receive actions.
 	 * @param outputPort
 	 *            the port the host is listening on.
+	 * @param overrideHost
+	 *            the JDBC host to receive SQL.
+	 * @param overridePort
+	 *            the port the JDBC host is listening on.
 	 */
 	public SaveDDLMartConstructor(final String outputHost,
-			final String outputPort) {
+			final String outputPort, final String overrideHost,
+			final String overridePort) {
 		Log.info("Saving DDL to MartRunner");
 		// Remember the settings.
 		this.outputHost = outputHost;
 		this.outputPort = outputPort;
+		this.overrideHost = overrideHost;
+		this.overridePort = overridePort;
 		// Redundant but included for clarity.
 		this.outputFile = null;
 		this.outputStringBuffer = null;
@@ -171,7 +186,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// the results into appropriate files or buffers.
 		final DDLHelper helper = this.outputStringBuffer == null ? this.outputHost != null ? (DDLHelper) new RemoteHostHelper(
 				this.outputHost, this.outputPort, dd,
-				(JDBCDataLink) inputSchemaList.get(0))
+				(JDBCDataLink) inputSchemaList.get(0), this.overrideHost,
+				this.overridePort)
 				: (DDLHelper) new TableAsFileHelper(this.outputFile, dd)
 				: new SingleStringBufferHelper(this.outputStringBuffer, dd);
 		Log.debug("Chose helper " + helper.getClass().getName());
@@ -429,6 +445,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private String outputPort;
 
+		private String overrideHost;
+
+		private String overridePort;
+
 		private String job;
 
 		private String dataset;
@@ -445,6 +465,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            the host to send actions to.
 		 * @param outputPort
 		 *            the port the host is listening on.
+		 * @param overrideHost
+		 *            the JDBC host to send SQL to.
+		 * @param overridePort
+		 *            the port the JDBC host is listening on.
 		 * @param dialect
 		 *            the type of SQL the actions should contain.
 		 * @param targetJDBCDataLink
@@ -452,10 +476,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 */
 		public RemoteHostHelper(final String outputHost,
 				final String outputPort, final DatabaseDialect dialect,
-				final JDBCDataLink targetJDBCDataLink) {
+				final JDBCDataLink targetJDBCDataLink,
+				final String overrideHost, final String overridePort) {
 			super(dialect);
 			this.outputHost = outputHost;
 			this.outputPort = outputPort;
+			this.overrideHost = overrideHost;
+			this.overridePort = overridePort;
 			this.actions = new LinkedHashMap();
 			this.targetJDBCDataLink = targetJDBCDataLink;
 		}
@@ -478,6 +505,15 @@ public class SaveDDLMartConstructor implements MartConstructor {
 					// Write the opening message to the socket.
 					this.job = MartRunnerProtocol.Client.newJob(
 							this.outputHost, this.outputPort);
+					// Substitute JDBC url with alternative
+					// JDBC host and port.
+					String url = this.targetJDBCDataLink.getJDBCURL();
+					if (this.overrideHost != null
+							&& this.overridePort != null
+							&& this.overrideHost.trim().length()
+									+ this.overridePort.trim().length() > 0)
+						url = url.replaceAll("//[^:]+:\\d+", "//"
+								+ this.overrideHost + ":" + this.overridePort);
 					MartRunnerProtocol.Client.beginJob(this.outputHost,
 							this.outputPort, this.job, this.targetJDBCDataLink
 									.getDriverClassName(),

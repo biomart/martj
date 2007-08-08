@@ -83,7 +83,8 @@ public class DataSetDiagram extends Diagram {
 			final DataSetLayoutConstraint constraint = new DataSetLayoutConstraint(
 					DataSetLayoutConstraint.MAIN, i);
 			// Add main table.
-			this.add(new TableComponent(table, this), constraint);
+			this.add(new TableComponent(table, this), constraint,
+					Diagram.TABLE_LAYER);
 			// Add dimension tables.
 			if (table.getPrimaryKey() != null)
 				for (final Iterator r = table.getPrimaryKey().getRelations()
@@ -97,11 +98,12 @@ public class DataSetDiagram extends Diagram {
 								DataSetLayoutConstraint.DIMENSION, i);
 						// Add dimension table.
 						this.add(new TableComponent(target, this),
-								dimConstraint, 0);
+								dimConstraint, Diagram.TABLE_LAYER);
 					} else
 						mainTables.add(target);
 					// Add relation.
-					this.add(new RelationComponent(relation, this), -1);
+					this.add(new RelationComponent(relation, this),
+							Diagram.RELATION_LAYER);
 				}
 		}
 

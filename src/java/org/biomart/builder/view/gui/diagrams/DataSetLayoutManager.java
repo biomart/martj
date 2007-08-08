@@ -26,7 +26,9 @@ import java.awt.LayoutManager2;
 import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +72,8 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 	private final List rowWidths;
 
+	private final Collection fixedComps;
+
 	/**
 	 * Sets up some defaults for the layout, ready for use.
 	 */
@@ -81,6 +85,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 		this.rowWidths = new ArrayList();
 		this.dimensionTables = new ArrayList();
 		this.relations = new ArrayList();
+		this.fixedComps = new HashSet();
 	}
 
 	public float getLayoutAlignmentX(final Container target) {
@@ -131,8 +136,12 @@ public class DataSetLayoutManager implements LayoutManager2 {
 			if (this.sizeKnown)
 				return;
 
-			this.size.height = 0;
-			this.size.width = 0;
+			// Assumption that we are laying out a diagram.
+			final Dimension maskedButton = ((Diagram) parent)
+					.getMaskedHiddenArea();
+
+			this.size.height = maskedButton.height;
+			this.size.width = maskedButton.width;
 			this.prefSizes.clear();
 
 			// We have the same number of rows as main/subclass tables.
@@ -188,7 +197,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 		synchronized (comp.getTreeLock()) {
 			if (comp instanceof RelationComponent)
 				this.relations.add(comp);
-			else if (comp instanceof DiagramComponent && constraints != null
+			else if (comp instanceof DiagramComponent
 					&& constraints instanceof DataSetLayoutConstraint) {
 				this.constraints.put(comp, constraints);
 				final Dimension prefSize = comp.getPreferredSize();
@@ -231,13 +240,16 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 				this.size.height += newRowHeight - oldRowHeight;
 				this.size.width = Math.max(this.size.width, newRowWidth);
-			}
+			} else
+				this.fixedComps.add(comp);
 		}
 	}
 
 	public void removeLayoutComponent(final Component comp) {
 		synchronized (comp.getTreeLock()) {
-			if (comp instanceof RelationComponent)
+			if (this.fixedComps.contains(comp))
+				this.fixedComps.remove(comp);
+			else if (comp instanceof RelationComponent)
 				this.relations.remove(comp);
 			else {
 				final DataSetLayoutConstraint constraints = (DataSetLayoutConstraint) this.constraints
@@ -306,8 +318,17 @@ public class DataSetLayoutManager implements LayoutManager2 {
 		this.calculateSize(parent);
 		synchronized (parent.getTreeLock()) {
 
+			// Fixed components are ignored. The parent should
+			// lay them out.
+
+			// Assumption that we are laying out a diagram.
+			final Dimension maskedButton = ((Diagram) parent)
+					.getMaskedHiddenArea();
+
 			// Lay out each row at a time.
-			int nextY = DataSetLayoutManager.TABLE_PADDING;
+			int nextY = DataSetLayoutManager.TABLE_PADDING
+					+ maskedButton.height;
+
 			for (int rowNum = 0; rowNum < this.mainTables.size(); rowNum++) {
 				int x = DataSetLayoutManager.TABLE_PADDING * 3;
 				final int y = nextY
@@ -352,30 +373,30 @@ public class DataSetLayoutManager implements LayoutManager2 {
 			for (final Iterator i = this.relations.iterator(); i.hasNext();) {
 				final RelationComponent comp = (RelationComponent) i.next();
 
-				// Obtain first key and work out position relative to
+				// Obtain keys and work out position relative to
 				// diagram.
 				int rowNum = 0;
-				int rowBottom = ((Integer) this.rowHeights.get(rowNum))
-						.intValue();
+				int rowBottom = maskedButton.height
+						+ ((Integer) this.rowHeights.get(rowNum)).intValue();
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
+				final KeyComponent secondKey = comp.getSecondKeyComponent();
 				if (firstKey == null || !firstKey.isVisible())
+					continue;
+				if (secondKey == null || !secondKey.isVisible())
 					continue;
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				final int firstKeyInsetX = firstKeyRectangle.x;
-				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey
-						.getParent(), firstKeyRectangle, parent);
-				while (firstKeyRectangle.y >= rowBottom)
-					rowBottom += ((Integer) this.rowHeights.get(++rowNum))
-							.intValue();
-
-				// Do the same for the second key.
-				final KeyComponent secondKey = comp.getSecondKeyComponent();
-				if (secondKey == null || !secondKey.isVisible())
-					continue;
 				Rectangle secondKeyRectangle = secondKey.getBounds();
 				final int secondKeyInsetX = secondKeyRectangle.x;
+				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey
+						.getParent(), firstKeyRectangle, parent);
 				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey
 						.getParent(), secondKeyRectangle, parent);
+				// Work out true row bottom.
+				while ((firstKeyRectangle.y >= rowBottom || secondKeyRectangle.y >= rowBottom)
+						&& rowNum < this.rowHeights.size() - 1)
+					rowBottom += ((Integer) this.rowHeights.get(++rowNum))
+							.intValue();
 
 				// Work out left/right most.
 				final Rectangle leftKeyRectangle = firstKeyRectangle.x <= secondKeyRectangle.x ? firstKeyRectangle
@@ -426,10 +447,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					viaX = leftX
 							+ ((List) this.dimensionTables.get(rowNum)).size()
 							* DataSetLayoutManager.RELATION_SPACING / 2;
-					if (Math.abs(rightY - leftY) > 20)
-						viaY = (relBottomY + relTopY) / 2;
-					else
-						viaY = relTopY + (int) ((relBottomY - relTopY) * 1.8);
+					viaY = relTopY + (int) ((relBottomY - relTopY) * 1.8);
 				}
 
 				// Set overall bounds.

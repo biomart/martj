@@ -34,7 +34,6 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.Column;
 import org.biomart.common.model.ComponentStatus;
 import org.biomart.common.model.Key;
 import org.biomart.common.model.Relation;
@@ -145,6 +144,45 @@ public class SchemaContext implements DiagramContext {
 			// Add drag-and-drop to all keys here.
 			((KeyComponent) component).setDraggable(true);
 		}
+	}
+
+	public boolean isMasked(final Object object) {
+		// Incorrect and ignored stuff is 'masked'.
+
+		if (object instanceof Table) {
+
+			// Fade out all ignored tables.
+			if (((Table) object).isIgnore())
+				return true;
+		}
+
+		// Relations get pretty colours if they are incorrect or handmade.
+		else if (object instanceof Relation) {
+
+			// What relation is this?
+			final Relation relation = (Relation) object;
+
+			// Fade out all INFERRED_INCORRECT relations and those which
+			// head to ignored tables.
+			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
+					|| relation.getFirstKey().getTable().isIgnore()
+					|| relation.getSecondKey().getTable().isIgnore())
+				return true;
+
+		}
+
+		// Keys also get pretty colours for being incorrect or handmade.
+		else if (object instanceof Key) {
+
+			// What key is this?
+			final Key key = (Key) object;
+
+			// Fade out all INFERRED_INCORRECT relations.
+			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
+				return true;
+		}
+
+		return false;
 	}
 
 	public void populateMultiContextMenu(final JPopupMenu contextMenu,
@@ -314,45 +352,25 @@ public class SchemaContext implements DiagramContext {
 			// Separator.
 			contextMenu.addSeparator();
 
-			// Set up a radio button group for the correct/incorrect options.
-			final ButtonGroup correctGroup = new ButtonGroup();
-
-			// Mark relation as correct, but only if not handmade.
-			final JRadioButtonMenuItem correct = new JRadioButtonMenuItem(
-					Resources.get("correctRelationTitle"));
-			correct.setMnemonic(Resources.get("correctRelationMnemonic")
-					.charAt(0));
-			correct.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestChangeRelationStatus(relation,
-									ComponentStatus.INFERRED);
-				}
-			});
-			correctGroup.add(correct);
-			contextMenu.add(correct);
-			if (relation.getStatus().equals(ComponentStatus.INFERRED))
-				correct.setSelected(true);
-			else if (relation.getStatus().equals(ComponentStatus.HANDMADE))
-				correct.setEnabled(false);
-
+			// Masked? (Incorrect?)
 			// Mark relation as incorrect, but only if not handmade.
-			final JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(
-					Resources.get("incorrectRelationTitle"));
+			final JCheckBoxMenuItem incorrect = new JCheckBoxMenuItem(Resources
+					.get("incorrectRelationTitle"));
 			incorrect.setMnemonic(Resources.get("incorrectRelationMnemonic")
 					.charAt(0));
 			incorrect.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestChangeRelationStatus(relation,
-									ComponentStatus.INFERRED_INCORRECT);
+					SchemaContext.this.martTab
+							.getSchemaTabSet()
+							.requestChangeRelationStatus(
+									relation,
+									incorrect.isSelected() ? ComponentStatus.INFERRED_INCORRECT
+											: ComponentStatus.INFERRED);
 				}
 			});
-			correctGroup.add(incorrect);
 			contextMenu.add(incorrect);
-			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				incorrect.setSelected(true);
-			else if (relation.getStatus().equals(ComponentStatus.HANDMADE))
+			incorrect.setSelected(relationIncorrect);
+			if (relation.getStatus().equals(ComponentStatus.HANDMADE))
 				incorrect.setEnabled(false);
 
 			// Separator
@@ -377,11 +395,6 @@ public class SchemaContext implements DiagramContext {
 
 		// Keys have menus too.
 		else if (object instanceof Key) {
-			// First, work out what table this key is on, and add options
-			// relating to that table.
-			final Table table = ((Key) object).getTable();
-			this.populateContextMenu(contextMenu, table);
-
 			// Then work out what key this is.
 			final Key key = (Key) object;
 
@@ -419,44 +432,26 @@ public class SchemaContext implements DiagramContext {
 			// Separator.
 			contextMenu.addSeparator();
 
-			// Set up a radio group for the correct/incorrect buttons.
-			final ButtonGroup correctGroup = new ButtonGroup();
-
-			// Mark the key as correct, but not if handmade.
-			final JRadioButtonMenuItem correct = new JRadioButtonMenuItem(
-					Resources.get("correctKeyTitle"));
-			correct.setMnemonic(Resources.get("correctKeyMnemonic").charAt(0));
-			correct.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestChangeKeyStatus(key,
-									ComponentStatus.INFERRED);
-				}
-			});
-			correctGroup.add(correct);
-			contextMenu.add(correct);
-			if (key.getStatus().equals(ComponentStatus.INFERRED))
-				correct.setSelected(true);
-			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
-				correct.setEnabled(false);
-
+			// Incorrect = masked.
 			// Mark the key as incorrect, but not if handmade.
-			final JRadioButtonMenuItem incorrect = new JRadioButtonMenuItem(
-					Resources.get("incorrectKeyTitle"));
+			final JCheckBoxMenuItem incorrect = new JCheckBoxMenuItem(Resources
+					.get("incorrectKeyTitle"));
 			incorrect.setMnemonic(Resources.get("incorrectKeyMnemonic").charAt(
 					0));
 			incorrect.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestChangeKeyStatus(key,
-									ComponentStatus.INFERRED_INCORRECT);
+					SchemaContext.this.martTab
+							.getSchemaTabSet()
+							.requestChangeKeyStatus(
+									key,
+									incorrect.isSelected() ? ComponentStatus.INFERRED_INCORRECT
+											: ComponentStatus.INFERRED);
 				}
 			});
-			correctGroup.add(incorrect);
 			contextMenu.add(incorrect);
-			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				incorrect.setSelected(true);
-			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
+			incorrect.setSelected(key.getStatus().equals(
+					ComponentStatus.INFERRED_INCORRECT));
+			if (key.getStatus().equals(ComponentStatus.HANDMADE))
 				incorrect.setEnabled(false);
 
 			// Separator
@@ -476,13 +471,6 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(createrel);
 			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 				createrel.setEnabled(false);
-		}
-
-		// Columns too, finally.
-		else if (object instanceof Column) {
-			// Columns just show their table menus.
-			final Table table = ((Column) object).getTable();
-			this.populateContextMenu(contextMenu, table);
 		}
 	}
 }

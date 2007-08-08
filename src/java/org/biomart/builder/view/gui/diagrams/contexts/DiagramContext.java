@@ -72,4 +72,14 @@ public interface DiagramContext {
 	 */
 	public void populateMultiContextMenu(JPopupMenu contextMenu,
 			Collection selectedItems, Class clazz);
+
+	/**
+	 * Tests to see if the specified object is masked. This is used in the
+	 * show/hide masked objects switch.
+	 * 
+	 * @param object
+	 *            the object to test.
+	 * @return <tt>true</tt> if it is masked.
+	 */
+	public boolean isMasked(Object object);
 }

@@ -92,6 +92,10 @@ public class SaveDDLDialog extends JDialog {
 
 	private JTextField runDDLPort;
 
+	private JTextField overrideHost;
+
+	private JTextField overridePort;
+
 	/**
 	 * Constant referring to running DDL.
 	 */
@@ -247,6 +251,15 @@ public class SaveDDLDialog extends JDialog {
 		this.runDDLPort = new JFormattedTextField(new DecimalFormat("0"));
 		this.runDDLPort.setColumns(5);
 		this.runDDLPort.setText(martTab.getMart().getOutputPort());
+		final JLabel overrideHostLabel = new JLabel(Resources
+				.get("overrideHostLabel"));
+		this.overrideHost = new JTextField(20);
+		this.overrideHost.setText(martTab.getMart().getOverrideHost());
+		final JLabel overridePortLabel = new JLabel(Resources
+				.get("overridePortLabel"));
+		this.overridePort = new JFormattedTextField(new DecimalFormat("0"));
+		this.overridePort.setColumns(5);
+		this.overridePort.setText(martTab.getMart().getOverridePort());
 
 		// Add listeners to view DDL options which show/hide additional stuff.
 		this.outputFormat.addItemListener(new ItemListener() {
@@ -267,13 +280,21 @@ public class SaveDDLDialog extends JDialog {
 						Resources.get("runDDL"))) {
 					outputHostLabel.setVisible(true);
 					outputPortLabel.setVisible(true);
+					overrideHostLabel.setVisible(true);
+					overridePortLabel.setVisible(true);
 					SaveDDLDialog.this.runDDLHost.setVisible(true);
 					SaveDDLDialog.this.runDDLPort.setVisible(true);
+					SaveDDLDialog.this.overrideHost.setVisible(true);
+					SaveDDLDialog.this.overridePort.setVisible(true);
 				} else {
 					outputHostLabel.setVisible(false);
 					outputPortLabel.setVisible(false);
+					overrideHostLabel.setVisible(false);
+					overridePortLabel.setVisible(false);
 					SaveDDLDialog.this.runDDLHost.setVisible(false);
 					SaveDDLDialog.this.runDDLPort.setVisible(false);
+					SaveDDLDialog.this.overrideHost.setVisible(false);
+					SaveDDLDialog.this.overridePort.setVisible(false);
 				}
 				SaveDDLDialog.this.pack();
 			}
@@ -317,6 +338,14 @@ public class SaveDDLDialog extends JDialog {
 		content.add(outputPortLabel, labelConstraints);
 		field = new JPanel();
 		field.add(this.runDDLPort);
+		content.add(field, fieldConstraints);
+		content.add(overrideHostLabel, labelConstraints);
+		field = new JPanel();
+		field.add(this.overrideHost);
+		content.add(field, fieldConstraints);
+		content.add(overridePortLabel, labelConstraints);
+		field = new JPanel();
+		field.add(this.overridePort);
 		content.add(field, fieldConstraints);
 
 		// The close and execute buttons.
@@ -382,7 +411,8 @@ public class SaveDDLDialog extends JDialog {
 		else if (this.outputFormat.getSelectedItem().equals(
 				Resources.get("runDDL")))
 			constructor = new SaveDDLMartConstructor(this.runDDLHost.getText(),
-					this.runDDLPort.getText());
+					this.runDDLPort.getText(), this.overrideHost.getText(),
+					this.overridePort.getText());
 		else
 			constructor = new SaveDDLMartConstructor(sb);
 
@@ -392,6 +422,10 @@ public class SaveDDLDialog extends JDialog {
 					this.runDDLHost.getText());
 			this.martTab.getMartTabSet().requestSetOutputPort(
 					this.runDDLPort.getText());
+			this.martTab.getMartTabSet().requestSetOverrideHost(
+					this.overrideHost.getText());
+			this.martTab.getMartTabSet().requestSetOverridePort(
+					this.overridePort.getText());
 			final String outputSchema = this.targetSchemaName.getText();
 			this.martTab.getMartTabSet().requestSetOutputSchema(outputSchema);
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(
@@ -461,6 +495,15 @@ public class SaveDDLDialog extends JDialog {
 			if (this.isEmpty(this.runDDLPort.getText()))
 				messages.add(Resources.get("fieldIsEmpty", Resources
 						.get("runDDLPort")));
+			// Both or neither override settings = EOR = XOR.
+			if (this.isEmpty(this.overrideHost.getText()) ^ this.isEmpty(this.overridePort.getText())) {
+			if (this.isEmpty(this.overrideHost.getText()))
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("overrideHost")));
+			else 
+				messages.add(Resources.get("fieldIsEmpty", Resources
+						.get("overridePort")));
+			}
 		}
 
 		// Must have at least one dataset selected.

@@ -93,6 +93,11 @@ public class TransformationContext extends DataSetContext {
 			super.customiseAppearance(component, object);
 	}
 
+	public boolean isMasked(final Object object) {
+		// Nothing is ever masked here otherwise it wouldn't show up!
+		return false;
+	}
+
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
 		// Don't process fake tables.

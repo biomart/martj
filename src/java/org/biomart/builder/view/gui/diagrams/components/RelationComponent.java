@@ -118,7 +118,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	/**
 	 * Constant referring to incorrect relation colour.
 	 */
-	public static Color INCORRECT_COLOUR = Color.RED;
+	public static Color INCORRECT_COLOUR = Color.LIGHT_GRAY;
 
 	/**
 	 * Constant referring to masked relation colour.
@@ -362,8 +362,15 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	public void updateAppearance() {
 		// Use the context to alter us first.
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
-		if (mod != null)
-			mod.customiseAppearance(this, this.getObject());
+		if (mod != null) {
+			if (this.getDiagram().isMaskedHidden()
+					&& mod.isMasked(this.getObject())) {
+				this.setVisible(false);
+				return;
+			}
+			else 
+				mod.customiseAppearance(this, this.getObject());
+		}
 		// Work out what style to draw the relation line.
 		final Stroke oldStroke = this.stroke;
 		if (this.relation.isOneToOne())
@@ -376,6 +383,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 					: RelationComponent.ONE_MANY_DASHED
 					: this.compounded ? RelationComponent.ONE_MANY_DOTTED
 							: RelationComponent.ONE_MANY;
+		this.setVisible(true);
 		// Force repaint of area if stroke changed.
 		if (oldStroke != this.stroke) {
 			this.revalidate();

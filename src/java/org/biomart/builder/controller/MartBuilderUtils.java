@@ -260,6 +260,30 @@ public class MartBuilderUtils {
 	}
 
 	/**
+	 * Sets the override host on a mart.
+	 * 
+	 * @param mart
+	 *            the mart to change.
+	 * @param overrideHost
+	 *            the new override host value.
+	 */
+	public static void setOverrideHost(final Mart mart, final String overrideHost) {
+		mart.setOverrideHost(overrideHost);
+	}
+
+	/**
+	 * Sets the override port on a mart.
+	 * 
+	 * @param mart
+	 *            the mart to change.
+	 * @param overridePort
+	 *            the new override port value.
+	 */
+	public static void setOverridePort(final Mart mart, final String overridePort) {
+		mart.setOverridePort(overridePort);
+	}
+
+	/**
 	 * Adds a schema to a mart.
 	 * 
 	 * @param mart

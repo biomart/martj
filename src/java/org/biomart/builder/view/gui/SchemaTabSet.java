@@ -111,7 +111,9 @@ public class SchemaTabSet extends JTabbedPane {
 		this.allSchemasDiagram = new AllSchemasDiagram(this.martTab);
 		final JScrollPane scroller = new JScrollPane(this.allSchemasDiagram);
 		scroller.getViewport().setBackground(
-				this.allSchemasDiagram.getBackground());
+				this.allSchemasDiagram.getBackground());		
+		scroller.getHorizontalScrollBar().addAdjustmentListener(this.allSchemasDiagram);
+		scroller.getVerticalScrollBar().addAdjustmentListener(this.allSchemasDiagram);
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
 
 		// Populate the map to hold the relation between schemas and the
@@ -142,7 +144,9 @@ public class SchemaTabSet extends JTabbedPane {
 		// Create a scroller to contain the diagram.
 		final JScrollPane scroller = new JScrollPane(schemaDiagram);
 		scroller.getViewport().setBackground(schemaDiagram.getBackground());
-
+		scroller.getHorizontalScrollBar().addAdjustmentListener(schemaDiagram);
+		scroller.getVerticalScrollBar().addAdjustmentListener(schemaDiagram);
+		
 		// Add a tab containing the scroller, with the same name as the schema.
 		this.addTab(schema.getName(), scroller);
 
@@ -375,6 +379,15 @@ public class SchemaTabSet extends JTabbedPane {
 	private synchronized void recalculateAllSchemaDiagrams() {
 		for (int index = 0; index < this.schemaToDiagram[0].size(); index++)
 			((Diagram) this.schemaToDiagram[1].get(index)).recalculateDiagram();
+	}
+
+	/**
+	 * Repaints all schema diagrams, including the overview.
+	 */
+	public synchronized void repaintAllSchemaDiagrams() {
+		for (int index = 0; index < this.schemaToDiagram[0].size(); index++)
+			((Diagram) this.schemaToDiagram[1].get(index)).repaintDiagram();
+		this.repaintOverviewDiagram();
 	}
 
 	/**

@@ -49,6 +49,7 @@ import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
+import org.biomart.builder.model.TransformationUnit.SkipTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.model.Column;
@@ -255,8 +256,11 @@ public class DataSet extends GenericSchema {
 					.getTransformationUnits().iterator(); i.hasNext()
 					&& positionMap.size() < trueSelectedCols.size();) {
 				final TransformationUnit tu = (TransformationUnit) i.next();
-				if (tu instanceof SelectFromTable) {
+				if (tu instanceof SelectFromTable) {					
 					// JoinTable extends SelectFromTable.
+					// Skip SkipTables.
+					if (tu instanceof SkipTable)
+						continue;
 					// Add the unit to the from clause.
 					final Table selTab = ((SelectFromTable) tu).getTable();
 					final String selSch = selTab.getSchema().equals(schema) ? usablePartition
@@ -575,6 +579,27 @@ public class DataSet extends GenericSchema {
 			} catch (final Throwable t) {
 				throw new BioMartError(t);
 			}
+
+			// Copy all parent FKs and add to child, but WITHOUT
+			// relations. Subclasses only!
+			if (type.equals(DataSetTableType.MAIN_SUBCLASS))
+				for (final Iterator i = parentDSTable.getForeignKeys()
+						.iterator(); i.hasNext();) {
+					final ForeignKey parentFK = (ForeignKey) i.next();
+					final List childFKCols = new ArrayList();
+					for (final Iterator j = parentFK.getColumns()
+							.iterator(); j.hasNext();)
+						childFKCols.add(parentTU.getNewColumnNameMap()
+								.get(((DataSetColumn)j.next()).getName()));
+					try {
+						// Create the child FK.
+						final ForeignKey dsTableFK = new GenericForeignKey(
+								childFKCols);
+						dsTable.addForeignKey(dsTableFK);
+					} catch (final Throwable t) {
+						throw new BioMartError(t);
+					}
+				}
 		}
 
 		// How many times are allowed to iterate over each relation?
@@ -880,8 +905,15 @@ public class DataSet extends GenericSchema {
 				continue;
 
 			// Don't follow masked relations.
-			if (this.schemaMods.isMaskedRelation(dsTable, r))
+			if (this.schemaMods.isMaskedRelation(dsTable, r)) {
+				// Make a fake SKIP table unit to show what
+				// might still be possible for the user.
+				final Key skipKey = r.getKeyForTable(mergeTable);
+				final SkipTable stu = new SkipTable(tu, skipKey.getTable(), sourceDataSetCols,
+						skipKey, r, ((Integer) relationCount.get(r)).intValue());
+				dsTable.addTransformationUnit(stu);
 				continue;
+			}
 
 			// Don't follow directional relations from the wrong end.
 			if (this.schemaMods.isDirectionalRelation(dsTable, r)
@@ -2035,11 +2067,14 @@ public class DataSet extends GenericSchema {
 		 * @return the parent table.
 		 */
 		public DataSetTable getParent() {
-			if (this.getForeignKeys().size() == 0)
-				return null;
-			return (DataSetTable) ((Relation) ((Key) this.getForeignKeys()
-					.iterator().next()).getRelations().iterator().next())
-					.getOneKey().getTable();
+			for (final Iterator i = this.getForeignKeys().iterator(); i
+					.hasNext();) {
+				final ForeignKey fk = (ForeignKey) i.next();
+				if (fk.getRelations().size() > 0)
+					return (DataSetTable) ((Relation) fk.getRelations()
+							.iterator().next()).getOneKey().getTable();
+			}
+			return null;
 		}
 	}
 

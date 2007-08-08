@@ -35,6 +35,8 @@ import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,6 +48,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -96,7 +99,7 @@ import org.biomart.common.view.gui.dialogs.ComponentPrinter;
  * @since 0.5
  */
 public abstract class Diagram extends JLayeredPane implements Scrollable,
-		Autoscroll {
+		Autoscroll, AdjustmentListener {
 
 	private static final int AUTOSCROLL_INSET = 12;
 
@@ -104,6 +107,26 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * The background colour to use for this diagram.
 	 */
 	public static final Color BACKGROUND_COLOUR = Color.WHITE;
+
+	/**
+	 * The background for the masked checkbox.
+	 */
+	public static final Color MASK_BG_COLOR = Color.WHITE;
+
+	/**
+	 * The layer for always-on-top components.
+	 */
+	public static final int TOP_LAYER = 0;
+
+	/**
+	 * The layer for middle components.
+	 */
+	public static final int TABLE_LAYER = 2;
+
+	/**
+	 * The layer for always-bottom components.
+	 */
+	public static final int RELATION_LAYER = 2;
 
 	// OK to use maps as it gets cleared out each time, the keys never change.
 	private final Map componentMap = new HashMap();
@@ -113,6 +136,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	private MartTab martTab;
 
 	private final List selectedItems = new ArrayList();
+
+	private JCheckBox maskedHidden;
 
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
@@ -143,6 +168,17 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		// Remember our settings.
 		this.martTab = martTab;
 
+		// Create the hide masked box.
+		this.maskedHidden = new JCheckBox(Resources.get("hideMaskedTitle"));
+		this.maskedHidden.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				martTab.getSchemaTabSet().repaintAllSchemaDiagrams();
+				martTab.getDataSetTabSet().repaintAllDataSetDiagrams();
+			}
+		});
+		// It has a semi-transparent background with no border.
+		this.maskedHidden.setOpaque(true);
+		this.maskedHidden.setBackground(Diagram.MASK_BG_COLOR);
 		// Deal with drops.
 		final DropTargetListener dtListener = new DropTargetListener() {
 			public void dragEnter(DropTargetDragEvent e) {
@@ -657,6 +693,10 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				// Delegate to do the actual diagram clear-and-repopulate.
 				Diagram.this.doRecalculateDiagram();
 
+				// Set up a floating panel with the hide masked box.
+				Diagram.this.add(Diagram.this.maskedHidden, null,
+						Diagram.TOP_LAYER);
+
 				// Reapply all the states. The methods of the Map interface use
 				// equals() to compare objects, so any objects in the new
 				// diagram
@@ -671,6 +711,10 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 					if (comp != null)
 						comp.setState(entry.getValue());
 				}
+
+				// Initial placement of the hide masked button.
+				Diagram.this.adjustmentValueChanged(null);
+
 				// Resize the diagram to fit the components.
 				Diagram.this.repaintDiagram();
 			}
@@ -695,6 +739,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				for (final Iterator i = Diagram.this.componentMap.values()
 						.iterator(); i.hasNext();)
 					((DiagramComponent) i.next()).repaintDiagramComponent();
+				Diagram.this.maskedHidden.repaint();
 			}
 		}.start();
 	}
@@ -710,17 +755,26 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this.revalidate();
 	}
 
+	/**
+	 * Work out how much space the masked/hidden button needs.
+	 * 
+	 * @return the space it needs.
+	 */
+	protected Dimension getMaskedHiddenArea() {
+		return this.maskedHidden.getPreferredSize();
+	}
+
 	public Dimension getPreferredSize() {
 		// Stretch ourselves to fill the viewport if we are smaller than it.
-		Dimension pref = this.getLayout().preferredLayoutSize(this);
+		Dimension preferredSize = this.getLayout().preferredLayoutSize(this);
 		final JViewport viewport = this.getParent() instanceof JViewport ? (JViewport) this
 				.getParent()
 				: null;
 		if (viewport != null)
-			pref = new Dimension((int) Math.max(pref.getWidth(), viewport
-					.getWidth()), (int) Math.max(pref.getHeight(), viewport
-					.getHeight()));
-		return pref;
+			preferredSize = new Dimension((int) Math.max(preferredSize
+					.getWidth(), viewport.getWidth()), (int) Math.max(
+					preferredSize.getHeight(), viewport.getHeight()));
+		return preferredSize;
 	}
 
 	/**
@@ -796,5 +850,33 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public int getScrollableUnitIncrement(final Rectangle visibleRect,
 			final int orientation, final int direction) {
 		return Diagram.AUTOSCROLL_INSET;
+	}
+
+	/**
+	 * Should we hide masked things?
+	 * 
+	 * @return <tt>true</tt> if we should.
+	 */
+	public boolean isMaskedHidden() {
+		return this.maskedHidden.isSelected();
+	}
+
+	public void adjustmentValueChanged(final AdjustmentEvent evt) {
+		// This panel hangs out top-left regardless of viewport
+		// scrolling.
+		final Dimension buttonSize = this.getMaskedHiddenArea();
+		JViewport viewport = null;
+		if (this.getParent() != null && this.getParent() instanceof JViewport)
+			viewport = (JViewport) this.getParent();
+		if (viewport != null) {
+			final Rectangle viewportOffset = viewport.getViewRect();
+			this.maskedHidden.setBounds(viewportOffset.x + viewportOffset.width
+					- buttonSize.width, viewportOffset.y, buttonSize.width,
+					buttonSize.height);
+		} else
+			this.maskedHidden.setBounds(this.getPreferredSize().width
+					- buttonSize.width, 0, buttonSize.width, buttonSize.height);
+		// To wipe out the opaque background a repaint is necessary.
+		Diagram.this.maskedHidden.repaint();
 	}
 }

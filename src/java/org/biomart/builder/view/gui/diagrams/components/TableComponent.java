@@ -212,8 +212,10 @@ public class TableComponent extends BoxShapedComponent {
 					TableComponent.this.setState(Boolean.TRUE);
 				// Recalculate the diagram.
 				TableComponent.this.getDiagram().revalidate();
+				TableComponent.this.getDiagram().repaintDiagram();
 			}
 		});
+		this.showHide.setEnabled(sortedColMap.size()>0);
 
 		// Set our initial display state as false, which means columns are
 		// hidden.

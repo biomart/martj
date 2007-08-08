@@ -18,6 +18,7 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -72,17 +73,19 @@ public class AllSchemasDiagram extends Diagram {
 					this);
 			// Count and remember relations.
 			int indent = 0;
-			for (final Iterator j = schema.getExternalRelations().iterator(); j
-					.hasNext();) {
+			final Collection extRels = schema.getExternalRelations();
+			for (final Iterator j = extRels.iterator(); j.hasNext();) {
 				final Relation rel = (Relation) j.next();
 				if (!usedRels.contains(rel)) {
 					this.add(new RelationComponent(rel, this),
-							new SchemaLayoutConstraint(indent++), -1);
+							new SchemaLayoutConstraint(indent++),
+							Diagram.RELATION_LAYER);
 					usedRels.add(rel);
 				}
 			}
-			this.add(schemaComponent, new SchemaLayoutConstraint(schema
-					.getExternalRelations().size()), 0);
+			this.add(schemaComponent,
+					new SchemaLayoutConstraint(extRels.size()),
+					Diagram.TABLE_LAYER);
 		}
 
 		// Resize the diagram to fit the components.

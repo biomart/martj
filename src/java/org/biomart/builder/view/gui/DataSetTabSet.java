@@ -120,7 +120,9 @@ public class DataSetTabSet extends JTabbedPane {
 				martTab));
 		final JScrollPane scroller = new JScrollPane(this.allDataSetsDiagram);
 		scroller.getViewport().setBackground(
-				this.allDataSetsDiagram.getBackground());
+				this.allDataSetsDiagram.getBackground());		
+		scroller.getHorizontalScrollBar().addAdjustmentListener(this.allDataSetsDiagram);
+		scroller.getVerticalScrollBar().addAdjustmentListener(this.allDataSetsDiagram);
 		this.addTab(Resources.get("multiDataSetOverviewTab"), scroller);
 
 		// Calculate the dataset tabs.
@@ -150,7 +152,9 @@ public class DataSetTabSet extends JTabbedPane {
 		// Create a scroller to contain the diagram.
 		final JScrollPane scroller = new JScrollPane(datasetDiagram);
 		scroller.getViewport().setBackground(datasetDiagram.getBackground());
-
+		scroller.getHorizontalScrollBar().addAdjustmentListener(datasetDiagram);
+		scroller.getVerticalScrollBar().addAdjustmentListener(datasetDiagram);
+		
 		// Add a tab containing the scroller, with the same name as the dataset.
 		this.addTab(dataset.getName(), scroller);
 
@@ -323,6 +327,19 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public MartTab getMartTab() {
 		return this.martTab;
+	}
+
+	/**
+	 * Repaints all dataset diagrams in the current mart, including
+	 * the overview.
+	 */
+	public synchronized void repaintAllDataSetDiagrams() {
+		for (int index = 0; index < this.datasetToDiagram[0].size(); index++)
+			((Diagram) this.datasetToDiagram[1].get(index))
+					.repaintDiagram();
+		this.repaintOverviewDiagram();
+		if (this.currentExplanationDialog != null)
+			this.currentExplanationDialog.repaintDialog(null);
 	}
 
 	/**
