@@ -433,34 +433,14 @@ public class OracleDialect extends DatabaseDialect {
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + schemaName + "." + optTableName
-				+ " as select distinct ");
+				+ " as select ");
 		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext();) {
-			sb.append("a.");
 			sb.append((String) i.next());
 			if (i.hasNext())
 				sb.append(',');
 		}
-		if (action.getCopyTable() != null)
-			sb.append(",b.*");
-		sb.append(" from " + schemaName + "." + sourceTableName + " a");
-		if (action.getCopyTable() != null) {
-			sb.append(" inner join " + schemaName + "." + action.getCopyTable()
-					+ " b on ");
-			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext();) {
-				final String col = (String) i.next();
-				sb.append("a." + col + "=b." + col);
-				if (i.hasNext())
-					sb.append(" and ");
-			}
-		}
+		sb.append(" from " + schemaName + "." + sourceTableName);
 		statements.add(sb.toString());
-		if (action.getCopyTable() != null) {
-			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext();)
-				statements.add("alter table " + schemaName + "." + optTableName
-						+ " set unused (" + (String) i.next() + ")");
-			statements.add("alter table " + schemaName + "." + optTableName
-					+ " drop unused columns");
-		}
 	}
 
 	/**

@@ -2031,35 +2031,21 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Work out the optimiser.
 				DataSetOptimiserType opt = null;
-				if ("NONE".equals(optType))
-					opt = DataSetOptimiserType.NONE;
-				else if ("COLUMN".equals(optType))
-					opt = DataSetOptimiserType.COLUMN;
-				else if ("COLUMN_INHERIT".equals(optType))
+				if ("COLUMN_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.COLUMN_INHERIT;
-				else if ("COLUMN_BOOL".equals(optType))
-					opt = DataSetOptimiserType.COLUMN_BOOL;
 				else if ("COLUMN_BOOL_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.COLUMN_BOOL_INHERIT;
-				else if ("COLUMN_BOOL_NULL".equals(optType))
-					opt = DataSetOptimiserType.COLUMN_BOOL_NULL;
 				else if ("COLUMN_BOOL_NULL_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.COLUMN_BOOL_NULL_INHERIT;
-				else if ("TABLE".equals(optType))
-					opt = DataSetOptimiserType.TABLE;
 				else if ("TABLE_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.TABLE_INHERIT;
-				else if ("TABLE_BOOL".equals(optType))
-					opt = DataSetOptimiserType.TABLE_BOOL;
 				else if ("TABLE_BOOL_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.TABLE_BOOL_INHERIT;
-				else if ("TABLE_BOOL_NULL".equals(optType))
-					opt = DataSetOptimiserType.TABLE_BOOL_NULL;
 				else if ("TABLE_BOOL_NULL_INHERIT".equals(optType))
 					opt = DataSetOptimiserType.TABLE_BOOL_NULL_INHERIT;
 				else
-					throw new SAXException(Resources.get(
-							"unknownOptimiserType", optType));
+					// Default to none.
+					opt = DataSetOptimiserType.NONE;
 
 				// Assign the mart constructor, optimiser, and partition on
 				// schema settings.

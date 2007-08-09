@@ -235,6 +235,98 @@ public abstract class MartConstructorAction {
 	}
 
 	/**
+	 * Copy optimiser table actions.
+	 */
+	public static class CopyOptimiser extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
+
+		private Collection keyColumns;
+
+		private String optTableName;
+
+		private String optColumnName;
+		
+		private String parentOptTableName;
+
+		/**
+		 * Creates a new CopyOptimiser action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public CopyOptimiser(final String datasetSchemaName,
+				final String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcCopyOpt", new String[] {
+					this.getOptTableName(), this.getOptColumnName() });
+		}
+
+		/**
+		 * @return the keyColumns
+		 */
+		public Collection getKeyColumns() {
+			return this.keyColumns;
+		}
+
+		/**
+		 * @param keyColumns
+		 *            the keyColumns to set
+		 */
+		public void setKeyColumns(final Collection keyColumns) {
+			this.keyColumns = keyColumns;
+		}
+
+		/**
+		 * @return the optColumnName
+		 */
+		public String getOptColumnName() {
+			return this.optColumnName;
+		}
+
+		/**
+		 * @param optColumnName
+		 *            the optColumnName to set
+		 */
+		public void setOptColumnName(final String optColumnName) {
+			this.optColumnName = optColumnName;
+		}
+
+		/**
+		 * @return the optTableName
+		 */
+		public String getOptTableName() {
+			return this.optTableName;
+		}
+
+		/**
+		 * @param optTableName
+		 *            the optTableName to set
+		 */
+		public void setOptTableName(final String optTableName) {
+			this.optTableName = optTableName;
+		}
+
+		/**
+		 * @return the parentOptTableName
+		 */
+		public String getParentOptTableName() {
+			return parentOptTableName;
+		}
+
+		/**
+		 * @param parentOptTableName the parentOptTableName to set
+		 */
+		public void setParentOptTableName(String parentOptTableName) {
+			this.parentOptTableName = parentOptTableName;
+		}
+	}
+
+	/**
 	 * Create optimiser table actions.
 	 */
 	public static class CreateOptimiser extends MartConstructorAction {
@@ -243,10 +335,6 @@ public abstract class MartConstructorAction {
 		private Collection keyColumns;
 
 		private String optTableName;
-
-		private String copyTable;
-
-		private List copyKey;
 
 		/**
 		 * Creates a new CreateOptimiser action.
@@ -293,36 +381,6 @@ public abstract class MartConstructorAction {
 		 */
 		public void setOptTableName(final String optTableName) {
 			this.optTableName = optTableName;
-		}
-
-		/**
-		 * @return the copyTable
-		 */
-		public String getCopyTable() {
-			return this.copyTable;
-		}
-
-		/**
-		 * @param copyTable
-		 *            the copyTable to set
-		 */
-		public void setCopyTable(final String copyTable) {
-			this.copyTable = copyTable;
-		}
-
-		/**
-		 * @return the copyKey
-		 */
-		public List getCopyKey() {
-			return this.copyKey;
-		}
-
-		/**
-		 * @param copyKey
-		 *            the copyKey to set
-		 */
-		public void setCopyKey(final List copyKey) {
-			this.copyKey = copyKey;
 		}
 	}
 

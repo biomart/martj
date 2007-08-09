@@ -45,6 +45,7 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -570,14 +571,15 @@ public interface MartConstructor {
 			// If this is a subclass table, then the optimiser
 			// type is always COUNT_INHERIT or COUNT_INHERIT_TABLE.
 			DataSetOptimiserType oType = dataset.getDataSetOptimiserType();
-			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS))
-				oType = oType.isTable() ? DataSetOptimiserType.TABLE_INHERIT
-						: DataSetOptimiserType.COLUMN_INHERIT;
+			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)
+					&& oType.equals(DataSetOptimiserType.NONE))
+				oType = DataSetOptimiserType.COLUMN_INHERIT;
 			if (!oType.equals(DataSetOptimiserType.NONE))
 				this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
-						dsTable, oType, !dsTable.getType().equals(
-								DataSetTableType.DIMENSION)
-								&& dataset.getDataSetOptimiserType().isTable());
+						dsTable, oType, dsTable.getType().equals(
+								DataSetTableType.MAIN)
+								&& dataset.getDataSetOptimiserType().isTable(),
+						null);
 			return true;
 		}
 
@@ -660,8 +662,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final DataSetOptimiserType oType,
-				final boolean createTable) throws ListenerException,
-				PartitionException {
+				final boolean createTable, final String copyDown)
+				throws ListenerException, PartitionException {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
 			if (createTable) {
@@ -678,28 +680,11 @@ public interface MartConstructor {
 							.add(((DataSetColumn) y.next())
 									.getPartitionedName());
 
-				// Work out the parent.
-				final DataSetTable parent = dsTable.getType().equals(
-						DataSetTableType.MAIN_SUBCLASS) ? dsTable.getParent()
-						: null;
-
 				// Create the table by selecting the pk.
 				final CreateOptimiser create = new CreateOptimiser(
 						this.datasetSchemaName, finalCombinedName);
 				create.setKeyColumns(keyCols);
 				create.setOptTableName(optTable);
-				if (parent != null) {
-					// The key cols are those from the primary key.
-					final List parentKeyCols = new ArrayList();
-					for (final Iterator y = parent.getPrimaryKey().getColumns()
-							.iterator(); y.hasNext();)
-						parentKeyCols.add(((DataSetColumn) y.next())
-								.getPartitionedName());
-					create.setCopyKey(parentKeyCols);
-					create.setCopyTable(this.getOptimiserTableName(
-							schemaPrefix, dsPta, dmPta, parent, dataset
-									.getDataSetOptimiserType()));
-				}
 				this.issueAction(create);
 
 				// Index the pk on the new table.
@@ -716,6 +701,12 @@ public interface MartConstructor {
 				final String optTable = this.getOptimiserTableName(
 						schemaPrefix, dsPta, dmPta, parent, dataset
 								.getDataSetOptimiserType());
+				// Columns are dimension table names with '_bool' or
+				// '_count' appended.
+				final String optCol = copyDown != null ? copyDown : this
+						.getOptimiserColumnName(dsPta, dmPta, parent, dsTable,
+								oType);
+
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
 				// where at least one child non-key col is non-null.
@@ -725,36 +716,58 @@ public interface MartConstructor {
 					keyCols
 							.add(((DataSetColumn) y.next())
 									.getPartitionedName());
-				final List nonNullCols = new ArrayList();
-				for (final Iterator y = dsTable.getColumns().iterator(); y
-						.hasNext();) {
-					final DataSetColumn col = (DataSetColumn) y.next();
-					// We won't select masked cols as they won't be in
-					// the final table, and we won't select expression
-					// columns as they can genuinely be null.
-					if (!dataset.getDataSetModifications().isMaskedColumn(col)
-							&& !(col instanceof ExpressionColumn))
-						nonNullCols.add(col.getPartitionedName());
+
+				// If called with the copyDown option, don't create
+				// on the parent, instead create directly on the target
+				// level and copy the column data down from the parent.
+				if (copyDown != null) {
+					// We can skip this process entirely if we're using
+					// tables as these does not need cols copying.
+					if (dataset.getDataSetOptimiserType().isTable())
+						return;
+					// Continue copying.
+					this.uniqueOptCols.put(dsTable, new HashSet());
+					((Collection) this.uniqueOptCols.get(dsTable))
+							.add(copyDown);
+					final String childOptTable = this.getOptimiserTableName(
+							schemaPrefix, dsPta, dmPta, dsTable, dataset
+									.getDataSetOptimiserType());
+					// Do the bool/count copy.
+					final CopyOptimiser copy = new CopyOptimiser(
+							this.datasetSchemaName, finalCombinedName);
+					copy.setKeyColumns(keyCols);
+					copy.setOptTableName(childOptTable);
+					copy.setOptColumnName(optCol);
+					copy.setParentOptTableName(optTable);
+					this.issueAction(copy);
+				} else {
+					// Work out what to count.
+					final List nonNullCols = new ArrayList();
+					for (final Iterator y = dsTable.getColumns().iterator(); y
+							.hasNext();) {
+						final DataSetColumn col = (DataSetColumn) y.next();
+						// We won't select masked cols as they won't be in
+						// the final table, and we won't select expression
+						// columns as they can genuinely be null.
+						if (!dataset.getDataSetModifications().isMaskedColumn(
+								col)
+								&& !(col instanceof ExpressionColumn))
+							nonNullCols.add(col.getPartitionedName());
+					}
+					nonNullCols.removeAll(keyCols);
+					// Do the bool/count update.
+					final UpdateOptimiser update = new UpdateOptimiser(
+							this.datasetSchemaName, finalCombinedName);
+					update.setKeyColumns(keyCols);
+					update.setNonNullColumns(nonNullCols);
+					update.setSourceTableName(this.getFinalName(schemaPrefix,
+							dsPta, dmPta, dsTable));
+					update.setOptTableName(optTable);
+					update.setOptColumnName(optCol);
+					update.setCountNotBool(!oType.isBool());
+					update.setNullNotZero(!oType.isUseNull());
+					this.issueAction(update);
 				}
-				nonNullCols.removeAll(keyCols);
-
-				// Columns are dimension table names with '_bool' or
-				// '_count' appended.
-				final String optCol = this.getOptimiserColumnName(dsPta, dmPta,
-						parent, dsTable, oType);
-
-				// Do the bool/count update.
-				final UpdateOptimiser update = new UpdateOptimiser(
-						this.datasetSchemaName, finalCombinedName);
-				update.setKeyColumns(keyCols);
-				update.setNonNullColumns(nonNullCols);
-				update.setSourceTableName(this.getFinalName(schemaPrefix,
-						dsPta, dmPta, dsTable));
-				update.setOptTableName(optTable);
-				update.setOptColumnName(optCol);
-				update.setCountNotBool(!oType.isBool());
-				update.setNullNotZero(!oType.isUseNull());
-				this.issueAction(update);
 
 				// Index the column if required.
 				if (dataset.isIndexOptimiser()) {
@@ -764,6 +777,15 @@ public interface MartConstructor {
 					index.setColumns(Collections.singletonList(optCol));
 					this.issueAction(index);
 				}
+
+				// If subclass table, call this method a second
+				// time to copy the column down.
+				if (copyDown == null
+						&& dsTable.getType().equals(
+								DataSetTableType.MAIN_SUBCLASS))
+					this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
+							dsTable, oType, dataset.getDataSetOptimiserType()
+									.isTable(), optCol);
 			}
 		}
 
@@ -883,14 +905,15 @@ public interface MartConstructor {
 			// Add to selectCols all the inherited has columns, if
 			// this is not a dimension table and the optimiser type is not a
 			// table one.
-			if (!dataset.getDataSetOptimiserType().isTable()
+			DataSetOptimiserType oType = dataset.getDataSetOptimiserType();
+			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)
+					&& oType.equals(DataSetOptimiserType.NONE))
+				oType = DataSetOptimiserType.COLUMN_INHERIT;
+			if (!oType.isTable()
 					&& sourceTable instanceof DataSetTable
 					&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				final Collection hasCols = (Collection) this.uniqueOptCols
 						.get(sourceTable);
-				// FIXME This does not work. Need to add SC opt cols
-				// AFTER SC has fully generated, as until the SC is
-				// generated the col does not exist on parent!
 				if (hasCols != null) {
 					for (final Iterator k = hasCols.iterator(); k.hasNext();) {
 						final String hasCol = (String) k.next();
@@ -1262,14 +1285,12 @@ public interface MartConstructor {
 			finalName.append(dsTable.getSchema().getName());
 			finalName.append(Resources.get("tablenameSep"));
 			finalName.append(dsTable.getModifiedName());
-			if (oType.equals(DataSetOptimiserType.TABLE)
-					|| oType.equals(DataSetOptimiserType.TABLE_INHERIT)) {
+			if (oType.equals(DataSetOptimiserType.TABLE_INHERIT)) {
 				finalName.append(Resources.get("tablenameSubSep"));
 				finalName.append(Resources.get("countTblPartition"));
 				finalName.append(Resources.get("tablenameSep"));
 				finalName.append(Resources.get("dimensionSuffix"));
-			} else if (oType.equals(DataSetOptimiserType.TABLE_BOOL)
-					|| oType.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) {
+			} else if (oType.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT)) {
 				finalName.append(Resources.get("tablenameSubSep"));
 				finalName.append(Resources.get("boolTblPartition"));
 				finalName.append(Resources.get("tablenameSep"));
@@ -1329,11 +1350,8 @@ public interface MartConstructor {
 					sb.append(Resources.get("tablenameSubSep"));
 				}
 				sb
-						.append(oType.equals(DataSetOptimiserType.COLUMN_BOOL)
-								|| oType
-										.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
-								|| oType
-										.equals(DataSetOptimiserType.TABLE_BOOL)
+						.append(oType
+								.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
 								|| oType
 										.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT) ? Resources
 								.get("boolColSuffix")

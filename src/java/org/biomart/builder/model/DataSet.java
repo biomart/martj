@@ -937,8 +937,8 @@ public class DataSet extends GenericSchema {
 				// might still be possible for the user.
 				final Key skipKey = r.getKeyForTable(mergeTable);
 				final List newSourceDSCols = new ArrayList();
-				for (final Iterator j = skipKey.getColumns()
-						.iterator(); j.hasNext();)
+				for (final Iterator j = skipKey.getColumns().iterator(); j
+						.hasNext();)
 					newSourceDSCols.add(tu.getDataSetColumnFor((Column) j
 							.next()));
 				final SkipTable stu = new SkipTable(tu, skipKey.getTable(),
@@ -1309,7 +1309,7 @@ public class DataSet extends GenericSchema {
 		// Update the modification sets.
 		this.dsMods.synchronise();
 	}
-	
+
 	public boolean isMasked() {
 		// Is the table or schema ignored?
 		if (this.centralTable.isIgnore()
@@ -1318,7 +1318,7 @@ public class DataSet extends GenericSchema {
 		else
 			return super.isMasked();
 	}
-	
+
 	public void setMasked(final boolean masked) {
 		// Ignore if the schema is masked or the central
 		// table is masked.
@@ -1699,108 +1699,49 @@ public class DataSet extends GenericSchema {
 		 * Use this constant to refer to no optimisation.
 		 */
 		public static final DataSetOptimiserType NONE = new DataSetOptimiserType(
-				"NONE", false, false, false, false);
+				"NONE", false, false, false);
 
 		/**
-		 * Use this constant to refer to optimising by including an extra column
-		 * on the main table for each dimension and populating it with the
-		 * number of matching rows in that dimension.
-		 */
-		public static final DataSetOptimiserType COLUMN = new DataSetOptimiserType(
-				"COLUMN", false, false, false, false);
-
-		/**
-		 * Use this constant to refer to no optimising by creating a separate
-		 * table linked on a 1:1 basis with the main table, with one column per
-		 * dimension populated with the number of matching rows in that
-		 * dimension.
-		 */
-		public static final DataSetOptimiserType TABLE = new DataSetOptimiserType(
-				"TABLE", false, true, false, false);
-
-		/**
-		 * Use this constant to refer to optimising by including an extra column
-		 * on the main table for each dimension and populating it with 1 or 0
-		 * depending whether matching rows exist in that dimension.
-		 */
-		public static final DataSetOptimiserType COLUMN_BOOL = new DataSetOptimiserType(
-				"COLUMN_BOOL", true, false, false, false);
-
-		/**
-		 * Use this constant to refer to no optimising by creating a separate
-		 * table linked on a 1:1 basis with the main table, with one column per
-		 * dimension populated with 1 or 0 depending whether matching rows exist
-		 * in that dimension.
-		 */
-		public static final DataSetOptimiserType TABLE_BOOL = new DataSetOptimiserType(
-				"TABLE_BOOL", true, true, false, false);
-
-		/**
-		 * Use this constant to refer to optimising by including an extra column
-		 * on the main table for each dimension and populating it with 1 or null
-		 * depending whether matching rows exist in that dimension.
-		 */
-		public static final DataSetOptimiserType COLUMN_BOOL_NULL = new DataSetOptimiserType(
-				"COLUMN_BOOL_NULL", true, false, false, true);
-
-		/**
-		 * Use this constant to refer to no optimising by creating a separate
-		 * table linked on a 1:1 basis with the main table, with one column per
-		 * dimension populated with 1 or null depending whether matching rows
-		 * exist in that dimension.
-		 */
-		public static final DataSetOptimiserType TABLE_BOOL_NULL = new DataSetOptimiserType(
-				"TABLE_BOOL_NULL", true, true, false, true);
-
-		/**
-		 * See {@link #COLUMN} but parent tables will inherit copies of count
-		 * columns from child tables.
+		 * Parent tables will inherit copies of count columns from child tables.
 		 */
 		public static final DataSetOptimiserType COLUMN_INHERIT = new DataSetOptimiserType(
-				"COLUMN_INHERIT", false, false, true, false);
+				"COLUMN_INHERIT", false, false, false);
 
 		/**
-		 * See {@link #TABLE} but parent tables will inherit copies of count
-		 * tables from child tables.
+		 * Parent tables will inherit copies of count tables from child tables.
 		 */
 		public static final DataSetOptimiserType TABLE_INHERIT = new DataSetOptimiserType(
-				"TABLE_INHERIT", false, true, true, false);
+				"TABLE_INHERIT", false, true, false);
 
 		/**
-		 * See {@link #COLUMN_BOOL} but parent tables will inherit copies of
-		 * bool columns from child tables.
+		 * Parent tables will inherit copies of bool columns from child tables.
 		 */
 		public static final DataSetOptimiserType COLUMN_BOOL_INHERIT = new DataSetOptimiserType(
-				"COLUMN_BOOL_INHERIT", true, false, true, false);
+				"COLUMN_BOOL_INHERIT", true, false, false);
 
 		/**
-		 * See {@link #TABLE_BOOL} but parent tables will inherit copies of bool
-		 * tables from child tables.
+		 * Parent tables will inherit copies of bool tables from child tables.
 		 */
 		public static final DataSetOptimiserType TABLE_BOOL_INHERIT = new DataSetOptimiserType(
-				"TABLE_BOOL_INHERIT", true, true, true, false);
+				"TABLE_BOOL_INHERIT", true, true, false);
 
 		/**
-		 * See {@link #COLUMN_BOOL_NULL} but parent tables will inherit copies
-		 * of bool columns from child tables.
+		 * Parent tables will inherit copies of bool columns from child tables.
 		 */
 		public static final DataSetOptimiserType COLUMN_BOOL_NULL_INHERIT = new DataSetOptimiserType(
-				"COLUMN_BOOL_NULL_INHERIT", true, false, true, true);
+				"COLUMN_BOOL_NULL_INHERIT", true, false, true);
 
 		/**
-		 * See {@link #TABLE_BOOL_NULL} but parent tables will inherit copies of
-		 * bool tables from child tables.
+		 * Parent tables will inherit copies of bool tables from child tables.
 		 */
 		public static final DataSetOptimiserType TABLE_BOOL_NULL_INHERIT = new DataSetOptimiserType(
-				"TABLE_BOOL_NULL_INHERIT", true, true, true, true);
+				"TABLE_BOOL_NULL_INHERIT", true, true, true);
 
 		private final String name;
 
 		private final boolean bool;
 
 		private final boolean table;
-
-		private final boolean inherit;
 
 		private final boolean useNull;
 
@@ -1816,20 +1757,14 @@ public class DataSet extends GenericSchema {
 		 * @param table
 		 *            <tt>true</tt> if columns should live in their own
 		 *            tables.
-		 * @param inherit
-		 *            <tt>true</tt> if parent main tables of a subclass table
-		 *            should also inherit the column and/or table of this
-		 *            optimiser type.
 		 * @param useNull
 		 *            if this is a bool column, use null/1 instead of 0/1.
 		 */
 		private DataSetOptimiserType(final String name, final boolean bool,
-				final boolean table, final boolean inherit,
-				final boolean useNull) {
+				final boolean table, final boolean useNull) {
 			this.name = name;
 			this.bool = bool;
 			this.table = table;
-			this.inherit = inherit;
 			this.useNull = useNull;
 		}
 
@@ -1883,17 +1818,6 @@ public class DataSet extends GenericSchema {
 			return this.table;
 		}
 
-		/**
-		 * Return <tt>true</tt> if parent tables should inherit columns/tables
-		 * generated by this optimise.
-		 * 
-		 * @return <tt>true</tt> if parent tables should inherit,
-		 *         <tt>false</tt> otherwise.
-		 */
-		public boolean isInherit() {
-			return this.inherit;
-		}
-
 		public int hashCode() {
 			return this.toString().hashCode();
 		}
@@ -1916,24 +1840,16 @@ public class DataSet extends GenericSchema {
 		public static Map getTypes() {
 			final Map optimiserTypes = new LinkedHashMap();
 			optimiserTypes.put("None", DataSetOptimiserType.NONE);
-			optimiserTypes.put("Column", DataSetOptimiserType.COLUMN);
 			optimiserTypes.put("ColumnInherit",
 					DataSetOptimiserType.COLUMN_INHERIT);
-			optimiserTypes.put("ColumnBool", DataSetOptimiserType.COLUMN_BOOL);
 			optimiserTypes.put("ColumnBoolInherit",
 					DataSetOptimiserType.COLUMN_BOOL_INHERIT);
-			optimiserTypes.put("ColumnBoolNull",
-					DataSetOptimiserType.COLUMN_BOOL_NULL);
 			optimiserTypes.put("ColumnBoolNullInherit",
 					DataSetOptimiserType.COLUMN_BOOL_NULL_INHERIT);
-			optimiserTypes.put("Table", DataSetOptimiserType.TABLE);
 			optimiserTypes.put("TableInherit",
 					DataSetOptimiserType.TABLE_INHERIT);
-			optimiserTypes.put("TableBool", DataSetOptimiserType.TABLE_BOOL);
 			optimiserTypes.put("TableBoolInherit",
 					DataSetOptimiserType.TABLE_BOOL_INHERIT);
-			optimiserTypes.put("TableBoolNull",
-					DataSetOptimiserType.TABLE_BOOL_NULL);
 			optimiserTypes.put("TableBoolNullInherit",
 					DataSetOptimiserType.TABLE_BOOL_NULL_INHERIT);
 			return optimiserTypes;

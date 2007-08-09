@@ -28,6 +28,7 @@ import java.util.Map;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -429,31 +430,52 @@ public class MySQLDialect extends DatabaseDialect {
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + schemaName + "." + optTableName
-				+ " as select distinct ");
+				+ " as select ");
 		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext();) {
-			sb.append("a.");
 			sb.append((String) i.next());
 			if (i.hasNext())
 				sb.append(',');
 		}
-		if (action.getCopyTable() != null)
-			sb.append(",b.*");
-		sb.append(" from " + schemaName + "." + sourceTableName + " a");
-		if (action.getCopyTable() != null) {
-			sb.append(" inner join " + schemaName + "." + action.getCopyTable()
-					+ " b on ");
-			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext();) {
-				final String col = (String) i.next();
-				sb.append("a." + col + "=b." + col);
-				if (i.hasNext())
-					sb.append(" and ");
-			}
+		sb.append(" from " + schemaName + "." + sourceTableName);
+		statements.add(sb.toString());
+	}
+
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
+	public void doCopyOptimiser(final CopyOptimiser action,
+			final List statements) throws Exception {
+		final String schemaName = action.getDataSetSchemaName();
+		final String parentOptTableName = action.getParentOptTableName();
+		final String optTableName = action.getOptTableName();
+		final String optColName = action.getOptColumnName();
+
+		this.checkColumnName(optColName);
+
+		statements.add("alter table " + schemaName + "." + optTableName
+				+ " add column (" + optColName + " integer default 0)");
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("update " + schemaName + "." + optTableName + " a set "
+				+ optColName + "=(select " + optColName + " from " + schemaName
+				+ "." + parentOptTableName + " b where ");
+		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext();) {
+			final String keyCol = (String) i.next();
+			sb.append("a.");
+			sb.append(keyCol);
+			sb.append("=b.");
+			sb.append(keyCol);
+			if (i.hasNext())
+				sb.append(" and ");
 		}
 		statements.add(sb.toString());
-		if (action.getCopyTable() != null)
-			for (final Iterator i = action.getCopyKey().iterator(); i.hasNext();)
-				statements.add("alter table " + schemaName + "." + optTableName
-						+ " drop column " + (String) i.next());
 	}
 
 	/**
