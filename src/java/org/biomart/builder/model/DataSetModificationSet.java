@@ -223,7 +223,7 @@ public class DataSetModificationSet {
 						.getSchema().getTableByName((String) entry.getKey());
 				final String checkName = (String) entry.getValue();
 				// Can use straight == as will be null or same object.
-				if (checkName.equals(name)
+				if (checkName.equals(name) && checkTable != null
 						&& checkTable.getParent() == table.getParent()) {
 					name = baseName + "_" + suffix++;
 					i = -1;

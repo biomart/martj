@@ -110,7 +110,8 @@ public class ExplainContext extends SchemaContext {
 		else if (object instanceof Table) {
 			// Fade out UNINCLUDED tables.
 			final boolean isFocus = this.datasetTable != null
-					&& this.datasetTable.getFocusTable().equals(object);
+					&& (this.datasetTable.getFocusTable().equals(object)
+							|| this.datasetTable.getParent()==object);
 			final Set included = new HashSet(
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedRelations() : this.dataset
@@ -141,11 +142,12 @@ public class ExplainContext extends SchemaContext {
 
 	public boolean isMasked(final Object object) {
 		if (object instanceof Relation) {
-			final Relation relation = (Relation)object;
+			final Relation relation = (Relation) object;
 			// Fade out all UNINCLUDED and MASKED relations.
 			final boolean included = this.datasetTable == null ? this.dataset
-					.getIncludedRelations().contains(relation) : this.datasetTable
-					.getIncludedRelations().contains(relation);
+					.getIncludedRelations().contains(relation)
+					: this.datasetTable.getIncludedRelations().contains(
+							relation);
 			if (!included
 					|| this.dataset.getSchemaModifications().isMaskedRelation(
 							this.datasetTable, relation))
@@ -165,7 +167,7 @@ public class ExplainContext extends SchemaContext {
 			if (included.isEmpty() && !isFocus)
 				return true;
 		}
-		
+
 		return false;
 	}
 
@@ -405,8 +407,7 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(mask);
-		if (incorrect || !relationMasked
-				&& !relationIncluded)
+		if (incorrect || !relationMasked && !relationIncluded)
 			mask.setEnabled(false);
 		if (relationMasked)
 			mask.setSelected(true);

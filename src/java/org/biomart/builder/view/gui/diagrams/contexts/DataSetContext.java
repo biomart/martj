@@ -151,11 +151,13 @@ public class DataSetContext extends SchemaContext {
 				component.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Highlight DIMENSION tables.
-			else if (tableType.equals(DataSetTableType.DIMENSION))
+			else if (tableType.equals(DataSetTableType.DIMENSION)) {
 				// Is it compounded?
 				((TableComponent) component).setCompounded(this.dataset
 						.getSchemaModifications().isCompoundRelation(null,
 								((DataSetTable) object).getFocusRelation()));
+				component.setBackground(TableComponent.BACKGROUND_COLOUR);
+			}
 
 			else
 				component.setBackground(TableComponent.BACKGROUND_COLOUR);

@@ -30,6 +30,7 @@ import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeSc
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTable;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
+import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.common.model.Column;
 import org.biomart.common.model.Relation;
 import org.biomart.common.model.Table;
@@ -62,9 +63,13 @@ public class TransformationContext extends DataSetContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
-		// Don't process fake tables.
-		if (object instanceof FakeTable || object instanceof FakeSchema)
+		// Don't process fake schemas.
+		if (object instanceof FakeSchema)
 			return;
+		
+		// Normal background on fake tables.
+		else if (object instanceof FakeTable)
+			component.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 		// Convert tables to real tables then process.
 		else if (object instanceof RealisedTable) {

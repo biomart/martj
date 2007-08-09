@@ -349,11 +349,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		private final Collection lIncludeCols;
 
 		/**
-		 * The background color for this kind of diagram.
-		 */
-		public static final Color BG_COLOR = Color.DARK_GRAY;
-
-		/**
 		 * Creates a diagram showing the given pair of tables and a relation
 		 * between them. This is a faded-out 'fake' relation.
 		 * 
@@ -376,8 +371,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final List lIncludeCols, final int step,
 				final ExplainContext explainContext, final Map shownTables) {
 			super(martTab, step, explainContext, shownTables);
-
-			this.setBackground(SkipTempReal.BG_COLOR);
 
 			// Remember the columns, and calculate the diagram.
 			this.ltu = ltu;
