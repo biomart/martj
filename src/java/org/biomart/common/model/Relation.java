@@ -358,7 +358,8 @@ public interface Relation extends Comparable {
 		 *             the relation already exists.
 		 */
 		public GenericRelation(final Key firstKey, final Key secondKey,
-				final Cardinality cardinality) throws AssociationException {
+				final Cardinality cardinality)
+				throws AssociationException {
 			Log.debug("Creating relation between " + firstKey + " and "
 					+ secondKey + " with cardinality " + cardinality);
 			// Remember the keys etc.

@@ -832,7 +832,11 @@ public class SchemaTabSet extends JTabbedPane {
 				SchemaTabSet.this.recalculateSchemaTabs();
 
 				SchemaTabSet.this.getMartTab().getDataSetTabSet()
-						.recalculateOverviewDiagram();
+						.recalculateDataSetTabs();
+				SchemaTabSet.this.getMartTab().getDataSetTabSet()
+						.recalculateAffectedDataSetDiagrams(s);
+				SchemaTabSet.this.getMartTab().getDataSetTabSet()
+						.repaintOverviewDiagram();
 				SchemaTabSet.this.repaintOverviewDiagram();
 
 				// Update the modified status for this tabset.

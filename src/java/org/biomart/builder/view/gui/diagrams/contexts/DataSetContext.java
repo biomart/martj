@@ -137,18 +137,18 @@ public class DataSetContext extends SchemaContext {
 			// Fade MASKED DIMENSION relations.
 			else if (this.getDataSet().getDataSetModifications().isMaskedTable(
 					(DataSetTable) object))
-				component.setForeground(TableComponent.MASKED_COLOUR);
+				component.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Fade MASKED datasets.
 			else if (this.getDataSet().isMasked())
 				((TableComponent) component)
-						.setForeground(TableComponent.MASKED_COLOUR);
+						.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION tables.
 			else if (this.getDataSet().getSchemaModifications()
 					.isMergedRelation(
 							((DataSetTable) object).getFocusRelation()))
-				component.setForeground(TableComponent.MASKED_COLOUR);
+				component.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Highlight DIMENSION tables.
 			else if (tableType.equals(DataSetTableType.DIMENSION))
@@ -158,7 +158,7 @@ public class DataSetContext extends SchemaContext {
 								((DataSetTable) object).getFocusRelation()));
 
 			else
-				component.setForeground(TableComponent.NORMAL_COLOUR);
+				component.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 			// Update dotted line (partitioned).
 			((TableComponent) component).setRestricted(this.getMartTab()

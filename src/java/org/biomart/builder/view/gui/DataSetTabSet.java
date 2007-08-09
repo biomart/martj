@@ -468,7 +468,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Causes {@link Diagram#repaintDiagram()} to be called on the tab which
 	 * represents all the datasets in the mart.
 	 */
-	private synchronized void repaintOverviewDiagram() {
+	public synchronized void repaintOverviewDiagram() {
 		this.allDataSetsDiagram.repaintDiagram();
 	}
 

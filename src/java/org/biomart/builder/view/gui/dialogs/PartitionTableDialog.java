@@ -129,7 +129,8 @@ public class PartitionTableDialog extends JDialog {
 	private PartitionTableDialog(final DataSet dataset, final Object preselect) {
 		// Create the base dialog.
 		super();
-		this.setTitle(Resources.get("partitionTableDialogTitle"));
+		this.setTitle(Resources.get("partitionTableDialogTitle", dataset
+				.getName()));
 		this.setModal(true);
 
 		// Create the content pane to store the create dialog panel.

@@ -117,10 +117,10 @@ public class ExplainContext extends SchemaContext {
 							.getIncludedRelations());
 			included.retainAll(((Table) object).getRelations());
 			if (included.isEmpty() && !isFocus)
-				component.setForeground(TableComponent.MASKED_COLOUR);
+				component.setBackground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
 			else
-				component.setForeground(TableComponent.NORMAL_COLOUR);
+				component.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 			((TableComponent) component).setRestricted(this.dataset
 					.getSchemaModifications().isRestrictedTable(

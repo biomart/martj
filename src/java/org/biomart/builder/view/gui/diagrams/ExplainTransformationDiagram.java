@@ -351,7 +351,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		/**
 		 * The background color for this kind of diagram.
 		 */
-		public static final Color BG_COLOR = new Color(1.0f, 1.0f, 0.8f, 1.0f);
+		public static final Color BG_COLOR = Color.DARK_GRAY;
 
 		/**
 		 * Creates a diagram showing the given pair of tables and a relation

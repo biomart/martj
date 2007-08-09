@@ -96,11 +96,11 @@ public class SchemaContext implements DiagramContext {
 
 			// Fade out all ignored tables.
 			if (((Table) object).isIgnore())
-				component.setForeground(TableComponent.IGNORE_COLOUR);
+				component.setBackground(TableComponent.IGNORE_COLOUR);
 
 			// All others are normal.
 			else
-				component.setForeground(TableComponent.NORMAL_COLOUR);
+				component.setBackground(TableComponent.BACKGROUND_COLOUR);
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.

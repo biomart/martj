@@ -60,22 +60,22 @@ import org.biomart.common.resources.Resources;
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
-	private static final Color BACKGROUND_COLOUR = Color.PINK;
-
 	/**
-	 * Border colour for all unpartitioned tables.
+	 * Background colour for all normal tables.
 	 */
-	public static Color NORMAL_COLOUR = Color.BLACK;
+	public static final Color BACKGROUND_COLOUR = Color.PINK;
 
 	/**
-	 * Border colour for all ignored tables.
-	 */
-	public static Color IGNORE_COLOUR = Color.RED;
-
-	/**
-	 * Border colour for masked tables.
+	 * Background colour for masked tables.
 	 */
 	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
+
+	private static Color NORMAL_COLOUR = Color.BLACK;
+
+	/**
+	 * Background colour for all ignored tables.
+	 */
+	public static Color IGNORE_COLOUR = Color.LIGHT_GRAY;
 
 	private static final Font ITALIC_FONT = Font.decode("SansSerif-ITALIC-10");
 
@@ -117,7 +117,7 @@ public class TableComponent extends BoxShapedComponent {
 		this.constraints.insets = new Insets(0, 2, 0, 2);
 
 		// Set the background colour.
-		this.setBackground(TableComponent.BACKGROUND_COLOUR);
+		this.setForeground(TableComponent.NORMAL_COLOUR);
 
 		// Draw our contents.
 		this.recalculateDiagramComponent();
