@@ -261,12 +261,13 @@ public class TableComponent extends BoxShapedComponent {
 		final Table table = this.getTable();
 		final StringBuffer name = new StringBuffer();
 		if (table != null && table instanceof DataSetTable) {
-			final String originalName = this.getTable().getName();
+			final String parts[] = this.getTable().getName().split(Resources.get("tablenameSep"));
+			final String displayOriginalName = parts[parts.length-1];
 			final String modifiedName = this.getEditableName();
 			name.append(modifiedName);
-			if (!modifiedName.equals(originalName)) {
+			if (!modifiedName.equals(displayOriginalName)) {
 				name.append(" (");
-				name.append(originalName);
+				name.append(displayOriginalName);
 				name.append(')');
 			}
 		} else

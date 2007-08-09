@@ -17,10 +17,12 @@
  */
 package org.biomart.builder.model;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -208,9 +210,25 @@ public class DataSetModificationSet {
 				&& !name.equals(table.getModifiedName())) {
 			// Make the name unique.
 			final String baseName = name;
-			for (int i = 1; this.renamedTables.containsValue(name); name = baseName
-					+ "_" + i++)
-				;
+			final List entries = Arrays.asList(this.renamedTables.entrySet()
+					.toArray());
+			// Iterate over renamedTables entries.
+			// If find an entry with same name, find ds table it refers to.
+			// If entry ds table parent = table parent then increment and
+			// restart search.
+			int suffix = 1;
+			for (int i = 0; i < entries.size(); i++) {
+				final Map.Entry entry = (Map.Entry) entries.get(i);
+				final DataSetTable checkTable = (DataSetTable) table
+						.getSchema().getTableByName((String) entry.getKey());
+				final String checkName = (String) entry.getValue();
+				// Can use straight == as will be null or same object.
+				if (checkName.equals(name)
+						&& checkTable.getParent() == table.getParent()) {
+					name = baseName + "_" + suffix++;
+					i = -1;
+				}
+			}
 			this.renamedTables.put(table.getName(), name);
 		}
 	}

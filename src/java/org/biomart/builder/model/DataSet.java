@@ -496,8 +496,14 @@ public class DataSet extends GenericSchema {
 			throws PartitionException {
 		Log.debug("Creating dataset table for " + realTable
 				+ " with parent relation " + sourceRelation + " as a " + type);
-		// Create the empty dataset table.
-		final DataSetTable dsTable = new DataSetTable(realTable.getName(),
+		// Create the empty dataset table. Use a unique prefix
+		// to prevent naming clashes.
+		String prefix = "";
+		if (parentDSTable!=null) {
+			final String parts[] = parentDSTable.getName().split(Resources.get("tablenameSep"));
+			prefix = parts[parts.length-1]+Resources.get("tablenameSep");
+		}
+		final DataSetTable dsTable = new DataSetTable(prefix+realTable.getName(),
 				this, type, realTable, sourceRelation);
 		this.addTable(dsTable);
 
@@ -576,7 +582,10 @@ public class DataSet extends GenericSchema {
 				dsTableFK.addRelation(rel);
 			} catch (final Throwable t) {
 				throw new BioMartError(t);
-			}
+			}		
+			
+			// Do a user-friendly rename.
+			this.getDataSetModifications().setTableRename(dsTable, realTable.getName());
 
 			// Copy all parent FKs and add to child, but WITHOUT
 			// relations. Subclasses only!
