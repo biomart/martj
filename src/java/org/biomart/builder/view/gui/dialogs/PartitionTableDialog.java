@@ -580,15 +580,28 @@ public class PartitionTableDialog extends JDialog {
 				// Lookup valid dataset/dimension options.
 				final List choices = new ArrayList(dataset.getMart()
 						.getDataSets());
+				// Remove those that are partition tables themselves.
 				for (final Iterator i = dataset.getMart()
 						.getPartitionTableNames().iterator(); i.hasNext();)
 					choices.remove(dataset.getMart().getDataSetByName(
 							(String) i.next()));
+				// Remove all invisible and masked datasets.
+				for (final Iterator i = choices.iterator(); i.hasNext(); ) {
+					final DataSet ds = (DataSet) i.next();
+					if (ds.isMasked() || ds.isInvisible())
+						i.remove();
+				}
+				// Only remove those applied to NO_DIMENSION.
 				for (final Iterator i = dataset.asPartitionTable()
-						.getAllApplications().keySet().iterator(); i.hasNext();)
-					choices.remove(i.next());
+						.getAllApplications().entrySet().iterator(); i.hasNext();) {
+					final Map.Entry entry = (Map.Entry)i.next();
+					final DataSet ds = (DataSet) entry.getKey();
+					final Map map = (Map)entry.getValue();
+					if (map.containsKey(PartitionTable.NO_DIMENSION))
+						choices.remove(ds);
+				}
 				// Add all dimensions from remaining dses then remove
-				// used dimensions.
+				// used dimensions and parent dses.
 				for (final Iterator i = new ArrayList(choices).iterator(); i
 						.hasNext();) {
 					final DataSet ds = (DataSet) i.next();
@@ -601,12 +614,14 @@ public class PartitionTableDialog extends JDialog {
 					}
 					final Map dims = (Map) dataset.asPartitionTable()
 							.getAllApplications().get(ds);
-					if (dims != null)
+					if (dims != null) {
+						choices.remove(ds);
 						for (final Iterator j = dims.keySet().iterator(); j
 								.hasNext();)
 							choices
 									.remove(ds
 											.getTableByName((String) j.next()));
+					}
 				}
 				// Prompt user to choose one.
 				final Object sel = JOptionPane.showInputDialog(
