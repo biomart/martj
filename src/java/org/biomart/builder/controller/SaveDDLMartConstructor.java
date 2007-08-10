@@ -516,8 +516,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 								+ this.overrideHost + ":" + this.overridePort);
 					MartRunnerProtocol.Client.beginJob(this.outputHost,
 							this.outputPort, this.job, this.targetJDBCDataLink
-									.getDriverClassName(),
-							this.targetJDBCDataLink.getJDBCURL(),
+									.getDriverClassName(), url,
 							this.targetJDBCDataLink.getUsername(),
 							this.targetJDBCDataLink.getPassword());
 				} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
