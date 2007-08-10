@@ -986,6 +986,8 @@ public interface MartConstructor {
 						.getAppliedRowForRelation(ljtu.getSchemaRelation());
 				// It might not have one after all.
 				if (prow != null) {
+					// We'll need a final left join.
+					requiresFinalLeftJoin = true;
 					// Look up the table that the naming column is on. It
 					// will be a subtable which needs initialising on the
 					// first pass, and next rowing on all passes.
