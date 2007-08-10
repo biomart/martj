@@ -978,7 +978,6 @@ public class PartitionTableDialog extends JDialog {
 							.get(i)).getSelectedItem();
 					parts.add(new PartitionAppliedRow(ptCol, dsCol, nameCol,
 							(Relation) this.dsRelMap.get(dsCol)));
-					;
 				}
 				this.pta.setPartitionAppliedRows(parts);
 			}
@@ -1092,10 +1091,22 @@ public class PartitionTableDialog extends JDialog {
 			// If autoCol has been set, use it to modify the
 			// partition table application.
 			if (autoCol != null) {
+				Relation rel = null;
+				for (final Iterator j = ((DataSetTable) autoCol.getTable()).getTransformationUnits()
+						.iterator(); j.hasNext() && rel==null;) {
+					final TransformationUnit tu = (TransformationUnit) j.next();
+					final Relation candRel = tu instanceof JoinTable ? ((JoinTable) tu)
+							.getSchemaRelation() : null;
+					for (final Iterator i = tu.getNewColumnNameMap().values()
+							.iterator(); i.hasNext() && rel==null;) {
+						final DataSetColumn dsCol = (DataSetColumn) i.next();
+						if (dsCol==autoCol)
+							rel = candRel;
+					}
+				}
 				final PartitionAppliedRow row = new PartitionAppliedRow(
 						sourceCol.getName(), autoCol.getName(), sourceCol
-								.getName(), ((DataSetTable) autoCol.getTable())
-								.getFocusRelation());
+								.getName(), rel);
 				pta.getPartitionAppliedRows().clear();
 				pta.getPartitionAppliedRows().add(row);
 			}
