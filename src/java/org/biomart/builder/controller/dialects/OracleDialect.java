@@ -28,6 +28,7 @@ import java.util.Map;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -203,6 +204,45 @@ public class OracleDialect extends DatabaseDialect {
 					sb.append(',');
 			}
 		}
+		statements.add(sb.toString());
+	}
+
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
+	public void doCopyOptimiser(final CopyOptimiser action,
+			final List statements) throws Exception {
+		final String schemaName = action.getDataSetSchemaName();
+		final String parentOptTableName = action.getParentOptTableName();
+		final String optTableName = action.getOptTableName();
+		final String optColName = action.getOptColumnName();
+
+		this.checkColumnName(optColName);
+
+		statements.add("alter table " + schemaName + "." + optTableName
+				+ " add column (" + optColName + " integer default 0)");
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("update " + schemaName + "." + optTableName + " a set "
+				+ optColName + "=(select " + optColName + " from " + schemaName
+				+ "." + parentOptTableName + " b where ");
+		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext();) {
+			final String keyCol = (String) i.next();
+			sb.append("a.");
+			sb.append(keyCol);
+			sb.append("=b.");
+			sb.append(keyCol);
+			if (i.hasNext())
+				sb.append(" and ");
+		}
+		sb.append(')');
 		statements.add(sb.toString());
 	}
 

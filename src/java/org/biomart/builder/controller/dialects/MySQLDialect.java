@@ -476,6 +476,7 @@ public class MySQLDialect extends DatabaseDialect {
 			if (i.hasNext())
 				sb.append(" and ");
 		}
+		sb.append(')');
 		statements.add(sb.toString());
 	}
 
