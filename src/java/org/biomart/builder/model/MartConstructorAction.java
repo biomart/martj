@@ -578,6 +578,8 @@ public abstract class MartConstructorAction {
 		private String loopbackDiffSource;
 
 		private String loopbackDiffTarget;
+		
+		private boolean leftJoin;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -801,6 +803,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setLoopbackDiffTarget(String loopbackDiffTarget) {
 			this.loopbackDiffTarget = loopbackDiffTarget;
+		}
+
+		/**
+		 * @return the leftJoin
+		 */
+		public boolean isLeftJoin() {
+			return leftJoin;
+		}
+
+		/**
+		 * @param leftJoin the leftJoin to set
+		 */
+		public void setLeftJoin(boolean leftJoin) {
+			this.leftJoin = leftJoin;
 		}
 	}
 

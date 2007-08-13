@@ -949,11 +949,13 @@ public interface MartConstructor {
 				final String tempTable, final Set droppedCols)
 				throws SQLException, ListenerException, PartitionException {
 
-			boolean requiresFinalLeftJoin = false;
+			final boolean useLeftJoin = !dsTable.getType().equals(DataSetTableType.DIMENSION);
+			boolean requiresFinalLeftJoin = !useLeftJoin;
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);
+			action.setLeftJoin(useLeftJoin);
 
 			PartitionTableApplication pta = null;
 			if (dsTable.getType().equals(DataSetTableType.DIMENSION)

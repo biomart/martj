@@ -253,7 +253,8 @@ public class MySQLDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		final String joinType = action.getRelationRestriction() != null
+		final String joinType = !action.isLeftJoin() 
+				|| action.getRelationRestriction() != null
 				&& action.getRelationRestriction().isHard()
 				|| action.getTableRestriction() != null
 				&& action.getTableRestriction().isHard()
