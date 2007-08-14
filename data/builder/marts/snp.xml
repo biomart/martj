@@ -1249,12 +1249,12 @@
 		<maskedTable tableKey="variation__allele_group_allele"/>
 		<renamedTable tableKey="variation__allele" newName="allele"/>
 		<renamedTable tableKey="variation__individual_genotype_multiple_bp" newName="individual_genotype_multiple_bp"/>
-		<renamedTable tableKey="variation__strain_gtype_final" newName="strain_gtype_final"/>
+		<renamedTable tableKey="variation__strain_gtype_final" newName="snp_strain"/>
 		<renamedTable tableKey="variation_feature__tagged_variation_feature" newName="tagged_variation_feature"/>
 		<renamedTable tableKey="variation__population_genotype" newName="population_genotype"/>
 		<renamedTable tableKey="variation__variation_synonym" newName="variation_synonym"/>
 		<renamedTable tableKey="variation__variation_feature" newName="variation_feature"/>
-		<renamedTable tableKey="variation__tmp_individual_genotype_single_bp" newName="tmp_individual_genotype_single_bp"/>
+		<renamedTable tableKey="variation__tmp_individual_genotype_single_bp" newName="polymorphic_strain"/>
 		<renamedTable tableKey="variation__variation_group_variation" newName="variation_group_variation"/>
 		<renamedTable tableKey="variation_feature__transcript_variation" newName="transcript_variation"/>
 		<renamedTable tableKey="variation__allele_group_allele" newName="allele_group_allele"/>
