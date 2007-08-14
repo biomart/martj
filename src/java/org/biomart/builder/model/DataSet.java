@@ -584,8 +584,9 @@ public class DataSet extends GenericSchema {
 				throw new BioMartError(t);
 			}		
 			
-			// Do a user-friendly rename.
-			this.getDataSetModifications().setTableRename(dsTable, realTable.getName());
+			// Do a user-friendly rename if not already done by user.
+			if (!this.getDataSetModifications().isTableRename(dsTable))
+				this.getDataSetModifications().setTableRename(dsTable, realTable.getName());
 
 			// Copy all parent FKs and add to child, but WITHOUT
 			// relations. Subclasses only!
