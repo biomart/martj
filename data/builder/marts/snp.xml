@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mart PUBLIC "-//EBI//DTD MartBuilder 0.7-//EBI//DTD MartBuilder " "http://www.biomart.org/DTD/MartBuilder-0.7.dtd">
-<mart nameCase="0">
+<mart outputSchema="arek_snp" outputHost="localhost" outputPort="10000" overrideHost="mart1" overridePort="3306" nameCase="0">
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://ensembldb.ensembl.org:3306/mus_musculus_core_45_36f" schemaName="mus_musculus_core_45_36f" username="anonymous" name="ensembl_mouse" keyguessing="true" masked="false">
 		<table id="1" name="alt_allele" ignore="false">
 			<column id="2" name="gene_id"/>
