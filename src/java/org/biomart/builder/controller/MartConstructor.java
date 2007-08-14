@@ -949,14 +949,6 @@ public interface MartConstructor {
 				final String tempTable, final Set droppedCols)
 				throws SQLException, ListenerException, PartitionException {
 
-			final boolean useLeftJoin = !dsTable.getType().equals(DataSetTableType.DIMENSION);
-			boolean requiresFinalLeftJoin = !useLeftJoin;
-			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					dsPta, dmPta, dsTable);
-			final Join action = new Join(this.datasetSchemaName,
-					finalCombinedName);
-			action.setLeftJoin(useLeftJoin);
-
 			PartitionTableApplication pta = null;
 			if (dsTable.getType().equals(DataSetTableType.DIMENSION)
 					&& dmPta != null)
@@ -981,6 +973,17 @@ public interface MartConstructor {
 								prow.getNamePartitionCol()).getPartitionTable()
 								.nextRow();
 				}
+			}
+
+			final boolean useLeftJoin = !dsTable.getType().equals(DataSetTableType.DIMENSION);
+			boolean requiresFinalLeftJoin = !useLeftJoin;
+			final String finalCombinedName = this.getFinalName(schemaPrefix,
+					dsPta, dmPta, dsTable);
+			final Join action = new Join(this.datasetSchemaName,
+					finalCombinedName);
+			action.setLeftJoin(useLeftJoin);
+			
+			if (pta != null) {
 				// For all relations, if this is the one
 				// that some subdiv partition applies to, then apply it.
 				// This is a join, so we look up row by relation.
