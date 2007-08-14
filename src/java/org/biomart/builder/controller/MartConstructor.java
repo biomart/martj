@@ -309,14 +309,17 @@ public interface MartConstructor {
 							.prepareRows((String) schemaPartition.getKey(),
 									PartitionTable.UNLIMITED_ROWS);
 				while (fakeDSPartition ? true : dsPta != null
-						&& dsPta.getPartitionTable().nextRow()) {
+						&& dsPta.getNamePartitionCol().getPartitionTable()
+								.nextRow()) {
 					fakeDSPartition = false;
 					// Make more specific.
 					String partitionedDataSetName = dataset.getName();
 					if (dsPta != null)
 						partitionedDataSetName = dsPta.getNamePartitionCol()
 								.getValueForRow(
-										dsPta.getPartitionTable().currentRow())
+										dsPta.getNamePartitionCol()
+												.getPartitionTable()
+												.currentRow())
 								+ Resources.get("tablenameSubSep")
 								+ partitionedDataSetName;
 					this.issueListenerEvent(
@@ -338,7 +341,8 @@ public interface MartConstructor {
 														.getKey(),
 												PartitionTable.UNLIMITED_ROWS);
 							while (fakeDMPartition ? true : dmPta != null
-									&& dmPta.getPartitionTable().nextRow()) {
+									&& dmPta.getNamePartitionCol()
+											.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
 								if (!this.makeActionsForDatasetTable(
 										templateSchema,
@@ -845,9 +849,9 @@ public interface MartConstructor {
 				// PrepareRow on subdivision, if any.
 				if (pta.getPartitionAppliedRows().size() > 1) {
 					final PartitionAppliedRow subprow = (PartitionAppliedRow) pta
-							.getPartitionAppliedRows().get(1);
+							.getPartitionAppliedRows().get(0);
 					pta.getPartitionTable().getSelectedColumn(
-							subprow.getNamePartitionCol()).getPartitionTable()
+							subprow.getPartitionCol()).getPartitionTable()
 							.prepareRows(schemaPartition,
 									PartitionTable.UNLIMITED_ROWS);
 				}
@@ -909,8 +913,7 @@ public interface MartConstructor {
 			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)
 					&& oType.equals(DataSetOptimiserType.NONE))
 				oType = DataSetOptimiserType.COLUMN_INHERIT;
-			if (!oType.isTable()
-					&& sourceTable instanceof DataSetTable
+			if (!oType.isTable() && sourceTable instanceof DataSetTable
 					&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				final Collection hasCols = (Collection) this.uniqueOptCols
 						.get(sourceTable);
@@ -960,29 +963,27 @@ public interface MartConstructor {
 				// If this is first relation after select table
 				// (note first relation, not first join) then apply
 				// next row to any subdiv table present.
-				if (pta.getPartitionAppliedRows().size() > 1) {
-					final PartitionAppliedRow prow = (PartitionAppliedRow) pta
-							.getPartitionAppliedRows().get(1);
-					// A test to see if this is the first relation
-					// after the select (regardless of how many times this
-					// relation has been seen).
-					boolean nudgeRow = firstJoinRel.equals(ljtu
-							.getSchemaRelation());
-					if (nudgeRow)
-						pta.getPartitionTable().getSelectedColumn(
-								prow.getNamePartitionCol()).getPartitionTable()
-								.nextRow();
-				}
+				// Use a test to see if this is the first relation
+				// after the select (regardless of how many times this
+				// relation has been seen).
+				boolean nextRow = firstJoinRel.equals(ljtu.getSchemaRelation());
+				if (nextRow && pta.getPartitionAppliedRows().size() > 1)
+					pta.getPartitionTable().getSelectedColumn(
+							((PartitionAppliedRow) pta
+									.getPartitionAppliedRows().get(0))
+									.getPartitionCol()).getPartitionTable()
+							.nextRow();
 			}
 
-			final boolean useLeftJoin = !dsTable.getType().equals(DataSetTableType.DIMENSION);
+			final boolean useLeftJoin = !dsTable.getType().equals(
+					DataSetTableType.DIMENSION);
 			boolean requiresFinalLeftJoin = !useLeftJoin;
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);
 			action.setLeftJoin(useLeftJoin);
-			
+
 			if (pta != null) {
 				// For all relations, if this is the one
 				// that some subdiv partition applies to, then apply it.

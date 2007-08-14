@@ -586,17 +586,18 @@ public class PartitionTableDialog extends JDialog {
 					choices.remove(dataset.getMart().getDataSetByName(
 							(String) i.next()));
 				// Remove all invisible and masked datasets.
-				for (final Iterator i = choices.iterator(); i.hasNext(); ) {
+				for (final Iterator i = choices.iterator(); i.hasNext();) {
 					final DataSet ds = (DataSet) i.next();
 					if (ds.isMasked() || ds.isInvisible())
 						i.remove();
 				}
 				// Only remove those applied to NO_DIMENSION.
 				for (final Iterator i = dataset.asPartitionTable()
-						.getAllApplications().entrySet().iterator(); i.hasNext();) {
-					final Map.Entry entry = (Map.Entry)i.next();
+						.getAllApplications().entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
 					final DataSet ds = (DataSet) entry.getKey();
-					final Map map = (Map)entry.getValue();
+					final Map map = (Map) entry.getValue();
 					if (map.containsKey(PartitionTable.NO_DIMENSION))
 						choices.remove(ds);
 				}
@@ -1092,23 +1093,24 @@ public class PartitionTableDialog extends JDialog {
 			// partition table application.
 			if (autoCol != null) {
 				Relation rel = null;
-				for (final Iterator j = ((DataSetTable) autoCol.getTable()).getTransformationUnits()
-						.iterator(); j.hasNext() && rel==null;) {
+				for (final Iterator j = ((DataSetTable) autoCol.getTable())
+						.getTransformationUnits().iterator(); j.hasNext()
+						&& rel == null;) {
 					final TransformationUnit tu = (TransformationUnit) j.next();
 					final Relation candRel = tu instanceof JoinTable ? ((JoinTable) tu)
-							.getSchemaRelation() : null;
+							.getSchemaRelation()
+							: null;
 					for (final Iterator i = tu.getNewColumnNameMap().values()
-							.iterator(); i.hasNext() && rel==null;) {
+							.iterator(); i.hasNext() && rel == null;) {
 						final DataSetColumn dsCol = (DataSetColumn) i.next();
-						if (dsCol==autoCol)
+						if (dsCol == autoCol)
 							rel = candRel;
 					}
 				}
 				final PartitionAppliedRow row = new PartitionAppliedRow(
 						sourceCol.getName(), autoCol.getName(), sourceCol
 								.getName(), rel);
-				pta.getPartitionAppliedRows().clear();
-				pta.getPartitionAppliedRows().add(row);
+				pta.setPartitionAppliedRows(Collections.singletonList(row));
 			}
 			pt.applyTo((DataSet) dimension.getSchema(), dimension.getName(),
 					pta);
