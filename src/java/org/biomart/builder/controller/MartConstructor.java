@@ -520,7 +520,7 @@ public interface MartConstructor {
 				if (col.isRequiredInterim() && !col.isRequiredFinal())
 					dropCols.add(col.getPartitionedName());
 				// Create index if required.
-				else if (!droppedCols.contains(col.getPartitionedName())) {
+				else if (col.isRequiredFinal() && !droppedCols.contains(col.getPartitionedName())) {
 					keepCols.add(col);
 				}
 			}
