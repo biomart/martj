@@ -20,9 +20,9 @@
 			<column id="15" name="db_file"/>
 			<column id="16" name="program_file"/>
 			<column id="17" name="program_version"/>
-			<column id="18" name="gff_feature"/>
-			<column id="19" name="program"/>
-			<column id="20" name="module"/>
+			<column id="18" name="module"/>
+			<column id="19" name="gff_feature"/>
+			<column id="20" name="program"/>
 			<primaryKey id="21" columnIds="7" status="INFERRED"/>
 		</table>
 		<table id="22" name="analysis_description" ignore="false">
@@ -44,8 +44,8 @@
 		</table>
 		<table id="37" name="assembly_exception" ignore="false">
 			<column id="38" name="ori"/>
-			<column id="39" name="exc_type"/>
-			<column id="40" name="seq_region_id"/>
+			<column id="39" name="seq_region_id"/>
+			<column id="40" name="exc_type"/>
 			<column id="41" name="seq_region_start"/>
 			<column id="42" name="assembly_exception_id"/>
 			<column id="43" name="exc_seq_region_start"/>
@@ -53,7 +53,7 @@
 			<column id="45" name="seq_region_end"/>
 			<column id="46" name="exc_seq_region_id"/>
 			<primaryKey id="47" columnIds="42" status="INFERRED"/>
-			<foreignKey id="48" columnIds="40" status="INFERRED"/>
+			<foreignKey id="48" columnIds="39" status="INFERRED"/>
 		</table>
 		<table id="49" name="attrib_type" ignore="false">
 			<column id="50" name="code"/>
@@ -94,8 +94,8 @@
 			<column id="81" name="type"/>
 			<column id="82" name="ditag_id"/>
 			<column id="83" name="tag_count"/>
-			<column id="84" name="sequence"/>
-			<column id="85" name="name"/>
+			<column id="84" name="name"/>
+			<column id="85" name="sequence"/>
 			<primaryKey id="86" columnIds="82" status="INFERRED"/>
 		</table>
 		<table id="87" name="ditag_feature" ignore="false">
@@ -135,9 +135,9 @@
 			<column id="119" name="dna_align_feature_id"/>
 			<column id="120" name="seq_region_id"/>
 			<column id="121" name="hit_end"/>
-			<column id="122" name="hit_strand"/>
-			<column id="123" name="score"/>
-			<column id="124" name="perc_ident"/>
+			<column id="122" name="perc_ident"/>
+			<column id="123" name="hit_strand"/>
+			<column id="124" name="score"/>
 			<primaryKey id="125" columnIds="119" status="INFERRED"/>
 			<foreignKey id="126" columnIds="111" status="INFERRED"/>
 			<foreignKey id="127" columnIds="120" status="INFERRED"/>
@@ -180,15 +180,15 @@
 		</table>
 		<table id="160" name="external_db" ignore="false">
 			<column id="161" name="db_release"/>
-			<column id="162" name="display_label_linkable"/>
-			<column id="163" name="db_name"/>
+			<column id="162" name="db_name"/>
+			<column id="163" name="display_label_linkable"/>
 			<column id="164" name="type"/>
 			<column id="165" name="dbprimary_acc_linkable"/>
 			<column id="166" name="db_display_name"/>
-			<column id="167" name="status"/>
-			<column id="168" name="external_db_id"/>
+			<column id="167" name="external_db_id"/>
+			<column id="168" name="status"/>
 			<column id="169" name="priority"/>
-			<primaryKey id="170" columnIds="168" status="INFERRED"/>
+			<primaryKey id="170" columnIds="167" status="INFERRED"/>
 		</table>
 		<table id="171" name="external_synonym" ignore="false">
 			<column id="172" name="synonym"/>
@@ -203,11 +203,11 @@
 			<column id="180" name="gene_id"/>
 			<column id="181" name="description"/>
 			<column id="182" name="status"/>
-			<column id="183" name="source"/>
+			<column id="183" name="seq_region_end"/>
 			<column id="184" name="display_xref_id"/>
-			<column id="185" name="seq_region_end"/>
-			<column id="186" name="seq_region_strand"/>
-			<column id="187" name="biotype"/>
+			<column id="185" name="source"/>
+			<column id="186" name="biotype"/>
+			<column id="187" name="seq_region_strand"/>
 			<column id="188" name="is_current"/>
 			<primaryKey id="189" columnIds="180" status="INFERRED"/>
 			<foreignKey id="190" columnIds="177" status="INFERRED"/>
@@ -247,20 +247,20 @@
 			<foreignKey id="220" columnIds="218" status="INFERRED"/>
 		</table>
 		<table id="221" name="identity_xref" ignore="false">
-			<column id="222" name="analysis_id"/>
+			<column id="222" name="object_xref_id"/>
 			<column id="223" name="translation_end"/>
-			<column id="224" name="object_xref_id"/>
+			<column id="224" name="analysis_id"/>
 			<column id="225" name="hit_end"/>
 			<column id="226" name="target_identity"/>
 			<column id="227" name="query_identity"/>
 			<column id="228" name="score"/>
-			<column id="229" name="evalue"/>
-			<column id="230" name="hit_start"/>
+			<column id="229" name="hit_start"/>
+			<column id="230" name="evalue"/>
 			<column id="231" name="translation_start"/>
 			<column id="232" name="cigar_line"/>
-			<primaryKey id="233" columnIds="224" status="INFERRED"/>
-			<foreignKey id="234" columnIds="222" status="INFERRED"/>
-			<foreignKey id="235" columnIds="224" status="INFERRED"/>
+			<primaryKey id="233" columnIds="222" status="INFERRED"/>
+			<foreignKey id="234" columnIds="224" status="INFERRED"/>
+			<foreignKey id="235" columnIds="222" status="INFERRED"/>
 		</table>
 		<table id="236" name="interpro" ignore="false">
 			<column id="237" name="interpro_ac"/>
@@ -279,15 +279,15 @@
 			<foreignKey id="249" columnIds="242" status="INFERRED"/>
 		</table>
 		<table id="250" name="map" ignore="false">
-			<column id="251" name="map_name"/>
-			<column id="252" name="map_id"/>
-			<primaryKey id="253" columnIds="252" status="INFERRED"/>
+			<column id="251" name="map_id"/>
+			<column id="252" name="map_name"/>
+			<primaryKey id="253" columnIds="251" status="INFERRED"/>
 		</table>
 		<table id="254" name="mapping_session" ignore="false">
 			<column id="255" name="created"/>
 			<column id="256" name="new_release"/>
-			<column id="257" name="new_assembly"/>
-			<column id="258" name="old_db_name"/>
+			<column id="257" name="old_db_name"/>
+			<column id="258" name="new_assembly"/>
 			<column id="259" name="old_assembly"/>
 			<column id="260" name="new_db_name"/>
 			<column id="261" name="mapping_session_id"/>
@@ -297,8 +297,8 @@
 		<table id="264" name="marker" ignore="false">
 			<column id="265" name="right_primer"/>
 			<column id="266" name="max_primer_dist"/>
-			<column id="267" name="type"/>
-			<column id="268" name="display_marker_synonym_id"/>
+			<column id="267" name="display_marker_synonym_id"/>
+			<column id="268" name="type"/>
 			<column id="269" name="marker_id"/>
 			<column id="270" name="left_primer"/>
 			<column id="271" name="priority"/>
@@ -320,15 +320,15 @@
 		</table>
 		<table id="286" name="marker_map_location" ignore="false">
 			<column id="287" name="lod_score"/>
-			<column id="288" name="position"/>
-			<column id="289" name="marker_id"/>
-			<column id="290" name="marker_synonym_id"/>
-			<column id="291" name="chromosome_name"/>
+			<column id="288" name="marker_id"/>
+			<column id="289" name="position"/>
+			<column id="290" name="chromosome_name"/>
+			<column id="291" name="marker_synonym_id"/>
 			<column id="292" name="map_id"/>
-			<primaryKey id="293" columnIds="289,292" status="INFERRED"/>
+			<primaryKey id="293" columnIds="288,292" status="INFERRED"/>
 			<foreignKey id="294" columnIds="292" status="INFERRED"/>
-			<foreignKey id="295" columnIds="289" status="INFERRED"/>
-			<foreignKey id="296" columnIds="290" status="INFERRED"/>
+			<foreignKey id="295" columnIds="288" status="INFERRED"/>
+			<foreignKey id="296" columnIds="291" status="INFERRED"/>
 		</table>
 		<table id="297" name="marker_synonym" ignore="false">
 			<column id="298" name="marker_id"/>
@@ -361,9 +361,9 @@
 			<column id="321" name="seq_region_id"/>
 			<column id="322" name="seq_region_start"/>
 			<column id="323" name="seq_region_end"/>
-			<column id="324" name="seq_region_strand"/>
-			<column id="325" name="misc_feature_id"/>
-			<primaryKey id="326" columnIds="325" status="INFERRED"/>
+			<column id="324" name="misc_feature_id"/>
+			<column id="325" name="seq_region_strand"/>
+			<primaryKey id="326" columnIds="324" status="INFERRED"/>
 			<foreignKey id="327" columnIds="321" status="INFERRED"/>
 		</table>
 		<table id="328" name="misc_feature_misc_set" ignore="false">
@@ -374,47 +374,47 @@
 			<foreignKey id="333" columnIds="329" status="INFERRED"/>
 		</table>
 		<table id="334" name="misc_set" ignore="false">
-			<column id="335" name="code"/>
-			<column id="336" name="misc_set_id"/>
-			<column id="337" name="max_length"/>
-			<column id="338" name="description"/>
+			<column id="335" name="misc_set_id"/>
+			<column id="336" name="code"/>
+			<column id="337" name="description"/>
+			<column id="338" name="max_length"/>
 			<column id="339" name="name"/>
-			<primaryKey id="340" columnIds="336" status="INFERRED"/>
+			<primaryKey id="340" columnIds="335" status="INFERRED"/>
 		</table>
 		<table id="341" name="object_xref" ignore="false">
-			<column id="342" name="ensembl_object_type"/>
+			<column id="342" name="object_xref_id"/>
 			<column id="343" name="ensembl_id"/>
-			<column id="344" name="object_xref_id"/>
+			<column id="344" name="ensembl_object_type"/>
 			<column id="345" name="xref_id"/>
-			<primaryKey id="346" columnIds="344" status="INFERRED"/>
+			<primaryKey id="346" columnIds="342" status="INFERRED"/>
 			<foreignKey id="347" columnIds="345" status="INFERRED"/>
 			<foreignKey id="348" columnIds="343" status="HANDMADE"/>
 		</table>
 		<table id="349" name="oligo_array" ignore="false">
 			<column id="350" name="probe_setsize"/>
 			<column id="351" name="type"/>
-			<column id="352" name="parent_array_id"/>
-			<column id="353" name="oligo_array_id"/>
+			<column id="352" name="oligo_array_id"/>
+			<column id="353" name="parent_array_id"/>
 			<column id="354" name="name"/>
-			<primaryKey id="355" columnIds="353" status="INFERRED"/>
+			<primaryKey id="355" columnIds="352" status="INFERRED"/>
 		</table>
 		<table id="356" name="oligo_feature" ignore="false">
-			<column id="357" name="analysis_id"/>
-			<column id="358" name="oligo_probe_id"/>
+			<column id="357" name="oligo_probe_id"/>
+			<column id="358" name="analysis_id"/>
 			<column id="359" name="seq_region_id"/>
 			<column id="360" name="seq_region_start"/>
 			<column id="361" name="seq_region_end"/>
-			<column id="362" name="seq_region_strand"/>
-			<column id="363" name="oligo_feature_id"/>
+			<column id="362" name="oligo_feature_id"/>
+			<column id="363" name="seq_region_strand"/>
 			<column id="364" name="mismatches"/>
-			<primaryKey id="365" columnIds="363" status="INFERRED"/>
-			<foreignKey id="366" columnIds="357" status="INFERRED"/>
+			<primaryKey id="365" columnIds="362" status="INFERRED"/>
+			<foreignKey id="366" columnIds="358" status="INFERRED"/>
 			<foreignKey id="367" columnIds="359" status="INFERRED"/>
 		</table>
 		<table id="368" name="oligo_probe" ignore="false">
 			<column id="369" name="oligo_probe_id"/>
-			<column id="370" name="length"/>
-			<column id="371" name="probeset"/>
+			<column id="370" name="probeset"/>
+			<column id="371" name="length"/>
 			<column id="372" name="description"/>
 			<column id="373" name="oligo_array_id"/>
 			<column id="374" name="name"/>
@@ -435,8 +435,8 @@
 			<column id="387" name="exon_rank"/>
 			<column id="388" name="p_value"/>
 			<column id="389" name="prediction_transcript_id"/>
-			<column id="390" name="start_phase"/>
-			<column id="391" name="seq_region_end"/>
+			<column id="390" name="seq_region_end"/>
+			<column id="391" name="start_phase"/>
 			<column id="392" name="seq_region_strand"/>
 			<primaryKey id="393" columnIds="383" status="INFERRED"/>
 			<foreignKey id="394" columnIds="389" status="INFERRED"/>
@@ -445,8 +445,8 @@
 		<table id="396" name="prediction_transcript" ignore="false">
 			<column id="397" name="analysis_id"/>
 			<column id="398" name="seq_region_id"/>
-			<column id="399" name="display_label"/>
-			<column id="400" name="seq_region_start"/>
+			<column id="399" name="seq_region_start"/>
+			<column id="400" name="display_label"/>
 			<column id="401" name="prediction_transcript_id"/>
 			<column id="402" name="seq_region_end"/>
 			<column id="403" name="seq_region_strand"/>
@@ -473,19 +473,19 @@
 			<foreignKey id="423" columnIds="417" status="INFERRED"/>
 		</table>
 		<table id="424" name="protein_feature" ignore="false">
-			<column id="425" name="analysis_id"/>
-			<column id="426" name="protein_feature_id"/>
+			<column id="425" name="protein_feature_id"/>
+			<column id="426" name="analysis_id"/>
 			<column id="427" name="hit_end"/>
-			<column id="428" name="perc_ident"/>
-			<column id="429" name="score"/>
+			<column id="428" name="score"/>
+			<column id="429" name="perc_ident"/>
 			<column id="430" name="translation_id"/>
-			<column id="431" name="evalue"/>
+			<column id="431" name="seq_end"/>
 			<column id="432" name="hit_start"/>
-			<column id="433" name="seq_end"/>
+			<column id="433" name="evalue"/>
 			<column id="434" name="seq_start"/>
 			<column id="435" name="hit_id"/>
-			<primaryKey id="436" columnIds="426" status="INFERRED"/>
-			<foreignKey id="437" columnIds="425" status="INFERRED"/>
+			<primaryKey id="436" columnIds="425" status="INFERRED"/>
+			<foreignKey id="437" columnIds="426" status="INFERRED"/>
 			<foreignKey id="438" columnIds="430" status="INFERRED"/>
 			<foreignKey id="439" columnIds="435" status="HANDMADE"/>
 		</table>
@@ -502,19 +502,19 @@
 			<column id="449" name="analysis_id"/>
 			<column id="450" name="seq_region_id"/>
 			<column id="451" name="seq_region_start"/>
-			<column id="452" name="qtl_id"/>
-			<column id="453" name="seq_region_end"/>
+			<column id="452" name="seq_region_end"/>
+			<column id="453" name="qtl_id"/>
 			<foreignKey id="454" columnIds="449" status="INFERRED"/>
-			<foreignKey id="455" columnIds="452" status="INFERRED"/>
+			<foreignKey id="455" columnIds="453" status="INFERRED"/>
 			<foreignKey id="456" columnIds="450" status="INFERRED"/>
 		</table>
 		<table id="457" name="qtl_synonym" ignore="false">
-			<column id="458" name="source_primary_id"/>
-			<column id="459" name="source_database"/>
-			<column id="460" name="qtl_id"/>
-			<column id="461" name="qtl_synonym_id"/>
-			<primaryKey id="462" columnIds="461" status="INFERRED"/>
-			<foreignKey id="463" columnIds="460" status="INFERRED"/>
+			<column id="458" name="source_database"/>
+			<column id="459" name="source_primary_id"/>
+			<column id="460" name="qtl_synonym_id"/>
+			<column id="461" name="qtl_id"/>
+			<primaryKey id="462" columnIds="460" status="INFERRED"/>
+			<foreignKey id="463" columnIds="461" status="INFERRED"/>
 		</table>
 		<table id="464" name="regulatory_factor" ignore="false">
 			<column id="465" name="type"/>
@@ -534,14 +534,14 @@
 			<column id="477" name="analysis_id"/>
 			<column id="478" name="seq_region_id"/>
 			<column id="479" name="seq_region_start"/>
-			<column id="480" name="regulatory_factor_id"/>
-			<column id="481" name="regulatory_feature_id"/>
+			<column id="480" name="regulatory_feature_id"/>
+			<column id="481" name="regulatory_factor_id"/>
 			<column id="482" name="seq_region_end"/>
-			<column id="483" name="seq_region_strand"/>
-			<column id="484" name="name"/>
-			<primaryKey id="485" columnIds="481" status="INFERRED"/>
+			<column id="483" name="name"/>
+			<column id="484" name="seq_region_strand"/>
+			<primaryKey id="485" columnIds="480" status="INFERRED"/>
 			<foreignKey id="486" columnIds="477" status="INFERRED"/>
-			<foreignKey id="487" columnIds="480" status="INFERRED"/>
+			<foreignKey id="487" columnIds="481" status="INFERRED"/>
 			<foreignKey id="488" columnIds="478" status="INFERRED"/>
 		</table>
 		<table id="489" name="regulatory_feature_object" ignore="false">
@@ -553,50 +553,50 @@
 			<foreignKey id="495" columnIds="493" status="INFERRED"/>
 		</table>
 		<table id="496" name="regulatory_search_region" ignore="false">
-			<column id="497" name="analysis_id"/>
-			<column id="498" name="ensembl_object_type"/>
+			<column id="497" name="ensembl_object_type"/>
+			<column id="498" name="analysis_id"/>
 			<column id="499" name="seq_region_id"/>
 			<column id="500" name="seq_region_start"/>
 			<column id="501" name="regulatory_search_region_id"/>
 			<column id="502" name="seq_region_end"/>
-			<column id="503" name="seq_region_strand"/>
-			<column id="504" name="name"/>
+			<column id="503" name="name"/>
+			<column id="504" name="seq_region_strand"/>
 			<column id="505" name="ensembl_object_id"/>
 			<primaryKey id="506" columnIds="501" status="INFERRED"/>
-			<foreignKey id="507" columnIds="497" status="INFERRED"/>
+			<foreignKey id="507" columnIds="498" status="INFERRED"/>
 			<foreignKey id="508" columnIds="499" status="INFERRED"/>
 		</table>
 		<table id="509" name="repeat_consensus" ignore="false">
 			<column id="510" name="repeat_consensus"/>
 			<column id="511" name="repeat_type"/>
-			<column id="512" name="repeat_class"/>
-			<column id="513" name="repeat_name"/>
+			<column id="512" name="repeat_name"/>
+			<column id="513" name="repeat_class"/>
 			<column id="514" name="repeat_consensus_id"/>
 			<primaryKey id="515" columnIds="514" status="INFERRED"/>
 		</table>
 		<table id="516" name="repeat_feature" ignore="false">
 			<column id="517" name="analysis_id"/>
 			<column id="518" name="seq_region_id"/>
-			<column id="519" name="seq_region_start"/>
-			<column id="520" name="repeat_feature_id"/>
+			<column id="519" name="repeat_feature_id"/>
+			<column id="520" name="seq_region_start"/>
 			<column id="521" name="score"/>
-			<column id="522" name="repeat_end"/>
-			<column id="523" name="repeat_start"/>
+			<column id="522" name="repeat_start"/>
+			<column id="523" name="repeat_end"/>
 			<column id="524" name="seq_region_end"/>
 			<column id="525" name="seq_region_strand"/>
 			<column id="526" name="repeat_consensus_id"/>
-			<primaryKey id="527" columnIds="520" status="INFERRED"/>
+			<primaryKey id="527" columnIds="519" status="INFERRED"/>
 			<foreignKey id="528" columnIds="517" status="INFERRED"/>
 			<foreignKey id="529" columnIds="526" status="INFERRED"/>
 			<foreignKey id="530" columnIds="518" status="INFERRED"/>
 		</table>
 		<table id="531" name="seq_region" ignore="false">
 			<column id="532" name="seq_region_id"/>
-			<column id="533" name="length"/>
-			<column id="534" name="coord_system_id"/>
+			<column id="533" name="coord_system_id"/>
+			<column id="534" name="length"/>
 			<column id="535" name="name"/>
 			<primaryKey id="536" columnIds="532" status="INFERRED"/>
-			<foreignKey id="537" columnIds="534" status="INFERRED"/>
+			<foreignKey id="537" columnIds="533" status="INFERRED"/>
 		</table>
 		<table id="538" name="seq_region_attrib" ignore="false">
 			<column id="539" name="seq_region_id"/>
@@ -608,8 +608,8 @@
 		<table id="544" name="simple_feature" ignore="false">
 			<column id="545" name="analysis_id"/>
 			<column id="546" name="seq_region_id"/>
-			<column id="547" name="display_label"/>
-			<column id="548" name="seq_region_start"/>
+			<column id="547" name="seq_region_start"/>
+			<column id="548" name="display_label"/>
 			<column id="549" name="score"/>
 			<column id="550" name="simple_feature_id"/>
 			<column id="551" name="seq_region_end"/>
@@ -620,10 +620,10 @@
 		</table>
 		<table id="556" name="stable_id_event" ignore="false">
 			<column id="557" name="new_version"/>
-			<column id="558" name="type"/>
-			<column id="559" name="old_stable_id"/>
-			<column id="560" name="score"/>
-			<column id="561" name="old_version"/>
+			<column id="558" name="old_stable_id"/>
+			<column id="559" name="type"/>
+			<column id="560" name="old_version"/>
+			<column id="561" name="score"/>
 			<column id="562" name="mapping_session_id"/>
 			<column id="563" name="new_stable_id"/>
 			<foreignKey id="564" columnIds="562" status="INFERRED"/>
@@ -641,13 +641,13 @@
 			<column id="574" name="gene_id"/>
 			<column id="575" name="description"/>
 			<column id="576" name="status"/>
-			<column id="577" name="display_xref_id"/>
-			<column id="578" name="seq_region_end"/>
-			<column id="579" name="biotype"/>
+			<column id="577" name="seq_region_end"/>
+			<column id="578" name="display_xref_id"/>
+			<column id="579" name="transcript_id"/>
 			<column id="580" name="seq_region_strand"/>
-			<column id="581" name="transcript_id"/>
+			<column id="581" name="biotype"/>
 			<column id="582" name="is_current"/>
-			<primaryKey id="583" columnIds="581" status="INFERRED"/>
+			<primaryKey id="583" columnIds="579" status="INFERRED"/>
 			<foreignKey id="584" columnIds="571" status="INFERRED"/>
 			<foreignKey id="585" columnIds="574" status="INFERRED"/>
 			<foreignKey id="586" columnIds="572" status="INFERRED"/>
@@ -678,8 +678,8 @@
 			<column id="607" name="end_exon_id"/>
 			<column id="608" name="translation_id"/>
 			<column id="609" name="seq_end"/>
-			<column id="610" name="start_exon_id"/>
-			<column id="611" name="seq_start"/>
+			<column id="610" name="seq_start"/>
+			<column id="611" name="start_exon_id"/>
 			<column id="612" name="transcript_id"/>
 			<primaryKey id="613" columnIds="608" status="INFERRED"/>
 			<foreignKey id="614" columnIds="612" status="INFERRED"/>
@@ -702,15 +702,15 @@
 		</table>
 		<table id="629" name="unconventional_transcript_association" ignore="false">
 			<column id="630" name="gene_id"/>
-			<column id="631" name="interaction_type"/>
-			<column id="632" name="transcript_id"/>
+			<column id="631" name="transcript_id"/>
+			<column id="632" name="interaction_type"/>
 			<foreignKey id="633" columnIds="630" status="INFERRED"/>
-			<foreignKey id="634" columnIds="632" status="INFERRED"/>
+			<foreignKey id="634" columnIds="631" status="INFERRED"/>
 		</table>
 		<table id="635" name="unmapped_object" ignore="false">
-			<column id="636" name="ensembl_object_type"/>
+			<column id="636" name="analysis_id"/>
 			<column id="637" name="ensembl_id"/>
-			<column id="638" name="analysis_id"/>
+			<column id="638" name="ensembl_object_type"/>
 			<column id="639" name="unmapped_reason_id"/>
 			<column id="640" name="type"/>
 			<column id="641" name="query_score"/>
@@ -720,7 +720,7 @@
 			<column id="645" name="unmapped_object_id"/>
 			<column id="646" name="parent"/>
 			<primaryKey id="647" columnIds="645" status="INFERRED"/>
-			<foreignKey id="648" columnIds="638" status="INFERRED"/>
+			<foreignKey id="648" columnIds="636" status="INFERRED"/>
 			<foreignKey id="649" columnIds="644" status="INFERRED"/>
 			<foreignKey id="650" columnIds="639" status="INFERRED"/>
 		</table>
@@ -767,8 +767,8 @@
 		<relation id="689" cardinality="M" firstKeyId="21" secondKeyId="79" status="INFERRED"/>
 		<relation id="690" cardinality="M" firstKeyId="61" secondKeyId="537" status="INFERRED"/>
 		<relation id="691" cardinality="M" firstKeyId="346" secondKeyId="220" status="INFERRED"/>
-		<relation id="692" cardinality="M" firstKeyId="536" secondKeyId="48" status="INFERRED"/>
-		<relation id="693" cardinality="M" firstKeyId="536" secondKeyId="104" status="INFERRED"/>
+		<relation id="692" cardinality="M" firstKeyId="536" secondKeyId="104" status="INFERRED"/>
+		<relation id="693" cardinality="M" firstKeyId="536" secondKeyId="48" status="INFERRED"/>
 		<relation id="694" cardinality="M" firstKeyId="21" secondKeyId="584" status="INFERRED"/>
 		<relation id="695" cardinality="M" firstKeyId="447" secondKeyId="455" status="INFERRED"/>
 		<relation id="696" cardinality="M" firstKeyId="381" secondKeyId="202" status="INFERRED"/>
@@ -782,8 +782,8 @@
 		<relation id="704" cardinality="M" firstKeyId="536" secondKeyId="367" status="INFERRED"/>
 		<relation id="705" cardinality="M" firstKeyId="21" secondKeyId="234" status="INFERRED"/>
 		<relation id="706" cardinality="1" firstKeyId="189" secondKeyId="216" status="INFERRED"/>
-		<relation id="707" cardinality="M" firstKeyId="189" secondKeyId="473" status="INFERRED"/>
-		<relation id="708" cardinality="M" firstKeyId="583" secondKeyId="614" status="INFERRED"/>
+		<relation id="707" cardinality="M" firstKeyId="583" secondKeyId="614" status="INFERRED"/>
+		<relation id="708" cardinality="M" firstKeyId="189" secondKeyId="473" status="INFERRED"/>
 		<relation id="709" cardinality="M" firstKeyId="536" secondKeyId="543" status="INFERRED"/>
 		<relation id="710" cardinality="M" firstKeyId="515" secondKeyId="529" status="INFERRED"/>
 		<relation id="711" cardinality="M" firstKeyId="447" secondKeyId="463" status="INFERRED"/>
@@ -836,663 +836,664 @@
 		<relation id="758" cardinality="M" firstKeyId="21" secondKeyId="190" status="INFERRED"/>
 		<relation id="759" cardinality="M" firstKeyId="302" secondKeyId="296" status="INFERRED"/>
 		<relation id="760" cardinality="1" firstKeyId="583" secondKeyId="600" status="INFERRED"/>
-		<relation id="761" cardinality="M" firstKeyId="21" secondKeyId="102" status="INFERRED"/>
-		<relation id="762" cardinality="M" firstKeyId="485" secondKeyId="495" status="INFERRED"/>
-		<relation id="763" cardinality="M" firstKeyId="340" secondKeyId="333" status="INFERRED"/>
-		<relation id="764" cardinality="M" firstKeyId="536" secondKeyId="133" status="HANDMADE"/>
-		<relation id="765" cardinality="M" firstKeyId="189" secondKeyId="585" status="INFERRED"/>
+		<relation id="761" cardinality="M" firstKeyId="240" secondKeyId="667" status="HANDMADE"/>
+		<relation id="762" cardinality="M" firstKeyId="21" secondKeyId="102" status="INFERRED"/>
+		<relation id="763" cardinality="M" firstKeyId="485" secondKeyId="495" status="INFERRED"/>
+		<relation id="764" cardinality="M" firstKeyId="340" secondKeyId="333" status="INFERRED"/>
+		<relation id="765" cardinality="M" firstKeyId="536" secondKeyId="133" status="HANDMADE"/>
+		<relation id="766" cardinality="M" firstKeyId="189" secondKeyId="585" status="INFERRED"/>
 	</jdbcSchema>
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:3309/homo_sapiens_core_expression_est_45_36g" schemaName="homo_sapiens_core_expression_est_45_36g" username="ensadmin" password="ensembl" name="expression" keyguessing="true" masked="false">
-		<table id="766" name="Clonelib" ignore="false">
-			<column id="767" name="Name"/>
-			<column id="768" name="Id"/>
-			<primaryKey id="769" columnIds="768" status="INFERRED"/>
+		<table id="767" name="Clonelib" ignore="false">
+			<column id="768" name="Name"/>
+			<column id="769" name="Id"/>
+			<primaryKey id="770" columnIds="769" status="INFERRED"/>
 		</table>
-		<table id="770" name="EST" ignore="false">
-			<column id="771" name="Clonelib_id"/>
-			<column id="772" name="EST_id"/>
-			<primaryKey id="773" columnIds="772" status="INFERRED"/>
+		<table id="771" name="EST" ignore="false">
+			<column id="772" name="Clonelib_id"/>
+			<column id="773" name="EST_id"/>
+			<primaryKey id="774" columnIds="773" status="INFERRED"/>
 		</table>
-		<table id="774" name="EnsemblTranscript" ignore="false">
-			<column id="775" name="EST_id"/>
-			<column id="776" name="Id"/>
-			<foreignKey id="777" columnIds="775" status="INFERRED"/>
+		<table id="775" name="EnsemblTranscript" ignore="false">
+			<column id="776" name="EST_id"/>
+			<column id="777" name="Id"/>
+			<foreignKey id="778" columnIds="776" status="INFERRED"/>
 		</table>
-		<table id="778" name="Mapping" ignore="false">
-			<column id="779" name="Node_id"/>
+		<table id="779" name="Mapping" ignore="false">
 			<column id="780" name="Clonelib_id"/>
-			<foreignKey id="781" columnIds="779" status="INFERRED"/>
+			<column id="781" name="Node_id"/>
+			<foreignKey id="782" columnIds="781" status="INFERRED"/>
 		</table>
-		<table id="782" name="Node" ignore="false">
-			<column id="783" name="Node_id"/>
+		<table id="783" name="Node" ignore="false">
 			<column id="784" name="Definition"/>
-			<column id="785" name="ParentId"/>
-			<column id="786" name="Ontology_id"/>
-			<primaryKey id="787" columnIds="783" status="INFERRED"/>
-			<foreignKey id="788" columnIds="786" status="INFERRED"/>
-			<foreignKey id="789" columnIds="785" status="HANDMADE"/>
+			<column id="785" name="Node_id"/>
+			<column id="786" name="ParentId"/>
+			<column id="787" name="Ontology_id"/>
+			<primaryKey id="788" columnIds="785" status="INFERRED"/>
+			<foreignKey id="789" columnIds="787" status="INFERRED"/>
+			<foreignKey id="790" columnIds="786" status="HANDMADE"/>
 		</table>
-		<table id="790" name="Ontology" ignore="false">
-			<column id="791" name="Ontology_id"/>
-			<column id="792" name="Name"/>
-			<primaryKey id="793" columnIds="791" status="INFERRED"/>
+		<table id="791" name="Ontology" ignore="false">
+			<column id="792" name="Ontology_id"/>
+			<column id="793" name="Name"/>
+			<primaryKey id="794" columnIds="792" status="INFERRED"/>
 		</table>
-		<table id="794" name="Synonym" ignore="false">
-			<column id="795" name="Synonym"/>
-			<column id="796" name="Term"/>
-			<primaryKey id="797" columnIds="795" status="INFERRED"/>
+		<table id="795" name="Synonym" ignore="false">
+			<column id="796" name="Synonym"/>
+			<column id="797" name="Term"/>
+			<primaryKey id="798" columnIds="796" status="INFERRED"/>
 		</table>
-		<table id="798" name="Vocabulary" ignore="false">
-			<column id="799" name="Node_id"/>
-			<column id="800" name="Term"/>
-			<primaryKey id="801" columnIds="800" status="INFERRED"/>
-			<foreignKey id="802" columnIds="799" status="INFERRED"/>
+		<table id="799" name="Vocabulary" ignore="false">
+			<column id="800" name="Node_id"/>
+			<column id="801" name="Term"/>
+			<primaryKey id="802" columnIds="801" status="INFERRED"/>
+			<foreignKey id="803" columnIds="800" status="INFERRED"/>
 		</table>
-		<table id="803" name="gene_attrib" ignore="false">
-			<column id="804" name="value"/>
-			<column id="805" name="gene_id"/>
-			<column id="806" name="attrib_type_id"/>
+		<table id="804" name="gene_attrib" ignore="false">
+			<column id="805" name="value"/>
+			<column id="806" name="gene_id"/>
+			<column id="807" name="attrib_type_id"/>
 		</table>
-		<table id="807" name="oligo_array" ignore="false">
-			<column id="808" name="probe_setsize"/>
-			<column id="809" name="type"/>
-			<column id="810" name="oligo_array_id"/>
+		<table id="808" name="oligo_array" ignore="false">
+			<column id="809" name="probe_setsize"/>
+			<column id="810" name="type"/>
 			<column id="811" name="parent_array_id"/>
-			<column id="812" name="name"/>
-			<primaryKey id="813" columnIds="810" status="INFERRED"/>
+			<column id="812" name="oligo_array_id"/>
+			<column id="813" name="name"/>
+			<primaryKey id="814" columnIds="812" status="INFERRED"/>
 		</table>
-		<table id="814" name="oligo_feature" ignore="false">
-			<column id="815" name="oligo_probe_id"/>
+		<table id="815" name="oligo_feature" ignore="false">
 			<column id="816" name="analysis_id"/>
-			<column id="817" name="seq_region_id"/>
-			<column id="818" name="seq_region_start"/>
-			<column id="819" name="seq_region_end"/>
-			<column id="820" name="oligo_feature_id"/>
+			<column id="817" name="oligo_probe_id"/>
+			<column id="818" name="seq_region_id"/>
+			<column id="819" name="seq_region_start"/>
+			<column id="820" name="seq_region_end"/>
 			<column id="821" name="seq_region_strand"/>
-			<column id="822" name="mismatches"/>
-			<primaryKey id="823" columnIds="820" status="INFERRED"/>
+			<column id="822" name="oligo_feature_id"/>
+			<column id="823" name="mismatches"/>
+			<primaryKey id="824" columnIds="822" status="INFERRED"/>
 		</table>
-		<table id="824" name="oligo_probe" ignore="false">
-			<column id="825" name="oligo_probe_id"/>
-			<column id="826" name="probeset"/>
+		<table id="825" name="oligo_probe" ignore="false">
+			<column id="826" name="oligo_probe_id"/>
 			<column id="827" name="length"/>
-			<column id="828" name="description"/>
-			<column id="829" name="oligo_array_id"/>
-			<column id="830" name="name"/>
-			<primaryKey id="831" columnIds="825,829" status="INFERRED"/>
-			<foreignKey id="832" columnIds="829" status="INFERRED"/>
+			<column id="828" name="probeset"/>
+			<column id="829" name="description"/>
+			<column id="830" name="oligo_array_id"/>
+			<column id="831" name="name"/>
+			<primaryKey id="832" columnIds="826,830" status="INFERRED"/>
+			<foreignKey id="833" columnIds="830" status="INFERRED"/>
 		</table>
-		<table id="833" name="peptide_archive" ignore="false">
-			<column id="834" name="peptide_archive_id"/>
-			<column id="835" name="peptide_seq"/>
-			<column id="836" name="md5_checksum"/>
-			<primaryKey id="837" columnIds="834" status="INFERRED"/>
+		<table id="834" name="peptide_archive" ignore="false">
+			<column id="835" name="peptide_archive_id"/>
+			<column id="836" name="peptide_seq"/>
+			<column id="837" name="md5_checksum"/>
+			<primaryKey id="838" columnIds="835" status="INFERRED"/>
 		</table>
-		<table id="838" name="unmapped_object" ignore="false">
-			<column id="839" name="analysis_id"/>
-			<column id="840" name="ensembl_id"/>
-			<column id="841" name="ensembl_object_type"/>
-			<column id="842" name="unmapped_reason_id"/>
-			<column id="843" name="type"/>
-			<column id="844" name="query_score"/>
-			<column id="845" name="target_score"/>
-			<column id="846" name="identifier"/>
-			<column id="847" name="external_db_id"/>
-			<column id="848" name="unmapped_object_id"/>
-			<primaryKey id="849" columnIds="848" status="INFERRED"/>
-			<foreignKey id="850" columnIds="842" status="INFERRED"/>
+		<table id="839" name="unmapped_object" ignore="false">
+			<column id="840" name="ensembl_object_type"/>
+			<column id="841" name="ensembl_id"/>
+			<column id="842" name="analysis_id"/>
+			<column id="843" name="unmapped_reason_id"/>
+			<column id="844" name="type"/>
+			<column id="845" name="query_score"/>
+			<column id="846" name="target_score"/>
+			<column id="847" name="identifier"/>
+			<column id="848" name="external_db_id"/>
+			<column id="849" name="unmapped_object_id"/>
+			<primaryKey id="850" columnIds="849" status="INFERRED"/>
+			<foreignKey id="851" columnIds="843" status="INFERRED"/>
 		</table>
-		<table id="851" name="unmapped_reason" ignore="false">
-			<column id="852" name="unmapped_reason_id"/>
-			<column id="853" name="summary_description"/>
-			<column id="854" name="full_description"/>
-			<primaryKey id="855" columnIds="852" status="INFERRED"/>
+		<table id="852" name="unmapped_reason" ignore="false">
+			<column id="853" name="unmapped_reason_id"/>
+			<column id="854" name="summary_description"/>
+			<column id="855" name="full_description"/>
+			<primaryKey id="856" columnIds="853" status="INFERRED"/>
 		</table>
-		<relation id="856" cardinality="M" firstKeyId="855" secondKeyId="850" status="INFERRED"/>
-		<relation id="857" cardinality="M" firstKeyId="789" secondKeyId="802" status="HANDMADE"/>
-		<relation id="858" cardinality="M" firstKeyId="813" secondKeyId="832" status="INFERRED"/>
-		<relation id="859" cardinality="M" firstKeyId="773" secondKeyId="777" status="INFERRED"/>
-		<relation id="860" cardinality="M" firstKeyId="787" secondKeyId="781" status="INFERRED"/>
-		<relation id="861" cardinality="M" firstKeyId="787" secondKeyId="802" status="INFERRED"/>
-		<relation id="862" cardinality="M" firstKeyId="793" secondKeyId="788" status="INFERRED"/>
+		<relation id="857" cardinality="M" firstKeyId="856" secondKeyId="851" status="INFERRED"/>
+		<relation id="858" cardinality="M" firstKeyId="790" secondKeyId="803" status="HANDMADE"/>
+		<relation id="859" cardinality="M" firstKeyId="814" secondKeyId="833" status="INFERRED"/>
+		<relation id="860" cardinality="M" firstKeyId="774" secondKeyId="778" status="INFERRED"/>
+		<relation id="861" cardinality="M" firstKeyId="788" secondKeyId="782" status="INFERRED"/>
+		<relation id="862" cardinality="M" firstKeyId="794" secondKeyId="789" status="INFERRED"/>
+		<relation id="863" cardinality="M" firstKeyId="788" secondKeyId="803" status="INFERRED"/>
 	</jdbcSchema>
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3309/ensembl_go_45" schemaName="ensembl_go_45" username="ensadmin" password="ensembl" name="go" keyguessing="true" masked="false">
-		<table id="863" name="assoc_rel" ignore="false">
-			<column id="864" name="relationship_type_id"/>
-			<column id="865" name="from_id"/>
-			<column id="866" name="to_id"/>
-			<column id="867" name="id"/>
-			<primaryKey id="868" columnIds="867" status="INFERRED"/>
+		<table id="864" name="assoc_rel" ignore="false">
+			<column id="865" name="relationship_type_id"/>
+			<column id="866" name="from_id"/>
+			<column id="867" name="to_id"/>
+			<column id="868" name="id"/>
+			<primaryKey id="869" columnIds="868" status="INFERRED"/>
 		</table>
-		<table id="869" name="association" ignore="false">
-			<column id="870" name="is_not"/>
-			<column id="871" name="assocdate"/>
-			<column id="872" name="role_group"/>
+		<table id="870" name="association" ignore="false">
+			<column id="871" name="is_not"/>
+			<column id="872" name="assocdate"/>
 			<column id="873" name="source_db_id"/>
-			<column id="874" name="id"/>
-			<column id="875" name="term_id"/>
-			<column id="876" name="gene_product_id"/>
-			<primaryKey id="877" columnIds="874" status="INFERRED"/>
-			<foreignKey id="878" columnIds="876" status="INFERRED"/>
+			<column id="874" name="role_group"/>
+			<column id="875" name="gene_product_id"/>
+			<column id="876" name="term_id"/>
+			<column id="877" name="id"/>
+			<primaryKey id="878" columnIds="877" status="INFERRED"/>
 			<foreignKey id="879" columnIds="875" status="INFERRED"/>
+			<foreignKey id="880" columnIds="876" status="INFERRED"/>
 		</table>
-		<table id="880" name="association_qualifier" ignore="false">
-			<column id="881" name="value"/>
-			<column id="882" name="association_id"/>
-			<column id="883" name="id"/>
+		<table id="881" name="association_qualifier" ignore="false">
+			<column id="882" name="value"/>
+			<column id="883" name="association_id"/>
 			<column id="884" name="term_id"/>
-			<primaryKey id="885" columnIds="883" status="INFERRED"/>
-			<foreignKey id="886" columnIds="882" status="INFERRED"/>
-			<foreignKey id="887" columnIds="884" status="INFERRED"/>
+			<column id="885" name="id"/>
+			<primaryKey id="886" columnIds="885" status="INFERRED"/>
+			<foreignKey id="887" columnIds="883" status="INFERRED"/>
+			<foreignKey id="888" columnIds="884" status="INFERRED"/>
 		</table>
-		<table id="888" name="db" ignore="false">
-			<column id="889" name="generic_url"/>
+		<table id="889" name="db" ignore="false">
 			<column id="890" name="url_syntax"/>
-			<column id="891" name="datatype"/>
-			<column id="892" name="name"/>
+			<column id="891" name="generic_url"/>
+			<column id="892" name="datatype"/>
 			<column id="893" name="fullname"/>
-			<column id="894" name="id"/>
-			<primaryKey id="895" columnIds="894" status="INFERRED"/>
+			<column id="894" name="name"/>
+			<column id="895" name="id"/>
+			<primaryKey id="896" columnIds="895" status="INFERRED"/>
 		</table>
-		<table id="896" name="dbxref" ignore="false">
-			<column id="897" name="xref_desc"/>
-			<column id="898" name="xref_key"/>
+		<table id="897" name="dbxref" ignore="false">
+			<column id="898" name="xref_desc"/>
 			<column id="899" name="xref_dbname"/>
-			<column id="900" name="xref_keytype"/>
-			<column id="901" name="id"/>
-			<primaryKey id="902" columnIds="901" status="INFERRED"/>
+			<column id="900" name="xref_key"/>
+			<column id="901" name="xref_keytype"/>
+			<column id="902" name="id"/>
+			<primaryKey id="903" columnIds="902" status="INFERRED"/>
 		</table>
-		<table id="903" name="evidence" ignore="false">
-			<column id="904" name="code"/>
-			<column id="905" name="seq_acc"/>
-			<column id="906" name="association_id"/>
+		<table id="904" name="evidence" ignore="false">
+			<column id="905" name="code"/>
+			<column id="906" name="seq_acc"/>
 			<column id="907" name="dbxref_id"/>
-			<column id="908" name="id"/>
-			<primaryKey id="909" columnIds="908" status="INFERRED"/>
-			<foreignKey id="910" columnIds="906" status="INFERRED"/>
-			<foreignKey id="911" columnIds="907" status="INFERRED"/>
+			<column id="908" name="association_id"/>
+			<column id="909" name="id"/>
+			<primaryKey id="910" columnIds="909" status="INFERRED"/>
+			<foreignKey id="911" columnIds="908" status="INFERRED"/>
+			<foreignKey id="912" columnIds="907" status="INFERRED"/>
 		</table>
-		<table id="912" name="evidence_dbxref" ignore="false">
-			<column id="913" name="evidence_id"/>
-			<column id="914" name="dbxref_id"/>
-			<foreignKey id="915" columnIds="914" status="INFERRED"/>
-			<foreignKey id="916" columnIds="913" status="INFERRED"/>
+		<table id="913" name="evidence_dbxref" ignore="false">
+			<column id="914" name="evidence_id"/>
+			<column id="915" name="dbxref_id"/>
+			<foreignKey id="916" columnIds="915" status="INFERRED"/>
+			<foreignKey id="917" columnIds="914" status="INFERRED"/>
 		</table>
-		<table id="917" name="gene_product" ignore="false">
-			<column id="918" name="secondary_species_id"/>
+		<table id="918" name="gene_product" ignore="false">
 			<column id="919" name="type_id"/>
-			<column id="920" name="full_name"/>
-			<column id="921" name="dbxref_id"/>
-			<column id="922" name="species_id"/>
-			<column id="923" name="id"/>
-			<column id="924" name="symbol"/>
-			<primaryKey id="925" columnIds="923" status="INFERRED"/>
-			<foreignKey id="926" columnIds="921" status="INFERRED"/>
+			<column id="920" name="secondary_species_id"/>
+			<column id="921" name="full_name"/>
+			<column id="922" name="dbxref_id"/>
+			<column id="923" name="species_id"/>
+			<column id="924" name="id"/>
+			<column id="925" name="symbol"/>
+			<primaryKey id="926" columnIds="924" status="INFERRED"/>
 			<foreignKey id="927" columnIds="922" status="INFERRED"/>
+			<foreignKey id="928" columnIds="923" status="INFERRED"/>
 		</table>
-		<table id="928" name="gene_product_count" ignore="false">
-			<column id="929" name="code"/>
-			<column id="930" name="product_count"/>
-			<column id="931" name="speciesdbname"/>
-			<column id="932" name="term_id"/>
-			<foreignKey id="933" columnIds="932" status="INFERRED"/>
+		<table id="929" name="gene_product_count" ignore="false">
+			<column id="930" name="code"/>
+			<column id="931" name="product_count"/>
+			<column id="932" name="speciesdbname"/>
+			<column id="933" name="term_id"/>
+			<foreignKey id="934" columnIds="933" status="INFERRED"/>
 		</table>
-		<table id="934" name="gene_product_property" ignore="false">
-			<column id="935" name="property_val"/>
-			<column id="936" name="property_key"/>
-			<column id="937" name="gene_product_id"/>
-			<foreignKey id="938" columnIds="937" status="INFERRED"/>
+		<table id="935" name="gene_product_property" ignore="false">
+			<column id="936" name="property_val"/>
+			<column id="937" name="property_key"/>
+			<column id="938" name="gene_product_id"/>
+			<foreignKey id="939" columnIds="938" status="INFERRED"/>
 		</table>
-		<table id="939" name="gene_product_seq" ignore="false">
-			<column id="940" name="is_primary_seq"/>
-			<column id="941" name="seq_id"/>
-			<column id="942" name="gene_product_id"/>
-			<foreignKey id="943" columnIds="942" status="INFERRED"/>
-			<foreignKey id="944" columnIds="941" status="INFERRED"/>
+		<table id="940" name="gene_product_seq" ignore="false">
+			<column id="941" name="is_primary_seq"/>
+			<column id="942" name="seq_id"/>
+			<column id="943" name="gene_product_id"/>
+			<foreignKey id="944" columnIds="943" status="INFERRED"/>
+			<foreignKey id="945" columnIds="942" status="INFERRED"/>
 		</table>
-		<table id="945" name="gene_product_synonym" ignore="false">
-			<column id="946" name="product_synonym"/>
-			<column id="947" name="gene_product_id"/>
-			<foreignKey id="948" columnIds="947" status="INFERRED"/>
+		<table id="946" name="gene_product_synonym" ignore="false">
+			<column id="947" name="product_synonym"/>
+			<column id="948" name="gene_product_id"/>
+			<foreignKey id="949" columnIds="948" status="INFERRED"/>
 		</table>
-		<table id="949" name="graph_path" ignore="false">
-			<column id="950" name="distance"/>
-			<column id="951" name="term1_id"/>
-			<column id="952" name="term2_id"/>
-			<column id="953" name="id"/>
-			<primaryKey id="954" columnIds="953" status="INFERRED"/>
+		<table id="950" name="graph_path" ignore="false">
+			<column id="951" name="distance"/>
+			<column id="952" name="term1_id"/>
+			<column id="953" name="term2_id"/>
+			<column id="954" name="id"/>
+			<primaryKey id="955" columnIds="954" status="INFERRED"/>
 		</table>
-		<table id="955" name="graph_path2term" ignore="false">
-			<column id="956" name="graph_path_id"/>
-			<column id="957" name="rank"/>
-			<column id="958" name="term_id"/>
-			<foreignKey id="959" columnIds="956" status="INFERRED"/>
-			<foreignKey id="960" columnIds="958" status="INFERRED"/>
+		<table id="956" name="graph_path2term" ignore="false">
+			<column id="957" name="graph_path_id"/>
+			<column id="958" name="rank"/>
+			<column id="959" name="term_id"/>
+			<foreignKey id="960" columnIds="957" status="INFERRED"/>
+			<foreignKey id="961" columnIds="959" status="INFERRED"/>
 		</table>
-		<table id="961" name="instance_data" ignore="false">
-			<column id="962" name="release_notes"/>
-			<column id="963" name="release_type"/>
-			<column id="964" name="release_name"/>
+		<table id="962" name="instance_data" ignore="false">
+			<column id="963" name="release_notes"/>
+			<column id="964" name="release_type"/>
+			<column id="965" name="release_name"/>
 		</table>
-		<table id="965" name="seq" ignore="false">
-			<column id="966" name="moltype"/>
-			<column id="967" name="seq_len"/>
-			<column id="968" name="seq"/>
-			<column id="969" name="display_id"/>
+		<table id="966" name="seq" ignore="false">
+			<column id="967" name="moltype"/>
+			<column id="968" name="seq_len"/>
+			<column id="969" name="seq"/>
 			<column id="970" name="description"/>
-			<column id="971" name="md5checksum"/>
-			<column id="972" name="timestamp"/>
-			<column id="973" name="id"/>
-			<primaryKey id="974" columnIds="973" status="INFERRED"/>
+			<column id="971" name="display_id"/>
+			<column id="972" name="md5checksum"/>
+			<column id="973" name="timestamp"/>
+			<column id="974" name="id"/>
+			<primaryKey id="975" columnIds="974" status="INFERRED"/>
 		</table>
-		<table id="975" name="seq_dbxref" ignore="false">
-			<column id="976" name="dbxref_id"/>
-			<column id="977" name="seq_id"/>
-			<foreignKey id="978" columnIds="976" status="INFERRED"/>
+		<table id="976" name="seq_dbxref" ignore="false">
+			<column id="977" name="dbxref_id"/>
+			<column id="978" name="seq_id"/>
 			<foreignKey id="979" columnIds="977" status="INFERRED"/>
+			<foreignKey id="980" columnIds="978" status="INFERRED"/>
 		</table>
-		<table id="980" name="seq_property" ignore="false">
-			<column id="981" name="property_val"/>
-			<column id="982" name="property_key"/>
-			<column id="983" name="seq_id"/>
-			<column id="984" name="id"/>
-			<primaryKey id="985" columnIds="984" status="INFERRED"/>
-			<foreignKey id="986" columnIds="983" status="INFERRED"/>
+		<table id="981" name="seq_property" ignore="false">
+			<column id="982" name="property_val"/>
+			<column id="983" name="property_key"/>
+			<column id="984" name="seq_id"/>
+			<column id="985" name="id"/>
+			<primaryKey id="986" columnIds="985" status="INFERRED"/>
+			<foreignKey id="987" columnIds="984" status="INFERRED"/>
 		</table>
-		<table id="987" name="source_audit" ignore="false">
-			<column id="988" name="source_md5"/>
-			<column id="989" name="source_path"/>
-			<column id="990" name="source_type"/>
-			<column id="991" name="source_mtime"/>
+		<table id="988" name="source_audit" ignore="false">
+			<column id="989" name="source_md5"/>
+			<column id="990" name="source_path"/>
+			<column id="991" name="source_type"/>
+			<column id="992" name="source_mtime"/>
 		</table>
-		<table id="992" name="species" ignore="false">
-			<column id="993" name="lineage_string"/>
-			<column id="994" name="common_name"/>
-			<column id="995" name="ncbi_taxa_id"/>
-			<column id="996" name="id"/>
+		<table id="993" name="species" ignore="false">
+			<column id="994" name="lineage_string"/>
+			<column id="995" name="common_name"/>
+			<column id="996" name="ncbi_taxa_id"/>
 			<column id="997" name="genus"/>
-			<column id="998" name="species"/>
-			<primaryKey id="999" columnIds="996" status="INFERRED"/>
+			<column id="998" name="id"/>
+			<column id="999" name="species"/>
+			<primaryKey id="1000" columnIds="998" status="INFERRED"/>
 		</table>
-		<table id="1000" name="term" ignore="false">
-			<column id="1001" name="term_type"/>
-			<column id="1002" name="acc"/>
+		<table id="1001" name="term" ignore="false">
+			<column id="1002" name="term_type"/>
 			<column id="1003" name="is_root"/>
-			<column id="1004" name="is_obsolete"/>
-			<column id="1005" name="name"/>
-			<column id="1006" name="id"/>
-			<primaryKey id="1007" columnIds="1006" status="INFERRED"/>
-			<foreignKey id="1008" columnIds="1002" status="HANDMADE"/>
+			<column id="1004" name="acc"/>
+			<column id="1005" name="is_obsolete"/>
+			<column id="1006" name="name"/>
+			<column id="1007" name="id"/>
+			<primaryKey id="1008" columnIds="1007" status="INFERRED"/>
+			<foreignKey id="1009" columnIds="1004" status="HANDMADE"/>
 		</table>
-		<table id="1009" name="term2term" ignore="false">
-			<column id="1010" name="term1_id"/>
-			<column id="1011" name="relationship_type_id"/>
-			<column id="1012" name="term2_id"/>
-			<column id="1013" name="complete"/>
-			<column id="1014" name="id"/>
-			<primaryKey id="1015" columnIds="1014" status="INFERRED"/>
+		<table id="1010" name="term2term" ignore="false">
+			<column id="1011" name="term1_id"/>
+			<column id="1012" name="relationship_type_id"/>
+			<column id="1013" name="term2_id"/>
+			<column id="1014" name="complete"/>
+			<column id="1015" name="id"/>
+			<primaryKey id="1016" columnIds="1015" status="INFERRED"/>
 		</table>
-		<table id="1016" name="term_audit" ignore="false">
-			<column id="1017" name="term_loadtime"/>
-			<column id="1018" name="term_id"/>
-			<foreignKey id="1019" columnIds="1018" status="INFERRED"/>
+		<table id="1017" name="term_audit" ignore="false">
+			<column id="1018" name="term_loadtime"/>
+			<column id="1019" name="term_id"/>
+			<foreignKey id="1020" columnIds="1019" status="INFERRED"/>
 		</table>
-		<table id="1020" name="term_dbxref" ignore="false">
-			<column id="1021" name="is_for_definition"/>
-			<column id="1022" name="dbxref_id"/>
-			<column id="1023" name="term_id"/>
-			<foreignKey id="1024" columnIds="1022" status="INFERRED"/>
+		<table id="1021" name="term_dbxref" ignore="false">
+			<column id="1022" name="is_for_definition"/>
+			<column id="1023" name="dbxref_id"/>
+			<column id="1024" name="term_id"/>
 			<foreignKey id="1025" columnIds="1023" status="INFERRED"/>
+			<foreignKey id="1026" columnIds="1024" status="INFERRED"/>
 		</table>
-		<table id="1026" name="term_definition" ignore="false">
-			<column id="1027" name="term_comment"/>
-			<column id="1028" name="term_definition"/>
-			<column id="1029" name="dbxref_id"/>
-			<column id="1030" name="term_id"/>
-			<column id="1031" name="reference"/>
-			<primaryKey id="1032" columnIds="1028" status="INFERRED"/>
-			<foreignKey id="1033" columnIds="1029" status="INFERRED"/>
+		<table id="1027" name="term_definition" ignore="false">
+			<column id="1028" name="term_comment"/>
+			<column id="1029" name="term_definition"/>
+			<column id="1030" name="dbxref_id"/>
+			<column id="1031" name="term_id"/>
+			<column id="1032" name="reference"/>
+			<primaryKey id="1033" columnIds="1029" status="INFERRED"/>
 			<foreignKey id="1034" columnIds="1030" status="INFERRED"/>
+			<foreignKey id="1035" columnIds="1031" status="INFERRED"/>
 		</table>
-		<table id="1035" name="term_property" ignore="false">
-			<column id="1036" name="property_val"/>
-			<column id="1037" name="property_key"/>
-			<column id="1038" name="term_id"/>
-			<foreignKey id="1039" columnIds="1038" status="INFERRED"/>
+		<table id="1036" name="term_property" ignore="false">
+			<column id="1037" name="property_val"/>
+			<column id="1038" name="property_key"/>
+			<column id="1039" name="term_id"/>
+			<foreignKey id="1040" columnIds="1039" status="INFERRED"/>
 		</table>
-		<table id="1040" name="term_subset" ignore="false">
-			<column id="1041" name="subset_id"/>
-			<column id="1042" name="term_id"/>
-			<foreignKey id="1043" columnIds="1042" status="INFERRED"/>
+		<table id="1041" name="term_subset" ignore="false">
+			<column id="1042" name="subset_id"/>
+			<column id="1043" name="term_id"/>
+			<foreignKey id="1044" columnIds="1043" status="INFERRED"/>
 		</table>
-		<table id="1044" name="term_synonym" ignore="false">
-			<column id="1045" name="acc_synonym"/>
-			<column id="1046" name="synonym_type_id"/>
-			<column id="1047" name="term_id"/>
-			<column id="1048" name="term_synonym"/>
-			<primaryKey id="1049" columnIds="1048" status="INFERRED"/>
-			<foreignKey id="1050" columnIds="1047" status="INFERRED"/>
+		<table id="1045" name="term_synonym" ignore="false">
+			<column id="1046" name="acc_synonym"/>
+			<column id="1047" name="synonym_type_id"/>
+			<column id="1048" name="term_id"/>
+			<column id="1049" name="term_synonym"/>
+			<primaryKey id="1050" columnIds="1049" status="INFERRED"/>
+			<foreignKey id="1051" columnIds="1048" status="INFERRED"/>
 		</table>
-		<relation id="1051" cardinality="M" firstKeyId="1007" secondKeyId="960" status="INFERRED"/>
-		<relation id="1052" cardinality="M" firstKeyId="902" secondKeyId="911" status="INFERRED"/>
-		<relation id="1053" cardinality="M" firstKeyId="1007" secondKeyId="1050" status="INFERRED"/>
-		<relation id="1054" cardinality="M" firstKeyId="1007" secondKeyId="887" status="INFERRED"/>
-		<relation id="1055" cardinality="M" firstKeyId="974" secondKeyId="986" status="INFERRED"/>
-		<relation id="1056" cardinality="M" firstKeyId="974" secondKeyId="944" status="INFERRED"/>
-		<relation id="1057" cardinality="M" firstKeyId="925" secondKeyId="948" status="INFERRED"/>
-		<relation id="1058" cardinality="M" firstKeyId="954" secondKeyId="959" status="INFERRED"/>
-		<relation id="1059" cardinality="M" firstKeyId="1007" secondKeyId="1034" status="INFERRED"/>
-		<relation id="1060" cardinality="M" firstKeyId="1007" secondKeyId="933" status="INFERRED"/>
-		<relation id="1061" cardinality="M" firstKeyId="1007" secondKeyId="1019" status="INFERRED"/>
-		<relation id="1062" cardinality="M" firstKeyId="1007" secondKeyId="1039" status="INFERRED"/>
-		<relation id="1063" cardinality="M" firstKeyId="999" secondKeyId="927" status="INFERRED"/>
-		<relation id="1064" cardinality="M" firstKeyId="925" secondKeyId="878" status="INFERRED"/>
-		<relation id="1065" cardinality="M" firstKeyId="902" secondKeyId="1024" status="INFERRED"/>
-		<relation id="1066" cardinality="M" firstKeyId="877" secondKeyId="886" status="INFERRED"/>
-		<relation id="1067" cardinality="M" firstKeyId="1007" secondKeyId="879" status="INFERRED"/>
-		<relation id="1068" cardinality="M" firstKeyId="902" secondKeyId="978" status="INFERRED"/>
-		<relation id="1069" cardinality="M" firstKeyId="902" secondKeyId="1033" status="INFERRED"/>
-		<relation id="1070" cardinality="M" firstKeyId="974" secondKeyId="979" status="INFERRED"/>
-		<relation id="1071" cardinality="M" firstKeyId="925" secondKeyId="938" status="INFERRED"/>
-		<relation id="1072" cardinality="M" firstKeyId="909" secondKeyId="916" status="INFERRED"/>
-		<relation id="1073" cardinality="M" firstKeyId="877" secondKeyId="910" status="INFERRED"/>
-		<relation id="1074" cardinality="M" firstKeyId="902" secondKeyId="926" status="INFERRED"/>
-		<relation id="1075" cardinality="M" firstKeyId="1007" secondKeyId="1043" status="INFERRED"/>
-		<relation id="1076" cardinality="M" firstKeyId="925" secondKeyId="943" status="INFERRED"/>
-		<relation id="1077" cardinality="M" firstKeyId="902" secondKeyId="915" status="INFERRED"/>
-		<relation id="1078" cardinality="M" firstKeyId="1007" secondKeyId="1025" status="INFERRED"/>
+		<relation id="1052" cardinality="M" firstKeyId="1008" secondKeyId="961" status="INFERRED"/>
+		<relation id="1053" cardinality="M" firstKeyId="1008" secondKeyId="1051" status="INFERRED"/>
+		<relation id="1054" cardinality="M" firstKeyId="903" secondKeyId="912" status="INFERRED"/>
+		<relation id="1055" cardinality="M" firstKeyId="975" secondKeyId="987" status="INFERRED"/>
+		<relation id="1056" cardinality="M" firstKeyId="1008" secondKeyId="888" status="INFERRED"/>
+		<relation id="1057" cardinality="M" firstKeyId="975" secondKeyId="945" status="INFERRED"/>
+		<relation id="1058" cardinality="M" firstKeyId="926" secondKeyId="949" status="INFERRED"/>
+		<relation id="1059" cardinality="M" firstKeyId="955" secondKeyId="960" status="INFERRED"/>
+		<relation id="1060" cardinality="M" firstKeyId="1008" secondKeyId="1035" status="INFERRED"/>
+		<relation id="1061" cardinality="M" firstKeyId="1008" secondKeyId="934" status="INFERRED"/>
+		<relation id="1062" cardinality="M" firstKeyId="1008" secondKeyId="1020" status="INFERRED"/>
+		<relation id="1063" cardinality="M" firstKeyId="1008" secondKeyId="1040" status="INFERRED"/>
+		<relation id="1064" cardinality="M" firstKeyId="1000" secondKeyId="928" status="INFERRED"/>
+		<relation id="1065" cardinality="M" firstKeyId="926" secondKeyId="879" status="INFERRED"/>
+		<relation id="1066" cardinality="M" firstKeyId="903" secondKeyId="1025" status="INFERRED"/>
+		<relation id="1067" cardinality="M" firstKeyId="878" secondKeyId="887" status="INFERRED"/>
+		<relation id="1068" cardinality="M" firstKeyId="1008" secondKeyId="880" status="INFERRED"/>
+		<relation id="1069" cardinality="M" firstKeyId="903" secondKeyId="979" status="INFERRED"/>
+		<relation id="1070" cardinality="M" firstKeyId="903" secondKeyId="1034" status="INFERRED"/>
+		<relation id="1071" cardinality="M" firstKeyId="975" secondKeyId="980" status="INFERRED"/>
+		<relation id="1072" cardinality="M" firstKeyId="926" secondKeyId="939" status="INFERRED"/>
+		<relation id="1073" cardinality="M" firstKeyId="910" secondKeyId="917" status="INFERRED"/>
+		<relation id="1074" cardinality="M" firstKeyId="878" secondKeyId="911" status="INFERRED"/>
+		<relation id="1075" cardinality="M" firstKeyId="903" secondKeyId="927" status="INFERRED"/>
+		<relation id="1076" cardinality="M" firstKeyId="1008" secondKeyId="1044" status="INFERRED"/>
+		<relation id="1077" cardinality="M" firstKeyId="926" secondKeyId="944" status="INFERRED"/>
+		<relation id="1078" cardinality="M" firstKeyId="903" secondKeyId="916" status="INFERRED"/>
+		<relation id="1079" cardinality="M" firstKeyId="1008" secondKeyId="1026" status="INFERRED"/>
 	</jdbcSchema>
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3309/homo_sapiens_variation_45_36g" schemaName="homo_sapiens_variation_45_36g" username="ensadmin" password="ensembl" name="variation" keyguessing="true" masked="false">
-		<table id="1079" name="allele" ignore="false">
-			<column id="1080" name="allele_id"/>
-			<column id="1081" name="variation_id"/>
-			<column id="1082" name="frequency"/>
-			<column id="1083" name="sample_id"/>
-			<column id="1084" name="allele"/>
-			<primaryKey id="1085" columnIds="1080" status="INFERRED"/>
-			<foreignKey id="1086" columnIds="1083" status="INFERRED"/>
-			<foreignKey id="1087" columnIds="1081" status="INFERRED"/>
+		<table id="1080" name="allele" ignore="false">
+			<column id="1081" name="allele_id"/>
+			<column id="1082" name="variation_id"/>
+			<column id="1083" name="frequency"/>
+			<column id="1084" name="sample_id"/>
+			<column id="1085" name="allele"/>
+			<primaryKey id="1086" columnIds="1081" status="INFERRED"/>
+			<foreignKey id="1087" columnIds="1084" status="INFERRED"/>
+			<foreignKey id="1088" columnIds="1082" status="INFERRED"/>
 		</table>
-		<table id="1088" name="allele_group" ignore="false">
-			<column id="1089" name="allele_group_id"/>
-			<column id="1090" name="variation_group_id"/>
-			<column id="1091" name="frequency"/>
-			<column id="1092" name="source_id"/>
-			<column id="1093" name="sample_id"/>
-			<column id="1094" name="name"/>
-			<primaryKey id="1095" columnIds="1089" status="INFERRED"/>
-			<foreignKey id="1096" columnIds="1093" status="INFERRED"/>
-			<foreignKey id="1097" columnIds="1092" status="INFERRED"/>
-			<foreignKey id="1098" columnIds="1090" status="INFERRED"/>
+		<table id="1089" name="allele_group" ignore="false">
+			<column id="1090" name="allele_group_id"/>
+			<column id="1091" name="variation_group_id"/>
+			<column id="1092" name="frequency"/>
+			<column id="1093" name="source_id"/>
+			<column id="1094" name="sample_id"/>
+			<column id="1095" name="name"/>
+			<primaryKey id="1096" columnIds="1090" status="INFERRED"/>
+			<foreignKey id="1097" columnIds="1094" status="INFERRED"/>
+			<foreignKey id="1098" columnIds="1093" status="INFERRED"/>
+			<foreignKey id="1099" columnIds="1091" status="INFERRED"/>
 		</table>
-		<table id="1099" name="allele_group_allele" ignore="false">
-			<column id="1100" name="variation_id"/>
-			<column id="1101" name="allele_group_id"/>
-			<column id="1102" name="allele"/>
-			<foreignKey id="1103" columnIds="1101" status="INFERRED"/>
-			<foreignKey id="1104" columnIds="1100" status="INFERRED"/>
+		<table id="1100" name="allele_group_allele" ignore="false">
+			<column id="1101" name="variation_id"/>
+			<column id="1102" name="allele_group_id"/>
+			<column id="1103" name="allele"/>
+			<foreignKey id="1104" columnIds="1102" status="INFERRED"/>
+			<foreignKey id="1105" columnIds="1101" status="INFERRED"/>
 		</table>
-		<table id="1105" name="compressed_genotype_single_bp" ignore="false">
-			<column id="1106" name="seq_region_id"/>
-			<column id="1107" name="seq_region_start"/>
+		<table id="1106" name="compressed_genotype_single_bp" ignore="false">
+			<column id="1107" name="seq_region_id"/>
 			<column id="1108" name="genotypes"/>
-			<column id="1109" name="sample_id"/>
-			<column id="1110" name="seq_region_end"/>
-			<column id="1111" name="seq_region_strand"/>
-			<foreignKey id="1112" columnIds="1109" status="INFERRED"/>
+			<column id="1109" name="seq_region_start"/>
+			<column id="1110" name="sample_id"/>
+			<column id="1111" name="seq_region_end"/>
+			<column id="1112" name="seq_region_strand"/>
+			<foreignKey id="1113" columnIds="1110" status="INFERRED"/>
 		</table>
-		<table id="1113" name="failed_description" ignore="false">
-			<column id="1114" name="description"/>
-			<column id="1115" name="failed_description_id"/>
-			<primaryKey id="1116" columnIds="1115" status="INFERRED"/>
+		<table id="1114" name="failed_description" ignore="false">
+			<column id="1115" name="description"/>
+			<column id="1116" name="failed_description_id"/>
+			<primaryKey id="1117" columnIds="1116" status="INFERRED"/>
 		</table>
-		<table id="1117" name="failed_variation" ignore="false">
-			<column id="1118" name="variation_id"/>
-			<column id="1119" name="failed_description_id"/>
-			<primaryKey id="1120" columnIds="1118" status="INFERRED"/>
-			<foreignKey id="1121" columnIds="1119" status="INFERRED"/>
-			<foreignKey id="1122" columnIds="1118" status="INFERRED"/>
+		<table id="1118" name="failed_variation" ignore="false">
+			<column id="1119" name="variation_id"/>
+			<column id="1120" name="failed_description_id"/>
+			<primaryKey id="1121" columnIds="1119" status="INFERRED"/>
+			<foreignKey id="1122" columnIds="1120" status="INFERRED"/>
+			<foreignKey id="1123" columnIds="1119" status="INFERRED"/>
 		</table>
-		<table id="1123" name="flanking_sequence" ignore="false">
-			<column id="1124" name="seq_region_id"/>
-			<column id="1125" name="variation_id"/>
+		<table id="1124" name="flanking_sequence" ignore="false">
+			<column id="1125" name="seq_region_id"/>
 			<column id="1126" name="down_seq_region_start"/>
-			<column id="1127" name="down_seq_region_end"/>
-			<column id="1128" name="up_seq_region_start"/>
-			<column id="1129" name="up_seq"/>
-			<column id="1130" name="down_seq"/>
-			<column id="1131" name="up_seq_region_end"/>
+			<column id="1127" name="variation_id"/>
+			<column id="1128" name="down_seq_region_end"/>
+			<column id="1129" name="up_seq_region_start"/>
+			<column id="1130" name="up_seq"/>
+			<column id="1131" name="down_seq"/>
 			<column id="1132" name="seq_region_strand"/>
-			<primaryKey id="1133" columnIds="1125" status="INFERRED"/>
-			<foreignKey id="1134" columnIds="1125" status="INFERRED"/>
+			<column id="1133" name="up_seq_region_end"/>
+			<primaryKey id="1134" columnIds="1127" status="INFERRED"/>
+			<foreignKey id="1135" columnIds="1127" status="INFERRED"/>
 		</table>
-		<table id="1135" name="httag" ignore="false">
-			<column id="1136" name="variation_group_id"/>
-			<column id="1137" name="source_id"/>
-			<column id="1138" name="httag_id"/>
-			<column id="1139" name="name"/>
-			<primaryKey id="1140" columnIds="1138" status="INFERRED"/>
-			<foreignKey id="1141" columnIds="1137" status="INFERRED"/>
-			<foreignKey id="1142" columnIds="1136" status="INFERRED"/>
+		<table id="1136" name="httag" ignore="false">
+			<column id="1137" name="variation_group_id"/>
+			<column id="1138" name="source_id"/>
+			<column id="1139" name="httag_id"/>
+			<column id="1140" name="name"/>
+			<primaryKey id="1141" columnIds="1139" status="INFERRED"/>
+			<foreignKey id="1142" columnIds="1138" status="INFERRED"/>
+			<foreignKey id="1143" columnIds="1137" status="INFERRED"/>
 		</table>
-		<table id="1143" name="individual" ignore="false">
-			<column id="1144" name="gender"/>
+		<table id="1144" name="individual" ignore="false">
 			<column id="1145" name="mother_individual_sample_id"/>
-			<column id="1146" name="individual_type_id"/>
-			<column id="1147" name="father_individual_sample_id"/>
-			<column id="1148" name="sample_id"/>
-			<primaryKey id="1149" columnIds="1148" status="INFERRED"/>
-			<foreignKey id="1150" columnIds="1146" status="INFERRED"/>
-			<foreignKey id="1151" columnIds="1148" status="INFERRED"/>
+			<column id="1146" name="gender"/>
+			<column id="1147" name="individual_type_id"/>
+			<column id="1148" name="father_individual_sample_id"/>
+			<column id="1149" name="sample_id"/>
+			<primaryKey id="1150" columnIds="1149" status="INFERRED"/>
+			<foreignKey id="1151" columnIds="1147" status="INFERRED"/>
+			<foreignKey id="1152" columnIds="1149" status="INFERRED"/>
 		</table>
-		<table id="1152" name="individual_genotype_multiple_bp" ignore="false">
-			<column id="1153" name="allele_2"/>
-			<column id="1154" name="variation_id"/>
-			<column id="1155" name="sample_id"/>
-			<column id="1156" name="allele_1"/>
-			<foreignKey id="1157" columnIds="1155" status="INFERRED"/>
-			<foreignKey id="1158" columnIds="1154" status="INFERRED"/>
+		<table id="1153" name="individual_genotype_multiple_bp" ignore="false">
+			<column id="1154" name="allele_2"/>
+			<column id="1155" name="variation_id"/>
+			<column id="1156" name="sample_id"/>
+			<column id="1157" name="allele_1"/>
+			<foreignKey id="1158" columnIds="1156" status="INFERRED"/>
+			<foreignKey id="1159" columnIds="1155" status="INFERRED"/>
 		</table>
-		<table id="1159" name="individual_population" ignore="false">
-			<column id="1160" name="individual_sample_id"/>
-			<column id="1161" name="population_sample_id"/>
+		<table id="1160" name="individual_population" ignore="false">
+			<column id="1161" name="individual_sample_id"/>
+			<column id="1162" name="population_sample_id"/>
 		</table>
-		<table id="1162" name="individual_type" ignore="false">
-			<column id="1163" name="individual_type_id"/>
-			<column id="1164" name="description"/>
-			<column id="1165" name="name"/>
-			<primaryKey id="1166" columnIds="1163" status="INFERRED"/>
+		<table id="1163" name="individual_type" ignore="false">
+			<column id="1164" name="individual_type_id"/>
+			<column id="1165" name="description"/>
+			<column id="1166" name="name"/>
+			<primaryKey id="1167" columnIds="1164" status="INFERRED"/>
 		</table>
-		<table id="1167" name="meta" ignore="false">
-			<column id="1168" name="meta_value"/>
-			<column id="1169" name="meta_key"/>
-			<column id="1170" name="meta_id"/>
-			<primaryKey id="1171" columnIds="1170" status="INFERRED"/>
+		<table id="1168" name="meta" ignore="false">
+			<column id="1169" name="meta_value"/>
+			<column id="1170" name="meta_key"/>
+			<column id="1171" name="meta_id"/>
+			<primaryKey id="1172" columnIds="1171" status="INFERRED"/>
 		</table>
-		<table id="1172" name="meta_coord" ignore="false">
-			<column id="1173" name="coord_system_id"/>
-			<column id="1174" name="max_length"/>
-			<column id="1175" name="table_name"/>
+		<table id="1173" name="meta_coord" ignore="false">
+			<column id="1174" name="coord_system_id"/>
+			<column id="1175" name="max_length"/>
+			<column id="1176" name="table_name"/>
 		</table>
-		<table id="1176" name="population" ignore="false">
-			<column id="1177" name="sample_id"/>
-			<primaryKey id="1178" columnIds="1177" status="INFERRED"/>
-			<foreignKey id="1179" columnIds="1177" status="INFERRED"/>
+		<table id="1177" name="population" ignore="false">
+			<column id="1178" name="sample_id"/>
+			<primaryKey id="1179" columnIds="1178" status="INFERRED"/>
+			<foreignKey id="1180" columnIds="1178" status="INFERRED"/>
 		</table>
-		<table id="1180" name="population_genotype" ignore="false">
-			<column id="1181" name="population_genotype_id"/>
-			<column id="1182" name="allele_2"/>
-			<column id="1183" name="variation_id"/>
-			<column id="1184" name="frequency"/>
-			<column id="1185" name="sample_id"/>
-			<column id="1186" name="allele_1"/>
-			<primaryKey id="1187" columnIds="1181" status="INFERRED"/>
-			<foreignKey id="1188" columnIds="1185" status="INFERRED"/>
-			<foreignKey id="1189" columnIds="1183" status="INFERRED"/>
+		<table id="1181" name="population_genotype" ignore="false">
+			<column id="1182" name="population_genotype_id"/>
+			<column id="1183" name="allele_2"/>
+			<column id="1184" name="variation_id"/>
+			<column id="1185" name="frequency"/>
+			<column id="1186" name="sample_id"/>
+			<column id="1187" name="allele_1"/>
+			<primaryKey id="1188" columnIds="1182" status="INFERRED"/>
+			<foreignKey id="1189" columnIds="1186" status="INFERRED"/>
+			<foreignKey id="1190" columnIds="1184" status="INFERRED"/>
 		</table>
-		<table id="1190" name="population_structure" ignore="false">
-			<column id="1191" name="super_population_sample_id"/>
+		<table id="1191" name="population_structure" ignore="false">
 			<column id="1192" name="sub_population_sample_id"/>
+			<column id="1193" name="super_population_sample_id"/>
 		</table>
-		<table id="1193" name="read_coverage" ignore="false">
-			<column id="1194" name="level"/>
-			<column id="1195" name="seq_region_id"/>
-			<column id="1196" name="seq_region_start"/>
-			<column id="1197" name="sample_id"/>
-			<column id="1198" name="seq_region_end"/>
-			<foreignKey id="1199" columnIds="1197" status="INFERRED"/>
+		<table id="1194" name="read_coverage" ignore="false">
+			<column id="1195" name="level"/>
+			<column id="1196" name="seq_region_id"/>
+			<column id="1197" name="seq_region_start"/>
+			<column id="1198" name="sample_id"/>
+			<column id="1199" name="seq_region_end"/>
+			<foreignKey id="1200" columnIds="1198" status="INFERRED"/>
 		</table>
-		<table id="1200" name="sample" ignore="false">
-			<column id="1201" name="description"/>
-			<column id="1202" name="sample_id"/>
-			<column id="1203" name="size"/>
-			<column id="1204" name="name"/>
-			<primaryKey id="1205" columnIds="1202" status="INFERRED"/>
+		<table id="1201" name="sample" ignore="false">
+			<column id="1202" name="description"/>
+			<column id="1203" name="sample_id"/>
+			<column id="1204" name="size"/>
+			<column id="1205" name="name"/>
+			<primaryKey id="1206" columnIds="1203" status="INFERRED"/>
 		</table>
-		<table id="1206" name="sample_merge" ignore="false">
-			<column id="1207" name="description"/>
-			<column id="1208" name="sample_id"/>
-			<column id="1209" name="size"/>
-			<column id="1210" name="name"/>
-			<foreignKey id="1211" columnIds="1208" status="INFERRED"/>
+		<table id="1207" name="sample_merge" ignore="false">
+			<column id="1208" name="description"/>
+			<column id="1209" name="sample_id"/>
+			<column id="1210" name="size"/>
+			<column id="1211" name="name"/>
+			<foreignKey id="1212" columnIds="1209" status="INFERRED"/>
 		</table>
-		<table id="1212" name="sample_synonym" ignore="false">
-			<column id="1213" name="sample_synonym_id"/>
-			<column id="1214" name="source_id"/>
-			<column id="1215" name="sample_id"/>
-			<column id="1216" name="name"/>
-			<primaryKey id="1217" columnIds="1213" status="INFERRED"/>
-			<foreignKey id="1218" columnIds="1215" status="INFERRED"/>
-			<foreignKey id="1219" columnIds="1214" status="INFERRED"/>
+		<table id="1213" name="sample_synonym" ignore="false">
+			<column id="1214" name="sample_synonym_id"/>
+			<column id="1215" name="source_id"/>
+			<column id="1216" name="sample_id"/>
+			<column id="1217" name="name"/>
+			<primaryKey id="1218" columnIds="1214" status="INFERRED"/>
+			<foreignKey id="1219" columnIds="1216" status="INFERRED"/>
+			<foreignKey id="1220" columnIds="1215" status="INFERRED"/>
 		</table>
-		<table id="1220" name="source" ignore="false">
-			<column id="1221" name="source_id"/>
-			<column id="1222" name="name"/>
-			<column id="1223" name="version"/>
-			<primaryKey id="1224" columnIds="1221" status="INFERRED"/>
+		<table id="1221" name="source" ignore="false">
+			<column id="1222" name="source_id"/>
+			<column id="1223" name="name"/>
+			<column id="1224" name="version"/>
+			<primaryKey id="1225" columnIds="1222" status="INFERRED"/>
 		</table>
-		<table id="1225" name="tagged_variation_feature" ignore="false">
-			<column id="1226" name="variation_feature_id"/>
-			<column id="1227" name="sample_id"/>
-			<primaryKey id="1228" columnIds="1226,1227" status="INFERRED"/>
-			<foreignKey id="1229" columnIds="1227" status="INFERRED"/>
-			<foreignKey id="1230" columnIds="1226" status="INFERRED"/>
+		<table id="1226" name="tagged_variation_feature" ignore="false">
+			<column id="1227" name="variation_feature_id"/>
+			<column id="1228" name="sample_id"/>
+			<primaryKey id="1229" columnIds="1227,1228" status="INFERRED"/>
+			<foreignKey id="1230" columnIds="1228" status="INFERRED"/>
+			<foreignKey id="1231" columnIds="1227" status="INFERRED"/>
 		</table>
-		<table id="1231" name="transcript_variation" ignore="false">
-			<column id="1232" name="translation_end"/>
-			<column id="1233" name="transcript_variation_id"/>
+		<table id="1232" name="transcript_variation" ignore="false">
+			<column id="1233" name="translation_end"/>
 			<column id="1234" name="variation_feature_id"/>
-			<column id="1235" name="consequence_type"/>
-			<column id="1236" name="cdna_end"/>
-			<column id="1237" name="translation_start"/>
-			<column id="1238" name="peptide_allele_string"/>
-			<column id="1239" name="transcript_id"/>
-			<column id="1240" name="cdna_start"/>
-			<primaryKey id="1241" columnIds="1233" status="INFERRED"/>
-			<foreignKey id="1242" columnIds="1234" status="INFERRED"/>
-			<foreignKey id="1243" columnIds="1239" status="HANDMADE"/>
+			<column id="1235" name="transcript_variation_id"/>
+			<column id="1236" name="consequence_type"/>
+			<column id="1237" name="peptide_allele_string"/>
+			<column id="1238" name="translation_start"/>
+			<column id="1239" name="cdna_end"/>
+			<column id="1240" name="transcript_id"/>
+			<column id="1241" name="cdna_start"/>
+			<primaryKey id="1242" columnIds="1235" status="INFERRED"/>
+			<foreignKey id="1243" columnIds="1234" status="INFERRED"/>
+			<foreignKey id="1244" columnIds="1240" status="HANDMADE"/>
 		</table>
-		<table id="1244" name="variation" ignore="false">
-			<column id="1245" name="validation_status"/>
-			<column id="1246" name="variation_id"/>
-			<column id="1247" name="source_id"/>
-			<column id="1248" name="ancestral_allele"/>
-			<column id="1249" name="name"/>
-			<primaryKey id="1250" columnIds="1246" status="INFERRED"/>
-			<foreignKey id="1251" columnIds="1247" status="INFERRED"/>
+		<table id="1245" name="variation" ignore="false">
+			<column id="1246" name="validation_status"/>
+			<column id="1247" name="variation_id"/>
+			<column id="1248" name="source_id"/>
+			<column id="1249" name="ancestral_allele"/>
+			<column id="1250" name="name"/>
+			<primaryKey id="1251" columnIds="1247" status="INFERRED"/>
+			<foreignKey id="1252" columnIds="1248" status="INFERRED"/>
 		</table>
-		<table id="1252" name="variation_feature" ignore="false">
-			<column id="1253" name="variation_id"/>
-			<column id="1254" name="seq_region_start"/>
-			<column id="1255" name="consequence_type"/>
-			<column id="1256" name="source_id"/>
-			<column id="1257" name="seq_region_end"/>
-			<column id="1258" name="seq_region_strand"/>
-			<column id="1259" name="seq_region_id"/>
-			<column id="1260" name="validation_status"/>
-			<column id="1261" name="variation_feature_id"/>
-			<column id="1262" name="map_weight"/>
-			<column id="1263" name="allele_string"/>
-			<column id="1264" name="flags"/>
-			<column id="1265" name="variation_name"/>
-			<primaryKey id="1266" columnIds="1261" status="INFERRED"/>
-			<foreignKey id="1267" columnIds="1256" status="INFERRED"/>
-			<foreignKey id="1268" columnIds="1253" status="INFERRED"/>
+		<table id="1253" name="variation_feature" ignore="false">
+			<column id="1254" name="variation_id"/>
+			<column id="1255" name="seq_region_start"/>
+			<column id="1256" name="consequence_type"/>
+			<column id="1257" name="source_id"/>
+			<column id="1258" name="seq_region_end"/>
+			<column id="1259" name="seq_region_strand"/>
+			<column id="1260" name="seq_region_id"/>
+			<column id="1261" name="validation_status"/>
+			<column id="1262" name="variation_feature_id"/>
+			<column id="1263" name="map_weight"/>
+			<column id="1264" name="allele_string"/>
+			<column id="1265" name="flags"/>
+			<column id="1266" name="variation_name"/>
+			<primaryKey id="1267" columnIds="1262" status="INFERRED"/>
+			<foreignKey id="1268" columnIds="1257" status="INFERRED"/>
+			<foreignKey id="1269" columnIds="1254" status="INFERRED"/>
 		</table>
-		<table id="1269" name="variation_group" ignore="false">
-			<column id="1270" name="variation_group_id"/>
+		<table id="1270" name="variation_group" ignore="false">
 			<column id="1271" name="type"/>
-			<column id="1272" name="source_id"/>
-			<column id="1273" name="name"/>
-			<primaryKey id="1274" columnIds="1270" status="INFERRED"/>
-			<foreignKey id="1275" columnIds="1272" status="INFERRED"/>
+			<column id="1272" name="variation_group_id"/>
+			<column id="1273" name="source_id"/>
+			<column id="1274" name="name"/>
+			<primaryKey id="1275" columnIds="1272" status="INFERRED"/>
+			<foreignKey id="1276" columnIds="1273" status="INFERRED"/>
 		</table>
-		<table id="1276" name="variation_group_feature" ignore="false">
-			<column id="1277" name="variation_group_feature_id"/>
+		<table id="1277" name="variation_group_feature" ignore="false">
 			<column id="1278" name="seq_region_id"/>
-			<column id="1279" name="seq_region_start"/>
-			<column id="1280" name="variation_group_id"/>
-			<column id="1281" name="variation_group_name"/>
-			<column id="1282" name="seq_region_end"/>
-			<column id="1283" name="seq_region_strand"/>
-			<primaryKey id="1284" columnIds="1277" status="INFERRED"/>
-			<foreignKey id="1285" columnIds="1280" status="INFERRED"/>
+			<column id="1279" name="variation_group_feature_id"/>
+			<column id="1280" name="seq_region_start"/>
+			<column id="1281" name="variation_group_id"/>
+			<column id="1282" name="variation_group_name"/>
+			<column id="1283" name="seq_region_end"/>
+			<column id="1284" name="seq_region_strand"/>
+			<primaryKey id="1285" columnIds="1279" status="INFERRED"/>
+			<foreignKey id="1286" columnIds="1281" status="INFERRED"/>
 		</table>
-		<table id="1286" name="variation_group_variation" ignore="false">
-			<column id="1287" name="variation_id"/>
-			<column id="1288" name="variation_group_id"/>
-			<foreignKey id="1289" columnIds="1287" status="INFERRED"/>
+		<table id="1287" name="variation_group_variation" ignore="false">
+			<column id="1288" name="variation_id"/>
+			<column id="1289" name="variation_group_id"/>
 			<foreignKey id="1290" columnIds="1288" status="INFERRED"/>
+			<foreignKey id="1291" columnIds="1289" status="INFERRED"/>
 		</table>
-		<table id="1291" name="variation_synonym" ignore="false">
-			<column id="1292" name="moltype"/>
-			<column id="1293" name="variation_id"/>
-			<column id="1294" name="source_id"/>
-			<column id="1295" name="variation_synonym_id"/>
-			<column id="1296" name="name"/>
-			<primaryKey id="1297" columnIds="1295" status="INFERRED"/>
-			<foreignKey id="1298" columnIds="1294" status="INFERRED"/>
-			<foreignKey id="1299" columnIds="1293" status="INFERRED"/>
+		<table id="1292" name="variation_synonym" ignore="false">
+			<column id="1293" name="moltype"/>
+			<column id="1294" name="variation_id"/>
+			<column id="1295" name="source_id"/>
+			<column id="1296" name="variation_synonym_id"/>
+			<column id="1297" name="name"/>
+			<primaryKey id="1298" columnIds="1296" status="INFERRED"/>
+			<foreignKey id="1299" columnIds="1295" status="INFERRED"/>
+			<foreignKey id="1300" columnIds="1294" status="INFERRED"/>
 		</table>
-		<relation id="1300" cardinality="M" firstKeyId="1116" secondKeyId="1121" status="INFERRED"/>
-		<relation id="1301" cardinality="M" firstKeyId="1224" secondKeyId="1275" status="INFERRED"/>
-		<relation id="1302" cardinality="M" firstKeyId="1266" secondKeyId="1230" status="INFERRED"/>
-		<relation id="1303" cardinality="M" firstKeyId="1250" secondKeyId="1104" status="INFERRED"/>
-		<relation id="1304" cardinality="M" firstKeyId="1205" secondKeyId="1188" status="INFERRED"/>
-		<relation id="1305" cardinality="1" firstKeyId="1205" secondKeyId="1179" status="INFERRED"/>
-		<relation id="1306" cardinality="M" firstKeyId="1205" secondKeyId="1157" status="INFERRED"/>
-		<relation id="1307" cardinality="M" firstKeyId="1205" secondKeyId="1096" status="INFERRED"/>
-		<relation id="1308" cardinality="1" firstKeyId="1250" secondKeyId="1122" status="INFERRED"/>
-		<relation id="1309" cardinality="M" firstKeyId="1250" secondKeyId="1087" status="INFERRED"/>
-		<relation id="1310" cardinality="M" firstKeyId="1166" secondKeyId="1150" status="INFERRED"/>
-		<relation id="1311" cardinality="M" firstKeyId="1205" secondKeyId="1218" status="INFERRED"/>
-		<relation id="1312" cardinality="M" firstKeyId="1274" secondKeyId="1285" status="INFERRED"/>
-		<relation id="1313" cardinality="M" firstKeyId="1224" secondKeyId="1251" status="INFERRED"/>
-		<relation id="1314" cardinality="M" firstKeyId="1224" secondKeyId="1298" status="INFERRED"/>
-		<relation id="1315" cardinality="M" firstKeyId="1224" secondKeyId="1219" status="INFERRED"/>
-		<relation id="1316" cardinality="M" firstKeyId="1224" secondKeyId="1097" status="INFERRED"/>
-		<relation id="1317" cardinality="M" firstKeyId="1205" secondKeyId="1211" status="INFERRED"/>
-		<relation id="1318" cardinality="M" firstKeyId="1250" secondKeyId="1299" status="INFERRED"/>
-		<relation id="1319" cardinality="M" firstKeyId="1205" secondKeyId="1229" status="INFERRED"/>
-		<relation id="1320" cardinality="M" firstKeyId="1205" secondKeyId="1112" status="INFERRED"/>
-		<relation id="1321" cardinality="M" firstKeyId="1224" secondKeyId="1141" status="INFERRED"/>
-		<relation id="1322" cardinality="M" firstKeyId="1274" secondKeyId="1098" status="INFERRED"/>
-		<relation id="1323" cardinality="M" firstKeyId="1250" secondKeyId="1289" status="INFERRED"/>
-		<relation id="1324" cardinality="M" firstKeyId="1250" secondKeyId="1189" status="INFERRED"/>
-		<relation id="1325" cardinality="M" firstKeyId="1205" secondKeyId="1086" status="INFERRED"/>
-		<relation id="1326" cardinality="M" firstKeyId="1250" secondKeyId="1158" status="INFERRED"/>
-		<relation id="1327" cardinality="M" firstKeyId="1274" secondKeyId="1290" status="INFERRED"/>
-		<relation id="1328" cardinality="M" firstKeyId="1274" secondKeyId="1142" status="INFERRED"/>
-		<relation id="1329" cardinality="M" firstKeyId="1266" secondKeyId="1242" status="INFERRED"/>
-		<relation id="1330" cardinality="1" firstKeyId="1205" secondKeyId="1151" status="INFERRED"/>
-		<relation id="1331" cardinality="M" firstKeyId="1224" secondKeyId="1267" status="INFERRED"/>
-		<relation id="1332" cardinality="M" firstKeyId="1250" secondKeyId="1268" status="INFERRED"/>
-		<relation id="1333" cardinality="M" firstKeyId="1095" secondKeyId="1103" status="INFERRED"/>
-		<relation id="1334" cardinality="1" firstKeyId="1250" secondKeyId="1134" status="INFERRED"/>
-		<relation id="1335" cardinality="M" firstKeyId="1205" secondKeyId="1199" status="INFERRED"/>
+		<relation id="1301" cardinality="M" firstKeyId="1117" secondKeyId="1122" status="INFERRED"/>
+		<relation id="1302" cardinality="M" firstKeyId="1225" secondKeyId="1276" status="INFERRED"/>
+		<relation id="1303" cardinality="M" firstKeyId="1267" secondKeyId="1231" status="INFERRED"/>
+		<relation id="1304" cardinality="M" firstKeyId="1251" secondKeyId="1105" status="INFERRED"/>
+		<relation id="1305" cardinality="M" firstKeyId="1206" secondKeyId="1189" status="INFERRED"/>
+		<relation id="1306" cardinality="1" firstKeyId="1206" secondKeyId="1180" status="INFERRED"/>
+		<relation id="1307" cardinality="M" firstKeyId="1206" secondKeyId="1158" status="INFERRED"/>
+		<relation id="1308" cardinality="M" firstKeyId="1206" secondKeyId="1097" status="INFERRED"/>
+		<relation id="1309" cardinality="M" firstKeyId="1167" secondKeyId="1151" status="INFERRED"/>
+		<relation id="1310" cardinality="M" firstKeyId="1251" secondKeyId="1088" status="INFERRED"/>
+		<relation id="1311" cardinality="1" firstKeyId="1251" secondKeyId="1123" status="INFERRED"/>
+		<relation id="1312" cardinality="M" firstKeyId="1206" secondKeyId="1219" status="INFERRED"/>
+		<relation id="1313" cardinality="M" firstKeyId="1275" secondKeyId="1286" status="INFERRED"/>
+		<relation id="1314" cardinality="M" firstKeyId="1225" secondKeyId="1252" status="INFERRED"/>
+		<relation id="1315" cardinality="M" firstKeyId="1225" secondKeyId="1299" status="INFERRED"/>
+		<relation id="1316" cardinality="M" firstKeyId="1225" secondKeyId="1220" status="INFERRED"/>
+		<relation id="1317" cardinality="M" firstKeyId="1225" secondKeyId="1098" status="INFERRED"/>
+		<relation id="1318" cardinality="M" firstKeyId="1206" secondKeyId="1212" status="INFERRED"/>
+		<relation id="1319" cardinality="M" firstKeyId="1251" secondKeyId="1300" status="INFERRED"/>
+		<relation id="1320" cardinality="M" firstKeyId="1206" secondKeyId="1230" status="INFERRED"/>
+		<relation id="1321" cardinality="M" firstKeyId="1206" secondKeyId="1113" status="INFERRED"/>
+		<relation id="1322" cardinality="M" firstKeyId="1225" secondKeyId="1142" status="INFERRED"/>
+		<relation id="1323" cardinality="M" firstKeyId="1275" secondKeyId="1099" status="INFERRED"/>
+		<relation id="1324" cardinality="M" firstKeyId="1251" secondKeyId="1290" status="INFERRED"/>
+		<relation id="1325" cardinality="M" firstKeyId="1251" secondKeyId="1190" status="INFERRED"/>
+		<relation id="1326" cardinality="M" firstKeyId="1206" secondKeyId="1087" status="INFERRED"/>
+		<relation id="1327" cardinality="M" firstKeyId="1251" secondKeyId="1159" status="INFERRED"/>
+		<relation id="1328" cardinality="M" firstKeyId="1275" secondKeyId="1291" status="INFERRED"/>
+		<relation id="1329" cardinality="M" firstKeyId="1275" secondKeyId="1143" status="INFERRED"/>
+		<relation id="1330" cardinality="M" firstKeyId="1267" secondKeyId="1243" status="INFERRED"/>
+		<relation id="1331" cardinality="1" firstKeyId="1206" secondKeyId="1152" status="INFERRED"/>
+		<relation id="1332" cardinality="M" firstKeyId="1251" secondKeyId="1269" status="INFERRED"/>
+		<relation id="1333" cardinality="M" firstKeyId="1225" secondKeyId="1268" status="INFERRED"/>
+		<relation id="1334" cardinality="M" firstKeyId="1096" secondKeyId="1104" status="INFERRED"/>
+		<relation id="1335" cardinality="M" firstKeyId="1206" secondKeyId="1200" status="INFERRED"/>
+		<relation id="1336" cardinality="1" firstKeyId="1251" secondKeyId="1135" status="INFERRED"/>
 	</jdbcSchema>
-	<relation id="1336" cardinality="M" firstKeyId="1008" secondKeyId="667" status="HANDMADE"/>
-	<relation id="1337" cardinality="M" firstKeyId="583" secondKeyId="1243" status="HANDMADE"/>
+	<relation id="1337" cardinality="M" firstKeyId="1009" secondKeyId="667" status="HANDMADE"/>
+	<relation id="1338" cardinality="M" firstKeyId="583" secondKeyId="1244" status="HANDMADE"/>
 	<dataset name="assembly_exception" centralTableId="37" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="density_feature" centralTableId="62" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="ditag_feature" centralTableId="87" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
@@ -1502,8 +1503,8 @@
 		<renamedTable tableKey="exon__exon_transcript" newName="exon_transcript"/>
 	</dataset>
 	<dataset name="gene" centralTableId="176" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
-		<subclassRelation relationId="765"/>
-		<subclassRelation relationId="708"/>
+		<subclassRelation relationId="766"/>
+		<subclassRelation relationId="707"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="protein_feature_id"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="created"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="analysis_id"/>
@@ -1516,16 +1517,16 @@
 		<maskedColumn tableKey="translation__protein_feature" colKey="hit_end"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="gff_source"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="db"/>
-		<maskedColumn tableKey="translation__protein_feature" colKey="perc_ident"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="score"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="perc_ident"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="seq_end"/>
-		<maskedColumn tableKey="translation__protein_feature" colKey="db_file"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="logic_name"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="db_file"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="program_file"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="program_version"/>
-		<maskedColumn tableKey="translation__protein_feature" colKey="module"/>
-		<maskedColumn tableKey="translation__protein_feature" colKey="gff_feature"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="program"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="gff_feature"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="module"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="translation_end"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="seq_region_start"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="consequence_type"/>
@@ -1542,19 +1543,11 @@
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="transcript_variation_id"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="map_weight"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="source_id_variation"/>
-		<maskedColumn tableKey="transcript__transcript_variation" colKey="allele_string"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="flags"/>
-		<maskedColumn tableKey="transcript__transcript_variation" colKey="translation_start"/>
+		<maskedColumn tableKey="transcript__transcript_variation" colKey="allele_string"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="peptide_allele_string"/>
+		<maskedColumn tableKey="transcript__transcript_variation" colKey="translation_start"/>
 		<maskedColumn tableKey="transcript__transcript_variation" colKey="name"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="protein_feature_id"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="hit_end"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="score"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="perc_ident"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="seq_end"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="hit_start"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="evalue"/>
-		<maskedColumn tableKey="translation__protein_feature_1" colKey="seq_start"/>
 		<maskedColumn tableKey="translation__object_xref_1" colKey="object_xref_id"/>
 		<maskedColumn tableKey="translation__object_xref_1" colKey="term_type"/>
 		<maskedColumn tableKey="translation__object_xref_1" colKey="db_release"/>
@@ -1571,6 +1564,19 @@
 		<maskedColumn tableKey="translation__object_xref_1" colKey="info_text"/>
 		<maskedColumn tableKey="translation__object_xref_1" colKey="external_db_id"/>
 		<maskedColumn tableKey="translation__object_xref_1" colKey="priority"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="protein_feature_id"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="xref_id"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="hit_start"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="evalue"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="seq_start"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="info_type"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="version"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="hit_id"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="hit_end"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="info_text"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="score"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="perc_ident"/>
+		<maskedColumn tableKey="translation__protein_feature_1" colKey="seq_end"/>
 		<maskedRelation tableKey="gene" relationId="689"/>
 		<maskedRelation tableKey="gene" relationId="678"/>
 		<maskedRelation tableKey="gene" relationId="697"/>
@@ -1583,30 +1589,40 @@
 		<maskedRelation tableKey="gene" relationId="747"/>
 		<maskedRelation tableKey="gene" relationId="734"/>
 		<maskedRelation tableKey="gene" relationId="713"/>
-		<maskedRelation tableKey="gene" relationId="683"/>
+		<maskedRelation tableKey="gene" relationId="762"/>
 		<maskedRelation tableKey="gene" relationId="674"/>
-		<maskedRelation tableKey="gene" relationId="761"/>
+		<maskedRelation tableKey="gene" relationId="683"/>
 		<maskedRelation tableKey="gene" relationId="684"/>
 		<maskedRelation tableKey="gene" relationId="718"/>
 		<maskedRelation tableKey="gene" relationId="723"/>
 		<maskedRelation tableKey="translation__protein_feature" relationId="701"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="739"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1301"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1302"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1311"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1314"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1315"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1317"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1333"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1316"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1322"/>
+		<maskedRelation tableKey="transcript__transcript_variation" relationId="1336"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="689"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1051"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="739"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1052"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="705"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="708"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="707"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="1053"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1054"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1336"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1056"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1337"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="744"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="745"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1059"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="1060"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="694"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="745"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="1061"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="694"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1062"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="747"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="713"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1062"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1063"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="674"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="715"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="716"/>
@@ -1614,37 +1630,58 @@
 		<maskedRelation tableKey="gene__object_xref" relationId="751"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="722"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="752"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1068"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="723"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1067"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="697"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="678"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="697"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="725"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="755"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="727"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="679"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="727"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="701"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="758"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="760"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1075"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1076"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="734"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="761"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="683"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="762"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="684"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="735"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1078"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1079"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="736"/>
 		<maskedRelation tableKey="gene__object_xref" relationId="703"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="1337"/>
-		<maskedRelation tableKey="gene__object_xref" relationId="765"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1300"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1308"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1301"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1313"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1314"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1316"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1331"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1315"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1321"/>
-		<maskedRelation tableKey="transcript__transcript_variation" relationId="1334"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="1338"/>
+		<maskedRelation tableKey="gene__object_xref" relationId="766"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1052"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="705"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="706"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="707"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="708"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1053"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1056"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1337"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1060"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1061"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="746"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1062"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1063"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="715"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="752"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="722"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1068"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="725"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="679"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="699"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="757"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="701"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="733"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="758"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1076"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="761"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="682"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="1079"/>
+		<maskedRelation tableKey="transcript__object_xref" relationId="766"/>
 		<maskedRelation tableKey="gene__transcript" relationId="689"/>
 		<maskedRelation tableKey="gene__transcript" relationId="678"/>
 		<maskedRelation tableKey="gene__transcript" relationId="697"/>
@@ -1657,59 +1694,49 @@
 		<maskedRelation tableKey="gene__transcript" relationId="747"/>
 		<maskedRelation tableKey="gene__transcript" relationId="734"/>
 		<maskedRelation tableKey="gene__transcript" relationId="713"/>
-		<maskedRelation tableKey="gene__transcript" relationId="683"/>
+		<maskedRelation tableKey="gene__transcript" relationId="762"/>
 		<maskedRelation tableKey="gene__transcript" relationId="674"/>
-		<maskedRelation tableKey="gene__transcript" relationId="761"/>
+		<maskedRelation tableKey="gene__transcript" relationId="683"/>
 		<maskedRelation tableKey="gene__transcript" relationId="684"/>
 		<maskedRelation tableKey="gene__transcript" relationId="718"/>
 		<maskedRelation tableKey="gene__transcript" relationId="723"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1051"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="705"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="706"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="707"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="708"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1053"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1054"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1336"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1059"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1060"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1061"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="746"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1062"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="715"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="752"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="722"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1067"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="725"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="679"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="699"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="757"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="733"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="758"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1075"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="682"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="1078"/>
-		<maskedRelation tableKey="transcript__object_xref" relationId="765"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="689"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="678"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="697"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="705"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="755"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="744"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="745"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="758"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="694"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="747"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="734"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="713"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="683"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="674"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="761"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="684"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="718"/>
-		<maskedRelation tableKey="translation__protein_feature_1" relationId="723"/>
-		<maskedRelation tableKey="translation__object_xref_1" relationId="739"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="739"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1052"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="705"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="706"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="707"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="708"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1053"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1056"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1337"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1060"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1061"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="694"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1062"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="746"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1063"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="715"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="716"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="751"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1068"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="727"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="699"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="757"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="701"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="733"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="758"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="760"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1076"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="761"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="682"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="735"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1079"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="736"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="703"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="1338"/>
+		<maskedRelation tableKey="translation__object_xref" relationId="766"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="689"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="739"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="705"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="706"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="708"/>
@@ -1717,8 +1744,8 @@
 		<maskedRelation tableKey="translation__object_xref_1" relationId="744"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="745"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="694"/>
-		<maskedRelation tableKey="translation__object_xref_1" relationId="747"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="746"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="747"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="713"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="674"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="715"/>
@@ -1732,52 +1759,52 @@
 		<maskedRelation tableKey="translation__object_xref_1" relationId="727"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="699"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="757"/>
-		<maskedRelation tableKey="translation__object_xref_1" relationId="758"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="701"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="733"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="758"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="760"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="734"/>
-		<maskedRelation tableKey="translation__object_xref_1" relationId="683"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="761"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="682"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="762"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="683"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="684"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="735"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="736"/>
 		<maskedRelation tableKey="translation__object_xref_1" relationId="703"/>
-		<maskedRelation tableKey="translation__object_xref_1" relationId="1337"/>
-		<maskedRelation tableKey="translation__object_xref_1" relationId="765"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="739"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1051"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="705"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="706"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="707"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="708"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1053"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1054"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1336"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1059"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1060"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="694"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1061"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="746"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1062"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="715"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="716"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="751"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1067"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="727"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="699"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="757"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="733"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="758"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="760"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1075"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="682"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="735"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1078"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="736"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="703"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="1337"/>
-		<maskedRelation tableKey="translation__object_xref" relationId="765"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="1338"/>
+		<maskedRelation tableKey="translation__object_xref_1" relationId="766"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="689"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1052"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="705"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1053"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1056"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1337"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="744"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1060"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="745"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1061"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="694"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="747"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="673"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1062"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="713"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="674"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1063"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="718"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1068"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="723"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="697"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="678"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="755"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="758"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1076"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="734"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="683"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="762"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="684"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="1079"/>
+		<maskedRelation tableKey="translation__protein_feature_1" relationId="687"/>
 		<distinctRows tableKey="translation__protein_feature"/>
 		<distinctRows tableKey="translation__protein_feature_1"/>
 		<maskedTable tableKey="gene__unconventional_transcript_association"/>
@@ -1803,33 +1830,33 @@
 		<renamedTable tableKey="transcript__exon_transcript" newName="exon_transcript"/>
 		<renamedTable tableKey="transcript__transcript_attrib" newName="transcript_attrib"/>
 		<renamedTable tableKey="transcript__transcript_supporting_feature" newName="transcript_supporting_feature"/>
-		<renamedTable tableKey="transcript__translation" newName="translation"/>
 		<renamedTable tableKey="translation__translation_attrib" newName="translation_attrib"/>
-		<renamedTable tableKey="gene__transcript" newName="transcript"/>
+		<renamedTable tableKey="transcript__translation" newName="translation"/>
 		<renamedTable tableKey="transcript__object_xref" newName="object_xref"/>
+		<renamedTable tableKey="gene__transcript" newName="transcript"/>
 		<renamedTable tableKey="translation__object_xref_1" newName="go"/>
 		<renamedTable tableKey="transcript__unconventional_transcript_association" newName="unconventional_transcript_association"/>
 	</dataset>
 	<dataset name="gene_xref_partition" centralTableId="341" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
-		<maskedRelation tableKey="object_xref" relationId="1051"/>
+		<maskedRelation tableKey="object_xref" relationId="1052"/>
 		<maskedRelation tableKey="object_xref" relationId="705"/>
 		<maskedRelation tableKey="object_xref" relationId="706"/>
-		<maskedRelation tableKey="object_xref" relationId="708"/>
+		<maskedRelation tableKey="object_xref" relationId="707"/>
 		<maskedRelation tableKey="object_xref" relationId="1053"/>
 		<maskedRelation tableKey="object_xref" relationId="709"/>
-		<maskedRelation tableKey="object_xref" relationId="1054"/>
-		<maskedRelation tableKey="object_xref" relationId="1336"/>
+		<maskedRelation tableKey="object_xref" relationId="1056"/>
+		<maskedRelation tableKey="object_xref" relationId="1337"/>
 		<maskedRelation tableKey="object_xref" relationId="671"/>
-		<maskedRelation tableKey="object_xref" relationId="1060"/>
+		<maskedRelation tableKey="object_xref" relationId="1061"/>
 		<maskedRelation tableKey="object_xref" relationId="713"/>
-		<maskedRelation tableKey="object_xref" relationId="1062"/>
-		<maskedRelation tableKey="object_xref" relationId="674"/>
 		<maskedRelation tableKey="object_xref" relationId="714"/>
+		<maskedRelation tableKey="object_xref" relationId="1063"/>
+		<maskedRelation tableKey="object_xref" relationId="674"/>
 		<maskedRelation tableKey="object_xref" relationId="715"/>
 		<maskedRelation tableKey="object_xref" relationId="716"/>
 		<maskedRelation tableKey="object_xref" relationId="718"/>
-		<maskedRelation tableKey="object_xref" relationId="719"/>
 		<maskedRelation tableKey="object_xref" relationId="675"/>
+		<maskedRelation tableKey="object_xref" relationId="719"/>
 		<maskedRelation tableKey="object_xref" relationId="721"/>
 		<maskedRelation tableKey="object_xref" relationId="722"/>
 		<maskedRelation tableKey="object_xref" relationId="723"/>
@@ -1846,40 +1873,40 @@
 		<maskedRelation tableKey="object_xref" relationId="683"/>
 		<maskedRelation tableKey="object_xref" relationId="684"/>
 		<maskedRelation tableKey="object_xref" relationId="735"/>
-		<maskedRelation tableKey="object_xref" relationId="1078"/>
+		<maskedRelation tableKey="object_xref" relationId="1079"/>
 		<maskedRelation tableKey="object_xref" relationId="736"/>
 		<maskedRelation tableKey="object_xref" relationId="688"/>
 		<maskedRelation tableKey="object_xref" relationId="739"/>
 		<maskedRelation tableKey="object_xref" relationId="689"/>
 		<maskedRelation tableKey="object_xref" relationId="690"/>
 		<maskedRelation tableKey="object_xref" relationId="744"/>
-		<maskedRelation tableKey="object_xref" relationId="1059"/>
+		<maskedRelation tableKey="object_xref" relationId="1060"/>
 		<maskedRelation tableKey="object_xref" relationId="745"/>
-		<maskedRelation tableKey="object_xref" relationId="692"/>
 		<maskedRelation tableKey="object_xref" relationId="693"/>
+		<maskedRelation tableKey="object_xref" relationId="692"/>
 		<maskedRelation tableKey="object_xref" relationId="694"/>
-		<maskedRelation tableKey="object_xref" relationId="1061"/>
+		<maskedRelation tableKey="object_xref" relationId="1062"/>
 		<maskedRelation tableKey="object_xref" relationId="747"/>
-		<maskedRelation tableKey="object_xref" relationId="751"/>
 		<maskedRelation tableKey="object_xref" relationId="750"/>
+		<maskedRelation tableKey="object_xref" relationId="751"/>
 		<maskedRelation tableKey="object_xref" relationId="752"/>
-		<maskedRelation tableKey="object_xref" relationId="1067"/>
+		<maskedRelation tableKey="object_xref" relationId="1068"/>
 		<maskedRelation tableKey="object_xref" relationId="697"/>
 		<maskedRelation tableKey="object_xref" relationId="755"/>
 		<maskedRelation tableKey="object_xref" relationId="756"/>
 		<maskedRelation tableKey="object_xref" relationId="700"/>
 		<maskedRelation tableKey="object_xref" relationId="757"/>
-		<maskedRelation tableKey="object_xref" relationId="701"/>
 		<maskedRelation tableKey="object_xref" relationId="758"/>
+		<maskedRelation tableKey="object_xref" relationId="701"/>
 		<maskedRelation tableKey="object_xref" relationId="760"/>
-		<maskedRelation tableKey="object_xref" relationId="1075"/>
+		<maskedRelation tableKey="object_xref" relationId="1076"/>
 		<maskedRelation tableKey="object_xref" relationId="702"/>
-		<maskedRelation tableKey="object_xref" relationId="761"/>
-		<maskedRelation tableKey="object_xref" relationId="764"/>
-		<maskedRelation tableKey="object_xref" relationId="703"/>
-		<maskedRelation tableKey="object_xref" relationId="704"/>
+		<maskedRelation tableKey="object_xref" relationId="762"/>
 		<maskedRelation tableKey="object_xref" relationId="765"/>
-		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="342" aliasNames="col1" expression=":col1=&quot;Gene&quot;" hard="false"/>
+		<maskedRelation tableKey="object_xref" relationId="703"/>
+		<maskedRelation tableKey="object_xref" relationId="766"/>
+		<maskedRelation tableKey="object_xref" relationId="704"/>
+		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="344" aliasNames="col1" expression=":col1=&quot;Gene&quot;" hard="false"/>
 		<renamedTable tableKey="object_xref__go_xref" newName="go_xref"/>
 	</dataset>
 	<dataset name="karyotype" centralTableId="241" optimiser="NONE" invisible="true" masked="false" indexOptimiser="false"/>
@@ -1896,22 +1923,22 @@
 	<dataset name="protein_align_feature" centralTableId="407" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="protein_feature_partition" centralTableId="424" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
 		<maskedRelation tableKey="protein_feature" relationId="739"/>
-		<maskedRelation tableKey="protein_feature" relationId="1051"/>
-		<maskedRelation tableKey="protein_feature" relationId="708"/>
+		<maskedRelation tableKey="protein_feature" relationId="1052"/>
+		<maskedRelation tableKey="protein_feature" relationId="707"/>
 		<maskedRelation tableKey="protein_feature" relationId="1053"/>
-		<maskedRelation tableKey="protein_feature" relationId="1054"/>
-		<maskedRelation tableKey="protein_feature" relationId="1336"/>
-		<maskedRelation tableKey="protein_feature" relationId="1059"/>
+		<maskedRelation tableKey="protein_feature" relationId="1056"/>
+		<maskedRelation tableKey="protein_feature" relationId="1337"/>
 		<maskedRelation tableKey="protein_feature" relationId="1060"/>
-		<maskedRelation tableKey="protein_feature" relationId="694"/>
 		<maskedRelation tableKey="protein_feature" relationId="1061"/>
+		<maskedRelation tableKey="protein_feature" relationId="694"/>
 		<maskedRelation tableKey="protein_feature" relationId="673"/>
 		<maskedRelation tableKey="protein_feature" relationId="1062"/>
+		<maskedRelation tableKey="protein_feature" relationId="1063"/>
 		<maskedRelation tableKey="protein_feature" relationId="716"/>
 		<maskedRelation tableKey="protein_feature" relationId="751"/>
 		<maskedRelation tableKey="protein_feature" relationId="752"/>
 		<maskedRelation tableKey="protein_feature" relationId="722"/>
-		<maskedRelation tableKey="protein_feature" relationId="1067"/>
+		<maskedRelation tableKey="protein_feature" relationId="1068"/>
 		<maskedRelation tableKey="protein_feature" relationId="725"/>
 		<maskedRelation tableKey="protein_feature" relationId="679"/>
 		<maskedRelation tableKey="protein_feature" relationId="727"/>
@@ -1919,12 +1946,12 @@
 		<maskedRelation tableKey="protein_feature" relationId="729"/>
 		<maskedRelation tableKey="protein_feature" relationId="701"/>
 		<maskedRelation tableKey="protein_feature" relationId="760"/>
-		<maskedRelation tableKey="protein_feature" relationId="1075"/>
+		<maskedRelation tableKey="protein_feature" relationId="1076"/>
 		<maskedRelation tableKey="protein_feature" relationId="735"/>
-		<maskedRelation tableKey="protein_feature" relationId="1078"/>
+		<maskedRelation tableKey="protein_feature" relationId="1079"/>
 		<maskedRelation tableKey="protein_feature" relationId="736"/>
 		<maskedRelation tableKey="protein_feature" relationId="703"/>
-		<maskedRelation tableKey="protein_feature" relationId="765"/>
+		<maskedRelation tableKey="protein_feature" relationId="766"/>
 	</dataset>
 	<dataset name="qtl_feature" centralTableId="448" optimiser="NONE" invisible="true" masked="false" indexOptimiser="false"/>
 	<dataset name="regulatory_feature" centralTableId="476" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false">
@@ -1934,25 +1961,25 @@
 	<dataset name="repeat_feature" centralTableId="516" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="simple_feature" centralTableId="544" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="transcript_xref_partition" centralTableId="341" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
-		<maskedRelation tableKey="object_xref" relationId="1051"/>
+		<maskedRelation tableKey="object_xref" relationId="1052"/>
 		<maskedRelation tableKey="object_xref" relationId="705"/>
 		<maskedRelation tableKey="object_xref" relationId="706"/>
-		<maskedRelation tableKey="object_xref" relationId="707"/>
 		<maskedRelation tableKey="object_xref" relationId="708"/>
+		<maskedRelation tableKey="object_xref" relationId="707"/>
 		<maskedRelation tableKey="object_xref" relationId="1053"/>
 		<maskedRelation tableKey="object_xref" relationId="709"/>
-		<maskedRelation tableKey="object_xref" relationId="1054"/>
-		<maskedRelation tableKey="object_xref" relationId="1336"/>
+		<maskedRelation tableKey="object_xref" relationId="1056"/>
+		<maskedRelation tableKey="object_xref" relationId="1337"/>
 		<maskedRelation tableKey="object_xref" relationId="671"/>
-		<maskedRelation tableKey="object_xref" relationId="1060"/>
+		<maskedRelation tableKey="object_xref" relationId="1061"/>
 		<maskedRelation tableKey="object_xref" relationId="713"/>
-		<maskedRelation tableKey="object_xref" relationId="1062"/>
-		<maskedRelation tableKey="object_xref" relationId="674"/>
 		<maskedRelation tableKey="object_xref" relationId="714"/>
+		<maskedRelation tableKey="object_xref" relationId="674"/>
+		<maskedRelation tableKey="object_xref" relationId="1063"/>
 		<maskedRelation tableKey="object_xref" relationId="715"/>
 		<maskedRelation tableKey="object_xref" relationId="718"/>
-		<maskedRelation tableKey="object_xref" relationId="675"/>
 		<maskedRelation tableKey="object_xref" relationId="719"/>
+		<maskedRelation tableKey="object_xref" relationId="675"/>
 		<maskedRelation tableKey="object_xref" relationId="721"/>
 		<maskedRelation tableKey="object_xref" relationId="722"/>
 		<maskedRelation tableKey="object_xref" relationId="723"/>
@@ -1970,77 +1997,77 @@
 		<maskedRelation tableKey="object_xref" relationId="682"/>
 		<maskedRelation tableKey="object_xref" relationId="683"/>
 		<maskedRelation tableKey="object_xref" relationId="684"/>
-		<maskedRelation tableKey="object_xref" relationId="1078"/>
+		<maskedRelation tableKey="object_xref" relationId="1079"/>
 		<maskedRelation tableKey="object_xref" relationId="688"/>
 		<maskedRelation tableKey="object_xref" relationId="689"/>
 		<maskedRelation tableKey="object_xref" relationId="690"/>
 		<maskedRelation tableKey="object_xref" relationId="744"/>
-		<maskedRelation tableKey="object_xref" relationId="1059"/>
+		<maskedRelation tableKey="object_xref" relationId="1060"/>
 		<maskedRelation tableKey="object_xref" relationId="745"/>
-		<maskedRelation tableKey="object_xref" relationId="693"/>
 		<maskedRelation tableKey="object_xref" relationId="692"/>
+		<maskedRelation tableKey="object_xref" relationId="693"/>
 		<maskedRelation tableKey="object_xref" relationId="694"/>
-		<maskedRelation tableKey="object_xref" relationId="1061"/>
+		<maskedRelation tableKey="object_xref" relationId="1062"/>
 		<maskedRelation tableKey="object_xref" relationId="747"/>
 		<maskedRelation tableKey="object_xref" relationId="746"/>
 		<maskedRelation tableKey="object_xref" relationId="750"/>
 		<maskedRelation tableKey="object_xref" relationId="752"/>
-		<maskedRelation tableKey="object_xref" relationId="1067"/>
+		<maskedRelation tableKey="object_xref" relationId="1068"/>
 		<maskedRelation tableKey="object_xref" relationId="697"/>
 		<maskedRelation tableKey="object_xref" relationId="755"/>
 		<maskedRelation tableKey="object_xref" relationId="699"/>
 		<maskedRelation tableKey="object_xref" relationId="756"/>
 		<maskedRelation tableKey="object_xref" relationId="700"/>
 		<maskedRelation tableKey="object_xref" relationId="757"/>
-		<maskedRelation tableKey="object_xref" relationId="701"/>
 		<maskedRelation tableKey="object_xref" relationId="758"/>
+		<maskedRelation tableKey="object_xref" relationId="701"/>
 		<maskedRelation tableKey="object_xref" relationId="760"/>
-		<maskedRelation tableKey="object_xref" relationId="1075"/>
+		<maskedRelation tableKey="object_xref" relationId="1076"/>
 		<maskedRelation tableKey="object_xref" relationId="702"/>
-		<maskedRelation tableKey="object_xref" relationId="761"/>
-		<maskedRelation tableKey="object_xref" relationId="764"/>
-		<maskedRelation tableKey="object_xref" relationId="704"/>
+		<maskedRelation tableKey="object_xref" relationId="762"/>
 		<maskedRelation tableKey="object_xref" relationId="765"/>
-		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="342" aliasNames="col1" expression=":col1=&quot;Transcript&quot;" hard="false"/>
+		<maskedRelation tableKey="object_xref" relationId="766"/>
+		<maskedRelation tableKey="object_xref" relationId="704"/>
+		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="344" aliasNames="col1" expression=":col1=&quot;Transcript&quot;" hard="false"/>
 		<renamedTable tableKey="object_xref__go_xref" newName="go_xref"/>
 	</dataset>
 	<dataset name="translation_xref_partition" centralTableId="341" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
 		<maskedRelation tableKey="object_xref" relationId="739"/>
-		<maskedRelation tableKey="object_xref" relationId="1051"/>
+		<maskedRelation tableKey="object_xref" relationId="1052"/>
 		<maskedRelation tableKey="object_xref" relationId="705"/>
 		<maskedRelation tableKey="object_xref" relationId="706"/>
 		<maskedRelation tableKey="object_xref" relationId="707"/>
 		<maskedRelation tableKey="object_xref" relationId="708"/>
 		<maskedRelation tableKey="object_xref" relationId="1053"/>
-		<maskedRelation tableKey="object_xref" relationId="1054"/>
-		<maskedRelation tableKey="object_xref" relationId="1336"/>
-		<maskedRelation tableKey="object_xref" relationId="1059"/>
+		<maskedRelation tableKey="object_xref" relationId="1056"/>
+		<maskedRelation tableKey="object_xref" relationId="1337"/>
 		<maskedRelation tableKey="object_xref" relationId="1060"/>
-		<maskedRelation tableKey="object_xref" relationId="694"/>
 		<maskedRelation tableKey="object_xref" relationId="1061"/>
-		<maskedRelation tableKey="object_xref" relationId="746"/>
+		<maskedRelation tableKey="object_xref" relationId="694"/>
 		<maskedRelation tableKey="object_xref" relationId="1062"/>
+		<maskedRelation tableKey="object_xref" relationId="746"/>
+		<maskedRelation tableKey="object_xref" relationId="1063"/>
 		<maskedRelation tableKey="object_xref" relationId="715"/>
 		<maskedRelation tableKey="object_xref" relationId="716"/>
 		<maskedRelation tableKey="object_xref" relationId="751"/>
 		<maskedRelation tableKey="object_xref" relationId="722"/>
-		<maskedRelation tableKey="object_xref" relationId="1067"/>
+		<maskedRelation tableKey="object_xref" relationId="1068"/>
 		<maskedRelation tableKey="object_xref" relationId="727"/>
 		<maskedRelation tableKey="object_xref" relationId="699"/>
 		<maskedRelation tableKey="object_xref" relationId="757"/>
+		<maskedRelation tableKey="object_xref" relationId="701"/>
 		<maskedRelation tableKey="object_xref" relationId="733"/>
 		<maskedRelation tableKey="object_xref" relationId="758"/>
-		<maskedRelation tableKey="object_xref" relationId="701"/>
 		<maskedRelation tableKey="object_xref" relationId="760"/>
-		<maskedRelation tableKey="object_xref" relationId="1075"/>
+		<maskedRelation tableKey="object_xref" relationId="1076"/>
 		<maskedRelation tableKey="object_xref" relationId="682"/>
 		<maskedRelation tableKey="object_xref" relationId="735"/>
-		<maskedRelation tableKey="object_xref" relationId="1078"/>
+		<maskedRelation tableKey="object_xref" relationId="1079"/>
 		<maskedRelation tableKey="object_xref" relationId="736"/>
 		<maskedRelation tableKey="object_xref" relationId="703"/>
-		<maskedRelation tableKey="object_xref" relationId="1337"/>
-		<maskedRelation tableKey="object_xref" relationId="765"/>
-		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="342" aliasNames="col1" expression=":col1=&quot;Translation&quot;" hard="false"/>
+		<maskedRelation tableKey="object_xref" relationId="1338"/>
+		<maskedRelation tableKey="object_xref" relationId="766"/>
+		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="344" aliasNames="col1" expression=":col1=&quot;Translation&quot;" hard="false"/>
 		<renamedTable tableKey="object_xref__go_xref" newName="go_xref"/>
 	</dataset>
 	<datasetPartitionTable name="gene_xref_partition" selectedColumns="db_name">
