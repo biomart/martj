@@ -1684,6 +1684,28 @@
 	<dataset name="gene_1" centralTableId="176" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
 		<subclassRelation relationId="765"/>
 		<subclassRelation relationId="707"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="protein_feature_id"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="created"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="analysis_id"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="module_version"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="parameters"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="hit_start"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="evalue"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="seq_start"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="db_version"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="hit_end"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="gff_source"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="db"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="score"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="perc_ident"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="seq_end"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="logic_name"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="db_file"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="program_file"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="program_version"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="program"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="gff_feature"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="module"/>
 		<maskedRelation tableKey="gene" relationId="689"/>
 		<maskedRelation tableKey="gene" relationId="678"/>
 		<maskedRelation tableKey="gene" relationId="697"/>
