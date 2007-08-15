@@ -522,23 +522,14 @@ public interface MartConstructor {
 				// Create index if required.
 				else if (!droppedCols.contains(col.getPartitionedName())) {
 					keepCols.add(col.getPartitionedName());
-					if (dataset.getDataSetModifications().isIndexedColumn(col)) {
-						final Index index = new Index(this.datasetSchemaName,
-								finalCombinedName);
-						index.setTable(previousTempTable);
-						index.setColumns(Collections.singletonList(col
-								.getPartitionedName()));
-						this.issueAction(index);
-					}
 				}
 			}
 
 			// Does it need a final distinct?
 			if (dataset.getDataSetModifications().isDistinctTable(dsTable)) {
 				final String tempTable = tempName + this.tempNameCount++;
-				this
-						.doDistinct(finalCombinedName, previousTempTable,
-								tempTable, keepCols);
+				this.doDistinct(finalCombinedName, previousTempTable,
+						tempTable, keepCols);
 				previousTempTable = tempTable;
 			} else if (!dropCols.isEmpty()) {
 				final DropColumns dropcol = new DropColumns(
@@ -546,6 +537,19 @@ public interface MartConstructor {
 				dropcol.setTable(previousTempTable);
 				dropcol.setColumns(dropCols);
 				this.issueAction(dropcol);
+			}
+
+			// Indexing.
+			for (final Iterator i = keepCols.iterator(); i.hasNext();) {
+				final DataSetColumn col = (DataSetColumn) i.next();
+				if (dataset.getDataSetModifications().isIndexedColumn(col)) {
+					final Index index = new Index(this.datasetSchemaName,
+							finalCombinedName);
+					index.setTable(previousTempTable);
+					index.setColumns(Collections.singletonList(col
+							.getPartitionedName()));
+					this.issueAction(index);
+				}
 			}
 
 			// Add a rename action to produce the final table.
@@ -648,8 +652,7 @@ public interface MartConstructor {
 
 		private void doDistinct(final String finalCombinedName,
 				final String previousTempTable, final String tempTable,
-				final Collection keepCols)
-				throws ListenerException {
+				final Collection keepCols) throws ListenerException {
 			// Make the join.
 			final Distinct action = new Distinct(this.datasetSchemaName,
 					finalCombinedName);
