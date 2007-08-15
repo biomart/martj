@@ -160,9 +160,16 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		statements.add("set search_path=" + createTableSchema + ","
 				+ fromTableSchema + ",pg_catalog");
 
+		final StringBuffer cols = new StringBuffer();
+		for (final Iterator i = action.getKeepCols().iterator(); i.hasNext(); ) {
+			cols.append(i.next());
+			if (i.hasNext())
+				cols.append(',');
+		}
+
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select distinct * from " + fromTableSchema + "."
+				+ " as select distinct "+cols+" from " + fromTableSchema + "."
 				+ fromTableName);
 
 		statements.add(sb.toString());

@@ -941,6 +941,8 @@ public abstract class MartConstructorAction {
 		private String table;
 
 		private String resultTable;
+		
+		private Collection keepCols;
 
 		/**
 		 * Creates a new Distinct action.
@@ -1003,6 +1005,21 @@ public abstract class MartConstructorAction {
 		 */
 		public void setTable(final String table) {
 			this.table = table;
+		}
+
+		/**
+		 * @return the keepCols
+		 */
+		public Collection getKeepCols() {
+			return keepCols;
+		}
+
+		/**
+		 * @param keepCols
+		 *            the keepCols to set
+		 */
+		public void setKeepCols(Collection keepCols) {
+			this.keepCols = keepCols;
 		}
 	}
 

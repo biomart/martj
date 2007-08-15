@@ -149,9 +149,16 @@ public class MySQLDialect extends DatabaseDialect {
 		final String fromTableSchema = action.getSchema();
 		final String fromTableName = action.getTable();
 
+		final StringBuffer cols = new StringBuffer();
+		for (final Iterator i = action.getKeepCols().iterator(); i.hasNext(); ) {
+			cols.append(i.next());
+			if (i.hasNext())
+				cols.append(',');
+		}
+		
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select distinct * from " + fromTableSchema + "."
+				+ " as select distinct "+cols+" from " + fromTableSchema + "."
 				+ fromTableName);
 
 		statements.add(sb.toString());

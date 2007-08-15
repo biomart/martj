@@ -511,35 +511,36 @@ public interface MartConstructor {
 				previousTempTable = tempTable;
 			}
 
-			// Does it need a final distinct?
-			if (dataset.getDataSetModifications().isDistinctTable(dsTable)) {
-				final String tempTable = tempName + this.tempNameCount++;
-				this
-						.doDistinct(finalCombinedName, previousTempTable,
-								tempTable);
-				previousTempTable = tempTable;
-			}
-
 			// Drop masked dependencies and create column indices.
 			final List dropCols = new ArrayList();
+			final List keepCols = new ArrayList();
 			for (final Iterator x = dsTable.getColumns().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
 				if (col.isRequiredInterim() && !col.isRequiredFinal())
 					dropCols.add(col.getPartitionedName());
 				// Create index if required.
-				else if (!droppedCols.contains(col.getPartitionedName())
-						&& dataset.getDataSetModifications().isIndexedColumn(
-								col)) {
-					final Index index = new Index(this.datasetSchemaName,
-							finalCombinedName);
-					index.setTable(previousTempTable);
-					index.setColumns(Collections.singletonList(col
-							.getPartitionedName()));
-					this.issueAction(index);
+				else if (!droppedCols.contains(col.getPartitionedName())) {
+					keepCols.add(col.getPartitionedName());
+					if (dataset.getDataSetModifications().isIndexedColumn(col)) {
+						final Index index = new Index(this.datasetSchemaName,
+								finalCombinedName);
+						index.setTable(previousTempTable);
+						index.setColumns(Collections.singletonList(col
+								.getPartitionedName()));
+						this.issueAction(index);
+					}
 				}
 			}
-			if (!dropCols.isEmpty()) {
+
+			// Does it need a final distinct?
+			if (dataset.getDataSetModifications().isDistinctTable(dsTable)) {
+				final String tempTable = tempName + this.tempNameCount++;
+				this
+						.doDistinct(finalCombinedName, previousTempTable,
+								tempTable, keepCols);
+				previousTempTable = tempTable;
+			} else if (!dropCols.isEmpty()) {
 				final DropColumns dropcol = new DropColumns(
 						this.datasetSchemaName, finalCombinedName);
 				dropcol.setTable(previousTempTable);
@@ -646,7 +647,8 @@ public interface MartConstructor {
 		}
 
 		private void doDistinct(final String finalCombinedName,
-				final String previousTempTable, final String tempTable)
+				final String previousTempTable, final String tempTable,
+				final Collection keepCols)
 				throws ListenerException {
 			// Make the join.
 			final Distinct action = new Distinct(this.datasetSchemaName,
@@ -654,6 +656,7 @@ public interface MartConstructor {
 			action.setSchema(this.datasetSchemaName);
 			action.setTable(previousTempTable);
 			action.setResultTable(tempTable);
+			action.setKeepCols(keepCols);
 			this.issueAction(action);
 			// Drop the old one.
 			final Drop drop = new Drop(this.datasetSchemaName,
