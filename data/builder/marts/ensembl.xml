@@ -2122,5 +2122,6 @@
 	</datasetPartitionTable>
 	<datasetPartitionTable name="protein_feature" selectedColumns="logic_name">
 		<partitionApplication name="gene" dimension="protein_feature" pCols="logic_name" dsCols="logic_name" relationIds="697" nameCols="logic_name"/>
+		<partitionApplication name="gene_1" dimension="translation__protein_feature" pCols="logic_name" dsCols="logic_name" relationIds="697" nameCols="logic_name"/>
 	</datasetPartitionTable>
 </mart>
