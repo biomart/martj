@@ -521,15 +521,18 @@ public interface MartConstructor {
 					dropCols.add(col.getPartitionedName());
 				// Create index if required.
 				else if (!droppedCols.contains(col.getPartitionedName())) {
-					keepCols.add(col.getPartitionedName());
+					keepCols.add(col);
 				}
 			}
 
 			// Does it need a final distinct?
 			if (dataset.getDataSetModifications().isDistinctTable(dsTable)) {
 				final String tempTable = tempName + this.tempNameCount++;
+				final Set keepColNames = new HashSet();
+				for (final Iterator i = keepCols.iterator(); i.hasNext(); )
+					keepColNames.add(((DataSetColumn)i.next()).getPartitionedName());
 				this.doDistinct(finalCombinedName, previousTempTable,
-						tempTable, keepCols);
+						tempTable, keepColNames);
 				previousTempTable = tempTable;
 			} else if (!dropCols.isEmpty()) {
 				final DropColumns dropcol = new DropColumns(
