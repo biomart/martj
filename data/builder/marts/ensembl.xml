@@ -1500,6 +1500,9 @@
 	<relation id="1342" cardinality="M" firstKeyId="781" secondKeyId="599" status="HANDMADE"/>
 	<relation id="1343" cardinality="M" firstKeyId="1014" secondKeyId="667" status="HANDMADE"/>
 	<relation id="1344" cardinality="M" firstKeyId="583" secondKeyId="1249" status="HANDMADE"/>
+	<dataset name="Ontology" centralTableId="795" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+		<renamedTable tableKey="Ontology__Node" newName="Node"/>
+	</dataset>
 	<dataset name="assembly_exception" centralTableId="37" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="density_feature" centralTableId="62" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
 	<dataset name="ditag_feature" centralTableId="87" optimiser="NONE" invisible="true" masked="true" indexOptimiser="false"/>
@@ -1590,6 +1593,7 @@
 		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="ParentId"/>
 		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="Ontology_id"/>
 		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="EST_id"/>
+		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="Name"/>
 		<maskedRelation tableKey="gene" relationId="689"/>
 		<maskedRelation tableKey="gene" relationId="678"/>
 		<maskedRelation tableKey="gene" relationId="697"/>
@@ -1820,13 +1824,14 @@
 		<maskedRelation tableKey="translation__object_xref" relationId="766"/>
 		<distinctRows tableKey="translation__protein_feature"/>
 		<distinctRows tableKey="translation__protein_feature_1"/>
+		<distinctRows tableKey="transcript__EnsemblTranscript"/>
 		<maskedTable tableKey="gene__unconventional_transcript_association"/>
 		<maskedTable tableKey="gene__regulatory_factor_coding"/>
+		<maskedTable tableKey="gene__alt_allele"/>
+		<maskedTable tableKey="transcript__regulatory_factor_coding"/>
 		<maskedTable tableKey="transcript__transcript_attrib"/>
 		<maskedTable tableKey="transcript__transcript_supporting_feature"/>
-		<maskedTable tableKey="gene__alt_allele"/>
 		<maskedTable tableKey="translation__translation_attrib"/>
-		<maskedTable tableKey="transcript__regulatory_factor_coding"/>
 		<maskedTable tableKey="transcript__unconventional_transcript_association"/>
 		<compoundRelation tableKey="__DATASET_WIDE__" relationId="725" n="2" parallel="true"/>
 		<compoundRelation tableKey="__DATASET_WIDE__" relationId="752" n="2" parallel="true"/>
@@ -2084,6 +2089,9 @@
 		<restrictedTable tableKey="object_xref" tableId="341" aliasColumnIds="342" aliasNames="col1" expression=":col1=&quot;Translation&quot;" hard="false"/>
 		<renamedTable tableKey="object_xref__go_xref" newName="go_xref"/>
 	</dataset>
+	<datasetPartitionTable name="Ontology" selectedColumns="Name">
+		<partitionApplication name="gene" dimension="transcript__EnsemblTranscript" pCols="Name" dsCols="Name_Ontology" relationIds="868" nameCols="Name"/>
+	</datasetPartitionTable>
 	<datasetPartitionTable name="gene_xref_partition" selectedColumns="db_name">
 		<partitionApplication name="gene" dimension="gene__object_xref" pCols="db_name" dsCols="db_name" relationIds="673" nameCols="db_name"/>
 		<partitionApplication name="gene" dimension="object_xref_2" pCols="db_name" dsCols="db_name" relationIds="673" nameCols="db_name"/>
