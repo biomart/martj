@@ -959,7 +959,7 @@
 		<relation id="864" cardinality="M" firstKeyId="775" secondKeyId="780" status="INFERRED"/>
 		<relation id="865" cardinality="M" firstKeyId="776" secondKeyId="786" status="HANDMADE"/>
 		<relation id="866" cardinality="M" firstKeyId="792" secondKeyId="785" status="INFERRED"/>
-		<relation id="867" cardinality="M" firstKeyId="792" secondKeyId="807" status="INFERRED"/>
+		<relation id="867" cardinality="1" firstKeyId="792" secondKeyId="807" status="HANDMADE"/>
 		<relation id="868" cardinality="M" firstKeyId="798" secondKeyId="793" status="INFERRED"/>
 	</jdbcSchema>
 	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3309/ensembl_go_45" schemaName="ensembl_go_45" username="ensadmin" password="ensembl" name="go" keyguessing="true" masked="false">
@@ -1584,6 +1584,12 @@
 		<maskedColumn tableKey="translation__object_xref_1" colKey="info_text"/>
 		<maskedColumn tableKey="translation__object_xref_1" colKey="external_db_id"/>
 		<maskedColumn tableKey="translation__object_xref_1" colKey="priority"/>
+		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="Node_id"/>
+		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="Clonelib_id"/>
+		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="Definition"/>
+		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="ParentId"/>
+		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="Ontology_id"/>
+		<maskedColumn tableKey="transcript__EnsemblTranscript" colKey="EST_id"/>
 		<maskedRelation tableKey="gene" relationId="689"/>
 		<maskedRelation tableKey="gene" relationId="678"/>
 		<maskedRelation tableKey="gene" relationId="697"/>
