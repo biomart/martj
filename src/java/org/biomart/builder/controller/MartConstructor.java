@@ -517,11 +517,11 @@ public interface MartConstructor {
 			for (final Iterator x = dsTable.getColumns().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
-				if (col.isRequiredInterim() && !col.isRequiredFinal())
-					dropCols.add(col.getPartitionedName());
-				// Create index if required.
-				else if (col.isRequiredFinal() && !droppedCols.contains(col.getPartitionedName())) {
-					keepCols.add(col);
+				if (!droppedCols.contains(col.getPartitionedName())) {
+					if (col.isRequiredInterim() && !col.isRequiredFinal())
+						dropCols.add(col.getPartitionedName());
+				 	else if (col.isRequiredFinal()) 
+				 		keepCols.add(col);
 				}
 			}
 
