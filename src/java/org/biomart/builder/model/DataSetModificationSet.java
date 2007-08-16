@@ -32,6 +32,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.common.model.Key;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -89,7 +90,10 @@ public class DataSetModificationSet {
 			if (column instanceof InheritedColumn)
 				throw new ValidationException(Resources
 						.get("cannotMaskInheritedColumn"));
-			if (column.isInAnyKey())
+			boolean inKey = false;
+			for (final Iterator i = column.getTable().getKeys().iterator(); i.hasNext() && !inKey; )
+				inKey = ((Key)i.next()).getColumns().contains(column);
+			if (inKey)
 				throw new ValidationException(Resources
 						.get("cannotMaskNecessaryColumn"));
 			if (!this.maskedColumns.containsKey(tableKey))
