@@ -305,11 +305,11 @@ public interface MartConstructor {
 				// Loop over dataset partitions.
 				boolean fakeDSPartition = dsPta == null;
 				if (!fakeDSPartition)
-					dsPta.getNamePartitionCol().getPartitionTable()
+					dsPta.getPartitionTable()
 							.prepareRows((String) schemaPartition.getKey(),
 									PartitionTable.UNLIMITED_ROWS);
 				while (fakeDSPartition ? true : dsPta != null
-						&& dsPta.getNamePartitionCol().getPartitionTable()
+						&& dsPta.getPartitionTable()
 								.nextRow()) {
 					fakeDSPartition = false;
 					// Make more specific.
@@ -335,13 +335,13 @@ public interface MartConstructor {
 											dsTable);
 							boolean fakeDMPartition = dmPta == null;
 							if (!fakeDMPartition)
-								dmPta.getNamePartitionCol().getPartitionTable()
+								dmPta.getPartitionTable()
 										.prepareRows(
 												(String) schemaPartition
 														.getKey(),
 												PartitionTable.UNLIMITED_ROWS);
 							while (fakeDMPartition ? true : dmPta != null
-									&& dmPta.getNamePartitionCol()
+									&& dmPta
 											.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
 								if (!this.makeActionsForDatasetTable(
@@ -858,7 +858,7 @@ public interface MartConstructor {
 				// PrepareRow on subdivision, if any.
 				if (pta.getPartitionAppliedRows().size() > 1) {
 					final PartitionAppliedRow subprow = (PartitionAppliedRow) pta
-							.getPartitionAppliedRows().get(0);
+							.getPartitionAppliedRows().get(1);
 					pta.getPartitionTable().getSelectedColumn(
 							subprow.getPartitionCol()).getPartitionTable()
 							.prepareRows(schemaPartition,
@@ -979,7 +979,7 @@ public interface MartConstructor {
 				if (nextRow && pta.getPartitionAppliedRows().size() > 1)
 					pta.getPartitionTable().getSelectedColumn(
 							((PartitionAppliedRow) pta
-									.getPartitionAppliedRows().get(0))
+									.getPartitionAppliedRows().get(1))
 									.getPartitionCol()).getPartitionTable()
 							.nextRow();
 			}

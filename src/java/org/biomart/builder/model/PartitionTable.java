@@ -305,6 +305,7 @@ public interface PartitionTable {
 
 		public PartitionRow currentRow() throws PartitionException {
 			// Exception if currentRow is null.
+			System.err.println(this.getName()+" current row is "+this.currentRow); //FIXME
 			if (this.currentRow == null)
 				throw new PartitionException(Resources
 						.get("partitionCurrentBeforeNext"));
@@ -456,6 +457,7 @@ public interface PartitionTable {
 		}
 
 		public boolean nextRow() throws PartitionException {
+			System.err.println(this.getName()+" next row"); //FIXME
 			return this.getNextRow(false);
 		}
 
@@ -733,6 +735,24 @@ public interface PartitionTable {
 		 */
 		public abstract String getValue(final String columnName)
 				throws PartitionException;
+
+		public String toString() {
+			final StringBuffer sbuff = new StringBuffer();
+			for (final Iterator i = this.getPartitionTable()
+					.getSelectedColumnNames().iterator(); i.hasNext();) {
+				final String colName = (String) i.next();
+				if (colName.equals(PartitionTable.DIV_COLUMN))
+					continue;
+				try {
+					final PartitionColumn col = this.getPartitionTable()
+							.getSelectedColumn(colName);
+					sbuff.append(col.getValueForRow(this));
+				} catch (final PartitionException pe) {
+					throw new BioMartError(pe);
+				}
+			}
+			return sbuff.toString();
+		}
 
 		public int compareTo(final Object obj) {
 			final PartitionRow them = (PartitionRow) obj;
