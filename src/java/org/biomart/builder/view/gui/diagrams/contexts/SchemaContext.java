@@ -30,17 +30,17 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.biomart.builder.model.ComponentStatus;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.ComponentStatus;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
-import org.biomart.common.model.Relation.Cardinality;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -83,19 +83,19 @@ public class SchemaContext implements DiagramContext {
 		// This bit updates schema boxes.
 		if (object instanceof Schema) {
 			final SchemaComponent schcomp = (SchemaComponent) component;
-			if (((Schema)object).isMasked())
+			if (((Schema) object).isMasked())
 				schcomp.setBackground(SchemaComponent.MASKED_BACKGROUND);
 			else
 				schcomp.setBackground(SchemaComponent.BACKGROUND_COLOUR);
 		}
-		
+
 		// This bit removes a restricted outline from any restricted tables.
 		else if (object instanceof Table) {
 			final TableComponent tblcomp = (TableComponent) component;
 			tblcomp.setRestricted(false);
 
 			// Fade out all ignored tables.
-			if (((Table) object).isIgnore())
+			if (((Table) object).isMasked())
 				component.setBackground(TableComponent.IGNORE_COLOUR);
 
 			// All others are normal.
@@ -121,10 +121,11 @@ public class SchemaContext implements DiagramContext {
 			// Fade out all INFERRED_INCORRECT relations and those which
 			// head to ignored tables.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| relation.getFirstKey().getTable().isIgnore()
-					|| relation.getSecondKey().getTable().isIgnore()
+					|| relation.getFirstKey().getTable().isMasked()
+					|| relation.getSecondKey().getTable().isMasked()
 					|| relation.getFirstKey().getTable().getSchema().isMasked()
-					|| relation.getSecondKey().getTable().getSchema().isMasked())
+					|| relation.getSecondKey().getTable().getSchema()
+							.isMasked())
 				component.setForeground(RelationComponent.INCORRECT_COLOUR);
 
 			// Highlight all HANDMADE relations.
@@ -160,17 +161,17 @@ public class SchemaContext implements DiagramContext {
 	}
 
 	public boolean isMasked(final Object object) {
-		
+
 		if (object instanceof Schema) {
-			if (((Schema)object).isMasked())
+			if (((Schema) object).isMasked())
 				return true;
 		}
-		
+
 		// Incorrect and ignored stuff is 'masked'.
 		else if (object instanceof Table) {
 
 			// Fade out all ignored tables.
-			if (((Table) object).isIgnore())
+			if (((Table) object).isMasked())
 				return true;
 		}
 
@@ -183,10 +184,11 @@ public class SchemaContext implements DiagramContext {
 			// Fade out all INFERRED_INCORRECT relations and those which
 			// head to ignored tables or masked schemas.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| relation.getFirstKey().getTable().isIgnore()
-					|| relation.getFirstKey().getTable().isIgnore()
+					|| relation.getFirstKey().getTable().isMasked()
+					|| relation.getFirstKey().getTable().isMasked()
 					|| relation.getFirstKey().getTable().getSchema().isMasked()
-					|| relation.getSecondKey().getTable().getSchema().isMasked())
+					|| relation.getSecondKey().getTable().getSchema()
+							.isMasked())
 				return true;
 
 		}
@@ -248,7 +250,7 @@ public class SchemaContext implements DiagramContext {
 			showRows.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					SchemaContext.this.martTab.getSchemaTabSet()
-							.requestShowRows(table, 0, 10);
+							.requestShowRows(table, 10);
 				}
 			});
 			contextMenu.add(showRows);
@@ -296,7 +298,7 @@ public class SchemaContext implements DiagramContext {
 							.requestIgnoreTable(table, ignore.isSelected());
 				}
 			});
-			ignore.setSelected(table.isIgnore());
+			ignore.setSelected(table.isMasked());
 			ignore.setEnabled(!table.getSchema().isMasked());
 			contextMenu.add(ignore);
 		}

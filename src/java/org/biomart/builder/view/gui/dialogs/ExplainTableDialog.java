@@ -27,6 +27,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +45,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.TransformationUnit.Expression;
@@ -56,13 +59,11 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
 import org.biomart.builder.view.gui.diagrams.contexts.TransformationContext;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
+import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.Transaction.TransactionEvent;
+import org.biomart.common.utils.Transaction.TransactionListener;
 import org.biomart.common.view.gui.LongProcess;
 
 /**
@@ -79,13 +80,15 @@ import org.biomart.common.view.gui.LongProcess;
  *          $Author$
  * @since 0.5
  */
-public class ExplainTableDialog extends JDialog implements ExplainDialog {
+public class ExplainTableDialog extends JDialog implements TransactionListener {
 	private static final long serialVersionUID = 1;
 
 	private static final int MAX_UNITS = Settings.getProperty("maxunits") == null ? 50
 			: Integer.parseInt(Settings.getProperty("maxunits"));
 
 	private JCheckBox maskedHidden;
+
+	private boolean needsRebuild;
 
 	/**
 	 * Opens an explanation showing the underlying relations and tables behind a
@@ -98,16 +101,12 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 	 */
 	public static void showTableExplanation(final MartTab martTab,
 			final DataSetTable table) {
-		final ExplainTableDialog dialog = new ExplainTableDialog(martTab, table);
-		martTab.getDataSetTabSet().setCurrentExplanationDialog(dialog);
-		dialog.setVisible(true);
-		// We don't get here until the dialog is closed.
-		martTab.getDataSetTabSet().clearCurrentExplanationDialog();
+		new ExplainTableDialog(martTab, table).setVisible(true);
 	}
 
-	private SchemaTabSet schemaTabSet;
+	private final SchemaTabSet schemaTabSet;
 
-	private DataSet ds;
+	private final DataSet ds;
 
 	private String tableName;
 
@@ -127,6 +126,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 	private TransformationContext transformationContext;
 
+	private final ExplainContext explainContext;
+
 	/**
 	 * The background for the masked checkbox.
 	 */
@@ -138,16 +139,19 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		this.setTitle(Resources.get("explainTableDialogTitle", dsTable
 				.getModifiedName()));
 		this.setModal(true);
-		this.ds = (DataSet) dsTable.getSchema();
+		this.ds = dsTable.getDataSet();
 		this.tableName = dsTable.getName();
 		this.martTab = martTab;
 		this.schemaTabSet = martTab.getSchemaTabSet();
+
+		// Create a context.
+		this.explainContext = new ExplainContext(this.martTab, this.ds, dsTable);
 
 		// Create the hide masked box.
 		this.maskedHidden = new JCheckBox(Resources.get("hideMaskedTitle"));
 		this.maskedHidden.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				ExplainTableDialog.this.recalculateDialog(null);
+				ExplainTableDialog.this.recalculateTransformation();
 			}
 		});
 		// It has a semi-transparent background with no border.
@@ -156,6 +160,9 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
+
+		// Attach the context to the schema tabset.
+		this.schemaTabSet.setDiagramContext(this.explainContext);
 
 		// Must be set visible as previous display location is invisible.
 		this.schemaTabSet.setVisible(true);
@@ -246,7 +253,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 
 		// Make a context for our sub-diagrams.
 		this.transformationContext = new TransformationContext(this.martTab,
-				(DataSet) dsTable.getSchema());
+				this.ds);
 
 		// Pack the window.
 		this.pack();
@@ -254,27 +261,68 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 		// Move ourselves.
 		this.setLocationRelativeTo(null);
 
-		// Calculate the transformation.
-		this.recalculateDialog(null);
+		// Add a listener to the dataset such that if any part of the dataset
+		// changes, we recalculate ourselves entirely.
+		this.needsRebuild = false;
+		Transaction.addTransactionListener(this);
+		final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				if (evt.getNewValue().equals(Boolean.TRUE))
+					ExplainTableDialog.this.needsRebuild = true;
+			}
+		};
+		this.ds.addPropertyChangeListener("directModified", listener);
 
 		// Select the default button (which shows the transformation card).
 		// We must physically click on it to make the card show.
+		this.recalculateTransformation();
 		transformationButton.doClick();
 	}
 
-	private void recalculateTransformation(final ExplainContext explainContext) {
+	public boolean isDirectModified() {
+		return false;
+	}
+
+	public boolean isIndirectModified() {
+		return false;
+	}
+
+	public void setDirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public void setIndirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public void transactionReset() {
+		// Ignore, for now.
+	}
+
+	public void transactionStarted(final TransactionEvent evt) {
+		// Ignore, for now.
+	}
+
+	public void transactionEnded(final TransactionEvent evt) {
+		if (this.needsRebuild)
+			this.recalculateTransformation();
+	}
+
+	private void recalculateTransformation() {
+		this.needsRebuild = false;
 		new LongProcess() {
 			public void run() throws Exception {
 				// Keep a note of shown tables.
 				final Map shownTables = new HashMap();
 				for (final Iterator i = ExplainTableDialog.this.transformationTableDiagrams
-						.iterator(); i.hasNext();) {
-					for (final Iterator j = ((ExplainTransformationDiagram)i.next()).getTableComponents().iterator(); j.hasNext(); ) {
-					final TableComponent comp = (TableComponent) j.next();
-					shownTables.put(((Table) comp.getObject()).getName(), comp
-							.getState());
+						.iterator(); i.hasNext();)
+					for (final Iterator j = ((ExplainTransformationDiagram) i
+							.next()).getTableComponents().iterator(); j
+							.hasNext();) {
+						final TableComponent comp = (TableComponent) j.next();
+						shownTables.put(((Table) comp.getObject()).getName(),
+								comp.getState());
 					}
-				}
 
 				// Clear the transformation box.
 				ExplainTableDialog.this.transformation.removeAll();
@@ -291,7 +339,7 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 				// instead put up a helpful message. Limit should be
 				// configurable from a properties file.
 				final Collection units = ((DataSetTable) ExplainTableDialog.this.ds
-						.getTableByName(ExplainTableDialog.this.tableName))
+						.getTables().get(ExplainTableDialog.this.tableName))
 						.getTransformationUnits();
 				if (units.size() > ExplainTableDialog.MAX_UNITS)
 					ExplainTableDialog.this.transformation.add(new JLabel(
@@ -327,7 +375,9 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 																	.get("explainExpressionLabel") }));
 							diagram = new ExplainTransformationDiagram.AdditionalColumns(
 									ExplainTableDialog.this.martTab, tu,
-									stepNumber, explainContext, shownTables);
+									stepNumber,
+									ExplainTableDialog.this.explainContext,
+									shownTables);
 						} else if (tu instanceof SkipTable) {
 							// Don't show these if we're hiding masked things.
 							if (ExplainTableDialog.this.maskedHidden
@@ -345,7 +395,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 							diagram = new ExplainTransformationDiagram.SkipTempReal(
 									ExplainTableDialog.this.martTab,
 									(SkipTable) tu, columnsSoFar, stepNumber,
-									explainContext, shownTables);
+									ExplainTableDialog.this.explainContext,
+									shownTables);
 						} else if (tu instanceof JoinTable) {
 							// Temp table to schema table join.
 							label = new JLabel(
@@ -359,7 +410,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 							diagram = new ExplainTransformationDiagram.TempReal(
 									ExplainTableDialog.this.martTab,
 									(JoinTable) tu, columnsSoFar, stepNumber,
-									explainContext, shownTables);
+									ExplainTableDialog.this.explainContext,
+									shownTables);
 						} else if (tu instanceof SelectFromTable) {
 							// Do a single-step select.
 							label = new JLabel(
@@ -373,7 +425,8 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 							diagram = new ExplainTransformationDiagram.SingleTable(
 									ExplainTableDialog.this.martTab,
 									(SelectFromTable) tu, stepNumber,
-									explainContext, shownTables);
+									ExplainTableDialog.this.explainContext,
+									shownTables);
 						} else
 							throw new BioMartError();
 						// Display the diagram.
@@ -396,99 +449,14 @@ public class ExplainTableDialog extends JDialog implements ExplainDialog {
 						stepNumber++;
 						// Remember what tables we just added.
 						ExplainTableDialog.this.transformationTableDiagrams
-						.add(diagram);
+								.add(diagram);
 					}
 				}
 
 				// Resize the diagram to fit the components.
 				ExplainTableDialog.this.transformation.revalidate();
+				ExplainTableDialog.this.transformation.repaint();
 			}
 		}.start();
-	}
-
-	private void repaintTransformation() {
-		this.transformation.repaint(this.transformation.getVisibleRect());
-	}
-
-	public void recalculateDialog(final Object changedObject) {
-		final ExplainContext explainContext = new ExplainContext(this.martTab,
-				(DataSetTable) this.ds.getTableByName(this.tableName));
-		if (this.schemaTabSet != null) {
-			// Update explain context.
-			this.schemaTabSet.setDiagramContext(explainContext);
-			if (changedObject != null)
-				if (changedObject instanceof Schema)
-					this.schemaTabSet
-							.recalculateSchemaDiagram((Schema) changedObject);
-				else if (changedObject instanceof Table)
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Table) changedObject)
-									.getSchema());
-				else if (changedObject instanceof Key)
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Key) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Column)
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Column) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Relation) {
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Relation) changedObject)
-									.getFirstKey().getTable().getSchema());
-					if (!((Relation) changedObject).getFirstKey().getTable()
-							.getSchema().equals(
-									((Relation) changedObject).getSecondKey()
-											.getTable().getSchema()))
-						this.schemaTabSet
-								.recalculateSchemaDiagram(((Relation) changedObject)
-										.getSecondKey().getTable().getSchema());
-				}
-			this.schemaTabSet.recalculateOverviewDiagram();
-		}
-		if (this.transformation != null) {
-			this.recalculateTransformation(explainContext);
-			this.repaintTransformation();
-		}
-	}
-
-	public void repaintDialog(final Object changedObject) {
-		if (this.schemaTabSet != null) {
-			// Update explain context.
-			final ExplainContext context = new ExplainContext(this.martTab,
-					(DataSetTable) this.ds.getTableByName(this.tableName));
-			this.schemaTabSet.setDiagramContext(context);
-			if (changedObject != null)
-				if (changedObject instanceof Schema)
-					this.schemaTabSet
-							.repaintSchemaDiagram((Schema) changedObject);
-				else if (changedObject instanceof Table)
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Table) changedObject)
-									.getSchema());
-				else if (changedObject instanceof Key)
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Key) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Column)
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Column) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Relation) {
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Relation) changedObject)
-									.getFirstKey().getTable().getSchema());
-					if (!((Relation) changedObject).getFirstKey().getTable()
-							.getSchema().equals(
-									((Relation) changedObject).getSecondKey()
-											.getTable().getSchema()))
-						this.schemaTabSet
-								.repaintSchemaDiagram(((Relation) changedObject)
-										.getSecondKey().getTable().getSchema());
-				}
-			this.schemaTabSet.repaintOverviewDiagram();
-		}
-		if (this.transformation != null)
-			this.repaintTransformation();
 	}
 }

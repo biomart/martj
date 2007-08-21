@@ -26,7 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
@@ -40,8 +42,6 @@ import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.DataLink;
-import org.biomart.common.model.DataLink.JDBCDataLink;
 
 /**
  * Understands how to create SQL and DDL for a PostgreSQL database.
@@ -161,7 +161,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 				+ fromTableSchema + ",pg_catalog");
 
 		final StringBuffer cols = new StringBuffer();
-		for (final Iterator i = action.getKeepCols().iterator(); i.hasNext(); ) {
+		for (final Iterator i = action.getKeepCols().iterator(); i.hasNext();) {
 			cols.append(i.next());
 			if (i.hasNext())
 				cols.append(',');
@@ -169,8 +169,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select distinct "+cols+" from " + fromTableSchema + "."
-				+ fromTableName);
+				+ " as select distinct " + cols + " from " + fromTableSchema
+				+ "." + fromTableName);
 
 		statements.add(sb.toString());
 	}
@@ -276,7 +276,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		final String joinType = !action.isLeftJoin() 
+		final String joinType = !action.isLeftJoin()
 				|| action.getRelationRestriction() != null
 				&& action.getRelationRestriction().isHard()
 				|| action.getTableRestriction() != null
@@ -337,7 +337,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append((String) entry.getValue());
 			sb.append('\'');
 		}
-		if (action.getLoopbackDiffSource()!=null) {
+		if (action.getLoopbackDiffSource() != null) {
 			sb.append(" and a.");
 			sb.append(action.getLoopbackDiffSource());
 			sb.append("<>b.");

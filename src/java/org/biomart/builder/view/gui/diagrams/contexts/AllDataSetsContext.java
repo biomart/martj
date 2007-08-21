@@ -75,9 +75,9 @@ public class AllDataSetsContext implements DiagramContext {
 				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 			// Update dotted line (partitioned).
-			((DataSetComponent) component)
-					.setRestricted(this.getMartTab().getMart()
-							.getPartitionTableForDataSet((DataSet) object) != null);
+			((DataSetComponent) component).setRestricted(this.getMartTab()
+					.getMart().getPartitionTableApplicationForDataSet(
+							(DataSet) object) != null);
 
 			((DataSetComponent) component).setRenameable(true);
 			((DataSetComponent) component).setSelectable(true);
@@ -85,10 +85,9 @@ public class AllDataSetsContext implements DiagramContext {
 	}
 
 	public boolean isMasked(final Object object) {
-		if (object instanceof DataSet) {
+		if (object instanceof DataSet)
 			if (((DataSet) object).isMasked())
 				return true;
-		}		
 		return false;
 	}
 

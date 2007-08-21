@@ -18,19 +18,21 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.DataSetLayoutManager.DataSetLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
 
 /**
  * Displays the contents of a dataset within a standard diagram object. This is
@@ -68,12 +70,22 @@ public class DataSetDiagram extends Diagram {
 		// Remember the schema, then lay it out.
 		this.dataset = dataset;
 		this.recalculateDiagram();
+
+		// If any tables or relations change, whole diagram needs
+		// redoing from scratch, and new listeners need setting up.
+		final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				DataSetDiagram.this.needsRedraw = true;
+			}
+		};
+		dataset.addPropertyChangeListener("indirectModified", listener);
+		dataset.addPropertyChangeListener("directModified", listener);
+		dataset.getTables().addPropertyChangeListener(listener);
+		dataset.getRelations().addPropertyChangeListener(listener);
 	}
 
 	public void doRecalculateDiagram() {
-		// First of all, remove all our existing components.
-		this.removeAll();
-
+		// FIXME Recycle components.
 		// Add stuff.
 		final List mainTables = new ArrayList();
 		mainTables.add(this.getDataSet().getMainTable());
@@ -106,9 +118,6 @@ public class DataSetDiagram extends Diagram {
 							Diagram.RELATION_LAYER);
 				}
 		}
-
-		// Resize the diagram to fit our new components.
-		this.resizeDiagram();
 	}
 
 	/**

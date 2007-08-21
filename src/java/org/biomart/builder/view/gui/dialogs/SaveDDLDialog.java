@@ -496,14 +496,14 @@ public class SaveDDLDialog extends JDialog {
 				messages.add(Resources.get("fieldIsEmpty", Resources
 						.get("runDDLPort")));
 			// Both or neither override settings = EOR = XOR.
-			if (this.isEmpty(this.overrideHost.getText()) ^ this.isEmpty(this.overridePort.getText())) {
-			if (this.isEmpty(this.overrideHost.getText()))
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("overrideHost")));
-			else 
-				messages.add(Resources.get("fieldIsEmpty", Resources
-						.get("overridePort")));
-			}
+			if (this.isEmpty(this.overrideHost.getText())
+					^ this.isEmpty(this.overridePort.getText()))
+				if (this.isEmpty(this.overrideHost.getText()))
+					messages.add(Resources.get("fieldIsEmpty", Resources
+							.get("overrideHost")));
+				else
+					messages.add(Resources.get("fieldIsEmpty", Resources
+							.get("overridePort")));
 		}
 
 		// Must have at least one dataset selected.

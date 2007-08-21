@@ -26,6 +26,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
@@ -101,6 +103,24 @@ public class DataSetComponent extends BoxShapedComponent {
 
 		// Calculate the components and add them to the list.
 		this.recalculateDiagramComponent();
+
+		// Repaint events.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				DataSetComponent.this.needsRepaint = true;
+			}
+		};
+		dataset.addPropertyChangeListener("masked", repaintListener);
+		dataset.addPropertyChangeListener("partitionTable", repaintListener);
+		dataset.addPropertyChangeListener("invisible", repaintListener);
+
+		// Recalc events.
+		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				DataSetComponent.this.needsRecalc = true;
+			}
+		};
+		dataset.addPropertyChangeListener("name", recalcListener);
 	}
 
 	private DataSet getDataSet() {
@@ -166,20 +186,6 @@ public class DataSetComponent extends BoxShapedComponent {
 		});
 		contextMenu.add(rename);
 
-		// Add an option to replicate this dataset.
-		final JMenuItem replicate = new JMenuItem(Resources
-				.get("replicateDataSetTitle"));
-		replicate.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
-				0));
-		replicate.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				DataSetComponent.this.getDiagram().getMartTab()
-						.getDataSetTabSet().requestReplicateDataSet(
-								DataSetComponent.this.getDataSet());
-			}
-		});
-		contextMenu.add(replicate);
-
 		// Option to remove the dataset from the mart.
 		final JMenuItem remove = new JMenuItem(Resources
 				.get("removeDataSetTitle"), new ImageIcon(Resources
@@ -236,10 +242,7 @@ public class DataSetComponent extends BoxShapedComponent {
 		return contextMenu;
 	}
 
-	public void recalculateDiagramComponent() {
-		// Remove all our components.
-		this.removeAll();
-
+	protected void doRecalculateDiagramComponent() {
 		// Add the label for the dataset name,
 		final JTextField name = new JTextField();
 		name.setFont(DataSetComponent.BOLD_FONT);

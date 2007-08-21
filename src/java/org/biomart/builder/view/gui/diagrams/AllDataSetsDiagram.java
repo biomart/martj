@@ -18,6 +18,8 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 
 import org.biomart.builder.model.DataSet;
@@ -49,22 +51,27 @@ public class AllDataSetsDiagram extends Diagram {
 
 		// Calculate the diagram.
 		this.recalculateDiagram();
+
+		// Listener to know when to recalculate entire diagram,
+		// based on mart dataset entries.
+		// If any change, whole diagram needs redoing from scratch,
+		// and new listeners need setting up.
+		final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				AllDataSetsDiagram.this.needsRedraw = true;
+			}
+		};
+		martTab.getMart().getDataSets().addPropertyChangeListener(listener);
 	}
 
 	public void doRecalculateDiagram() {
-		// Remove all existing components.
-		this.removeAll();
-
 		// Add a DataSetComponent for each dataset.
 		for (final Iterator i = this.getMartTab().getMart().getDataSets()
-				.iterator(); i.hasNext();) {
+				.values().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 			final DataSetComponent dsComponent = new DataSetComponent(ds, this);
 			this.add(dsComponent, new SchemaLayoutConstraint(0),
 					Diagram.TABLE_LAYER);
 		}
-
-		// Resize the diagram to fit the components.
-		this.resizeDiagram();
 	}
 }

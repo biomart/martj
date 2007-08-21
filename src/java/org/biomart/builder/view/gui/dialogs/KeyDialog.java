@@ -22,7 +22,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
@@ -40,7 +39,8 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicArrowButton;
 
-import org.biomart.common.model.Table;
+import org.biomart.builder.model.Column;
+import org.biomart.builder.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -73,7 +73,7 @@ public class KeyDialog extends JDialog {
 	 *            the columns to preselect as part of the key.
 	 */
 	public KeyDialog(final Table table, final String title,
-			final String action, final List columns) {
+			final String action, final Column[] columns) {
 		// Create the base dialog.
 		super();
 		this.setTitle(title);
@@ -81,8 +81,8 @@ public class KeyDialog extends JDialog {
 
 		// The list of table columns is populated with the names of columns.
 		this.tableColumns = new DefaultListModel();
-		for (final Iterator i = new TreeSet(table.getColumns()).iterator(); i
-				.hasNext();)
+		for (final Iterator i = new TreeSet(table.getColumns().values())
+				.iterator(); i.hasNext();)
 			this.tableColumns.addElement(i.next());
 
 		// The list of selected columns is populated with the columns from
@@ -90,10 +90,9 @@ public class KeyDialog extends JDialog {
 		// columns, to prevent duplication.
 		this.selectedColumns = new DefaultListModel();
 		if (columns != null)
-			for (final Iterator i = columns.iterator(); i.hasNext();) {
-				final Object o = i.next();
-				this.tableColumns.removeElement(o);
-				this.selectedColumns.addElement(o);
+			for (int i = 0; i < columns.length; i++) {
+				this.tableColumns.removeElement(columns[i]);
+				this.selectedColumns.addElement(columns[i]);
 			}
 
 		// The close and execute buttons.
@@ -271,7 +270,12 @@ public class KeyDialog extends JDialog {
 	 * 
 	 * @return the columns the user selected, in order.
 	 */
-	public List getSelectedColumns() {
-		return Arrays.asList(this.selectedColumns.toArray());
+	public Column[] getSelectedColumns() {
+		// For some reason, can't cast Object[] to Column[].
+		final Object[] objs = this.selectedColumns.toArray();
+		final Column[] cols = new Column[objs.length];
+		for (int i = 0; i < objs.length; i++)
+			cols[i] = (Column) objs[i];
+		return cols;
 	}
 }

@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
-import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
+import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.model.Table.RestrictedTableDefinition;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -245,7 +245,7 @@ public abstract class MartConstructorAction {
 		private String optTableName;
 
 		private String optColumnName;
-		
+
 		private String parentOptTableName;
 
 		/**
@@ -315,13 +315,14 @@ public abstract class MartConstructorAction {
 		 * @return the parentOptTableName
 		 */
 		public String getParentOptTableName() {
-			return parentOptTableName;
+			return this.parentOptTableName;
 		}
 
 		/**
-		 * @param parentOptTableName the parentOptTableName to set
+		 * @param parentOptTableName
+		 *            the parentOptTableName to set
 		 */
-		public void setParentOptTableName(String parentOptTableName) {
+		public void setParentOptTableName(final String parentOptTableName) {
 			this.parentOptTableName = parentOptTableName;
 		}
 	}
@@ -574,11 +575,11 @@ public abstract class MartConstructorAction {
 		private TransformationUnit relationRestrictionPreviousUnit;
 
 		private final Map partitionRestrictions = new HashMap();
-		
+
 		private String loopbackDiffSource;
 
 		private String loopbackDiffTarget;
-		
+
 		private boolean leftJoin;
 
 		/**
@@ -781,13 +782,14 @@ public abstract class MartConstructorAction {
 		 * @return the loopbackDiffSource
 		 */
 		public String getLoopbackDiffSource() {
-			return loopbackDiffSource;
+			return this.loopbackDiffSource;
 		}
 
 		/**
-		 * @param loopbackDiffSource the loopbackDiffSource to set
+		 * @param loopbackDiffSource
+		 *            the loopbackDiffSource to set
 		 */
-		public void setLoopbackDiffSource(String loopbackDiffSource) {
+		public void setLoopbackDiffSource(final String loopbackDiffSource) {
 			this.loopbackDiffSource = loopbackDiffSource;
 		}
 
@@ -795,13 +797,14 @@ public abstract class MartConstructorAction {
 		 * @return the loopbackDiffTarget
 		 */
 		public String getLoopbackDiffTarget() {
-			return loopbackDiffTarget;
+			return this.loopbackDiffTarget;
 		}
 
 		/**
-		 * @param loopbackDiffTarget the loopbackDiffTarget to set
+		 * @param loopbackDiffTarget
+		 *            the loopbackDiffTarget to set
 		 */
-		public void setLoopbackDiffTarget(String loopbackDiffTarget) {
+		public void setLoopbackDiffTarget(final String loopbackDiffTarget) {
 			this.loopbackDiffTarget = loopbackDiffTarget;
 		}
 
@@ -809,13 +812,14 @@ public abstract class MartConstructorAction {
 		 * @return the leftJoin
 		 */
 		public boolean isLeftJoin() {
-			return leftJoin;
+			return this.leftJoin;
 		}
 
 		/**
-		 * @param leftJoin the leftJoin to set
+		 * @param leftJoin
+		 *            the leftJoin to set
 		 */
-		public void setLeftJoin(boolean leftJoin) {
+		public void setLeftJoin(final boolean leftJoin) {
 			this.leftJoin = leftJoin;
 		}
 	}
@@ -941,7 +945,7 @@ public abstract class MartConstructorAction {
 		private String table;
 
 		private String resultTable;
-		
+
 		private Collection keepCols;
 
 		/**
@@ -1011,14 +1015,14 @@ public abstract class MartConstructorAction {
 		 * @return the keepCols
 		 */
 		public Collection getKeepCols() {
-			return keepCols;
+			return this.keepCols;
 		}
 
 		/**
 		 * @param keepCols
 		 *            the keepCols to set
 		 */
-		public void setKeepCols(Collection keepCols) {
+		public void setKeepCols(final Collection keepCols) {
 			this.keepCols = keepCols;
 		}
 	}

@@ -29,19 +29,21 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
+import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
+import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.SkipTempReal;
+import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.ComponentStatus;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -68,12 +70,15 @@ public class ExplainContext extends SchemaContext {
 	 * 
 	 * @param martTab
 	 *            the mart tab that the dataset tab appears within.
+	 * @param dataset
+	 *            the dataset the table is in.
 	 * @param datasetTable
 	 *            the dataset table we are attached to.
 	 */
-	public ExplainContext(final MartTab martTab, final DataSetTable datasetTable) {
+	public ExplainContext(final MartTab martTab, final DataSet dataset,
+			final DataSetTable datasetTable) {
 		super(martTab);
-		this.dataset = (DataSet) datasetTable.getSchema();
+		this.dataset = dataset;
 		this.datasetTable = datasetTable;
 	}
 
@@ -96,6 +101,7 @@ public class ExplainContext extends SchemaContext {
 
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
+
 		if (object instanceof Relation)
 			this.customiseRelationAppearance(component, (Relation) object,
 					RealisedRelation.NO_ITERATION);
@@ -109,23 +115,23 @@ public class ExplainContext extends SchemaContext {
 		// This section customises table objects.
 		else if (object instanceof Table) {
 			// Fade out UNINCLUDED tables.
-			final boolean isFocus = this.datasetTable != null
-					&& (this.datasetTable.getFocusTable().equals(object)
-							|| this.datasetTable.getParent()==object);
 			final Set included = new HashSet(
 					this.datasetTable != null ? this.datasetTable
-							.getIncludedRelations() : this.dataset
-							.getIncludedRelations());
-			included.retainAll(((Table) object).getRelations());
-			if (included.isEmpty() && !isFocus)
+							.getIncludedTables() : this.dataset
+							.getIncludedTables());
+			if (!(object instanceof DataSetTable)
+					&& (((DiagramComponent) component).getDiagram() instanceof SkipTempReal || !included
+							.contains(object)))
 				component.setBackground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
 			else
 				component.setBackground(TableComponent.BACKGROUND_COLOUR);
 
-			((TableComponent) component).setRestricted(this.dataset
-					.getSchemaModifications().isRestrictedTable(
-							this.datasetTable, (Table) object));
+			((TableComponent) component)
+					.setRestricted((this.datasetTable == null ? ((Table) object)
+							.getRestrictTable(this.dataset)
+							: ((Table) object).getRestrictTable(this.dataset,
+									this.datasetTable.getName())) != null);
 		}
 
 		// This section customises the appearance of key objects within
@@ -141,6 +147,7 @@ public class ExplainContext extends SchemaContext {
 	}
 
 	public boolean isMasked(final Object object) {
+
 		if (object instanceof Relation) {
 			final Relation relation = (Relation) object;
 			// Fade out all UNINCLUDED and MASKED relations.
@@ -149,8 +156,10 @@ public class ExplainContext extends SchemaContext {
 					: this.datasetTable.getIncludedRelations().contains(
 							relation);
 			if (!included
-					|| this.dataset.getSchemaModifications().isMaskedRelation(
-							this.datasetTable, relation))
+					|| (this.datasetTable == null ? relation
+							.isMaskRelation(this.dataset) : relation
+							.isMaskRelation(this.dataset, this.datasetTable
+									.getName())))
 				return true;
 		}
 
@@ -187,35 +196,43 @@ public class ExplainContext extends SchemaContext {
 			final Relation relation, final int iteration) {
 
 		// Is it restricted?
-		((RelationComponent) component).setRestricted(this.dataset
-				.getSchemaModifications().isRestrictedRelation(
-						this.datasetTable, relation)
-				&& (iteration == RealisedRelation.NO_ITERATION || this.dataset
-						.getSchemaModifications().isRestrictedRelation(
-								this.datasetTable, relation, iteration)));
+		((RelationComponent) component)
+				.setRestricted((this.datasetTable == null ? relation
+						.isRestrictRelation(this.dataset) : relation
+						.isRestrictRelation(this.dataset, this.datasetTable
+								.getName()))
+						&& (iteration == RealisedRelation.NO_ITERATION || (this.datasetTable == null ? relation
+								.getRestrictRelation(this.dataset, iteration)
+								: relation.getRestrictRelation(this.dataset,
+										this.datasetTable.getName(), iteration)) != null));
 
 		// Is it compounded?
-		((RelationComponent) component).setCompounded(this.dataset
-				.getSchemaModifications().isCompoundRelation(this.datasetTable,
-						relation));
+		((RelationComponent) component)
+				.setCompounded((this.datasetTable == null ? relation
+						.getCompoundRelation(this.dataset) : relation
+						.getCompoundRelation(this.dataset, this.datasetTable
+								.getName())) != null);
 
 		// Is it loopback?
-		((RelationComponent) component).setLoopback(this.dataset
-				.getSchemaModifications().isLoopbackRelation(this.datasetTable,
-						relation));
+		((RelationComponent) component)
+				.setLoopback((this.datasetTable == null ? relation
+						.getLoopbackRelation(this.getDataSet()) : relation
+						.getLoopbackRelation(this.getDataSet(),
+								this.datasetTable.getName())) != null);
 
 		// Fade out all UNINCLUDED and MASKED relations.
-		final boolean included = this.datasetTable == null ? this.dataset
+		boolean included = this.datasetTable == null ? this.dataset
 				.getIncludedRelations().contains(relation) : this.datasetTable
 				.getIncludedRelations().contains(relation);
 		if (!included
-				|| this.dataset.getSchemaModifications().isMaskedRelation(
-						this.datasetTable, relation))
+				|| (this.datasetTable == null ? relation
+						.isMaskRelation(this.dataset) : relation
+						.isMaskRelation(this.dataset, this.datasetTable
+								.getName())))
 			component.setForeground(RelationComponent.MASKED_COLOUR);
 
 		// Highlight SUBCLASS relations.
-		else if (this.dataset.getSchemaModifications().isSubclassedRelation(
-				relation))
+		else if (relation.isSubclassRelation(this.dataset))
 			component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 		// All others are normal.
@@ -235,6 +252,7 @@ public class ExplainContext extends SchemaContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
+
 		if (object instanceof Relation)
 			this.populateRelationContextMenu(contextMenu, (Relation) object,
 					RealisedRelation.NO_ITERATION);
@@ -280,8 +298,10 @@ public class ExplainContext extends SchemaContext {
 			contextMenu.addSeparator();
 
 			// If it's a restricted table...
-			if (this.dataset.getSchemaModifications().isRestrictedTable(
-					this.datasetTable, table)) {
+			if ((this.datasetTable == null ? ((Table) object)
+					.getRestrictTable(this.dataset)
+					: ((Table) object).getRestrictTable(this.dataset,
+							this.datasetTable.getName())) != null) {
 
 				// Option to modify restriction.
 				final JMenuItem modify = new JMenuItem(Resources
@@ -336,8 +356,10 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(remove);
-			if (!this.dataset.getSchemaModifications().isRestrictedTable(
-					this.datasetTable, table))
+			if ((this.datasetTable == null ? ((Table) object)
+					.getRestrictTable(this.dataset)
+					: ((Table) object).getRestrictTable(this.dataset,
+							this.datasetTable.getName())) == null)
 				remove.setEnabled(false);
 		}
 	}
@@ -364,31 +386,38 @@ public class ExplainContext extends SchemaContext {
 		// Work out what state the relation is already in.
 		final boolean incorrect = relation.getStatus().equals(
 				ComponentStatus.INFERRED_INCORRECT);
-		final boolean relationMasked = this.dataset.getSchemaModifications()
-				.isMaskedRelation(this.datasetTable, relation);
+		final boolean relationMasked = this.datasetTable == null ? relation
+				.isMaskRelation(this.dataset) : relation.isMaskRelation(
+				this.dataset, this.datasetTable.getName());
 
-		final boolean relationRestricted = this.dataset
-				.getSchemaModifications().isRestrictedRelation(
-						this.datasetTable, relation)
-				&& (iteration == RealisedRelation.NO_ITERATION || this.dataset
-						.getSchemaModifications().isRestrictedRelation(
-								this.datasetTable, relation, iteration));
-		final boolean relationSubclassed = this.dataset
-				.getSchemaModifications().isSubclassedRelation(relation);
-		final boolean relationCompounded = this.dataset
-				.getSchemaModifications().isCompoundRelation(this.datasetTable,
-						relation);
-		final boolean relationDirectional = this.dataset
-				.getSchemaModifications().isDirectionalRelation(
-						this.datasetTable, relation);
-		final boolean relationForced = this.dataset.getSchemaModifications()
-				.isForceIncludeRelation(this.datasetTable, relation);
+		final boolean relationRestricted = (this.datasetTable == null ? relation
+				.isRestrictRelation(this.dataset)
+				: relation.isRestrictRelation(this.dataset, this.datasetTable
+						.getName()))
+				&& (iteration == RealisedRelation.NO_ITERATION || (this.datasetTable == null ? relation
+						.getRestrictRelation(this.dataset, iteration)
+						: relation.getRestrictRelation(this.dataset,
+								this.datasetTable.getName(), iteration)) != null);
+		final boolean relationSubclassed = relation
+				.isSubclassRelation(this.dataset);
+		final boolean relationCompounded = (this.datasetTable == null ? relation
+				.getCompoundRelation(this.dataset)
+				: relation.getCompoundRelation(this.dataset, this.datasetTable
+						.getName())) != null;
+		final boolean relationDirectional = (this.datasetTable == null ? relation
+				.getDirectionalRelation(this.dataset)
+				: relation.getDirectionalRelation(this.dataset,
+						this.datasetTable.getName())) != null;
+		final boolean relationForced = this.datasetTable == null ? relation
+				.isForceRelation(this.dataset) : relation.isForceRelation(
+				this.dataset, this.datasetTable.getName());
 		final boolean relationIncluded = this.datasetTable == null ? this.dataset
 				.getIncludedRelations().contains(relation)
 				: this.datasetTable.getIncludedRelations().contains(relation);
-		final boolean relationLoopbacked = this.dataset
-				.getSchemaModifications().isLoopbackRelation(this.datasetTable,
-						relation);
+		final boolean relationLoopbacked = (this.datasetTable == null ? relation
+				.getLoopbackRelation(this.dataset)
+				: relation.getLoopbackRelation(this.dataset, this.datasetTable
+						.getName())) != null;
 
 		// The mask/unmask option allows the user to mask/unmask a relation.
 		final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
@@ -429,8 +458,7 @@ public class ExplainContext extends SchemaContext {
 		if (incorrect || relationMasked || !relation.isOneToMany()
 				&& !relationLoopbacked)
 			loopback.setEnabled(false);
-		if (relationLoopbacked)
-			loopback.setSelected(true);
+		loopback.setSelected(relationLoopbacked);
 
 		// The force option allows the user to forcibly include a relation
 		// that would otherwise remain unincluded.
@@ -467,9 +495,13 @@ public class ExplainContext extends SchemaContext {
 				ExplainContext.this.getMartTab().getDataSetTabSet()
 						.requestCompoundRelation(ExplainContext.this.dataset,
 								ExplainContext.this.datasetTable, relation);
-				compound.setSelected(ExplainContext.this.dataset
-						.getSchemaModifications().isCompoundRelation(
-								ExplainContext.this.datasetTable, relation));
+				compound
+						.setSelected((ExplainContext.this.datasetTable == null ? relation
+								.getCompoundRelation(ExplainContext.this.dataset)
+								: relation.getCompoundRelation(
+										ExplainContext.this.dataset,
+										ExplainContext.this.datasetTable
+												.getName())) != null);
 			}
 		});
 		contextMenu.add(compound);
@@ -489,9 +521,14 @@ public class ExplainContext extends SchemaContext {
 						.requestDirectionalRelation(
 								ExplainContext.this.dataset,
 								ExplainContext.this.datasetTable, relation);
-				directional.setSelected(ExplainContext.this.dataset
-						.getSchemaModifications().isDirectionalRelation(
-								ExplainContext.this.datasetTable, relation));
+				directional
+						.setSelected((ExplainContext.this.datasetTable == null ? relation
+								.getDirectionalRelation(ExplainContext.this
+										.getDataSet())
+								: relation.getDirectionalRelation(
+										ExplainContext.this.getDataSet(),
+										ExplainContext.this.datasetTable
+												.getName())) != null);
 			}
 		});
 		contextMenu.add(directional);

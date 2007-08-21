@@ -26,6 +26,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 
 import javax.swing.ImageIcon;
@@ -34,11 +36,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.diagrams.Diagram;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -98,6 +100,23 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Calculate the components and add them to the list.
 		this.recalculateDiagramComponent();
+
+		// Repaint events.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				SchemaComponent.this.needsRepaint = true;
+			}
+		};
+		schema.addPropertyChangeListener("masked", repaintListener);
+
+		// Recalc events.
+		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				SchemaComponent.this.needsRecalc = true;
+			}
+		};
+		schema.addPropertyChangeListener("name", recalcListener);
+		schema.getRelations().addPropertyChangeListener(recalcListener);
 	}
 
 	private Schema getSchema() {
@@ -157,20 +176,6 @@ public class SchemaComponent extends BoxShapedComponent {
 		});
 		contextMenu.add(rename);
 
-		// Add an option to replicate this dataset.
-		final JMenuItem replicate = new JMenuItem(Resources
-				.get("replicateSchemaTitle"));
-		replicate.setMnemonic(Resources.get("replicateSchemaMnemonic")
-				.charAt(0));
-		replicate.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				SchemaComponent.this.getDiagram().getMartTab()
-						.getSchemaTabSet().requestReplicateSchema(
-								SchemaComponent.this.getSchema());
-			}
-		});
-		contextMenu.add(replicate);
-
 		// Option to remove the dataset from the mart.
 		final JMenuItem remove = new JMenuItem(Resources
 				.get("removeSchemaTitle"), new ImageIcon(Resources
@@ -207,9 +212,9 @@ public class SchemaComponent extends BoxShapedComponent {
 		return contextMenu;
 	}
 
-	public void recalculateDiagramComponent() {
-		// Remove all our components.
-		this.removeAll();
+	protected void doRecalculateDiagramComponent() {
+		// Clear subcomponents.
+		this.getSubComponents().clear();
 
 		// Add the label for the schema name,
 		final JTextField name = new JTextField();
@@ -220,9 +225,13 @@ public class SchemaComponent extends BoxShapedComponent {
 
 		// Now add any tables with external relations. Loop through the
 		// external keys to identify the tables to do this.
-		for (final Iterator i = this.getSchema().getExternalRelations()
-				.iterator(); i.hasNext();) {
+		for (final Iterator i = this.getSchema().getRelations().iterator(); i
+				.hasNext();) {
 			final Relation rel = (Relation) i.next();
+
+			if (!rel.isExternal())
+				continue;
+
 			final Key key = rel.getKeyForSchema(this.getSchema());
 			final Table table = key.getTable();
 

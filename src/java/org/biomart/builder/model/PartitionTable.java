@@ -32,10 +32,9 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.biomart.builder.exceptions.PartitionException;
-import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.Schema.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -50,7 +49,12 @@ import org.biomart.common.resources.Resources;
  *          rh4 $
  * @since 0.7
  */
-public interface PartitionTable {
+public abstract class PartitionTable {
+
+	// TODO Beanify
+	// TODO Change control
+	// TODO Listener on tables of parent dataset - rebuild if change in any way.
+	// TODO Transaction control.
 
 	/**
 	 * Use this constant to pass to methods which require a number of rows as a
@@ -71,11 +75,53 @@ public interface PartitionTable {
 	public static final String NO_DIMENSION = "";
 
 	/**
+	 * Internal use only, by anonymous subclass.
+	 */
+	protected Map columnMap = new TreeMap(); // Sorted by column name.
+
+	private int rowIterator = -1;
+
+	private PartitionRow currentRow = null;
+
+	private List rows = null;
+
+	/**
+	 * Internal use only, for subdivision tables only.
+	 */
+	protected final List subRows = new ArrayList();
+
+	/**
+	 * Internal use only, by anonymous subclass.
+	 */
+	protected List selectedCols = new ArrayList();
+
+	/**
+	 * Internal use only, by anonymous subclass.
+	 */
+	protected List groupCols = new ArrayList();
+
+	private PartitionTable subdivision = null;
+
+	private final Map dmApplications = new HashMap();
+
+	// Unique IDs for avoiding listener probs.
+	private static int ID_SERIES = 0;
+
+	private final int uniqueId = PartitionTable.ID_SERIES++;
+
+	/**
+	 * Create a new, empty, partition table.
+	 */
+	public PartitionTable() {
+		// TODO
+	}
+
+	/**
 	 * What is our name?
 	 * 
 	 * @return the name.
 	 */
-	public String getName();
+	public abstract String getName();
 
 	/**
 	 * Get ready to iterate over the rows in this table. After calling this, a
@@ -95,7 +141,32 @@ public interface PartitionTable {
 	 *             if anything went wrong.
 	 */
 	public void prepareRows(final String schemaPartition, final int limit)
-			throws PartitionException;
+			throws PartitionException {
+		Log.debug("Preparing rows");
+		this.currentRow = null;
+		this.rows = new ArrayList(this.getRows(schemaPartition));
+		// Iterate over rows, apply transforms, drop duplicates.
+		final Set seen = new HashSet();
+		for (final Iterator i = this.rows.iterator(); i.hasNext();) {
+			final PartitionRow row = (PartitionRow) i.next();
+			final StringBuffer buf = new StringBuffer();
+			for (final Iterator j = this.columnMap.values().iterator(); j
+					.hasNext();) {
+				final PartitionColumn pcol = (PartitionColumn) j.next();
+				buf.append(pcol.getValueForRow(row));
+				buf.append(',');
+			}
+			final String result = buf.toString();
+			if (!seen.contains(result))
+				seen.add(result);
+			else
+				i.remove();
+		}
+		Collections.sort(this.rows);
+		if (limit != PartitionTable.UNLIMITED_ROWS && this.rows.size() > limit)
+			this.rows = this.rows.subList(0, limit);
+		this.rowIterator = 0;
+	}
 
 	/**
 	 * Move to the next row, or the first row if not yet called. This will skip
@@ -107,7 +178,9 @@ public interface PartitionTable {
 	 * @throws PartitionException
 	 *             if anything went wrong.
 	 */
-	public boolean nextRow() throws PartitionException;
+	public boolean nextRow() throws PartitionException {
+		return this.getNextRow(false);
+	}
 
 	/**
 	 * Move to the next row, or the first row if not yet called. This will not
@@ -118,7 +191,9 @@ public interface PartitionTable {
 	 * @throws PartitionException
 	 *             if anything went wrong.
 	 */
-	public boolean nudgeRow() throws PartitionException;
+	public boolean nudgeRow() throws PartitionException {
+		return this.getNextRow(true);
+	}
 
 	/**
 	 * Return the current row. If {@link #nextRow()} has not been called since
@@ -129,7 +204,13 @@ public interface PartitionTable {
 	 * @throws PartitionException
 	 *             if anything went wrong, or there is no current row.
 	 */
-	public PartitionRow currentRow() throws PartitionException;
+	public PartitionRow currentRow() throws PartitionException {
+		// Exception if currentRow is null.
+		if (this.currentRow == null)
+			throw new PartitionException(Resources
+					.get("partitionCurrentBeforeNext"));
+		return this.currentRow;
+	}
 
 	/**
 	 * Obtain the named column definition.
@@ -141,14 +222,22 @@ public interface PartitionTable {
 	 *             if there is no such column.
 	 */
 	public PartitionColumn getSelectedColumn(final String name)
-			throws PartitionException;
+			throws PartitionException {
+		// Throw exception if it does not exist or is subdivided.
+		if (!this.columnMap.containsKey(name))
+			throw new PartitionException(Resources.get("partitionNoSuchColumn",
+					name));
+		return (PartitionColumn) this.columnMap.get(name);
+	}
 
 	/**
 	 * What columns do we have?
 	 * 
 	 * @return the column names.
 	 */
-	public Collection getAllColumnNames();
+	public Collection getAllColumnNames() {
+		return this.columnMap.keySet();
+	}
 
 	/**
 	 * What columns did the user select? (This may contain entries which are
@@ -157,7 +246,9 @@ public interface PartitionTable {
 	 * 
 	 * @return the ordered list of selected columns.
 	 */
-	public List getSelectedColumnNames();
+	public List getSelectedColumnNames() {
+		return this.selectedCols;
+	}
 
 	/**
 	 * What columns did the user select? (This may contain entries which are
@@ -170,7 +261,112 @@ public interface PartitionTable {
 	 *             if any of them are invalid.
 	 */
 	public void setSelectedColumnNames(final List selectedColumns)
-			throws PartitionException;
+			throws PartitionException {
+		// Preserve any existing regexes.
+		final Map regexStore = new HashMap(this.columnMap);
+
+		// Clear-out.
+		this.selectedCols.clear();
+		this.groupCols.clear();
+		this.columnMap.clear();
+
+		// Construct new table hierarchy.
+		String previous = "";
+		for (final Iterator i = selectedColumns.iterator(); i.hasNext();) {
+			final String col = (String) i.next();
+			if (col.equals(PartitionTable.DIV_COLUMN))
+				// Don't allow back-to-back divs.
+				if (previous.equals(col))
+					continue;
+				// Don't allow div-at-end.
+				else if (!i.hasNext())
+					continue;
+				// Don't allow div-at-start.
+				else if ("".equals(previous))
+					continue;
+			this.selectedCols.add(col);
+			previous = col;
+		}
+
+		// Column groupings into subdivisions.
+		final List currentGroupCols = new ArrayList();
+		int groupPos = 0;
+		while (groupPos < this.selectedCols.size()
+				&& !this.selectedCols.get(groupPos).equals(
+						PartitionTable.DIV_COLUMN))
+			currentGroupCols.add(this.selectedCols.get(groupPos++));
+		// Set up initial table.
+		for (final Iterator i = currentGroupCols.iterator(); i.hasNext();) {
+			final String col = (String) i.next();
+			this.groupCols.add(col);
+			final PartitionColumn pcol = new PartitionColumn(this, col);
+			final PartitionColumn regexStored = (PartitionColumn) regexStore
+					.get(pcol.getName());
+			if (regexStored != null) {
+				pcol.setRegexMatch(regexStored.getRegexMatch());
+				pcol.setRegexReplace(regexStored.getRegexReplace());
+			}
+			this.columnMap.put(col, pcol);
+		}
+		PartitionTable currentPT = this;
+		while (groupPos < this.selectedCols.size()) {
+			// Skip DIV itself.
+			if (groupPos < this.selectedCols.size())
+				groupPos++;
+			// Extend group cols to next DIV
+			final List newGroupCols = new ArrayList();
+			while (groupPos < this.selectedCols.size()
+					&& !this.selectedCols.get(groupPos).equals(
+							PartitionTable.DIV_COLUMN)) {
+				final String col = (String) this.selectedCols.get(groupPos++);
+				currentGroupCols.add(col);
+				newGroupCols.add(col);
+			}
+			// Create subdiv PT with extended group cols
+			final PartitionTable parent = this;
+			final PartitionTable subdiv = new PartitionTable() {
+				{
+					// Subdiv column map = pointer this column map.
+					this.columnMap = parent.columnMap;
+					// Subdiv selected cols = pointer this selected cols.
+					this.selectedCols = parent.selectedCols;
+					// Subdiv group cols = copy currentGroupCols
+					this.groupCols = new ArrayList(currentGroupCols);
+				}
+
+				protected List getRows(String schemaPartition)
+						throws PartitionException {
+					return this.subRows;
+				}
+
+				public Collection getAllColumnNames() {
+					return parent.getAllColumnNames();
+				}
+
+				public String getName() {
+					return parent.getName();
+				}
+
+			};
+			// Assign subdiv to current PT
+			currentPT.subdivision = subdiv;
+			// Create column objects for each new group col
+			for (final Iterator i = newGroupCols.iterator(); i.hasNext();) {
+				final String col = (String) i.next();
+				// Assign column objects to new subdiv
+				final PartitionColumn pcol = new PartitionColumn(subdiv, col);
+				final PartitionColumn regexStored = (PartitionColumn) regexStore
+						.get(pcol.getName());
+				if (regexStored != null) {
+					pcol.setRegexMatch(regexStored.getRegexMatch());
+					pcol.setRegexReplace(regexStored.getRegexReplace());
+				}
+				this.columnMap.put(col, pcol);
+			}
+			// Set current PT = new subdiv
+			currentPT = subdiv;
+		}
+	}
 
 	/**
 	 * Make a copy of ourselves in the target.
@@ -181,7 +377,20 @@ public interface PartitionTable {
 	 *             if it went wrong.
 	 */
 	public void replicate(final PartitionTable target)
-			throws PartitionException;
+			throws PartitionException {
+		target.setSelectedColumnNames(this.getSelectedColumnNames());
+		for (final Iterator i = this.getSelectedColumnNames().iterator(); i
+				.hasNext();) {
+			final String colName = (String) i.next();
+			final PartitionColumn ourPcol = this.getSelectedColumn(colName);
+			final PartitionColumn theirPcol = target.getSelectedColumn(colName);
+			theirPcol.setRegexMatch(ourPcol.getRegexMatch());
+			theirPcol.setRegexReplace(ourPcol.getRegexReplace());
+		}
+		// Note that we do NOT replicate applications. That would
+		// not make sense - cannot apply two partition tables to
+		// a single target!
+	}
 
 	/**
 	 * Apply this partition table to the given dimension using the given
@@ -193,9 +402,19 @@ public interface PartitionTable {
 	 *            the dimension.
 	 * @param appl
 	 *            the application definition (null for default).
+	 * @return the application definition.
 	 */
-	public void applyTo(final DataSet ds, final String dimension,
-			final PartitionTableApplication appl);
+	public PartitionTableApplication applyTo(final DataSet ds,
+			String dimension, PartitionTableApplication appl) {
+		if (dimension == null)
+			dimension = PartitionTable.NO_DIMENSION;
+		if (!this.dmApplications.containsKey(ds))
+			this.dmApplications.put(ds, new HashMap());
+		if (appl == null)
+			appl = PartitionTableApplication.createDefault(this, ds, dimension);
+		((Map) this.dmApplications.get(ds)).put(dimension, appl);
+		return appl;
+	}
 
 	/**
 	 * Gets the current definition of how this partition table is applied to the
@@ -208,7 +427,14 @@ public interface PartitionTable {
 	 * @return the definition.
 	 */
 	public PartitionTableApplication getApplication(final DataSet ds,
-			final String dimension);
+			String dimension) {
+		if (dimension == null)
+			dimension = PartitionTable.NO_DIMENSION;
+		if (!this.dmApplications.containsKey(ds))
+			return null;
+		return (PartitionTableApplication) ((Map) this.dmApplications.get(ds))
+				.get(dimension);
+	}
 
 	/**
 	 * Remove this partition table from a dimension.
@@ -218,7 +444,15 @@ public interface PartitionTable {
 	 * @param dimension
 	 *            the dimension.
 	 */
-	public void removeFrom(final DataSet ds, final String dimension);
+	public void removeFrom(final DataSet ds, String dimension) {
+		if (dimension == null)
+			dimension = PartitionTable.NO_DIMENSION;
+		if (!this.dmApplications.containsKey(ds))
+			return;
+		((Map) this.dmApplications.get(ds)).remove(dimension);
+		if (((Map) this.dmApplications.get(ds)).isEmpty())
+			this.dmApplications.remove(ds);
+	}
 
 	/**
 	 * Get a map of all instances where this is applied to a dimension (or if
@@ -227,329 +461,80 @@ public interface PartitionTable {
 	 * @return keys are datasets, values are nested maps where keys are
 	 *         dimension names and values are application definitions.
 	 */
-	public Map getAllApplications();
+	public Map getAllApplications() {
+		return this.dmApplications;
+	}
+
+	private boolean getNextRow(final boolean nudge) throws PartitionException {
+		// If row iterator is negative, throw exception.
+		if (this.rowIterator < 0)
+			throw new PartitionException(Resources
+					.get("partitionIterateBeforePopulate"));
+		// Exception if doesn't have a next, and set currentRow to
+		// null.
+		if (this.rowIterator >= this.rows.size())
+			return false;
+		// Update current row.
+		this.currentRow = (PartitionRow) this.rows.get(this.rowIterator++);
+		// Set up the sub-division tables.
+		if (this.subdivision != null) {
+			this.subdivision.subRows.clear();
+			this.subdivision.subRows.add(this.currentRow);
+			// Keep adding rows till find one not same.
+			boolean keepGoing = !nudge;
+			while (keepGoing && this.rowIterator < this.rows.size()) {
+				final PartitionRow subRow = (PartitionRow) this.rows
+						.get(this.rowIterator);
+				for (final Iterator i = this.groupCols.iterator(); i.hasNext()
+						&& keepGoing;) {
+					final String subColName = (String) i.next();
+					final PartitionColumn pcol = this
+							.getSelectedColumn(subColName);
+					final String parentValue = pcol
+							.getValueForRow(this.currentRow);
+					final String subValue = pcol.getValueForRow(subRow);
+					keepGoing &= parentValue.equals(subValue);
+				}
+				if (keepGoing) {
+					this.subdivision.subRows.add(subRow);
+					this.rowIterator++;
+				}
+			}
+		}
+		return true;
+	}
 
 	/**
-	 * An abstract implementation from which others will extend. Anonymous inner
-	 * classes extending this will probably provide SQL-based data rows, for
-	 * instance.
+	 * Implementing methods should use this to build a list of rows and return
+	 * it. Iteration will be handled by the parent. Duplicated rows, if any,
+	 * will be handled by the parent, as will any regexing or special row
+	 * manipulation.
+	 * 
+	 * @param schemaPartition
+	 *            the partition to get rows for, or <tt>null</tt> if not to
+	 *            bother.
+	 * @return the rows. Never <tt>null</tt> but may be empty.
+	 * @throws PartitionException
+	 *             if the rows couldn't be obtained.
 	 */
-	public static abstract class AbstractPartitionTable implements
-			PartitionTable {
+	protected abstract List getRows(final String schemaPartition)
+			throws PartitionException;
 
-		/**
-		 * Internal use only, by anonymous subclass.
-		 */
-		protected Map columnMap = new TreeMap(); // Sorted by column name.
-
-		private int rowIterator = -1;
-
-		private PartitionRow currentRow = null;
-
-		private List rows = null;
-
-		/**
-		 * Internal use only, for subdivision tables only.
-		 */
-		protected final List subRows = new ArrayList();
-
-		/**
-		 * Internal use only, by anonymous subclass.
-		 */
-		protected List selectedCols = new ArrayList();
-
-		/**
-		 * Internal use only, by anonymous subclass.
-		 */
-		protected List groupCols = new ArrayList();
-
-		private AbstractPartitionTable subdivision = null;
-
-		private final Map dmApplications = new HashMap();
-
-		public void applyTo(final DataSet ds, String dimension,
-				PartitionTableApplication appl) {
-			if (dimension == null)
-				dimension = PartitionTable.NO_DIMENSION;
-			if (!this.dmApplications.containsKey(ds))
-				this.dmApplications.put(ds, new HashMap());
-			if (appl == null)
-				appl = PartitionTableApplication.createDefault(this, ds,
-						dimension);
-			((Map) this.dmApplications.get(ds)).put(dimension, appl);
-		}
-
-		public PartitionTableApplication getApplication(final DataSet ds,
-				String dimension) {
-			if (dimension == null)
-				dimension = PartitionTable.NO_DIMENSION;
-			if (!this.dmApplications.containsKey(ds))
-				return null;
-			return (PartitionTableApplication) ((Map) this.dmApplications
-					.get(ds)).get(dimension);
-		}
-
-		public void removeFrom(final DataSet ds, String dimension) {
-			if (dimension == null)
-				dimension = PartitionTable.NO_DIMENSION;
-			if (!this.dmApplications.containsKey(ds))
-				return;
-			((Map) this.dmApplications.get(ds)).remove(dimension);
-			if (((Map) this.dmApplications.get(ds)).isEmpty())
-				this.dmApplications.remove(ds);
-		}
-
-		public Map getAllApplications() {
-			return this.dmApplications;
-		}
-
-		public PartitionRow currentRow() throws PartitionException {
-			// Exception if currentRow is null.
-			System.err.println(this.getName()+" current row is "+this.currentRow); //FIXME
-			if (this.currentRow == null)
-				throw new PartitionException(Resources
-						.get("partitionCurrentBeforeNext"));
-			return this.currentRow;
-		}
-
-		public void replicate(final PartitionTable target)
-				throws PartitionException {
-			target.setSelectedColumnNames(this.getSelectedColumnNames());
-			for (final Iterator i = this.getSelectedColumnNames().iterator(); i
-					.hasNext();) {
-				final String colName = (String) i.next();
-				final PartitionColumn ourPcol = this.getSelectedColumn(colName);
-				final PartitionColumn theirPcol = target
-						.getSelectedColumn(colName);
-				theirPcol.setRegexMatch(ourPcol.getRegexMatch());
-				theirPcol.setRegexReplace(ourPcol.getRegexReplace());
-			}
-			// Note that we do NOT replicate applications. That would
-			// not make sense - cannot apply two partition tables to
-			// a single target!
-		}
-
-		public PartitionColumn getSelectedColumn(final String name)
-				throws PartitionException {
-			// Throw exception if it does not exist or is subdivided.
-			if (!this.columnMap.containsKey(name))
-				throw new PartitionException(Resources.get(
-						"partitionNoSuchColumn", name));
-			return (PartitionColumn) this.columnMap.get(name);
-		}
-
-		public List getSelectedColumnNames() {
-			return this.selectedCols;
-		}
-
-		public void setSelectedColumnNames(final List selectedColumns)
-				throws PartitionException {
-			// Preserve any existing regexes.
-			final Map regexStore = new HashMap(this.columnMap);
-
-			// Clear-out.
-			this.selectedCols.clear();
-			this.groupCols.clear();
-			this.columnMap.clear();
-
-			// Construct new table hierarchy.
-			String previous = "";
-			for (final Iterator i = selectedColumns.iterator(); i.hasNext();) {
-				final String col = (String) i.next();
-				if (col.equals(PartitionTable.DIV_COLUMN))
-					// Don't allow back-to-back divs.
-					if (previous.equals(col))
-						continue;
-					// Don't allow div-at-end.
-					else if (!i.hasNext())
-						continue;
-					// Don't allow div-at-start.
-					else if ("".equals(previous))
-						continue;
-				this.selectedCols.add(col);
-				previous = col;
-			}
-
-			// Column groupings into subdivisions.
-			final List currentGroupCols = new ArrayList();
-			int groupPos = 0;
-			while (groupPos < this.selectedCols.size()
-					&& !this.selectedCols.get(groupPos).equals(
-							PartitionTable.DIV_COLUMN))
-				currentGroupCols.add(this.selectedCols.get(groupPos++));
-			// Set up initial table.
-			for (final Iterator i = currentGroupCols.iterator(); i.hasNext();) {
-				final String col = (String) i.next();
-				this.groupCols.add(col);
-				final PartitionColumn pcol = new PartitionColumn(this, col);
-				final PartitionColumn regexStored = (PartitionColumn) regexStore
-						.get(pcol.getName());
-				if (regexStored != null) {
-					pcol.setRegexMatch(regexStored.getRegexMatch());
-					pcol.setRegexReplace(regexStored.getRegexReplace());
-				}
-				this.columnMap.put(col, pcol);
-			}
-			AbstractPartitionTable currentPT = this;
-			while (groupPos < this.selectedCols.size()) {
-				// Skip DIV itself.
-				if (groupPos < this.selectedCols.size())
-					groupPos++;
-				// Extend group cols to next DIV
-				final List newGroupCols = new ArrayList();
-				while (groupPos < this.selectedCols.size()
-						&& !this.selectedCols.get(groupPos).equals(
-								PartitionTable.DIV_COLUMN)) {
-					final String col = (String) this.selectedCols
-							.get(groupPos++);
-					currentGroupCols.add(col);
-					newGroupCols.add(col);
-				}
-				// Create subdiv PT with extended group cols
-				final AbstractPartitionTable parent = this;
-				final AbstractPartitionTable subdiv = new AbstractPartitionTable() {
-					{
-						// Subdiv column map = pointer this column map.
-						this.columnMap = parent.columnMap;
-						// Subdiv selected cols = pointer this selected cols.
-						this.selectedCols = parent.selectedCols;
-						// Subdiv group cols = copy currentGroupCols
-						this.groupCols = new ArrayList(currentGroupCols);
-					}
-
-					protected List getRows(String schemaPartition)
-							throws PartitionException {
-						return this.subRows;
-					}
-
-					public Collection getAllColumnNames() {
-						return parent.getAllColumnNames();
-					}
-
-					public String getName() {
-						return parent.getName();
-					}
-
-				};
-				// Assign subdiv to current PT
-				currentPT.subdivision = subdiv;
-				// Create column objects for each new group col
-				for (final Iterator i = newGroupCols.iterator(); i.hasNext();) {
-					final String col = (String) i.next();
-					// Assign column objects to new subdiv
-					final PartitionColumn pcol = new PartitionColumn(subdiv,
-							col);
-					final PartitionColumn regexStored = (PartitionColumn) regexStore
-							.get(pcol.getName());
-					if (regexStored != null) {
-						pcol.setRegexMatch(regexStored.getRegexMatch());
-						pcol.setRegexReplace(regexStored.getRegexReplace());
-					}
-					this.columnMap.put(col, pcol);
-				}
-				// Set current PT = new subdiv
-				currentPT = subdiv;
-			}
-		}
-
-		public boolean nudgeRow() throws PartitionException {
-			return this.getNextRow(true);
-		}
-
-		public boolean nextRow() throws PartitionException {
-			System.err.println(this.getName()+" next row"); //FIXME
-			return this.getNextRow(false);
-		}
-
-		private boolean getNextRow(final boolean nudge)
-				throws PartitionException {
-			// If row iterator is negative, throw exception.
-			if (this.rowIterator < 0)
-				throw new PartitionException(Resources
-						.get("partitionIterateBeforePopulate"));
-			// Exception if doesn't have a next, and set currentRow to
-			// null.
-			if (this.rowIterator >= this.rows.size())
-				return false;
-			// Update current row.
-			this.currentRow = (PartitionRow) this.rows.get(this.rowIterator++);
-			// Set up the sub-division tables.
-			if (this.subdivision != null) {
-				this.subdivision.subRows.clear();
-				this.subdivision.subRows.add(this.currentRow);
-				// Keep adding rows till find one not same.
-				boolean keepGoing = !nudge;
-				while (keepGoing && this.rowIterator < this.rows.size()) {
-					final PartitionRow subRow = (PartitionRow) this.rows
-							.get(this.rowIterator);
-					for (final Iterator i = this.groupCols.iterator(); i
-							.hasNext()
-							&& keepGoing;) {
-						final String subColName = (String) i.next();
-						final PartitionColumn pcol = this
-								.getSelectedColumn(subColName);
-						final String parentValue = pcol
-								.getValueForRow(this.currentRow);
-						final String subValue = pcol.getValueForRow(subRow);
-						keepGoing &= parentValue.equals(subValue);
-					}
-					if (keepGoing) {
-						this.subdivision.subRows.add(subRow);
-						this.rowIterator++;
-					}
-				}
-			}
+	public boolean equals(final Object obj) {
+		if (obj == this)
 			return true;
-		}
+		else if (obj == null)
+			return false;
+		else if (obj instanceof PartitionTable) {
+			final PartitionTable pt = (PartitionTable) obj;
+			return (this.uniqueId + "_" + this.getName()).equals(pt.uniqueId
+					+ "_" + pt.getName());
+		} else
+			return false;
+	}
 
-		public void prepareRows(final String schemaPartition, final int limit)
-				throws PartitionException {
-			Log.debug("Preparing rows");
-			this.currentRow = null;
-			this.rows = new ArrayList(this.getRows(schemaPartition));
-			// Iterate over rows, apply transforms, drop duplicates.
-			final Set seen = new HashSet();
-			for (final Iterator i = this.rows.iterator(); i.hasNext();) {
-				final PartitionRow row = (PartitionRow) i.next();
-				final StringBuffer buf = new StringBuffer();
-				for (final Iterator j = this.columnMap.values().iterator(); j
-						.hasNext();) {
-					final PartitionColumn pcol = (PartitionColumn) j.next();
-					buf.append(pcol.getValueForRow(row));
-					buf.append(',');
-				}
-				final String result = buf.toString();
-				if (!seen.contains(result))
-					seen.add(result);
-				else
-					i.remove();
-			}
-			Collections.sort(this.rows);
-			if (limit != PartitionTable.UNLIMITED_ROWS
-					&& this.rows.size() > limit)
-				this.rows = this.rows.subList(0, limit);
-			this.rowIterator = 0;
-		}
-
-		/**
-		 * Implementing methods should use this to build a list of rows and
-		 * return it. Iteration will be handled by the parent. Duplicated rows,
-		 * if any, will be handled by the parent, as will any regexing or
-		 * special row manipulation.
-		 * 
-		 * @param schemaPartition
-		 *            the partition to get rows for, or <tt>null</tt> if not
-		 *            to bother.
-		 * @return the rows. Never <tt>null</tt> but may be empty.
-		 * @throws PartitionException
-		 *             if the rows couldn't be obtained.
-		 */
-		protected abstract List getRows(final String schemaPartition)
-				throws PartitionException;
-
-		public String toString() {
-			return this.getName();
-		}
+	public String toString() {
+		return this.getName();
 	}
 
 	/**
@@ -670,7 +655,7 @@ public interface PartitionTable {
 			 * has one row, with no columns.
 			 */
 			public FakeColumn() {
-				super(new AbstractPartitionTable() {
+				super(new PartitionTable() {
 					public String getName() {
 						return "__FAKE__TABLE__";
 					}
@@ -890,12 +875,10 @@ public interface PartitionTable {
 					pt);
 			final String ptCol = (String) pt.getSelectedColumnNames()
 					.iterator().next();
-			pa
-					.setPartitionAppliedRows(Collections
-							.singletonList(new PartitionAppliedRow(ptCol,
-									((DataSetColumn) ds.getMainTable()
-											.getColumns().iterator().next())
-											.getName(), ptCol, null)));
+			pa.setPartitionAppliedRows(Collections
+					.singletonList(new PartitionAppliedRow(ptCol, (String) ds
+							.getMainTable().getColumns().keySet().iterator()
+							.next(), ptCol, null)));
 			return pa;
 		}
 
@@ -919,9 +902,9 @@ public interface PartitionTable {
 					.iterator().next();
 			pa.setPartitionAppliedRows(Collections
 					.singletonList(new PartitionAppliedRow(ptCol,
-							((DataSetColumn) ds.getTableByName(dimension)
-									.getColumns().iterator().next()).getName(),
-							ptCol, null)));
+							(String) ((DataSetTable) ds.getTables().get(
+									dimension)).getColumns().keySet()
+									.iterator().next(), ptCol, null)));
 			return pa;
 		}
 
@@ -1004,7 +987,7 @@ public interface PartitionTable {
 			 * @return the relation
 			 */
 			public Relation getRelation() {
-				return relation;
+				return this.relation;
 			}
 		}
 	}

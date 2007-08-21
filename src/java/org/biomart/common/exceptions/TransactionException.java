@@ -16,52 +16,60 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.runner.exceptions;
+package org.biomart.common.exceptions;
 
 /**
- * This refers to exceptions where something has failed during communication
- * between a MartBuilder server and client.
+ * This is a basic {@link Exception} for all exceptions where something does not
+ * fit into the expected data model.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
  *          rh4 $
- * @since 0.6
+ * @since 0.5
  */
-public class ProtocolException extends MartRunnerException {
+public class TransactionException extends BioMartException {
 	private static final long serialVersionUID = 1;
 
 	/**
-	 * Constructs an instance of <tt>ProtocolException</tt> with the specified
-	 * detail message.
+	 * Creates a new instance of <tt>TransactionException</tt> without detail
+	 * message.
+	 */
+	public TransactionException() {
+		super();
+	}
+
+	/**
+	 * Constructs an instance of <tt>TransactionException</tt> with the
+	 * specified detail message.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 */
-	public ProtocolException(final String msg) {
+	public TransactionException(final String msg) {
 		super(msg);
 	}
 
 	/**
-	 * Constructs an instance of <tt>ProtocolException</tt> with the specified
-	 * detail message and initial cause.
+	 * Constructs an instance of <tt>TransactionException</tt> with the
+	 * specified detail message and cause.
 	 * 
 	 * @param msg
 	 *            the detail message.
 	 * @param t
-	 *            the initial cause.
+	 *            the underlying cause.
 	 */
-	public ProtocolException(final String msg, final Throwable t) {
+	public TransactionException(final String msg, final Throwable t) {
 		super(msg, t);
 	}
 
 	/**
-	 * Constructs an instance of <tt>ProtocolException</tt> with the specified
-	 * initial cause.
+	 * Constructs an instance of <tt>TransactionException</tt> with the
+	 * specified cause.
 	 * 
 	 * @param t
-	 *            the initial cause.
+	 *            the underlying cause.
 	 */
-	public ProtocolException(final Throwable t) {
+	public TransactionException(final Throwable t) {
 		super(t);
 	}
 }

@@ -28,11 +28,6 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -44,7 +39,7 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.5
  */
-public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
+public class ExplainDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	/**
@@ -58,11 +53,7 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 	 */
 	public static void showDataSetExplanation(final MartTab martTab,
 			final DataSet dataset) {
-		final ExplainDataSetDialog dialog = new ExplainDataSetDialog(martTab,
-				dataset);
-		martTab.getDataSetTabSet().setCurrentExplanationDialog(dialog);
-		dialog.setVisible(true);
-		martTab.getDataSetTabSet().clearCurrentExplanationDialog();
+		new ExplainDataSetDialog(martTab, dataset).setVisible(true);
 	}
 
 	private SchemaTabSet schemaTabSet;
@@ -83,6 +74,10 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 		// Make a content pane.
 		final JPanel content = new JPanel(new BorderLayout());
+
+		// Attach the appropriate context to the tabset.
+		this.schemaTabSet.setDiagramContext(new ExplainContext(this.martTab,
+				this.dataset));
 
 		// The content pane is the schema tab set with an explain context.
 		content.add(this.schemaTabSet, BorderLayout.CENTER);
@@ -106,84 +101,5 @@ public class ExplainDataSetDialog extends JDialog implements ExplainDialog {
 
 		// Move ourselves.
 		this.setLocationRelativeTo(null);
-
-		// Calculate the schema tabset.
-		this.recalculateDialog(null);
-	}
-
-	public void recalculateDialog(final Object changedObject) {
-		if (this.schemaTabSet != null) {
-			// Update explain context.
-			final ExplainContext context = new ExplainContext(this.martTab,
-					this.dataset);
-			this.schemaTabSet.setDiagramContext(context);
-			if (changedObject != null)
-				if (changedObject instanceof Schema)
-					this.schemaTabSet
-							.recalculateSchemaDiagram((Schema) changedObject);
-				else if (changedObject instanceof Table)
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Table) changedObject)
-									.getSchema());
-				else if (changedObject instanceof Key)
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Key) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Column)
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Column) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Relation) {
-					this.schemaTabSet
-							.recalculateSchemaDiagram(((Relation) changedObject)
-									.getFirstKey().getTable().getSchema());
-					if (!((Relation) changedObject).getFirstKey().getTable()
-							.getSchema().equals(
-									((Relation) changedObject).getSecondKey()
-											.getTable().getSchema()))
-						this.schemaTabSet
-								.recalculateSchemaDiagram(((Relation) changedObject)
-										.getSecondKey().getTable().getSchema());
-				}
-			this.schemaTabSet.recalculateOverviewDiagram();
-		}
-	}
-
-	public void repaintDialog(final Object changedObject) {
-		if (this.schemaTabSet != null) {
-			// Update explain context.
-			final ExplainContext context = new ExplainContext(this.martTab,
-					this.dataset);
-			this.schemaTabSet.setDiagramContext(context);
-			if (changedObject != null)
-				if (changedObject instanceof Schema)
-					this.schemaTabSet
-							.repaintSchemaDiagram((Schema) changedObject);
-				else if (changedObject instanceof Table)
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Table) changedObject)
-									.getSchema());
-				else if (changedObject instanceof Key)
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Key) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Column)
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Column) changedObject)
-									.getTable().getSchema());
-				else if (changedObject instanceof Relation) {
-					this.schemaTabSet
-							.repaintSchemaDiagram(((Relation) changedObject)
-									.getFirstKey().getTable().getSchema());
-					if (!((Relation) changedObject).getFirstKey().getTable()
-							.getSchema().equals(
-									((Relation) changedObject).getSecondKey()
-											.getTable().getSchema()))
-						this.schemaTabSet
-								.repaintSchemaDiagram(((Relation) changedObject)
-										.getSecondKey().getTable().getSchema());
-				}
-			this.schemaTabSet.repaintOverviewDiagram();
-		}
 	}
 }

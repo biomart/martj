@@ -19,18 +19,20 @@
 package org.biomart.builder.view.gui.diagrams;
 
 import java.awt.LayoutManager;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
 
 /**
  * Displays the contents of a schema within a diagram object. It adds a series
@@ -67,6 +69,19 @@ public class SchemaDiagram extends Diagram {
 		// Remember the schema, then lay it out.
 		this.schema = schema;
 		this.recalculateDiagram();
+
+		// Listener to know when to recalculate entire diagram,
+		// based on tables in schema, and keys+relations on those
+		// tables (presence/absence only).
+		// If any change, whole diagram needs redoing from scratch,
+		// and new listeners need setting up.
+		final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				SchemaDiagram.this.needsRedraw = true;
+			}
+		};
+		schema.getTables().addPropertyChangeListener(listener);
+		schema.getRelations().addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -84,31 +99,27 @@ public class SchemaDiagram extends Diagram {
 	}
 
 	public void doRecalculateDiagram() {
-		// First of all, remove all our existing components.
-		this.removeAll();
-
+		// FIXME Recycle components.
 		// Add a TableComponent for each table in the schema.
 		final Set usedRels = new HashSet();
-		for (final Iterator i = this.getSchema().getTables().iterator(); i
-				.hasNext();) {
+		for (final Iterator i = this.getSchema().getTables().values()
+				.iterator(); i.hasNext();) {
 			final Table t = (Table) i.next();
-			final Collection tRels = t.getInternalRelations();
-			this.add(new TableComponent(t, this), new SchemaLayoutConstraint(
-					tRels.size()), Diagram.TABLE_LAYER);
+			final Collection tRels = new HashSet();
 			int indent = 0;
-			for (final Iterator j = tRels.iterator(); j.hasNext();) {
+			for (final Iterator j = t.getRelations().iterator(); j.hasNext();) {
 				final Relation rel = (Relation) j.next();
-				if (!usedRels.contains(rel)) {
+				if (!rel.isExternal() && !usedRels.contains(rel)) {
+					tRels.add(rel);
 					this.add(new RelationComponent(rel, this),
 							new SchemaLayoutConstraint(indent++),
 							Diagram.RELATION_LAYER);
 					usedRels.add(rel);
 				}
 			}
+			this.add(new TableComponent(t, this), new SchemaLayoutConstraint(
+					tRels.size()), Diagram.TABLE_LAYER);
 		}
-
-		// Resize the diagram to fit our new components.
-		this.resizeDiagram();
 	}
 
 	/**

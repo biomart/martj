@@ -86,7 +86,7 @@ public class Settings {
 			"properties");
 
 	private static final Object SAVE_LOCK = new String("__SAVE__LOCK");
-	
+
 	private static final String manifestName = "__MANIFEST.txt";
 
 	// Create the bits we need on start-up.
@@ -195,7 +195,8 @@ public class Settings {
 								.get("settingsCacheHeader"));
 					}
 					// Write manifest speciying order of keys.
-					final File manifest = new File(classDir, Settings.manifestName);
+					final File manifest = new File(classDir,
+							Settings.manifestName);
 					final FileOutputStream fos = new FileOutputStream(manifest);
 					final ObjectOutputStream oos = new ObjectOutputStream(fos);
 					oos.writeObject(manifestList);
@@ -222,8 +223,8 @@ public class Settings {
 	public static List getHistoryNamesForClass(final Class clazz) {
 		final Map map = (Map) Settings.classCache.get(clazz);
 		// Use copy of map keys in order to prevent concurrent modifications.
-		return map == null ? Collections.EMPTY_LIST
-				: new ArrayList(map.keySet());
+		return map == null ? Collections.EMPTY_LIST : new ArrayList(map
+				.keySet());
 	}
 
 	/**
@@ -303,25 +304,27 @@ public class Settings {
 					// Write manifest speciying reverse order of keys.
 					List manifestList;
 					try {
-						final File manifest = new File(classDir, Settings.manifestName);
-						final FileInputStream fis = new FileInputStream(manifest);
+						final File manifest = new File(classDir,
+								Settings.manifestName);
+						final FileInputStream fis = new FileInputStream(
+								manifest);
 						final ObjectInputStream ois = new ObjectInputStream(fis);
-						manifestList = (List)ois.readObject();
+						manifestList = (List) ois.readObject();
 						fis.close();
 					} catch (final Exception e) {
 						// No manifest? Use natural order instead.
 						manifestList = Arrays.asList(classDir.list());
 					}
 					// Load files in order specified in manifest.
-					for (final Iterator j = manifestList.iterator(); j.hasNext(); ) {
-						final String entry = (String)j.next();
+					for (final Iterator j = manifestList.iterator(); j
+							.hasNext();) {
+						final String entry = (String) j.next();
 						final Properties props = new Properties();
 						final File propsFile = new File(classDir, entry);
 						Log.debug("Loading properties from "
 								+ propsFile.getPath());
 						props.load(new FileInputStream(propsFile));
-						Settings
-								.saveHistoryProperties(clazz, entry, props);
+						Settings.saveHistoryProperties(clazz, entry, props);
 					}
 				} catch (final ClassNotFoundException e) {
 					// Ignore. We don't care as these settings are

@@ -362,17 +362,15 @@ public class JobThreadManager extends Thread {
 						hasUsableActions = true;
 						// Check that no sibling sections have actions that are
 						// running or failed.
-						final JobPlanSection parent = (JobPlanSection) section
-								.getParent();
+						final JobPlanSection parent = section.getParent();
 						final List siblings = new ArrayList();
-						if (parent != null) {
+						if (parent != null)
 							if (parent.getStatus().equals(JobStatus.FAILED)
 									|| parent.getStatus().equals(
 											JobStatus.RUNNING))
 								hasUnusableSiblings = true;
 							else
 								siblings.addAll(parent.getSubSections());
-						}
 						// If any sibling claimed by another section, or
 						// any sibling failed, then this section is
 						// not usable.

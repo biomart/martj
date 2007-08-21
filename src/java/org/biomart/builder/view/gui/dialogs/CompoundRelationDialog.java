@@ -38,7 +38,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.biomart.builder.model.SchemaModificationSet.CompoundRelationDefinition;
+import org.biomart.builder.model.Relation.CompoundRelationDefinition;
 import org.biomart.common.resources.Resources;
 
 /**

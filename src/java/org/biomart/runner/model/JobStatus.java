@@ -26,8 +26,8 @@ import java.util.Map;
  * Handles job/section/action statuses.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class JobStatus implements Serializable, Comparable {
@@ -101,14 +101,16 @@ public class JobStatus implements Serializable, Comparable {
 		final JobStatus otherStatus = (JobStatus) other;
 		return this.rank - otherStatus.rank;
 	}
-	
+
 	/**
 	 * Is this status more important than the one specified?
-	 * @param other the one to check against.
+	 * 
+	 * @param other
+	 *            the one to check against.
 	 * @return <tt>true</tt> if this status beats the one passed in.
 	 */
 	public boolean isMoreImportantThan(final JobStatus other) {
-		return this.compareTo(other)<=0;
+		return this.compareTo(other) <= 0;
 	}
 
 	public String toString() {

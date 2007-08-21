@@ -384,6 +384,9 @@ public class DataSetLayoutManager implements LayoutManager2 {
 					continue;
 				if (secondKey == null || !secondKey.isVisible())
 					continue;
+				// Update key locations.
+				// firstKey.revalidate();
+				// secondKey.revalidate();
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				final int firstKeyInsetX = firstKeyRectangle.x;
 				Rectangle secondKeyRectangle = secondKey.getBounds();

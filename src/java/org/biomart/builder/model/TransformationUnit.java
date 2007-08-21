@@ -18,6 +18,7 @@
 package org.biomart.builder.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -29,15 +30,11 @@ import java.util.TreeSet;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
-import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.InverseMap;
 
@@ -275,14 +272,16 @@ public abstract class TransformationUnit {
 			DataSetColumn candidate = (DataSetColumn) this
 					.getNewColumnNameMap().get(name);
 			if (candidate == null && this.getPreviousUnit() != null) {
-				final Key ourKey = this.schemaRelation.getFirstKey()
-						.getColumns().contains(column) ? this.schemaRelation
-						.getFirstKey() : this.schemaRelation.getSecondKey();
+				final Key ourKey = Arrays.asList(
+						this.schemaRelation.getFirstKey().getColumns())
+						.contains(column) ? this.schemaRelation.getFirstKey()
+						: this.schemaRelation.getSecondKey();
 				final Key parentKey = this.schemaRelation.getOtherKey(ourKey);
-				final int pos = ourKey.getColumns().indexOf(column);
+				final int pos = Arrays.asList(ourKey.getColumns()).indexOf(
+						column);
 				if (pos >= 0)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
-							(Column) parentKey.getColumns().get(pos));
+							parentKey.getColumns()[pos]);
 				if (candidate == null)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
 							column);

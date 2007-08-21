@@ -36,7 +36,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.biomart.common.model.Column;
+import org.biomart.builder.model.Column;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -44,8 +44,8 @@ import org.biomart.common.resources.Resources;
  * both directions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class LoopbackRelationDialog extends JDialog {
@@ -66,7 +66,7 @@ public class LoopbackRelationDialog extends JDialog {
 	 *            the columns the user can choose from.
 	 */
 	public LoopbackRelationDialog(final boolean isLoopback,
-			Column loopbackDiffColumn, final Collection columnOptions) {
+			final Column loopbackDiffColumn, final Collection columnOptions) {
 		// Create the base dialog.
 		super();
 		this.setTitle(Resources.get("loopbackRelationDialogTitle"));
@@ -100,7 +100,7 @@ public class LoopbackRelationDialog extends JDialog {
 		this.column = new JComboBox();
 		this.column.addItem(Resources.get("loopbackRelationNoDiff"));
 		for (final Iterator i = columnOptions.iterator(); i.hasNext();)
-			this.column.addItem((Column) i.next());
+			this.column.addItem(i.next());
 		this.column.setEnabled(isLoopback);
 		this.column.setSelectedItem(colSelect);
 
@@ -128,9 +128,10 @@ public class LoopbackRelationDialog extends JDialog {
 		// Intercept the checkbox.
 		this.loopback.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				LoopbackRelationDialog.this.column.setEnabled(loopback
-						.isSelected());
-				if (!loopback.isSelected())
+				LoopbackRelationDialog.this.column
+						.setEnabled(LoopbackRelationDialog.this.loopback
+								.isSelected());
+				if (!LoopbackRelationDialog.this.loopback.isSelected())
 					LoopbackRelationDialog.this.column.setSelectedItem(null);
 			}
 		});

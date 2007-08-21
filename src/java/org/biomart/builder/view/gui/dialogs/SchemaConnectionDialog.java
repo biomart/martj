@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.view.gui.dialogs;
+package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -30,19 +30,20 @@ import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.biomart.common.controller.CommonUtils;
+import org.biomart.builder.model.Mart;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Schema.JDBCSchema;
+import org.biomart.builder.view.gui.panels.SchemaConnectionPanel;
+import org.biomart.builder.view.gui.panels.SchemaConnectionPanel.JDBCSchemaConnectionPanel;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
-import org.biomart.common.view.gui.panels.SchemaConnectionPanel;
-import org.biomart.common.view.gui.panels.SchemaConnectionPanel.JDBCSchemaConnectionPanel;
+import org.biomart.common.view.gui.dialogs.StackTrace;
+import org.biomart.common.view.gui.dialogs.TransactionalDialog;
 
 /**
  * This dialog box allows the user to define or modify a schema, by giving it a
@@ -56,17 +57,20 @@ import org.biomart.common.view.gui.panels.SchemaConnectionPanel.JDBCSchemaConnec
  *          $Author$
  * @since 0.5
  */
-public class SchemaConnectionDialog extends JDialog {
+public class SchemaConnectionDialog extends TransactionalDialog {
 	private static final long serialVersionUID = 1;
 
 	/**
 	 * Pop up a dialog asking the user for details for a new schema, then create
 	 * and return that schema.
 	 * 
+	 * @param mart
+	 *            the mart to create the schema in.
+	 * 
 	 * @return the newly created schema, or null if it was cancelled.
 	 */
-	public static Schema createSchema() {
-		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(
+	public static Schema createSchema(final Mart mart) {
+		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(mart,
 				Resources.get("newSchemaDialogTitle"), Resources
 						.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
@@ -84,9 +88,9 @@ public class SchemaConnectionDialog extends JDialog {
 	 *         if not.
 	 */
 	public static boolean modifySchema(final Schema schema) {
-		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(
-				Resources.get("modifySchemaDialogTitle"), Resources
-						.get("modifyButton"), schema);
+		final SchemaConnectionDialog dialog = new SchemaConnectionDialog(schema
+				.getMart(), Resources.get("modifySchemaDialogTitle"), Resources
+				.get("modifyButton"), schema);
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		if (dialog.schema != null && dialog.schema instanceof JDBCSchema)
@@ -110,7 +114,7 @@ public class SchemaConnectionDialog extends JDialog {
 
 	private JComboBox type;
 
-	private SchemaConnectionDialog(final String title,
+	private SchemaConnectionDialog(final Mart mart, final String title,
 			final String executeButtonText, final Schema template) {
 		// Create the basic dialog centred on the main mart builder window.
 		super();
@@ -156,7 +160,8 @@ public class SchemaConnectionDialog extends JDialog {
 						Resources.get("jdbcSchema")))
 					if (!(SchemaConnectionDialog.this.connectionPanel instanceof JDBCSchemaConnectionPanel)) {
 						connectionPanelHolder.removeAll();
-						SchemaConnectionDialog.this.connectionPanel = new JDBCSchemaConnectionPanel();
+						SchemaConnectionDialog.this.connectionPanel = new JDBCSchemaConnectionPanel(
+								mart);
 						connectionPanelHolder
 								.add(SchemaConnectionDialog.this.connectionPanel);
 						SchemaConnectionDialog.this.pack();
@@ -258,9 +263,11 @@ public class SchemaConnectionDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				SchemaConnectionDialog.this.schema = SchemaConnectionDialog.this
 						.createSchemaFromSettings();
-				SchemaConnectionDialog.this.schema.storeInHistory();
-				if (SchemaConnectionDialog.this.schema != null)
-					SchemaConnectionDialog.this.setVisible(false);
+				if (SchemaConnectionDialog.this.schema != null) {
+					SchemaConnectionDialog.this.schema.storeInHistory();
+					if (SchemaConnectionDialog.this.schema != null)
+						SchemaConnectionDialog.this.setVisible(false);
+				}
 			}
 		});
 
@@ -283,7 +290,7 @@ public class SchemaConnectionDialog extends JDialog {
 
 		try {
 			// Attempt to pass the test.
-			passedTest = CommonUtils.testSchema(schema);
+			passedTest = schema.test();
 		} catch (final Throwable t) {
 			// If we get an exception, we failed the test, and should
 			// tell the user why.

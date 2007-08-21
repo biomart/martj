@@ -33,17 +33,22 @@ import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ListenerException;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.MartConstructorAction;
 import org.biomart.builder.model.PartitionTable;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
+import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
@@ -59,19 +64,13 @@ import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
 import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
-import org.biomart.builder.model.SchemaModificationSet.RestrictedRelationDefinition;
-import org.biomart.builder.model.SchemaModificationSet.RestrictedTableDefinition;
+import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.model.Table.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.model.TransformationUnit.SkipTable;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
-import org.biomart.common.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -254,7 +253,7 @@ public interface MartConstructor {
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 			final PartitionTableApplication dsPta = dataset.getMart()
-					.getPartitionTableForDataSet(dataset);
+					.getPartitionTableApplicationForDataSet(dataset);
 
 			// Is it partitioned?
 			Collection schemaPartitions = templateSchema.getPartitions()
@@ -264,8 +263,7 @@ public interface MartConstructor {
 				schemaPartitions = new ArrayList();
 				schemaPartitions.add(new Map.Entry() {
 					public Object getKey() {
-						return ((JDBCSchema) templateSchema)
-								.getDatabaseSchema();
+						return templateSchema.getDataLinkSchema();
 					}
 
 					public Object getValue() {
@@ -305,12 +303,11 @@ public interface MartConstructor {
 				// Loop over dataset partitions.
 				boolean fakeDSPartition = dsPta == null;
 				if (!fakeDSPartition)
-					dsPta.getPartitionTable()
-							.prepareRows((String) schemaPartition.getKey(),
-									PartitionTable.UNLIMITED_ROWS);
+					dsPta.getPartitionTable().prepareRows(
+							(String) schemaPartition.getKey(),
+							PartitionTable.UNLIMITED_ROWS);
 				while (fakeDSPartition ? true : dsPta != null
-						&& dsPta.getPartitionTable()
-								.nextRow()) {
+						&& dsPta.getPartitionTable().nextRow()) {
 					fakeDSPartition = false;
 					// Make more specific.
 					String partitionedDataSetName = dataset.getName();
@@ -331,18 +328,16 @@ public interface MartConstructor {
 						if (!droppedTables.contains(dsTable.getParent())) {
 							// Loop over dataset table partitions.
 							final PartitionTableApplication dmPta = dataset
-									.getMart().getPartitionTableForDimension(
+									.getMart()
+									.getPartitionTableApplicationForDimension(
 											dsTable);
 							boolean fakeDMPartition = dmPta == null;
 							if (!fakeDMPartition)
-								dmPta.getPartitionTable()
-										.prepareRows(
-												(String) schemaPartition
-														.getKey(),
-												PartitionTable.UNLIMITED_ROWS);
+								dmPta.getPartitionTable().prepareRows(
+										(String) schemaPartition.getKey(),
+										PartitionTable.UNLIMITED_ROWS);
 							while (fakeDMPartition ? true : dmPta != null
-									&& dmPta
-											.getPartitionTable().nextRow()) {
+									&& dmPta.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
 								if (!this.makeActionsForDatasetTable(
 										templateSchema,
@@ -390,11 +385,10 @@ public interface MartConstructor {
 					final DataSetTable dsTab = (DataSetTable) r.getManyKey()
 							.getTable();
 					if (!tablesToProcess.contains(dsTab)
-							&& !dataset.getDataSetModifications()
-									.isMaskedTable(dsTab)
-							&& (dsTab.getFocusRelation() != null && !dataset
-									.getSchemaModifications().isMergedRelation(
-											dsTab.getFocusRelation())))
+							&& !dsTab.isDimensionMasked()
+							&& dsTab.getFocusRelation() != null
+							&& !dsTab.getFocusRelation().isMergeRelation(
+									dataset))
 						if (dsTab.getType().equals(DataSetTableType.DIMENSION))
 							nextDims.add(dsTab);
 						else
@@ -444,11 +438,9 @@ public interface MartConstructor {
 						continue;
 				}
 				// Skip?
-				else if (tu instanceof SkipTable) {
+				else if (tu instanceof SkipTable)
 					// Ignore.
 					continue;
-				}
-				// Left-join?
 				else if (tu instanceof JoinTable) {
 					if (firstJoinRel == null)
 						firstJoinRel = ((JoinTable) tu).getSchemaRelation();
@@ -514,23 +506,23 @@ public interface MartConstructor {
 			// Drop masked dependencies and create column indices.
 			final List dropCols = new ArrayList();
 			final List keepCols = new ArrayList();
-			for (final Iterator x = dsTable.getColumns().iterator(); x
+			for (final Iterator x = dsTable.getColumns().values().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
-				if (!droppedCols.contains(col.getPartitionedName())) {
+				if (!droppedCols.contains(col.getPartitionedName()))
 					if (col.isRequiredInterim() && !col.isRequiredFinal())
 						dropCols.add(col.getPartitionedName());
-				 	else if (col.isRequiredFinal()) 
-				 		keepCols.add(col);
-				}
+					else if (col.isRequiredFinal())
+						keepCols.add(col);
 			}
 
 			// Does it need a final distinct?
-			if (dataset.getDataSetModifications().isDistinctTable(dsTable)) {
+			if (dsTable.isDistinctTable()) {
 				final String tempTable = tempName + this.tempNameCount++;
 				final Set keepColNames = new HashSet();
-				for (final Iterator i = keepCols.iterator(); i.hasNext(); )
-					keepColNames.add(((DataSetColumn)i.next()).getPartitionedName());
+				for (final Iterator i = keepCols.iterator(); i.hasNext();)
+					keepColNames.add(((DataSetColumn) i.next())
+							.getPartitionedName());
 				this.doDistinct(finalCombinedName, previousTempTable,
 						tempTable, keepColNames);
 				previousTempTable = tempTable;
@@ -545,7 +537,7 @@ public interface MartConstructor {
 			// Indexing.
 			for (final Iterator i = keepCols.iterator(); i.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) i.next();
-				if (dataset.getDataSetModifications().isIndexedColumn(col)) {
+				if (col.isColumnIndexed()) {
 					final Index index = new Index(this.datasetSchemaName,
 							finalCombinedName);
 					index.setTable(previousTempTable);
@@ -566,11 +558,9 @@ public interface MartConstructor {
 			for (final Iterator j = dsTable.getKeys().iterator(); j.hasNext();) {
 				final Key key = (Key) j.next();
 				final List keyCols = new ArrayList();
-				for (final Iterator k = key.getColumns().iterator(); k
-						.hasNext();)
-					keyCols
-							.add(((DataSetColumn) k.next())
-									.getPartitionedName());
+				for (int k = 0; k < key.getColumns().length; k++)
+					keyCols.add(((DataSetColumn) key.getColumns()[k])
+							.getPartitionedName());
 				final Index index = new Index(this.datasetSchemaName,
 						finalCombinedName);
 				index.setTable(finalName);
@@ -609,11 +599,10 @@ public interface MartConstructor {
 			final List leftSelectCols = leftJoinCols;
 			final List rightJoinCols = leftJoinCols;
 			final List rightSelectCols = new ArrayList();
-			for (final Iterator x = parent.getPrimaryKey().getColumns()
-					.iterator(); x.hasNext();)
-				leftJoinCols.add(((DataSetColumn) x.next())
-						.getPartitionedName());
-			for (final Iterator x = dsTable.getColumns().iterator(); x
+			for (int x = 0; x < parent.getPrimaryKey().getColumns().length; x++)
+				leftJoinCols.add(((DataSetColumn) parent.getPrimaryKey()
+						.getColumns()[x]).getPartitionedName());
+			for (final Iterator x = dsTable.getColumns().values().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
 				if (col.isRequiredInterim())
@@ -687,11 +676,9 @@ public interface MartConstructor {
 								.getDataSetOptimiserType());
 				// The key cols are those from the primary key.
 				final List keyCols = new ArrayList();
-				for (final Iterator y = dsTable.getPrimaryKey().getColumns()
-						.iterator(); y.hasNext();)
-					keyCols
-							.add(((DataSetColumn) y.next())
-									.getPartitionedName());
+				for (int y = 0; y < dsTable.getPrimaryKey().getColumns().length; y++)
+					keyCols.add(((DataSetColumn) dsTable.getPrimaryKey()
+							.getColumns()[y]).getPartitionedName());
 
 				// Create the table by selecting the pk.
 				final CreateOptimiser create = new CreateOptimiser(
@@ -724,11 +711,9 @@ public interface MartConstructor {
 				// Do a left-join update. We're looking for rows
 				// where at least one child non-key col is non-null.
 				final List keyCols = new ArrayList();
-				for (final Iterator y = parent.getPrimaryKey().getColumns()
-						.iterator(); y.hasNext();)
-					keyCols
-							.add(((DataSetColumn) y.next())
-									.getPartitionedName());
+				for (int y = 0; y < parent.getPrimaryKey().getColumns().length; y++)
+					keyCols.add(((DataSetColumn) parent.getPrimaryKey()
+							.getColumns()[y]).getPartitionedName());
 
 				// If called with the copyDown option, don't create
 				// on the parent, instead create directly on the target
@@ -756,14 +741,13 @@ public interface MartConstructor {
 				} else {
 					// Work out what to count.
 					final List nonNullCols = new ArrayList();
-					for (final Iterator y = dsTable.getColumns().iterator(); y
-							.hasNext();) {
+					for (final Iterator y = dsTable.getColumns().values()
+							.iterator(); y.hasNext();) {
 						final DataSetColumn col = (DataSetColumn) y.next();
 						// We won't select masked cols as they won't be in
 						// the final table, and we won't select expression
 						// columns as they can genuinely be null.
-						if (!dataset.getDataSetModifications().isMaskedColumn(
-								col)
+						if (!col.isColumnMasked()
 								&& !(col instanceof ExpressionColumn))
 							nonNullCols.add(col.getPartitionedName());
 					}
@@ -875,11 +859,9 @@ public interface MartConstructor {
 			else if (sourceTable.getSchema() == templateSchema)
 				schema = schemaPartition;
 			else {
-				final Map sParts = ((JDBCSchema) sourceTable.getSchema())
-						.getPartitions();
+				final Map sParts = sourceTable.getSchema().getPartitions();
 				if (sParts.isEmpty())
-					schema = ((JDBCSchema) sourceTable.getSchema())
-							.getDatabaseSchema();
+					schema = sourceTable.getSchema().getDataLinkSchema();
 				else
 					for (final Iterator i = sParts.entrySet().iterator(); i
 							.hasNext()
@@ -908,8 +890,7 @@ public interface MartConstructor {
 					selectCols
 							.put(
 									sourceTable instanceof DataSetTable ? ((DataSetColumn) sourceTable
-											.getColumnByName((String) entry
-													.getKey()))
+											.getColumns().get(entry.getKey()))
 											.getPartitionedName()
 											: entry.getKey(), col
 											.getPartitionedName());
@@ -942,13 +923,10 @@ public interface MartConstructor {
 			action.setResultTable(tempTable);
 
 			// Table restriction.
-			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
-					stu.getTable())) {
-				final RestrictedTableDefinition def = dataset
-						.getSchemaModifications().getRestrictedTable(dsTable,
-								stu.getTable());
+			final RestrictedTableDefinition def = stu.getTable()
+					.getRestrictTable(dataset, dsTable.getName());
+			if (def != null)
 				action.setTableRestriction(def);
-			}
 			this.issueAction(action);
 		}
 
@@ -960,6 +938,15 @@ public interface MartConstructor {
 				final Relation firstJoinRel, final String previousTempTable,
 				final String tempTable, final Set droppedCols)
 				throws SQLException, ListenerException, PartitionException {
+
+			final boolean useLeftJoin = !dsTable.getType().equals(
+					DataSetTableType.DIMENSION);
+			boolean requiresFinalLeftJoin = !useLeftJoin;
+			final String finalCombinedName = this.getFinalName(schemaPrefix,
+					dsPta, dmPta, dsTable);
+			final Join action = new Join(this.datasetSchemaName,
+					finalCombinedName);
+			action.setLeftJoin(useLeftJoin);
 
 			PartitionTableApplication pta = null;
 			if (dsTable.getType().equals(DataSetTableType.DIMENSION)
@@ -975,25 +962,14 @@ public interface MartConstructor {
 				// Use a test to see if this is the first relation
 				// after the select (regardless of how many times this
 				// relation has been seen).
-				boolean nextRow = firstJoinRel.equals(ljtu.getSchemaRelation());
+				final boolean nextRow = firstJoinRel.equals(ljtu
+						.getSchemaRelation());
 				if (nextRow && pta.getPartitionAppliedRows().size() > 1)
 					pta.getPartitionTable().getSelectedColumn(
 							((PartitionAppliedRow) pta
 									.getPartitionAppliedRows().get(1))
 									.getPartitionCol()).getPartitionTable()
 							.nextRow();
-			}
-
-			final boolean useLeftJoin = !dsTable.getType().equals(
-					DataSetTableType.DIMENSION);
-			boolean requiresFinalLeftJoin = !useLeftJoin;
-			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					dsPta, dmPta, dsTable);
-			final Join action = new Join(this.datasetSchemaName,
-					finalCombinedName);
-			action.setLeftJoin(useLeftJoin);
-
-			if (pta != null) {
 				// For all relations, if this is the one
 				// that some subdiv partition applies to, then apply it.
 				// This is a join, so we look up row by relation.
@@ -1037,11 +1013,10 @@ public interface MartConstructor {
 			if (ljtu.getTable().getSchema() == templateSchema)
 				rightSchema = schemaPartition;
 			else {
-				final Map ljParts = ((JDBCSchema) ljtu.getTable().getSchema())
-						.getPartitions();
+				final Map ljParts = ljtu.getTable().getSchema().getPartitions();
 				if (ljParts.isEmpty())
-					rightSchema = ((JDBCSchema) ljtu.getTable().getSchema())
-							.getDatabaseSchema();
+					rightSchema = ljtu.getTable().getSchema()
+							.getDataLinkSchema();
 				else
 					for (final Iterator i = ljParts.entrySet().iterator(); i
 							.hasNext()
@@ -1057,8 +1032,11 @@ public interface MartConstructor {
 			}
 			final String rightTable = ljtu.getTable().getName();
 			final List leftJoinCols = new ArrayList();
-			final List rightJoinCols = ljtu.getSchemaRelation().getOtherKey(
-					ljtu.getSchemaSourceKey()).getColumnNames();
+			final List rightJoinCols = new ArrayList();
+			for (int i = 0; i < ljtu.getSchemaRelation().getOtherKey(
+					ljtu.getSchemaSourceKey()).getColumns().length; i++)
+				rightJoinCols.add(ljtu.getSchemaRelation().getOtherKey(
+						ljtu.getSchemaSourceKey()).getColumns()[i].getName());
 			final Map selectCols = new HashMap();
 			// Populate vars.
 			for (final Iterator k = ljtu.getSourceDataSetColumns().iterator(); k
@@ -1095,27 +1073,22 @@ public interface MartConstructor {
 			action.setResultTable(tempTable);
 
 			// Table restriction.
-			if (dataset.getSchemaModifications().isRestrictedTable(dsTable,
-					ljtu.getTable())) {
-				final RestrictedTableDefinition def = dataset
-						.getSchemaModifications().getRestrictedTable(dsTable,
-								ljtu.getTable());
-				action.setTableRestriction(def);
-				requiresFinalLeftJoin |= def.isHard();
+			final RestrictedTableDefinition rdef = ljtu.getTable()
+					.getRestrictTable(dataset, dsTable.getName());
+			if (rdef != null) {
+				action.setTableRestriction(rdef);
+				requiresFinalLeftJoin |= rdef.isHard();
 			}
+
 			// Don't add restriction if loopback relation from M end.
-			final boolean loopbackManyEnd = dataset.getSchemaModifications()
-					.isLoopbackRelation(dsTable, ljtu.getSchemaRelation())
+			final boolean loopbackManyEnd = ljtu.getSchemaRelation()
+					.getLoopbackRelation(dataset, dsTable.getName()) != null
 					&& ljtu.getSchemaSourceKey().equals(
 							ljtu.getSchemaRelation().getManyKey());
-			if (!loopbackManyEnd
-					&& dataset.getSchemaModifications().isRestrictedRelation(
-							dsTable, ljtu.getSchemaRelation(),
-							ljtu.getSchemaRelationIteration())) {
-				final RestrictedRelationDefinition def = dataset
-						.getSchemaModifications().getRestrictedRelation(
-								dsTable, ljtu.getSchemaRelation(),
-								ljtu.getSchemaRelationIteration());
+			final RestrictedRelationDefinition def = ljtu.getSchemaRelation()
+					.getRestrictRelation(dataset, dsTable.getName(),
+							ljtu.getSchemaRelationIteration());
+			if (!loopbackManyEnd && def != null) {
 				// Add the restriction.
 				action.setRelationRestrictionPreviousUnit(ljtu
 						.getPreviousUnit());
@@ -1127,14 +1100,14 @@ public interface MartConstructor {
 			}
 			// If this is a loopback from the one end, add the optional
 			// differentiation column.
-			final boolean loopbackOneEnd = dataset.getSchemaModifications()
-					.isLoopbackRelation(dsTable, ljtu.getSchemaRelation())
+			final boolean loopbackOneEnd = ljtu.getSchemaRelation()
+					.getLoopbackRelation(dataset, dsTable.getName()) != null
 					&& ljtu.getSchemaSourceKey().equals(
 							ljtu.getSchemaRelation().getOneKey());
 			if (loopbackOneEnd) {
 				// Identify the differentiation column.
-				final Column diffCol = dataset.getSchemaModifications()
-						.getLoopbackRelation(dsTable, ljtu.getSchemaRelation());
+				final Column diffCol = ljtu.getSchemaRelation()
+						.getLoopbackRelation(dataset, dsTable.getName());
 				if (diffCol != null) {
 					// Identify the differentiation column from the
 					// previous unit's selected columns.
@@ -1166,7 +1139,7 @@ public interface MartConstructor {
 
 			// Work out what columns we can select in the first group.
 			final Collection selectCols = new HashSet();
-			for (final Iterator z = dsTable.getColumns().iterator(); z
+			for (final Iterator z = dsTable.getColumns().values().iterator(); z
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) z.next();
 				final String colName = col.getPartitionedName();
@@ -1208,8 +1181,8 @@ public interface MartConstructor {
 						continue;
 					// Otherwise, work out group-by stuff.
 					if (expr.isGroupBy()) {
-						for (final Iterator x = dsTable.getColumns().iterator(); x
-								.hasNext();) {
+						for (final Iterator x = dsTable.getColumns().values()
+								.iterator(); x.hasNext();) {
 							final DataSetColumn col = (DataSetColumn) x.next();
 							final String colName = col.getPartitionedName();
 							if (expr.getAliases().keySet().contains(
@@ -1378,7 +1351,7 @@ public interface MartConstructor {
 					.contains(name));
 			name = name.replaceAll("\\W+", "");
 			// UC/LC/Mixed?
-			switch (((DataSet) dsTable.getSchema()).getMart().getCase()) {
+			switch (dsTable.getDataSet().getMart().getCase()) {
 			case Mart.USE_LOWER_CASE:
 				name = name.toLowerCase();
 				break;
@@ -1429,7 +1402,7 @@ public interface MartConstructor {
 			// Remove any non-[char/number/underscore] symbols.
 			final String name = finalName.toString().replaceAll("\\W+", "");
 			// UC/LC/Mixed?
-			switch (((DataSet) dsTable.getSchema()).getMart().getCase()) {
+			switch (dsTable.getDataSet().getMart().getCase()) {
 			case Mart.USE_LOWER_CASE:
 				return name.toLowerCase();
 			case Mart.USE_UPPER_CASE:

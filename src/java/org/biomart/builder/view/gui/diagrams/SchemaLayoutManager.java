@@ -44,8 +44,8 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
  * This layout manager lays out components in rows of a square block.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class SchemaLayoutManager implements LayoutManager2 {
@@ -366,7 +366,6 @@ public class SchemaLayoutManager implements LayoutManager2 {
 			// Work out how the relations are going to join things up.
 			for (final Iterator i = this.relations.iterator(); i.hasNext();) {
 				final RelationComponent comp = (RelationComponent) i.next();
-
 				// Obtain first key and work out position relative to
 				// diagram.
 				int firstRowNum = 0;

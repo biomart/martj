@@ -28,15 +28,20 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collections;
-import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
+import org.biomart.builder.model.Relation;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
-import org.biomart.common.model.Relation;
+import org.biomart.common.utils.BeanMap;
+import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.Transaction.TransactionEvent;
+import org.biomart.common.utils.Transaction.TransactionListener;
 
 /**
  * This component represents a relation between two keys, in the form of a line.
@@ -48,7 +53,18 @@ import org.biomart.common.model.Relation;
  *          $Author$
  * @since 0.5
  */
-public class RelationComponent extends JComponent implements DiagramComponent {
+public class RelationComponent extends JComponent implements DiagramComponent,
+		TransactionListener {
+
+	/**
+	 * Subclasses use this if the component needs repainting.
+	 */
+	protected boolean needsRepaint = false;
+
+	/**
+	 * Subclasses use this if the component needs recalculating.
+	 */
+	protected boolean needsRecalc = false;
 
 	private static final float RELATION_DASHSIZE = 6.0f; // 72 = 1 inch
 
@@ -173,6 +189,7 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 
 		// Turn on the mouse.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+		this.setDoubleBuffered(true); // Stop flicker.
 
 		// Make sure we're transparent.
 		this.setOpaque(false);
@@ -186,6 +203,63 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		// Draw our contents, as we don't have any child classes that
 		// do this for us unfortunately.
 		this.recalculateDiagramComponent();
+
+		Transaction.addTransactionListener(this);
+
+		// Repaint events.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				RelationComponent.this.needsRepaint = true;
+			}
+		};
+		relation.addPropertyChangeListener("indirectModified", repaintListener);
+		relation.addPropertyChangeListener("directModified", repaintListener);
+		relation.getFirstKey().addPropertyChangeListener("status",
+				repaintListener);
+		relation.getFirstKey().getTable().addPropertyChangeListener("masked",
+				repaintListener);
+		relation.getFirstKey().getTable().addPropertyChangeListener(
+				"dimensionMasked", repaintListener);
+		relation.getSecondKey().addPropertyChangeListener("status",
+				repaintListener);
+		relation.getSecondKey().getTable().addPropertyChangeListener("masked",
+				repaintListener);
+		relation.getSecondKey().getTable().addPropertyChangeListener(
+				"dimensionMasked", repaintListener);
+
+	}
+
+	public void setDirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isDirectModified() {
+		return false;
+	}
+
+	public void setIndirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isIndirectModified() {
+		return false;
+	}
+
+	public void transactionReset() {
+		// Ignore, for now.
+	}
+
+	public void transactionStarted(final TransactionEvent evt) {
+		// Ignore, for now.
+	}
+
+	public void transactionEnded(final TransactionEvent evt) {
+		if (this.needsRecalc)
+			this.recalculateDiagramComponent();
+		else if (this.needsRepaint)
+			this.repaintDiagramComponent();
+		this.needsRecalc = false;
+		this.needsRepaint = false;
 	}
 
 	protected void paintComponent(final Graphics g) {
@@ -284,14 +358,15 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 		return this.state;
 	}
 
-	public Map getSubComponents() {
+	public BeanMap getSubComponents() {
 		// We have no sub-components.
-		return Collections.EMPTY_MAP;
+		return new BeanMap(Collections.EMPTY_MAP);
 	}
 
 	public void recalculateDiagramComponent() {
 		if (this.relation != null)
-			this.setToolTipText(this.relation.getName());
+			this.setToolTipText(this.relation.toString());
+		this.repaintDiagramComponent();
 	}
 
 	public void repaintDiagramComponent() {
@@ -362,15 +437,13 @@ public class RelationComponent extends JComponent implements DiagramComponent {
 	public void updateAppearance() {
 		// Use the context to alter us first.
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
-		if (mod != null) {
+		if (mod != null)
 			if (this.getDiagram().isMaskedHidden()
 					&& mod.isMasked(this.getObject())) {
 				this.setVisible(false);
 				return;
-			}
-			else 
+			} else
 				mod.customiseAppearance(this, this.getObject());
-		}
 		// Work out what style to draw the relation line.
 		final Stroke oldStroke = this.stroke;
 		if (this.relation.isOneToOne())

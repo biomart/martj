@@ -32,6 +32,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
@@ -44,8 +46,6 @@ import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -98,19 +98,19 @@ public class DataSetContext extends SchemaContext {
 					.getTable();
 
 			// Is it compounded?
-			((RelationComponent) component).setCompounded(this.dataset
-					.getSchemaModifications().isCompoundRelation(null,
-							target.getFocusRelation()));
+			if (target.getFocusRelation() != null)
+				((RelationComponent) component)
+						.setCompounded(target.getFocusRelation()
+								.getCompoundRelation(this.dataset) != null);
 
 			// Fade MASKED DIMENSION relations.
-			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					target)
-					|| this.getDataSet().isMasked())
+			if (target.isDimensionMasked() || this.getDataSet().isMasked())
 				component.setForeground(RelationComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION relations.
-			else if (this.getDataSet().getSchemaModifications()
-					.isMergedRelation(target.getFocusRelation()))
+			else if (target.getFocusRelation() != null
+					&& target.getFocusRelation().isMergeRelation(
+							this.getDataSet()))
 				component.setForeground(TableComponent.MASKED_COLOUR);
 
 			// Highlight SUBCLASS relations.
@@ -135,8 +135,7 @@ public class DataSetContext extends SchemaContext {
 				component.setBackground(DataSetComponent.PARTITION_BACKGROUND);
 
 			// Fade MASKED DIMENSION relations.
-			else if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					(DataSetTable) object))
+			else if (((DataSetTable) object).isDimensionMasked())
 				component.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Fade MASKED datasets.
@@ -145,17 +144,19 @@ public class DataSetContext extends SchemaContext {
 						.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION tables.
-			else if (this.getDataSet().getSchemaModifications()
-					.isMergedRelation(
-							((DataSetTable) object).getFocusRelation()))
+			else if (((DataSetTable) object).getFocusRelation() != null
+					&& ((DataSetTable) object).getFocusRelation()
+							.isMergeRelation(this.getDataSet()))
 				component.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Highlight DIMENSION tables.
 			else if (tableType.equals(DataSetTableType.DIMENSION)) {
 				// Is it compounded?
-				((TableComponent) component).setCompounded(this.dataset
-						.getSchemaModifications().isCompoundRelation(null,
-								((DataSetTable) object).getFocusRelation()));
+				((TableComponent) component)
+						.setCompounded(((DataSetTable) object)
+								.getFocusRelation() != null
+								&& ((DataSetTable) object).getFocusRelation()
+										.getCompoundRelation(this.dataset) != null);
 				component.setBackground(TableComponent.BACKGROUND_COLOUR);
 			}
 
@@ -164,12 +165,13 @@ public class DataSetContext extends SchemaContext {
 
 			// Update dotted line (partitioned).
 			((TableComponent) component).setRestricted(this.getMartTab()
-					.getMart().getPartitionTableForDimension(
+					.getMart().getPartitionTableApplicationForDimension(
 							(DataSetTable) object) != null
 					|| ((DataSetTable) object).getType().equals(
 							DataSetTableType.MAIN)
-					&& this.getMartTab().getMart().getPartitionTableForDataSet(
-							this.dataset) != null);
+					&& this.getMartTab().getMart()
+							.getPartitionTableApplicationForDataSet(
+									this.dataset) != null);
 
 			((TableComponent) component).setRenameable(true);
 			((TableComponent) component).setSelectable(true);
@@ -182,8 +184,7 @@ public class DataSetContext extends SchemaContext {
 			final DataSetColumn column = (DataSetColumn) object;
 
 			// Fade out all MASKED columns.
-			if (((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isMaskedColumn(column))
+			if (column.isColumnMasked())
 				component.setBackground(ColumnComponent.MASKED_COLOUR);
 			// Red INHERITED columns.
 			else if (column instanceof InheritedColumn)
@@ -196,8 +197,7 @@ public class DataSetContext extends SchemaContext {
 				component.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 			// Indexed?
-			if (((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isIndexedColumn(column))
+			if (column.isColumnIndexed())
 				((BoxShapedComponent) component).setIndexed(true);
 			else
 				((BoxShapedComponent) component).setIndexed(false);
@@ -238,16 +238,13 @@ public class DataSetContext extends SchemaContext {
 						for (final Iterator i = selectedItems.iterator(); i
 								.hasNext();) {
 							final DataSetTable table = (DataSetTable) i.next();
-							final boolean isMasked = DataSetContext.this
-									.getDataSet().getDataSetModifications()
-									.isMaskedTable(table);
-							final boolean isMerged = DataSetContext.this
-									.getDataSet().getSchemaModifications()
-									.isMergedRelation(table.getFocusRelation());
-							final boolean isCompound = DataSetContext.this
-									.getDataSet().getSchemaModifications()
-									.isCompoundRelation(null,
-											table.getFocusRelation());
+							final boolean isMasked = table.isDimensionMasked();
+							final boolean isMerged = table.getFocusRelation()
+									.isMergeRelation(
+											DataSetContext.this.getDataSet());
+							final boolean isCompound = table.getFocusRelation()
+									.getCompoundRelation(
+											DataSetContext.this.dataset) != null;
 							contextMenu.add(removeDM);
 							if (!isMerged && !isCompound && !isMasked)
 								DataSetContext.this.getMartTab()
@@ -270,9 +267,7 @@ public class DataSetContext extends SchemaContext {
 						for (final Iterator i = selectedItems.iterator(); i
 								.hasNext();) {
 							final DataSetTable table = (DataSetTable) i.next();
-							final boolean isMasked = DataSetContext.this
-									.getDataSet().getDataSetModifications()
-									.isMaskedTable(table);
+							final boolean isMasked = table.isDimensionMasked();
 							contextMenu.add(removeDM);
 							if (isMasked)
 								DataSetContext.this.getMartTab()
@@ -307,9 +302,7 @@ public class DataSetContext extends SchemaContext {
 					for (final Iterator i = selectedItems.iterator(); i
 							.hasNext();) {
 						final DataSetColumn column = (DataSetColumn) i.next();
-						final boolean isMasked = DataSetContext.this
-								.getDataSet().getDataSetModifications()
-								.isMaskedColumn(column);
+						final boolean isMasked = column.isColumnMasked();
 						if (!isMasked && !(column instanceof ExpressionColumn))
 							columns.add(column);
 					}
@@ -331,9 +324,7 @@ public class DataSetContext extends SchemaContext {
 					for (final Iterator i = selectedItems.iterator(); i
 							.hasNext();) {
 						final DataSetColumn column = (DataSetColumn) i.next();
-						final boolean isMasked = DataSetContext.this
-								.getDataSet().getDataSetModifications()
-								.isMaskedColumn(column);
+						final boolean isMasked = column.isColumnMasked();
 						if (isMasked)
 							columns.add(column);
 					}
@@ -397,8 +388,7 @@ public class DataSetContext extends SchemaContext {
 					.getTable();
 
 			// Fade MASKED DIMENSION relations.
-			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					target))
+			if (target.isDimensionMasked())
 				return true;
 		}
 
@@ -406,18 +396,14 @@ public class DataSetContext extends SchemaContext {
 		else if (object instanceof DataSetTable) {
 
 			// Fade MASKED DIMENSION relations.
-			if (this.getDataSet().getDataSetModifications().isMaskedTable(
-					(DataSetTable) object))
+			if (((DataSetTable) object).isDimensionMasked())
 				return true;
 		}
 
 		// Is it a column?
-		else if (object instanceof DataSetColumn) {
-
-			if (this.getDataSet().getDataSetModifications().isMaskedColumn(
-					(DataSetColumn) object))
+		else if (object instanceof DataSetColumn)
+			if (((DataSetColumn) object).isColumnMasked())
 				return true;
-		}
 
 		return false;
 	}
@@ -505,16 +491,16 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(distinct);
-			if (this.dataset.getDataSetModifications().isDistinctTable(table))
+			if (table.isDistinctTable())
 				distinct.setSelected(true);
 
-			final boolean isMasked = this.getDataSet()
-					.getDataSetModifications().isMaskedTable(table);
-			final boolean isMerged = this.getDataSet().getSchemaModifications()
-					.isMergedRelation(table.getFocusRelation());
-			final boolean isCompound = this.getDataSet()
-					.getSchemaModifications().isCompoundRelation(null,
-							table.getFocusRelation());
+			final boolean isMasked = table.isDimensionMasked();
+			final boolean isMerged = table.getFocusRelation() != null
+					&& table.getFocusRelation().isMergeRelation(
+							this.getDataSet());
+			final boolean isCompound = table.getFocusRelation() != null
+					&& table.getFocusRelation().getCompoundRelation(
+							this.dataset) != null;
 
 			// Dimension tables have their own options.
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
@@ -580,9 +566,9 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestReplicateDimension(
 										DataSetContext.this.dataset, table);
-						compound.setSelected(DataSetContext.this.dataset
-								.getSchemaModifications().isCompoundRelation(
-										null, table.getFocusRelation()));
+						compound.setSelected(table.getFocusRelation()
+								.getCompoundRelation(
+										DataSetContext.this.dataset) != null);
 					}
 				});
 				contextMenu.add(compound);
@@ -625,8 +611,11 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(partitionWizard);
-				partitionWizard.setSelected(this.getMartTab().getMart()
-						.getPartitionTableForDimension(table) != null);
+				partitionWizard
+						.setSelected(this
+								.getMartTab()
+								.getMart()
+								.getPartitionTableApplicationForDimension(table) != null);
 				if (isMasked || isMerged)
 					partitionWizard.setEnabled(false);
 			}
@@ -662,9 +651,9 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestRecurseSubclass(
 										DataSetContext.this.dataset, table);
-						compound.setSelected(DataSetContext.this.dataset
-								.getSchemaModifications().isCompoundRelation(
-										null, table.getFocusRelation()));
+						compound.setSelected(table.getFocusRelation()
+								.getCompoundRelation(
+										DataSetContext.this.dataset) != null);
 					}
 				});
 				contextMenu.add(compound);
@@ -700,8 +689,7 @@ public class DataSetContext extends SchemaContext {
 			contextMenu.addSeparator();
 
 			// Mask the column.
-			final boolean isMasked = ((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isMaskedColumn(column);
+			final boolean isMasked = column.isColumnMasked();
 			final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
 					.get("maskColumnTitle"));
 			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
@@ -725,8 +713,7 @@ public class DataSetContext extends SchemaContext {
 				mask.setEnabled(false);
 
 			// Index the column.
-			final boolean isIndexed = ((DataSet) column.getTable().getSchema())
-					.getDataSetModifications().isIndexedColumn(column);
+			final boolean isIndexed = column.isColumnIndexed();
 			final JCheckBoxMenuItem index = new JCheckBoxMenuItem(Resources
 					.get("indexColumnTitle"));
 			index.setMnemonic(Resources.get("indexColumnMnemonic").charAt(0));
@@ -761,7 +748,7 @@ public class DataSetContext extends SchemaContext {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestExpressionColumn(
-										(DataSetTable) column.getTable(),
+										column.getDataSetTable(),
 										(ExpressionColumn) column);
 					}
 				});
@@ -776,7 +763,7 @@ public class DataSetContext extends SchemaContext {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestRemoveExpressionColumn(
-										(DataSetTable) column.getTable(),
+										column.getDataSetTable(),
 										(ExpressionColumn) column);
 					}
 				});

@@ -23,7 +23,10 @@ import java.util.Collection;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeSchema;
@@ -31,9 +34,6 @@ import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTa
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Table;
 
 /**
  * This context is basically the same as {@link TransformationContext}, except
@@ -41,8 +41,8 @@ import org.biomart.common.model.Table;
  * instances.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public class TransformationContext extends DataSetContext {
@@ -66,7 +66,7 @@ public class TransformationContext extends DataSetContext {
 		// Don't process fake schemas.
 		if (object instanceof FakeSchema)
 			return;
-		
+
 		// Normal background on fake tables.
 		else if (object instanceof FakeTable)
 			component.setBackground(TableComponent.BACKGROUND_COLOUR);
@@ -100,13 +100,10 @@ public class TransformationContext extends DataSetContext {
 
 	public boolean isMasked(final Object object) {
 		// Is it a column?
-		if (object instanceof DataSetColumn) {
-
-			if (this.getDataSet().getDataSetModifications().isMaskedColumn(
-					(DataSetColumn) object))
+		if (object instanceof DataSetColumn)
+			if (((DataSetColumn) object).isColumnMasked())
 				return true;
-		}
-		
+
 		return false;
 	}
 

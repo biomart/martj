@@ -36,11 +36,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import org.biomart.builder.model.SchemaModificationSet;
-import org.biomart.common.model.Relation;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -78,7 +78,7 @@ public class RestrictedRelationDialog extends JDialog {
 	 *            the restriction to use as a template, if any.
 	 */
 	public RestrictedRelationDialog(final Relation relation,
-			final SchemaModificationSet.RestrictedRelationDefinition template) {
+			final RestrictedRelationDefinition template) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(template == null ? Resources
@@ -121,7 +121,7 @@ public class RestrictedRelationDialog extends JDialog {
 		// First table aliases.
 		this.lcolumnAliasModel = new ColumnStringTablePanel(
 				template == null ? null : template.getLeftAliases(), relation
-						.getFirstKey().getTable().getColumns()) {
+						.getFirstKey().getTable().getColumns().values()) {
 			private static final long serialVersionUID = 1L;
 
 			private int alias = 1;
@@ -157,7 +157,7 @@ public class RestrictedRelationDialog extends JDialog {
 		// Second table aliases.
 		this.rcolumnAliasModel = new ColumnStringTablePanel(
 				template == null ? null : template.getRightAliases(), relation
-						.getSecondKey().getTable().getColumns()) {
+						.getSecondKey().getTable().getColumns().values()) {
 			private static final long serialVersionUID = 1L;
 
 			private int alias = 1;

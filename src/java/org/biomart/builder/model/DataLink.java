@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.model;
+package org.biomart.builder.model;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -34,6 +34,22 @@ import java.sql.SQLException;
  * @since 0.5
  */
 public interface DataLink {
+
+	/**
+	 * Gets the data source schema name.
+	 * 
+	 * @return the data source schema name.
+	 */
+	public String getDataLinkSchema();
+
+	/**
+	 * Sets the data source schema name.
+	 * 
+	 * @param schemaName
+	 *            the data source schema name.
+	 */
+	public void setDataLinkSchema(String schemaName);
+
 	/**
 	 * Checks to see if this datalink 'cohabits' with another one. Cohabitation
 	 * means that it would be possible to write a single SQL statement that
@@ -73,23 +89,15 @@ public interface DataLink {
 		 * Returns a JDBC connection connected to this database using the data
 		 * supplied to all the other methods in this interface.
 		 * 
-		 * @param partition
-		 *            the partition of the schema to connect to, if any.
-		 *            <tt>null</tt> is used where no partition in particular
-		 *            is required and the default main schema is suitable.
+		 * @param overrideDataLinkSchema
+		 *            the schema to connect to, if any. <tt>null</tt> is used
+		 *            where the default main schema is suitable.
 		 * @return the connection for this database.
 		 * @throws SQLException
 		 *             if there was any problem connecting.
 		 */
-		public Connection getConnection(final String partition)
+		public Connection getConnection(final String overrideDataLinkSchema)
 				throws SQLException;
-
-		/**
-		 * Gets the database schema name.
-		 * 
-		 * @return the database schema name.
-		 */
-		public String getDatabaseSchema();
 
 		/**
 		 * Getter for the name of the driver class, eg.
@@ -104,7 +112,7 @@ public interface DataLink {
 		 * 
 		 * @return the JDBC URL.
 		 */
-		public String getJDBCURL();
+		public String getUrl();
 
 		/**
 		 * Gets the password. May be <tt>null</tt> which would indicate that
@@ -122,14 +130,6 @@ public interface DataLink {
 		public String getUsername();
 
 		/**
-		 * Sets the database schema name.
-		 * 
-		 * @param schemaName
-		 *            the database schema name.
-		 */
-		public void setDatabaseSchema(String schemaName);
-
-		/**
 		 * Sets the name of the driver class, eg. <tt>com.mysql.jdbc.Driver</tt>
 		 * 
 		 * @param driverClassName
@@ -143,7 +143,7 @@ public interface DataLink {
 		 * @param url
 		 *            the JDBC URL.
 		 */
-		public void setJDBCURL(String url);
+		public void setUrl(String url);
 
 		/**
 		 * Sets the password. If <tt>null</tt>, then no password will be

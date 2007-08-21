@@ -23,6 +23,8 @@ import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,7 +50,6 @@ import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 
-import org.biomart.builder.controller.MartBuilderUtils;
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.exceptions.ConstructorException;
@@ -60,6 +61,7 @@ import org.biomart.builder.view.gui.dialogs.MartRunnerMonitorDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
+import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.dialogs.ViewTextDialog;
@@ -156,6 +158,25 @@ public class MartTabSet extends JTabbedPane {
 		// Within that tab, select the all-schemas and all-datasets tabs.
 		martTab.getDataSetTabSet().setSelectedIndex(0);
 		martTab.getSchemaTabSet().setSelectedIndex(0);
+
+		// Listen to modified changes.
+		final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				if (evt.getNewValue().equals(Boolean.TRUE)
+						&& !Boolean.TRUE
+								.equals(MartTabSet.this.martModifiedStatus.put(
+										mart, Boolean.TRUE)))
+					MartTabSet.this.updateMartTitle(mart);
+			}
+		};
+		mart.addPropertyChangeListener("directModified", listener);
+		mart.addPropertyChangeListener("indirectModified", listener);
+	}
+
+	private void updateMartTitle(final Mart mart) {
+		// Update the tab title to indicate modification status.
+		this.setTitleAt(this.getSelectedIndex(), this
+				.suggestTabName(mart, true));
 	}
 
 	/**
@@ -331,56 +352,8 @@ public class MartTabSet extends JTabbedPane {
 			// Find out which files they selected.
 			final File[] loadFiles = this.xmlFileChooser.getSelectedFiles();
 
-			// If they selected any at all, load them in turn.
-			if (loadFiles != null)
-				// In the background, load them in turn.
-				new LongProcess() {
-					public void run() throws Exception {
-						// Do we need to close the existing unsaved
-						// unmodified default tab?
-						MartTab defaultTab = MartTabSet.this
-								.getSelectedMartTab();
-						final int defaultIndex = MartTabSet.this
-								.getSelectedIndex();
-						if (MartTabSet.this.getComponentCount() > 1
-								|| defaultTab != null
-								&& !MartTabSet.this.getTitleAt(defaultIndex)
-										.equals(Resources.get("unsavedMart")))
-							defaultTab = null;
-
-						// Load the files.
-						for (int i = 0; i < loadFiles.length; i++) {
-							final File file = loadFiles[i];
-							final Mart mart = MartBuilderXML.load(file);
-							MartTabSet.this.addMartTab(mart, file);
-							// Save XML filename in history of accessed
-							// files.
-							final Properties history = new Properties();
-							history.setProperty("location", file.getPath());
-							Settings
-									.saveHistoryProperties(MartTabSet.class,
-											MartTabSet.this.suggestTabName(
-													mart, false), history);
-						}
-
-						// Finally, remove the unsaved default tab if
-						// we need to.
-						if (defaultTab != null) {
-							// Remove the tab.
-							MartTabSet.this.removeTabAt(defaultIndex);
-
-							// Remove the mart from the modified map.
-							MartTabSet.this.martModifiedStatus
-									.remove(defaultTab.getMart());
-
-							// Remove the XML file the mart came from from
-							// the file map.
-							MartTabSet.this.martXMLFile.remove(defaultTab
-									.getMart());
-
-						}
-					}
-				}.start();
+			for (int i = 0; i < loadFiles.length; i++)
+				this.requestLoadMart(loadFiles[i]);
 		}
 	}
 
@@ -409,7 +382,10 @@ public class MartTabSet extends JTabbedPane {
 					defaultTab = null;
 
 				// Load the files.
+				Transaction.start();
 				final Mart mart = MartBuilderXML.load(file);
+				Transaction.endAndWait(); // Sync before draw!
+				MartTabSet.this.martModifiedStatus.put(mart, Boolean.FALSE);
 				MartTabSet.this.addMartTab(mart, file);
 				// Save XML filename in history of accessed
 				// files.
@@ -431,7 +407,6 @@ public class MartTabSet extends JTabbedPane {
 					// Remove the XML file the mart came from from
 					// the file map.
 					MartTabSet.this.martXMLFile.remove(defaultTab.getMart());
-
 				}
 			}
 		}.start();
@@ -465,7 +440,7 @@ public class MartTabSet extends JTabbedPane {
 
 		// If the mart has no datasets, ignore the request.
 		final Mart mart = currentMartTab.getMart();
-		final Collection datasets = new ArrayList(mart.getDataSets());
+		final Collection datasets = new ArrayList(mart.getDataSets().values());
 		// Remove partition table datasets from the list.
 		// Also remove masked datasets.
 		for (final Iterator i = datasets.iterator(); i.hasNext();) {
@@ -520,13 +495,7 @@ public class MartTabSet extends JTabbedPane {
 	 *            the new output schema.
 	 */
 	public void requestSetOutputSchema(final String outputSchema) {
-		final String oldOne = this.getSelectedMartTab().getMart()
-				.getOutputSchema();
-		if (oldOne == null || !oldOne.equals(outputSchema)) {
-			MartBuilderUtils.setOutputSchema(this.getSelectedMartTab()
-					.getMart(), outputSchema);
-			this.requestChangeModifiedStatus(true);
-		}
+		this.getSelectedMartTab().getMart().setOutputSchema(outputSchema);
 	}
 
 	/**
@@ -536,13 +505,9 @@ public class MartTabSet extends JTabbedPane {
 	 *            the new output host.
 	 */
 	public void requestSetOutputHost(final String host) {
-		final String oldOne = this.getSelectedMartTab().getMart()
-				.getOutputHost();
-		if (oldOne == null || !oldOne.equals(host)) {
-			MartBuilderUtils.setOutputHost(this.getSelectedMartTab().getMart(),
-					host);
-			this.requestChangeModifiedStatus(true);
-		}
+		Transaction.start();
+		MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(host);
+		Transaction.end();
 	}
 
 	/**
@@ -552,13 +517,9 @@ public class MartTabSet extends JTabbedPane {
 	 *            the new output port.
 	 */
 	public void requestSetOutputPort(final String port) {
-		final String oldOne = this.getSelectedMartTab().getMart()
-				.getOutputPort();
-		if (oldOne == null || !oldOne.equals(port)) {
-			MartBuilderUtils.setOutputPort(this.getSelectedMartTab().getMart(),
-					port);
-			this.requestChangeModifiedStatus(true);
-		}
+		Transaction.start();
+		MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(port);
+		Transaction.end();
 	}
 
 	/**
@@ -568,13 +529,9 @@ public class MartTabSet extends JTabbedPane {
 	 *            the new host.
 	 */
 	public void requestSetOverrideHost(final String host) {
-		final String oldOne = this.getSelectedMartTab().getMart()
-				.getOverrideHost();
-		if (oldOne == null || !oldOne.equals(host)) {
-			MartBuilderUtils.setOverrideHost(this.getSelectedMartTab().getMart(),
-					host);
-			this.requestChangeModifiedStatus(true);
-		}
+		Transaction.start();
+		MartTabSet.this.getSelectedMartTab().getMart().setOverrideHost(host);
+		Transaction.end();
 	}
 
 	/**
@@ -584,13 +541,9 @@ public class MartTabSet extends JTabbedPane {
 	 *            the new port.
 	 */
 	public void requestSetOverridePort(final String port) {
-		final String oldOne = this.getSelectedMartTab().getMart()
-				.getOverridePort();
-		if (oldOne == null || !oldOne.equals(port)) {
-			MartBuilderUtils.setOverridePort(this.getSelectedMartTab().getMart(),
-					port);
-			this.requestChangeModifiedStatus(true);
-		}
+		Transaction.start();
+		MartTabSet.this.getSelectedMartTab().getMart().setOverridePort(port);
+		Transaction.end();
 	}
 
 	/**
@@ -730,10 +683,10 @@ public class MartTabSet extends JTabbedPane {
 							.save(currentMart,
 									(File) MartTabSet.this.martXMLFile
 											.get(currentMart));
-					// We're not modified any more! But
-					// this shouldn't get executed if save
-					// fails - hence no finally block.
-					MartTabSet.this.requestChangeModifiedStatus(false);
+					// We're not modified any more!
+					MartTabSet.this.martModifiedStatus.put(currentMart,
+							Boolean.FALSE);
+					MartTabSet.this.updateMartTitle(currentMart);
 				}
 			}.start();
 	}
@@ -777,52 +730,15 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Sets the current modified status. This applies to the currently selected
-	 * mart.
-	 * 
-	 * @param status
-	 *            <tt>true</tt> for modified, <tt>false</tt> for unmodified.
-	 */
-	public void requestChangeModifiedStatus(final boolean status) {
-		// If nothing selected, ignore it.
-		if (this.getSelectedMartTab() == null)
-			return;
-
-		// Work out the current mart.
-		final Mart currentMart = this.getSelectedMartTab().getMart();
-
-		// Update the status for it.
-		this.martModifiedStatus.put(currentMart, Boolean.valueOf(status));
-
-		// Update the tab title to indicate modification status.
-		this.setTitleAt(this.getSelectedIndex(), this.suggestTabName(
-				currentMart, true));
-	}
-
-	/**
 	 * Change the name case for the selected mart.
 	 * 
 	 * @param nameCase
 	 *            the new case.
 	 */
 	public void requestChangeNameCase(final int nameCase) {
-		// If nothing selected, refuse.
-		if (this.getSelectedMartTab() == null)
-			return;
-
-		// Work out if we already have a file for this mart. If not,
-		// do a save-as instead.
-		final Mart currentMart = this.getSelectedMartTab().getMart();
-		new LongProcess() {
-			public void run() throws Exception {
-				// Save it.
-				MartBuilderUtils.setCase(currentMart, nameCase);
-
-				// Sync ds tabs.
-				MartTabSet.this.getSelectedMartTab().getDataSetTabSet()
-						.recalculateAllDataSetDiagrams();
-			}
-		}.start();
+		Transaction.start();
+		MartTabSet.this.getSelectedMartTab().getMart().setCase(nameCase);
+		Transaction.end();
 	}
 
 	/**
@@ -881,7 +797,7 @@ public class MartTabSet extends JTabbedPane {
 					MartTab.this.martTabSet.requestRunDDL();
 				}
 			});
-			
+
 			// Build the DDL+Hide Masked box.
 			final JPanel smallerPanel = new JPanel();
 			smallerPanel.add(runDDL);

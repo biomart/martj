@@ -48,8 +48,8 @@ import org.biomart.runner.exceptions.ProtocolException;
  * where <tt>&lt;port&gt;</tt> is the port that this server should listen on.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class MartRunner extends BioMartCLI {
@@ -100,11 +100,11 @@ public class MartRunner extends BioMartCLI {
 		Log.debug("Finding crashed jobs");
 		final int crashedJobs = JobHandler.stopCrashedJobs();
 		if (crashedJobs > 0)
-			Log.info("Found crashed jobs: "+crashedJobs);
+			Log.info("Found crashed jobs: " + crashedJobs);
 		// Establish the socket and start listening.
 		try {
 			final int port = Integer.parseInt(args[0]);
-			Log.info("Server listening on "+port);
+			Log.info("Server listening on " + port);
 			this.serverSocket = new ServerSocket(port);
 		} catch (final IOException e) {
 			throw new ValidationException(Resources.get("serverPortBroken",

@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.view.gui.panels;
+package org.biomart.builder.view.gui.panels;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -46,9 +46,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileFilter;
 
-import org.biomart.common.controller.CommonUtils;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Schema.JDBCSchema;
+import org.biomart.builder.model.Mart;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
@@ -127,6 +127,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	 */
 	public static class JDBCSchemaConnectionPanel extends SchemaConnectionPanel
 			implements DocumentListener {
+
 		private static final Map DRIVER_MAP = new HashMap();
 
 		private static final Map DRIVER_NAME_MAP = new HashMap();
@@ -168,6 +169,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					.get("driverClassPostgreSQL"), "org.postgresql.Driver");
 		}
 
+		private final Mart mart;
+
 		private String currentJDBCURLTemplate;
 
 		private JTextField database;
@@ -200,9 +203,13 @@ public abstract class SchemaConnectionPanel extends JPanel {
 		 * and may result in unpredictable behaviour. Or, call
 		 * {@link #copySettingsFromProperties(Properties)} to achieve the same
 		 * results.
+		 * 
+		 * @param mart
+		 *            the mart this schema will belong to.
 		 */
-		public JDBCSchemaConnectionPanel() {
+		public JDBCSchemaConnectionPanel(final Mart mart) {
 			super();
+			this.mart = mart;
 
 			// Create the layout manager for this panel.
 			this.setLayout(new GridBagLayout());
@@ -519,7 +526,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				final String password = new String(this.password.getPassword());
 
 				// Construct a JDBCSchema based on them.
-				final JDBCSchema schema = CommonUtils.createJDBCSchema(
+				final JDBCSchema schema = new JDBCSchema(this.mart,
 						driverClassName, url, schemaName, username, password,
 						name, false);
 
@@ -557,8 +564,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					// the existing schema object.
 					final JDBCSchema jschema = (JDBCSchema) schema;
 					jschema.setDriverClassName(this.driverClass.getText());
-					jschema.setJDBCURL(this.jdbcURL.getText());
-					jschema.setDatabaseSchema(this.schemaName.getText());
+					jschema.setUrl(this.jdbcURL.getText());
+					jschema.setDataLinkSchema(this.schemaName.getText());
 					jschema.setUsername(this.username.getText());
 					jschema
 							.setPassword(new String(this.password.getPassword()));
@@ -591,11 +598,11 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				this.driverClassChanged();
 
 				// Carry on copying.
-				final String jdbcURL = jdbcSchema.getJDBCURL();
+				final String jdbcURL = jdbcSchema.getUrl();
 				this.jdbcURL.setText(jdbcURL);
 				this.username.setText(jdbcSchema.getUsername());
 				this.password.setText(jdbcSchema.getPassword());
-				this.schemaName.setText(jdbcSchema.getDatabaseSchema());
+				this.schemaName.setText(jdbcSchema.getDataLinkSchema());
 
 				// Parse the JDBC URL into host, port and database, if the
 				// driver is known to us (defined in the map at the start

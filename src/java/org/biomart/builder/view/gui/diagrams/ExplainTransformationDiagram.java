@@ -18,14 +18,23 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
-import java.awt.Color;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.biomart.builder.model.Column;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Mart;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TransformationUnit;
+import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.model.TransformationUnit.SkipTable;
@@ -36,17 +45,6 @@ import org.biomart.builder.view.gui.diagrams.components.TableComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Table;
-import org.biomart.common.model.Key.ForeignKey;
-import org.biomart.common.model.Key.GenericForeignKey;
-import org.biomart.common.model.Key.GenericPrimaryKey;
-import org.biomart.common.model.Key.PrimaryKey;
-import org.biomart.common.model.Relation.GenericRelation;
-import org.biomart.common.model.Schema.GenericSchema;
-import org.biomart.common.model.Table.GenericTable;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -96,7 +94,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		this.step = step;
 		this.explainContext = explainContext;
 		this.shownTables = shownTables;
-		this.setUseMaskedHidden(false);
+
+		// No listener required as diagram gets redone from
+		// scratch if underlying tables change.
+	}
+
+	protected boolean isMaskedHiddenUsed() {
+		return false;
 	}
 
 	/**
@@ -174,7 +178,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.removeAll();
 			this.getTableComponents().clear();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
@@ -183,18 +186,18 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final Table tempSource = new RealisedTable(this.stu.getTable()
 					.getName(), tempSourceSchema, this.stu.getTable(), this
 					.getExplainContext());
-			tempSourceSchema.addTable(tempSource);
+			tempSourceSchema.getTables().put(tempSource.getName(), tempSource);
 			for (final Iterator i = this.stu.getNewColumnNameMap().values()
-					.iterator(); i.hasNext();)
-				tempSource.addColumn((Column) i.next());
+					.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
+				tempSource.getColumns().put(col.getName(), col);
+			}
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);
 			final Object tcState = this.getState(tc);
 			if (tcState != null)
 				tc.setState(tcState);
-			// Resize the diagram to fit.
-			this.resizeDiagram();
 		}
 	}
 
@@ -241,7 +244,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.removeAll();
 			this.getTableComponents().clear();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
@@ -250,22 +252,19 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final Table tempSource = new FakeTable(Resources
 					.get("dummyTempTableName")
 					+ " " + this.getStep(), tempSourceSchema);
-			tempSourceSchema.addTable(tempSource);
-			for (final Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
-				tempSource.addColumn((Column) i.next());
+			tempSourceSchema.getTables().put(tempSource.getName(), tempSource);
+			for (final Iterator i = this.lIncludeCols.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
+				tempSource.getColumns().put(col.getName(), col);
+			}
 			Key tempSourceKey;
 			if (this.ltu.getSchemaSourceKey() instanceof ForeignKey) {
-				tempSourceKey = new GenericForeignKey(this.ltu
-						.getSourceDataSetColumns());
-				try {
-					tempSource.addForeignKey((ForeignKey) tempSourceKey);
-				} catch (final AssociationException e) {
-					// Really should never happen.
-					throw new BioMartError(e);
-				}
+				tempSourceKey = new ForeignKey((Column[]) this.ltu
+						.getSourceDataSetColumns().toArray(new Column[0]));
+				tempSource.getForeignKeys().add(tempSourceKey);
 			} else {
-				tempSourceKey = new GenericPrimaryKey(this.ltu
-						.getSourceDataSetColumns());
+				tempSourceKey = new PrimaryKey((Column[]) this.ltu
+						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
 
@@ -277,23 +276,18 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.getSchema().getName());
 			final Table tempTarget = new RealisedTable(realTarget.getName(),
 					tempTargetSchema, realTarget, this.getExplainContext());
-			tempTargetSchema.addTable(tempTarget);
+			tempTargetSchema.getTables().put(tempTarget.getName(), tempTarget);
 			for (final Iterator i = this.ltu.getNewColumnNameMap().values()
-					.iterator(); i.hasNext();)
-				tempTarget.addColumn((Column) i.next());
+					.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
+				tempTarget.getColumns().put(col.getName(), col);
+			}
 			Key tempTargetKey;
 			if (realTargetKey instanceof ForeignKey) {
-				tempTargetKey = new GenericForeignKey(realTargetKey
-						.getColumns());
-				try {
-					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
-				} catch (final AssociationException e) {
-					// Really should never happen.
-					throw new BioMartError(e);
-				}
+				tempTargetKey = new ForeignKey(realTargetKey.getColumns());
+				tempTarget.getForeignKeys().add(tempTargetKey);
 			} else {
-				tempTargetKey = new GenericPrimaryKey(realTargetKey
-						.getColumns());
+				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
 
@@ -332,8 +326,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempRelation, this);
 			this.add(relationComponent, new SchemaLayoutConstraint(0),
 					Diagram.RELATION_LAYER);
-			// Resize the diagram to fit.
-			this.resizeDiagram();
 		}
 	}
 
@@ -380,7 +372,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.removeAll();
 			this.getTableComponents().clear();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
@@ -389,22 +380,19 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final Table tempSource = new FakeTable(Resources
 					.get("dummyTempTableName")
 					+ " " + this.getStep(), tempSourceSchema);
-			tempSourceSchema.addTable(tempSource);
-			for (final Iterator i = this.lIncludeCols.iterator(); i.hasNext();)
-				tempSource.addColumn((Column) i.next());
+			tempSourceSchema.getTables().put(tempSource.getName(), tempSource);
+			for (final Iterator i = this.lIncludeCols.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
+				tempSource.getColumns().put(col.getName(), col);
+			}
 			Key tempSourceKey;
 			if (this.ltu.getSchemaSourceKey() instanceof ForeignKey) {
-				tempSourceKey = new GenericForeignKey(this.ltu
-						.getSourceDataSetColumns());
-				try {
-					tempSource.addForeignKey((ForeignKey) tempSourceKey);
-				} catch (final AssociationException e) {
-					// Really should never happen.
-					throw new BioMartError(e);
-				}
+				tempSourceKey = new ForeignKey((Column[]) this.ltu
+						.getSourceDataSetColumns().toArray(new Column[0]));
+				tempSource.getForeignKeys().add(tempSourceKey);
 			} else {
-				tempSourceKey = new GenericPrimaryKey(this.ltu
-						.getSourceDataSetColumns());
+				tempSourceKey = new PrimaryKey((Column[]) this.ltu
+						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
 
@@ -416,21 +404,14 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					.getSchema().getName());
 			final Table tempTarget = new RealisedTable(realTarget.getName(),
 					tempTargetSchema, realTarget, this.getExplainContext());
-			tempTargetSchema.addTable(tempTarget);
+			tempTargetSchema.getTables().put(tempTarget.getName(), tempTarget);
 			// Target table has no columns.
 			Key tempTargetKey;
 			if (realTargetKey instanceof ForeignKey) {
-				tempTargetKey = new GenericForeignKey(realTargetKey
-						.getColumns());
-				try {
-					tempTarget.addForeignKey((ForeignKey) tempTargetKey);
-				} catch (final AssociationException e) {
-					// Really should never happen.
-					throw new BioMartError(e);
-				}
+				tempTargetKey = new ForeignKey(realTargetKey.getColumns());
+				tempTarget.getForeignKeys().add(tempTargetKey);
 			} else {
-				tempTargetKey = new GenericPrimaryKey(realTargetKey
-						.getColumns());
+				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
 
@@ -469,8 +450,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					tempRelation, this);
 			this.add(relationComponent, new SchemaLayoutConstraint(0),
 					Diagram.RELATION_LAYER);
-			// Resize the diagram to fit.
-			this.resizeDiagram();
 		}
 	}
 
@@ -511,7 +490,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.removeAll();
 			this.getTableComponents().clear();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
@@ -520,25 +498,25 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			final Table tempSource = new FakeTable(Resources
 					.get("dummyTempTableName")
 					+ " " + this.getStep(), tempSourceSchema);
-			tempSourceSchema.addTable(tempSource);
+			tempSourceSchema.getTables().put(tempSource.getName(), tempSource);
 			for (final Iterator i = this.etu.getNewColumnNameMap().values()
-					.iterator(); i.hasNext();)
-				tempSource.addColumn((Column) i.next());
+					.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
+				tempSource.getColumns().put(col.getName(), col);
+			}
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);
 			final Object tcState = this.getState(tc);
 			if (tcState != null)
 				tc.setState(tcState);
-			// Resize the diagram to fit.
-			this.resizeDiagram();
 		}
 	}
 
 	/**
 	 * A realised relation is a generic relation with a specific iteration.
 	 */
-	public static class RealisedRelation extends GenericRelation {
+	public static class RealisedRelation extends Relation {
 
 		private final Relation relation;
 
@@ -579,6 +557,15 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			this.relation = relation;
 			this.relationIteration = relationIteration;
 			this.explainContext = explainContext;
+			relation.addPropertyChangeListener(new PropertyChangeListener() {
+				public void propertyChange(final PropertyChangeEvent e) {
+					final PropertyChangeEvent ours = new PropertyChangeEvent(
+							RealisedRelation.this, e.getPropertyName(), e
+									.getOldValue(), e.getNewValue());
+					ours.setPropagationId(e.getPropagationId());
+					RealisedRelation.this.pcs.firePropertyChange(ours);
+				}
+			});
 		}
 
 		/**
@@ -606,7 +593,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	/**
 	 * Realised tables are copies of those found in real schemas.
 	 */
-	public static class RealisedTable extends GenericTable {
+	public static class RealisedTable extends Table {
 
 		private final Table table;
 
@@ -626,9 +613,18 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 */
 		public RealisedTable(final String name, final FakeSchema schema,
 				final Table table, final ExplainContext explainContext) {
-			super(name, schema);
+			super(schema, name);
 			this.table = table;
 			this.explainContext = explainContext;
+			table.addPropertyChangeListener(new PropertyChangeListener() {
+				public void propertyChange(final PropertyChangeEvent e) {
+					final PropertyChangeEvent ours = new PropertyChangeEvent(
+							RealisedTable.this, e.getPropertyName(), e
+									.getOldValue(), e.getNewValue());
+					ours.setPropagationId(e.getPropagationId());
+					RealisedTable.this.pcs.firePropertyChange(ours);
+				}
+			});
 		}
 
 		/**
@@ -647,9 +643,21 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	}
 
 	/**
+	 * A fake mart does not really exist.
+	 */
+	public static class FakeMart extends Mart {
+		/**
+		 * Construct a fake mart.
+		 */
+		public FakeMart() {
+			super();
+		}
+	}
+
+	/**
 	 * A fake schema does not really exist.
 	 */
-	public static class FakeSchema extends GenericSchema {
+	public static class FakeSchema extends Schema {
 		/**
 		 * Construct a fake schema with the given name.
 		 * 
@@ -657,14 +665,14 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the name.
 		 */
 		public FakeSchema(final String name) {
-			super(name);
+			super(new FakeMart(), name, name);
 		}
 	}
 
 	/**
 	 * A fake table does not really exist.
 	 */
-	public static class FakeTable extends GenericTable {
+	public static class FakeTable extends Table {
 		/**
 		 * Construct a fake table with the given name in the given schema.
 		 * 
@@ -674,7 +682,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the schema.
 		 */
 		public FakeTable(final String name, final FakeSchema schema) {
-			super(name, schema);
+			super(schema, name);
 		}
 	}
 }

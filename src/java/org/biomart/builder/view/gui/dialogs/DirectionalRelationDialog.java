@@ -36,8 +36,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Relation;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Relation;
 import org.biomart.common.resources.Resources;
 
 /**

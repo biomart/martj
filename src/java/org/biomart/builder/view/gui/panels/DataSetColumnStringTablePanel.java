@@ -31,7 +31,7 @@ import javax.swing.ListCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import org.biomart.builder.model.DataSet.DataSetColumn;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 /**
  * A two-column table model which displays dataset columns as a drop-down on the

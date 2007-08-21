@@ -39,9 +39,9 @@ import javax.swing.event.MenuListener;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.common.model.Schema;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.view.gui.BioMartGUI;
@@ -133,8 +133,6 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem renameSchema;
 
-		private JMenuItem replicateSchema;
-
 		private JMenuItem removeSchema;
 
 		private JMenuItem invisibleDataset;
@@ -146,8 +144,6 @@ public class MartBuilder extends BioMartGUI {
 		private JMenuItem saveDatasetDDL;
 
 		private JMenuItem renameDataset;
-
-		private JMenuItem replicateDataset;
 
 		private JMenuItem removeDataset;
 
@@ -324,13 +320,6 @@ public class MartBuilder extends BioMartGUI {
 					.charAt(0));
 			this.renameSchema.addActionListener(this);
 
-			// Replicate schema.
-			this.replicateSchema = new JMenuItem(Resources
-					.get("replicateSchemaTitle"));
-			this.replicateSchema.setMnemonic(Resources.get(
-					"replicateSchemaMnemonic").charAt(0));
-			this.replicateSchema.addActionListener(this);
-
 			// Remove schema.
 			this.removeSchema = new JMenuItem(Resources
 					.get("removeSchemaTitle"), new ImageIcon(Resources
@@ -381,13 +370,6 @@ public class MartBuilder extends BioMartGUI {
 			this.renameDataset.setMnemonic(Resources.get(
 					"renameDataSetMnemonic").charAt(0));
 			this.renameDataset.addActionListener(this);
-
-			// Replicate dataset.
-			this.replicateDataset = new JMenuItem(Resources
-					.get("replicateDataSetTitle"));
-			this.replicateDataset.setMnemonic(Resources.get(
-					"replicateDataSetMnemonic").charAt(0));
-			this.replicateDataset.addActionListener(this);
 
 			// Remove dataset.
 			this.removeDataset = new JMenuItem(Resources
@@ -493,7 +475,6 @@ public class MartBuilder extends BioMartGUI {
 			schemaMenu.add(this.partitionedSchema);
 			schemaMenu.addSeparator();
 			schemaMenu.add(this.renameSchema);
-			schemaMenu.add(this.replicateSchema);
 			schemaMenu.add(this.removeSchema);
 
 			// Construct the dataset menu.
@@ -514,7 +495,6 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.add(this.explainDataset);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.renameDataset);
-			datasetMenu.add(this.replicateDataset);
 			datasetMenu.add(this.removeDataset);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.extendDataset);
@@ -694,8 +674,6 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.renameSchema
 							.setEnabled(schema != null);
-					MartBuilderMenuBar.this.replicateSchema
-							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.removeSchema
 							.setEnabled(schema != null);
 				}
@@ -742,14 +720,13 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.partitionDSWizard
 							.setSelected(ds != null
-									&& mart.getPartitionTableForDataSet(ds) != null);
+									&& mart
+											.getPartitionTableApplicationForDataSet(ds) != null);
 					MartBuilderMenuBar.this.explainDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.saveDatasetDDL
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.renameDataset
-							.setEnabled(ds != null);
-					MartBuilderMenuBar.this.replicateDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.removeDataset
 							.setEnabled(ds != null);
@@ -875,12 +852,6 @@ public class MartBuilder extends BioMartGUI {
 						.getSelectedSchema();
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestRenameSchema(schema);
-			} else if (e.getSource() == this.replicateSchema) {
-				final Schema schema = this.getMartBuilder().martTabSet
-						.getSelectedMartTab().getSchemaTabSet()
-						.getSelectedSchema();
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getSchemaTabSet().requestReplicateSchema(schema);
 			} else if (e.getSource() == this.removeSchema) {
 				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
@@ -936,12 +907,6 @@ public class MartBuilder extends BioMartGUI {
 						.getSelectedDataSet();
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestRenameDataSet(ds);
-			} else if (e.getSource() == this.replicateDataset) {
-				final DataSet ds = this.getMartBuilder().martTabSet
-						.getSelectedMartTab().getDataSetTabSet()
-						.getSelectedDataSet();
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getDataSetTabSet().requestReplicateDataSet(ds);
 			} else if (e.getSource() == this.removeDataset) {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()

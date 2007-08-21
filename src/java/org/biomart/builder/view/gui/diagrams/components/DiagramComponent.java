@@ -18,12 +18,11 @@
 
 package org.biomart.builder.view.gui.diagrams.components;
 
-import java.util.Map;
-
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
+import org.biomart.common.utils.BeanMap;
 
 /**
  * An element that can be drawn on a diagram. It can provide a context menu for
@@ -84,7 +83,7 @@ public interface DiagramComponent {
 	 * 
 	 * @return the map of inner components.
 	 */
-	public Map getSubComponents();
+	public BeanMap getSubComponents();
 
 	/**
 	 * This method is called when the component needs to rethink its contents

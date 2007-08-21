@@ -27,17 +27,18 @@ import org.biomart.runner.model.JobPlan;
  * This dialog runs tests against a job.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class MartRunnerTestDialog extends JDialog {
 	private static final long serialVersionUID = 1;
-	
+
 	/**
 	 * Opens a test dialog to allow tests against a particular job plan.
 	 * 
-	 * @param jobPlan the job to run tests against.
+	 * @param jobPlan
+	 *            the job to run tests against.
 	 */
 	public static void showTests(final JobPlan jobPlan) {
 		// Open the dialog.

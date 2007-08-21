@@ -15,7 +15,7 @@
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package org.biomart.common.view.gui.panels;
+package org.biomart.builder.view.gui.panels;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -41,8 +41,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Column.GenericColumn;
+import org.biomart.builder.model.Column;
 
 /**
  * This panel represents a two-column table which can contain the entries of a
@@ -532,7 +531,7 @@ public abstract class TwoColumnTablePanel extends JPanel {
 		}
 
 		public Class getFirstColumnType() {
-			return GenericColumn.class;
+			return Column.class;
 		}
 
 		public Object getNewRowFirstColumn() {

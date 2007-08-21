@@ -40,19 +40,20 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 
+import org.biomart.builder.model.Column;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.view.gui.diagrams.Diagram;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Key.PrimaryKey;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
@@ -125,6 +126,22 @@ public class KeyComponent extends BoxShapedComponent {
 
 		// Calculate the component layout.
 		this.recalculateDiagramComponent();
+
+		// Repaint events.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				KeyComponent.this.needsRepaint = true;
+			}
+		};
+		key.addPropertyChangeListener("status", repaintListener);
+
+		// Recalc events.
+		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				KeyComponent.this.needsRecalc = true;
+			}
+		};
+		key.addPropertyChangeListener("columns", recalcListener);
 
 		// Set up drag-and-drop capabilities.
 		final DragSource dragSource = DragSource.getDefaultDragSource();
@@ -266,21 +283,17 @@ public class KeyComponent extends BoxShapedComponent {
 		return (Key) this.getObject();
 	}
 
-	public void recalculateDiagramComponent() {
-		// Clear first.
-		this.removeAll();
-
+	protected void doRecalculateDiagramComponent() {
 		// Calculate new label.
 		final StringBuffer sb = new StringBuffer();
-		for (final Iterator i = this.getKey().getColumns().iterator(); i
-				.hasNext();) {
-			final Column column = (Column) i.next();
+		for (int i = 0; i < this.getKey().getColumns().length; i++) {
+			if (i > 0)
+				sb.append(", ");
+			final Column column = this.getKey().getColumns()[i];
 			sb
 					.append(column instanceof DataSetColumn ? ((DataSetColumn) column)
 							.getModifiedName()
 							: column.getName());
-			if (i.hasNext())
-				sb.append(", ");
 		}
 
 		// Add the label.

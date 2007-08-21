@@ -23,13 +23,15 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.JTextField;
 
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.diagrams.Diagram;
-import org.biomart.common.model.Column;
 
 /**
  * This simple component represents a single column within a table.
@@ -102,16 +104,30 @@ public class ColumnComponent extends BoxShapedComponent {
 
 		// Calculate the diagram.
 		this.recalculateDiagramComponent();
+
+		// Repaint events.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				ColumnComponent.this.needsRepaint = true;
+			}
+		};
+		column.addPropertyChangeListener("columnMasked", repaintListener);
+		column.addPropertyChangeListener("columnIndexed", repaintListener);
+
+		// Recalc events.
+		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				ColumnComponent.this.needsRecalc = true;
+			}
+		};
+		column.addPropertyChangeListener("columnRename", recalcListener);
 	}
 
 	private Column getColumn() {
 		return (Column) this.getObject();
 	}
 
-	public void recalculateDiagramComponent() {
-		// Remove everything.
-		this.removeAll();
-
+	protected void doRecalculateDiagramComponent() {
 		// Add the label for the column name.
 		final JTextField name = new JTextField();
 		name.setFont(ColumnComponent.NORMAL_FONT);

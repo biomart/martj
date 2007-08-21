@@ -28,8 +28,8 @@ import java.util.Map;
  * Handles list of jobs currently known.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class JobList implements Serializable {

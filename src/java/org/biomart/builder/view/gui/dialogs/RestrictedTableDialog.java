@@ -36,11 +36,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import org.biomart.builder.model.SchemaModificationSet;
-import org.biomart.common.model.Table;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.model.Table.RestrictedTableDefinition;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel.ColumnStringTablePanel;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -76,7 +76,7 @@ public class RestrictedTableDialog extends JDialog {
 	 *            the restriction to use as a template, if any.
 	 */
 	public RestrictedTableDialog(final Table table,
-			final SchemaModificationSet.RestrictedTableDefinition template) {
+			final RestrictedTableDefinition template) {
 		// Creates the basic dialog.
 		super();
 		this.setTitle(template == null ? Resources
@@ -117,7 +117,7 @@ public class RestrictedTableDialog extends JDialog {
 		this.hard = new JCheckBox(Resources.get("hardLabel"));
 
 		// Work out what column/relation pairs are available to us.
-		final List colsAvailable = new ArrayList(table.getColumns());
+		final List colsAvailable = new ArrayList(table.getColumns().values());
 
 		// Table aliases.
 		this.columnAliasModel = new ColumnStringTablePanel(

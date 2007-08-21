@@ -25,6 +25,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -36,14 +38,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.biomart.builder.model.Column;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTable;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -70,7 +72,7 @@ public class TableComponent extends BoxShapedComponent {
 	 */
 	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
-	private static Color NORMAL_COLOUR = Color.BLACK;
+	private static final Color NORMAL_COLOUR = Color.BLACK;
 
 	/**
 	 * Background colour for all ignored tables.
@@ -121,6 +123,30 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Draw our contents.
 		this.recalculateDiagramComponent();
+
+		// Repaint events.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				TableComponent.this.needsRepaint = true;
+			}
+		};
+		table.addPropertyChangeListener("masked", repaintListener);
+		table.addPropertyChangeListener("dimensionMasked", repaintListener);
+		table.addPropertyChangeListener("distinctTable", repaintListener);
+		table.addPropertyChangeListener("restrictTable", repaintListener);
+		// This picks up non-major relation changes.
+		table.addPropertyChangeListener("indirectModified", repaintListener);
+
+		// Recalc events.
+		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				TableComponent.this.needsRecalc = true;
+			}
+		};
+		table.addPropertyChangeListener("name", recalcListener);
+		table.addPropertyChangeListener("tableRename", recalcListener);
+		table.getKeys().addPropertyChangeListener(recalcListener);
+		table.getColumns().addPropertyChangeListener(recalcListener);
 	}
 
 	/**
@@ -141,9 +167,9 @@ public class TableComponent extends BoxShapedComponent {
 		return this.hidingMaskedCols;
 	}
 
-	public void recalculateDiagramComponent() {
-		// Remove all our existing components.
-		this.removeAll();
+	protected void doRecalculateDiagramComponent() {
+		// Clear subcomponents.
+		this.getSubComponents().clear();
 
 		// Add the table name label.
 		final JTextField name = new JTextField();
@@ -168,6 +194,15 @@ public class TableComponent extends BoxShapedComponent {
 			this.addSubComponent(key, keyComponent);
 			this.getSubComponents().putAll(keyComponent.getSubComponents());
 
+			for (int j = 0; j < key.getColumns().length; j++)
+				key.getColumns()[j].addPropertyChangeListener("columnRename",
+						new PropertyChangeListener() {
+							public void propertyChange(
+									final PropertyChangeEvent evt) {
+								TableComponent.this.needsRecalc = true;
+							}
+						});
+
 			// Physically add it to the table component layout.
 			this.add(keyComponent, this.constraints);
 		}
@@ -177,8 +212,8 @@ public class TableComponent extends BoxShapedComponent {
 
 		// Do a bit of sorting to make them alphabetical first.
 		final Map sortedColMap = new TreeMap();
-		for (final Iterator i = this.getTable().getColumns().iterator(); i
-				.hasNext();) {
+		for (final Iterator i = this.getTable().getColumns().values()
+				.iterator(); i.hasNext();) {
 			final Column col = (Column) i.next();
 			sortedColMap.put(
 					col instanceof DataSetColumn ? ((DataSetColumn) col)
@@ -200,8 +235,14 @@ public class TableComponent extends BoxShapedComponent {
 						TableComponent.this.hidingMaskedCols = hideMaskedButton
 								.isSelected();
 						// Recalculate the diagram.
-						TableComponent.this.getDiagram().revalidate();
-						TableComponent.this.getDiagram().repaintDiagram();
+						for (final Iterator i = TableComponent.this
+								.getSubComponents().values().iterator(); i
+								.hasNext();) {
+							final DiagramComponent comp = (DiagramComponent) i
+									.next();
+							if (comp instanceof ColumnComponent)
+								comp.repaintDiagramComponent();
+						}
 					}
 				});
 			}
@@ -234,12 +275,11 @@ public class TableComponent extends BoxShapedComponent {
 					TableComponent.this.setState(Boolean.FALSE);
 				else
 					TableComponent.this.setState(Boolean.TRUE);
-				// Recalculate the diagram.
-				TableComponent.this.getDiagram().revalidate();
-				TableComponent.this.getDiagram().repaintDiagram();
 			}
 		});
 		this.showHide.setEnabled(sortedColMap.size() > 0);
+		this.add(this.columnsListPanel, this.constraints);
+		this.columnsListPanel.setVisible(false);
 
 		// Set our initial display state as false, which means columns are
 		// hidden.
@@ -261,8 +301,9 @@ public class TableComponent extends BoxShapedComponent {
 		final Table table = this.getTable();
 		final StringBuffer name = new StringBuffer();
 		if (table != null && table instanceof DataSetTable) {
-			final String parts[] = this.getTable().getName().split(Resources.get("tablenameSep"));
-			final String displayOriginalName = parts[parts.length-1];
+			final String parts[] = this.getTable().getName().split(
+					Resources.get("tablenameSep"));
+			final String displayOriginalName = parts[parts.length - 1];
 			final String modifiedName = this.getEditableName();
 			name.append(modifiedName);
 			if (!modifiedName.equals(displayOriginalName)) {
@@ -280,11 +321,11 @@ public class TableComponent extends BoxShapedComponent {
 		if (state != null && state.equals(Boolean.TRUE)) {
 			if (this.getState() != null
 					&& this.getState().equals(Boolean.FALSE))
-				this.add(this.columnsListPanel, this.constraints);
+				this.columnsListPanel.setVisible(true);
 			this.showHide.setText(Resources.get("hideColumnsButton"));
 		} else {
 			if (this.getState() != null && this.getState().equals(Boolean.TRUE))
-				this.remove(this.columnsListPanel);
+				this.columnsListPanel.setVisible(false);
 			this.showHide.setText(Resources.get("showColumnsButton"));
 		}
 

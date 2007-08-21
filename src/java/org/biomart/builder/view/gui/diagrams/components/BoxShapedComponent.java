@@ -23,6 +23,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.LayoutManager2;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
@@ -35,7 +36,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -48,6 +48,10 @@ import javax.swing.SwingUtilities;
 
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
+import org.biomart.common.utils.BeanMap;
+import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.Transaction.TransactionEvent;
+import org.biomart.common.utils.Transaction.TransactionListener;
 
 /**
  * Any diagram component that is box-shaped is derived from this class. It
@@ -65,7 +69,17 @@ import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
  * @since 0.5
  */
 public abstract class BoxShapedComponent extends JPanel implements
-		DiagramComponent {
+		DiagramComponent, TransactionListener {
+
+	/**
+	 * Subclasses use this if the component needs recalculating.
+	 */
+	protected boolean needsRecalc = false;
+
+	/**
+	 * Subclasses use this if the component needs repainting.
+	 */
+	protected boolean needsRepaint = false;
 
 	private static final float BOX_DASHSIZE = 6.0f; // 72 = 1 inch
 
@@ -144,7 +158,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	private RenderingHints renderHints;
 
 	// OK to use map, as the components are recreated, not changed.
-	private final Map subComponents = new HashMap();
+	private final BeanMap subComponents = new BeanMap(new HashMap());
 
 	/**
 	 * Constructs a box-shaped component around the given database object to be
@@ -164,6 +178,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 		// Turn on the mouse.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+		this.setDoubleBuffered(true); // Stop flicker.
 
 		// Make sure we're not transparent.
 		this.setOpaque(true);
@@ -173,6 +188,41 @@ public abstract class BoxShapedComponent extends JPanel implements
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		this.renderHints.put(RenderingHints.KEY_RENDERING,
 				RenderingHints.VALUE_RENDER_QUALITY);
+
+		Transaction.addTransactionListener(this);
+	}
+
+	public void setDirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isDirectModified() {
+		return false;
+	}
+
+	public void setIndirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isIndirectModified() {
+		return false;
+	}
+
+	public void transactionReset() {
+		// Ignore, for now.
+	}
+
+	public void transactionStarted(final TransactionEvent evt) {
+		// Ignore, for now.
+	}
+
+	public void transactionEnded(final TransactionEvent evt) {
+		if (this.needsRecalc)
+			this.recalculateDiagramComponent();
+		else if (this.needsRepaint)
+			this.repaintDiagramComponent();
+		this.needsRecalc = false;
+		this.needsRepaint = false;
 	}
 
 	/**
@@ -301,11 +351,29 @@ public abstract class BoxShapedComponent extends JPanel implements
 		return this.state;
 	}
 
-	public Map getSubComponents() {
+	public BeanMap getSubComponents() {
 		return this.subComponents;
 	}
 
-	public abstract void recalculateDiagramComponent();
+	public void recalculateDiagramComponent() {
+		// Remove everything.
+		this.removeAll();
+		final Object state = this.getState();
+		this.doRecalculateDiagramComponent();
+		if (state != null)
+			this.setState(state);
+		this.revalidate();
+		final Diagram parent = (Diagram) this.getParent();
+		if (parent != null)
+			((LayoutManager2) parent.getLayout()).invalidateLayout(parent
+					.getParent());
+		this.repaintDiagramComponent();
+	}
+
+	/**
+	 * This method actually does the work.
+	 */
+	protected abstract void doRecalculateDiagramComponent();
 
 	public void repaintDiagramComponent() {
 		this.updateAppearance();
@@ -563,7 +631,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	public void updateAppearance() {
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null) {
-			if (mod.isMasked(this.getObject())) {
+			if (mod.isMasked(this.getObject()))
 				if (this instanceof ColumnComponent) {
 					final TableComponent parent = (TableComponent) SwingUtilities
 							.getAncestorOfClass(TableComponent.class, this);
@@ -575,7 +643,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 					this.setVisible(false);
 					return;
 				}
-			}
 			this.setVisible(true);
 			mod.customiseAppearance(this, this.getObject());
 		}

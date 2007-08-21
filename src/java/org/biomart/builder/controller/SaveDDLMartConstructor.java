@@ -36,12 +36,12 @@ import java.util.zip.ZipOutputStream;
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ListenerException;
+import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructorAction;
-import org.biomart.common.model.DataLink;
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.DataLink.JDBCDataLink;
-import org.biomart.common.model.Schema.JDBCSchema;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.DataLink.JDBCDataLink;
+import org.biomart.builder.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.runner.controller.MartRunnerProtocol;
@@ -507,7 +507,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 							this.outputHost, this.outputPort);
 					// Substitute JDBC url with alternative
 					// JDBC host and port.
-					String url = this.targetJDBCDataLink.getJDBCURL();
+					String url = this.targetJDBCDataLink.getUrl();
 					if (this.overrideHost != null
 							&& this.overridePort != null
 							&& this.overrideHost.trim().length()

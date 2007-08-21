@@ -38,7 +38,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,15 +66,18 @@ import javax.swing.ListCellRenderer;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
+import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
-import org.biomart.common.model.Table;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.InverseMap;
+import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.Transaction.TransactionEvent;
+import org.biomart.common.utils.Transaction.TransactionListener;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.ComponentImageSaver;
 import org.biomart.common.view.gui.dialogs.ComponentPrinter;
@@ -99,7 +105,15 @@ import org.biomart.common.view.gui.dialogs.ComponentPrinter;
  * @since 0.5
  */
 public abstract class Diagram extends JLayeredPane implements Scrollable,
-		Autoscroll, AdjustmentListener {
+		Autoscroll, AdjustmentListener, TransactionListener {
+
+	/**
+	 * This is inherited by subclasses to indicate they need redrawing when the
+	 * next transaction ends.
+	 */
+	protected boolean needsRedraw = false;
+
+	private boolean needsSubComps = false;
 
 	private static final int AUTOSCROLL_INSET = 12;
 
@@ -121,12 +135,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	/**
 	 * The layer for middle components.
 	 */
-	public static final int TABLE_LAYER = 2;
+	public static final int TABLE_LAYER = 0;
 
 	/**
 	 * The layer for always-bottom components.
 	 */
-	public static final int RELATION_LAYER = 2;
+	public static final int RELATION_LAYER = -1;
 
 	// OK to use maps as it gets cleared out each time, the keys never change.
 	private final Map componentMap = new HashMap();
@@ -138,8 +152,6 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	private final List selectedItems = new ArrayList();
 
 	private JCheckBox maskedHidden;
-
-	private boolean useMaskedHidden = true;
 
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
@@ -161,11 +173,11 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		super();
 		if (layout != null)
 			this.setLayout(layout);
-
 		Log.debug("Creating new diagram of type " + this.getClass().getName());
 
 		// Enable mouse events to be picked up all over the diagram.
 		this.enableEvents(AWTEvent.MOUSE_EVENT_MASK);
+		this.setDoubleBuffered(true); // Stop flicker.
 
 		// Remember our settings.
 		this.martTab = martTab;
@@ -174,8 +186,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this.maskedHidden = new JCheckBox(Resources.get("hideMaskedTitle"));
 		this.maskedHidden.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				martTab.getSchemaTabSet().repaintAllSchemaDiagrams();
-				martTab.getDataSetTabSet().repaintAllDataSetDiagrams();
+				Diagram.this.repaintDiagram();
 			}
 		});
 		// It has a semi-transparent background with no border.
@@ -207,16 +218,9 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		// Set our background.
 		this.setBackground(Diagram.BACKGROUND_COLOUR);
 		this.setOpaque(true);
-	}
 
-	/**
-	 * Do we show the masked hidden button?
-	 * 
-	 * @param useMaskedHidden
-	 *            <tt>true</tt> if we want the masked hidden button.
-	 */
-	public void setUseMaskedHidden(final boolean useMaskedHidden) {
-		this.useMaskedHidden = useMaskedHidden;
+		// Register ourselves for transactions.
+		Transaction.addTransactionListener(this);
 	}
 
 	/**
@@ -234,6 +238,56 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	public Diagram(final MartTab martTab) {
 		this(null, martTab);
+	}
+
+	public void setDirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isDirectModified() {
+		return false;
+	}
+
+	public void setIndirectModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isIndirectModified() {
+		return false;
+	}
+
+	public void transactionReset() {
+		// Ignore, for now.
+	}
+
+	public void transactionStarted(final TransactionEvent evt) {
+		// Ignore, for now.
+	}
+
+	public void transactionEnded(final TransactionEvent evt) {
+		if (this.needsRedraw)
+			this.recalculateDiagram();
+		else if (this.needsSubComps)
+			this.recalculateSubComps();
+	}
+
+	private void recalculateSubComps() {
+		this.needsSubComps = false;
+		final Collection comps = Arrays.asList(this.getComponents());
+		for (final Iterator i = this.componentMap.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (!comps.contains(entry.getValue()))
+				i.remove();
+		}
+		final Map subCompMap = new HashMap();
+		for (final Iterator i = this.componentMap.values().iterator(); i
+				.hasNext();) {
+			final Object o = i.next();
+			if (o instanceof DiagramComponent)
+				subCompMap.putAll(((DiagramComponent) o).getSubComponents());
+		}
+		this.componentMap.putAll(subCompMap);
 	}
 
 	/**
@@ -531,9 +585,15 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	protected void addImpl(final Component comp, final Object constraints,
 			final int index) {
 		if (comp instanceof DiagramComponent) {
-			this.componentMap.put(((DiagramComponent) comp).getObject(), comp);
-			this.componentMap.putAll(((DiagramComponent) comp)
-					.getSubComponents());
+			final DiagramComponent dcomp = (DiagramComponent) comp;
+			this.needsSubComps = true;
+			this.componentMap.put(dcomp.getObject(), dcomp);
+			dcomp.getSubComponents().addPropertyChangeListener(
+					new PropertyChangeListener() {
+						public void propertyChange(final PropertyChangeEvent e) {
+							Diagram.this.needsSubComps = true;
+						}
+					});
 		}
 		super.addImpl(comp, constraints, index);
 	}
@@ -679,51 +739,49 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	public void recalculateDiagram() {
 		Log.debug("Recalculating diagram");
+		this.needsRedraw = false;
 		new LongProcess() {
 			public void run() throws Exception {
 				Diagram.this.deselectAll();
-				// Remember all the existing diagram component states.
-				final Map states = new HashMap();
+
+				// Remember states.
+				final Map stateMap = new HashMap();
 				for (final Iterator i = Diagram.this.componentMap.entrySet()
 						.iterator(); i.hasNext();) {
 					final Map.Entry entry = (Map.Entry) i.next();
-					final Object object = entry.getKey();
-					final DiagramComponent comp = (DiagramComponent) entry
-							.getValue();
-
-					// If the component actually exists, which it may not if the
-					// diagram has been dynamically updated elsewhere, remember
-					// the state, else remove the current component because it
-					// is
-					// not relevant.
-					if (comp != null)
-						states.put(object, comp.getState());
-					else
-						i.remove();
+					final Object o = entry.getValue();
+					if (o instanceof BoxShapedComponent)
+						stateMap.put(entry.getKey(), ((BoxShapedComponent) o)
+								.getState());
 				}
+
+				// First of all, remove all our existing components.
+				Diagram.this.removeAll();
+				Diagram.this.componentMap.clear();
 
 				// Delegate to do the actual diagram clear-and-repopulate.
 				Diagram.this.doRecalculateDiagram();
 
+				// Do the subcomp thing.
+				Diagram.this.recalculateSubComps();
+
+				// Reinstate states.
+				for (final Iterator i = stateMap.entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					final BoxShapedComponent o = (BoxShapedComponent) Diagram.this.componentMap
+							.get(entry.getKey());
+					if (o != null && entry.getValue() != null)
+						o.setState(entry.getValue());
+				}
+
 				// Set up a floating panel with the hide masked box.
-				if (Diagram.this.useMaskedHidden)
+				if (Diagram.this.isMaskedHiddenUsed())
 					Diagram.this.add(Diagram.this.maskedHidden, null,
 							Diagram.TOP_LAYER);
 
-				// Reapply all the states. The methods of the Map interface use
-				// equals() to compare objects, so any objects in the new
-				// diagram
-				// which match the old objects in the old diagram will inherit
-				// the state from the old objects.
-				for (final Iterator i = states.entrySet().iterator(); i
-						.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final Object object = entry.getKey();
-					final DiagramComponent comp = (DiagramComponent) Diagram.this.componentMap
-							.get(object);
-					if (comp != null)
-						comp.setState(entry.getValue());
-				}
+				// Resize the diagram to fit our new components.
+				Diagram.this.resizeDiagram();
 
 				// Initial placement of the hide masked button.
 				Diagram.this.adjustmentValueChanged(null);
@@ -752,8 +810,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				for (final Iterator i = Diagram.this.componentMap.values()
 						.iterator(); i.hasNext();)
 					((DiagramComponent) i.next()).repaintDiagramComponent();
-				if (Diagram.this.useMaskedHidden)
-					Diagram.this.maskedHidden.repaint();
+				Diagram.this.repaint();
 			}
 		}.start();
 	}
@@ -775,7 +832,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * @return the space it needs.
 	 */
 	protected Dimension getMaskedHiddenArea() {
-		if (this.useMaskedHidden)
+		if (this.isMaskedHiddenUsed())
 			return this.maskedHidden.getPreferredSize();
 		else
 			return new Dimension(0, 0);
@@ -874,12 +931,21 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * 
 	 * @return <tt>true</tt> if we should.
 	 */
+	protected boolean isMaskedHiddenUsed() {
+		return true;
+	}
+
+	/**
+	 * Are masked things being hidden?
+	 * 
+	 * @return <tt>true</tt> if they are.
+	 */
 	public boolean isMaskedHidden() {
-		return this.useMaskedHidden && this.maskedHidden.isSelected();
+		return this.isMaskedHiddenUsed() && this.maskedHidden.isSelected();
 	}
 
 	public void adjustmentValueChanged(final AdjustmentEvent evt) {
-		if (!this.useMaskedHidden)
+		if (!this.isMaskedHiddenUsed())
 			return;
 		// This panel hangs out top-left regardless of viewport
 		// scrolling.

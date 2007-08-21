@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.model;
+package org.biomart.builder.model;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +34,8 @@ public class ComponentStatus implements Comparable {
 	private static final long serialVersionUID = 1L;
 
 	private static final Map singletons = new HashMap();
+
+	private final String name;
 
 	/**
 	 * Use this constant to refer to a component that was specified by the user.
@@ -78,15 +80,6 @@ public class ComponentStatus implements Comparable {
 		return s;
 	}
 
-	private final String name;
-
-	/**
-	 * The private constructor takes a single parameter, which defines the name
-	 * this status object will display when printed.
-	 * 
-	 * @param name
-	 *            the name of the status.
-	 */
 	private ComponentStatus(final String name) {
 		this.name = name;
 	}
@@ -101,25 +94,11 @@ public class ComponentStatus implements Comparable {
 		return o == this;
 	}
 
-	/**
-	 * Displays the name of this status object.
-	 * 
-	 * @return the name of this status object.
-	 */
-	public String getName() {
-		return this.name;
-	}
-
 	public int hashCode() {
-		return this.toString().hashCode();
+		return this.name.hashCode();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * The function outputs the result of {@link #getName()}.
-	 */
 	public String toString() {
-		return "" + this.getName();
+		return this.name;
 	}
 }

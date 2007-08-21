@@ -39,12 +39,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
-import org.biomart.common.model.Column;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -134,8 +134,8 @@ public class SuggestInvisibleDataSetDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				if (SuggestInvisibleDataSetDialog.this.tables.getSelectedItem() != null) {
 					final List availableColumns = new ArrayList();
-					for (final Iterator i = table.getColumns().iterator(); i
-							.hasNext();) {
+					for (final Iterator i = table.getColumns().values()
+							.iterator(); i.hasNext();) {
 						final DataSetColumn col = (DataSetColumn) i.next();
 						if (col instanceof WrappedColumn
 								&& ((WrappedColumn) col)

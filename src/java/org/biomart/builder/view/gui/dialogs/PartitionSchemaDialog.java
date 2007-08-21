@@ -16,7 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.biomart.common.view.gui.dialogs;
+package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -38,10 +38,10 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Schema.JDBCSchema;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel.StringStringTablePanel;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel.StringStringTablePanel;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
  * This dialog asks users to create or modify a restriction over a particular
@@ -126,8 +126,8 @@ public class PartitionSchemaDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Create the template name.
-		final JTextField templateName = new JTextField(((JDBCSchema) template)
-				.getDatabaseSchema());
+		final JTextField templateName = new JTextField(template
+				.getDataLinkSchema());
 		templateName.setEnabled(false);
 
 		// Create the regex and expression fields.

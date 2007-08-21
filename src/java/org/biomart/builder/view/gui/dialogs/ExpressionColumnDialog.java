@@ -24,11 +24,13 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -39,14 +41,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import org.biomart.builder.model.Column;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.DataSetModificationSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.view.gui.panels.DataSetColumnStringTablePanel;
-import org.biomart.common.model.Column;
-import org.biomart.common.model.Key;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.view.gui.panels.TwoColumnTablePanel;
 
 /**
  * This dialog asks users to create or modify an expression column.
@@ -129,14 +131,14 @@ public class ExpressionColumnDialog extends JDialog {
 			for (final Iterator i = template.getAliases().entrySet().iterator(); i
 					.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
-				final Column col = table.getColumnByName((String) entry
-						.getKey());
+				final Column col = (Column) table.getColumns().get(
+						entry.getKey());
 				if (col != null)
 					defaults.put(col, entry.getValue());
 			}
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
 		this.columnAliasModel = new DataSetColumnStringTablePanel(defaults,
-				table.getColumns(), skipIncludeCol) {
+				table.getColumns().values(), skipIncludeCol) {
 			private static final long serialVersionUID = 1L;
 
 			private int alias = 1;
@@ -255,18 +257,13 @@ public class ExpressionColumnDialog extends JDialog {
 		// If group-by is selected, we can't allow them to use columns
 		// involved in any keys.
 		if (this.getGroupBy()) {
-			final Collection aliasCols = this.getColumnAliases().keySet();
-			boolean keyFree = true;
+			final Set aliasCols = new HashSet(this.getColumnAliases().keySet());
+			final Set keyCols = new HashSet();
 			for (final Iterator i = this.table.getKeys().iterator(); i
-					.hasNext()
-					&& keyFree;) {
-				final Key k = (Key) i.next();
-				for (final Iterator j = k.getColumns().iterator(); j.hasNext()
-						&& keyFree;)
-					if (aliasCols.contains(j.next()))
-						keyFree = false;
-			}
-			if (!keyFree)
+					.hasNext();)
+				keyCols.addAll(Arrays.asList(((Key) i.next()).getColumns()));
+			aliasCols.retainAll(keyCols);
+			if (!aliasCols.isEmpty())
 				messages.add(Resources.get("columnAliasIncludesKeyCols"));
 		}
 

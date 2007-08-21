@@ -66,7 +66,7 @@ public class InverseMap implements Map {
 			entries.add(new Map.Entry() {
 				private final Object key = me.getValue();
 
-				private Object value = me.getKey();
+				private final Object value = me.getKey();
 
 				public Object getKey() {
 					return this.key;
@@ -77,10 +77,7 @@ public class InverseMap implements Map {
 				}
 
 				public Object setValue(final Object value) {
-					final Object oldValue = this.value;
-					InverseMap.this.map.put(me.getKey(), value);
-					this.value = value;
-					return oldValue;
+					throw new UnsupportedOperationException();
 				}
 			});
 		}
@@ -105,28 +102,15 @@ public class InverseMap implements Map {
 	}
 
 	public Object put(final Object key, final Object value) {
-		final Object oldValue = this.get(key);
-		this.map.put(value, key);
-		return oldValue;
+		throw new UnsupportedOperationException();
 	}
 
 	public void putAll(final Map t) {
-		for (final Iterator i = t.entrySet().iterator(); i.hasNext();) {
-			final Map.Entry me = (Map.Entry) i.next();
-			this.map.put(me.getValue(), me.getKey());
-		}
+		throw new UnsupportedOperationException();
 	}
 
 	public Object remove(final Object key) {
-		for (final Iterator i = this.map.entrySet().iterator(); i.hasNext();) {
-			final Map.Entry me = (Map.Entry) i.next();
-			if (me.getValue().equals(key)) {
-				final Object value = me.getKey();
-				i.remove();
-				return value;
-			}
-		}
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	public int size() {
@@ -135,6 +119,18 @@ public class InverseMap implements Map {
 
 	public Collection values() {
 		return this.map.keySet();
+	}
+
+	public int hashCode() {
+		return this.map.hashCode();
+	}
+
+	public boolean equals(final Object o) {
+		return this.map.equals(o);
+	}
+
+	public String toString() {
+		return this.map.toString();
 	}
 
 }

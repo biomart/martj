@@ -19,12 +19,11 @@
 package org.biomart.runner.exceptions;
 
 /**
- * This refers to exceptions where something has failed during 
- * a job test.
+ * This refers to exceptions where something has failed during a job test.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class TestException extends MartRunnerException {

@@ -52,7 +52,7 @@ public class JobPlan implements Serializable {
 	private static final int MAX_THREAD_COUNT = Integer.parseInt(Settings
 			.getProperty("maxthreads") == null ? "5" : Settings
 			.getProperty("maxthreads"));
-	
+
 	private String JDBCDriverClassName;
 
 	private String JDBCURL;
@@ -387,9 +387,8 @@ public class JobPlan implements Serializable {
 							.hasNext();) {
 						final Date childEnded = ((JobPlanSection) i.next())
 								.getEnded();
-						if (newEnded == null
-								|| (childEnded != null && newEnded
-										.before(childEnded)))
+						if (newEnded == null || childEnded != null
+								&& newEnded.before(childEnded))
 							newEnded = childEnded;
 					}
 					if (allActions != null)
@@ -397,9 +396,8 @@ public class JobPlan implements Serializable {
 								.hasNext();) {
 							final Date childEnded = ((JobPlanAction) i.next())
 									.getEnded();
-							if (newEnded == null
-									|| (childEnded != null && newEnded
-											.before(childEnded)))
+							if (newEnded == null || childEnded != null
+									&& newEnded.before(childEnded))
 								newEnded = childEnded;
 						}
 				}
@@ -435,9 +433,8 @@ public class JobPlan implements Serializable {
 							.hasNext();) {
 						final Date childStarted = ((JobPlanSection) i.next())
 								.getStarted();
-						if (newStarted == null
-								|| (childStarted != null && newStarted
-										.after(childStarted)))
+						if (newStarted == null || childStarted != null
+								&& newStarted.after(childStarted))
 							newStarted = childStarted;
 					}
 					if (allActions != null)
@@ -445,9 +442,8 @@ public class JobPlan implements Serializable {
 								.hasNext();) {
 							final Date childStarted = ((JobPlanAction) i.next())
 									.getStarted();
-							if (newStarted == null
-									|| (childStarted != null && newStarted
-											.after(childStarted)))
+							if (newStarted == null || childStarted != null
+									&& newStarted.after(childStarted))
 								newStarted = childStarted;
 						}
 				}

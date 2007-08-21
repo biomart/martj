@@ -39,8 +39,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
-import org.biomart.common.model.Schema;
-import org.biomart.common.model.Table;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -106,8 +106,8 @@ public class SuggestDataSetDialog extends JDialog {
 
 		final List availableTables = new ArrayList();
 		for (final Iterator i = schemas.iterator(); i.hasNext();)
-			for (final Iterator j = ((Schema) i.next()).getTables().iterator(); j
-					.hasNext();)
+			for (final Iterator j = ((Schema) i.next()).getTables().values()
+					.iterator(); j.hasNext();)
 				availableTables.add(j.next());
 		// Sort the list and make a component to display it.
 		Collections.sort(availableTables);

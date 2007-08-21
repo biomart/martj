@@ -18,17 +18,19 @@
 
 package org.biomart.builder.view.gui.diagrams;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
-import org.biomart.common.model.Relation;
-import org.biomart.common.model.Schema;
 
 /**
  * This diagram draws a {@link SchemaComponent} for each schema in the mart. If
@@ -58,25 +60,41 @@ public class AllSchemasDiagram extends Diagram {
 
 		// Calculate the diagram.
 		this.recalculateDiagram();
+
+		// Listener to know when to recalculate entire diagram,
+		// based on tables in schema, and keys+relations on those
+		// tables (presence/absence only).
+		// If any change, whole diagram needs redoing from scratch,
+		// and new listeners need setting up.
+		final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				AllSchemasDiagram.this.needsRedraw = true;
+			}
+		};
+		martTab.getMart().getSchemas().addPropertyChangeListener(listener);
+		for (final Iterator i = martTab.getMart().getSchemas().values()
+				.iterator(); i.hasNext();) {
+			final Schema sch = (Schema) i.next();
+			sch.getRelations().addPropertyChangeListener(listener);
+		}
 	}
 
 	public void doRecalculateDiagram() {
-		// Remove all existing components.
-		this.removeAll();
-
 		// Add a SchemaComponent for each schema.
 		final Set usedRels = new HashSet();
 		for (final Iterator i = this.getMartTab().getMart().getSchemas()
-				.iterator(); i.hasNext();) {
+				.values().iterator(); i.hasNext();) {
 			final Schema schema = (Schema) i.next();
 			final SchemaComponent schemaComponent = new SchemaComponent(schema,
 					this);
 			// Count and remember relations.
 			int indent = 0;
-			final Collection extRels = schema.getExternalRelations();
-			for (final Iterator j = extRels.iterator(); j.hasNext();) {
+			final Collection extRels = new HashSet();
+			for (final Iterator j = schema.getRelations().iterator(); j
+					.hasNext();) {
 				final Relation rel = (Relation) j.next();
-				if (!usedRels.contains(rel)) {
+				if (rel.isExternal() && !usedRels.contains(rel)) {
+					extRels.add(rel);
 					this.add(new RelationComponent(rel, this),
 							new SchemaLayoutConstraint(indent++),
 							Diagram.RELATION_LAYER);
@@ -87,8 +105,5 @@ public class AllSchemasDiagram extends Diagram {
 					new SchemaLayoutConstraint(extRels.size()),
 					Diagram.TABLE_LAYER);
 		}
-
-		// Resize the diagram to fit the components.
-		this.resizeDiagram();
 	}
 }

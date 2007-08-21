@@ -55,8 +55,8 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Tools for running SQL.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class JobHandler {
@@ -253,7 +253,7 @@ public class JobHandler {
 				actionId = parts[1];
 			}
 			if (!sectionId.equals(previousSectionId)) {
-				if (previousSectionId != null && sectionHasUpdatedActions) 
+				if (previousSectionId != null && sectionHasUpdatedActions)
 					JobHandler.setActions(jobId, previousSectionId, actions,
 							false);
 				sectionHasUpdatedActions = false;
@@ -283,16 +283,16 @@ public class JobHandler {
 				final Collection newIdentifiers = new ArrayList();
 				final JobPlanSection section = JobHandler.getJobPlan(jobId)
 						.getJobPlanSection(sectionId);
-				if (section.getActionCount() > 0) 
+				if (section.getActionCount() > 0)
 					// Recurse on direct actions.
 					newIdentifiers.addAll(actions.keySet());
 				// Recurse on subsections too.
 				for (final Iterator j = section.getSubSections().iterator(); j
-						.hasNext();) 
+						.hasNext();)
 					newIdentifiers.add(((JobPlanSection) j.next())
 							.getIdentifier());
 				// Do the recursive call.
-				JobHandler.setStatus(jobId, newIdentifiers, status, message, 
+				JobHandler.setStatus(jobId, newIdentifiers, status, message,
 						false);
 			}
 		}
@@ -433,7 +433,7 @@ public class JobHandler {
 	 */
 	public static Map getActions(final String jobId, final String sectionId)
 			throws JobException {
-		Log.debug("Loading actions for job "+jobId+" section "+sectionId);
+		Log.debug("Loading actions for job " + jobId + " section " + sectionId);
 		// Load actions from file.
 		synchronized (JobHandler.planDirLock) {
 			// Load existing job plan.
@@ -603,12 +603,12 @@ public class JobHandler {
 				new JobThreadManagerListener() {
 					public void jobStopped(final String jobId) {
 						JobHandler.jobManagers.remove(jobId);
-						Log.info("Thread manager stopped for "+jobId);
+						Log.info("Thread manager stopped for " + jobId);
 					}
 				});
 		JobHandler.jobManagers.put(jobId, manager);
 		manager.startThreadManager();
-		Log.info("Thread manager started for "+jobId);
+		Log.info("Thread manager started for " + jobId);
 	}
 
 	/**
@@ -626,7 +626,7 @@ public class JobHandler {
 				.get(jobId);
 		manager.stopThreadManager();
 		// Don't remove it. The callback will do that.
-		Log.info("Stopped thread manager "+jobId);
+		Log.info("Stopped thread manager " + jobId);
 	}
 
 	private static File getJobListFile() throws IOException {
