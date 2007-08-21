@@ -81,6 +81,7 @@
         <include name="ensj.jar" />
         <include name="ensj-util.jar" />
         <include name="java-getopt-1.0.9.jar" />
+        <include name="jaf-1_1-fr.jar" />
         <include name="jdbc2_0-stdext.jar" />
         <include name="jdom.jar" />
         <include name="junit.jar" />
