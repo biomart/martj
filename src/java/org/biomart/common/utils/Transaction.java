@@ -319,14 +319,14 @@ public class Transaction {
 		list.addAll(schComp);
 		// relations.
 		list.addAll(schRel);
+		// partition tables.
+		list.addAll(pts);
 		// dataset.
 		list.addAll(ds);
 		// non-relation dataset components.
 		list.addAll(dsComp);
 		// dataset relations.
 		list.addAll(dsRel);
-		// partition tables.
-		list.addAll(pts);
 		// diagrams.
 		list.addAll(diag);
 		// diagram components.
