@@ -83,8 +83,10 @@ public class SchemaContext implements DiagramContext {
 			final Object object) {
 		// This bit updates schema boxes.
 		if (object instanceof Schema) {
+			final Schema schema = (Schema) object;
 			final SchemaComponent schcomp = (SchemaComponent) component;
-			if (((Schema) object).isMasked())
+			schcomp.setRecentlyChanged(schema.isDirectModified());
+			if (schema.isMasked())
 				schcomp.setBackground(SchemaComponent.MASKED_BACKGROUND);
 			else
 				schcomp.setBackground(SchemaComponent.BACKGROUND_COLOUR);
@@ -93,15 +95,18 @@ public class SchemaContext implements DiagramContext {
 		// This bit removes a restricted outline from any restricted tables.
 		else if (object instanceof Table) {
 			final TableComponent tblcomp = (TableComponent) component;
+			final Table table = (Table) object;
 			tblcomp.setRestricted(false);
 
+			tblcomp.setRecentlyChanged(table.isDirectModified());
+
 			// Fade out all ignored tables.
-			if (this.isMasked(object)) 
-				component.setBackground(TableComponent.IGNORE_COLOUR);
+			if (this.isMasked(table))
+				tblcomp.setBackground(TableComponent.IGNORE_COLOUR);
 
 			// All others are normal.
 			else
-				component.setBackground(TableComponent.BACKGROUND_COLOUR);
+				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.
@@ -109,15 +114,18 @@ public class SchemaContext implements DiagramContext {
 
 			// What relation is this?
 			final Relation relation = (Relation) object;
+			final RelationComponent relcomp = (RelationComponent) component;
 
 			// Is it restricted?
-			((RelationComponent) component).setRestricted(false);
+			relcomp.setRestricted(false);
 
 			// Is it compounded?
-			((RelationComponent) component).setCompounded(false);
+			relcomp.setCompounded(false);
 
 			// Is it loopback?
-			((RelationComponent) component).setLoopback(false);
+			relcomp.setLoopback(false);
+
+			relcomp.setRecentlyChanged(relation.isDirectModified());
 
 			// Fade out all INFERRED_INCORRECT relations and those which
 			// head to ignored tables.
@@ -127,15 +135,15 @@ public class SchemaContext implements DiagramContext {
 					|| relation.getFirstKey().getTable().getSchema().isMasked()
 					|| relation.getSecondKey().getTable().getSchema()
 							.isMasked())
-				component.setForeground(RelationComponent.INCORRECT_COLOUR);
+				relcomp.setForeground(RelationComponent.INCORRECT_COLOUR);
 
 			// Highlight all HANDMADE relations.
 			else if (relation.getStatus().equals(ComponentStatus.HANDMADE))
-				component.setForeground(RelationComponent.HANDMADE_COLOUR);
+				relcomp.setForeground(RelationComponent.HANDMADE_COLOUR);
 
 			// All others are normal.
 			else
-				component.setForeground(RelationComponent.NORMAL_COLOUR);
+				relcomp.setForeground(RelationComponent.NORMAL_COLOUR);
 		}
 
 		// Keys also get pretty colours for being incorrect or handmade.
@@ -143,21 +151,22 @@ public class SchemaContext implements DiagramContext {
 
 			// What key is this?
 			final Key key = (Key) object;
+			final KeyComponent keycomp = (KeyComponent) component;
 
 			// Fade out all INFERRED_INCORRECT relations.
 			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
-				component.setForeground(KeyComponent.INCORRECT_COLOUR);
+				keycomp.setForeground(KeyComponent.INCORRECT_COLOUR);
 
 			// Highlight all HANDMADE relations.
 			else if (key.getStatus().equals(ComponentStatus.HANDMADE))
-				component.setForeground(KeyComponent.HANDMADE_COLOUR);
+				keycomp.setForeground(KeyComponent.HANDMADE_COLOUR);
 
 			// All others are normal.
 			else
-				component.setForeground(KeyComponent.NORMAL_COLOUR);
+				keycomp.setForeground(KeyComponent.NORMAL_COLOUR);
 
 			// Add drag-and-drop to all keys here.
-			((KeyComponent) component).setDraggable(true);
+			keycomp.setDraggable(true);
 		}
 	}
 
@@ -170,14 +179,16 @@ public class SchemaContext implements DiagramContext {
 
 		// Incorrect and ignored stuff is 'masked'.
 		else if (object instanceof Table) {
-			final Table table = (Table)object;
-			
+			final Table table = (Table) object;
+
 			// Fade out all ignored and/or unreachable tables.
 			if (table.isMasked())
 				return true;
 			else {
-				for (final Iterator i = table.getRelations().iterator(); i.hasNext(); )
-					if (!((Relation)i.next()).getStatus().equals(ComponentStatus.INFERRED_INCORRECT))  
+				for (final Iterator i = table.getRelations().iterator(); i
+						.hasNext();)
+					if (!((Relation) i.next()).getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT))
 						return false;
 				return true;
 			}

@@ -18,6 +18,8 @@
 
 package org.biomart.builder.view.gui.diagrams.components;
 
+import java.awt.Color;
+
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.view.gui.diagrams.Diagram;
@@ -36,6 +38,17 @@ import org.biomart.common.utils.BeanMap;
  * @since 0.5
  */
 public interface DiagramComponent {
+
+	/**
+	 * The colour used to highlight changes.
+	 */
+	public static final Color GLOW_COLOUR = Color.yellow;
+
+	/**
+	 * The width of the line used to highlight changes.
+	 */
+	public static final int GLOW_WIDTH = 3;
+	
 	/**
 	 * Construct a context menu for the model object.
 	 * 
@@ -110,4 +123,10 @@ public interface DiagramComponent {
 	 * It does _not_ repaint the object.
 	 */
 	public void updateAppearance();
+	
+	/**
+	 * Has this component recently changed? Highlight it if it has.
+	 * @param changed <tt>true</tt> if it has recently changed.
+	 */
+	public void setRecentlyChanged(final boolean changed);
 }

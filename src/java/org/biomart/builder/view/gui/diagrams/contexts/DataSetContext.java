@@ -40,7 +40,6 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
-import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
@@ -92,6 +91,7 @@ public class DataSetContext extends SchemaContext {
 
 			// Which relation is it?
 			final Relation relation = (Relation) object;
+			final RelationComponent relcomp = (RelationComponent) component;
 
 			// What tables does it link?
 			final DataSetTable target = (DataSetTable) relation.getManyKey()
@@ -99,82 +99,81 @@ public class DataSetContext extends SchemaContext {
 
 			// Is it compounded?
 			if (target.getFocusRelation() != null)
-				((RelationComponent) component)
-						.setCompounded(target.getFocusRelation()
-								.getCompoundRelation(this.dataset) != null);
+				relcomp.setCompounded(target.getFocusRelation()
+						.getCompoundRelation(this.dataset) != null);
+
+			relcomp.setRecentlyChanged(target.isDirectModified());
 
 			// Fade MASKED DIMENSION relations.
 			if (target.isDimensionMasked() || this.getDataSet().isMasked())
-				component.setForeground(RelationComponent.MASKED_COLOUR);
+				relcomp.setForeground(RelationComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION relations.
 			else if (target.getFocusRelation() != null
 					&& target.getFocusRelation().isMergeRelation(
 							this.getDataSet()))
-				component.setForeground(TableComponent.MASKED_COLOUR);
+				relcomp.setForeground(TableComponent.MASKED_COLOUR);
 
 			// Highlight SUBCLASS relations.
 			else if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
-				component.setForeground(RelationComponent.SUBCLASS_COLOUR);
+				relcomp.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
 			// All the rest are normal.
 			else
-				component.setForeground(RelationComponent.NORMAL_COLOUR);
+				relcomp.setForeground(RelationComponent.NORMAL_COLOUR);
 		}
 
 		// Is it a table?
 		else if (object instanceof DataSetTable) {
 
 			// Which table is it?
-			final DataSetTableType tableType = ((DataSetTable) object)
-					.getType();
+			final TableComponent tblcomp = (TableComponent) component;
+			final DataSetTable tbl = (DataSetTable) object;
+			final DataSetTableType tableType = tbl.getType();
+
+			tblcomp.setRecentlyChanged(tbl.isDirectModified());
 
 			// Highlight partitioned main tables.
 			if (tableType.equals(DataSetTableType.MAIN)
 					&& this.getDataSet().isPartitionTable())
-				component.setBackground(DataSetComponent.PARTITION_BACKGROUND);
+				tblcomp.setBackground(DataSetComponent.PARTITION_BACKGROUND);
 
 			// Fade MASKED DIMENSION relations.
-			else if (((DataSetTable) object).isDimensionMasked())
-				component.setBackground(TableComponent.MASKED_COLOUR);
+			else if (tbl.isDimensionMasked())
+				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Fade MASKED datasets.
 			else if (this.getDataSet().isMasked())
-				((TableComponent) component)
-						.setBackground(TableComponent.MASKED_COLOUR);
+				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Fade MERGED DIMENSION tables.
-			else if (((DataSetTable) object).getFocusRelation() != null
-					&& ((DataSetTable) object).getFocusRelation()
+			else if (tbl.getFocusRelation() != null
+					&& tbl.getFocusRelation()
 							.isMergeRelation(this.getDataSet()))
-				component.setBackground(TableComponent.MASKED_COLOUR);
+				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Highlight DIMENSION tables.
 			else if (tableType.equals(DataSetTableType.DIMENSION)) {
 				// Is it compounded?
-				((TableComponent) component)
-						.setCompounded(((DataSetTable) object)
-								.getFocusRelation() != null
-								&& ((DataSetTable) object).getFocusRelation()
-										.getCompoundRelation(this.dataset) != null);
-				component.setBackground(TableComponent.BACKGROUND_COLOUR);
+				tblcomp.setCompounded(tbl.getFocusRelation() != null
+						&& tbl.getFocusRelation().getCompoundRelation(
+								this.dataset) != null);
+				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 			}
 
 			else
-				component.setBackground(TableComponent.BACKGROUND_COLOUR);
+				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 			// Update dotted line (partitioned).
-			((TableComponent) component).setRestricted(this.getMartTab()
-					.getMart().getPartitionTableApplicationForDimension(
-							(DataSetTable) object) != null
-					|| ((DataSetTable) object).getType().equals(
-							DataSetTableType.MAIN)
+			tblcomp.setRestricted(this.getMartTab().getMart()
+					.getPartitionTableApplicationForDimension(tbl) != null
+					|| tableType.equals(DataSetTableType.MAIN)
 					&& this.getMartTab().getMart()
 							.getPartitionTableApplicationForDataSet(
 									this.dataset) != null);
 
-			((TableComponent) component).setRenameable(true);
-			((TableComponent) component).setSelectable(true);
+			tblcomp.setRenameable(true);
+			tblcomp.setSelectable(true);
 		}
 
 		// Columns.
@@ -182,37 +181,42 @@ public class DataSetContext extends SchemaContext {
 
 			// Which column is it?
 			final DataSetColumn column = (DataSetColumn) object;
+			final ColumnComponent colcomp = (ColumnComponent) component;
+
+			colcomp.setRecentlyChanged(column.isDirectModified());
 
 			// Fade out all MASKED columns.
 			if (column.isColumnMasked())
-				component.setBackground(ColumnComponent.MASKED_COLOUR);
+				colcomp.setBackground(ColumnComponent.MASKED_COLOUR);
 			// Red INHERITED columns.
 			else if (column instanceof InheritedColumn)
-				component.setBackground(ColumnComponent.INHERITED_COLOUR);
+				colcomp.setBackground(ColumnComponent.INHERITED_COLOUR);
 			// Magenta EXPRESSION columns.
 			else if (column instanceof ExpressionColumn)
-				component.setBackground(ColumnComponent.EXPRESSION_COLOUR);
+				colcomp.setBackground(ColumnComponent.EXPRESSION_COLOUR);
 			// All others are normal.
 			else
-				component.setBackground(ColumnComponent.NORMAL_COLOUR);
+				colcomp.setBackground(ColumnComponent.NORMAL_COLOUR);
 
 			// Indexed?
 			if (column.isColumnIndexed())
-				((BoxShapedComponent) component).setIndexed(true);
+				colcomp.setIndexed(true);
 			else
-				((BoxShapedComponent) component).setIndexed(false);
+				colcomp.setIndexed(false);
 
-			((ColumnComponent) component).setRenameable(true);
-			((ColumnComponent) component).setSelectable(true);
+			colcomp.setRenameable(true);
+			colcomp.setSelectable(true);
 		}
 
 		// Keys
 		else if (object instanceof Key) {
-			((BoxShapedComponent) component).setIndexed(true);
+			final KeyComponent keycomp = (KeyComponent) component;
+
+			keycomp.setIndexed(true);
 
 			// Remove drag-and-drop from the key as it does not apply in
 			// the window context.
-			((KeyComponent) component).setDraggable(false);
+			keycomp.setDraggable(false);
 		}
 	}
 

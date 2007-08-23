@@ -133,7 +133,7 @@ public class KeyComponent extends BoxShapedComponent {
 				KeyComponent.this.needsRepaint = true;
 			}
 		};
-		key.addPropertyChangeListener("status", repaintListener);
+		key.addPropertyChangeListener("directModified", repaintListener);
 
 		// Recalc events.
 		final PropertyChangeListener recalcListener = new PropertyChangeListener() {

@@ -313,24 +313,24 @@ public class Transaction {
 				rest.add(tl);
 		}
 		final List list = new ArrayList();
+		// schemas.
+		list.addAll(sch);
 		// non-relation schema components.
 		list.addAll(schComp);
 		// relations.
 		list.addAll(schRel);
-		// schemas.
-		list.addAll(sch);
+		// dataset.
+		list.addAll(ds);
 		// non-relation dataset components.
 		list.addAll(dsComp);
 		// dataset relations.
 		list.addAll(dsRel);
 		// partition tables.
 		list.addAll(pts);
-		// dataset.
-		list.addAll(ds);
-		// diagram components.
-		list.addAll(diagComp);
 		// diagrams.
 		list.addAll(diag);
+		// diagram components.
+		list.addAll(diagComp);
 		// anything else that is interested.
 		list.addAll(rest);
 		return list;

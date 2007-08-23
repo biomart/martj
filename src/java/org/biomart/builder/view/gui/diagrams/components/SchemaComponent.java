@@ -107,7 +107,7 @@ public class SchemaComponent extends BoxShapedComponent {
 				SchemaComponent.this.needsRepaint = true;
 			}
 		};
-		schema.addPropertyChangeListener("masked", repaintListener);
+		schema.addPropertyChangeListener("directModified", repaintListener);
 
 		// Recalc events.
 		final PropertyChangeListener recalcListener = new PropertyChangeListener() {

@@ -850,16 +850,9 @@ public class SchemaTabSet extends JTabbedPane {
 	 * Synchronises all schemas in the mart.
 	 */
 	public void requestSynchroniseAllSchemas() {
-		// In the background, do the synchronisation.
-		new LongProcess() {
-			public void run() throws Exception {
-				Transaction.start();
-				for (final Iterator i = SchemaTabSet.this.martTab.getMart()
-						.getSchemas().values().iterator(); i.hasNext();)
-					((Schema) i.next()).synchronise();
-				Transaction.end();
-			}
-		}.start();
+		for (final Iterator i = SchemaTabSet.this.martTab.getMart()
+				.getSchemas().values().iterator(); i.hasNext();)
+			this.requestSynchroniseSchema((Schema) i.next());
 	}
 
 	/**
@@ -875,6 +868,9 @@ public class SchemaTabSet extends JTabbedPane {
 				Transaction.start();
 				schema.synchronise();
 				Transaction.end();
+				// This is to ensure that any modified flags get cleared.
+				((SchemaDiagram) SchemaTabSet.this.schemaToDiagram.get(schema
+						.getName())).repaintDiagram();
 			}
 		}.start();
 	}

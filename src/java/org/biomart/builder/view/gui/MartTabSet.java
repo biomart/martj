@@ -384,6 +384,7 @@ public class MartTabSet extends JTabbedPane {
 				Transaction.start();
 				final Mart mart = MartBuilderXML.load(file);
 				Transaction.end(); 
+				Transaction.reset(); // Remove the modified status.
 				MartTabSet.this.martModifiedStatus.put(mart, Boolean.FALSE);
 				MartTabSet.this.addMartTab(mart, file);
 				// Save XML filename in history of accessed

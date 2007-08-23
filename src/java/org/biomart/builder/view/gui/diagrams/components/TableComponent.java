@@ -131,18 +131,13 @@ public class TableComponent extends BoxShapedComponent {
 				TableComponent.this.needsRepaint = true;
 			}
 		};
-		table.addPropertyChangeListener("masked", repaintListener);
-		table.addPropertyChangeListener("dimensionMasked", repaintListener);
-		table.addPropertyChangeListener("distinctTable", repaintListener);
-		table.addPropertyChangeListener("restrictTable", repaintListener);
+		table.addPropertyChangeListener("directModified", repaintListener);
 		// Listen to all relations on this table and repaint when needed.
 		// We don't need to monitor relations themselves as the entire
 		// diagram gets recalculated if they change.
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext(); ) {
 			final Relation rel = (Relation)i.next();
-			rel.addPropertyChangeListener("status", repaintListener);
-			rel.addPropertyChangeListener("maskRelation", repaintListener);
-			rel.addPropertyChangeListener("forceRelation", repaintListener);
+			rel.addPropertyChangeListener("directModified", repaintListener);
 		}
 
 		// Recalc events.

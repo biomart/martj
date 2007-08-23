@@ -39,7 +39,6 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.SkipTempReal;
-import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
@@ -108,41 +107,51 @@ public class ExplainContext extends SchemaContext {
 
 		// Schema objects.
 		else if (object instanceof Schema) {
-			((SchemaComponent) component).setRenameable(false);
-			((SchemaComponent) component).setSelectable(false);
+			final Schema sch = (Schema) object;
+			final SchemaComponent schcomp = (SchemaComponent) component;
+
+			schcomp.setRecentlyChanged(sch.isDirectModified());
+
+			schcomp.setRenameable(false);
+			schcomp.setSelectable(false);
 		}
 
 		// This section customises table objects.
 		else if (object instanceof Table) {
+			final Table table = (Table) object;
+			final TableComponent tblcomp = (TableComponent) component;
+
 			// Fade out UNINCLUDED tables.
 			final Set included = new HashSet(
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedTables() : this.dataset
 							.getIncludedTables());
 			if (!(object instanceof DataSetTable)
-					&& (((DiagramComponent) component).getDiagram() instanceof SkipTempReal || !included
+					&& (tblcomp.getDiagram() instanceof SkipTempReal || !included
 							.contains(object)))
-				component.setBackground(TableComponent.MASKED_COLOUR);
+				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
-			else
-				component.setBackground(TableComponent.BACKGROUND_COLOUR);
+			else {
+				tblcomp.setRecentlyChanged(table.isDirectModified());
+				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
+			}
 
-			((TableComponent) component)
-					.setRestricted((this.datasetTable == null ? ((Table) object)
-							.getRestrictTable(this.dataset)
-							: ((Table) object).getRestrictTable(this.dataset,
-									this.datasetTable.getName())) != null);
+			tblcomp.setRestricted((this.datasetTable == null ? table
+					.getRestrictTable(this.dataset) : table.getRestrictTable(
+					this.dataset, this.datasetTable.getName())) != null);
 		}
 
 		// This section customises the appearance of key objects within
 		// table objects in the diagram.
 		else if (object instanceof Key) {
+			final KeyComponent keycomp = (KeyComponent) component;
+
 			// All are normal.
-			component.setForeground(KeyComponent.NORMAL_COLOUR);
+			keycomp.setForeground(KeyComponent.NORMAL_COLOUR);
 
 			// Remove drag-and-drop from the key as it does not apply in
 			// the window context.
-			((KeyComponent) component).setDraggable(false);
+			keycomp.setDraggable(false);
 		}
 	}
 
@@ -151,17 +160,18 @@ public class ExplainContext extends SchemaContext {
 		if (object instanceof Relation) {
 			final Relation relation = (Relation) object;
 			// Fade out all UNINCLUDED and MASKED relations.
-					final Set includedTabs = new HashSet(
-							this.datasetTable != null ? this.datasetTable
-									.getIncludedTables() : this.dataset
-									.getIncludedTables());
-			if (!(includedTabs.contains(relation.getFirstKey().getTable()) && includedTabs.contains(relation.getSecondKey().getTable())))
+			final Set includedTabs = new HashSet(
+					this.datasetTable != null ? this.datasetTable
+							.getIncludedTables() : this.dataset
+							.getIncludedTables());
+			if (!(includedTabs.contains(relation.getFirstKey().getTable()) && includedTabs
+					.contains(relation.getSecondKey().getTable())))
 				return true;
 		}
 
 		// This section customises table objects.
 		else if (object instanceof Table) {
-			final Table table = (Table)object;
+			final Table table = (Table) object;
 			// Fade out UNINCLUDED tables.
 			final Set includedTabs = new HashSet(
 					this.datasetTable != null ? this.datasetTable

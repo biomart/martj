@@ -113,6 +113,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	protected boolean needsRedraw = false;
 
+	/**
+	 * This is inherited by subclasses to indicate they need repainting when the
+	 * next transaction ends.
+	 */
+	protected boolean needsRepaint = false;
+
 	private boolean needsSubComps = false;
 
 	private static final int AUTOSCROLL_INSET = 12;
@@ -257,14 +263,18 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
+		if (this.needsSubComps)
+			this.recalculateSubComps();
 		if (this.needsRedraw)
 			this.recalculateDiagram();
-		else if (this.needsSubComps)
-			this.recalculateSubComps();
+		else if (this.needsRepaint)
+			this.repaintDiagram();
+		this.needsRepaint = false;
+		this.needsRedraw = false;
+		this.needsSubComps = false;
 	}
 
 	private void recalculateSubComps() {
-		this.needsSubComps = false;
 		final Collection comps = Arrays.asList(this.getComponents());
 		for (final Iterator i = this.componentMap.entrySet().iterator(); i
 				.hasNext();) {
@@ -731,9 +741,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	public void recalculateDiagram() {
 		Log.debug("Recalculating diagram");
-		this.needsRedraw = false;
 		new LongProcess() {
-			public void run() throws Exception {
+			public void run() {
 				Diagram.this.deselectAll();
 
 				// Remember states.
@@ -797,14 +806,10 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * on a table). Use {@link #recalculateDiagram()} instead.
 	 */
 	public void repaintDiagram() {
-		new LongProcess() {
-			public void run() throws Exception {
-				for (final Iterator i = Diagram.this.componentMap.values()
-						.iterator(); i.hasNext();)
-					((DiagramComponent) i.next()).repaintDiagramComponent();
-				Diagram.this.repaint();
-			}
-		}.start();
+		for (final Iterator i = this.componentMap.values().iterator(); i
+				.hasNext();)
+			((DiagramComponent) i.next()).repaintDiagramComponent();
+		this.repaint();
 	}
 
 	/**

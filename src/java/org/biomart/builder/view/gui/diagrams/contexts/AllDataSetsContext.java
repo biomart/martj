@@ -63,24 +63,29 @@ public class AllDataSetsContext implements DiagramContext {
 	public void customiseAppearance(final JComponent component,
 			final Object object) {
 		if (object instanceof DataSet) {
+			final DataSet ds = (DataSet) object;
+			final DataSetComponent dscomp = (DataSetComponent) component;
+
+			dscomp.setRecentlyChanged(ds.isDirectModified());
 
 			// Set the background colour.
-			if (((DataSet) object).isPartitionTable())
-				component.setBackground(DataSetComponent.PARTITION_BACKGROUND);
-			else if (((DataSet) object).isMasked())
-				component.setBackground(DataSetComponent.MASKED_BACKGROUND);
-			else if (((DataSet) object).isInvisible())
-				component.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
+			if (ds.isPartitionTable())
+				dscomp.setBackground(DataSetComponent.PARTITION_BACKGROUND);
+			else if (ds.isMasked())
+				dscomp.setBackground(DataSetComponent.MASKED_BACKGROUND);
+			else if (ds.isInvisible())
+				dscomp.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
 			else
-				component.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
+				dscomp.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 			// Update dotted line (partitioned).
-			((DataSetComponent) component).setRestricted(this.getMartTab()
-					.getMart().getPartitionTableApplicationForDataSet(
-							(DataSet) object) != null);
+			dscomp
+					.setRestricted(this.getMartTab().getMart()
+							.getPartitionTableApplicationForDataSet(
+									(DataSet) object) != null);
 
-			((DataSetComponent) component).setRenameable(true);
-			((DataSetComponent) component).setSelectable(true);
+			dscomp.setRenameable(true);
+			dscomp.setSelectable(true);
 		}
 	}
 

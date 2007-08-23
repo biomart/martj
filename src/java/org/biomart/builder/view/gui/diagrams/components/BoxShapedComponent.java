@@ -23,7 +23,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.LayoutManager2;
 import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
@@ -80,6 +79,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * Subclasses use this if the component needs repainting.
 	 */
 	protected boolean needsRepaint = false;
+
+	private boolean changed = false;
 
 	private static final float BOX_DASHSIZE = 6.0f; // 72 = 1 inch
 
@@ -355,10 +356,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 		if (state != null)
 			this.setState(state);
 		this.revalidate();
-		final Diagram parent = (Diagram) this.getParent();
-		if (parent != null)
-			((LayoutManager2) parent.getLayout()).invalidateLayout(parent
-					.getParent());
 		this.repaintDiagramComponent();
 	}
 
@@ -574,8 +571,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	/**
-	 * Obtain the display name for this box-shaped object, to display
-	 * above the box (as opposed to the editable name).
+	 * Obtain the display name for this box-shaped object, to display above the
+	 * box (as opposed to the editable name).
+	 * 
 	 * @return the display name.
 	 */
 	public abstract String getDisplayName();
@@ -623,6 +621,10 @@ public abstract class BoxShapedComponent extends JPanel implements
 		return this.selected;
 	}
 
+	public void setRecentlyChanged(final boolean changed) {
+		this.changed = changed;
+	}
+
 	public void updateAppearance() {
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null) {
@@ -649,6 +651,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 		else
 			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_OUTLINE
 					: BoxShapedComponent.OUTLINE;
-		this.setBorder(BorderFactory.createLineBorder(this.getForeground()));
+		this.setBorder(BorderFactory
+				.createLineBorder(this.changed ? DiagramComponent.GLOW_COLOUR
+						: this.getForeground()));
 	}
 }

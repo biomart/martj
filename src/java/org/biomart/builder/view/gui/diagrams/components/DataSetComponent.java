@@ -110,9 +110,7 @@ public class DataSetComponent extends BoxShapedComponent {
 				DataSetComponent.this.needsRepaint = true;
 			}
 		};
-		dataset.addPropertyChangeListener("masked", repaintListener);
-		dataset.addPropertyChangeListener("partitionTable", repaintListener);
-		dataset.addPropertyChangeListener("invisible", repaintListener);
+		dataset.addPropertyChangeListener("directModified", repaintListener);
 
 		// Recalc events.
 		final PropertyChangeListener recalcListener = new PropertyChangeListener() {

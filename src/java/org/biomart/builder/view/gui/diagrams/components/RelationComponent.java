@@ -66,6 +66,8 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	 */
 	protected boolean needsRecalc = false;
 
+	private boolean changed = false;
+
 	private static final float RELATION_DASHSIZE = 6.0f; // 72 = 1 inch
 
 	private static final float RELATION_DOTSIZE = 2.0f; // 72 = 1 inch
@@ -256,6 +258,11 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	protected void paintComponent(final Graphics g) {
 		final Graphics2D g2d = (Graphics2D) g;
 		g2d.setRenderingHints(this.renderHints);
+		if (this.changed) {
+			g2d.setColor(DiagramComponent.GLOW_COLOUR);
+			g2d.setStroke(new BasicStroke(DiagramComponent.GLOW_WIDTH));
+			g2d.draw(this.outline);
+		}
 		g2d.setColor(this.getForeground());
 		g2d.setStroke(this.stroke);
 		g2d.draw(this.loopback ? this.outline : this.lineShape);
@@ -423,6 +430,10 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	 */
 	public void setLoopback(final boolean loopback) {
 		this.loopback = loopback;
+	}
+
+	public void setRecentlyChanged(final boolean changed) {
+		this.changed = changed;
 	}
 
 	public void updateAppearance() {

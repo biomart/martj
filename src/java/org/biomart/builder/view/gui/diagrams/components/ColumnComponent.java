@@ -111,8 +111,7 @@ public class ColumnComponent extends BoxShapedComponent {
 				ColumnComponent.this.needsRepaint = true;
 			}
 		};
-		column.addPropertyChangeListener("columnMasked", repaintListener);
-		column.addPropertyChangeListener("columnIndexed", repaintListener);
+		column.addPropertyChangeListener("directModified", repaintListener);
 
 		// Recalc events.
 		final PropertyChangeListener recalcListener = new PropertyChangeListener() {

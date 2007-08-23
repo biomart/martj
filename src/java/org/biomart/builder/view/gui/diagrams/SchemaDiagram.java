@@ -82,6 +82,14 @@ public class SchemaDiagram extends Diagram {
 		};
 		schema.getTables().addPropertyChangeListener(listener);
 		schema.getRelations().addPropertyChangeListener(listener);
+		
+		// When to repaint?
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				SchemaDiagram.this.needsRepaint = true;
+			}
+		};
+		schema.addPropertyChangeListener("directModified",repaintListener);
 	}
 
 	/**

@@ -317,7 +317,6 @@ public class DataSetLayoutManager implements LayoutManager2 {
 		// Work out how big we are.
 		this.calculateSize(parent);
 		synchronized (parent.getTreeLock()) {
-
 			// Fixed components are ignored. The parent should
 			// lay them out.
 
@@ -385,8 +384,6 @@ public class DataSetLayoutManager implements LayoutManager2 {
 				if (secondKey == null || !secondKey.isVisible())
 					continue;
 				// Update key locations.
-				// firstKey.revalidate();
-				// secondKey.revalidate();
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				final int firstKeyInsetX = firstKeyRectangle.x;
 				Rectangle secondKeyRectangle = secondKey.getBounds();
