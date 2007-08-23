@@ -222,7 +222,6 @@ public class Table implements Comparable, TransactionListener {
 			// Add added ones.
 			for (final Iterator i = newCols.iterator(); i.hasNext();) {
 				final Column column = (Column) i.next();
-				this.columnCache.add(column);
 				column.addPropertyChangeListener("indirectModified",
 						new PropertyChangeListener() {
 							public void propertyChange(
@@ -238,6 +237,8 @@ public class Table implements Comparable, TransactionListener {
 							}
 						});
 			}
+			this.columnCache.clear();
+			this.columnCache.addAll(this.getColumns().values());
 		}
 		final Collection newKeys = new HashSet();
 		if (this.primaryKey != null)
@@ -256,7 +257,6 @@ public class Table implements Comparable, TransactionListener {
 			// Add added ones.
 			for (final Iterator i = newKeys.iterator(); i.hasNext();) {
 				final Key key = (Key) i.next();
-				this.keyCache.add(key);
 				key.getRelations().addPropertyChangeListener(
 						this.relationCacheBuilder);
 				key.addPropertyChangeListener("indirectModified",
@@ -274,6 +274,10 @@ public class Table implements Comparable, TransactionListener {
 							}
 						});
 			}
+			this.keyCache.clear();
+			if (this.primaryKey != null)
+				this.keyCache.add(this.primaryKey);
+			this.keyCache.addAll(this.foreignKeys);
 		}
 		final Collection newRels = new HashSet();
 		for (final Iterator i = this.keyCache.iterator(); i.hasNext();) {

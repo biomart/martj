@@ -57,8 +57,7 @@ public class BeanListIterator extends BeanIterator implements ListIterator {
 
 	public void add(final Object arg0) {
 		((ListIterator) this.delegate).add(arg0);
-		this.fireIndexedPropertyChange(BeanIterator.propertyName,
-				this.currentIndex + 1, null, arg0);
+		this.firePropertyChange(BeanIterator.propertyName, null, arg0);
 	}
 
 	public boolean hasPrevious() {
@@ -83,8 +82,7 @@ public class BeanListIterator extends BeanIterator implements ListIterator {
 		final Object oldValue = this.currentObj;
 		final Object newValue = arg0;
 		((ListIterator) this.delegate).set(newValue);
-		this.fireIndexedPropertyChange(BeanIterator.propertyName,
-				this.currentIndex, newValue, oldValue);
+		this.firePropertyChange(BeanIterator.propertyName, newValue, oldValue);
 	}
 
 	public Object next() {

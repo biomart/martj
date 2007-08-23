@@ -17,7 +17,6 @@
  */
 package org.biomart.common.utils;
 
-import java.beans.IndexedPropertyChangeEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
@@ -79,16 +78,9 @@ public class BeanList extends BeanCollection implements List {
 		beanListIterator
 				.addPropertyChangeListener(new PropertyChangeListener() {
 					public void propertyChange(final PropertyChangeEvent evt) {
-						if (evt instanceof IndexedPropertyChangeEvent) {
-							final IndexedPropertyChangeEvent ievt = (IndexedPropertyChangeEvent) evt;
-							BeanList.this.fireIndexedPropertyChange(
-									BeanCollection.propertyName, ievt
-											.getIndex(), ievt.getOldValue(),
-									ievt.getNewValue());
-						} else
-							BeanList.this.firePropertyChange(
-									BeanCollection.propertyName, evt
-											.getOldValue(), evt.getNewValue());
+						BeanList.this.firePropertyChange(
+								BeanCollection.propertyName, evt.getOldValue(),
+								evt.getNewValue());
 					}
 				});
 		// Return the wrapped entry set.
@@ -104,16 +96,9 @@ public class BeanList extends BeanCollection implements List {
 		beanListIterator
 				.addPropertyChangeListener(new PropertyChangeListener() {
 					public void propertyChange(final PropertyChangeEvent evt) {
-						if (evt instanceof IndexedPropertyChangeEvent) {
-							final IndexedPropertyChangeEvent ievt = (IndexedPropertyChangeEvent) evt;
-							BeanList.this.fireIndexedPropertyChange(
-									BeanCollection.propertyName, ievt
-											.getIndex(), ievt.getOldValue(),
-									ievt.getNewValue());
-						} else
-							BeanList.this.firePropertyChange(
-									BeanCollection.propertyName, evt
-											.getOldValue(), evt.getNewValue());
+						BeanList.this.firePropertyChange(
+								BeanCollection.propertyName, evt.getOldValue(),
+								evt.getNewValue());
 					}
 				});
 		// Return the wrapped entry set.
@@ -122,8 +107,7 @@ public class BeanList extends BeanCollection implements List {
 
 	public Object remove(final int index) {
 		final Object result = ((List) this.delegate).remove(index);
-		this.fireIndexedPropertyChange(BeanCollection.propertyName, index,
-				result, null);
+		this.firePropertyChange(BeanCollection.propertyName, result, null);
 		return result;
 	}
 
@@ -132,17 +116,8 @@ public class BeanList extends BeanCollection implements List {
 				fromIndex, toIndex));
 		subList.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				if (evt instanceof IndexedPropertyChangeEvent) {
-					// Offset the index passed up by adding fromIndex.
-					final IndexedPropertyChangeEvent ievt = (IndexedPropertyChangeEvent) evt;
-					BeanList.this.fireIndexedPropertyChange(
-							BeanCollection.propertyName, ievt.getIndex()
-									+ fromIndex, ievt.getOldValue(), ievt
-									.getNewValue());
-				} else
-					BeanList.this.firePropertyChange(
-							BeanCollection.propertyName, evt.getOldValue(), evt
-									.getNewValue());
+				BeanList.this.firePropertyChange(BeanCollection.propertyName,
+						evt.getOldValue(), evt.getNewValue());
 			}
 		});
 		return subList;
@@ -150,8 +125,7 @@ public class BeanList extends BeanCollection implements List {
 
 	public void add(final int arg0, final Object arg1) {
 		((List) this.delegate).add(arg0, arg1);
-		this.fireIndexedPropertyChange(BeanCollection.propertyName, arg0, null,
-				arg1);
+		this.firePropertyChange(BeanCollection.propertyName, null, arg1);
 	}
 
 	public boolean addAll(final int arg0, final Collection arg1) {
@@ -163,8 +137,7 @@ public class BeanList extends BeanCollection implements List {
 
 	public Object set(final int arg0, final Object arg1) {
 		final Object result = ((List) this.delegate).set(arg0, arg1);
-		this.fireIndexedPropertyChange(BeanCollection.propertyName, arg0, null,
-				arg1);
+		this.firePropertyChange(BeanCollection.propertyName, null, arg1);
 		return result;
 	}
 }
