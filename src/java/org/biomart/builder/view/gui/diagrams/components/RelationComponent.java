@@ -212,7 +212,6 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 				RelationComponent.this.needsRepaint = true;
 			}
 		};
-		relation.addPropertyChangeListener("indirectModified", repaintListener);
 		relation.addPropertyChangeListener("directModified", repaintListener);
 		relation.getFirstKey().addPropertyChangeListener("status",
 				repaintListener);
@@ -234,14 +233,6 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	}
 
 	public boolean isDirectModified() {
-		return false;
-	}
-
-	public void setIndirectModified(final boolean modified) {
-		// Ignore, for now.
-	}
-
-	public boolean isIndirectModified() {
 		return false;
 	}
 

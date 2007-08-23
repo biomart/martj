@@ -26,10 +26,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.common.exceptions.TransactionException;
-import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
@@ -38,8 +45,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * event handler queue.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class Transaction {
@@ -89,27 +96,11 @@ public class Transaction {
 		public void setDirectModified(final boolean modified);
 
 		/**
-		 * Indicate that some aspect of this object has been indirectly affected
-		 * by the current transaction.
-		 * 
-		 * @param modified
-		 *            whether or not it has been affected.
-		 */
-		public void setIndirectModified(final boolean modified);
-
-		/**
 		 * Has this object been directly affected by this transaction?
 		 * 
 		 * @return <tt>true</tt> if it has.
 		 */
 		public boolean isDirectModified();
-
-		/**
-		 * Has this object been indirectly affected by this transaction?
-		 * 
-		 * @return <tt>true</tt> if it has.
-		 */
-		public boolean isIndirectModified();
 	}
 
 	private static class WeakTransactionListener implements TransactionListener {
@@ -117,6 +108,15 @@ public class Transaction {
 
 		private WeakTransactionListener(final TransactionListener listener) {
 			this.listenerRef = new WeakReference(listener);
+		}
+
+		/**
+		 * Obtain the wrapped listener.
+		 * 
+		 * @return the listener, or null if it has gone away.
+		 */
+		public TransactionListener get() {
+			return (TransactionListener) this.listenerRef.get();
 		}
 
 		public void transactionReset() {
@@ -156,15 +156,6 @@ public class Transaction {
 				listener.setDirectModified(modified);
 		}
 
-		public void setIndirectModified(final boolean modified) {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null)
-				this.removeListener();
-			else
-				listener.setIndirectModified(modified);
-		}
-
 		public boolean isDirectModified() {
 			final TransactionListener listener = (TransactionListener) this.listenerRef
 					.get();
@@ -172,17 +163,7 @@ public class Transaction {
 				this.removeListener();
 				return false;
 			} else
-				return listener.isIndirectModified();
-		}
-
-		public boolean isIndirectModified() {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null) {
-				this.removeListener();
-				return false;
-			} else
-				return listener.isIndirectModified();
+				return listener.isDirectModified();
 		}
 
 		private void removeListener() {
@@ -258,35 +239,9 @@ public class Transaction {
 	 * Flag that a transaction has ended. If other transactions were started in
 	 * the meantime, the last one to end will trigger a
 	 * {@link TransactionListener#transactionEnded(org.biomart.common.utils.Transaction.TransactionEvent)}
-	 * event. Spawns a thread to do this and returns instantly.
+	 * event.
 	 */
 	public synchronized static void end() {
-		synchronized (Transaction.LOCK) {
-			if (Transaction.inProgress == 0)
-				return;
-			if (--Transaction.inProgress == 0) {
-				final TransactionEvent event = new TransactionEvent(
-						Transaction.currentTransaction);
-				new LongProcess() {
-					public void run() throws Exception {
-						for (final Iterator i = Transaction
-								.getOrderedListeners().iterator(); i.hasNext();)
-							((TransactionListener) i.next())
-									.transactionEnded(event);
-						Transaction.currentTransaction = null;
-					}
-				}.start();
-			}
-		}
-	}
-
-	/**
-	 * Flag that a transaction has ended. If other transactions were started in
-	 * the meantime, the last one to end will trigger a
-	 * {@link TransactionListener#transactionEnded(org.biomart.common.utils.Transaction.TransactionEvent)}
-	 * event. Waits for all to complete before returning.
-	 */
-	public synchronized static void endAndWait() {
 		synchronized (Transaction.LOCK) {
 			if (Transaction.inProgress == 0)
 				return;
@@ -308,33 +263,76 @@ public class Transaction {
 	}
 
 	private static List getOrderedListeners() {
-		// Schemas get notified first in order to ensure that
-		// data is up-to-date.
-		// Then, partition tables, so that datasets relying on them
-		// are up-to-date.
-		// Then, datasets.
-		// Then, anything else that is interested.
-		final List list = new ArrayList();
-		final List schs = new ArrayList();
+		final List sch = new ArrayList();
+		final List schComp = new ArrayList();
+		final List schRel = new ArrayList();
+		final List dsComp = new ArrayList();
+		final List dsRel = new ArrayList();
 		final List pts = new ArrayList();
 		final List ds = new ArrayList();
-		final List normal = new ArrayList();
+		final List diag = new ArrayList();
+		final List diagComp = new ArrayList();
+		final List rest = new ArrayList();
 		for (final Iterator i = Transaction.listeners.iterator(); i.hasNext();) {
-			final TransactionListener tl = (TransactionListener) i.next();
-			if (tl instanceof DataSet) {
+			final TransactionListener tl = ((WeakTransactionListener) i.next())
+					.get();
+			if (tl == null)
+				continue;
+			else if (tl instanceof DataSet) {
 				if (((DataSet) tl).isPartitionTable())
 					pts.add(tl);
 				else
 					ds.add(tl);
 			} else if (tl instanceof Schema)
-				schs.add(tl);
+				sch.add(tl);
+			else if (tl instanceof DiagramComponent)
+				diagComp.add(tl);
+			else if (tl instanceof Diagram)
+				diag.add(tl);
+			else if (tl instanceof Relation) {
+				if (((Relation) tl).getFirstKey().getTable().getSchema() instanceof DataSet)
+					dsRel.add(tl);
+				else
+					schRel.add(tl);
+			} else if (tl instanceof Key) {
+				if (((Key) tl).getTable().getSchema() instanceof DataSet)
+					dsComp.add(tl);
+				else
+					schComp.add(tl);
+			} else if (tl instanceof Column) {
+				if (tl instanceof DataSetColumn)
+					dsComp.add(tl);
+				else
+					schComp.add(tl);
+			} else if (tl instanceof Table)
+				if (tl instanceof DataSetTable)
+					dsComp.add(tl);
+				else
+					schComp.add(tl);
 			else
-				normal.add(tl);
+				rest.add(tl);
 		}
-		list.addAll(schs);
+		final List list = new ArrayList();
+		// non-relation schema components.
+		list.addAll(schComp);
+		// relations.
+		list.addAll(schRel);
+		// schemas.
+		list.addAll(sch);
+		// non-relation dataset components.
+		list.addAll(dsComp);
+		// dataset relations.
+		list.addAll(dsRel);
+		// partition tables.
 		list.addAll(pts);
+		// dataset.
 		list.addAll(ds);
-		list.addAll(normal);
+		// diagram components.
+		list.addAll(diagComp);
+		// diagrams.
+		list.addAll(diag);
+		// anything else that is interested.
+		list.addAll(rest);
 		return list;
 	}
 

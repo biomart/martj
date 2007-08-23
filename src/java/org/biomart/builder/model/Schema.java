@@ -111,8 +111,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 	private boolean directModified = false;
 
-	private boolean indirectModified = false;
-
 	private final Collection tableCache;
 
 	private final BeanCollection relationCache;
@@ -186,23 +184,12 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.pcs.addPropertyChangeListener("keyGuessing", listener);
 		this.pcs.addPropertyChangeListener("masked", listener);
 		this.pcs.addPropertyChangeListener("name", listener);
-
-		final PropertyChangeListener listener2 = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Schema.this.setIndirectModified(true);
-			}
-		};
-		this.pcs
-				.addPropertyChangeListener("partitionNameExpression", listener2);
-		this.pcs.addPropertyChangeListener("partitionRegex", listener2);
+		this.pcs.addPropertyChangeListener("partitionNameExpression", listener);
+		this.pcs.addPropertyChangeListener("partitionRegex", listener);
 	}
 
 	public boolean isDirectModified() {
 		return this.directModified;
-	}
-
-	public boolean isIndirectModified() {
-		return this.indirectModified;
 	}
 
 	public void setDirectModified(final boolean modified) {
@@ -213,17 +200,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		if (modified == this.indirectModified)
-			return;
-		final boolean oldValue = this.indirectModified;
-		this.indirectModified = modified;
-		this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-	}
-
 	public void transactionReset() {
 		this.directModified = false;
-		this.indirectModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
@@ -280,13 +258,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 							public void propertyChange(
 									final PropertyChangeEvent evt) {
 								Schema.this.setDirectModified(true);
-							}
-						});
-				table.addPropertyChangeListener("indirectModified",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								Schema.this.setIndirectModified(true);
 							}
 						});
 			}
@@ -1600,8 +1571,11 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 							// and the PK.
 							if (candidateRel.getOtherKey(fk).equals(pk)) {
 								// Make it inferred if it is handmade.
+								// Don't override 1:1 defs.
 								if (candidateRel.getStatus().equals(
-										ComponentStatus.HANDMADE))
+										ComponentStatus.HANDMADE)
+										&& candidateRel.getCardinality()
+												.equals(Cardinality.MANY))
 									try {
 										candidateRel
 												.setStatus(ComponentStatus.INFERRED);
@@ -1860,8 +1834,12 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 							// and the PK.
 							if (candidateRel.getOtherKey(fk).equals(pk)) {
 								// Make it inferred if it is handmade.
+								// Don't change status if is not 1:M as
+								// db can only tell us 1:M relations.
 								if (candidateRel.getStatus().equals(
-										ComponentStatus.HANDMADE))
+										ComponentStatus.HANDMADE)
+										&& candidateRel.getCardinality()
+												.equals(Cardinality.MANY))
 									try {
 										candidateRel
 												.setStatus(ComponentStatus.INFERRED);

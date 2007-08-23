@@ -40,6 +40,7 @@ import javax.swing.JTextField;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -134,8 +135,15 @@ public class TableComponent extends BoxShapedComponent {
 		table.addPropertyChangeListener("dimensionMasked", repaintListener);
 		table.addPropertyChangeListener("distinctTable", repaintListener);
 		table.addPropertyChangeListener("restrictTable", repaintListener);
-		// This picks up non-major relation changes.
-		table.addPropertyChangeListener("indirectModified", repaintListener);
+		// Listen to all relations on this table and repaint when needed.
+		// We don't need to monitor relations themselves as the entire
+		// diagram gets recalculated if they change.
+		for (final Iterator i = table.getRelations().iterator(); i.hasNext(); ) {
+			final Relation rel = (Relation)i.next();
+			rel.addPropertyChangeListener("status", repaintListener);
+			rel.addPropertyChangeListener("maskRelation", repaintListener);
+			rel.addPropertyChangeListener("forceRelation", repaintListener);
+		}
 
 		// Recalc events.
 		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
@@ -297,7 +305,7 @@ public class TableComponent extends BoxShapedComponent {
 				.getTable()).getModifiedName() : this.getTable().getName();
 	}
 
-	public String getName() {
+	public String getDisplayName() {
 		final Table table = this.getTable();
 		final StringBuffer name = new StringBuffer();
 		if (table != null && table instanceof DataSetTable) {

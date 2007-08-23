@@ -78,8 +78,6 @@ public class DataSetDiagram extends Diagram {
 				DataSetDiagram.this.needsRedraw = true;
 			}
 		};
-		dataset.addPropertyChangeListener("indirectModified", listener);
-		dataset.addPropertyChangeListener("directModified", listener);
 		dataset.getTables().addPropertyChangeListener(listener);
 		dataset.getRelations().addPropertyChangeListener(listener);
 	}

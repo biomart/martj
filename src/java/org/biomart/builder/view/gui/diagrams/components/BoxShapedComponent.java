@@ -200,14 +200,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 		return false;
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		// Ignore, for now.
-	}
-
-	public boolean isIndirectModified() {
-		return false;
-	}
-
 	public void transactionReset() {
 		// Ignore, for now.
 	}
@@ -578,12 +570,15 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.name.setEditable(false);
 		this.name.setEnabled(false);
 		this.name.setOpaque(this.isSelected());
-		this.name.setText(this.getName());
+		this.name.setText(this.getDisplayName());
 	}
 
-	public String getName() {
-		return "";
-	}
+	/**
+	 * Obtain the display name for this box-shaped object, to display
+	 * above the box (as opposed to the editable name).
+	 * @return the display name.
+	 */
+	public abstract String getDisplayName();
 
 	/**
 	 * Returns the name the user can edit. This can be different from the name
@@ -592,7 +587,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * @return the editable name.
 	 */
 	public String getEditableName() {
-		return this.getName();
+		return this.getDisplayName();
 	}
 
 	private void doRename() {

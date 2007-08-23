@@ -170,7 +170,6 @@ public class MartTabSet extends JTabbedPane {
 			}
 		};
 		mart.addPropertyChangeListener("directModified", listener);
-		mart.addPropertyChangeListener("indirectModified", listener);
 	}
 
 	private void updateMartTitle(final Mart mart) {
@@ -384,7 +383,7 @@ public class MartTabSet extends JTabbedPane {
 				// Load the files.
 				Transaction.start();
 				final Mart mart = MartBuilderXML.load(file);
-				Transaction.endAndWait(); // Sync before draw!
+				Transaction.end(); 
 				MartTabSet.this.martModifiedStatus.put(mart, Boolean.FALSE);
 				MartTabSet.this.addMartTab(mart, file);
 				// Save XML filename in history of accessed
@@ -648,8 +647,10 @@ public class MartTabSet extends JTabbedPane {
 	 */
 	public void requestMonitorRemoteHost(final String host, final String port,
 			final boolean defaultJob) {
-		this.requestSetOutputHost(host);
-		this.requestSetOutputPort(port);
+		Transaction.start();
+		MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(host);
+		MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(port);
+		Transaction.end();
 		// Open remote host monitor dialog.
 		MartRunnerMonitorDialog.monitor(host, port, defaultJob);
 	}

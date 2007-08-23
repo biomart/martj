@@ -264,7 +264,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		return this.getSchema().getName();
 	}
 
-	public String getName() {
+	public String getDisplayName() {
 		final StringBuffer name = new StringBuffer();
 		if (this.getSchema().getPartitionRegex() != null
 				&& !this.getSchema().getPartitionRegex().equals("")) {

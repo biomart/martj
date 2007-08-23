@@ -151,29 +151,23 @@ public class ExplainContext extends SchemaContext {
 		if (object instanceof Relation) {
 			final Relation relation = (Relation) object;
 			// Fade out all UNINCLUDED and MASKED relations.
-			final boolean included = this.datasetTable == null ? this.dataset
-					.getIncludedRelations().contains(relation)
-					: this.datasetTable.getIncludedRelations().contains(
-							relation);
-			if (!included
-					|| (this.datasetTable == null ? relation
-							.isMaskRelation(this.dataset) : relation
-							.isMaskRelation(this.dataset, this.datasetTable
-									.getName())))
+					final Set includedTabs = new HashSet(
+							this.datasetTable != null ? this.datasetTable
+									.getIncludedTables() : this.dataset
+									.getIncludedTables());
+			if (!(includedTabs.contains(relation.getFirstKey().getTable()) && includedTabs.contains(relation.getSecondKey().getTable())))
 				return true;
 		}
 
 		// This section customises table objects.
 		else if (object instanceof Table) {
+			final Table table = (Table)object;
 			// Fade out UNINCLUDED tables.
-			final boolean isFocus = this.datasetTable != null
-					&& this.datasetTable.getFocusTable().equals(object);
-			final Set included = new HashSet(
+			final Set includedTabs = new HashSet(
 					this.datasetTable != null ? this.datasetTable
-							.getIncludedRelations() : this.dataset
-							.getIncludedRelations());
-			included.retainAll(((Table) object).getRelations());
-			if (included.isEmpty() && !isFocus)
+							.getIncludedTables() : this.dataset
+							.getIncludedTables());
+			if (!includedTabs.contains(table))
 				return true;
 		}
 

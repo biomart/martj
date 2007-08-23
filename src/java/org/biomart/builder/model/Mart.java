@@ -37,7 +37,6 @@ import java.util.TreeSet;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
-import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -78,8 +77,6 @@ public class Mart implements TransactionListener {
 	private String overridePort = null;
 
 	private boolean directModified = false;
-
-	private boolean indirectModified = false;
 
 	/**
 	 * Constant referring to table and column name conversion.
@@ -124,16 +121,10 @@ public class Mart implements TransactionListener {
 			}
 		};
 		this.pcs.addPropertyChangeListener("case", listener);
-
-		final PropertyChangeListener listener2 = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Mart.this.setIndirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("outputHost", listener2);
-		this.pcs.addPropertyChangeListener("outputPort", listener2);
-		this.pcs.addPropertyChangeListener("outputSchema", listener2);
-		this.pcs.addPropertyChangeListener("overrideHost", listener2);
+		this.pcs.addPropertyChangeListener("outputHost", listener);
+		this.pcs.addPropertyChangeListener("outputPort", listener);
+		this.pcs.addPropertyChangeListener("outputSchema", listener);
+		this.pcs.addPropertyChangeListener("overrideHost", listener);
 
 		// Listeners on schema and dataset additions to spot
 		// and handle renames.
@@ -166,13 +157,6 @@ public class Mart implements TransactionListener {
 												.getOldValue());
 										Mart.this.schemas.put(pe.getNewValue(),
 												sch);
-									}
-								});
-						sch.addPropertyChangeListener("indirectModified",
-								new PropertyChangeListener() {
-									public void propertyChange(
-											final PropertyChangeEvent evt) {
-										Mart.this.setIndirectModified(true);
 									}
 								});
 						sch.addPropertyChangeListener("directModified",
@@ -217,13 +201,6 @@ public class Mart implements TransactionListener {
 												pe.getNewValue(), ds);
 									}
 								});
-						ds.addPropertyChangeListener("indirectModified",
-								new PropertyChangeListener() {
-									public void propertyChange(
-											final PropertyChangeEvent evt) {
-										Mart.this.setIndirectModified(true);
-									}
-								});
 						ds.addPropertyChangeListener("directModified",
 								new PropertyChangeListener() {
 									public void propertyChange(
@@ -265,10 +242,6 @@ public class Mart implements TransactionListener {
 		return this.directModified;
 	}
 
-	public boolean isIndirectModified() {
-		return this.indirectModified;
-	}
-
 	public void setDirectModified(final boolean modified) {
 		if (modified == this.directModified)
 			return;
@@ -277,17 +250,8 @@ public class Mart implements TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		if (modified == this.indirectModified)
-			return;
-		final boolean oldValue = this.indirectModified;
-		this.indirectModified = modified;
-		this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-	}
-
 	public void transactionReset() {
 		this.directModified = false;
-		this.indirectModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
@@ -846,8 +810,8 @@ public class Mart implements TransactionListener {
 				}
 				r.setSubclassRelation(suggestedDataSet, true);
 			} catch (final ValidationException e) {
-				// Eh? We asked for it, dammit!
-				throw new BioMartError(e);
+				// Not valid? OK, ignore this one.
+				continue;
 			}
 			suggestedDataSets.addAll(this.continueSubclassing(includeTables,
 					(Collection) relationTablesIncluded.get(r),

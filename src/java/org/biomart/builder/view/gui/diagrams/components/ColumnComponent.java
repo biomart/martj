@@ -148,7 +148,7 @@ public class ColumnComponent extends BoxShapedComponent {
 				: this.getColumn().getName();
 	}
 
-	public String getName() {
+	public String getDisplayName() {
 		String name = this.getEditableName();
 		if (this.getColumn() != null
 				&& this.getColumn() instanceof WrappedColumn) {

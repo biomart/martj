@@ -260,7 +260,7 @@ public class DataSetComponent extends BoxShapedComponent {
 		return this.getDataSet().getName();
 	}
 
-	public String getName() {
+	public String getDisplayName() {
 		final StringBuffer name = new StringBuffer();
 		name.append(this.getEditableName());
 		return name.toString();

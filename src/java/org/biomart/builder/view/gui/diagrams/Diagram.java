@@ -248,14 +248,6 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		return false;
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		// Ignore, for now.
-	}
-
-	public boolean isIndirectModified() {
-		return false;
-	}
-
 	public void transactionReset() {
 		// Ignore, for now.
 	}

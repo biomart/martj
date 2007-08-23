@@ -97,6 +97,26 @@ public class DataSet extends Schema {
 		}
 	};
 
+	private final PropertyChangeListener rebuildListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			final Object src = evt.getSource();
+			Object val = evt.getNewValue();
+			if (val == null)
+				val = evt.getOldValue();
+			if (src instanceof Relation || src instanceof Table) {
+				if (val instanceof DataSet)
+					DataSet.this.needsFullSync = val == DataSet.this;
+				else if (val instanceof String)
+					DataSet.this.needsFullSync = DataSet.this.getTables()
+							.containsKey(val);
+				else
+					DataSet.this.needsFullSync = true;
+			} else
+				DataSet.this.needsFullSync = true;
+			DataSet.this.setDirectModified(true);
+		}
+	};
+
 	private final Table centralTable;
 
 	private final Collection includedRelations;
@@ -151,23 +171,14 @@ public class DataSet extends Schema {
 		// Always need syncing at end of creating transaction.
 		this.needsFullSync = true;
 
-		// If at any point anything causes us to get the modified flag set,
-		// we need a full sync.
-		this.getMart().addPropertyChangeListener("case", this.listener);
-		this.getMart().addPropertyChangeListener("partitionTable",
-				this.listener);
-	}
+		// All changes to us make us modified.
+		this.pcs.addPropertyChangeListener("partitionTable", this.listener);
+		this.pcs.addPropertyChangeListener("datasetOptimiser", this.listener);
+		this.pcs.addPropertyChangeListener("indexOptimiser", this.listener);
+		this.pcs.addPropertyChangeListener("invisible", this.listener);
 
-	public void setDirectModified(final boolean modified) {
-		if (modified)
-			this.needsFullSync = true;
-		super.setDirectModified(modified);
-	}
-
-	public void setIndirectModified(final boolean modified) {
-		if (modified)
-			this.needsFullSync = true;
-		super.setIndirectModified(modified);
+		// Recalculate completely if parent mart changes case.
+		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
 	}
 
 	/**
@@ -178,7 +189,7 @@ public class DataSet extends Schema {
 	 *            the new name for the schema.
 	 */
 	public void setName(String name) {
-		Log.debug("Renaming schema " + this + " to " + name);
+		Log.debug("Renaming dataset " + this + " to " + name);
 		final String oldValue = this.name;
 		if (this.name == name || this.name != null && this.name.equals(name))
 			return;
@@ -626,6 +637,9 @@ public class DataSet extends Schema {
 			dsTable = new DataSetTable(fullName, this, type, realTable,
 					sourceRelation);
 			this.getTables().put(dsTable.getName(), dsTable);
+			// Listen to this table to modify ourselves.
+			// As it happens, nothing can happen to a dstable yet that
+			// requires this.
 		}
 		dsTable.includedRelations.clear();
 		dsTable.includedTables.clear();
@@ -714,6 +728,14 @@ public class DataSet extends Schema {
 						dsCol = (InheritedColumn) candDSCol;
 					else {
 						dsCol = new InheritedColumn(dsTable, parentDSCol);
+						// Listen to this column to modify ourselves.
+						if (!dsTable.getType().equals(
+								DataSetTableType.DIMENSION)) {
+							dsCol.addPropertyChangeListener("columnMasked",
+									rebuildListener);
+							dsCol.addPropertyChangeListener("columnRename",
+									rebuildListener);
+						}
 						dsTable.getColumns().put(dsCol.getName(), dsCol);
 					}
 				}
@@ -864,6 +886,10 @@ public class DataSet extends Schema {
 						.next();
 				final ExpressionColumn expCol = new ExpressionColumn(expcolDef
 						.getColKey(), dsTable, expcolDef);
+				// Listen to this column to modify ourselves.
+				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
+					expCol.addPropertyChangeListener("columnRename",
+							rebuildListener);
 				dsTable.getColumns().put(expCol.getName(), expCol);
 			}
 			// Wipe it out so only happens first time.
@@ -1130,10 +1156,24 @@ public class DataSet extends Schema {
 				else {
 					wc = new WrappedColumn(c, colName, dsTable, sourceRelation);
 					dsTable.getColumns().put(wc.getName(), wc);
+					// Listen to this column to modify ourselves.
+					if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+						wc.addPropertyChangeListener("columnMasked",
+								rebuildListener);
+						wc.addPropertyChangeListener("columnRename",
+								rebuildListener);
+					}
 				}
 			} else {
 				wc = new WrappedColumn(c, colName, dsTable, sourceRelation);
 				dsTable.getColumns().put(wc.getName(), wc);
+				// Listen to this column to modify ourselves.
+				if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+					wc.addPropertyChangeListener("columnMasked",
+							rebuildListener);
+					wc.addPropertyChangeListener("columnRename",
+							rebuildListener);
+				}
 			}
 			unusedCols.remove(wc);
 			tu.getNewColumnNameMap().put(c.getName(), wc);
@@ -1543,7 +1583,7 @@ public class DataSet extends Schema {
 		// Remove us as a listener from all existing included rels and schs.
 		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();)
 			((Schema) i.next()).removePropertyChangeListener("masked",
-					this.listener);
+					this.rebuildListener);
 		// Gather up the tables we have used or are linked to those we have
 		// used.
 		final Set listeningTables = new HashSet();
@@ -1558,10 +1598,40 @@ public class DataSet extends Schema {
 			}
 		}
 		// Don't listen to the tables and their keys and columns.
+		final Set listeningRels = new HashSet();
 		for (final Iterator i = listeningTables.iterator(); i.hasNext();) {
 			final Table tbl = (Table) i.next();
-			tbl.removePropertyChangeListener("directModified", this.listener);
-			tbl.removePropertyChangeListener("indirectModified", this.listener);
+			listeningRels.addAll(tbl.getRelations());
+			// Listen only to useful things.
+			tbl.removePropertyChangeListener("masked", this.rebuildListener);
+			tbl.removePropertyChangeListener("restrictTable",
+					this.rebuildListener);
+			tbl.getColumns().removePropertyChangeListener(this.rebuildListener);
+			tbl.getRelations().removePropertyChangeListener(
+					this.rebuildListener);
+		}
+		// Stop listening to the relation.
+		for (final Iterator i = listeningRels.iterator(); i.hasNext();) {
+			final Relation rel = (Relation) i.next();
+			rel.removePropertyChangeListener("cardinality",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("status", this.rebuildListener);
+			rel.removePropertyChangeListener("compoundRelation",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("directionRelation",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("forceRelation",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("loopbackRelation",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("maskRelation",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("mergeRelation",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("restrictRelation",
+					this.rebuildListener);
+			rel.removePropertyChangeListener("subclassRelation",
+					this.rebuildListener);
 		}
 
 		// Empty out used rels and schs.
@@ -1602,7 +1672,7 @@ public class DataSet extends Schema {
 		// ourselves if we are already listening to them.
 		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();)
 			((Schema) i.next()).addPropertyChangeListener("masked",
-					this.listener);
+					this.rebuildListener);
 		// Gather up the tables we have used and those linked to them.
 		listeningTables.clear();
 		for (final Iterator i = this.includedRelations.iterator(); i.hasNext();) {
@@ -1616,10 +1686,40 @@ public class DataSet extends Schema {
 			}
 		}
 		// Listen to the tables and their children.
+		listeningRels.clear();
 		for (final Iterator i = listeningTables.iterator(); i.hasNext();) {
 			final Table tbl = (Table) i.next();
-			tbl.addPropertyChangeListener("directModified", this.listener);
-			tbl.addPropertyChangeListener("indirectModified", this.listener);
+			listeningRels.addAll(tbl.getRelations());
+			// Listen only to useful things.
+			tbl.addPropertyChangeListener("masked", this.rebuildListener);
+			tbl
+					.addPropertyChangeListener("restrictTable",
+							this.rebuildListener);
+			tbl.getColumns().addPropertyChangeListener(this.rebuildListener);
+			tbl.getRelations().addPropertyChangeListener(this.rebuildListener);
+		}
+		// Listen to useful bits of the relation.
+		for (final Iterator i = listeningRels.iterator(); i.hasNext();) {
+			final Relation rel = (Relation) i.next();
+			rel.addPropertyChangeListener("cardinality", this.rebuildListener);
+			rel.addPropertyChangeListener("status", this.rebuildListener);
+			rel.addPropertyChangeListener("compoundRelation",
+					this.rebuildListener);
+			rel.addPropertyChangeListener("directionRelation",
+					this.rebuildListener);
+			rel
+					.addPropertyChangeListener("forceRelation",
+							this.rebuildListener);
+			rel.addPropertyChangeListener("loopbackRelation",
+					this.rebuildListener);
+			rel.addPropertyChangeListener("maskRelation", this.rebuildListener);
+			rel
+					.addPropertyChangeListener("mergeRelation",
+							this.rebuildListener);
+			rel.addPropertyChangeListener("restrictRelation",
+					this.rebuildListener);
+			rel.addPropertyChangeListener("subclassRelation",
+					this.rebuildListener);
 		}
 	}
 
@@ -1688,13 +1788,7 @@ public class DataSet extends Schema {
 			};
 			this.pcs.addPropertyChangeListener("columnMasked", listener);
 			this.pcs.addPropertyChangeListener("columnRename", listener);
-
-			final PropertyChangeListener listener2 = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					DataSetColumn.this.setIndirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener("columnIndexed", listener2);
+			this.pcs.addPropertyChangeListener("columnIndexed", listener);
 		}
 
 		/**
@@ -2420,14 +2514,8 @@ public class DataSet extends Schema {
 			};
 			this.pcs.addPropertyChangeListener("type", listener);
 			this.pcs.addPropertyChangeListener("tableRename", listener);
-
-			final PropertyChangeListener listener2 = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					DataSetTable.this.setIndirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener("dimensionMasked", listener2);
-			this.pcs.addPropertyChangeListener("distinctTable", listener2);
+			this.pcs.addPropertyChangeListener("dimensionMasked", listener);
+			this.pcs.addPropertyChangeListener("distinctTable", listener);
 		}
 
 		/**
@@ -2778,8 +2866,6 @@ public class DataSet extends Schema {
 
 		private boolean directModified = false;
 
-		private boolean indirectModified = false;
-
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
@@ -2820,17 +2906,12 @@ public class DataSet extends Schema {
 					ExpressionColumnDefinition.this.setDirectModified(true);
 				}
 			};
-			this.pcs.addPropertyChangeListener("expression", listener);
-			this.pcs.addPropertyChangeListener("groupBy", listener);
+			this.pcs.addPropertyChangeListener(listener);
 			this.aliases.addPropertyChangeListener(listener);
 		}
 
 		public boolean isDirectModified() {
 			return this.directModified;
-		}
-
-		public boolean isIndirectModified() {
-			return this.indirectModified;
 		}
 
 		public void setDirectModified(final boolean modified) {
@@ -2841,17 +2922,8 @@ public class DataSet extends Schema {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void setIndirectModified(final boolean modified) {
-			if (modified == this.indirectModified)
-				return;
-			final boolean oldValue = this.indirectModified;
-			this.indirectModified = modified;
-			this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-		}
-
 		public void transactionReset() {
 			this.directModified = false;
-			this.indirectModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {

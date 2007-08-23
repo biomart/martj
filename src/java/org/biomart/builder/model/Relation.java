@@ -85,8 +85,6 @@ public class Relation implements Comparable, TransactionListener {
 
 	private boolean directModified = false;
 
-	private boolean indirectModified = false;
-
 	private final Map mods = new HashMap();
 
 	private static final String DATASET_WIDE = "__DATASET_WIDE__";
@@ -184,20 +182,14 @@ public class Relation implements Comparable, TransactionListener {
 		};
 		this.pcs.addPropertyChangeListener("cardinality", listener);
 		this.pcs.addPropertyChangeListener("status", listener);
-
-		final PropertyChangeListener listener2 = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Relation.this.setIndirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("compoundRelation", listener2);
-		this.pcs.addPropertyChangeListener("directionRelation", listener2);
-		this.pcs.addPropertyChangeListener("forceRelation", listener2);
-		this.pcs.addPropertyChangeListener("loopbackRelation", listener2);
-		this.pcs.addPropertyChangeListener("maskRelation", listener2);
-		this.pcs.addPropertyChangeListener("mergeRelation", listener2);
-		this.pcs.addPropertyChangeListener("restrictRelation", listener2);
-		this.pcs.addPropertyChangeListener("subclassRelation", listener2);
+		this.pcs.addPropertyChangeListener("compoundRelation", listener);
+		this.pcs.addPropertyChangeListener("directionRelation", listener);
+		this.pcs.addPropertyChangeListener("forceRelation", listener);
+		this.pcs.addPropertyChangeListener("loopbackRelation", listener);
+		this.pcs.addPropertyChangeListener("maskRelation", listener);
+		this.pcs.addPropertyChangeListener("mergeRelation", listener);
+		this.pcs.addPropertyChangeListener("restrictRelation", listener);
+		this.pcs.addPropertyChangeListener("subclassRelation", listener);
 
 		// Add listeners to tables at both end so that if key
 		// is removed, relation is also removed.
@@ -249,10 +241,6 @@ public class Relation implements Comparable, TransactionListener {
 		return this.directModified;
 	}
 
-	public boolean isIndirectModified() {
-		return this.indirectModified;
-	}
-
 	public void setDirectModified(final boolean modified) {
 		if (modified == this.directModified)
 			return;
@@ -261,17 +249,8 @@ public class Relation implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		if (modified == this.indirectModified)
-			return;
-		final boolean oldValue = this.indirectModified;
-		this.indirectModified = modified;
-		this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-	}
-
 	public void transactionReset() {
 		this.directModified = false;
-		this.indirectModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
@@ -647,11 +626,10 @@ public class Relation implements Comparable, TransactionListener {
 			for (final Iterator i = combinedRels.iterator(); i.hasNext()
 					&& !hasConflict;) {
 				final Relation rel = (Relation) i.next();
-				if (!this.isSubclassRelation(dataset))
+				if (!rel.isSubclassRelation(dataset))
 					continue;
-				if (rel.getOneKey().getTable().equals(parentTable))
-					hasConflict = true;
-				else if (rel.getManyKey().getTable().equals(childTable))
+				else if (rel.getOneKey().getTable().equals(parentTable)
+						|| rel.getManyKey().getTable().equals(childTable))
 					hasConflict = true;
 			}
 			// If child has M:1 or parent has 1:M, we cannot do this.
@@ -1120,7 +1098,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.setIndirectModified(true);
+							pcs.firePropertyChange("restrictRelation", null,
+									dataset);
 						}
 					});
 			this.pcs.firePropertyChange("restrictRelation", null, dataset);
@@ -1162,7 +1141,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.setIndirectModified(true);
+							pcs.firePropertyChange("restrictRelation", null,
+									tableKey);
 						}
 					});
 			this.pcs.firePropertyChange("restrictRelation", null, tableKey);
@@ -1224,7 +1204,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.setIndirectModified(true);
+							pcs.firePropertyChange("compoundRelation", null,
+									dataset);
 						}
 					});
 			this.pcs.firePropertyChange("compoundRelation", null, dataset);
@@ -1256,7 +1237,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.setIndirectModified(true);
+							pcs.firePropertyChange("compoundRelation", null,
+									tableKey);
 						}
 					});
 			this.pcs.firePropertyChange("compoundRelation", null, tableKey);
@@ -1409,8 +1391,6 @@ public class Relation implements Comparable, TransactionListener {
 
 		private boolean directModified = false;
 
-		private boolean indirectModified = false;
-
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
@@ -1494,10 +1474,6 @@ public class Relation implements Comparable, TransactionListener {
 			return this.directModified;
 		}
 
-		public boolean isIndirectModified() {
-			return this.indirectModified;
-		}
-
 		public void setDirectModified(final boolean modified) {
 			if (modified == this.directModified)
 				return;
@@ -1506,17 +1482,8 @@ public class Relation implements Comparable, TransactionListener {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void setIndirectModified(final boolean modified) {
-			if (modified == this.indirectModified)
-				return;
-			final boolean oldValue = this.indirectModified;
-			this.indirectModified = modified;
-			this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-		}
-
 		public void transactionReset() {
 			this.directModified = false;
-			this.indirectModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {
@@ -1591,8 +1558,6 @@ public class Relation implements Comparable, TransactionListener {
 
 		private boolean directModified = false;
 
-		private boolean indirectModified = false;
-
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
@@ -1636,8 +1601,7 @@ public class Relation implements Comparable, TransactionListener {
 					RestrictedRelationDefinition.this.setDirectModified(true);
 				}
 			};
-			this.pcs.addPropertyChangeListener("expression", listener);
-			this.pcs.addPropertyChangeListener("hard", listener);
+			this.pcs.addPropertyChangeListener(listener);
 			this.leftAliases.addPropertyChangeListener(listener);
 			this.rightAliases.addPropertyChangeListener(listener);
 		}
@@ -1694,10 +1658,6 @@ public class Relation implements Comparable, TransactionListener {
 			return this.directModified;
 		}
 
-		public boolean isIndirectModified() {
-			return this.indirectModified;
-		}
-
 		public void setDirectModified(final boolean modified) {
 			if (modified == this.directModified)
 				return;
@@ -1706,17 +1666,8 @@ public class Relation implements Comparable, TransactionListener {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void setIndirectModified(final boolean modified) {
-			if (modified == this.indirectModified)
-				return;
-			final boolean oldValue = this.indirectModified;
-			this.indirectModified = modified;
-			this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-		}
-
 		public void transactionReset() {
 			this.directModified = false;
-			this.indirectModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {

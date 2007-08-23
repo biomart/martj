@@ -49,8 +49,6 @@ public class Column implements Comparable, TransactionListener {
 
 	private boolean directModified = false;
 
-	private boolean indirectModified = false;
-
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
@@ -95,10 +93,6 @@ public class Column implements Comparable, TransactionListener {
 		return this.directModified;
 	}
 
-	public boolean isIndirectModified() {
-		return this.indirectModified;
-	}
-
 	public void setDirectModified(final boolean modified) {
 		if (modified == this.directModified)
 			return;
@@ -107,17 +101,8 @@ public class Column implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		if (modified == this.indirectModified)
-			return;
-		final boolean oldValue = this.indirectModified;
-		this.indirectModified = modified;
-		this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-	}
-
 	public void transactionReset() {
 		this.directModified = false;
-		this.indirectModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {

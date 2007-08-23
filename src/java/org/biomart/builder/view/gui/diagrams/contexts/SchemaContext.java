@@ -21,6 +21,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -95,7 +96,7 @@ public class SchemaContext implements DiagramContext {
 			tblcomp.setRestricted(false);
 
 			// Fade out all ignored tables.
-			if (((Table) object).isMasked())
+			if (this.isMasked(object)) 
 				component.setBackground(TableComponent.IGNORE_COLOUR);
 
 			// All others are normal.
@@ -169,10 +170,17 @@ public class SchemaContext implements DiagramContext {
 
 		// Incorrect and ignored stuff is 'masked'.
 		else if (object instanceof Table) {
-
-			// Fade out all ignored tables.
-			if (((Table) object).isMasked())
+			final Table table = (Table)object;
+			
+			// Fade out all ignored and/or unreachable tables.
+			if (table.isMasked())
 				return true;
+			else {
+				for (final Iterator i = table.getRelations().iterator(); i.hasNext(); )
+					if (!((Relation)i.next()).getStatus().equals(ComponentStatus.INFERRED_INCORRECT))  
+						return false;
+				return true;
+			}
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.
@@ -185,7 +193,7 @@ public class SchemaContext implements DiagramContext {
 			// head to ignored tables or masked schemas.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
 					|| relation.getFirstKey().getTable().isMasked()
-					|| relation.getFirstKey().getTable().isMasked()
+					|| relation.getSecondKey().getTable().isMasked()
 					|| relation.getFirstKey().getTable().getSchema().isMasked()
 					|| relation.getSecondKey().getTable().getSchema()
 							.isMasked())

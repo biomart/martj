@@ -85,8 +85,6 @@ public class Table implements Comparable, TransactionListener {
 
 	private boolean directModified = false;
 
-	private boolean indirectModified = false;
-
 	private final Map mods = new HashMap();
 
 	private static final String DATASET_WIDE = "__DATASET_WIDE__";
@@ -138,21 +136,11 @@ public class Table implements Comparable, TransactionListener {
 			}
 		};
 		this.pcs.addPropertyChangeListener("masked", listener);
-
-		final PropertyChangeListener listener2 = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Table.this.setIndirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("restrictTable", listener2);
+		this.pcs.addPropertyChangeListener("restrictTable", listener);
 	}
 
 	public boolean isDirectModified() {
 		return this.directModified;
-	}
-
-	public boolean isIndirectModified() {
-		return this.indirectModified;
 	}
 
 	public void setDirectModified(final boolean modified) {
@@ -163,17 +151,8 @@ public class Table implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		if (modified == this.indirectModified)
-			return;
-		final boolean oldValue = this.indirectModified;
-		this.indirectModified = modified;
-		this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-	}
-
 	public void transactionReset() {
 		this.directModified = false;
-		this.indirectModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
@@ -222,13 +201,6 @@ public class Table implements Comparable, TransactionListener {
 			// Add added ones.
 			for (final Iterator i = newCols.iterator(); i.hasNext();) {
 				final Column column = (Column) i.next();
-				column.addPropertyChangeListener("indirectModified",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								Table.this.setIndirectModified(true);
-							}
-						});
 				column.addPropertyChangeListener("directModified",
 						new PropertyChangeListener() {
 							public void propertyChange(
@@ -259,13 +231,6 @@ public class Table implements Comparable, TransactionListener {
 				final Key key = (Key) i.next();
 				key.getRelations().addPropertyChangeListener(
 						this.relationCacheBuilder);
-				key.addPropertyChangeListener("indirectModified",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								Table.this.setIndirectModified(true);
-							}
-						});
 				key.addPropertyChangeListener("directModified",
 						new PropertyChangeListener() {
 							public void propertyChange(
@@ -497,7 +462,7 @@ public class Table implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							Table.this.setIndirectModified(true);
+							pcs.firePropertyChange("restrictTable", null, dataset);
 						}
 					});
 			this.pcs.firePropertyChange("restrictTable", null, dataset);
@@ -529,7 +494,7 @@ public class Table implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							Table.this.setIndirectModified(true);
+							pcs.firePropertyChange("restrictTable", null, tableKey);
 						}
 					});
 			this.pcs.firePropertyChange("restrictTable", null, tableKey);
@@ -583,8 +548,6 @@ public class Table implements Comparable, TransactionListener {
 
 		private boolean directModified = false;
 
-		private boolean indirectModified = false;
-
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
@@ -623,8 +586,7 @@ public class Table implements Comparable, TransactionListener {
 					RestrictedTableDefinition.this.setDirectModified(true);
 				}
 			};
-			this.pcs.addPropertyChangeListener("expression", listener);
-			this.pcs.addPropertyChangeListener("hard", listener);
+			this.pcs.addPropertyChangeListener(listener);
 			this.aliases.addPropertyChangeListener(listener);
 		}
 
@@ -680,10 +642,6 @@ public class Table implements Comparable, TransactionListener {
 			return this.directModified;
 		}
 
-		public boolean isIndirectModified() {
-			return this.indirectModified;
-		}
-
 		public void setDirectModified(final boolean modified) {
 			if (modified == this.directModified)
 				return;
@@ -692,17 +650,8 @@ public class Table implements Comparable, TransactionListener {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void setIndirectModified(final boolean modified) {
-			if (modified == this.indirectModified)
-				return;
-			final boolean oldValue = this.indirectModified;
-			this.indirectModified = modified;
-			this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-		}
-
 		public void transactionReset() {
 			this.directModified = false;
-			this.indirectModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {

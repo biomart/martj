@@ -267,8 +267,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		Transaction.addTransactionListener(this);
 		final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				if (evt.getNewValue().equals(Boolean.TRUE))
-					ExplainTableDialog.this.needsRebuild = true;
+				ExplainTableDialog.this.needsRebuild = true;
 			}
 		};
 		this.ds.addPropertyChangeListener("directModified", listener);
@@ -283,15 +282,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		return false;
 	}
 
-	public boolean isIndirectModified() {
-		return false;
-	}
-
 	public void setDirectModified(final boolean modified) {
-		// Ignore, for now.
-	}
-
-	public void setIndirectModified(final boolean modified) {
 		// Ignore, for now.
 	}
 

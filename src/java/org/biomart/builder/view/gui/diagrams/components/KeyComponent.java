@@ -283,6 +283,10 @@ public class KeyComponent extends BoxShapedComponent {
 		return (Key) this.getObject();
 	}
 
+	public String getDisplayName() {
+		return "";
+	}
+	
 	protected void doRecalculateDiagramComponent() {
 		// Calculate new label.
 		final StringBuffer sb = new StringBuffer();

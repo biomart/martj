@@ -66,8 +66,6 @@ public abstract class Key implements Comparable, TransactionListener {
 
 	private boolean directModified = false;
 
-	private boolean indirectModified = false;
-
 	private Collection relationCache;
 
 	/**
@@ -94,14 +92,9 @@ public abstract class Key implements Comparable, TransactionListener {
 				Key.this.setDirectModified(true);
 			}
 		};
-		this.pcs.addPropertyChangeListener("columns", listener);
+		this.pcs.addPropertyChangeListener(listener);
 
 		// Changes on relations.
-		final PropertyChangeListener listener2 = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Key.this.setIndirectModified(true);
-			}
-		};
 		this.relationCache = new HashSet();
 		this.relations.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
@@ -111,11 +104,7 @@ public abstract class Key implements Comparable, TransactionListener {
 				addedRels.removeAll(Key.this.relationCache);
 				for (final Iterator i = addedRels.iterator(); i.hasNext();) {
 					final Relation rel = (Relation) i.next();
-					rel
-							.addPropertyChangeListener("indirectModified",
-									listener2);
-					rel.addPropertyChangeListener("directModified", listener2);
-					Key.this.relationCache.add(rel);
+					rel.addPropertyChangeListener("directModified", listener);
 				}
 				Key.this.relationCache.clear();
 				Key.this.relationCache.addAll(Key.this.relations);
@@ -127,10 +116,6 @@ public abstract class Key implements Comparable, TransactionListener {
 		return this.directModified;
 	}
 
-	public boolean isIndirectModified() {
-		return this.indirectModified;
-	}
-
 	public void setDirectModified(final boolean modified) {
 		if (modified == this.directModified)
 			return;
@@ -139,17 +124,8 @@ public abstract class Key implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void setIndirectModified(final boolean modified) {
-		if (modified == this.indirectModified)
-			return;
-		final boolean oldValue = this.indirectModified;
-		this.indirectModified = modified;
-		this.pcs.firePropertyChange("indirectModified", oldValue, modified);
-	}
-
 	public void transactionReset() {
 		this.directModified = false;
-		this.indirectModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
