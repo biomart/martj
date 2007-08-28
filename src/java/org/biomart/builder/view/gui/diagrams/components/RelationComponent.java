@@ -227,7 +227,8 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 				repaintListener);
 		relation.getSecondKey().getTable().addPropertyChangeListener(
 				"dimensionMasked", repaintListener);
-
+		
+		this.changed = this.relation.isDirectModified();
 	}
 
 	public void setDirectModified(final boolean modified) {

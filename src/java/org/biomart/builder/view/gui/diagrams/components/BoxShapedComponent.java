@@ -192,6 +192,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 				RenderingHints.VALUE_RENDER_QUALITY);
 
 		Transaction.addTransactionListener(this);
+		
+		this.changed = this.object.isDirectModified();
 	}
 
 	public void setDirectModified(final boolean modified) {
@@ -356,9 +358,10 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.removeAll();
 		final Object state = this.getState();
 		this.doRecalculateDiagramComponent();
-		this.diagram.needsSubComps = true;
+		this.diagram.needsSubComps = !this.getSubComponents().isEmpty();
 		if (state != null)
 			this.setState(state);
+		// Update and paint.
 		this.revalidate();
 		this.repaintDiagramComponent();
 	}

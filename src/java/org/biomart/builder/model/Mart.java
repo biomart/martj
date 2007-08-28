@@ -596,8 +596,13 @@ public class Mart implements TransactionListener {
 		for (final Iterator i = rootTables.iterator(); i.hasNext();) {
 			final Table rootTable = (Table) i.next();
 			Log.debug("Constructing dataset for root table " + rootTable);
-			final DataSet dataset = new DataSet(this, rootTable, rootTable
-					.getName());
+			final DataSet dataset;
+			try {
+				dataset = new DataSet(this, rootTable, rootTable.getName());
+			} catch (final ValidationException e) {
+				// Skip this one.
+				continue;
+			}
 			this.getDataSets().put(dataset.getName(), dataset);
 			// Process it.
 			final Collection tablesIncluded = new HashSet();
@@ -892,7 +897,13 @@ public class Mart implements TransactionListener {
 		Log.debug("Creating datasets for remaining candidates");
 		for (final Iterator i = candidates.iterator(); i.hasNext();) {
 			final Table table = (Table) i.next();
-			final DataSet inv = new DataSet(this, table, table.getName());
+			final DataSet inv;
+			try {
+				inv = new DataSet(this, table, table.getName());
+			} catch (final ValidationException e) {
+				// Skip this one.
+				continue;
+			}
 			this.getDataSets().put(inv.getName(), inv);
 			invisibleDataSets.add(inv);
 		}

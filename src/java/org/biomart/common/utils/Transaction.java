@@ -186,7 +186,11 @@ public class Transaction {
 	 *            the listener to add.
 	 */
 	public static void addTransactionListener(final TransactionListener listener) {
-		Transaction.listeners.add(new WeakTransactionListener(listener));
+		synchronized (Transaction.LOCK) {
+			Transaction.listeners.add(new WeakTransactionListener(listener));
+			if (Transaction.currentTransaction != null)
+				listener.transactionReset();
+		}
 	}
 
 	private static void removeTransactionListener(

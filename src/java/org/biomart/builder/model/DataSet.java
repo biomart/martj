@@ -154,10 +154,18 @@ public class DataSet extends Schema {
 	 *            the table to use as the central table for this dataset.
 	 * @param name
 	 *            the name to give this dataset.
+	 * @throws ValidationException
+	 *             if the central table does not have a primary key.
 	 */
-	public DataSet(final Mart mart, final Table centralTable, final String name) {
+	public DataSet(final Mart mart, final Table centralTable, final String name)
+			throws ValidationException {
 		// Super first, to set the name.
 		super(mart, name, name);
+
+		// Check that the table has a primary key.
+		if (centralTable.getPrimaryKey() == null)
+			throw new ValidationException(Resources.get(
+					"datasetMustHaveCentralPK", centralTable.toString()));
 
 		// Remember the settings and make some defaults.
 		this.invisible = false;
@@ -2080,7 +2088,7 @@ public class DataSet extends Schema {
 			if (columnRename == oldValue || oldValue != null
 					&& oldValue.equals(columnRename))
 				return;
-			if (oldValue==null)
+			if (oldValue == null)
 				oldValue = this.getName();
 			// Make the name unique.
 			if (columnRename != null) {
@@ -2741,7 +2749,7 @@ public class DataSet extends Schema {
 			if (tableRename == oldValue || oldValue != null
 					&& oldValue.equals(tableRename))
 				return;
-			if (oldValue==null)
+			if (oldValue == null)
 				oldValue = this.getName();
 			// Make the name unique if it has a parent.
 			if (tableRename != null && this.getParent() != null) {

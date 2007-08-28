@@ -46,6 +46,12 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
  */
 public class AllSchemasDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
+	
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			AllSchemasDiagram.this.needsRedraw = true;
+		}
+	};
 
 	/**
 	 * The constructor creates the diagram and associates it with a given mart
@@ -66,17 +72,8 @@ public class AllSchemasDiagram extends Diagram {
 		// tables (presence/absence only).
 		// If any change, whole diagram needs redoing from scratch,
 		// and new listeners need setting up.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				AllSchemasDiagram.this.needsRedraw = true;
-			}
-		};
-		martTab.getMart().getSchemas().addPropertyChangeListener(listener);
-		for (final Iterator i = martTab.getMart().getSchemas().values()
-				.iterator(); i.hasNext();) {
-			final Schema sch = (Schema) i.next();
-			sch.getRelations().addPropertyChangeListener(listener);
-		}
+		
+		martTab.getMart().getSchemas().addPropertyChangeListener(this.listener);
 	}
 
 	public void doRecalculateDiagram() {
@@ -104,6 +101,8 @@ public class AllSchemasDiagram extends Diagram {
 			this.add(schemaComponent,
 					new SchemaLayoutConstraint(extRels.size()),
 					Diagram.TABLE_LAYER);
+			// Update ourselves when relations are added or removed.
+			schema.getRelations().addPropertyChangeListener(this.listener);
 		}
 	}
 }
