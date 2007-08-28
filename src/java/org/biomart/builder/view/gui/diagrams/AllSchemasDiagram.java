@@ -72,18 +72,10 @@ public class AllSchemasDiagram extends Diagram {
 			}
 		};
 		martTab.getMart().getSchemas().addPropertyChangeListener(listener);
-		
-		// When to repaint?
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				AllSchemasDiagram.this.needsRepaint = true;
-			}
-		};
 		for (final Iterator i = martTab.getMart().getSchemas().values()
 				.iterator(); i.hasNext();) {
 			final Schema sch = (Schema) i.next();
 			sch.getRelations().addPropertyChangeListener(listener);
-			sch.addPropertyChangeListener("directModified",repaintListener);
 		}
 	}
 

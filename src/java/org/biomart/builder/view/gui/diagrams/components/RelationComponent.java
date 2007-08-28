@@ -247,6 +247,8 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
+		this.needsRepaint |= this.changed ^ this.relation.isDirectModified();
+		this.changed = this.relation.isDirectModified();
 		if (this.needsRecalc)
 			this.recalculateDiagramComponent();
 		else if (this.needsRepaint)
@@ -430,10 +432,6 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	 */
 	public void setLoopback(final boolean loopback) {
 		this.loopback = loopback;
-	}
-
-	public void setRecentlyChanged(final boolean changed) {
-		this.changed = changed;
 	}
 
 	public void updateAppearance() {

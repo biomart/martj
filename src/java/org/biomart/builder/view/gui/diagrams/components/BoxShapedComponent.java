@@ -150,7 +150,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 	private JTextField name;
 
-	private Object object;
+	private TransactionListener object;
 
 	private Object state;
 
@@ -170,7 +170,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 * @param diagram
 	 *            the diagram to display ourselves in.
 	 */
-	public BoxShapedComponent(final Object object, final Diagram diagram) {
+	public BoxShapedComponent(final TransactionListener object,
+			final Diagram diagram) {
 		super();
 
 		// Remember settings.
@@ -210,6 +211,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
+		this.needsRepaint |= this.changed ^ this.object.isDirectModified();
+		this.changed = this.object.isDirectModified();
 		if (this.needsRecalc)
 			this.recalculateDiagramComponent();
 		else if (this.needsRepaint)
@@ -353,6 +356,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 		this.removeAll();
 		final Object state = this.getState();
 		this.doRecalculateDiagramComponent();
+		this.diagram.needsSubComps = true;
 		if (state != null)
 			this.setState(state);
 		this.revalidate();
@@ -619,10 +623,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 	 */
 	public boolean isSelected() {
 		return this.selected;
-	}
-
-	public void setRecentlyChanged(final boolean changed) {
-		this.changed = changed;
 	}
 
 	public void updateAppearance() {

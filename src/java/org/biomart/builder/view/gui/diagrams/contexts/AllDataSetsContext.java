@@ -66,8 +66,6 @@ public class AllDataSetsContext implements DiagramContext {
 			final DataSet ds = (DataSet) object;
 			final DataSetComponent dscomp = (DataSetComponent) component;
 
-			dscomp.setRecentlyChanged(ds.isDirectModified());
-
 			// Set the background colour.
 			if (ds.isPartitionTable())
 				dscomp.setBackground(DataSetComponent.PARTITION_BACKGROUND);

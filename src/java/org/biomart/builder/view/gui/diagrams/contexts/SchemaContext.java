@@ -85,7 +85,6 @@ public class SchemaContext implements DiagramContext {
 		if (object instanceof Schema) {
 			final Schema schema = (Schema) object;
 			final SchemaComponent schcomp = (SchemaComponent) component;
-			schcomp.setRecentlyChanged(schema.isDirectModified());
 			if (schema.isMasked())
 				schcomp.setBackground(SchemaComponent.MASKED_BACKGROUND);
 			else
@@ -97,8 +96,6 @@ public class SchemaContext implements DiagramContext {
 			final TableComponent tblcomp = (TableComponent) component;
 			final Table table = (Table) object;
 			tblcomp.setRestricted(false);
-
-			tblcomp.setRecentlyChanged(table.isDirectModified());
 
 			// Fade out all ignored tables.
 			if (this.isMasked(table))
@@ -124,8 +121,6 @@ public class SchemaContext implements DiagramContext {
 
 			// Is it loopback?
 			relcomp.setLoopback(false);
-
-			relcomp.setRecentlyChanged(relation.isDirectModified());
 
 			// Fade out all INFERRED_INCORRECT relations and those which
 			// head to ignored tables.

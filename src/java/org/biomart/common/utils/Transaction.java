@@ -327,10 +327,10 @@ public class Transaction {
 		list.addAll(dsComp);
 		// dataset relations.
 		list.addAll(dsRel);
-		// diagrams.
-		list.addAll(diag);
 		// diagram components.
 		list.addAll(diagComp);
+		// diagrams.
+		list.addAll(diag);
 		// anything else that is interested.
 		list.addAll(rest);
 		return list;

@@ -62,16 +62,6 @@ public class AllDataSetsDiagram extends Diagram {
 			}
 		};
 		martTab.getMart().getDataSets().addPropertyChangeListener(listener);
-		
-		// When to repaint?
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				AllDataSetsDiagram.this.needsRepaint = true;
-			}
-		};
-		for (final Iterator i = martTab.getMart().getDataSets().values()
-				.iterator(); i.hasNext();) 
-			((DataSet) i.next()).addPropertyChangeListener("directModified",repaintListener);
 	}
 
 	public void doRecalculateDiagram() {

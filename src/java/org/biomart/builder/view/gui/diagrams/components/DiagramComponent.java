@@ -123,10 +123,4 @@ public interface DiagramComponent {
 	 * It does _not_ repaint the object.
 	 */
 	public void updateAppearance();
-	
-	/**
-	 * Has this component recently changed? Highlight it if it has.
-	 * @param changed <tt>true</tt> if it has recently changed.
-	 */
-	public void setRecentlyChanged(final boolean changed);
 }

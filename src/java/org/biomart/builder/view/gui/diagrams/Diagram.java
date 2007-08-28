@@ -119,7 +119,10 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	protected boolean needsRepaint = false;
 
-	private boolean needsSubComps = false;
+	/**
+	 * This is public only so that the diagram picks up component changes.
+	 */
+	public boolean needsSubComps = false;
 
 	private static final int AUTOSCROLL_INSET = 12;
 
@@ -787,7 +790,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				// Initial placement of the hide masked button.
 				Diagram.this.adjustmentValueChanged(null);
 
-				// Resize the diagram to fit the components.
+				// Repaint the whole diagram to update the state of any
+				// new bits and remove any ghosts that may be left on screen.
 				Diagram.this.repaintDiagram();
 			}
 		}.start();

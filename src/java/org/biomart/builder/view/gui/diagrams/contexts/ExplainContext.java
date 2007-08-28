@@ -107,10 +107,7 @@ public class ExplainContext extends SchemaContext {
 
 		// Schema objects.
 		else if (object instanceof Schema) {
-			final Schema sch = (Schema) object;
 			final SchemaComponent schcomp = (SchemaComponent) component;
-
-			schcomp.setRecentlyChanged(sch.isDirectModified());
 
 			schcomp.setRenameable(false);
 			schcomp.setSelectable(false);
@@ -131,10 +128,8 @@ public class ExplainContext extends SchemaContext {
 							.contains(object)))
 				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
-			else {
-				tblcomp.setRecentlyChanged(table.isDirectModified());
+			else 
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
-			}
 
 			tblcomp.setRestricted((this.datasetTable == null ? table
 					.getRestrictTable(this.dataset) : table.getRestrictTable(

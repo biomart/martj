@@ -80,14 +80,6 @@ public class DataSetDiagram extends Diagram {
 		};
 		dataset.getTables().addPropertyChangeListener(listener);
 		dataset.getRelations().addPropertyChangeListener(listener);
-		
-		// When to repaint?
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				DataSetDiagram.this.needsRepaint = true;
-			}
-		};
-		dataset.addPropertyChangeListener("directModified",repaintListener);
 	}
 
 	public void doRecalculateDiagram() {

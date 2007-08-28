@@ -102,8 +102,6 @@ public class DataSetContext extends SchemaContext {
 				relcomp.setCompounded(target.getFocusRelation()
 						.getCompoundRelation(this.dataset) != null);
 
-			relcomp.setRecentlyChanged(target.isDirectModified());
-
 			// Fade MASKED DIMENSION relations.
 			if (target.isDimensionMasked() || this.getDataSet().isMasked())
 				relcomp.setForeground(RelationComponent.MASKED_COLOUR);
@@ -130,8 +128,6 @@ public class DataSetContext extends SchemaContext {
 			final TableComponent tblcomp = (TableComponent) component;
 			final DataSetTable tbl = (DataSetTable) object;
 			final DataSetTableType tableType = tbl.getType();
-
-			tblcomp.setRecentlyChanged(tbl.isDirectModified());
 
 			// Highlight partitioned main tables.
 			if (tableType.equals(DataSetTableType.MAIN)
@@ -182,8 +178,6 @@ public class DataSetContext extends SchemaContext {
 			// Which column is it?
 			final DataSetColumn column = (DataSetColumn) object;
 			final ColumnComponent colcomp = (ColumnComponent) component;
-
-			colcomp.setRecentlyChanged(column.isDirectModified());
 
 			// Fade out all MASKED columns.
 			if (column.isColumnMasked())
