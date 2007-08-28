@@ -1029,7 +1029,9 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public boolean isRestrictRelation(final DataSet dataset,
 			final String tableKey) {
-		return this.getMods(dataset, tableKey).containsKey("restrictRelation")
+		return this.isRestrictRelation(dataset)
+				|| this.getMods(dataset, tableKey).containsKey(
+						"restrictRelation")
 				&& !((Map) this.getMods(dataset, tableKey).get(
 						"restrictRelation")).isEmpty();
 	}
