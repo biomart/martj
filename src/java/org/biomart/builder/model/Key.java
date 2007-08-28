@@ -64,7 +64,7 @@ public abstract class Key implements Comparable, TransactionListener {
 
 	private ComponentStatus status;
 
-	private boolean directModified = false;
+	private boolean directModified = true;
 
 	private Collection relationCache;
 

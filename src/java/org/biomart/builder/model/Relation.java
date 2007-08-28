@@ -83,7 +83,7 @@ public class Relation implements Comparable, TransactionListener {
 
 	private ComponentStatus status;
 
-	private boolean directModified = false;
+	private boolean directModified = true;
 
 	private final Map mods = new HashMap();
 

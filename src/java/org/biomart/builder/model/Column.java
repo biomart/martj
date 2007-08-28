@@ -47,7 +47,7 @@ public class Column implements Comparable, TransactionListener {
 
 	private final Table table;
 
-	private boolean directModified = false;
+	private boolean directModified = true;
 
 	/**
 	 * Subclasses use this field to fire events of their own.

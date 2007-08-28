@@ -83,7 +83,7 @@ public class Table implements Comparable, TransactionListener {
 
 	private final Collection columnCache;
 
-	private boolean directModified = false;
+	private boolean directModified = true;
 
 	private final Map mods = new HashMap();
 

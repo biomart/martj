@@ -109,7 +109,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	protected boolean needsFullSync;
 
-	private boolean directModified = false;
+	private boolean directModified = true;
 
 	private final Collection tableCache;
 

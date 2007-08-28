@@ -76,7 +76,7 @@ public class Mart implements TransactionListener {
 
 	private String overridePort = null;
 
-	private boolean directModified = false;
+	private boolean directModified = true;
 
 	/**
 	 * Constant referring to table and column name conversion.
