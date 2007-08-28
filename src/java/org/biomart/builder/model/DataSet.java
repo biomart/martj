@@ -1110,6 +1110,14 @@ public class DataSet extends Schema {
 
 			// Create a wrapped column for this column.
 			String colName = c.getName();
+			// Add partitioning prefixes.
+			for (int k = 0; k < nameCols.size(); k++) {
+				final String pcolName = (String) nameCols.get(k);
+				final String suffix = nameColSuffixes.size() <= k ? "" : "#"
+						+ (String) nameColSuffixes.get(k);
+				colName = pcolName + suffix + Resources.get("columnnameSep")
+						+ colName;
+			}
 			// If appears in uniqueBases, add table suffix and retry.
 			if (uniqueBases.containsKey(colName)) {
 				colName = dsTable.getColumns().containsKey(colName) ? colName
@@ -1139,14 +1147,6 @@ public class DataSet extends Schema {
 					&& Arrays.asList(mergeTablePK.getColumns()).contains(c)
 					&& !colName.endsWith(Resources.get("keySuffix")))
 				colName = colName + Resources.get("keySuffix");
-			// Add partitioning prefixes.
-			for (int k = 0; k < nameCols.size(); k++) {
-				final PartitionColumn pcol = (PartitionColumn) nameCols.get(k);
-				final String suffix = nameColSuffixes.size() <= k ? "" : "#"
-						+ (String) nameColSuffixes.get(k);
-				colName = pcol.getName() + suffix
-						+ Resources.get("columnnameSep") + colName;
-			}
 			final WrappedColumn wc;
 			if (dsTable.getColumns().containsKey(colName)) {
 				final DataSetColumn candDSCol = (DataSetColumn) dsTable
@@ -1387,9 +1387,7 @@ public class DataSet extends Schema {
 							final PartitionAppliedRow prow = (PartitionAppliedRow) usefulPart
 									.getPartitionAppliedRows().get(1);
 							childCompounded = prow.getCompound();
-							nextNameCols.add(usefulPart.getPartitionTable()
-									.getSelectedColumn(
-											prow.getNamePartitionCol()));
+							nextNameCols.add(prow.getNamePartitionCol());
 						} else
 							childCompounded = 1;
 					}
@@ -1822,10 +1820,10 @@ public class DataSet extends Schema {
 		}
 
 		/**
-		 * Update the partition column list on this column.
+		 * Update the partition column list on this column to use the names.
 		 * 
 		 * @param partCols
-		 *            the new list of partition columns that apply.
+		 *            the new list of partition column names that apply.
 		 */
 		public void setPartitionCols(final List partCols) {
 			this.partitionCols.clear();
@@ -1836,13 +1834,18 @@ public class DataSet extends Schema {
 		 * Fixes the name of this column to what it will be after partitioning
 		 * has been applied using the current rows.
 		 * 
+		 * @param pta
+		 *            the current partition table application.
 		 * @throws PartitionException
 		 *             if it could not get the values.
 		 */
-		public void fixPartitionedName() throws PartitionException {
+		public void fixPartitionedName(final PartitionTableApplication pta)
+				throws PartitionException {
 			final StringBuffer buf = new StringBuffer();
 			for (final Iterator i = this.partitionCols.iterator(); i.hasNext();) {
-				final PartitionColumn pcol = (PartitionColumn) i.next();
+				final String pcolName = (String) i.next();
+				final PartitionColumn pcol = pta.getPartitionTable()
+						.getSelectedColumn(pcolName);
 				buf.append(pcol.getValueForRow(pcol.getPartitionTable()
 						.currentRow()));
 				buf.append(Resources.get("columnnameSep"));
@@ -1868,8 +1871,8 @@ public class DataSet extends Schema {
 
 		/**
 		 * Get the name of this column after partitioning has been applied. Must
-		 * call {@link #fixPartitionedName()} first else it will delegate to
-		 * {@link #getModifiedName()}.
+		 * call {@link #fixPartitionedName(PartitionTableApplication)} first
+		 * else it will delegate to {@link #getModifiedName()}.
 		 * 
 		 * @return the partitioned name.
 		 */
@@ -2073,10 +2076,12 @@ public class DataSet extends Schema {
 		 */
 		public void setColumnRename(String columnRename)
 				throws ValidationException {
-			final String oldValue = this.getColumnRename();
+			String oldValue = this.getColumnRename();
 			if (columnRename == oldValue || oldValue != null
 					&& oldValue.equals(columnRename))
 				return;
+			if (oldValue==null)
+				oldValue = this.getName();
 			// Make the name unique.
 			if (columnRename != null) {
 				final Set entries = new HashSet();
@@ -2084,8 +2089,7 @@ public class DataSet extends Schema {
 				for (final Iterator i = this.getTable().getColumns().values()
 						.iterator(); i.hasNext();)
 					entries.add(((DataSetColumn) i.next()).getModifiedName());
-				if (oldValue != null)
-					entries.remove(oldValue);
+				entries.remove(oldValue);
 				// First we need to find out the base name, ie. the bit
 				// we append numbers to make it unique, but before any
 				// key suffix. If we appended numbers after the key
@@ -2733,10 +2737,12 @@ public class DataSet extends Schema {
 		 *            the new name, or <tt>null</tt> to undo it.
 		 */
 		public void setTableRename(String tableRename) {
-			final String oldValue = this.getTableRename();
+			String oldValue = this.getTableRename();
 			if (tableRename == oldValue || oldValue != null
 					&& oldValue.equals(tableRename))
 				return;
+			if (oldValue==null)
+				oldValue = this.getName();
 			// Make the name unique if it has a parent.
 			if (tableRename != null && this.getParent() != null) {
 				final String baseName = tableRename;
@@ -2746,8 +2752,7 @@ public class DataSet extends Schema {
 						.getRelations().iterator(); i.hasNext();)
 					entries.add(((DataSetTable) ((Relation) i.next())
 							.getManyKey().getTable()).getModifiedName());
-				if (oldValue != null)
-					entries.remove(oldValue);
+				entries.remove(oldValue);
 				// Iterate over renamedTables entries.
 				// If find an entry with same name, find ds table it refers to.
 				// If entry ds table parent = table parent then increment and

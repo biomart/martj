@@ -885,7 +885,8 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
-				col.fixPartitionedName();
+				if (pta!=null)
+					col.fixPartitionedName(pta);
 				if (col.isRequiredInterim())
 					selectCols
 							.put(
@@ -1053,7 +1054,8 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
-				col.fixPartitionedName();
+				if (pta!=null)
+					col.fixPartitionedName(pta);
 				if (col.isRequiredInterim())
 					selectCols.put(entry.getKey(), col.getPartitionedName());
 			}

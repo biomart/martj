@@ -113,7 +113,7 @@ public abstract class PartitionTable {
 	 * Create a new, empty, partition table.
 	 */
 	public PartitionTable() {
-		// TODO
+		// Nothing to do here yet.
 	}
 
 	/**
@@ -594,7 +594,13 @@ public abstract class PartitionTable {
 		 */
 		public String getValueForRow(final PartitionRow row)
 				throws PartitionException {
-			if (this.compiled != null)
+			if (this.compiled == null && this.regexMatch!=null)
+				try {
+					this.compiled = Pattern.compile(this.regexMatch);
+				} catch (final PatternSyntaxException pe) {
+					this.compiled = null;
+				}
+			if (this.compiled != null && this.regexReplace!=null)
 				return this.compiled.matcher(row.getValue(this.getName()))
 						.replaceAll(this.regexReplace);
 			else
@@ -609,12 +615,7 @@ public abstract class PartitionTable {
 		 */
 		public void setRegexMatch(final String regexMatch) {
 			this.regexMatch = regexMatch;
-			if (this.regexMatch != null)
-				try {
-					this.compiled = Pattern.compile(this.regexMatch);
-				} catch (final PatternSyntaxException pe) {
-					this.compiled = null;
-				}
+			this.compiled = null;
 		}
 
 		/**
