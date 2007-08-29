@@ -192,7 +192,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Column col = (Column) i.next();
 				tempSource.getColumns().put(col.getName(), col);
 			}			
-			tempSource.transactionReset(); // To clear modified status.
+			tempSource.transactionResetVisibleModified(); 
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);
@@ -263,14 +263,14 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempSourceKey = new ForeignKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.getForeignKeys().add(tempSourceKey);	
-				tempSourceKey.transactionReset(); // To clear modified status.
+				tempSourceKey.transactionResetVisibleModified(); 
 			} else {
 				tempSourceKey = new PrimaryKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
-				tempSourceKey.transactionReset(); // To clear modified status.
+				tempSourceKey.transactionResetVisibleModified(); 
 			}
-			tempSource.transactionReset(); // To clear modified status.
+			tempSource.transactionResetVisibleModified(); 
 
 			// Create a copy of the target table complete with target key.
 			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
@@ -290,13 +290,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			if (realTargetKey instanceof ForeignKey) {
 				tempTargetKey = new ForeignKey(realTargetKey.getColumns());
 				tempTarget.getForeignKeys().add(tempTargetKey);
-				tempTargetKey.transactionReset(); // To clear modified status.
+				tempTargetKey.transactionResetVisibleModified(); 
 			} else {
 				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
-				tempTargetKey.transactionReset(); // To clear modified status.
+				tempTargetKey.transactionResetVisibleModified(); 
 			}
-			tempTarget.transactionReset(); // To clear modified status.
+			tempTarget.transactionResetVisibleModified(); 
 
 			// Create a copy of the relation but change to be between the
 			// two fake keys.
@@ -310,7 +310,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				tempRelation.transactionReset(); // To clear modified status.
+				tempRelation.transactionResetVisibleModified(); 
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
@@ -398,14 +398,14 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempSourceKey = new ForeignKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.getForeignKeys().add(tempSourceKey);	
-				tempSourceKey.transactionReset(); // To clear modified status.
+				tempSourceKey.transactionResetVisibleModified(); 
 			} else {
 				tempSourceKey = new PrimaryKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
-				tempSourceKey.transactionReset(); // To clear modified status.
+				tempSourceKey.transactionResetVisibleModified(); 
 			}
-			tempSource.transactionReset(); // To clear modified status.
+			tempSource.transactionResetVisibleModified(); 
 
 			// Create a copy of the target table complete with target key.
 			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
@@ -421,13 +421,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			if (realTargetKey instanceof ForeignKey) {
 				tempTargetKey = new ForeignKey(realTargetKey.getColumns());
 				tempTarget.getForeignKeys().add(tempTargetKey);
-				tempTargetKey.transactionReset(); // To clear modified status.
+				tempTargetKey.transactionResetVisibleModified(); 
 			} else {
 				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
-				tempTargetKey.transactionReset(); // To clear modified status.
+				tempTargetKey.transactionResetVisibleModified(); 
 			}
-			tempTarget.transactionReset(); // To clear modified status.
+			tempTarget.transactionResetVisibleModified(); 
 
 			// Create a copy of the relation but change to be between the
 			// two fake keys.
@@ -441,7 +441,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				tempRelation.transactionReset(); // To clear modified status.
+				tempRelation.transactionResetVisibleModified(); 
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
@@ -519,7 +519,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Column col = (Column) i.next();
 				tempSource.getColumns().put(col.getName(), col);
 			}
-			tempSource.transactionReset(); // To clear modified status.
+			tempSource.transactionResetVisibleModified(); 
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
 			this.getTableComponents().add(tc);

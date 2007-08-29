@@ -1352,6 +1352,7 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {
+			Transaction.resetVisibleModified();
 			Transaction.end();
 		}
 	}
@@ -1386,6 +1387,7 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {
+			Transaction.resetVisibleModified();
 			Transaction.end();
 		}
 	}

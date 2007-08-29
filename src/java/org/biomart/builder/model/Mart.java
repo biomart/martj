@@ -76,7 +76,7 @@ public class Mart implements TransactionListener {
 
 	private String overridePort = null;
 
-	private boolean directModified = true;
+	private boolean directModified = false;
 
 	/**
 	 * Constant referring to table and column name conversion.
@@ -249,13 +249,25 @@ public class Mart implements TransactionListener {
 		this.directModified = modified;
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
+	
+	public boolean isVisibleModified() {
+		return false;
+	}
+	
+	public void setVisibleModified(final boolean modified) {
+		// Ignore, for now.
+	}
 
-	public void transactionReset() {
+	public void transactionResetVisibleModified() {
+		// Ignore, for now.
+	}
+
+	public void transactionResetDirectModified() {
 		this.directModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
-		// Ignore, for now.
+		// Don't really care for now.
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {

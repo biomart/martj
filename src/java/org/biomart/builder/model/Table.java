@@ -83,7 +83,7 @@ public class Table implements Comparable, TransactionListener {
 
 	private final Collection columnCache;
 
-	private boolean directModified = true;
+	private boolean directModified = false;
 
 	private final Map mods = new HashMap();
 
@@ -151,12 +151,30 @@ public class Table implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void transactionReset() {
+	public boolean isVisibleModified() {
+		// Compute this from all keys and cols - if any are vis
+		// modified then we are too.
+		for (final Iterator i = this.getKeys().iterator(); i.hasNext(); ) 
+			if (((Key)i.next()).isVisibleModified()) return true;
+		for (final Iterator i = this.getColumns().values().iterator(); i.hasNext(); ) 
+			if (((Column)i.next()).isVisibleModified()) return true;
+		return false;
+	}
+
+	public void setVisibleModified(final boolean modified) {
+		// We compute this on the fly so cannot set it.
+	}
+
+	public void transactionResetVisibleModified() {
+		// We compute this on the fly so cannot set it.
+	}
+
+	public void transactionResetDirectModified() {
 		this.directModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
-		// Ignore, for now.
+		// Don't really care for now.
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
@@ -650,12 +668,24 @@ public class Table implements Comparable, TransactionListener {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void transactionReset() {
+		public boolean isVisibleModified() {
+			return false;
+		}
+
+		public void setVisibleModified(final boolean modified) {
+			// Ignore for now.
+		}
+
+		public void transactionResetVisibleModified() {
+			// Ignore for now.
+		}
+
+		public void transactionResetDirectModified() {
 			this.directModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {
-			// Ignore, for now.
+			// Don't really care for now.
 		}
 
 		public void transactionEnded(final TransactionEvent evt) {

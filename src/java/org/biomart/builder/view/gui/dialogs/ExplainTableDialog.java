@@ -286,7 +286,19 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		// Ignore, for now.
 	}
 
-	public void transactionReset() {
+	public boolean isVisibleModified() {
+		return false;
+	}
+
+	public void setVisibleModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public void transactionResetDirectModified() {
+		// Ignore, for now.
+	}
+
+	public void transactionResetVisibleModified() {
 		// Ignore, for now.
 	}
 

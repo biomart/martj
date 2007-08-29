@@ -62,7 +62,14 @@ public class Transaction {
 		 * tranaction starts, or after a transaction which caused changes which
 		 * are not considered important.
 		 */
-		public void transactionReset();
+		public void transactionResetDirectModified();
+
+		/**
+		 * Reset the modified flags on this object, possibly before a new
+		 * tranaction starts, or after a transaction which caused changes which
+		 * are not considered important.
+		 */
+		public void transactionResetVisibleModified();
 
 		/**
 		 * A transaction has begun.
@@ -85,6 +92,23 @@ public class Transaction {
 		 */
 		public void transactionEnded(final TransactionEvent evt)
 				throws TransactionException;
+
+		/**
+		 * Indicate that some aspect of this object has been directly affected
+		 * by the current transaction and it needs visibly highlighting.
+		 * 
+		 * @param modified
+		 *            whether or not it has been affected.
+		 */
+		public void setVisibleModified(final boolean modified);
+
+		/**
+		 * Has this object been directly affected by this transaction and needs
+		 * visibly highlighting?
+		 * 
+		 * @return <tt>true</tt> if it has.
+		 */
+		public boolean isVisibleModified();
 
 		/**
 		 * Indicate that some aspect of this object has been directly affected
@@ -119,13 +143,22 @@ public class Transaction {
 			return (TransactionListener) this.listenerRef.get();
 		}
 
-		public void transactionReset() {
+		public void transactionResetDirectModified() {
 			final TransactionListener listener = (TransactionListener) this.listenerRef
 					.get();
 			if (listener == null)
 				this.removeListener();
 			else
-				listener.transactionReset();
+				listener.transactionResetDirectModified();
+		}
+
+		public void transactionResetVisibleModified() {
+			final TransactionListener listener = (TransactionListener) this.listenerRef
+					.get();
+			if (listener == null)
+				this.removeListener();
+			else
+				listener.transactionResetVisibleModified();
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {
@@ -145,6 +178,25 @@ public class Transaction {
 				this.removeListener();
 			else
 				listener.transactionEnded(evt);
+		}
+
+		public void setVisibleModified(final boolean modified) {
+			final TransactionListener listener = (TransactionListener) this.listenerRef
+					.get();
+			if (listener == null)
+				this.removeListener();
+			else
+				listener.setVisibleModified(modified);
+		}
+
+		public boolean isVisibleModified() {
+			final TransactionListener listener = (TransactionListener) this.listenerRef
+					.get();
+			if (listener == null) {
+				this.removeListener();
+				return false;
+			} else
+				return listener.isVisibleModified();
 		}
 
 		public void setDirectModified(final boolean modified) {
@@ -201,13 +253,19 @@ public class Transaction {
 	/**
 	 * Reset all transaction listeners ready for a new transaction.
 	 */
-	public static void reset() {
-		synchronized (Transaction.LOCK) {
-			if (Transaction.inProgress == 0)
-				for (final Iterator i = Transaction.getOrderedListeners()
-						.iterator(); i.hasNext();)
-					((TransactionListener) i.next()).transactionReset();
-		}
+	public static void resetVisibleModified() {
+		for (final Iterator i = Transaction.getOrderedListeners().iterator(); i
+				.hasNext();)
+			((TransactionListener) i.next()).transactionResetVisibleModified();
+	}
+
+	/**
+	 * Reset all transaction listeners ready for a new transaction.
+	 */
+	public static void resetDirectModified() {
+		for (final Iterator i = Transaction.getOrderedListeners().iterator(); i
+				.hasNext();)
+			((TransactionListener) i.next()).transactionResetDirectModified();
 	}
 
 	/**
@@ -228,7 +286,7 @@ public class Transaction {
 						.iterator(); i.hasNext();) {
 					final TransactionListener listener = (TransactionListener) i
 							.next();
-					listener.transactionReset();
+					listener.transactionResetDirectModified();
 					listener.transactionStarted(event);
 				}
 			}

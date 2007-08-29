@@ -46,8 +46,13 @@ public class Column implements Comparable, TransactionListener {
 	private final String name;
 
 	private final Table table;
+	
+	/**
+	 * Some subclasses refer to this directly.
+	 */
+	protected boolean visibleModified = true;
 
-	private boolean directModified = true;
+	private boolean directModified = false;
 
 	/**
 	 * Subclasses use this field to fire events of their own.
@@ -100,13 +105,26 @@ public class Column implements Comparable, TransactionListener {
 		this.directModified = modified;
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
+	
+	public boolean isVisibleModified() {
+		return this.visibleModified;
+	}
+	
+	public void setVisibleModified(final boolean modified) {
+		// We don't care as this gets set internally.
+	}
 
-	public void transactionReset() {
+	public void transactionResetVisibleModified() {
+		this.visibleModified = false;
+		// Once reset, it is never true again.
+	}
+
+	public void transactionResetDirectModified() {
 		this.directModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
-		// Ignore, for now.
+		// Don't really care for now.
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {

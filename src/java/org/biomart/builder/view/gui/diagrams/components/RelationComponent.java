@@ -228,7 +228,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 		relation.getSecondKey().getTable().addPropertyChangeListener(
 				"dimensionMasked", repaintListener);
 		
-		this.changed = this.relation.isDirectModified();
+		this.changed = this.relation.isVisibleModified();
 	}
 
 	public void setDirectModified(final boolean modified) {
@@ -239,7 +239,19 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 		return false;
 	}
 
-	public void transactionReset() {
+	public void setVisibleModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isVisibleModified() {
+		return false;
+	}
+
+	public void transactionResetDirectModified() {
+		// Ignore, for now.
+	}
+
+	public void transactionResetVisibleModified() {
 		// Ignore, for now.
 	}
 
@@ -248,8 +260,9 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		this.needsRepaint |= this.changed ^ this.relation.isDirectModified();
-		this.changed = this.relation.isDirectModified();
+		final boolean visMod = this.relation.isVisibleModified();
+		this.needsRepaint |= this.changed ^ visMod;
+		this.changed = visMod;
 		if (this.needsRecalc)
 			this.recalculateDiagramComponent();
 		else if (this.needsRepaint)
@@ -372,6 +385,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 
 	public void repaintDiagramComponent() {
 		this.updateAppearance();
+		this.repaint();
 	}
 
 	/**

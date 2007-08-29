@@ -193,7 +193,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 
 		Transaction.addTransactionListener(this);
 		
-		this.changed = this.object.isDirectModified();
+		this.changed = this.object.isVisibleModified();
 	}
 
 	public void setDirectModified(final boolean modified) {
@@ -204,7 +204,19 @@ public abstract class BoxShapedComponent extends JPanel implements
 		return false;
 	}
 
-	public void transactionReset() {
+	public void setVisibleModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isVisibleModified() {
+		return false;
+	}
+
+	public void transactionResetVisibleModified() {
+		// Ignore, for now.
+	}
+
+	public void transactionResetDirectModified() {
 		// Ignore, for now.
 	}
 
@@ -213,8 +225,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		this.needsRepaint |= this.changed ^ this.object.isDirectModified();
-		this.changed = this.object.isDirectModified();
+		final boolean visMod = this.object.isVisibleModified();
+		this.needsRepaint |= this.changed ^ visMod;
+		this.changed = visMod;
 		if (this.needsRecalc)
 			this.recalculateDiagramComponent();
 		else if (this.needsRepaint)

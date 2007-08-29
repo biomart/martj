@@ -2173,6 +2173,7 @@ public class DataSet extends Schema {
 								ExpressionColumn.this.setDirectModified(true);
 							}
 						});
+				this.visibleModified = false;
 			}
 
 			/**
@@ -2209,6 +2210,7 @@ public class DataSet extends Schema {
 				super(dsColumn.getModifiedName(), dsTable);
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
+				this.visibleModified = false;
 			}
 
 			/**
@@ -2935,12 +2937,24 @@ public class DataSet extends Schema {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void transactionReset() {
+		public boolean isVisibleModified() {
+			return false;
+		}
+		
+		public void setVisibleModified(final boolean modified) {
+			// Ignore, for now.
+		}
+		
+		public void transactionResetVisibleModified() {
+			// Ignore, for now.
+		}
+
+		public void transactionResetDirectModified() {
 			this.directModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {
-			// Ignore, for now.
+			// Don't really care for now.
 		}
 
 		public void transactionEnded(final TransactionEvent evt) {

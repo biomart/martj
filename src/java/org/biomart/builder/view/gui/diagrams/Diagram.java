@@ -257,7 +257,19 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		return false;
 	}
 
-	public void transactionReset() {
+	public void setVisibleModified(final boolean modified) {
+		// Ignore, for now.
+	}
+
+	public boolean isVisibleModified() {
+		return false;
+	}
+
+	public void transactionResetVisibleModified() {
+		// Ignore, for now.
+	}
+	
+	public void transactionResetDirectModified() {
 		// Ignore, for now.
 	}
 

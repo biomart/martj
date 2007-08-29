@@ -433,7 +433,10 @@ public class SchemaTabSet extends JTabbedPane {
 				// turn it off again later.
 				if (schema.getRelations().size() == 0)
 					schema.setKeyGuessing(true);
-
+				
+				Transaction.end();
+				Transaction.start();
+				Transaction.resetVisibleModified();
 				Transaction.end();
 			}
 		}.start();
@@ -449,6 +452,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestChangeKeyStatus(final Key key,
 			final ComponentStatus status) {
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		key.setStatus(status);
 		Transaction.end();
@@ -465,6 +469,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestChangeRelationCardinality(final Relation relation,
 			final Cardinality cardinality) {
 		try {
+			Transaction.resetVisibleModified();
 			Transaction.start();
 			relation.setCardinality(cardinality);
 			relation.setStatus(ComponentStatus.HANDMADE);
@@ -486,6 +491,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestChangeRelationStatus(final Relation relation,
 			final ComponentStatus status) {
 		try {
+			Transaction.resetVisibleModified();
 			Transaction.start();
 			relation.setStatus(status);
 		} catch (final AssociationException e) {
@@ -525,6 +531,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateForeignKey(final Table table,
 			final Column[] columns) {
+		// DOES NOT AFFECT VISIBLE STATUS.
 		Transaction.start();
 		table.getForeignKeys().add(new ForeignKey(columns));
 		Transaction.end();
@@ -561,6 +568,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreatePrimaryKey(final Table table,
 			final Column[] columns) {
+		// DOES NOT AFFECT VISIBLE STATUS.
 		Transaction.start();
 		table.setPrimaryKey(new PrimaryKey(columns));
 		Transaction.end();
@@ -593,6 +601,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestCreateRelation(final Key from, final Key to) {
 		// Create the relation in the background.
 		try {
+			Transaction.resetVisibleModified();
 			Transaction.start();
 			final Relation rel = new Relation(
 					from,
@@ -616,6 +625,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to turn keyguessing off for.
 	 */
 	public void requestDisableKeyGuessing(final Schema schema) {
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		schema.setKeyGuessing(false);
 		Transaction.end();
@@ -630,6 +640,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            ignore it?
 	 */
 	public void requestIgnoreTable(final Table table, final boolean ignored) {
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		table.setMasked(ignored);
 		Transaction.end();
@@ -644,6 +655,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            mask it?
 	 */
 	public void requestMaskSchema(final Schema s, final boolean masked) {
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		s.setMasked(masked);
 		Transaction.end();
@@ -668,6 +680,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 		// If they selected any columns, modify the key.
 		if (cols.length > 0) {
+			Transaction.resetVisibleModified();
 			Transaction.start();
 			key.setColumns(cols);
 			Transaction.end();
@@ -681,6 +694,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to turn keyguessing on for.
 	 */
 	public void requestEnableKeyGuessing(final Schema schema) {
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		schema.setKeyGuessing(true);
 		Transaction.end();
@@ -708,6 +722,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestModifySchemaPartitions(final Schema schema) {
 		final PartitionSchemaDialog dialog = new PartitionSchemaDialog(schema);
 		if (dialog.definePartitions()) {
+			// DON'T reset visible here as doesn't affect it.
 			Transaction.start();
 			schema.setPartitionNameExpression(dialog.getExpression());
 			schema.setPartitionRegex(dialog.getRegex());
@@ -722,6 +737,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the key to remove.
 	 */
 	public void requestRemoveKey(final Key key) {
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		if (key instanceof PrimaryKey)
 			key.getTable().setPrimaryKey(null);
@@ -737,6 +753,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the relation to remove.
 	 */
 	public void requestRemoveRelation(final Relation relation) {
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		relation.getFirstKey().getRelations().remove(relation);
 		relation.getSecondKey().getRelations().remove(relation);
@@ -759,6 +776,7 @@ public class SchemaTabSet extends JTabbedPane {
 		if (choice != JOptionPane.YES_OPTION)
 			return;
 
+		Transaction.resetVisibleModified();
 		Transaction.start();
 		SchemaTabSet.this.martTab.getMart().getSchemas().remove(
 				schema.getName());
@@ -797,6 +815,7 @@ public class SchemaTabSet extends JTabbedPane {
 		if (newName.length() == 0)
 			return;
 
+		// DOES NOT AFFECT VISIBLE MODIFIED.
 		Transaction.start();
 		schema.setName(newName);
 		Transaction.end();
@@ -865,6 +884,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// In the background, do the synchronisation.
 		new LongProcess() {
 			public void run() throws Exception {
+				Transaction.resetVisibleModified();
 				Transaction.start();
 				schema.synchronise();
 				Transaction.end();

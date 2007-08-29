@@ -160,16 +160,16 @@ public class MartTabSet extends JTabbedPane {
 		martTab.getSchemaTabSet().setSelectedIndex(0);
 
 		// Listen to modified changes.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				if (evt.getNewValue().equals(Boolean.TRUE)
-						&& !Boolean.TRUE
-								.equals(MartTabSet.this.martModifiedStatus.put(
-										mart, Boolean.TRUE)))
-					MartTabSet.this.updateMartTitle(mart);
-			}
-		};
-		mart.addPropertyChangeListener("directModified", listener);
+		mart.addPropertyChangeListener("directModified",
+				new PropertyChangeListener() {
+					public void propertyChange(final PropertyChangeEvent evt) {
+						if (evt.getNewValue().equals(Boolean.TRUE)
+								&& !Boolean.TRUE
+										.equals(MartTabSet.this.martModifiedStatus
+												.put(mart, Boolean.TRUE)))
+							MartTabSet.this.updateMartTitle(mart);
+					}
+				});
 	}
 
 	private void updateMartTitle(final Mart mart) {
@@ -383,8 +383,12 @@ public class MartTabSet extends JTabbedPane {
 				// Load the files.
 				Transaction.start();
 				final Mart mart = MartBuilderXML.load(file);
-				Transaction.end(); 
-				Transaction.reset(); // Remove the modified status.
+				Transaction.end();				
+				Transaction.start();
+				Transaction.resetVisibleModified();
+				Transaction.end();
+
+
 				MartTabSet.this.martModifiedStatus.put(mart, Boolean.FALSE);
 				MartTabSet.this.addMartTab(mart, file);
 				// Save XML filename in history of accessed

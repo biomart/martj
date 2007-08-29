@@ -83,7 +83,9 @@ public class Relation implements Comparable, TransactionListener {
 
 	private ComponentStatus status;
 
-	private boolean directModified = true;
+	private boolean visibleModified = true;
+
+	private boolean directModified = false;
 
 	private final Map mods = new HashMap();
 
@@ -190,6 +192,15 @@ public class Relation implements Comparable, TransactionListener {
 		this.pcs.addPropertyChangeListener("mergeRelation", listener);
 		this.pcs.addPropertyChangeListener("restrictRelation", listener);
 		this.pcs.addPropertyChangeListener("subclassRelation", listener);
+		
+		// All changes to us make us visible modified.
+		final PropertyChangeListener vlistener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				Relation.this.visibleModified = true;
+			}
+		};
+		this.pcs.addPropertyChangeListener("cardinality", vlistener);
+		this.pcs.addPropertyChangeListener("status", vlistener);
 
 		// Add listeners to tables at both end so that if key
 		// is removed, relation is also removed.
@@ -249,12 +260,24 @@ public class Relation implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public void transactionReset() {
+	public boolean isVisibleModified() {
+		return this.visibleModified;
+	}
+	
+	public void setVisibleModified(final boolean modified) {
+		// Gets set internally so don't need to allow changes.
+	}
+	
+	public void transactionResetVisibleModified() {
+		this.visibleModified = false;
+	}
+
+	public void transactionResetDirectModified() {
 		this.directModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
-		// Ignore, for now.
+		// Don't really care for now.
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
@@ -1484,12 +1507,24 @@ public class Relation implements Comparable, TransactionListener {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void transactionReset() {
+		public boolean isVisibleModified() {
+			return false;
+		}
+		
+		public void setVisibleModified(final boolean modified) {
+			// Ignore, for now.
+		}
+		
+		public void transactionResetVisibleModified() {
+			// Ignore, for now.
+		}
+
+		public void transactionResetDirectModified() {
 			this.directModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {
-			// Ignore, for now.
+			// Don't really care for now.
 		}
 
 		public void transactionEnded(final TransactionEvent evt) {
@@ -1668,14 +1703,26 @@ public class Relation implements Comparable, TransactionListener {
 			this.pcs.firePropertyChange("directModified", oldValue, modified);
 		}
 
-		public void transactionReset() {
+		public boolean isVisibleModified() {
+			return false;
+		}
+		
+		public void setVisibleModified(final boolean modified) {
+			// Ignore, for now.
+		}
+		
+		public void transactionResetVisibleModified() {
+			// Ignore, for now.
+		}
+
+		public void transactionResetDirectModified() {
 			this.directModified = false;
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {
-			// Ignore, for now.
+			// Don't really care for now.
 		}
-
+		
 		public void transactionEnded(final TransactionEvent evt) {
 			// Don't really care for now.
 		}

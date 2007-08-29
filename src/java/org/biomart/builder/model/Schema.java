@@ -109,7 +109,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	protected boolean needsFullSync;
 
-	private boolean directModified = true;
+	private boolean directModified = false;
 
 	private final Collection tableCache;
 
@@ -199,13 +199,28 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.directModified = modified;
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
+	
+	public boolean isVisibleModified() {
+		// If any table is visible modified, then we are too.
+		for (final Iterator i = this.getTables().values().iterator(); i.hasNext(); )
+			if (((Table)i.next()).isVisibleModified()) return true;
+		return false;
+	}
+	
+	public void setVisibleModified(final boolean modified) {
+		// If any table is visible modified, then we are too.
+	}
 
-	public void transactionReset() {
+	public void transactionResetVisibleModified() {
+		// If any table is visible modified, then we are too.
+	}
+
+	public void transactionResetDirectModified() {
 		this.directModified = false;
 	}
 
 	public void transactionStarted(final TransactionEvent evt) {
-		// Ignore, for now.
+		// Don't really care for now.
 	}
 
 	public void transactionEnded(final TransactionEvent evt)
