@@ -520,6 +520,7 @@ public class Table implements Comparable, TransactionListener {
 			this.getMods(dataset, tableKey).remove("restrictTable");
 			this.pcs.firePropertyChange("restrictTable", tableKey, null);
 		}
+
 	}
 
 	public int compareTo(final Object o) throws ClassCastException {

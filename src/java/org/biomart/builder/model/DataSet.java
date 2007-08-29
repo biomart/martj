@@ -370,7 +370,7 @@ public class DataSet extends Schema {
 			String prevSch = null;
 			for (final Iterator i = DataSet.this.getMainTable()
 					.getTransformationUnits().iterator(); i.hasNext()
-					&& positionMap.size() < trueSelectedCols.size();) {
+					&& positionMap.size() <= trueSelectedCols.size();) {
 				final TransformationUnit tu = (TransformationUnit) i.next();
 				if (tu instanceof SelectFromTable) {
 					// JoinTable extends SelectFromTable.
@@ -438,7 +438,6 @@ public class DataSet extends Schema {
 										this.getMainTable().getName(),
 										jtu.getSchemaRelationIteration());
 						if (rr != null) {
-
 							sqlWhere.append(" and ");
 							sqlWhere.append(rr.getSubstitutedExpression(lhs
 									.toString(), rhs.toString(), false, false,

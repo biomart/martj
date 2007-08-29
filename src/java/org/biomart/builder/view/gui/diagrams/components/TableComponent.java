@@ -44,6 +44,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTable;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
@@ -135,9 +136,17 @@ public class TableComponent extends BoxShapedComponent {
 		// Listen to all relations on this table and repaint when needed.
 		// We don't need to monitor relations themselves as the entire
 		// diagram gets recalculated if they change.
-		for (final Iterator i = table.getRelations().iterator(); i.hasNext(); ) {
-			final Relation rel = (Relation)i.next();
+		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
+			final Relation rel = (Relation) i.next();
 			rel.addPropertyChangeListener("directModified", repaintListener);
+		}
+		// If this is a dataset main table, listen to the partition table
+		// conversion and repaint on that too.
+		if (table instanceof DataSetTable) {
+			final DataSetTable dsTbl = (DataSetTable) table;
+			if (dsTbl.getType().equals(DataSetTableType.MAIN))
+				dsTbl.getDataSet().addPropertyChangeListener("partitionTable",
+						repaintListener);
 		}
 
 		// Recalc events.
