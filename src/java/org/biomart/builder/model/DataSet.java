@@ -67,6 +67,9 @@ import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 
+// TODO Methods for Accept/Reject changes (optional for one source table, 
+// default all)
+
 /**
  * A {@link DataSet} instance serves two purposes. First, it contains lists of
  * settings that are specific to this dataset and affect the way in which tables
@@ -162,10 +165,11 @@ public class DataSet extends Schema {
 		// Super first, to set the name.
 		super(mart, name, name);
 
+		// FIXME Reinstate or simply warn. Also check that key is usable.
 		// Check that the table has a primary key.
-		if (centralTable.getPrimaryKey() == null)
-			throw new ValidationException(Resources.get(
-					"datasetMustHaveCentralPK", centralTable.toString()));
+		//if (centralTable.getPrimaryKey() == null)
+		//	throw new ValidationException(Resources.get(
+		//			"datasetMustHaveCentralPK", centralTable.toString()));
 
 		// Remember the settings and make some defaults.
 		this.invisible = false;
