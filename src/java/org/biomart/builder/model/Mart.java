@@ -77,6 +77,10 @@ public class Mart implements TransactionListener {
 	private String overridePort = null;
 
 	private boolean directModified = false;
+	
+	private boolean hideMaskedDataSets = false;
+	
+	private boolean hideMaskedSchemas = false;
 
 	/**
 	 * Constant referring to table and column name conversion.
@@ -236,6 +240,46 @@ public class Mart implements TransactionListener {
 			return this.uniqueID == ((Mart) obj).uniqueID;
 		else
 			return false;
+	}
+	
+	/**
+	 * Is this mart hiding masked datasets?
+	 * @param hideMaskedDataSets true if it is.
+	 */
+	public void setHideMaskedDataSets(final boolean hideMaskedDataSets) {
+		final boolean oldValue = this.hideMaskedDataSets;
+		if (this.hideMaskedDataSets == hideMaskedDataSets)
+			return;
+		this.hideMaskedDataSets = hideMaskedDataSets;
+		this.pcs.firePropertyChange("hideMaskedDataSets", oldValue, hideMaskedDataSets);
+	}
+	
+	/**
+	 * Is this mart hiding masked datasets?
+	 * @return true if it is.
+	 */
+	public boolean isHideMaskedDataSets() {
+		return this.hideMaskedDataSets;
+	}
+	
+	/**
+	 * Is this mart hiding masked schemas?
+	 * @param hideMaskedSchemas true if it is.
+	 */
+	public void setHideMaskedSchemas(final boolean hideMaskedSchemas) {
+		final boolean oldValue = this.hideMaskedSchemas;
+		if (this.hideMaskedSchemas == hideMaskedSchemas)
+			return;
+		this.hideMaskedSchemas = hideMaskedSchemas;
+		this.pcs.firePropertyChange("hideMaskedSchemas", oldValue, hideMaskedSchemas);
+	}
+	
+	/**
+	 * Is this mart hiding masked schemas?
+	 * @return true if it is.
+	 */
+	public boolean isHideMaskedSchemas() {
+		return this.hideMaskedSchemas;
 	}
 
 	public boolean isDirectModified() {

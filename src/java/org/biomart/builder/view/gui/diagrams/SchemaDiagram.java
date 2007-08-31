@@ -65,6 +65,7 @@ public class SchemaDiagram extends Diagram {
 			final Schema schema) {
 		// Call the general diagram constructor first.
 		super(layout, martTab);
+		
 
 		// Remember the schema, then lay it out.
 		this.schema = schema;
@@ -82,6 +83,16 @@ public class SchemaDiagram extends Diagram {
 		};
 		schema.getTables().addPropertyChangeListener(listener);
 		schema.getRelations().addPropertyChangeListener(listener);
+		
+		// Listen to when hide masked gets changed.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				SchemaDiagram.this.needsRepaint = true;
+			}
+		};
+		schema.addPropertyChangeListener("hideMasked", repaintListener);
+		
+		this.setHideMasked(schema.isHideMasked());
 	}
 
 	/**
@@ -98,6 +109,10 @@ public class SchemaDiagram extends Diagram {
 		this(new SchemaLayoutManager(), martTab, schema);
 	}
 
+	protected void hideMaskedChanged(final boolean newHideMasked) {
+		this.schema.setHideMasked(newHideMasked);
+	}
+	
 	public void doRecalculateDiagram() {
 		// FIXME Recycle components.
 		// Add a TableComponent for each table in the schema.

@@ -108,6 +108,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * Subclasses use this to notify update requirements.
 	 */
 	protected boolean needsFullSync;
+	
+	private boolean hideMasked = false;
 
 	private boolean directModified = false;
 
@@ -287,6 +289,27 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			this.relationCache.clear();
 			this.relationCache.addAll(newRels);
 		}
+	}
+	
+	/**
+	 * Is this schema hiding masked components?
+	 * @param hideMasked true if it is.
+	 */
+	public void setHideMasked(final boolean hideMasked) {
+		Log.debug("Setting hide masked schema on " + this + " to " + hideMasked);
+		final boolean oldValue = this.hideMasked;
+		if (this.hideMasked == hideMasked)
+			return;
+		this.hideMasked = hideMasked;
+		this.pcs.firePropertyChange("hideMasked", oldValue, hideMasked);
+	}
+	
+	/**
+	 * Is this schema hiding masked components?
+	 * @return true if it is.
+	 */
+	public boolean isHideMasked() {
+		return this.hideMasked;
 	}
 
 	/**

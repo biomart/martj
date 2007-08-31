@@ -71,11 +71,24 @@ public class AllSchemasDiagram extends Diagram {
 		// based on tables in schema, and keys+relations on those
 		// tables (presence/absence only).
 		// If any change, whole diagram needs redoing from scratch,
-		// and new listeners need setting up.
-		
+		// and new listeners need setting up.		
 		martTab.getMart().getSchemas().addPropertyChangeListener(this.listener);
+
+		// Listen to when hide masked gets changed.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				AllSchemasDiagram.this.needsRepaint = true;
+			}
+		};
+		martTab.getMart().addPropertyChangeListener("hideMaskedSchemas", repaintListener);
+		
+		this.setHideMasked(martTab.getMart().isHideMaskedSchemas());
 	}
 
+	protected void hideMaskedChanged(final boolean newHideMasked) {
+		this.getMartTab().getMart().setHideMaskedSchemas(newHideMasked);
+	}
+	
 	public void doRecalculateDiagram() {
 		// Add a SchemaComponent for each schema.
 		final Set usedRels = new HashSet();

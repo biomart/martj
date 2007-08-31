@@ -160,7 +160,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 	private final List selectedItems = new ArrayList();
 
-	private JCheckBox maskedHidden;
+	private JCheckBox hideMasked;
 
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
@@ -192,15 +192,17 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this.martTab = martTab;
 
 		// Create the hide masked box.
-		this.maskedHidden = new JCheckBox(Resources.get("hideMaskedTitle"));
-		this.maskedHidden.addActionListener(new ActionListener() {
+		this.hideMasked = new JCheckBox(Resources.get("hideMaskedTitle"));
+		this.hideMasked.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				Diagram.this.repaintDiagram();
+				Transaction.start();
+				Diagram.this.hideMaskedChanged(Diagram.this.hideMasked.isSelected());
+				Transaction.end();
 			}
 		});
 		// It has a semi-transparent background with no border.
-		this.maskedHidden.setOpaque(true);
-		this.maskedHidden.setBackground(Diagram.MASK_BG_COLOR);
+		this.hideMasked.setOpaque(true);
+		this.hideMasked.setBackground(Diagram.MASK_BG_COLOR);
 		// Deal with drops.
 		final DropTargetListener dtListener = new DropTargetListener() {
 			public void dragEnter(DropTargetDragEvent e) {
@@ -247,6 +249,31 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	public Diagram(final MartTab martTab) {
 		this(null, martTab);
+	}
+	
+	/**
+	 * Override this to find out when the hide masked checkbox changes.
+	 * @param newHideMasked true if it is now selected.
+	 */
+	protected void hideMaskedChanged(final boolean newHideMasked) {
+		// By default we don't care.
+	}
+
+	/**
+	 * Set the hide masked checkbox.
+	 * @param newHideMasked true to select it.
+	 */
+	public void setHideMasked(final boolean newHideMasked) {
+		if (this.hideMasked.isSelected() ^ newHideMasked)
+			this.hideMasked.doClick();
+	}
+	
+	/**
+	 * Is the hide masked checkbox selected?
+	 * @return true if it is.
+	 */
+	public boolean isHideMasked() {
+		return this.hideMasked.isSelected();
 	}
 
 	public void setDirectModified(final boolean modified) {
@@ -792,8 +819,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				}
 
 				// Set up a floating panel with the hide masked box.
-				if (Diagram.this.isMaskedHiddenUsed())
-					Diagram.this.add(Diagram.this.maskedHidden, null,
+				if (Diagram.this.isUseHideMasked())
+					Diagram.this.add(Diagram.this.hideMasked, null,
 							Diagram.TOP_LAYER);
 
 				// Resize the diagram to fit our new components.
@@ -844,9 +871,9 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * 
 	 * @return the space it needs.
 	 */
-	protected Dimension getMaskedHiddenArea() {
-		if (this.isMaskedHiddenUsed())
-			return this.maskedHidden.getPreferredSize();
+	protected Dimension getHideMaskedArea() {
+		if (this.isUseHideMasked())
+			return this.hideMasked.getPreferredSize();
 		else
 			return new Dimension(0, 0);
 	}
@@ -944,37 +971,28 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * 
 	 * @return <tt>true</tt> if we should.
 	 */
-	protected boolean isMaskedHiddenUsed() {
+	protected boolean isUseHideMasked() {
 		return true;
 	}
 
-	/**
-	 * Are masked things being hidden?
-	 * 
-	 * @return <tt>true</tt> if they are.
-	 */
-	public boolean isMaskedHidden() {
-		return this.isMaskedHiddenUsed() && this.maskedHidden.isSelected();
-	}
-
 	public void adjustmentValueChanged(final AdjustmentEvent evt) {
-		if (!this.isMaskedHiddenUsed())
+		if (!this.isUseHideMasked())
 			return;
 		// This panel hangs out top-left regardless of viewport
 		// scrolling.
-		final Dimension buttonSize = this.getMaskedHiddenArea();
+		final Dimension buttonSize = this.getHideMaskedArea();
 		JViewport viewport = null;
 		if (this.getParent() != null && this.getParent() instanceof JViewport)
 			viewport = (JViewport) this.getParent();
 		if (viewport != null) {
 			final Rectangle viewportOffset = viewport.getViewRect();
-			this.maskedHidden.setBounds(viewportOffset.x + viewportOffset.width
+			this.hideMasked.setBounds(viewportOffset.x + viewportOffset.width
 					- buttonSize.width, viewportOffset.y, buttonSize.width,
 					buttonSize.height);
 		} else
-			this.maskedHidden.setBounds(this.getPreferredSize().width
+			this.hideMasked.setBounds(this.getPreferredSize().width
 					- buttonSize.width, 0, buttonSize.width, buttonSize.height);
 		// To wipe out the opaque background a repaint is necessary.
-		Diagram.this.maskedHidden.repaint();
+		Diagram.this.hideMasked.repaint();
 	}
 }

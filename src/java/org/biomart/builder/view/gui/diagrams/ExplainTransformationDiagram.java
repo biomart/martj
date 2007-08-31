@@ -99,7 +99,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		// scratch if underlying tables change.
 	}
 
-	protected boolean isMaskedHiddenUsed() {
+	protected boolean isUseHideMasked() {
 		return false;
 	}
 

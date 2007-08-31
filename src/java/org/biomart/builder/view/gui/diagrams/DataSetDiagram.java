@@ -80,6 +80,20 @@ public class DataSetDiagram extends Diagram {
 		};
 		dataset.getTables().addPropertyChangeListener(listener);
 		dataset.getRelations().addPropertyChangeListener(listener);
+		
+		// Listen to when hide masked gets changed.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				DataSetDiagram.this.needsRepaint = true;
+			}
+		};
+		dataset.addPropertyChangeListener("hideMasked", repaintListener);
+		
+		this.setHideMasked(dataset.isHideMasked());
+	}
+
+	protected void hideMaskedChanged(final boolean newHideMasked) {
+		this.dataset.setHideMasked(newHideMasked);
 	}
 
 	public void doRecalculateDiagram() {

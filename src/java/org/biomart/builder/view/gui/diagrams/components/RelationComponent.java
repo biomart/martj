@@ -453,7 +453,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 		// Use the context to alter us first.
 		final DiagramContext mod = this.getDiagram().getDiagramContext();
 		if (mod != null)
-			if (this.getDiagram().isMaskedHidden()
+			if (this.getDiagram().isHideMasked()
 					&& mod.isMasked(this.getObject())) {
 				this.setVisible(false);
 				return;

@@ -62,6 +62,20 @@ public class AllDataSetsDiagram extends Diagram {
 			}
 		};
 		martTab.getMart().getDataSets().addPropertyChangeListener(listener);
+		
+		// Listen to when hide masked gets changed.
+		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				AllDataSetsDiagram.this.needsRepaint = true;
+			}
+		};
+		martTab.getMart().addPropertyChangeListener("hideMaskedDataSets", repaintListener);
+		
+		this.setHideMasked(martTab.getMart().isHideMaskedDataSets());
+	}
+
+	protected void hideMaskedChanged(final boolean newHideMasked) {
+		this.getMartTab().getMart().setHideMaskedDataSets(newHideMasked);
 	}
 
 	public void doRecalculateDiagram() {

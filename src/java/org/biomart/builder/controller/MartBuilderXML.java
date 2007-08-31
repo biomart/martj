@@ -489,6 +489,8 @@ public class MartBuilderXML extends DefaultHandler {
 					.isKeyGuessing()), xmlWriter);
 			this.writeAttribute("masked", Boolean.toString(jdbcSchema
 					.isMasked()), xmlWriter);
+			this.writeAttribute("hideMasked", Boolean.toString(jdbcSchema
+					.isHideMasked()), xmlWriter);
 
 			// Partitions.
 			this.writeAttribute("partitionRegex", jdbcSchema
@@ -652,6 +654,10 @@ public class MartBuilderXML extends DefaultHandler {
 		this.writeAttribute("overrideHost", mart.getOverrideHost(), xmlWriter);
 		this.writeAttribute("overridePort", mart.getOverridePort(), xmlWriter);
 		this.writeAttribute("nameCase", "" + mart.getCase(), xmlWriter);
+		this.writeAttribute("hideMaskedDataSets", Boolean.toString(mart.isHideMaskedDataSets()),
+				xmlWriter);
+		this.writeAttribute("hideMaskedSchemas", Boolean.toString(mart.isHideMaskedSchemas()),
+				xmlWriter);
 
 		// Write out each schema.
 		final Set externalRelations = new HashSet();
@@ -687,6 +693,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("invisible",
 					Boolean.toString(ds.isInvisible()), xmlWriter);
 			this.writeAttribute("masked", Boolean.toString(ds.isMasked()),
+					xmlWriter);
+			this.writeAttribute("hideMasked", Boolean.toString(ds.isHideMasked()),
 					xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
@@ -1353,6 +1361,10 @@ public class MartBuilderXML extends DefaultHandler {
 			mart.setOutputPort((String) attributes.get("outputPort"));
 			mart.setOverrideHost((String) attributes.get("overrideHost"));
 			mart.setOverridePort((String) attributes.get("overridePort"));
+			mart.setHideMaskedSchemas(Boolean.valueOf(
+					(String) attributes.get("hideMaskedSchemas")).booleanValue());
+			mart.setHideMaskedDataSets(Boolean.valueOf(
+					(String) attributes.get("hideMaskedDataSets")).booleanValue());
 			// Need check to be safe against pre-0.7 versions.
 			if (attributes.containsKey("nameCase"))
 				mart.setCase(Integer.parseInt((String) attributes
@@ -1380,6 +1392,8 @@ public class MartBuilderXML extends DefaultHandler {
 					(String) attributes.get("keyguessing")).booleanValue();
 			final boolean masked = Boolean.valueOf(
 					(String) attributes.get("masked")).booleanValue();
+			final boolean hideMasked = Boolean.valueOf(
+					(String) attributes.get("hideMasked")).booleanValue();
 
 			// Does it have partitions?
 			final String partitionRegex = (String) attributes
@@ -1393,6 +1407,7 @@ public class MartBuilderXML extends DefaultHandler {
 						driverClassName, url, schemaName, username, password,
 						name, keyguessing);
 				schema.setMasked(masked);
+				schema.setHideMasked(hideMasked);
 				schema.setPartitionRegex(partitionRegex);
 				schema.setPartitionNameExpression(partitionExpression);
 				schema.storeInHistory();
@@ -2099,6 +2114,8 @@ public class MartBuilderXML extends DefaultHandler {
 						(String) attributes.get("invisible")).booleanValue();
 				final boolean masked = Boolean.valueOf(
 						(String) attributes.get("masked")).booleanValue();
+				final boolean hideMasked = Boolean.valueOf(
+						(String) attributes.get("hideMasked")).booleanValue();
 				final Table centralTable = (Table) this.mappedObjects
 						.get(attributes.get("centralTableId"));
 				final String optType = (String) attributes.get("optimiser");
@@ -2134,6 +2151,7 @@ public class MartBuilderXML extends DefaultHandler {
 				ds.setDataSetOptimiserType(opt);
 				ds.setInvisible(invisible);
 				ds.setMasked(masked);
+				ds.setHideMasked(hideMasked);
 				ds.setIndexOptimiser(index);
 				element = ds;
 			} catch (final Exception e) {

@@ -29,6 +29,8 @@
 <!ATTLIST mart overrideHost CDATA #IMPLIED>
 <!ATTLIST mart overridePort CDATA #IMPLIED>
 <!ATTLIST mart nameCase CDATA #IMPLIED>
+<!ATTLIST mart hideMaskedDataSets (true|false) #IMPLIED>
+<!ATTLIST mart hideMaskedSchemas (true|false) #IMPLIED>
 
 <!ELEMENT jdbcSchema (table+,relation*)>
 <!ATTLIST jdbcSchema driverClassName CDATA #REQUIRED>
@@ -41,6 +43,7 @@
 <!ATTLIST jdbcSchema partitionRegex CDATA #IMPLIED>
 <!ATTLIST jdbcSchema partitionExpression CDATA #IMPLIED>
 <!ATTLIST jdbcSchema masked (true|false) #IMPLIED>
+<!ATTLIST jdbcSchema hideMasked (true|false) #IMPLIED>
 
 <!ELEMENT relation EMPTY>
 <!ATTLIST relation id ID #REQUIRED>
@@ -80,6 +83,7 @@ renamedColumn*,distinctRows*)>
 <!ATTLIST dataset indexOptimiser (true|false) #REQUIRED>
 <!ATTLIST dataset invisible (true|false) #REQUIRED>
 <!ATTLIST dataset masked (true|false) #IMPLIED>
+<!ATTLIST dataset hideMasked (true|false) #IMPLIED>
 
 <!ELEMENT subclassRelation EMPTY>
 <!ATTLIST subclassRelation relationId IDREF #REQUIRED>

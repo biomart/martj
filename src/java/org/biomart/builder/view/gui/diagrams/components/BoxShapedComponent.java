@@ -652,7 +652,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 						this.setVisible(false);
 						return;
 					}
-				} else if (this.getDiagram().isMaskedHidden()) {
+				} else if (this.getDiagram().isHideMasked()) {
 					this.setVisible(false);
 					return;
 				}

@@ -138,7 +138,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 			// Assumption that we are laying out a diagram.
 			final Dimension maskedButton = ((Diagram) parent)
-					.getMaskedHiddenArea();
+					.getHideMaskedArea();
 
 			this.size.height = maskedButton.height;
 			this.size.width = maskedButton.width;
@@ -322,7 +322,7 @@ public class DataSetLayoutManager implements LayoutManager2 {
 
 			// Assumption that we are laying out a diagram.
 			final Dimension maskedButton = ((Diagram) parent)
-					.getMaskedHiddenArea();
+					.getHideMaskedArea();
 
 			// Lay out each row at a time.
 			int nextY = DataSetLayoutManager.TABLE_PADDING
