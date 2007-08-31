@@ -376,6 +376,38 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Request that all changes on this dataset table associated with this
+	 * target are accepted. See {@link DataSetTable#acceptChanges(Table)}.
+	 * 
+	 * @param dsTable
+	 *            the dataset table to work with.
+	 * @param targetTable
+	 *            the (optional) target table to accept changes from.
+	 */
+	public void requestAcceptAll(final DataSetTable dsTable,
+			final Table targetTable) {
+		Transaction.start();
+		dsTable.acceptChanges(targetTable);
+		Transaction.end();
+	}
+
+	/**
+	 * Request that all changes on this dataset table associated with this
+	 * target are rejected. See {@link DataSetTable#rejectChanges(Table)}.
+	 * 
+	 * @param dsTable
+	 *            the dataset table to work with.
+	 * @param targetTable
+	 *            the (optional) target table to reject changes from.
+	 */
+	public void requestRejectAll(final DataSetTable dsTable,
+			final Table targetTable) {
+		Transaction.start();
+		dsTable.rejectChanges(targetTable);
+		Transaction.end();
+	}
+
+	/**
 	 * On a request to create DDL for the current dataset, open the DDL creation
 	 * window with all this dataset selected.
 	 * 

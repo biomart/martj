@@ -263,6 +263,48 @@ public class ExplainContext extends SchemaContext {
 
 			// Obtain the table object we should refer to.
 			final Table table = (Table) object;
+			
+			// Accept/Reject changes - only appear in explain dataset
+			// table, and only enabled if dataset table includes this table
+			// and dataset table has visible modified columns from this
+			// table.
+			if (this.datasetTable != null) {
+				final JMenuItem accept = new JMenuItem(Resources
+						.get("acceptChangesTitle"));
+				accept.setMnemonic(Resources.get("acceptChangesMnemonic")
+						.charAt(0));
+				accept.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						ExplainContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestAcceptAll(
+										ExplainContext.this.datasetTable, table);
+					}
+				});
+				accept.setEnabled(this.datasetTable
+						.hasVisibleModifiedFrom(table));
+				contextMenu.add(accept);
+
+				final JMenuItem reject = new JMenuItem(Resources
+						.get("rejectChangesTitle"));
+				reject.setMnemonic(Resources.get("rejectChangesMnemonic")
+						.charAt(0));
+				reject.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						ExplainContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestRejectAll(
+										ExplainContext.this.datasetTable, table);
+					}
+				});
+				reject.setEnabled(this.datasetTable
+						.hasVisibleModifiedFrom(table));
+				contextMenu.add(reject);
+
+				contextMenu.addSeparator();
+			}
 
 			// The mask option allows the user to mask all
 			// relations on a table.

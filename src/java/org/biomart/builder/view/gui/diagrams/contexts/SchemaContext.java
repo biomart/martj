@@ -185,7 +185,7 @@ public class SchemaContext implements DiagramContext {
 					if (!((Relation) i.next()).getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						return false;
-				return true;
+				return table.getSchema().getTables().size()>1;
 			}
 		}
 

@@ -67,9 +67,6 @@ import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 
-// TODO Methods for Accept/Reject changes (optional for one source table, 
-// default all)
-
 /**
  * A {@link DataSet} instance serves two purposes. First, it contains lists of
  * settings that are specific to this dataset and affect the way in which tables
@@ -164,12 +161,6 @@ public class DataSet extends Schema {
 			throws ValidationException {
 		// Super first, to set the name.
 		super(mart, name, name);
-
-		// FIXME Reinstate or simply warn. Also check that key is usable.
-		// Check that the table has a primary key.
-		//if (centralTable.getPrimaryKey() == null)
-		//	throw new ValidationException(Resources.get(
-		//			"datasetMustHaveCentralPK", centralTable.toString()));
 
 		// Remember the settings and make some defaults.
 		this.invisible = false;
@@ -743,9 +734,9 @@ public class DataSet extends Schema {
 						if (!dsTable.getType().equals(
 								DataSetTableType.DIMENSION)) {
 							dsCol.addPropertyChangeListener("columnMasked",
-									rebuildListener);
+									this.rebuildListener);
 							dsCol.addPropertyChangeListener("columnRename",
-									rebuildListener);
+									this.rebuildListener);
 						}
 						dsTable.getColumns().put(dsCol.getName(), dsCol);
 					}
@@ -900,7 +891,7 @@ public class DataSet extends Schema {
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					expCol.addPropertyChangeListener("columnRename",
-							rebuildListener);
+							this.rebuildListener);
 				dsTable.getColumns().put(expCol.getName(), expCol);
 			}
 			// Wipe it out so only happens first time.
@@ -1170,9 +1161,9 @@ public class DataSet extends Schema {
 					// Listen to this column to modify ourselves.
 					if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 						wc.addPropertyChangeListener("columnMasked",
-								rebuildListener);
+								this.rebuildListener);
 						wc.addPropertyChangeListener("columnRename",
-								rebuildListener);
+								this.rebuildListener);
 					}
 				}
 			} else {
@@ -1181,9 +1172,9 @@ public class DataSet extends Schema {
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 					wc.addPropertyChangeListener("columnMasked",
-							rebuildListener);
+							this.rebuildListener);
 					wc.addPropertyChangeListener("columnRename",
-							rebuildListener);
+							this.rebuildListener);
 				}
 			}
 			unusedCols.remove(wc);
@@ -2536,6 +2527,99 @@ public class DataSet extends Schema {
 		}
 
 		/**
+		 * Accept changes associated with columns from the target table. If the
+		 * target table is null, all changes are accepted. All affected columns
+		 * have their visible modified flag reset.
+		 * 
+		 * @param targetTable
+		 *            the target table.
+		 */
+		public void acceptChanges(final Table targetTable) {
+			this.acceptRejectChanges(targetTable, false);
+		}
+
+		/**
+		 * Reject changes associated with columns from the target table. If the
+		 * target table is null, all changes are rejected. Rejection means that
+		 * if the relation was modified, the relation is masked. Otherwise, the
+		 * affected columns are masked instead. All affected columns have their
+		 * visible modified flag reset.
+		 * 
+		 * @param targetTable
+		 *            the target table.
+		 */
+		public void rejectChanges(final Table targetTable) {
+			this.acceptRejectChanges(targetTable, true);
+		}
+
+		private void acceptRejectChanges(final Table targetTable,
+				final boolean reject) {
+			// Locate the TU that provides the target table.
+			for (final Iterator i = this.getTransformationUnits().iterator(); i
+					.hasNext();) {
+				final TransformationUnit tu = (TransformationUnit) i.next();
+				if (tu instanceof SelectFromTable
+						&& (targetTable == null || ((SelectFromTable) tu)
+								.getTable().equals(targetTable))) {
+					final SelectFromTable st = (SelectFromTable) tu;
+					// Are we rejecting?
+					if (reject && st instanceof JoinTable) {
+						final JoinTable jt = (JoinTable) st;
+						// Is the TU relation modified?
+						if (jt.getSchemaRelation().isVisibleModified()) {
+							jt.getSchemaRelation().setMaskRelation(
+									this.getDataSet(), this.getName(), true);
+							// No more needs to be done.
+							continue;
+						}
+					}
+					// Find all new columns from the TU.
+					for (final Iterator j = st.getNewColumnNameMap().values()
+							.iterator(); j.hasNext();) {
+						final DataSetColumn dsCol = (DataSetColumn)j.next();
+						// Is it new?
+						if (!dsCol.isVisibleModified())
+							continue;
+						// Are we rejecting?
+						if (reject)
+							// Mask it.
+							try {
+								dsCol.setColumnMasked(true);
+							} catch (final ValidationException ve) {
+								// Ignore - if we can't mask it, it's because
+								// it's
+								// important.
+							}
+						// Reset visible modified on all of them.
+						dsCol.transactionResetVisibleModified();
+					}
+				}
+			}
+		}
+
+		/**
+		 * Do any of the current visibly modified columns on this dataset table
+		 * come from the specified source table?
+		 * 
+		 * @param table
+		 *            the table to check.
+		 * @return true if they do.
+		 */
+		public boolean hasVisibleModifiedFrom(final Table table) {
+			for (final Iterator i = this.getColumns().values().iterator(); i
+					.hasNext();) {
+				final DataSetColumn dsCol = (DataSetColumn) i.next();
+				if (!dsCol.isVisibleModified())
+					continue;
+				if (dsCol instanceof WrappedColumn
+						&& ((WrappedColumn) dsCol).getWrappedColumn()
+								.getTable().equals(table))
+					return true;
+			}
+			return false;
+		}
+
+		/**
 		 * Obtain the dataset this table belongs to.
 		 * 
 		 * @return the dataset it belongs to.
@@ -2943,11 +3027,11 @@ public class DataSet extends Schema {
 		public boolean isVisibleModified() {
 			return false;
 		}
-		
+
 		public void setVisibleModified(final boolean modified) {
 			// Ignore, for now.
 		}
-		
+
 		public void transactionResetVisibleModified() {
 			// Ignore, for now.
 		}

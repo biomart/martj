@@ -605,7 +605,7 @@ public class MartBuilder extends BioMartGUI {
 						});
 						newItems.add(file);
 					}
-					if (newItems.size() > 1) {
+					if (newItems.size() > 0) {
 						fileMenu.addSeparator();
 						Collections.reverse(newItems);
 						for (final Iterator i = newItems.iterator(); i

@@ -267,8 +267,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
-			if (!this.ltu.getSchemaSourceKey().isVisibleModified())
-				tempSourceKey.transactionResetVisibleModified(); 
+			tempSourceKey.transactionResetVisibleModified(); 
 
 			// Create a copy of the target table complete with target key.
 			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
@@ -292,8 +291,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
-			if (!realTargetKey.isVisibleModified())
-				tempTargetKey.transactionResetVisibleModified(); 
+			tempTargetKey.transactionResetVisibleModified(); 
 
 			// Create a copy of the relation but change to be between the
 			// two fake keys.
@@ -307,8 +305,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				if (!this.ltu.getSchemaRelation().isVisibleModified())
-					tempRelation.transactionResetVisibleModified(); 
+				tempRelation.transactionResetVisibleModified(); 
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
@@ -401,8 +398,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
-			if (!this.ltu.getSchemaSourceKey().isVisibleModified())
-				tempSourceKey.transactionResetVisibleModified(); 
+			tempSourceKey.transactionResetVisibleModified(); 
 
 			// Create a copy of the target table complete with target key.
 			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
@@ -422,8 +418,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
-			if (!realTargetKey.isVisibleModified())
-				tempTargetKey.transactionResetVisibleModified(); 
+			tempTargetKey.transactionResetVisibleModified(); 
 
 			// Create a copy of the relation but change to be between the
 			// two fake keys.
@@ -437,8 +432,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				if (!this.ltu.getSchemaRelation().isVisibleModified())
-					tempRelation.transactionResetVisibleModified(); 
+				tempRelation.transactionResetVisibleModified(); 
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);

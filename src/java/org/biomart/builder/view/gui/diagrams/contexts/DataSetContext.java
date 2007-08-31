@@ -420,6 +420,38 @@ public class DataSetContext extends SchemaContext {
 			final DataSetTable table = (DataSetTable) object;
 			final DataSetTableType tableType = table.getType();
 
+			// Accept/Reject changes - only enabled if dataset table
+			// is visible modified.
+			final JMenuItem accept = new JMenuItem(Resources
+					.get("acceptChangesTitle"));
+			accept
+					.setMnemonic(Resources.get("acceptChangesMnemonic").charAt(
+							0));
+			accept.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestAcceptAll(table, null);
+				}
+			});
+			accept.setEnabled(table.isVisibleModified());
+			contextMenu.add(accept);
+
+			final JMenuItem reject = new JMenuItem(Resources
+					.get("rejectChangesTitle"));
+			reject
+					.setMnemonic(Resources.get("rejectChangesMnemonic").charAt(
+							0));
+			reject.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestRejectAll(table, null);
+				}
+			});
+			reject.setEnabled(table.isVisibleModified());
+			contextMenu.add(reject);
+
+			contextMenu.addSeparator();
+
 			// Option to explain how the table was constructed.
 			final JMenuItem explain = new JMenuItem(Resources
 					.get("explainTableTitle"), new ImageIcon(Resources
