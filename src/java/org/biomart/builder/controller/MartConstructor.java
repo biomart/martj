@@ -250,6 +250,16 @@ public interface MartConstructor {
 			// Check not cancelled.
 			this.checkCancelled();
 
+			// Check is valid for dataset construction.
+			boolean valid = false;
+			for (final Iterator i = dataset.getMainTable().getColumns()
+					.values().iterator(); i.hasNext() && !valid;)
+				valid |= ((DataSetColumn) i.next()).getModifiedName().endsWith(
+						Resources.get("keySuffix"));
+			if (!valid)
+				throw new ConstructorException(Resources.get(
+						"datasetNoKeyColumn", dataset.getName()));
+
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 			final PartitionTableApplication dsPta = dataset.getMart()
@@ -885,7 +895,7 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
-				if (pta!=null)
+				if (pta != null)
 					col.fixPartitionedName(pta);
 				if (col.isRequiredInterim())
 					selectCols
@@ -1054,7 +1064,7 @@ public interface MartConstructor {
 					.iterator(); k.hasNext();) {
 				final Map.Entry entry = (Map.Entry) k.next();
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
-				if (pta!=null)
+				if (pta != null)
 					col.fixPartitionedName(pta);
 				if (col.isRequiredInterim())
 					selectCols.put(entry.getKey(), col.getPartitionedName());
