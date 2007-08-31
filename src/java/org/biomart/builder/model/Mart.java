@@ -77,9 +77,9 @@ public class Mart implements TransactionListener {
 	private String overridePort = null;
 
 	private boolean directModified = false;
-	
+
 	private boolean hideMaskedDataSets = false;
-	
+
 	private boolean hideMaskedSchemas = false;
 
 	/**
@@ -129,6 +129,8 @@ public class Mart implements TransactionListener {
 		this.pcs.addPropertyChangeListener("outputPort", listener);
 		this.pcs.addPropertyChangeListener("outputSchema", listener);
 		this.pcs.addPropertyChangeListener("overrideHost", listener);
+		this.pcs.addPropertyChangeListener("hideMaskedSchemas", listener);
+		this.pcs.addPropertyChangeListener("hideMaskedDataSets", listener);
 
 		// Listeners on schema and dataset additions to spot
 		// and handle renames.
@@ -164,12 +166,8 @@ public class Mart implements TransactionListener {
 									}
 								});
 						sch.addPropertyChangeListener("directModified",
-								new PropertyChangeListener() {
-									public void propertyChange(
-											final PropertyChangeEvent evt) {
-										Mart.this.setDirectModified(true);
-									}
-								});
+								listener);
+						sch.addPropertyChangeListener("hideMasked", listener);
 					}
 				}
 			}
@@ -205,13 +203,10 @@ public class Mart implements TransactionListener {
 												pe.getNewValue(), ds);
 									}
 								});
-						ds.addPropertyChangeListener("directModified",
-								new PropertyChangeListener() {
-									public void propertyChange(
-											final PropertyChangeEvent evt) {
-										Mart.this.setDirectModified(true);
-									}
-								});
+						ds
+								.addPropertyChangeListener("directModified",
+										listener);
+						ds.addPropertyChangeListener("hideMasked", listener);
 					}
 				}
 			}
@@ -241,41 +236,49 @@ public class Mart implements TransactionListener {
 		else
 			return false;
 	}
-	
+
 	/**
 	 * Is this mart hiding masked datasets?
-	 * @param hideMaskedDataSets true if it is.
+	 * 
+	 * @param hideMaskedDataSets
+	 *            true if it is.
 	 */
 	public void setHideMaskedDataSets(final boolean hideMaskedDataSets) {
 		final boolean oldValue = this.hideMaskedDataSets;
 		if (this.hideMaskedDataSets == hideMaskedDataSets)
 			return;
 		this.hideMaskedDataSets = hideMaskedDataSets;
-		this.pcs.firePropertyChange("hideMaskedDataSets", oldValue, hideMaskedDataSets);
+		this.pcs.firePropertyChange("hideMaskedDataSets", oldValue,
+				hideMaskedDataSets);
 	}
-	
+
 	/**
 	 * Is this mart hiding masked datasets?
+	 * 
 	 * @return true if it is.
 	 */
 	public boolean isHideMaskedDataSets() {
 		return this.hideMaskedDataSets;
 	}
-	
+
 	/**
 	 * Is this mart hiding masked schemas?
-	 * @param hideMaskedSchemas true if it is.
+	 * 
+	 * @param hideMaskedSchemas
+	 *            true if it is.
 	 */
 	public void setHideMaskedSchemas(final boolean hideMaskedSchemas) {
 		final boolean oldValue = this.hideMaskedSchemas;
 		if (this.hideMaskedSchemas == hideMaskedSchemas)
 			return;
 		this.hideMaskedSchemas = hideMaskedSchemas;
-		this.pcs.firePropertyChange("hideMaskedSchemas", oldValue, hideMaskedSchemas);
+		this.pcs.firePropertyChange("hideMaskedSchemas", oldValue,
+				hideMaskedSchemas);
 	}
-	
+
 	/**
 	 * Is this mart hiding masked schemas?
+	 * 
 	 * @return true if it is.
 	 */
 	public boolean isHideMaskedSchemas() {
@@ -293,11 +296,11 @@ public class Mart implements TransactionListener {
 		this.directModified = modified;
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
-	
+
 	public boolean isVisibleModified() {
 		return false;
 	}
-	
+
 	public void setVisibleModified(final boolean modified) {
 		// Ignore, for now.
 	}
