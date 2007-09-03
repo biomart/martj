@@ -251,6 +251,7 @@ public interface MartConstructor {
 			this.checkCancelled();
 
 			// Check is valid for dataset construction.
+			/*
 			boolean valid = false;
 			for (final Iterator i = dataset.getMainTable().getColumns()
 					.values().iterator(); i.hasNext() && !valid;)
@@ -259,6 +260,7 @@ public interface MartConstructor {
 			if (!valid)
 				throw new ConstructorException(Resources.get(
 						"datasetNoKeyColumn", dataset.getName()));
+			*/ // TODO Commented until Arek decides what he wants.
 
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();

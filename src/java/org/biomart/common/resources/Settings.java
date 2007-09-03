@@ -21,6 +21,7 @@ package org.biomart.common.resources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import org.biomart.common.utils.FileUtils;
+import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
  * Manages the on-disk cache of user settings.
@@ -118,9 +122,58 @@ public class Settings {
 		// Use it to log application startup.
 		Log.info("Started " + app);
 		// Make the class cache directory.
-		Settings.classCacheDir = new File(Settings.appDir, "cache");
+		Settings.classCacheDir = new File(Settings.appDir, "objectCache");
+		final File classCacheVersion = new File(Settings.appDir,
+				"objectCacheVersion.txt");
+		// Remove it if pre-current version.
+		if (Settings.classCacheDir.exists()) {
+			// Load and check class cache version.
+			String oldVersion = null;
+			if (classCacheVersion.exists())
+				try {
+					final FileInputStream fis = new FileInputStream(
+							classCacheVersion);
+					final byte[] oldVersionBytes = new byte[Resources.BIOMART_VERSION
+							.length()];
+					final int readLength = fis.read(oldVersionBytes);
+					if (readLength >= 0)
+						oldVersion = new String(oldVersionBytes, 0, readLength);
+					fis.close();
+				} catch (final IOException e) {
+					// Assume if failed that it is an out-of-date version.
+					oldVersion = null;
+				}
+			// If differs, delete cache.
+			if (!Resources.BIOMART_VERSION.equals(oldVersion)) {
+				try {
+					FileUtils.delete(Settings.classCacheDir);
+				} catch (final IOException e) {
+					// Not much we can do apart from warn.
+					StackTrace.showStackTrace(e);
+				}
+			}
+		}
+		// If doesn't exist, or has been removed, (re)create it.
 		if (!Settings.classCacheDir.exists())
-			Settings.classCacheDir.mkdir();
+			try {
+				Settings.classCacheDir.mkdir();
+				// Create/Overwrite version file.
+				final FileOutputStream fos = new FileOutputStream(
+						classCacheVersion);
+				fos.write(Resources.BIOMART_VERSION.getBytes());
+				fos.close();
+			} catch (final IOException e) {
+				// Not much we can do apart from warn.
+				StackTrace.showStackTrace(e);
+			}
+		// Remove pre-0.7 cache if present.
+		final File oldCache = new File(Settings.appDir, "cache");
+		if (oldCache.exists())
+			try {
+				FileUtils.delete(oldCache);
+			} catch (final IOException e) {
+				// Ignore.
+			}
 	}
 
 	/**

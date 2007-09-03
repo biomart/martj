@@ -654,10 +654,10 @@ public class MartBuilderXML extends DefaultHandler {
 		this.writeAttribute("overrideHost", mart.getOverrideHost(), xmlWriter);
 		this.writeAttribute("overridePort", mart.getOverridePort(), xmlWriter);
 		this.writeAttribute("nameCase", "" + mart.getCase(), xmlWriter);
-		this.writeAttribute("hideMaskedDataSets", Boolean.toString(mart.isHideMaskedDataSets()),
-				xmlWriter);
-		this.writeAttribute("hideMaskedSchemas", Boolean.toString(mart.isHideMaskedSchemas()),
-				xmlWriter);
+		this.writeAttribute("hideMaskedDataSets", Boolean.toString(mart
+				.isHideMaskedDataSets()), xmlWriter);
+		this.writeAttribute("hideMaskedSchemas", Boolean.toString(mart
+				.isHideMaskedSchemas()), xmlWriter);
 
 		// Write out each schema.
 		final Set externalRelations = new HashSet();
@@ -694,8 +694,8 @@ public class MartBuilderXML extends DefaultHandler {
 					Boolean.toString(ds.isInvisible()), xmlWriter);
 			this.writeAttribute("masked", Boolean.toString(ds.isMasked()),
 					xmlWriter);
-			this.writeAttribute("hideMasked", Boolean.toString(ds.isHideMasked()),
-					xmlWriter);
+			this.writeAttribute("hideMasked", Boolean.toString(ds
+					.isHideMasked()), xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
 
@@ -1362,9 +1362,11 @@ public class MartBuilderXML extends DefaultHandler {
 			mart.setOverrideHost((String) attributes.get("overrideHost"));
 			mart.setOverridePort((String) attributes.get("overridePort"));
 			mart.setHideMaskedSchemas(Boolean.valueOf(
-					(String) attributes.get("hideMaskedSchemas")).booleanValue());
+					(String) attributes.get("hideMaskedSchemas"))
+					.booleanValue());
 			mart.setHideMaskedDataSets(Boolean.valueOf(
-					(String) attributes.get("hideMaskedDataSets")).booleanValue());
+					(String) attributes.get("hideMaskedDataSets"))
+					.booleanValue());
 			// Need check to be safe against pre-0.7 versions.
 			if (attributes.containsKey("nameCase"))
 				mart.setCase(Integer.parseInt((String) attributes
@@ -2129,22 +2131,13 @@ public class MartBuilderXML extends DefaultHandler {
 				this.constructedMart.getDataSets().put(ds.getName(), ds);
 
 				// Work out the optimiser.
-				DataSetOptimiserType opt = null;
-				if ("COLUMN_INHERIT".equals(optType))
-					opt = DataSetOptimiserType.COLUMN_INHERIT;
-				else if ("COLUMN_BOOL_INHERIT".equals(optType))
-					opt = DataSetOptimiserType.COLUMN_BOOL_INHERIT;
-				else if ("COLUMN_BOOL_NULL_INHERIT".equals(optType))
-					opt = DataSetOptimiserType.COLUMN_BOOL_NULL_INHERIT;
-				else if ("TABLE_INHERIT".equals(optType))
-					opt = DataSetOptimiserType.TABLE_INHERIT;
-				else if ("TABLE_BOOL_INHERIT".equals(optType))
-					opt = DataSetOptimiserType.TABLE_BOOL_INHERIT;
-				else if ("TABLE_BOOL_NULL_INHERIT".equals(optType))
-					opt = DataSetOptimiserType.TABLE_BOOL_NULL_INHERIT;
-				else
-					// Default to none.
+				DataSetOptimiserType opt = DataSetOptimiserType.NONE;
+				try {
+					opt = (DataSetOptimiserType) DataSetOptimiserType.class
+							.getField(optType).get(null);
+				} catch (final NoSuchFieldException nfe) {
 					opt = DataSetOptimiserType.NONE;
+				}
 
 				// Assign the mart constructor, optimiser, and partition on
 				// schema settings.
