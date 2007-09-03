@@ -35,7 +35,9 @@ import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
+import org.biomart.builder.model.MartConstructorAction.ExpandUnroll;
 import org.biomart.builder.model.MartConstructorAction.Index;
+import org.biomart.builder.model.MartConstructorAction.InitialUnroll;
 import org.biomart.builder.model.MartConstructorAction.Join;
 import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
@@ -55,6 +57,122 @@ public class MySQLDialect extends DatabaseDialect {
 
 	private int indexCount;
 
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
+	public void doInitialUnroll(final InitialUnroll action, final List statements)
+			throws Exception {
+		final String schemaName = action.getDataSetSchemaName();
+
+		this.checkColumnName(action.getUnrollIDCol());
+		this.checkColumnName(action.getUnrollNameCol());
+		this.checkColumnName(action.getUnrollIterationCol());
+		
+		final StringBuffer sb = new StringBuffer();
+		sb.append("create table ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getTable());
+		sb.append(" as select parent.*, child.");
+		sb.append(action.getUnrollPKCol());
+		sb.append(" as ");
+		sb.append(action.getUnrollIDCol());
+		sb.append(", child.");
+		sb.append(action.getNamingCol());
+		sb.append(" as ");
+		sb.append(action.getUnrollNameCol());
+		sb.append(", 1 as ");
+		sb.append(action.getUnrollIterationCol());
+		sb.append(" from ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append(" as parent left join ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append(" as child on parent.");
+		sb.append(action.getUnrollPKCol());
+		sb.append("=child.");
+		sb.append(action.getUnrollFKCol());
+
+		statements.add(sb.toString());
+	}
+
+	/**
+	 * Performs an action.
+	 * 
+	 * @param action
+	 *            the action to perform.
+	 * @param statements
+	 *            the list into which statements will be added.
+	 * @throws Exception
+	 *             if anything goes wrong.
+	 */
+	public void doExpandUnroll(final ExpandUnroll action, final List statements)
+			throws Exception {
+		final String schemaName = action.getDataSetSchemaName();
+		
+		final StringBuffer sb = new StringBuffer();
+		sb.append("insert into ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append('(');
+		for (final Iterator i = action.getParentCols().iterator(); i.hasNext(); ) {
+			sb.append((String)i.next());
+			sb.append(',');
+		}
+		sb.append(action.getUnrollIDCol());
+		sb.append(',');
+		sb.append(action.getUnrollNameCol());
+		sb.append(',');
+		sb.append(action.getUnrollIterationCol());
+		sb.append(") select ");
+		for (final Iterator i = action.getParentCols().iterator(); i.hasNext(); ) {
+			sb.append("parent.");
+			sb.append((String)i.next());
+			sb.append(',');
+		}
+		sb.append(" child.");
+		sb.append(action.getUnrollPKCol());
+		sb.append(" as ");
+		sb.append(action.getUnrollIDCol());
+		sb.append(", child.");
+		sb.append(action.getNamingCol());
+		sb.append(" as ");
+		sb.append(action.getUnrollNameCol());
+		sb.append(", parent.");
+		sb.append(action.getUnrollIterationCol());
+		sb.append("+1 as ");
+		sb.append(action.getUnrollIterationCol());
+		sb.append(" from ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append(" as parent inner join ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append(" as child on parent.");
+		sb.append(action.getUnrollIDCol());
+		sb.append("=child.");
+		sb.append(action.getUnrollFKCol());
+		sb.append(" and parent.");
+		sb.append(action.getUnrollIterationCol());
+		sb.append('=');
+		sb.append(action.getUnrollIteration());
+
+		statements.add(sb.toString());
+	}
+	
 	/**
 	 * Performs an action.
 	 * 

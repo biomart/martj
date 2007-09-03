@@ -108,7 +108,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * Subclasses use this to notify update requirements.
 	 */
 	protected boolean needsFullSync;
-	
+
 	private boolean hideMasked = false;
 
 	private boolean directModified = false;
@@ -201,14 +201,16 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.directModified = modified;
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
-	
+
 	public boolean isVisibleModified() {
 		// If any table is visible modified, then we are too.
-		for (final Iterator i = this.getTables().values().iterator(); i.hasNext(); )
-			if (((Table)i.next()).isVisibleModified()) return true;
+		for (final Iterator i = this.getTables().values().iterator(); i
+				.hasNext();)
+			if (((Table) i.next()).isVisibleModified())
+				return true;
 		return false;
 	}
-	
+
 	public void setVisibleModified(final boolean modified) {
 		// If any table is visible modified, then we are too.
 	}
@@ -290,22 +292,27 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			this.relationCache.addAll(newRels);
 		}
 	}
-	
+
 	/**
 	 * Is this schema hiding masked components?
-	 * @param hideMasked true if it is.
+	 * 
+	 * @param hideMasked
+	 *            true if it is.
 	 */
 	public void setHideMasked(final boolean hideMasked) {
-		Log.debug("Setting hide masked schema on " + this + " to " + hideMasked);
+		Log
+				.debug("Setting hide masked schema on " + this + " to "
+						+ hideMasked);
 		final boolean oldValue = this.hideMasked;
 		if (this.hideMasked == hideMasked)
 			return;
 		this.hideMasked = hideMasked;
 		this.pcs.firePropertyChange("hideMasked", oldValue, hideMasked);
 	}
-	
+
 	/**
 	 * Is this schema hiding masked components?
+	 * 
 	 * @return true if it is.
 	 */
 	public boolean isHideMasked() {
@@ -653,6 +660,20 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	}
 
 	/**
+	 * Count the rows for a table.
+	 * 
+	 * @param table
+	 *            the table to get rows from.
+	 * @return the count of rows. It will be 0 if the operation is not possible.
+	 * @throws SQLException
+	 *             if anything goes wrong.
+	 */
+	public int countRows(final Table table) throws SQLException {
+		// Default returns 0.
+		return 0;
+	}
+
+	/**
 	 * Retrieve the regex used to work out schema partitions. If this regex is
 	 * <tt>null</tt> then no partitioning will be done.
 	 * 
@@ -865,6 +886,24 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 			// Return the results.
 			return results;
+		}
+
+		public int countRows(final Table table) throws SQLException {
+			final String tableName = table.getName();
+
+			// Do the select.
+			final String schemaName = this.getDataLinkSchema();
+			final Connection conn = this.getConnection(null);
+			final String sql = "select count(1) from " + schemaName + "."
+					+ tableName;
+			Log.debug("About to run query: " + sql);
+			final ResultSet rs = conn.prepareStatement(sql).executeQuery();
+			rs.next();
+			int result = rs.getInt(1);
+			rs.close();
+
+			// Return the results.
+			return result;
 		}
 
 		public void populatePartitionCache(final Map partitions)

@@ -185,7 +185,7 @@ public class Relation implements Comparable, TransactionListener {
 		this.pcs.addPropertyChangeListener("cardinality", listener);
 		this.pcs.addPropertyChangeListener("status", listener);
 		this.pcs.addPropertyChangeListener("compoundRelation", listener);
-		this.pcs.addPropertyChangeListener("directionRelation", listener);
+		this.pcs.addPropertyChangeListener("unrolledRelation", listener);
 		this.pcs.addPropertyChangeListener("forceRelation", listener);
 		this.pcs.addPropertyChangeListener("loopbackRelation", listener);
 		this.pcs.addPropertyChangeListener("maskRelation", listener);
@@ -949,82 +949,44 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	/**
-	 * Is this relation directioned?
-	 * 
-	 * @param dataset
-	 *            the dataset to check for.
-	 * @return the key to use if it is, null otherwise.
-	 */
-	public Key getDirectionalRelation(final DataSet dataset) {
-		return (Key) this.getMods(dataset, null).get("directionalRelation");
-	}
-
-	/**
-	 * Is this relation directioned?
+	 * Is this relation unrolled?
 	 * 
 	 * @param dataset
 	 *            the dataset to check for.
 	 * @param tableKey
 	 *            the table to check for.
-	 * @return the key to use if it is, null otherwise.
+	 * @return the name column to use if it is, null otherwise.
 	 */
-	public Key getDirectionalRelation(final DataSet dataset,
+	public Column getUnrolledRelation(final DataSet dataset,
 			final String tableKey) {
-		Key result = (Key) this.getMods(dataset, tableKey).get(
-				"directionalRelation");
-		if (result == null)
-			result = this.getDirectionalRelation(dataset);
-		return result;
+		return (Column) this.getMods(dataset, tableKey).get(
+				"unrolledRelation");
 	}
 
 	/**
-	 * Direction this relation.
-	 * 
-	 * @param dataset
-	 *            the dataset to set for.
-	 * @param direction
-	 *            the key to set - if null, it undoes it.
-	 */
-	public void setDirectionalRelation(final DataSet dataset,
-			final Key direction) {
-		final Key oldValue = this.getDirectionalRelation(dataset);
-		if (direction == oldValue || oldValue != null
-				&& oldValue.equals(direction))
-			return;
-
-		if (direction != null) {
-			this.getMods(dataset, null).put("directionalRelation", direction);
-			this.pcs.firePropertyChange("directionalRelation", null, dataset);
-		} else {
-			this.getMods(dataset, null).remove("directionalRelation");
-			this.pcs.firePropertyChange("directionalRelation", dataset, null);
-		}
-	}
-
-	/**
-	 * Direction this relation.
+	 * Unroll this relation.
 	 * 
 	 * @param dataset
 	 *            the dataset to set for.
 	 * @param tableKey
 	 *            the dataset table to set for.
-	 * @param direction
-	 *            the key to set - if null, it undoes it.
+	 * @param nameColumn
+	 *            the naming column to use - if null, it undoes it.
 	 */
-	public void setDirectionalRelation(final DataSet dataset,
-			final String tableKey, final Key direction) {
-		final Key oldValue = this.getDirectionalRelation(dataset, tableKey);
-		if (direction == oldValue || oldValue != null
-				&& oldValue.equals(direction))
+	public void setUnrolledRelation(final DataSet dataset,
+			final String tableKey, final Column nameColumn) {
+		final Column oldValue = this.getUnrolledRelation(dataset, tableKey);
+		if (nameColumn == oldValue || oldValue != null
+				&& oldValue.equals(nameColumn))
 			return;
 
-		if (direction != null) {
-			this.getMods(dataset, tableKey).put("directionalRelation",
-					direction);
-			this.pcs.firePropertyChange("directionalRelation", null, tableKey);
+		if (nameColumn != null) {
+			this.getMods(dataset, tableKey).put("unrolledRelation",
+					nameColumn);
+			this.pcs.firePropertyChange("unrolledRelation", null, tableKey);
 		} else {
-			this.getMods(dataset, tableKey).remove("directionalRelation");
-			this.pcs.firePropertyChange("directionalRelation", tableKey, null);
+			this.getMods(dataset, tableKey).remove("unrolledRelation");
+			this.pcs.firePropertyChange("unrolledRelation", tableKey, null);
 		}
 	}
 

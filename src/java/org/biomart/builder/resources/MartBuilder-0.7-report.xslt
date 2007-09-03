@@ -245,12 +245,11 @@ Compound in parallel?: <xsl:value-of select="@parallel"/>
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>
 
-<xsl:template match="directionalRelation">
+<xsl:template match="unrolledRelation">
 
-Directional relation: <xsl:apply-templates select="key('ids',@relationId)"/>
-Starting key: <xsl:apply-templates select="key('ids',@keyId)"/> 
-<xsl:if test="not(@tableKey='__DATASET_WIDE__')">
-Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
+Unrolled relation: <xsl:apply-templates select="key('ids',@relationId)"/>
+Naming column: <xsl:apply-templates select="key('ids',@columnId)"/> 
+Applies only to dataset table: <xsl:value-of select="@tableKey"/>
 </xsl:template>
 
 <xsl:template match="distinctRows">

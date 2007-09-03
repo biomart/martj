@@ -128,7 +128,7 @@ public class ExplainContext extends SchemaContext {
 							.contains(object)))
 				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
-			else 
+			else
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 			tblcomp.setRestricted((this.datasetTable == null ? table
@@ -234,6 +234,12 @@ public class ExplainContext extends SchemaContext {
 		else if (relation.isSubclassRelation(this.dataset))
 			component.setForeground(RelationComponent.SUBCLASS_COLOUR);
 
+		// Highlight UNROLLED relations.
+		else if (this.datasetTable != null
+				&& relation.getUnrolledRelation(this.dataset, this.datasetTable
+						.getName()) != null)
+			component.setForeground(RelationComponent.UNROLLED_COLOUR);
+
 		// All others are normal.
 		else
 			component.setForeground(RelationComponent.NORMAL_COLOUR);
@@ -263,7 +269,7 @@ public class ExplainContext extends SchemaContext {
 
 			// Obtain the table object we should refer to.
 			final Table table = (Table) object;
-			
+
 			// Accept/Reject changes - only appear in explain dataset
 			// table, and only enabled if dataset table includes this table
 			// and dataset table has visible modified columns from this
@@ -430,7 +436,6 @@ public class ExplainContext extends SchemaContext {
 		final boolean relationMasked = this.datasetTable == null ? relation
 				.isMaskRelation(this.dataset) : relation.isMaskRelation(
 				this.dataset, this.datasetTable.getName());
-
 		final boolean relationRestricted = (this.datasetTable == null ? relation
 				.isRestrictRelation(this.dataset)
 				: relation.isRestrictRelation(this.dataset, this.datasetTable
@@ -445,10 +450,9 @@ public class ExplainContext extends SchemaContext {
 				.getCompoundRelation(this.dataset)
 				: relation.getCompoundRelation(this.dataset, this.datasetTable
 						.getName())) != null;
-		final boolean relationDirectional = (this.datasetTable == null ? relation
-				.getDirectionalRelation(this.dataset)
-				: relation.getDirectionalRelation(this.dataset,
-						this.datasetTable.getName())) != null;
+		final boolean relationUnrolled = this.datasetTable == null ? false
+				: (relation.getUnrolledRelation(this.dataset, this.datasetTable
+						.getName()) != null);
 		final boolean relationForced = this.datasetTable == null ? relation
 				.isForceRelation(this.dataset) : relation.isForceRelation(
 				this.dataset, this.datasetTable.getName());
@@ -477,7 +481,8 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(mask);
-		if (incorrect || !relationMasked && !relationIncluded)
+		if (incorrect || relationUnrolled || !relationMasked
+				&& !relationIncluded)
 			mask.setEnabled(false);
 		if (relationMasked)
 			mask.setSelected(true);
@@ -496,8 +501,8 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(loopback);
-		if (incorrect || relationMasked || !relation.isOneToMany()
-				&& !relationLoopbacked)
+		if (incorrect || relationUnrolled || relationMasked
+				|| !relation.isOneToMany() && !relationLoopbacked)
 			loopback.setEnabled(false);
 		loopback.setSelected(relationLoopbacked);
 
@@ -521,7 +526,8 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(force);
-		if (incorrect || relationMasked || relationIncluded && !relationForced)
+		if (incorrect || relationUnrolled || relationMasked || relationIncluded
+				&& !relationForced)
 			force.setEnabled(false);
 		if (relationForced)
 			force.setSelected(true);
@@ -546,37 +552,37 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(compound);
-		if (incorrect || relationMasked || this.dataset.isPartitionTable())
+		if (incorrect || relationUnrolled || relationMasked
+				|| this.dataset.isPartitionTable())
 			compound.setEnabled(false);
 		if (relationCompounded)
 			compound.setSelected(true);
 
 		// The compound option allows the user to direction a relation.
-		final JCheckBoxMenuItem directional = new JCheckBoxMenuItem(Resources
-				.get("directionalRelationTitle"));
-		directional.setMnemonic(Resources.get("directionalRelationMnemonic")
-				.charAt(0));
-		directional.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				ExplainContext.this.getMartTab().getDataSetTabSet()
-						.requestDirectionalRelation(
-								ExplainContext.this.dataset,
-								ExplainContext.this.datasetTable, relation);
-				directional
-						.setSelected((ExplainContext.this.datasetTable == null ? relation
-								.getDirectionalRelation(ExplainContext.this
-										.getDataSet())
-								: relation.getDirectionalRelation(
-										ExplainContext.this.getDataSet(),
-										ExplainContext.this.datasetTable
-												.getName())) != null);
-			}
-		});
-		contextMenu.add(directional);
-		if (incorrect || relationMasked)
-			directional.setEnabled(false);
-		if (relationDirectional)
-			directional.setSelected(true);
+		if (this.datasetTable != null) {
+			final JCheckBoxMenuItem unrolled = new JCheckBoxMenuItem(Resources
+					.get("unrolledRelationTitle"));
+			unrolled.setMnemonic(Resources.get("unrolledRelationMnemonic")
+					.charAt(0));
+			unrolled.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestUnrolledRelation(
+									ExplainContext.this.datasetTable, relation);
+					unrolled
+							.setSelected(relation.getUnrolledRelation(
+									ExplainContext.this.getDataSet(),
+									ExplainContext.this.datasetTable.getName()) != null);
+				}
+			});
+			contextMenu.add(unrolled);
+			if (incorrect || relationMasked || relationRestricted
+					|| relationSubclassed || relationCompounded
+					|| relationForced || relationLoopbacked)
+				unrolled.setEnabled(false);
+			if (relationUnrolled)
+				unrolled.setSelected(true);
+		}
 
 		// The subclass/unsubclass option allows subclassing, but is
 		// only selectable when the relation is unmasked and not
@@ -598,8 +604,8 @@ public class ExplainContext extends SchemaContext {
 			}
 		});
 		contextMenu.add(subclass);
-		if (incorrect || relationMasked || relation.isOneToOne()
-				|| this.datasetTable != null)
+		if (incorrect || relationUnrolled || relationMasked
+				|| relation.isOneToOne() || this.datasetTable != null)
 			subclass.setEnabled(false);
 		if (relationSubclassed)
 			subclass.setSelected(true);
@@ -625,7 +631,7 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(modify);
-			if (incorrect || relationMasked)
+			if (incorrect || relationUnrolled || relationMasked)
 				modify.setEnabled(false);
 
 		} else {

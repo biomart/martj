@@ -755,22 +755,6 @@ public class MartBuilderXML extends DefaultHandler {
 						this.closeElement("forcedRelation", xmlWriter);
 					}
 
-					// Directional relations.
-					if (r.getDirectionalRelation(ds) != null) {
-						this.openElement("directionalRelation", xmlWriter);
-						this.writeAttribute("relationId",
-								(String) this.reverseMappedObjects.get(r),
-								xmlWriter);
-						this
-								.writeAttribute(
-										"keyId",
-										(String) this.reverseMappedObjects
-												.get(r
-														.getDirectionalRelation(ds)),
-										xmlWriter);
-						this.closeElement("directionalRelation", xmlWriter);
-					}
-
 					// Compound relations.
 					if (r.getCompoundRelation(ds) != null) {
 						final CompoundRelationDefinition def = r
@@ -1025,19 +1009,19 @@ public class MartBuilderXML extends DefaultHandler {
 							this.closeElement("forcedRelation", xmlWriter);
 						}
 
-						// Directional relations.
-						if (r.getDirectionalRelation(ds, dsTable.getName()) != null) {
-							this.openElement("directionalRelation", xmlWriter);
+						// Unrolled relations.
+						if (r.getUnrolledRelation(ds, dsTable.getName()) != null) {
+							this.openElement("unrolledRelation", xmlWriter);
 							this.writeAttribute("tableKey", dsTable.getName(),
 									xmlWriter);
 							this.writeAttribute("relationId",
 									(String) this.reverseMappedObjects.get(r),
 									xmlWriter);
-							this.writeAttribute("keyId",
+							this.writeAttribute("columnId",
 									(String) this.reverseMappedObjects.get(r
-											.getDirectionalRelation(ds, dsTable
+											.getUnrolledRelation(ds, dsTable
 													.getName())), xmlWriter);
-							this.closeElement("directionalRelation", xmlWriter);
+							this.closeElement("unrolledRelation", xmlWriter);
 						}
 
 						// Compound relations.
@@ -1758,27 +1742,29 @@ public class MartBuilderXML extends DefaultHandler {
 
 		// Directional Relation (inside dataset).
 		else if ("directionalRelation".equals(eName)) {
+			// Ignore - historical.
+		}
+
+		// Unrolled Relation (inside dataset).
+		else if ("unrolledRelation".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
 					|| !(this.objectStack.peek() instanceof DataSet))
 				throw new SAXException(Resources
-						.get("directionalRelationOutsideDataSet"));
+						.get("unrolledRelationOutsideDataSet"));
 			final DataSet w = (DataSet) this.objectStack.peek();
 
 			try {
 				// Look up the relation.
 				final Relation rel = (Relation) this.mappedObjects
 						.get(attributes.get("relationId"));
-				final Key key = (Key) this.mappedObjects.get(attributes
-						.get("keyId"));
+				final Column col = (Column) this.mappedObjects.get(attributes
+						.get("columnId"));
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Compound it.
-				if (rel != null && key != null)
-					if (tableKey == null)
-						rel.setDirectionalRelation(w, key);
-					else
-						rel.setDirectionalRelation(w, tableKey, key);
+				if (rel != null && col != null && tableKey != null)
+					rel.setUnrolledRelation(w, tableKey, col);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

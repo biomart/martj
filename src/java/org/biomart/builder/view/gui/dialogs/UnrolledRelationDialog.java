@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -36,38 +37,37 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.biomart.builder.model.Key;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Relation;
 import org.biomart.common.resources.Resources;
 
 /**
- * A dialog which allows the user to choose which end of a relation it must be
- * followed from. The transformation will then always follow this relation from
- * that end and ignore it from the other.
+ * A dialog which allows the user to choose to unroll a relation such that all
+ * parents mention all children.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
  *          rh4 $
- * @since 0.6
+ * @since 0.7
  */
-public class DirectionalRelationDialog extends JDialog {
+public class UnrolledRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private JComboBox chosenKey;
+	private JComboBox chosenColumn;
 
 	/**
-	 * Pop up a dialog to define the direction of a relation.
+	 * Pop up a dialog to define the unrolling of a relation.
 	 * 
 	 * @param initialChoice
-	 *            the initial preselected key.
+	 *            the initial preselected naming column.
 	 * @param relation
 	 *            the relation we are working with.
 	 */
-	public DirectionalRelationDialog(final Key initialChoice,
+	public UnrolledRelationDialog(final Column initialChoice,
 			final Relation relation) {
 		// Create the base dialog.
 		super();
-		this.setTitle(Resources.get("directionalRelationDialogTitle"));
+		this.setTitle(Resources.get("unrolledRelationDialogTitle"));
 		this.setModal(true);
 
 		// Create the layout manager for this panel.
@@ -87,11 +87,12 @@ public class DirectionalRelationDialog extends JDialog {
 
 		// Set up the check box to turn it on and off.
 		final JCheckBox checkbox = new JCheckBox();
-		this.chosenKey = new JComboBox();
-		this.chosenKey.addItem(null);
-		this.chosenKey.addItem(relation.getFirstKey());
-		this.chosenKey.addItem(relation.getSecondKey());
-		this.chosenKey.setSelectedItem(initialChoice);
+		this.chosenColumn = new JComboBox();
+		this.chosenColumn.addItem(null);
+		for (final Iterator i = relation.getOneKey().getTable().getColumns()
+				.values().iterator(); i.hasNext();)
+			this.chosenColumn.addItem((Column) i.next());
+		this.chosenColumn.setSelectedItem(initialChoice);
 		if (initialChoice != null)
 			checkbox.setSelected(true);
 
@@ -102,8 +103,8 @@ public class DirectionalRelationDialog extends JDialog {
 		// Key field.
 		JPanel field = new JPanel();
 		field.add(checkbox);
-		field.add(new JLabel(Resources.get("directionalRelationKeyLabel")));
-		field.add(this.chosenKey);
+		field.add(new JLabel(Resources.get("unrolledRelationColLabel")));
+		field.add(this.chosenColumn);
 		content.add(field, fieldConstraints);
 
 		// Close/Execute buttons at the bottom.
@@ -113,9 +114,9 @@ public class DirectionalRelationDialog extends JDialog {
 		content.add(field, fieldLastRowConstraints);
 
 		// Intercept the drop-down.
-		this.chosenKey.addItemListener(new ItemListener() {
+		this.chosenColumn.addItemListener(new ItemListener() {
 			public void itemStateChanged(final ItemEvent e) {
-				if (DirectionalRelationDialog.this.getChosenKey() == null)
+				if (UnrolledRelationDialog.this.getChosenColumn() == null)
 					checkbox.setSelected(false);
 				else
 					checkbox.setSelected(true);
@@ -125,11 +126,11 @@ public class DirectionalRelationDialog extends JDialog {
 		checkbox.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				if (checkbox.isSelected()
-						&& DirectionalRelationDialog.this.getChosenKey() == null)
-					DirectionalRelationDialog.this.chosenKey
-							.setSelectedItem(relation.getFirstKey());
+						&& UnrolledRelationDialog.this.getChosenColumn() == null)
+					UnrolledRelationDialog.this.chosenColumn
+							.setSelectedIndex(1);
 				else
-					DirectionalRelationDialog.this.chosenKey
+					UnrolledRelationDialog.this.chosenColumn
 							.setSelectedItem(null);
 			}
 		});
@@ -139,9 +140,9 @@ public class DirectionalRelationDialog extends JDialog {
 		close.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
-				DirectionalRelationDialog.this.chosenKey
+				UnrolledRelationDialog.this.chosenColumn
 						.setSelectedItem(initialChoice);
-				DirectionalRelationDialog.this.setVisible(false);
+				UnrolledRelationDialog.this.setVisible(false);
 			}
 		});
 
@@ -149,8 +150,8 @@ public class DirectionalRelationDialog extends JDialog {
 		// then closes the dialog.
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				if (DirectionalRelationDialog.this.validateFields())
-					DirectionalRelationDialog.this.setVisible(false);
+				if (UnrolledRelationDialog.this.validateFields())
+					UnrolledRelationDialog.this.setVisible(false);
 			}
 		});
 
@@ -165,12 +166,12 @@ public class DirectionalRelationDialog extends JDialog {
 	}
 
 	/**
-	 * Get the key the user selected.
+	 * Get the column the user selected.
 	 * 
-	 * @return the selected key.
+	 * @return the selected column.
 	 */
-	public Key getChosenKey() {
-		return (Key) this.chosenKey.getSelectedItem();
+	public Column getChosenColumn() {
+		return (Column) this.chosenColumn.getSelectedItem();
 	}
 
 	private boolean validateFields() {

@@ -75,8 +75,8 @@
 compoundRelation*,subclassRelation*,maskedColumn*,
 indexedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,loopbackRelation*,forcedRelation*,restrictedTable*,
-restrictedRelation*,expressionColumn*,directionalRelation*,renamedTable*,
-renamedColumn*,distinctRows*)>
+restrictedRelation*,expressionColumn*,renamedTable*,
+renamedColumn*,distinctRows*,unrolledRelation*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN_INHERIT|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL_INHERIT|TABLE_INHERIT|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
@@ -94,10 +94,10 @@ renamedColumn*,distinctRows*)>
 <!ATTLIST compoundRelation n CDATA #REQUIRED>
 <!ATTLIST compoundRelation parallel (true|false) #REQUIRED>
 
-<!ELEMENT directionalRelation EMPTY>
-<!ATTLIST directionalRelation tableKey CDATA #REQUIRED>
-<!ATTLIST directionalRelation relationId IDREF #REQUIRED>
-<!ATTLIST directionalRelation keyId IDREF #REQUIRED>
+<!ELEMENT unrolledRelation EMPTY>
+<!ATTLIST unrolledRelation tableKey CDATA #REQUIRED>
+<!ATTLIST unrolledRelation relationId IDREF #REQUIRED>
+<!ATTLIST unrolledRelation columnId IDREF #REQUIRED>
 
 <!ELEMENT renamedTable EMPTY>
 <!ATTLIST renamedTable tableKey CDATA #REQUIRED>

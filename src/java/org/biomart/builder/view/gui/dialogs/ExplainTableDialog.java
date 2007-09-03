@@ -52,6 +52,7 @@ import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.model.TransformationUnit.SkipTable;
+import org.biomart.builder.model.TransformationUnit.UnrollTable;
 import org.biomart.builder.view.gui.SchemaTabSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram;
@@ -398,6 +399,21 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 							diagram = new ExplainTransformationDiagram.SkipTempReal(
 									ExplainTableDialog.this.martTab,
 									(SkipTable) tu, columnsSoFar, stepNumber,
+									ExplainTableDialog.this.explainContext,
+									shownTables);
+						} else if (tu instanceof UnrollTable) {
+							// Temp table to schema table join.
+							label = new JLabel(
+									Resources
+											.get(
+													"stepTableLabel",
+													new String[] {
+															"" + stepNumber,
+															Resources
+																	.get("explainUnrollLabel") }));
+							diagram = new ExplainTransformationDiagram.TempUnrollReal(
+									ExplainTableDialog.this.martTab,
+									(UnrollTable) tu, columnsSoFar, stepNumber,
 									ExplainTableDialog.this.explainContext,
 									shownTables);
 						} else if (tu instanceof JoinTable) {

@@ -38,6 +38,7 @@ import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.model.TransformationUnit.SkipTable;
+import org.biomart.builder.model.TransformationUnit.UnrollTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
@@ -205,6 +206,121 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * This version of the class shows a temp table on the left and a real table
 	 * on the right.
 	 */
+	public static class TempUnrollReal extends ExplainTransformationDiagram {
+		private static final long serialVersionUID = 1;
+
+		private final UnrollTable utu;
+
+		private final Collection lIncludeCols;
+
+		/**
+		 * Creates a diagram showing the given pair of tables and a relation
+		 * between them.
+		 * 
+		 * @param martTab
+		 *            the mart tab to pass menu events onto.
+		 * @param utu
+		 *            the transformation to explain.
+		 * @param lIncludeCols
+		 *            the columns to show in the temp table.
+		 * @param step
+		 *            the step of the transformation this diagram represents.
+		 * @param explainContext
+		 *            the context used to provide the relation contexts, which
+		 *            are the same as those that appear in the explain diagram
+		 *            in the other tab to the transform view.
+		 * @param shownTables
+		 *            name to state map for initial table states.
+		 */
+		public TempUnrollReal(final MartTab martTab, final UnrollTable utu,
+				final List lIncludeCols, final int step,
+				final ExplainContext explainContext, final Map shownTables) {
+			super(martTab, step, explainContext, shownTables);
+
+			// Remember the columns, and calculate the diagram.
+			this.utu = utu;
+			this.lIncludeCols = new ArrayList(lIncludeCols);
+			this.recalculateDiagram();
+		}
+
+		public void doRecalculateDiagram() {
+			// Removes all existing components.
+			this.getTableComponents().clear();
+			// Create a temp table called TEMP with the given columns
+			// and given foreign key.
+			final FakeSchema tempSourceSchema = new FakeSchema(Resources
+					.get("dummyTempSchemaName"));
+			final Table tempSource = new FakeTable(Resources
+					.get("dummyTempTableName")
+					+ " " + this.getStep(), tempSourceSchema);
+			tempSourceSchema.getTables().put(tempSource.getName(), tempSource);
+			for (final Iterator i = this.lIncludeCols.iterator(); i.hasNext();) {
+				final Column col = (Column) i.next();
+				tempSource.getColumns().put(col.getName(), col);
+			}
+			Key tempSourceKey = new ForeignKey(this.utu.getRelation()
+					.getManyKey().getColumns());
+			tempSource.getForeignKeys().add(tempSourceKey);
+			tempSourceKey.transactionResetVisibleModified();
+
+			// Create a copy of the target table complete with target key.
+			final Key realTargetKey = this.utu.getRelation().getOneKey();
+			final Table realTarget = realTargetKey.getTable();
+			final FakeSchema tempTargetSchema = new FakeSchema(realTarget
+					.getSchema().getName());
+			final Table tempTarget = new RealisedTable(realTarget.getName(),
+					tempTargetSchema, realTarget, this.getExplainContext());
+			tempTargetSchema.getTables().put(tempTarget.getName(), tempTarget);
+			tempTarget.getColumns().put(
+					this.utu.getUnrolledIDColumn().getName(),
+					this.utu.getUnrolledIDColumn());
+			tempTarget.getColumns().put(
+					this.utu.getUnrolledNameColumn().getName(),
+					this.utu.getUnrolledNameColumn());
+			Key tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
+			tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
+			tempTargetKey.transactionResetVisibleModified();
+
+			// Create a copy of the relation but change to be between the
+			// two fake keys.
+			Relation tempRelation;
+			try {
+				tempRelation = new RealisedRelation(tempSourceKey,
+						tempTargetKey, this.utu.getRelation().getCardinality(),
+						this.utu.getRelation(), 0, this.getExplainContext());
+				// DON'T add to keys else it causes trouble with
+				// the caching system!
+				tempRelation.transactionResetVisibleModified();
+			} catch (final AssociationException e) {
+				// Really should never happen.
+				throw new BioMartError(e);
+			}
+
+			// Add source and target tables.
+			final TableComponent tc1 = new TableComponent(tempSource, this);
+			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
+			this.getTableComponents().add(tc1);
+			final Object tc1State = this.getState(tc1);
+			if (tc1State != null)
+				tc1.setState(tc1State);
+			final TableComponent tc2 = new TableComponent(tempTarget, this);
+			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
+			this.getTableComponents().add(tc2);
+			final Object tc2State = this.getState(tc2);
+			if (tc2State != null)
+				tc2.setState(tc2State);
+			// Add relation.
+			final RelationComponent relationComponent = new RelationComponent(
+					tempRelation, this);
+			this.add(relationComponent, new SchemaLayoutConstraint(0),
+					Diagram.RELATION_LAYER);
+		}
+	}
+
+	/**
+	 * This version of the class shows a temp table on the left and a real table
+	 * on the right.
+	 */
 	public static class TempReal extends ExplainTransformationDiagram {
 		private static final long serialVersionUID = 1;
 
@@ -261,13 +377,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			if (this.ltu.getSchemaSourceKey() instanceof ForeignKey) {
 				tempSourceKey = new ForeignKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
-				tempSource.getForeignKeys().add(tempSourceKey);	
+				tempSource.getForeignKeys().add(tempSourceKey);
 			} else {
 				tempSourceKey = new PrimaryKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
-			tempSourceKey.transactionResetVisibleModified(); 
+			tempSourceKey.transactionResetVisibleModified();
 
 			// Create a copy of the target table complete with target key.
 			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
@@ -291,7 +407,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
-			tempTargetKey.transactionResetVisibleModified(); 
+			tempTargetKey.transactionResetVisibleModified();
 
 			// Create a copy of the relation but change to be between the
 			// two fake keys.
@@ -305,7 +421,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				tempRelation.transactionResetVisibleModified(); 
+				tempRelation.transactionResetVisibleModified();
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
@@ -392,13 +508,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			if (this.ltu.getSchemaSourceKey() instanceof ForeignKey) {
 				tempSourceKey = new ForeignKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
-				tempSource.getForeignKeys().add(tempSourceKey);	
+				tempSource.getForeignKeys().add(tempSourceKey);
 			} else {
 				tempSourceKey = new PrimaryKey((Column[]) this.ltu
 						.getSourceDataSetColumns().toArray(new Column[0]));
 				tempSource.setPrimaryKey((PrimaryKey) tempSourceKey);
 			}
-			tempSourceKey.transactionResetVisibleModified(); 
+			tempSourceKey.transactionResetVisibleModified();
 
 			// Create a copy of the target table complete with target key.
 			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
@@ -418,7 +534,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 				tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			}
-			tempTargetKey.transactionResetVisibleModified(); 
+			tempTargetKey.transactionResetVisibleModified();
 
 			// Create a copy of the relation but change to be between the
 			// two fake keys.
@@ -432,7 +548,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				tempRelation.transactionResetVisibleModified(); 
+				tempRelation.transactionResetVisibleModified();
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
@@ -571,7 +687,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 					ours.setPropagationId(e.getPropagationId());
 					RealisedRelation.this.pcs.firePropertyChange(ours);
 				}
-			});			
+			});
 		}
 
 		/**

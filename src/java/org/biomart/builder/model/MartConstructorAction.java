@@ -1152,6 +1152,377 @@ public abstract class MartConstructorAction {
 	/**
 	 * Drop column actions.
 	 */
+	public static class InitialUnroll extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
+
+		private String schema;
+
+		private String sourceTable;
+
+		private String unrollFKCol;
+
+		private String unrollPKCol;
+
+		private String unrollIDCol;
+
+		private String unrollNameCol;
+
+		private String unrollIterationCol;
+
+		private String namingCol;
+
+		private String table;
+
+		/**
+		 * Creates a new InitialUnroll action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public InitialUnroll(final String datasetSchemaName,
+				final String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcInitialUnroll");
+		}
+
+		/**
+		 * @return the namingCol
+		 */
+		public String getNamingCol() {
+			return namingCol;
+		}
+
+		/**
+		 * @param namingCol
+		 *            the namingCol to set
+		 */
+		public void setNamingCol(String namingCol) {
+			this.namingCol = namingCol;
+		}
+
+		/**
+		 * @return the schema
+		 */
+		public String getSchema() {
+			return schema;
+		}
+
+		/**
+		 * @param schema
+		 *            the schema to set
+		 */
+		public void setSchema(String schema) {
+			this.schema = schema;
+		}
+
+		/**
+		 * @return the sourceTable
+		 */
+		public String getSourceTable() {
+			return sourceTable;
+		}
+
+		/**
+		 * @param sourceTable
+		 *            the sourceTable to set
+		 */
+		public void setSourceTable(String sourceTable) {
+			this.sourceTable = sourceTable;
+		}
+
+		/**
+		 * @return the table
+		 */
+		public String getTable() {
+			return table;
+		}
+
+		/**
+		 * @param table
+		 *            the table to set
+		 */
+		public void setTable(String table) {
+			this.table = table;
+		}
+
+		/**
+		 * @return the unrollFKCol
+		 */
+		public String getUnrollFKCol() {
+			return unrollFKCol;
+		}
+
+		/**
+		 * @param unrollFKCol
+		 *            the unrollFKCol to set
+		 */
+		public void setUnrollFKCol(String unrollFKCol) {
+			this.unrollFKCol = unrollFKCol;
+		}
+
+		/**
+		 * @return the unrollIDCol
+		 */
+		public String getUnrollIDCol() {
+			return unrollIDCol;
+		}
+
+		/**
+		 * @param unrollIDCol
+		 *            the unrollIDCol to set
+		 */
+		public void setUnrollIDCol(String unrollIDCol) {
+			this.unrollIDCol = unrollIDCol;
+		}
+
+		/**
+		 * @return the unrollIterationCol
+		 */
+		public String getUnrollIterationCol() {
+			return unrollIterationCol;
+		}
+
+		/**
+		 * @param unrollIterationCol
+		 *            the unrollIterationCol to set
+		 */
+		public void setUnrollIterationCol(String unrollIterationCol) {
+			this.unrollIterationCol = unrollIterationCol;
+		}
+
+		/**
+		 * @return the unrollNameCol
+		 */
+		public String getUnrollNameCol() {
+			return unrollNameCol;
+		}
+
+		/**
+		 * @param unrollNameCol
+		 *            the unrollNameCol to set
+		 */
+		public void setUnrollNameCol(String unrollNameCol) {
+			this.unrollNameCol = unrollNameCol;
+		}
+
+		/**
+		 * @return the unrollPKCol
+		 */
+		public String getUnrollPKCol() {
+			return unrollPKCol;
+		}
+
+		/**
+		 * @param unrollPKCol
+		 *            the unrollPKCol to set
+		 */
+		public void setUnrollPKCol(String unrollPKCol) {
+			this.unrollPKCol = unrollPKCol;
+		}
+	}
+
+	/**
+	 * Drop column actions.
+	 */
+	public static class ExpandUnroll extends MartConstructorAction {
+		private static final long serialVersionUID = 1L;
+
+		private String schema;
+
+		private String sourceTable;
+
+		private String unrollFKCol;
+
+		private String unrollPKCol;
+
+		private String unrollIDCol;
+
+		private String unrollNameCol;
+
+		private String unrollIterationCol;
+
+		private int unrollIteration;
+
+		private String namingCol;
+
+		private List parentCols;
+
+		/**
+		 * Creates a new ExpandUnroll action.
+		 * 
+		 * @param datasetSchemaName
+		 *            the dataset schema we are working in.
+		 * @param datasetTableName
+		 *            the dataset table we are working on.
+		 */
+		public ExpandUnroll(final String datasetSchemaName,
+				final String datasetTableName) {
+			super(datasetSchemaName, datasetTableName);
+		}
+
+		public String getStatusMessage() {
+			return Resources.get("mcExpandUnroll");
+		}
+
+		/**
+		 * @return the namingCol
+		 */
+		public String getNamingCol() {
+			return namingCol;
+		}
+
+		/**
+		 * @param namingCol
+		 *            the namingCol to set
+		 */
+		public void setNamingCol(String namingCol) {
+			this.namingCol = namingCol;
+		}
+
+		/**
+		 * @return the schema
+		 */
+		public String getSchema() {
+			return schema;
+		}
+
+		/**
+		 * @param schema
+		 *            the schema to set
+		 */
+		public void setSchema(String schema) {
+			this.schema = schema;
+		}
+
+		/**
+		 * @return the sourceTable
+		 */
+		public String getSourceTable() {
+			return sourceTable;
+		}
+
+		/**
+		 * @param sourceTable
+		 *            the sourceTable to set
+		 */
+		public void setSourceTable(String sourceTable) {
+			this.sourceTable = sourceTable;
+		}
+
+		/**
+		 * @return the unrollFKCol
+		 */
+		public String getUnrollFKCol() {
+			return unrollFKCol;
+		}
+
+		/**
+		 * @param unrollFKCol
+		 *            the unrollFKCol to set
+		 */
+		public void setUnrollFKCol(String unrollFKCol) {
+			this.unrollFKCol = unrollFKCol;
+		}
+
+		/**
+		 * @return the unrollIDCol
+		 */
+		public String getUnrollIDCol() {
+			return unrollIDCol;
+		}
+
+		/**
+		 * @param unrollIDCol
+		 *            the unrollIDCol to set
+		 */
+		public void setUnrollIDCol(String unrollIDCol) {
+			this.unrollIDCol = unrollIDCol;
+		}
+
+		/**
+		 * @return the unrollIterationCol
+		 */
+		public String getUnrollIterationCol() {
+			return unrollIterationCol;
+		}
+
+		/**
+		 * @param unrollIterationCol
+		 *            the unrollIterationCol to set
+		 */
+		public void setUnrollIterationCol(String unrollIterationCol) {
+			this.unrollIterationCol = unrollIterationCol;
+		}
+
+		/**
+		 * @return the unrollNameCol
+		 */
+		public String getUnrollNameCol() {
+			return unrollNameCol;
+		}
+
+		/**
+		 * @param unrollNameCol
+		 *            the unrollNameCol to set
+		 */
+		public void setUnrollNameCol(String unrollNameCol) {
+			this.unrollNameCol = unrollNameCol;
+		}
+
+		/**
+		 * @return the unrollPKCol
+		 */
+		public String getUnrollPKCol() {
+			return unrollPKCol;
+		}
+
+		/**
+		 * @param unrollPKCol
+		 *            the unrollPKCol to set
+		 */
+		public void setUnrollPKCol(String unrollPKCol) {
+			this.unrollPKCol = unrollPKCol;
+		}
+
+		/**
+		 * @return the unrollIteration
+		 */
+		public int getUnrollIteration() {
+			return unrollIteration;
+		}
+
+		/**
+		 * @param unrollIteration
+		 *            the unrollIteration to set
+		 */
+		public void setUnrollIteration(int unrollIteration) {
+			this.unrollIteration = unrollIteration;
+		}
+
+		/**
+		 * @return the parentCols
+		 */
+		public List getParentCols() {
+			return parentCols;
+		}
+
+		/**
+		 * @param parentCols
+		 *            the parentCols to set
+		 */
+		public void setParentCols(List parentCols) {
+			this.parentCols = parentCols;
+		}
+	}
+
+	/**
+	 * Drop column actions.
+	 */
 	public static class DropColumns extends MartConstructorAction {
 		private static final long serialVersionUID = 1L;
 

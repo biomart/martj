@@ -153,6 +153,11 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	 */
 	public static Color SUBCLASS_COLOUR = Color.RED;
 
+	/**
+	 * Constant referring to unrolled relation colour.
+	 */
+	public static Color UNROLLED_COLOUR = Color.CYAN;
+	
 	private boolean restricted = false;
 
 	private boolean compounded = false;

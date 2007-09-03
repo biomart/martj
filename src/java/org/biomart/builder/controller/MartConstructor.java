@@ -20,6 +20,7 @@ package org.biomart.builder.controller;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,7 +56,9 @@ import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
 import org.biomart.builder.model.MartConstructorAction.DropColumns;
+import org.biomart.builder.model.MartConstructorAction.ExpandUnroll;
 import org.biomart.builder.model.MartConstructorAction.Index;
+import org.biomart.builder.model.MartConstructorAction.InitialUnroll;
 import org.biomart.builder.model.MartConstructorAction.Join;
 import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
@@ -70,6 +73,7 @@ import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.model.TransformationUnit.SkipTable;
+import org.biomart.builder.model.TransformationUnit.UnrollTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -252,16 +256,14 @@ public interface MartConstructor {
 
 			// Check is valid for dataset construction.
 			/*
-			boolean valid = false;
-			for (final Iterator i = dataset.getMainTable().getColumns()
-					.values().iterator(); i.hasNext() && !valid;)
-				valid |= ((DataSetColumn) i.next()).getModifiedName().endsWith(
-						Resources.get("keySuffix"));
-			if (!valid)
-				throw new ConstructorException(Resources.get(
-						"datasetNoKeyColumn", dataset.getName()));
-			*/ // TODO Commented until Arek decides what he wants.
-
+			 * boolean valid = false; for (final Iterator i =
+			 * dataset.getMainTable().getColumns() .values().iterator();
+			 * i.hasNext() && !valid;) valid |= ((DataSetColumn)
+			 * i.next()).getModifiedName().endsWith(
+			 * Resources.get("keySuffix")); if (!valid) throw new
+			 * ConstructorException(Resources.get( "datasetNoKeyColumn",
+			 * dataset.getName()));
+			 */// TODO Commented until Arek decides what he wants.
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 			final PartitionTableApplication dsPta = dataset.getMart()
@@ -449,6 +451,12 @@ public interface MartConstructor {
 						// new temp table from getting dropped.
 						continue;
 				}
+				// Unroll?
+				else if (tu instanceof UnrollTable)
+					this.doUnrollTable(templateSchema, schemaPartition,
+							schemaPrefix, dsPta, dmPta, dataset, dsTable,
+							(UnrollTable) tu, previousTempTable, tempTable,
+							droppedCols);
 				// Skip?
 				else if (tu instanceof SkipTable)
 					// Ignore.
@@ -1135,6 +1143,97 @@ public interface MartConstructor {
 			}
 			this.issueAction(action);
 			return requiresFinalLeftJoin;
+		}
+
+		private void doUnrollTable(final Schema templateSchema,
+				final String schemaPartition, final String schemaPrefix,
+				final PartitionTableApplication dsPta,
+				final PartitionTableApplication dmPta, final DataSet dataset,
+				final DataSetTable dsTable, final UnrollTable utu,
+				final String previousTempTable, final String tempTable,
+				final Set droppedCols) throws SQLException, ListenerException,
+				PartitionException {
+
+			final String finalCombinedName = this.getFinalName(schemaPrefix,
+					dsPta, dmPta, dsTable);
+
+			// Make sure that we use the same partition on the RHS
+			// if it exists, otherwise use the default partition.
+			// Note that it will run unpredictably if compound keys are used.
+			final String unrollFK = utu.getRelation().getManyKey().getColumns()[0]
+					.getName();
+			final String unrollPK = utu.getRelation().getOneKey().getColumns()[0]
+					.getName();
+			final String unrollIDColName = utu.getUnrolledIDColumn()
+					.getPartitionedName();
+			final String unrollNameColName = utu.getUnrolledNameColumn()
+					.getPartitionedName();
+			final String unrollIterationColName = unrollIDColName + "__i";
+
+			// n=count rows in PK table from relation.
+			int n = utu.getRelation().getOneKey().getTable().getSchema()
+					.countRows(utu.getRelation().getOneKey().getTable());
+			// Create initial select table with unrolled child cols and
+			// iteration col.
+			final InitialUnroll iaction = new InitialUnroll(
+					this.datasetSchemaName, finalCombinedName);
+			iaction.setSchema(this.datasetSchemaName);
+			iaction.setSourceTable(previousTempTable);
+			iaction.setUnrollFKCol(unrollFK);
+			iaction.setUnrollPKCol(unrollPK);
+			iaction.setUnrollIDCol(unrollIDColName);
+			iaction.setUnrollNameCol(unrollNameColName);
+			iaction.setUnrollIterationCol(unrollIterationColName);
+			iaction.setNamingCol(utu.getDataSetColumnFor(utu.getNamingColumn())
+					.getPartitionedName());
+			iaction.setTable(tempTable);
+			this.issueAction(iaction);
+			// Index FK of relation in new table.
+			Index index = new Index(this.datasetSchemaName, finalCombinedName);
+			index.setTable(tempTable);
+			index.setColumns(Collections.singletonList(unrollFK));
+			this.issueAction(index);
+			// Index unrolled child id + iteration column.
+			index = new Index(this.datasetSchemaName, finalCombinedName);
+			index.setTable(tempTable);
+			index.setColumns(Arrays.asList(new String[] { unrollIDColName,
+					unrollIterationColName }));
+			this.issueAction(index);
+			// Build a list of cols to include from the parent.
+			final List parentCols = new ArrayList();
+			TransformationUnit tu = utu;
+			while ((tu = tu.getPreviousUnit()) != null)
+				for (final Iterator i = tu.getNewColumnNameMap().values()
+						.iterator(); i.hasNext();) {
+					final DataSetColumn dsCol = (DataSetColumn) i.next();
+					if (dsCol.isRequiredInterim())
+						parentCols.add(dsCol.getPartitionedName());
+				}
+			parentCols.removeAll(droppedCols);
+			// Do n-1 expansion insert+update pairs.
+			for (int i = 1; i < n - 1; i++) {
+				final ExpandUnroll eaction = new ExpandUnroll(
+						this.datasetSchemaName, finalCombinedName);
+				eaction.setSchema(this.datasetSchemaName);
+				eaction.setSourceTable(tempTable);
+				eaction.setParentCols(parentCols);
+				eaction.setUnrollPKCol(unrollPK);
+				eaction.setUnrollFKCol(unrollFK);
+				eaction.setUnrollIDCol(unrollIDColName);
+				eaction.setUnrollNameCol(unrollNameColName);
+				eaction.setUnrollIterationCol(unrollIterationColName);
+				eaction.setUnrollIteration(i);
+				eaction.setNamingCol(utu.getDataSetColumnFor(
+						utu.getNamingColumn()).getPartitionedName());
+				this.issueAction(eaction);
+			}
+			// Drop iteration column.
+			final DropColumns dropcol = new DropColumns(this.datasetSchemaName,
+					finalCombinedName);
+			dropcol.setTable(tempTable);
+			dropcol.setColumns(Collections
+					.singletonList(unrollIterationColName));
+			this.issueAction(dropcol);
 		}
 
 		private boolean doExpression(final String schemaPrefix,

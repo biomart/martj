@@ -43,6 +43,7 @@ import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.UnrolledColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
@@ -58,6 +59,7 @@ import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
 import org.biomart.builder.model.TransformationUnit.SkipTable;
+import org.biomart.builder.model.TransformationUnit.UnrollTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.resources.Log;
@@ -631,6 +633,7 @@ public class DataSet extends Schema {
 					+ relationIteration;
 		final DataSetTable dsTable;
 		if (this.getTables().containsKey(fullName)) {
+			// TODO Make sure it refers to same relation before reusing!
 			dsTable = (DataSetTable) this.getTables().get(fullName);
 			dsTable.setType(type); // Just to make sure.
 			unusedTables.remove(dsTable);
@@ -1156,7 +1159,7 @@ public class DataSet extends Schema {
 				if (candDSCol instanceof WrappedColumn)
 					wc = (WrappedColumn) dsTable.getColumns().get(colName);
 				else {
-					wc = new WrappedColumn(c, colName, dsTable, sourceRelation);
+					wc = new WrappedColumn(c, colName, dsTable);
 					dsTable.getColumns().put(wc.getName(), wc);
 					// Listen to this column to modify ourselves.
 					if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
@@ -1167,7 +1170,7 @@ public class DataSet extends Schema {
 					}
 				}
 			} else {
-				wc = new WrappedColumn(c, colName, dsTable, sourceRelation);
+				wc = new WrappedColumn(c, colName, dsTable);
 				dsTable.getColumns().put(wc.getName(), wc);
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
@@ -1211,14 +1214,13 @@ public class DataSet extends Schema {
 			if (r.equals(sourceRelation) && !isLoopback)
 				continue;
 
-			// Don't excessively repeat relations.
-			if (((Integer) relationCount.get(r)).intValue() <= 0)
+			// Don't follow unrolled relations from the PK end.
+			if (r.getUnrolledRelation(this, dsTable.getName()) != null
+					&& r.getKeyForTable(mergeTable).equals(r.getOneKey()))
 				continue;
 
-			// Don't follow directional relations from the wrong end.
-			if (!r.getFirstKey().getTable().equals(r.getSecondKey().getTable())
-					&& r.getKeyForTable(mergeTable).equals(
-							r.getDirectionalRelation(this, dsTable.getName())))
+			// Don't excessively repeat relations.
+			if (((Integer) relationCount.get(r)).intValue() <= 0)
 				continue;
 
 			// Don't follow incorrect relations, or relations
@@ -1270,12 +1272,7 @@ public class DataSet extends Schema {
 			// Are we at the 1 end of a 1:M?
 			// If so, we may need to make a dimension, a subclass, or
 			// a concat column.
-			if (r.isOneToMany()
-					&& r.getOneKey().getTable().equals(mergeTable)
-					&& (r.getDirectionalRelation(this, dsTable.getName()) == null || r
-							.getOneKey().equals(
-									r.getDirectionalRelation(this, dsTable
-											.getName())))) {
+			if (r.isOneToMany() && r.getOneKey().getTable().equals(mergeTable)) {
 
 				// Subclass subclassed relations, if we are currently
 				// not building a dimension table.
@@ -1333,7 +1330,8 @@ public class DataSet extends Schema {
 					forceFollowRelation = true;
 			}
 
-			// Follow all others.
+			// Follow all others. Don't follow relations that are 
+			// already in the subclass or dimension queues.
 			else
 				followRelation = true;
 
@@ -1341,14 +1339,79 @@ public class DataSet extends Schema {
 			// including dimensions, include them from the 1:1 as well.
 			// Otherwise, stop including dimensions on subsequent tables.
 			if (followRelation || forceFollowRelation) {
+
+				// Don't follow unrolled relations - just add unrolled cols.
+				if (r.getUnrolledRelation(this, dsTable.getName()) != null) {
+					final Column nameCol = r.getUnrolledRelation(this, dsTable
+							.getName());
+					// Make an UNROLL unit that involves the relation and
+					// includes the name column, the source and target keys,
+					// and the unrolled ID and name UnrolledColumns.
+					final List newSourceDSCols = new ArrayList();
+					// Add UnrolledColumns for relation.
+					String colName = "";
+					// Add partitioning prefixes.
+					for (int k = 0; k < nameCols.size(); k++) {
+						final String pcolName = (String) nameCols.get(k);
+						final String suffix = nameColSuffixes.size() <= k ? ""
+								: "#" + (String) nameColSuffixes.get(k);
+						colName = pcolName + suffix
+								+ Resources.get("columnnameSep") + colName;
+					}
+					// Reuse columns.
+					final String unrolledID = colName
+							+ Resources.get("unrolledIDColName");
+					final String unrolledName = colName
+							+ Resources.get("unrolledNameColName");
+					UnrolledColumn unrolledIDCol;
+					if (dsTable.getColumns().containsKey(unrolledID)) {
+						final DataSetColumn candidate = (DataSetColumn) dsTable
+								.getColumns().get(unrolledID);
+						if (candidate instanceof UnrolledColumn)
+							unrolledIDCol = (UnrolledColumn) candidate;
+						else {
+							unrolledIDCol = new UnrolledColumn(unrolledID,
+									dsTable);
+							dsTable.getColumns().put(unrolledID, unrolledIDCol);
+						}
+					} else {
+						unrolledIDCol = new UnrolledColumn(unrolledID, dsTable);
+						dsTable.getColumns().put(unrolledID, unrolledIDCol);
+					}
+					UnrolledColumn unrolledNameCol;
+					if (dsTable.getColumns().containsKey(unrolledName)) {
+						final DataSetColumn candidate = (DataSetColumn) dsTable
+								.getColumns().get(unrolledName);
+						if (candidate instanceof UnrolledColumn)
+							unrolledNameCol = (UnrolledColumn) candidate;
+						else {
+							unrolledNameCol = new UnrolledColumn(unrolledName,
+									dsTable);
+							dsTable.getColumns().put(unrolledName,
+									unrolledNameCol);
+						}
+					} else {
+						unrolledNameCol = new UnrolledColumn(unrolledName,
+								dsTable);
+						dsTable.getColumns().put(unrolledName, unrolledNameCol);
+					}
+					newSourceDSCols.add(unrolledIDCol);
+					newSourceDSCols.add(unrolledNameCol);
+					// Create UnrollTable transformation unit.
+					dsTable.addTransformationUnit(new UnrollTable(tu, r,
+							newSourceDSCols, nameCol, unrolledIDCol,
+							unrolledNameCol));
+					this.includedRelations.add(r);
+					dsTable.includedRelations.add(r);
+					// Skip onto next relation.
+					continue;
+				}
+
 				final List nextNameCols = new ArrayList(nameCols);
 				final Map nextNameColSuffixes = new HashMap();
 				nextNameColSuffixes.put("" + 0, new ArrayList(nameColSuffixes));
 
-				Key sourceKey = r.getDirectionalRelation(this, dsTable
-						.getName());
-				if (sourceKey == null)
-					sourceKey = r.getKeyForTable(mergeTable);
+				final Key sourceKey = r.getKeyForTable(mergeTable);
 				final Key targetKey = r.getOtherKey(sourceKey);
 				final List newSourceDSCols = new ArrayList();
 				for (int j = 0; j < sourceKey.getColumns().length; j++)
@@ -1618,7 +1681,7 @@ public class DataSet extends Schema {
 			rel.removePropertyChangeListener("status", this.rebuildListener);
 			rel.removePropertyChangeListener("compoundRelation",
 					this.rebuildListener);
-			rel.removePropertyChangeListener("directionRelation",
+			rel.removePropertyChangeListener("unrolledRelation",
 					this.rebuildListener);
 			rel.removePropertyChangeListener("forceRelation",
 					this.rebuildListener);
@@ -1705,7 +1768,7 @@ public class DataSet extends Schema {
 			rel.addPropertyChangeListener("status", this.rebuildListener);
 			rel.addPropertyChangeListener("compoundRelation",
 					this.rebuildListener);
-			rel.addPropertyChangeListener("directionRelation",
+			rel.addPropertyChangeListener("unrolledRelation",
 					this.rebuildListener);
 			rel
 					.addPropertyChangeListener("forceRelation",
@@ -2178,6 +2241,46 @@ public class DataSet extends Schema {
 			public ExpressionColumnDefinition getDefinition() {
 				return this.definition;
 			}
+
+			public void setColumnMasked(final boolean columnMasked)
+					throws ValidationException {
+				if (columnMasked == this.isColumnMasked())
+					return;
+				if (columnMasked)
+					throw new ValidationException(Resources
+							.get("cannotMaskExpressionColumn"));
+				super.setColumnMasked(columnMasked);
+			}
+		}
+
+		/**
+		 * A column on a dataset table that is an unrolled column.
+		 */
+		public static class UnrolledColumn extends DataSetColumn {
+			private static final long serialVersionUID = 1L;
+
+			/**
+			 * This constructor gives the column a name.
+			 * 
+			 * @param name
+			 *            the name to give the unrolled column.
+			 * @param dsTable
+			 *            the dataset table to add the wrapped column to.
+			 */
+			public UnrolledColumn(final String name, final DataSetTable dsTable) {
+				// The super constructor will make the alias for us.
+				super(name, dsTable);
+			}
+
+			public void setColumnMasked(final boolean columnMasked)
+					throws ValidationException {
+				if (columnMasked == this.isColumnMasked())
+					return;
+				if (columnMasked)
+					throw new ValidationException(Resources
+							.get("cannotMaskUnrolledColumn"));
+				super.setColumnMasked(columnMasked);
+			}
 		}
 
 		/**
@@ -2264,14 +2367,9 @@ public class DataSet extends Schema {
 			 *            the name to give the wrapped column.
 			 * @param dsTable
 			 *            the dataset table to add the wrapped column to.
-			 * @param underlyingRelation
-			 *            the relation that provided this column. The underlying
-			 *            relation can be null in only one case - when the table
-			 *            is a {@link DataSetTableType#MAIN} table.
 			 */
 			public WrappedColumn(final Column column, final String colName,
-					final DataSetTable dsTable,
-					final Relation underlyingRelation) {
+					final DataSetTable dsTable) {
 				// Call the parent which will use the alias generator for us.
 				super(colName, dsTable);
 
@@ -2576,7 +2674,7 @@ public class DataSet extends Schema {
 					// Find all new columns from the TU.
 					for (final Iterator j = st.getNewColumnNameMap().values()
 							.iterator(); j.hasNext();) {
-						final DataSetColumn dsCol = (DataSetColumn)j.next();
+						final DataSetColumn dsCol = (DataSetColumn) j.next();
 						// Is it new?
 						if (!dsCol.isVisibleModified())
 							continue;

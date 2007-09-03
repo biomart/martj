@@ -43,7 +43,6 @@ import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
-import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -63,7 +62,6 @@ import org.biomart.builder.view.gui.diagrams.contexts.AllDataSetsContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DataSetContext;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.CompoundRelationDialog;
-import org.biomart.builder.view.gui.dialogs.DirectionalRelationDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
@@ -74,6 +72,7 @@ import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
+import org.biomart.builder.view.gui.dialogs.UnrolledRelationDialog;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.dialogs.StackTrace;
@@ -711,36 +710,32 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks that a relation be made unidirectional.
+	 * Asks that a relation be unrolled.
 	 * 
-	 * @param ds
-	 *            the dataset we are working with.
 	 * @param dst
 	 *            the table to work with.
 	 * @param relation
-	 *            the schema relation to make unidirectional.
+	 *            the schema relation to make unrolled.
 	 */
-	public void requestDirectionalRelation(final DataSet ds,
-			final DataSetTable dst, final Relation relation) {
+	public void requestUnrolledRelation(final DataSetTable dst,
+			final Relation relation) {
 		// Work out if it is already directional.
-		final Key def = relation.getDirectionalRelation(ds, dst.getName());
+		final Column def = relation.getUnrolledRelation(dst.getDataSet(), dst
+				.getName());
 
 		// Pop up a dialog and update 'direction'.
-		final DirectionalRelationDialog dialog = new DirectionalRelationDialog(
-				def, relation);
+		final UnrolledRelationDialog dialog = new UnrolledRelationDialog(def,
+				relation);
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
-		final Key newKey = dialog.getChosenKey();
+		final Column newDef = dialog.getChosenColumn();
 
 		// Skip altogether if no change.
-		if (newKey == def)
+		if (newDef == def)
 			return;
 
 		Transaction.start();
-		if (dst != null)
-			relation.setDirectionalRelation(ds, dst.getName(), newKey);
-		else
-			relation.setDirectionalRelation(ds, newKey);
+		relation.setUnrolledRelation(dst.getDataSet(), dst.getName(), newDef);
 		Transaction.end();
 	}
 

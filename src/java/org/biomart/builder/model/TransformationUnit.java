@@ -410,4 +410,93 @@ public abstract class TransformationUnit {
 					schemaRelation, schemaRelationIteration);
 		}
 	}
+
+	/**
+	 * This type of transformation unrolls tables.
+	 */
+	public static class UnrollTable extends TransformationUnit {
+		private static final long serialVersionUID = 1L;
+
+		private final Relation relation;
+
+		private final List sourceDataSetColumns;
+		
+		private final Column namingColumn;
+		
+		private final DataSetColumn unrolledIDColumn;
+		
+		private final DataSetColumn unrolledNameColumn;
+
+		/**
+		 * Instantiate a unit that selects from the given schema table.
+		 * 
+		 * @param previousUnit
+		 *            the unit that precedes this one.
+		 * @param relation
+		 *            the relation we are unrolling.
+		 * @param sourceDataSetColumns
+		 *            the columns in the existing dataset table that are used to
+		 *            make the join.
+		 * @param namingColumn
+		 *            the column to use to get names for the unrolled rows.
+		 *            @param unrolledIDColumn
+		 *            the unrolled ID column.
+		 *            @param unrolledNameColumn
+		 *            the unrolled name column.
+		 */
+		public UnrollTable(final TransformationUnit previousUnit,
+				final Relation relation, final List sourceDataSetColumns,
+				final Column namingColumn, final DataSetColumn unrolledIDColumn,
+				final DataSetColumn unrolledNameColumn) {
+			super(previousUnit);
+			this.relation = relation;
+			this.sourceDataSetColumns = sourceDataSetColumns;
+			this.namingColumn = namingColumn;
+			this.unrolledIDColumn = unrolledIDColumn;
+			this.unrolledNameColumn = unrolledNameColumn;
+		}
+
+		/**
+		 * @return the relation
+		 */
+		public Relation getRelation() {
+			return this.relation;
+		}
+
+		/**
+		 * @return the sourceDataSetColumns
+		 */
+		public List getSourceDataSetColumns() {
+			return this.sourceDataSetColumns;
+		}
+
+		/**
+		 * @return the namingColumn
+		 */
+		public Column getNamingColumn() {
+			return this.namingColumn;
+		}
+
+		/**
+		 * @return the unrolledIDColumn
+		 */
+		public DataSetColumn getUnrolledIDColumn() {
+			return unrolledIDColumn;
+		}
+
+		/**
+		 * @return the unrolledNameColumn
+		 */
+		public DataSetColumn getUnrolledNameColumn() {
+			return unrolledNameColumn;
+		}
+
+		public DataSetColumn getDataSetColumnFor(final Column column) {
+			if (this.getPreviousUnit() != null)
+				return this.getPreviousUnit().getDataSetColumnFor(column);
+			else
+				// Should never happen.
+				throw new BioMartError();
+		}
+	}
 }
