@@ -47,6 +47,7 @@ import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Displays a transformation step, depending on what is passed to the
@@ -258,7 +259,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 				final Column col = (Column) i.next();
 				tempSource.getColumns().put(col.getName(), col);
 			}
-			Key tempSourceKey = new ForeignKey(this.utu.getRelation()
+			final Key tempSourceKey = new ForeignKey(this.utu.getRelation()
 					.getManyKey().getColumns());
 			tempSource.getForeignKeys().add(tempSourceKey);
 			tempSourceKey.transactionResetVisibleModified();
@@ -277,7 +278,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			tempTarget.getColumns().put(
 					this.utu.getUnrolledNameColumn().getName(),
 					this.utu.getUnrolledNameColumn());
-			Key tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
+			final Key tempTargetKey = new PrimaryKey(realTargetKey.getColumns());
 			tempTarget.setPrimaryKey((PrimaryKey) tempTargetKey);
 			tempTargetKey.transactionResetVisibleModified();
 
@@ -652,6 +653,16 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 */
 		public static final int NO_ITERATION = -1;
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				final PropertyChangeEvent ours = new PropertyChangeEvent(
+						RealisedRelation.this, e.getPropertyName(), e
+								.getOldValue(), e.getNewValue());
+				ours.setPropagationId(e.getPropagationId());
+				RealisedRelation.this.pcs.firePropertyChange(ours);
+			}
+		};
+
 		/**
 		 * Constructs a realised relation.
 		 * 
@@ -679,15 +690,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			this.relation = relation;
 			this.relationIteration = relationIteration;
 			this.explainContext = explainContext;
-			relation.addPropertyChangeListener(new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					final PropertyChangeEvent ours = new PropertyChangeEvent(
-							RealisedRelation.this, e.getPropertyName(), e
-									.getOldValue(), e.getNewValue());
-					ours.setPropagationId(e.getPropagationId());
-					RealisedRelation.this.pcs.firePropertyChange(ours);
-				}
-			});
+			relation.addPropertyChangeListener(new WeakPropertyChangeListener(
+					relation, this.listener));
 		}
 
 		/**
@@ -721,6 +725,16 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		private final ExplainContext explainContext;
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				final PropertyChangeEvent ours = new PropertyChangeEvent(
+						RealisedTable.this, e.getPropertyName(), e
+								.getOldValue(), e.getNewValue());
+				ours.setPropagationId(e.getPropagationId());
+				RealisedTable.this.pcs.firePropertyChange(ours);
+			}
+		};
+
 		/**
 		 * Creates a realised table.
 		 * 
@@ -738,15 +752,8 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			super(schema, name);
 			this.table = table;
 			this.explainContext = explainContext;
-			table.addPropertyChangeListener(new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					final PropertyChangeEvent ours = new PropertyChangeEvent(
-							RealisedTable.this, e.getPropertyName(), e
-									.getOldValue(), e.getNewValue());
-					ours.setPropagationId(e.getPropagationId());
-					RealisedTable.this.pcs.firePropertyChange(ours);
-				}
-			});
+			table.addPropertyChangeListener(new WeakPropertyChangeListener(
+					table, this.listener));
 		}
 
 		/**

@@ -1194,14 +1194,14 @@ public abstract class MartConstructorAction {
 		 * @return the namingCol
 		 */
 		public String getNamingCol() {
-			return namingCol;
+			return this.namingCol;
 		}
 
 		/**
 		 * @param namingCol
 		 *            the namingCol to set
 		 */
-		public void setNamingCol(String namingCol) {
+		public void setNamingCol(final String namingCol) {
 			this.namingCol = namingCol;
 		}
 
@@ -1209,14 +1209,14 @@ public abstract class MartConstructorAction {
 		 * @return the schema
 		 */
 		public String getSchema() {
-			return schema;
+			return this.schema;
 		}
 
 		/**
 		 * @param schema
 		 *            the schema to set
 		 */
-		public void setSchema(String schema) {
+		public void setSchema(final String schema) {
 			this.schema = schema;
 		}
 
@@ -1224,14 +1224,14 @@ public abstract class MartConstructorAction {
 		 * @return the sourceTable
 		 */
 		public String getSourceTable() {
-			return sourceTable;
+			return this.sourceTable;
 		}
 
 		/**
 		 * @param sourceTable
 		 *            the sourceTable to set
 		 */
-		public void setSourceTable(String sourceTable) {
+		public void setSourceTable(final String sourceTable) {
 			this.sourceTable = sourceTable;
 		}
 
@@ -1239,14 +1239,14 @@ public abstract class MartConstructorAction {
 		 * @return the table
 		 */
 		public String getTable() {
-			return table;
+			return this.table;
 		}
 
 		/**
 		 * @param table
 		 *            the table to set
 		 */
-		public void setTable(String table) {
+		public void setTable(final String table) {
 			this.table = table;
 		}
 
@@ -1254,14 +1254,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollFKCol
 		 */
 		public String getUnrollFKCol() {
-			return unrollFKCol;
+			return this.unrollFKCol;
 		}
 
 		/**
 		 * @param unrollFKCol
 		 *            the unrollFKCol to set
 		 */
-		public void setUnrollFKCol(String unrollFKCol) {
+		public void setUnrollFKCol(final String unrollFKCol) {
 			this.unrollFKCol = unrollFKCol;
 		}
 
@@ -1269,14 +1269,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollIDCol
 		 */
 		public String getUnrollIDCol() {
-			return unrollIDCol;
+			return this.unrollIDCol;
 		}
 
 		/**
 		 * @param unrollIDCol
 		 *            the unrollIDCol to set
 		 */
-		public void setUnrollIDCol(String unrollIDCol) {
+		public void setUnrollIDCol(final String unrollIDCol) {
 			this.unrollIDCol = unrollIDCol;
 		}
 
@@ -1284,14 +1284,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollIterationCol
 		 */
 		public String getUnrollIterationCol() {
-			return unrollIterationCol;
+			return this.unrollIterationCol;
 		}
 
 		/**
 		 * @param unrollIterationCol
 		 *            the unrollIterationCol to set
 		 */
-		public void setUnrollIterationCol(String unrollIterationCol) {
+		public void setUnrollIterationCol(final String unrollIterationCol) {
 			this.unrollIterationCol = unrollIterationCol;
 		}
 
@@ -1299,14 +1299,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollNameCol
 		 */
 		public String getUnrollNameCol() {
-			return unrollNameCol;
+			return this.unrollNameCol;
 		}
 
 		/**
 		 * @param unrollNameCol
 		 *            the unrollNameCol to set
 		 */
-		public void setUnrollNameCol(String unrollNameCol) {
+		public void setUnrollNameCol(final String unrollNameCol) {
 			this.unrollNameCol = unrollNameCol;
 		}
 
@@ -1314,14 +1314,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollPKCol
 		 */
 		public String getUnrollPKCol() {
-			return unrollPKCol;
+			return this.unrollPKCol;
 		}
 
 		/**
 		 * @param unrollPKCol
 		 *            the unrollPKCol to set
 		 */
-		public void setUnrollPKCol(String unrollPKCol) {
+		public void setUnrollPKCol(final String unrollPKCol) {
 			this.unrollPKCol = unrollPKCol;
 		}
 	}
@@ -1373,14 +1373,14 @@ public abstract class MartConstructorAction {
 		 * @return the namingCol
 		 */
 		public String getNamingCol() {
-			return namingCol;
+			return this.namingCol;
 		}
 
 		/**
 		 * @param namingCol
 		 *            the namingCol to set
 		 */
-		public void setNamingCol(String namingCol) {
+		public void setNamingCol(final String namingCol) {
 			this.namingCol = namingCol;
 		}
 
@@ -1388,14 +1388,14 @@ public abstract class MartConstructorAction {
 		 * @return the schema
 		 */
 		public String getSchema() {
-			return schema;
+			return this.schema;
 		}
 
 		/**
 		 * @param schema
 		 *            the schema to set
 		 */
-		public void setSchema(String schema) {
+		public void setSchema(final String schema) {
 			this.schema = schema;
 		}
 
@@ -1403,14 +1403,14 @@ public abstract class MartConstructorAction {
 		 * @return the sourceTable
 		 */
 		public String getSourceTable() {
-			return sourceTable;
+			return this.sourceTable;
 		}
 
 		/**
 		 * @param sourceTable
 		 *            the sourceTable to set
 		 */
-		public void setSourceTable(String sourceTable) {
+		public void setSourceTable(final String sourceTable) {
 			this.sourceTable = sourceTable;
 		}
 
@@ -1418,14 +1418,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollFKCol
 		 */
 		public String getUnrollFKCol() {
-			return unrollFKCol;
+			return this.unrollFKCol;
 		}
 
 		/**
 		 * @param unrollFKCol
 		 *            the unrollFKCol to set
 		 */
-		public void setUnrollFKCol(String unrollFKCol) {
+		public void setUnrollFKCol(final String unrollFKCol) {
 			this.unrollFKCol = unrollFKCol;
 		}
 
@@ -1433,14 +1433,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollIDCol
 		 */
 		public String getUnrollIDCol() {
-			return unrollIDCol;
+			return this.unrollIDCol;
 		}
 
 		/**
 		 * @param unrollIDCol
 		 *            the unrollIDCol to set
 		 */
-		public void setUnrollIDCol(String unrollIDCol) {
+		public void setUnrollIDCol(final String unrollIDCol) {
 			this.unrollIDCol = unrollIDCol;
 		}
 
@@ -1448,14 +1448,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollIterationCol
 		 */
 		public String getUnrollIterationCol() {
-			return unrollIterationCol;
+			return this.unrollIterationCol;
 		}
 
 		/**
 		 * @param unrollIterationCol
 		 *            the unrollIterationCol to set
 		 */
-		public void setUnrollIterationCol(String unrollIterationCol) {
+		public void setUnrollIterationCol(final String unrollIterationCol) {
 			this.unrollIterationCol = unrollIterationCol;
 		}
 
@@ -1463,14 +1463,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollNameCol
 		 */
 		public String getUnrollNameCol() {
-			return unrollNameCol;
+			return this.unrollNameCol;
 		}
 
 		/**
 		 * @param unrollNameCol
 		 *            the unrollNameCol to set
 		 */
-		public void setUnrollNameCol(String unrollNameCol) {
+		public void setUnrollNameCol(final String unrollNameCol) {
 			this.unrollNameCol = unrollNameCol;
 		}
 
@@ -1478,14 +1478,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollPKCol
 		 */
 		public String getUnrollPKCol() {
-			return unrollPKCol;
+			return this.unrollPKCol;
 		}
 
 		/**
 		 * @param unrollPKCol
 		 *            the unrollPKCol to set
 		 */
-		public void setUnrollPKCol(String unrollPKCol) {
+		public void setUnrollPKCol(final String unrollPKCol) {
 			this.unrollPKCol = unrollPKCol;
 		}
 
@@ -1493,14 +1493,14 @@ public abstract class MartConstructorAction {
 		 * @return the unrollIteration
 		 */
 		public int getUnrollIteration() {
-			return unrollIteration;
+			return this.unrollIteration;
 		}
 
 		/**
 		 * @param unrollIteration
 		 *            the unrollIteration to set
 		 */
-		public void setUnrollIteration(int unrollIteration) {
+		public void setUnrollIteration(final int unrollIteration) {
 			this.unrollIteration = unrollIteration;
 		}
 
@@ -1508,14 +1508,14 @@ public abstract class MartConstructorAction {
 		 * @return the parentCols
 		 */
 		public List getParentCols() {
-			return parentCols;
+			return this.parentCols;
 		}
 
 		/**
 		 * @param parentCols
 		 *            the parentCols to set
 		 */
-		public void setParentCols(List parentCols) {
+		public void setParentCols(final List parentCols) {
 			this.parentCols = parentCols;
 		}
 	}

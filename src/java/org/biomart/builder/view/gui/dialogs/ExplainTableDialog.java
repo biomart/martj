@@ -43,6 +43,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Table;
@@ -65,6 +66,7 @@ import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 import org.biomart.common.view.gui.LongProcess;
 
 /**
@@ -129,6 +131,12 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 
 	private final ExplainContext explainContext;
 
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			ExplainTableDialog.this.needsRebuild = true;
+		}
+	};
+
 	/**
 	 * The background for the masked checkbox.
 	 */
@@ -140,6 +148,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		this.setTitle(Resources.get("explainTableDialogTitle", dsTable
 				.getModifiedName()));
 		this.setModal(true);
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.ds = dsTable.getDataSet();
 		this.tableName = dsTable.getName();
 		this.martTab = martTab;
@@ -266,12 +275,9 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		// changes, we recalculate ourselves entirely.
 		this.needsRebuild = false;
 		Transaction.addTransactionListener(this);
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				ExplainTableDialog.this.needsRebuild = true;
-			}
-		};
-		this.ds.addPropertyChangeListener("directModified", listener);
+		this.ds.addPropertyChangeListener("directModified",
+				new WeakPropertyChangeListener(this.ds, "directModified",
+						this.listener));
 
 		// Select the default button (which shows the transformation card).
 		// We must physically click on it to make the card show.

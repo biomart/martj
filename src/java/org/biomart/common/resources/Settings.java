@@ -144,14 +144,13 @@ public class Settings {
 					oldVersion = null;
 				}
 			// If differs, delete cache.
-			if (!Resources.BIOMART_VERSION.equals(oldVersion)) {
+			if (!Resources.BIOMART_VERSION.equals(oldVersion))
 				try {
 					FileUtils.delete(Settings.classCacheDir);
 				} catch (final IOException e) {
 					// Not much we can do apart from warn.
 					StackTrace.showStackTrace(e);
 				}
-			}
 		}
 		// If doesn't exist, or has been removed, (re)create it.
 		if (!Settings.classCacheDir.exists())

@@ -32,6 +32,7 @@ import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * The key class is core to the way tables get associated. They are involved in
@@ -63,12 +64,18 @@ public abstract class Key implements Comparable, TransactionListener {
 	private final BeanCollection relations;
 
 	private ComponentStatus status;
-	
+
 	private boolean visibleModified = true;
 
 	private boolean directModified = false;
 
 	private Collection relationCache;
+
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Key.this.setDirectModified(true);
+		}
+	};
 
 	/**
 	 * The constructor constructs a key over a set of columns. It doesn't check
@@ -89,12 +96,7 @@ public abstract class Key implements Comparable, TransactionListener {
 		Transaction.addTransactionListener(this);
 
 		// All changes to us make us modified.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Key.this.setDirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener(listener);
+		this.pcs.addPropertyChangeListener(this.listener);
 
 		// Changes on relations.
 		this.relationCache = new HashSet();
@@ -106,13 +108,15 @@ public abstract class Key implements Comparable, TransactionListener {
 				addedRels.removeAll(Key.this.relationCache);
 				for (final Iterator i = addedRels.iterator(); i.hasNext();) {
 					final Relation rel = (Relation) i.next();
-					rel.addPropertyChangeListener("directModified", listener);
+					rel.addPropertyChangeListener("directModified",
+							new WeakPropertyChangeListener(rel,
+									"directModified", Key.this.listener));
 				}
 				Key.this.relationCache.clear();
 				Key.this.relationCache.addAll(Key.this.relations);
 			}
 		});
-		
+
 		// Visible changes.
 		final PropertyChangeListener vlistener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
@@ -134,11 +138,11 @@ public abstract class Key implements Comparable, TransactionListener {
 		this.directModified = modified;
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
-	
+
 	public boolean isVisibleModified() {
 		return this.visibleModified;
 	}
-	
+
 	public void setVisibleModified(final boolean modified) {
 		// We don't care as this gets set internally.
 	}

@@ -50,6 +50,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -131,6 +132,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 		this.setTitle(Resources.get("partitionTableDialogTitle", dataset
 				.getName()));
 		this.setModal(true);
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		// Create the content pane to store the create dialog panel.
 		final JPanel content = new JPanel(new GridBagLayout());

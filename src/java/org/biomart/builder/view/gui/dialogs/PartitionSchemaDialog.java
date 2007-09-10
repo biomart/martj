@@ -35,6 +35,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -96,6 +97,7 @@ public class PartitionSchemaDialog extends JDialog {
 		super();
 		this.setTitle(Resources.get("schemaPartitionDialogTitle"));
 		this.setModal(true);
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		// Remembers the dataset tabset this dialog is referring to.
 		this.cancelled = true;

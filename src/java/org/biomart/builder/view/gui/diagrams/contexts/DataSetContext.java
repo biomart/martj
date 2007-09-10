@@ -148,6 +148,12 @@ public class DataSetContext extends SchemaContext {
 							.isMergeRelation(this.getDataSet()))
 				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 
+			// Highlight UNROLLED DIMENSION tables.
+			else if (tbl.getFocusRelation() != null
+					&& tbl.getFocusRelation().getUnrolledRelation(
+							this.getDataSet()) != null)
+				tblcomp.setBackground(TableComponent.UNROLLED_COLOUR);
+
 			// Highlight DIMENSION tables.
 			else if (tableType.equals(DataSetTableType.DIMENSION)) {
 				// Is it compounded?
@@ -420,6 +426,17 @@ public class DataSetContext extends SchemaContext {
 			final DataSetTable table = (DataSetTable) object;
 			final DataSetTableType tableType = table.getType();
 
+			final boolean isMasked = table.isDimensionMasked();
+			final boolean isMerged = table.getFocusRelation() != null
+					&& table.getFocusRelation().isMergeRelation(
+							this.getDataSet());
+			final boolean isUnrolled = table.getFocusRelation() != null
+					&& table.getFocusRelation().getUnrolledRelation(
+							this.getDataSet()) != null;
+			final boolean isCompound = table.getFocusRelation() != null
+					&& table.getFocusRelation().getCompoundRelation(
+							this.dataset) != null;
+
 			// Accept/Reject changes - only enabled if dataset table
 			// is visible modified.
 			final JMenuItem accept = new JMenuItem(Resources
@@ -521,16 +538,10 @@ public class DataSetContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(distinct);
+			if (isUnrolled || isMerged || isMasked)
+				distinct.setEnabled(false);
 			if (table.isDistinctTable())
 				distinct.setSelected(true);
-
-			final boolean isMasked = table.isDimensionMasked();
-			final boolean isMerged = table.getFocusRelation() != null
-					&& table.getFocusRelation().isMergeRelation(
-							this.getDataSet());
-			final boolean isCompound = table.getFocusRelation() != null
-					&& table.getFocusRelation().getCompoundRelation(
-							this.dataset) != null;
 
 			// Dimension tables have their own options.
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
@@ -557,8 +568,29 @@ public class DataSetContext extends SchemaContext {
 				});
 				contextMenu.add(mergeDM);
 				mergeDM.setSelected(isMerged);
-				if (isCompound)
+				if (isCompound || isUnrolled)
 					mergeDM.setEnabled(false);
+
+				// The dimension can be unrolled by using this option. This
+				// affects all dimensions based on this relation.
+				final JCheckBoxMenuItem unrolledDM = new JCheckBoxMenuItem(
+						Resources.get("unrolledDimensionTitle"));
+				unrolledDM.setMnemonic(Resources.get(
+						"unrolledDimensionMnemonic").charAt(0));
+				unrolledDM.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestUnrolledDimension(
+										DataSetContext.this.dataset, table);
+						unrolledDM.setSelected(table.getFocusRelation()
+								.getUnrolledRelation(
+										DataSetContext.this.dataset) != null);
+					}
+				});
+				contextMenu.add(unrolledDM);
+				unrolledDM.setSelected(isUnrolled);
+				if (isCompound || isMerged)
+					unrolledDM.setEnabled(false);
 
 				// The dimension can be removed by using this option. This
 				// simply masks the relation that caused the dimension to exist.
@@ -581,7 +613,7 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(removeDM);
-				if (isMerged || isCompound)
+				if (isMerged || isCompound || isUnrolled)
 					removeDM.setEnabled(false);
 				if (isMasked)
 					removeDM.setSelected(true);
@@ -602,7 +634,7 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(compound);
-				if (isMasked || isMerged)
+				if (isMasked || isMerged || isUnrolled)
 					compound.setEnabled(false);
 				if (isCompound)
 					compound.setSelected(true);
@@ -623,7 +655,7 @@ public class DataSetContext extends SchemaContext {
 										table.getFocusRelation());
 					}
 				});
-				if (isMerged || isMasked || isCompound)
+				if (isMerged || isMasked || isCompound || isUnrolled)
 					subclass.setEnabled(false);
 				contextMenu.add(subclass);
 
@@ -646,7 +678,7 @@ public class DataSetContext extends SchemaContext {
 								.getMartTab()
 								.getMart()
 								.getPartitionTableApplicationForDimension(table) != null);
-				if (isMasked || isMerged)
+				if (isMasked || isMerged || isUnrolled)
 					partitionWizard.setEnabled(false);
 			}
 
@@ -687,7 +719,7 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(compound);
-				if (isMasked || isMerged)
+				if (isMasked || isMerged || isUnrolled)
 					compound.setEnabled(false);
 				if (isCompound)
 					compound.setSelected(true);

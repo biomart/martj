@@ -402,7 +402,9 @@ public interface MartConstructor {
 							&& !dsTab.isDimensionMasked()
 							&& dsTab.getFocusRelation() != null
 							&& !dsTab.getFocusRelation().isMergeRelation(
-									dataset))
+									dataset)
+							&& dsTab.getFocusRelation().getUnrolledRelation(
+									dataset) == null)
 						if (dsTab.getType().equals(DataSetTableType.DIMENSION))
 							nextDims.add(dsTab);
 						else
@@ -1171,7 +1173,7 @@ public interface MartConstructor {
 			final String unrollIterationColName = unrollIDColName + "__i";
 
 			// n=count rows in PK table from relation.
-			int n = utu.getRelation().getOneKey().getTable().getSchema()
+			final int n = utu.getRelation().getOneKey().getTable().getSchema()
 					.countRows(utu.getRelation().getOneKey().getTable());
 			// Create initial select table with unrolled child cols and
 			// iteration col.

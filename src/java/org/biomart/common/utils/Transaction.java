@@ -18,7 +18,10 @@
 
 package org.biomart.common.utils;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashSet;
@@ -125,6 +128,91 @@ public class Transaction {
 		 * @return <tt>true</tt> if it has.
 		 */
 		public boolean isDirectModified();
+	}
+
+	/**
+	 * A weak property change listener that dies when the wrapped listener goes
+	 * out of scope.
+	 */
+	public static class WeakPropertyChangeListener implements
+			PropertyChangeListener {
+		private WeakReference listenerRef;
+
+		private Object parent;
+
+		private String property;
+
+		/**
+		 * Create a new weak property change listener.
+		 * 
+		 * @param parent
+		 *            the parent property change support object.
+		 * @param listener
+		 *            the listener to wrap.
+		 */
+		public WeakPropertyChangeListener(final Object parent,
+				final PropertyChangeListener listener) {
+			this(parent, null, listener);
+		}
+
+		/**
+		 * Create a new weak property change listener.
+		 * 
+		 * @param parent
+		 *            the parent property change support object.
+		 * @param property
+		 *            the property name to listen to - null for all.
+		 * @param listener
+		 *            the listener to wrap.
+		 */
+		public WeakPropertyChangeListener(final Object parent,
+				final String property, final PropertyChangeListener listener) {
+			this.listenerRef = new WeakReference(listener);
+			this.parent = parent;
+			this.property = property;
+		}
+
+		/**
+		 * Obtain the wrapped listener.
+		 * 
+		 * @return the listener, or null if it has gone away.
+		 */
+		public PropertyChangeListener getListener() {
+			return (PropertyChangeListener) this.listenerRef.get();
+		}
+
+		public void propertyChange(final PropertyChangeEvent evt) {
+			final PropertyChangeListener listener = this.getListener();
+			if (listener == null) {
+				if (this.parent != null)
+					try {
+						if (this.property == null) {
+							final Method method = this.parent
+									.getClass()
+									.getMethod(
+											"removePropertyChangeListener",
+											new Class[] { PropertyChangeListener.class });
+							method.invoke(this.parent, new Object[] { this });
+						} else {
+							final Method method = this.parent
+									.getClass()
+									.getMethod(
+											"removePropertyChangeListener",
+											new Class[] {
+													String.class,
+													PropertyChangeListener.class });
+							method.invoke(this.parent, new Object[] {
+									this.property, this });
+						}
+					} catch (final Exception e) {
+						// Don't care.
+					} finally {
+						// Don't do it again.
+						this.parent = null;
+					}
+			} else
+				listener.propertyChange(evt);
+		}
 	}
 
 	private static class WeakTransactionListener implements TransactionListener {

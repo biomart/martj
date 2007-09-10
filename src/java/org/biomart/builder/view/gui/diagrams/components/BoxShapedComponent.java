@@ -192,7 +192,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 				RenderingHints.VALUE_RENDER_QUALITY);
 
 		Transaction.addTransactionListener(this);
-		
+
 		this.changed = this.object.isVisibleModified();
 	}
 

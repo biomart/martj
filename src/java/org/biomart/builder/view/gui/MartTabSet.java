@@ -383,11 +383,10 @@ public class MartTabSet extends JTabbedPane {
 				// Load the files.
 				Transaction.start();
 				final Mart mart = MartBuilderXML.load(file);
-				Transaction.end();				
+				Transaction.end();
 				Transaction.start();
 				Transaction.resetVisibleModified();
 				Transaction.end();
-
 
 				MartTabSet.this.martModifiedStatus.put(mart, Boolean.FALSE);
 				MartTabSet.this.addMartTab(mart, file);
@@ -638,6 +637,7 @@ public class MartTabSet extends JTabbedPane {
 			return;
 		else
 			this.requestMonitorRemoteHost(d.getHost(), d.getPort(), false);
+		d.dispose();
 	}
 
 	/**

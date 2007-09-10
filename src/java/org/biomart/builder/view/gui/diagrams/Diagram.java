@@ -78,6 +78,7 @@ import org.biomart.common.utils.InverseMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.ComponentImageSaver;
 import org.biomart.common.view.gui.dialogs.ComponentPrinter;
@@ -162,6 +163,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 	private JCheckBox hideMasked;
 
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			Diagram.this.needsSubComps = true;
+		}
+	};
+
 	/**
 	 * Creates a new diagram which belongs inside the given mart tab and uses
 	 * the given layout manager. The {@link MartTab#getMart()} method will be
@@ -196,7 +203,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this.hideMasked.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				Transaction.start();
-				Diagram.this.hideMaskedChanged(Diagram.this.hideMasked.isSelected());
+				Diagram.this.hideMaskedChanged(Diagram.this.hideMasked
+						.isSelected());
 				Transaction.end();
 			}
 		});
@@ -250,10 +258,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public Diagram(final MartTab martTab) {
 		this(null, martTab);
 	}
-	
+
 	/**
 	 * Override this to find out when the hide masked checkbox changes.
-	 * @param newHideMasked true if it is now selected.
+	 * 
+	 * @param newHideMasked
+	 *            true if it is now selected.
 	 */
 	protected void hideMaskedChanged(final boolean newHideMasked) {
 		// By default we don't care.
@@ -261,15 +271,18 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 	/**
 	 * Set the hide masked checkbox.
-	 * @param newHideMasked true to select it.
+	 * 
+	 * @param newHideMasked
+	 *            true to select it.
 	 */
 	public void setHideMasked(final boolean newHideMasked) {
 		if (this.hideMasked.isSelected() ^ newHideMasked)
 			this.hideMasked.doClick();
 	}
-	
+
 	/**
 	 * Is the hide masked checkbox selected?
+	 * 
 	 * @return true if it is.
 	 */
 	public boolean isHideMasked() {
@@ -295,7 +308,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public void transactionResetVisibleModified() {
 		// Ignore, for now.
 	}
-	
+
 	public void transactionResetDirectModified() {
 		// Ignore, for now.
 	}
@@ -633,11 +646,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 			this.needsSubComps = true;
 			this.componentMap.put(dcomp.getObject(), dcomp);
 			dcomp.getSubComponents().addPropertyChangeListener(
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Diagram.this.needsSubComps = true;
-						}
-					});
+					new WeakPropertyChangeListener(dcomp.getSubComponents(),
+							this.listener));
 		}
 		super.addImpl(comp, constraints, index);
 	}

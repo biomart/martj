@@ -33,6 +33,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.DataSetLayoutManager.DataSetLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Displays the contents of a dataset within a standard diagram object. This is
@@ -50,6 +51,18 @@ public class DataSetDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	private final DataSet dataset;
+
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			DataSetDiagram.this.needsRedraw = true;
+		}
+	};
+
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			DataSetDiagram.this.needsRepaint = true;
+		}
+	};
 
 	/**
 	 * Creates a new diagram that displays the tables and relations inside a
@@ -73,22 +86,18 @@ public class DataSetDiagram extends Diagram {
 
 		// If any tables or relations change, whole diagram needs
 		// redoing from scratch, and new listeners need setting up.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				DataSetDiagram.this.needsRedraw = true;
-			}
-		};
-		dataset.getTables().addPropertyChangeListener(listener);
-		dataset.getRelations().addPropertyChangeListener(listener);
-		
+		dataset.getTables().addPropertyChangeListener(
+				new WeakPropertyChangeListener(dataset.getTables(),
+						this.listener));
+		dataset.getRelations().addPropertyChangeListener(
+				new WeakPropertyChangeListener(dataset.getRelations(),
+						this.listener));
+
 		// Listen to when hide masked gets changed.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				DataSetDiagram.this.needsRepaint = true;
-			}
-		};
-		dataset.addPropertyChangeListener("hideMasked", repaintListener);
-		
+		dataset.addPropertyChangeListener("hideMasked",
+				new WeakPropertyChangeListener(dataset, "hideMasked",
+						this.repaintListener));
+
 		this.setHideMasked(dataset.isHideMasked());
 	}
 

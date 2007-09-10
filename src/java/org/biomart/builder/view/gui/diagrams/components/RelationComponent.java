@@ -42,6 +42,7 @@ import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * This component represents a relation between two keys, in the form of a line.
@@ -157,7 +158,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	 * Constant referring to unrolled relation colour.
 	 */
 	public static Color UNROLLED_COLOUR = Color.CYAN;
-	
+
 	private boolean restricted = false;
 
 	private boolean compounded = false;
@@ -177,6 +178,12 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	private Object state;
 
 	private Stroke stroke;
+
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			RelationComponent.this.needsRepaint = true;
+		}
+	};
 
 	/**
 	 * The constructor constructs a component around a given relation, and
@@ -214,25 +221,34 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 		Transaction.addTransactionListener(this);
 
 		// Repaint events.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				RelationComponent.this.needsRepaint = true;
-			}
-		};
-		relation.addPropertyChangeListener("directModified", repaintListener);
-		relation.getFirstKey().addPropertyChangeListener("status",
-				repaintListener);
-		relation.getFirstKey().getTable().addPropertyChangeListener("masked",
-				repaintListener);
+		relation.addPropertyChangeListener("directModified",
+				new WeakPropertyChangeListener(relation, "directModified",
+						this.repaintListener));
+		relation.getFirstKey().addPropertyChangeListener(
+				"status",
+				new WeakPropertyChangeListener(relation, "status",
+						this.repaintListener));
 		relation.getFirstKey().getTable().addPropertyChangeListener(
-				"dimensionMasked", repaintListener);
-		relation.getSecondKey().addPropertyChangeListener("status",
-				repaintListener);
-		relation.getSecondKey().getTable().addPropertyChangeListener("masked",
-				repaintListener);
+				"masked",
+				new WeakPropertyChangeListener(relation, "masked",
+						this.repaintListener));
+		relation.getFirstKey().getTable().addPropertyChangeListener(
+				"dimensionMasked",
+				new WeakPropertyChangeListener(relation.getFirstKey()
+						.getTable(), "dimensionMasked", this.repaintListener));
+		relation.getSecondKey().addPropertyChangeListener(
+				"status",
+				new WeakPropertyChangeListener(relation.getSecondKey(),
+						"status", this.repaintListener));
 		relation.getSecondKey().getTable().addPropertyChangeListener(
-				"dimensionMasked", repaintListener);
-		
+				"masked",
+				new WeakPropertyChangeListener(relation.getSecondKey()
+						.getTable(), "masked", this.repaintListener));
+		relation.getSecondKey().getTable().addPropertyChangeListener(
+				"dimensionMasked",
+				new WeakPropertyChangeListener(relation.getSecondKey(),
+						"dimensionMasked", this.repaintListener));
+
 		this.changed = this.relation.isVisibleModified();
 	}
 

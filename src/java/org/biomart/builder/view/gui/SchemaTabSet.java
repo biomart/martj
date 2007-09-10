@@ -433,7 +433,7 @@ public class SchemaTabSet extends JTabbedPane {
 				// turn it off again later.
 				if (schema.getRelations().size() == 0)
 					schema.setKeyGuessing(true);
-				
+
 				Transaction.end();
 				Transaction.start();
 				Transaction.resetVisibleModified();
@@ -514,6 +514,7 @@ public class SchemaTabSet extends JTabbedPane {
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		final Column[] cols = dialog.getSelectedColumns();
+		dialog.dispose();
 
 		// If they chose some columns, create the key.
 		if (cols.length > 0)
@@ -550,6 +551,7 @@ public class SchemaTabSet extends JTabbedPane {
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		final Column[] cols = dialog.getSelectedColumns();
+		dialog.dispose();
 
 		// If they chose some columns, create the key.
 		if (cols.length > 0)
@@ -677,6 +679,7 @@ public class SchemaTabSet extends JTabbedPane {
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		final Column[] cols = dialog.getSelectedColumns();
+		dialog.dispose();
 
 		// If they selected any columns, modify the key.
 		if (cols.length > 0) {

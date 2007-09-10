@@ -57,6 +57,7 @@ import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A schema provides one or more table objects with unique names for the user to
@@ -124,6 +125,15 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	};
 
 	/**
+	 * Internal use only.
+	 */
+	protected final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Schema.this.setDirectModified(true);
+		}
+	};
+
+	/**
 	 * The constructor creates a schema with the given name. Keyguessing is
 	 * turned off.
 	 * 
@@ -177,17 +187,13 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.getTables().addPropertyChangeListener(this.relationCacheBuilder);
 
 		// All changes to us make us modified.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Schema.this.setDirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("dataLinkSchema", listener);
-		this.pcs.addPropertyChangeListener("keyGuessing", listener);
-		this.pcs.addPropertyChangeListener("masked", listener);
-		this.pcs.addPropertyChangeListener("name", listener);
-		this.pcs.addPropertyChangeListener("partitionNameExpression", listener);
-		this.pcs.addPropertyChangeListener("partitionRegex", listener);
+		this.pcs.addPropertyChangeListener("dataLinkSchema", this.listener);
+		this.pcs.addPropertyChangeListener("keyGuessing", this.listener);
+		this.pcs.addPropertyChangeListener("masked", this.listener);
+		this.pcs.addPropertyChangeListener("name", this.listener);
+		this.pcs.addPropertyChangeListener("partitionNameExpression",
+				this.listener);
+		this.pcs.addPropertyChangeListener("partitionRegex", this.listener);
 	}
 
 	public boolean isDirectModified() {
@@ -261,24 +267,22 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				final Table table = (Table) i.next();
 				this.tableCache.add(table);
 				table.getRelations().addPropertyChangeListener(
-						this.relationCacheBuilder);
+						new WeakPropertyChangeListener(table.getRelations(),
+								this.relationCacheBuilder));
+				table.addPropertyChangeListener("name",
+						new WeakPropertyChangeListener(table, "name",
+								this.listener));
 				table.addPropertyChangeListener("name",
 						new PropertyChangeListener() {
 							public void propertyChange(
 									final PropertyChangeEvent evt) {
-								Schema.this.setDirectModified(true);
 								Schema.this.tables.remove(evt.getOldValue());
 								Schema.this.tables
 										.put(evt.getNewValue(), table);
 							}
 						});
 				table.addPropertyChangeListener("directModified",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								Schema.this.setDirectModified(true);
-							}
-						});
+						new WeakPropertyChangeListener(table, this.listener));
 			}
 		}
 		final Collection newRels = new HashSet();
@@ -823,15 +827,11 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			this.setUsername(username);
 			this.setPassword(password);
 
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					JDBCSchema.this.setDirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener("driverClassName", listener);
-			this.pcs.addPropertyChangeListener("url", listener);
-			this.pcs.addPropertyChangeListener("username", listener);
-			this.pcs.addPropertyChangeListener("password", listener);
+			this.pcs
+					.addPropertyChangeListener("driverClassName", this.listener);
+			this.pcs.addPropertyChangeListener("url", this.listener);
+			this.pcs.addPropertyChangeListener("username", this.listener);
+			this.pcs.addPropertyChangeListener("password", this.listener);
 
 			// Add a thread so that any connection established gets closed when
 			// the application exits.
@@ -899,7 +899,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			Log.debug("About to run query: " + sql);
 			final ResultSet rs = conn.prepareStatement(sql).executeQuery();
 			rs.next();
-			int result = rs.getInt(1);
+			final int result = rs.getInt(1);
 			rs.close();
 
 			// Return the results.

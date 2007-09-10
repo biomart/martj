@@ -68,6 +68,7 @@ import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A {@link DataSet} instance serves two purposes. First, it contains lists of
@@ -92,12 +93,6 @@ import org.biomart.common.utils.Transaction.TransactionListener;
  */
 public class DataSet extends Schema {
 	private static final long serialVersionUID = 1L;
-
-	private final PropertyChangeListener listener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
-			DataSet.this.setDirectModified(true);
-		}
-	};
 
 	private final PropertyChangeListener rebuildListener = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -177,10 +172,15 @@ public class DataSet extends Schema {
 		this.needsFullSync = true;
 
 		// All changes to us make us modified.
-		this.pcs.addPropertyChangeListener("partitionTable", this.listener);
-		this.pcs.addPropertyChangeListener("datasetOptimiser", this.listener);
-		this.pcs.addPropertyChangeListener("indexOptimiser", this.listener);
-		this.pcs.addPropertyChangeListener("invisible", this.listener);
+		final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent evt) {
+				DataSet.this.setDirectModified(true);
+			}
+		};
+		this.pcs.addPropertyChangeListener("partitionTable", listener);
+		this.pcs.addPropertyChangeListener("datasetOptimiser", listener);
+		this.pcs.addPropertyChangeListener("indexOptimiser", listener);
+		this.pcs.addPropertyChangeListener("invisible", listener);
 
 		// Recalculate completely if parent mart changes case.
 		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
@@ -371,8 +371,8 @@ public class DataSet extends Schema {
 				final TransformationUnit tu = (TransformationUnit) i.next();
 				if (tu instanceof SelectFromTable) {
 					// JoinTable extends SelectFromTable.
-					// Skip SkipTables.
-					if (tu instanceof SkipTable)
+					// Skip SkipTables and UnrollTables.
+					if (tu instanceof SkipTable || tu instanceof UnrollTable)
 						continue;
 					// Add the unit to the from clause.
 					final Table selTab = ((SelectFromTable) tu).getTable();
@@ -631,14 +631,30 @@ public class DataSet extends Schema {
 		if (relationIteration > 0)
 			fullName = fullName + Resources.get("tablenameSubSep")
 					+ relationIteration;
-		final DataSetTable dsTable;
-		if (this.getTables().containsKey(fullName)) {
-			// TODO Make sure it refers to same relation before reusing!
-			dsTable = (DataSetTable) this.getTables().get(fullName);
-			dsTable.setType(type); // Just to make sure.
-			unusedTables.remove(dsTable);
-			dsTable.getTransformationUnits().clear();
-		} else {
+		// Loop over all tables with similar names to check for reuse.
+		DataSetTable dsTable = null;
+		for (final Iterator i = this.getTables().entrySet().iterator(); i
+				.hasNext()
+				&& dsTable == null;) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			final String testName = (String) entry.getKey();
+			final DataSetTable testTable = (DataSetTable) entry.getValue();
+			// If find table starting with same letters, check to see
+			// if can reuse, and update fullName to match it.
+			if (testName.equals(fullName) || testName.startsWith(fullName))
+				if (testTable.getFocusRelation() == null
+						|| testTable.getFocusRelation().equals(sourceRelation)) {
+					fullName = testName;
+					dsTable = testTable;
+					dsTable.setType(type); // Just to make sure.
+					unusedTables.remove(dsTable);
+					dsTable.getTransformationUnits().clear();
+				} else
+					dsTable = null;
+		}
+		// If still not found anything after all tables checked,
+		// create new table.
+		if (dsTable == null) {
 			dsTable = new DataSetTable(fullName, this, type, realTable,
 					sourceRelation);
 			this.getTables().put(dsTable.getName(), dsTable);
@@ -737,9 +753,13 @@ public class DataSet extends Schema {
 						if (!dsTable.getType().equals(
 								DataSetTableType.DIMENSION)) {
 							dsCol.addPropertyChangeListener("columnMasked",
-									this.rebuildListener);
+									new WeakPropertyChangeListener(dsCol,
+											"columnMasked",
+											this.rebuildListener));
 							dsCol.addPropertyChangeListener("columnRename",
-									this.rebuildListener);
+									new WeakPropertyChangeListener(dsCol,
+											"columnRename",
+											this.rebuildListener));
 						}
 						dsTable.getColumns().put(dsCol.getName(), dsCol);
 					}
@@ -879,6 +899,25 @@ public class DataSet extends Schema {
 		else
 			dsTable.setPrimaryKey(null);
 
+		// Fish out any UnrollTable unit and move it to end of queue.
+		final List units = dsTable.getTransformationUnits();
+		for (int i = 1; i < units.size() - 1; i++) { // Skip very first+last.
+			final TransformationUnit tu = (TransformationUnit) units.get(i);
+			if (tu instanceof UnrollTable) {
+				final TransformationUnit ptu = (TransformationUnit) units
+						.get(i - 1);
+				final TransformationUnit ntu = (TransformationUnit) units
+						.get(i + 1);
+				final TransformationUnit ltu = (TransformationUnit) units
+						.get(units.size() - 1);
+				tu.setPreviousUnit(ltu);
+				ntu.setPreviousUnit(ptu);
+				units.add(tu);
+				units.remove(i);
+				break;
+			}
+		}
+
 		// First time round only - do we have an initial set of
 		// expression column defs to create on this table?
 		// If so, create them.
@@ -894,7 +933,8 @@ public class DataSet extends Schema {
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					expCol.addPropertyChangeListener("columnRename",
-							this.rebuildListener);
+							new WeakPropertyChangeListener(expCol,
+									"columnRename", this.rebuildListener));
 				dsTable.getColumns().put(expCol.getName(), expCol);
 			}
 			// Wipe it out so only happens first time.
@@ -1164,9 +1204,11 @@ public class DataSet extends Schema {
 					// Listen to this column to modify ourselves.
 					if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 						wc.addPropertyChangeListener("columnMasked",
-								this.rebuildListener);
+								new WeakPropertyChangeListener(wc,
+										"columnMasked", this.rebuildListener));
 						wc.addPropertyChangeListener("columnRename",
-								this.rebuildListener);
+								new WeakPropertyChangeListener(wc,
+										"columnRename", this.rebuildListener));
 					}
 				}
 			} else {
@@ -1175,9 +1217,11 @@ public class DataSet extends Schema {
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 					wc.addPropertyChangeListener("columnMasked",
-							this.rebuildListener);
+							new WeakPropertyChangeListener(wc, "columnMasked",
+									this.rebuildListener));
 					wc.addPropertyChangeListener("columnRename",
-							this.rebuildListener);
+							new WeakPropertyChangeListener(wc, "columnRename",
+									this.rebuildListener));
 				}
 			}
 			unusedCols.remove(wc);
@@ -1212,11 +1256,6 @@ public class DataSet extends Schema {
 			// Don't go back up relation just followed unless we are doing
 			// loopback.
 			if (r.equals(sourceRelation) && !isLoopback)
-				continue;
-
-			// Don't follow unrolled relations from the PK end.
-			if (r.getUnrolledRelation(this, dsTable.getName()) != null
-					&& r.getKeyForTable(mergeTable).equals(r.getOneKey()))
 				continue;
 
 			// Don't excessively repeat relations.
@@ -1320,7 +1359,8 @@ public class DataSet extends Schema {
 					for (int k = 0; k < childCompounded; k++)
 						dimensionQ.add(new Object[] { newSourceDSCols, r,
 								new Integer(k) });
-					if (r.isMergeRelation(this))
+					if (r.isMergeRelation(this)
+							|| r.getUnrolledRelation(this) != null)
 						forceFollowRelation = true;
 				}
 
@@ -1330,7 +1370,7 @@ public class DataSet extends Schema {
 					forceFollowRelation = true;
 			}
 
-			// Follow all others. Don't follow relations that are 
+			// Follow all others. Don't follow relations that are
 			// already in the subclass or dimension queues.
 			else
 				followRelation = true;
@@ -1341,9 +1381,10 @@ public class DataSet extends Schema {
 			if (followRelation || forceFollowRelation) {
 
 				// Don't follow unrolled relations - just add unrolled cols.
-				if (r.getUnrolledRelation(this, dsTable.getName()) != null) {
-					final Column nameCol = r.getUnrolledRelation(this, dsTable
-							.getName());
+				final Column nameCol = r.getUnrolledRelation(this);
+				if (nameCol != null
+						&& !dsTable.getType()
+								.equals(DataSetTableType.DIMENSION)) {
 					// Make an UNROLL unit that involves the relation and
 					// includes the name column, the source and target keys,
 					// and the unrolled ID and name UnrolledColumns.
@@ -1643,10 +1684,6 @@ public class DataSet extends Schema {
 			return;
 		}
 
-		// Remove us as a listener from all existing included rels and schs.
-		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();)
-			((Schema) i.next()).removePropertyChangeListener("masked",
-					this.rebuildListener);
 		// Gather up the tables we have used or are linked to those we have
 		// used.
 		final Set listeningTables = new HashSet();
@@ -1659,42 +1696,6 @@ public class DataSet extends Schema {
 				listeningTables.add(rel.getFirstKey().getTable());
 				listeningTables.add(rel.getSecondKey().getTable());
 			}
-		}
-		// Don't listen to the tables and their keys and columns.
-		final Set listeningRels = new HashSet();
-		for (final Iterator i = listeningTables.iterator(); i.hasNext();) {
-			final Table tbl = (Table) i.next();
-			listeningRels.addAll(tbl.getRelations());
-			// Listen only to useful things.
-			tbl.removePropertyChangeListener("masked", this.rebuildListener);
-			tbl.removePropertyChangeListener("restrictTable",
-					this.rebuildListener);
-			tbl.getColumns().removePropertyChangeListener(this.rebuildListener);
-			tbl.getRelations().removePropertyChangeListener(
-					this.rebuildListener);
-		}
-		// Stop listening to the relation.
-		for (final Iterator i = listeningRels.iterator(); i.hasNext();) {
-			final Relation rel = (Relation) i.next();
-			rel.removePropertyChangeListener("cardinality",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("status", this.rebuildListener);
-			rel.removePropertyChangeListener("compoundRelation",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("unrolledRelation",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("forceRelation",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("loopbackRelation",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("maskRelation",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("mergeRelation",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("restrictRelation",
-					this.rebuildListener);
-			rel.removePropertyChangeListener("subclassRelation",
-					this.rebuildListener);
 		}
 
 		// Empty out used rels and schs.
@@ -1733,11 +1734,14 @@ public class DataSet extends Schema {
 
 		// Add us as a listener to all included rels and schs, replacing
 		// ourselves if we are already listening to them.
-		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();)
-			((Schema) i.next()).addPropertyChangeListener("masked",
-					this.rebuildListener);
+		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();) {
+			final Schema sch = (Schema) i.next();
+			sch.addPropertyChangeListener("masked",
+					new WeakPropertyChangeListener(sch, "masked",
+							this.rebuildListener));
+		}
 		// Gather up the tables we have used and those linked to them.
-		listeningTables.clear();
+		final Set listeningRels = new HashSet();
 		for (final Iterator i = this.includedRelations.iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
 			// Don't bother listening to tables at end of incorrect
@@ -1754,35 +1758,52 @@ public class DataSet extends Schema {
 			final Table tbl = (Table) i.next();
 			listeningRels.addAll(tbl.getRelations());
 			// Listen only to useful things.
-			tbl.addPropertyChangeListener("masked", this.rebuildListener);
-			tbl
-					.addPropertyChangeListener("restrictTable",
-							this.rebuildListener);
-			tbl.getColumns().addPropertyChangeListener(this.rebuildListener);
-			tbl.getRelations().addPropertyChangeListener(this.rebuildListener);
+			tbl.addPropertyChangeListener("masked",
+					new WeakPropertyChangeListener(tbl, "masked",
+							this.rebuildListener));
+			tbl.addPropertyChangeListener("restrictTable",
+					new WeakPropertyChangeListener(tbl, "restrictTable",
+							this.rebuildListener));
+			tbl.getColumns().addPropertyChangeListener(
+					new WeakPropertyChangeListener(tbl.getColumns(),
+							this.rebuildListener));
+			tbl.getRelations().addPropertyChangeListener(
+					new WeakPropertyChangeListener(tbl.getRelations(),
+							this.rebuildListener));
 		}
 		// Listen to useful bits of the relation.
 		for (final Iterator i = listeningRels.iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
-			rel.addPropertyChangeListener("cardinality", this.rebuildListener);
-			rel.addPropertyChangeListener("status", this.rebuildListener);
+			rel.addPropertyChangeListener("cardinality",
+					new WeakPropertyChangeListener(rel, "cardinality",
+							this.rebuildListener));
+			rel.addPropertyChangeListener("status",
+					new WeakPropertyChangeListener(rel, "status",
+							this.rebuildListener));
 			rel.addPropertyChangeListener("compoundRelation",
-					this.rebuildListener);
+					new WeakPropertyChangeListener(rel, "compoundRelation",
+							this.rebuildListener));
 			rel.addPropertyChangeListener("unrolledRelation",
-					this.rebuildListener);
-			rel
-					.addPropertyChangeListener("forceRelation",
-							this.rebuildListener);
+					new WeakPropertyChangeListener(rel, "unrolledRelation",
+							this.rebuildListener));
+			rel.addPropertyChangeListener("forceRelation",
+					new WeakPropertyChangeListener(rel, "forceRelation",
+							this.rebuildListener));
 			rel.addPropertyChangeListener("loopbackRelation",
-					this.rebuildListener);
-			rel.addPropertyChangeListener("maskRelation", this.rebuildListener);
-			rel
-					.addPropertyChangeListener("mergeRelation",
-							this.rebuildListener);
+					new WeakPropertyChangeListener(rel, "loopbackRelation",
+							this.rebuildListener));
+			rel.addPropertyChangeListener("maskRelation",
+					new WeakPropertyChangeListener(rel, "maskRelation",
+							this.rebuildListener));
+			rel.addPropertyChangeListener("mergeRelation",
+					new WeakPropertyChangeListener(rel, "mergeRelation",
+							this.rebuildListener));
 			rel.addPropertyChangeListener("restrictRelation",
-					this.rebuildListener);
+					new WeakPropertyChangeListener(rel, "restrictRelation",
+							this.rebuildListener));
 			rel.addPropertyChangeListener("subclassRelation",
-					this.rebuildListener);
+					new WeakPropertyChangeListener(rel, "subclassRelation",
+							this.rebuildListener));
 		}
 	}
 

@@ -69,14 +69,14 @@ public class PostgreSQLDialect extends DatabaseDialect {
 	 * @throws Exception
 	 *             if anything goes wrong.
 	 */
-	public void doInitialUnroll(final InitialUnroll action, final List statements)
-			throws Exception {
+	public void doInitialUnroll(final InitialUnroll action,
+			final List statements) throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
 
 		this.checkColumnName(action.getUnrollIDCol());
 		this.checkColumnName(action.getUnrollNameCol());
 		this.checkColumnName(action.getUnrollIterationCol());
-		
+
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table ");
 		sb.append(schemaName);
@@ -121,15 +121,15 @@ public class PostgreSQLDialect extends DatabaseDialect {
 	public void doExpandUnroll(final ExpandUnroll action, final List statements)
 			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
-		
+
 		final StringBuffer sb = new StringBuffer();
 		sb.append("insert into ");
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getSourceTable());
 		sb.append('(');
-		for (final Iterator i = action.getParentCols().iterator(); i.hasNext(); ) {
-			sb.append((String)i.next());
+		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
+			sb.append((String) i.next());
 			sb.append(',');
 		}
 		sb.append(action.getUnrollIDCol());
@@ -138,9 +138,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sb.append(',');
 		sb.append(action.getUnrollIterationCol());
 		sb.append(") select ");
-		for (final Iterator i = action.getParentCols().iterator(); i.hasNext(); ) {
+		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
 			sb.append("parent.");
-			sb.append((String)i.next());
+			sb.append((String) i.next());
 			sb.append(',');
 		}
 		sb.append(" child.");
@@ -151,9 +151,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sb.append(action.getNamingCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollNameCol());
-		sb.append(", parent.");
-		sb.append(action.getUnrollIterationCol());
-		sb.append("+1 as ");
+		sb.append(", ");
+		sb.append(action.getUnrollIteration()+1);
+		sb.append(" as ");
 		sb.append(action.getUnrollIterationCol());
 		sb.append(" from ");
 		sb.append(schemaName);

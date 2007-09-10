@@ -91,7 +91,7 @@ public class UnrolledRelationDialog extends JDialog {
 		this.chosenColumn.addItem(null);
 		for (final Iterator i = relation.getOneKey().getTable().getColumns()
 				.values().iterator(); i.hasNext();)
-			this.chosenColumn.addItem((Column) i.next());
+			this.chosenColumn.addItem(i.next());
 		this.chosenColumn.setSelectedItem(initialChoice);
 		if (initialChoice != null)
 			checkbox.setSelected(true);

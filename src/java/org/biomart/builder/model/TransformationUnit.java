@@ -52,7 +52,7 @@ public abstract class TransformationUnit {
 	 */
 	private final Map newColumnNameMap;
 
-	private final TransformationUnit previousUnit;
+	private TransformationUnit previousUnit;
 
 	/**
 	 * Constructs a new transformation unit that follows on from a given
@@ -73,6 +73,16 @@ public abstract class TransformationUnit {
 	 */
 	public TransformationUnit getPreviousUnit() {
 		return this.previousUnit;
+	}
+
+	/**
+	 * Change the previous unit to this one.
+	 * 
+	 * @param previousUnit
+	 *            the new previous unit. <tt>null</tt> to remove it.
+	 */
+	public void setPreviousUnit(final TransformationUnit previousUnit) {
+		this.previousUnit = previousUnit;
 	}
 
 	/**
@@ -420,11 +430,11 @@ public abstract class TransformationUnit {
 		private final Relation relation;
 
 		private final List sourceDataSetColumns;
-		
+
 		private final Column namingColumn;
-		
+
 		private final DataSetColumn unrolledIDColumn;
-		
+
 		private final DataSetColumn unrolledNameColumn;
 
 		/**
@@ -439,14 +449,15 @@ public abstract class TransformationUnit {
 		 *            make the join.
 		 * @param namingColumn
 		 *            the column to use to get names for the unrolled rows.
-		 *            @param unrolledIDColumn
+		 * @param unrolledIDColumn
 		 *            the unrolled ID column.
-		 *            @param unrolledNameColumn
+		 * @param unrolledNameColumn
 		 *            the unrolled name column.
 		 */
 		public UnrollTable(final TransformationUnit previousUnit,
 				final Relation relation, final List sourceDataSetColumns,
-				final Column namingColumn, final DataSetColumn unrolledIDColumn,
+				final Column namingColumn,
+				final DataSetColumn unrolledIDColumn,
 				final DataSetColumn unrolledNameColumn) {
 			super(previousUnit);
 			this.relation = relation;
@@ -481,14 +492,14 @@ public abstract class TransformationUnit {
 		 * @return the unrolledIDColumn
 		 */
 		public DataSetColumn getUnrolledIDColumn() {
-			return unrolledIDColumn;
+			return this.unrolledIDColumn;
 		}
 
 		/**
 		 * @return the unrolledNameColumn
 		 */
 		public DataSetColumn getUnrolledNameColumn() {
-			return unrolledNameColumn;
+			return this.unrolledNameColumn;
 		}
 
 		public DataSetColumn getDataSetColumnFor(final Column column) {

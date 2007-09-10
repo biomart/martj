@@ -38,6 +38,7 @@ import javax.swing.JTextField;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A diagram component that represents a dataset. It usually only has a label in
@@ -78,6 +79,18 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	private GridBagLayout layout;
 
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			DataSetComponent.this.needsRepaint = true;
+		}
+	};
+
+	private final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			DataSetComponent.this.needsRecalc = true;
+		}
+	};
+
 	/**
 	 * Constructs a dataset diagram component in the given diagram that displays
 	 * details of a particular dataset.
@@ -105,20 +118,14 @@ public class DataSetComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Repaint events.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				DataSetComponent.this.needsRepaint = true;
-			}
-		};
-		dataset.addPropertyChangeListener("directModified", repaintListener);
+		dataset.addPropertyChangeListener("directModified",
+				new WeakPropertyChangeListener(dataset, "directModified",
+						this.repaintListener));
 
 		// Recalc events.
-		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				DataSetComponent.this.needsRecalc = true;
-			}
-		};
-		dataset.addPropertyChangeListener("name", recalcListener);
+		dataset.addPropertyChangeListener("name",
+				new WeakPropertyChangeListener(dataset, "name",
+						this.recalcListener));
 	}
 
 	private DataSet getDataSet() {

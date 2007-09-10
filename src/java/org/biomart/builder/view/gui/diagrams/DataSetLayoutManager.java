@@ -45,8 +45,8 @@ import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
  * row.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.6
  */
 public class DataSetLayoutManager implements LayoutManager2 {

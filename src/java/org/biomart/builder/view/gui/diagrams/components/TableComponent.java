@@ -49,6 +49,7 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTable;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Table components are box-shaped, and represent an individual table. Inside
@@ -74,6 +75,11 @@ public class TableComponent extends BoxShapedComponent {
 	 */
 	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
+	/**
+	 * Background colour for unrolled tables.
+	 */
+	public static Color UNROLLED_COLOUR = Color.CYAN;
+
 	private static final Color NORMAL_COLOUR = Color.BLACK;
 
 	/**
@@ -94,6 +100,18 @@ public class TableComponent extends BoxShapedComponent {
 	private JButton showHide;
 
 	private boolean hidingMaskedCols = false;
+
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			TableComponent.this.needsRepaint = true;
+		}
+	};
+
+	private final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			TableComponent.this.needsRecalc = true;
+		}
+	};
 
 	/**
 	 * This constructor makes a new table component, associated with a
@@ -127,38 +145,45 @@ public class TableComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Repaint events.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				TableComponent.this.needsRepaint = true;
-			}
-		};
-		table.addPropertyChangeListener("directModified", repaintListener);
+		table.addPropertyChangeListener("directModified",
+				new WeakPropertyChangeListener(table, "directModified",
+						this.repaintListener));
 		// Listen to all relations on this table and repaint when needed.
 		// We don't need to monitor relations themselves as the entire
 		// diagram gets recalculated if they change.
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
-			rel.addPropertyChangeListener("directModified", repaintListener);
+			rel.addPropertyChangeListener("directModified",
+					new WeakPropertyChangeListener(rel, "directModified",
+							this.repaintListener));
 		}
-		// If this is a dataset main table, listen to the partition table
-		// conversion and repaint on that too.
+		// If this is a dataset table, listen to the partition table
+		// conversion and merge/unrolled signals and repaint on that too.
 		if (table instanceof DataSetTable) {
 			final DataSetTable dsTbl = (DataSetTable) table;
-			if (dsTbl.getType().equals(DataSetTableType.MAIN))
-				dsTbl.getDataSet().addPropertyChangeListener("partitionTable",
-						repaintListener);
+			dsTbl.getDataSet().addPropertyChangeListener(
+					"partitionTable",
+					new WeakPropertyChangeListener(dsTbl.getDataSet(),
+							"partitionTable", this.repaintListener));
+			if (!dsTbl.getType().equals(DataSetTableType.MAIN)) {
+				dsTbl.getFocusRelation().addPropertyChangeListener(
+						"mergeRelation",
+						new WeakPropertyChangeListener(
+								dsTbl.getFocusRelation(), "mergeRelation",
+								this.repaintListener));
+				dsTbl.getFocusRelation().addPropertyChangeListener(
+						"unrolledRelation",
+						new WeakPropertyChangeListener(
+								dsTbl.getFocusRelation(), "unrolledRelation",
+								this.repaintListener));
+			}
 		}
 
 		// Recalc events.
-		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				TableComponent.this.needsRecalc = true;
-			}
-		};
-		table.addPropertyChangeListener("name", recalcListener);
-		table.addPropertyChangeListener("tableRename", recalcListener);
-		table.getKeys().addPropertyChangeListener(recalcListener);
-		table.getColumns().addPropertyChangeListener(recalcListener);
+		table.addPropertyChangeListener("name", this.recalcListener);
+		table.addPropertyChangeListener("tableRename", this.recalcListener);
+		table.getKeys().addPropertyChangeListener(this.recalcListener);
+		table.getColumns().addPropertyChangeListener(this.recalcListener);
 	}
 
 	/**
@@ -208,12 +233,8 @@ public class TableComponent extends BoxShapedComponent {
 
 			for (int j = 0; j < key.getColumns().length; j++)
 				key.getColumns()[j].addPropertyChangeListener("columnRename",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								TableComponent.this.needsRecalc = true;
-							}
-						});
+						new WeakPropertyChangeListener(key.getColumns()[j],
+								"columnRename", this.recalcListener));
 
 			// Physically add it to the table component layout.
 			this.add(keyComponent, this.constraints);

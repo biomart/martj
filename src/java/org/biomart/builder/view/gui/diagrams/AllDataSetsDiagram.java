@@ -26,6 +26,7 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * This diagram draws a {@link DataSetComponent} for each dataset in a mart.
@@ -37,6 +38,18 @@ import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
  */
 public class AllDataSetsDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
+
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			AllDataSetsDiagram.this.needsRedraw = true;
+		}
+	};
+
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			AllDataSetsDiagram.this.needsRepaint = true;
+		}
+	};
 
 	/**
 	 * The constructor creates the diagram and associates it with a given mart
@@ -56,21 +69,16 @@ public class AllDataSetsDiagram extends Diagram {
 		// based on mart dataset entries.
 		// If any change, whole diagram needs redoing from scratch,
 		// and new listeners need setting up.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				AllDataSetsDiagram.this.needsRedraw = true;
-			}
-		};
-		martTab.getMart().getDataSets().addPropertyChangeListener(listener);
-		
+		martTab.getMart().getDataSets().addPropertyChangeListener(
+				new WeakPropertyChangeListener(martTab.getMart().getDataSets(),
+						this.listener));
+
 		// Listen to when hide masked gets changed.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				AllDataSetsDiagram.this.needsRepaint = true;
-			}
-		};
-		martTab.getMart().addPropertyChangeListener("hideMaskedDataSets", repaintListener);
-		
+		martTab.getMart().addPropertyChangeListener(
+				"hideMaskedDataSets",
+				new WeakPropertyChangeListener(martTab.getMart(),
+						"hideMaskedDataSets", this.repaintListener));
+
 		this.setHideMasked(martTab.getMart().isHideMaskedDataSets());
 	}
 

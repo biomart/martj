@@ -44,6 +44,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileFilter;
 
 import org.biomart.builder.controller.MartConstructor;
@@ -129,6 +130,7 @@ public class SaveDDLDialog extends JDialog {
 		super();
 		this.setTitle(Resources.get("saveDDLDialogTitle"));
 		this.setModal(true);
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).

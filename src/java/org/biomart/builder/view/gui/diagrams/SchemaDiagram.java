@@ -33,6 +33,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Displays the contents of a schema within a diagram object. It adds a series
@@ -50,6 +51,18 @@ public class SchemaDiagram extends Diagram {
 
 	private Schema schema;
 
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			SchemaDiagram.this.needsRedraw = true;
+		}
+	};
+
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			SchemaDiagram.this.needsRepaint = true;
+		}
+	};
+
 	/**
 	 * Creates a new diagram that displays the tables and relations inside a
 	 * specific schema.
@@ -65,7 +78,6 @@ public class SchemaDiagram extends Diagram {
 			final Schema schema) {
 		// Call the general diagram constructor first.
 		super(layout, martTab);
-		
 
 		// Remember the schema, then lay it out.
 		this.schema = schema;
@@ -76,22 +88,18 @@ public class SchemaDiagram extends Diagram {
 		// tables (presence/absence only).
 		// If any change, whole diagram needs redoing from scratch,
 		// and new listeners need setting up.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				SchemaDiagram.this.needsRedraw = true;
-			}
-		};
-		schema.getTables().addPropertyChangeListener(listener);
-		schema.getRelations().addPropertyChangeListener(listener);
-		
+		schema.getTables().addPropertyChangeListener(
+				new WeakPropertyChangeListener(schema.getTables(),
+						this.listener));
+		schema.getRelations().addPropertyChangeListener(
+				new WeakPropertyChangeListener(schema.getRelations(),
+						this.listener));
+
 		// Listen to when hide masked gets changed.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				SchemaDiagram.this.needsRepaint = true;
-			}
-		};
-		schema.addPropertyChangeListener("hideMasked", repaintListener);
-		
+		schema.addPropertyChangeListener("hideMasked",
+				new WeakPropertyChangeListener(schema, "hideMasked",
+						this.repaintListener));
+
 		this.setHideMasked(schema.isHideMasked());
 	}
 
@@ -112,7 +120,7 @@ public class SchemaDiagram extends Diagram {
 	protected void hideMaskedChanged(final boolean newHideMasked) {
 		this.schema.setHideMasked(newHideMasked);
 	}
-	
+
 	public void doRecalculateDiagram() {
 		// FIXME Recycle components.
 		// Add a TableComponent for each table in the schema.

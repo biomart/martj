@@ -249,7 +249,6 @@ Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 
 Unrolled relation: <xsl:apply-templates select="key('ids',@relationId)"/>
 Naming column: <xsl:apply-templates select="key('ids',@columnId)"/> 
-Applies only to dataset table: <xsl:value-of select="@tableKey"/>
 </xsl:template>
 
 <xsl:template match="distinctRows">

@@ -19,6 +19,7 @@
 package org.biomart.builder.view.gui.dialogs;
 
 import javax.swing.JDialog;
+import javax.swing.WindowConstants;
 
 import org.biomart.common.resources.Resources;
 import org.biomart.runner.model.JobPlan;
@@ -49,6 +50,7 @@ public class MartRunnerTestDialog extends JDialog {
 		super();
 		this.setTitle(Resources.get("testJobDialogTitle"));
 		this.setModal(false); // User can move about freely.
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		// TODO
 		// LHS panel lists valid job tests for this plan.
 		// Selecting test in LHS updates panel on RHS.

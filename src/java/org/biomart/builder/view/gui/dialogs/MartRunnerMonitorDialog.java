@@ -68,6 +68,7 @@ import javax.swing.JTree;
 import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -184,6 +185,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			final boolean defaultJob) {
 		// Create the blank dialog, and give it an appropriate title.
 		super(Resources.get("monitorDialogTitle", new String[] { host, port }));
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		// Make the RHS scrollpane containing job descriptions.
 		final JobPlanPanel jobPlanPanel = new JobPlanPanel(this, host, port);

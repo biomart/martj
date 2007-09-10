@@ -36,6 +36,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedRelation;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.SkipTempReal;
@@ -236,8 +237,9 @@ public class ExplainContext extends SchemaContext {
 
 		// Highlight UNROLLED relations.
 		else if (this.datasetTable != null
-				&& relation.getUnrolledRelation(this.dataset, this.datasetTable
-						.getName()) != null)
+				&& relation.getUnrolledRelation(this.dataset) != null
+				&& !this.datasetTable.getType().equals(
+						DataSetTableType.DIMENSION))
 			component.setForeground(RelationComponent.UNROLLED_COLOUR);
 
 		// All others are normal.
@@ -451,8 +453,9 @@ public class ExplainContext extends SchemaContext {
 				: relation.getCompoundRelation(this.dataset, this.datasetTable
 						.getName())) != null;
 		final boolean relationUnrolled = this.datasetTable == null ? false
-				: (relation.getUnrolledRelation(this.dataset, this.datasetTable
-						.getName()) != null);
+				: relation.getUnrolledRelation(this.dataset) != null
+						&& !this.datasetTable.getType().equals(
+								DataSetTableType.DIMENSION);
 		final boolean relationForced = this.datasetTable == null ? relation
 				.isForceRelation(this.dataset) : relation.isForceRelation(
 				this.dataset, this.datasetTable.getName());
@@ -557,32 +560,6 @@ public class ExplainContext extends SchemaContext {
 			compound.setEnabled(false);
 		if (relationCompounded)
 			compound.setSelected(true);
-
-		// The compound option allows the user to direction a relation.
-		if (this.datasetTable != null) {
-			final JCheckBoxMenuItem unrolled = new JCheckBoxMenuItem(Resources
-					.get("unrolledRelationTitle"));
-			unrolled.setMnemonic(Resources.get("unrolledRelationMnemonic")
-					.charAt(0));
-			unrolled.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestUnrolledRelation(
-									ExplainContext.this.datasetTable, relation);
-					unrolled
-							.setSelected(relation.getUnrolledRelation(
-									ExplainContext.this.getDataSet(),
-									ExplainContext.this.datasetTable.getName()) != null);
-				}
-			});
-			contextMenu.add(unrolled);
-			if (incorrect || relationMasked || relationRestricted
-					|| relationSubclassed || relationCompounded
-					|| relationForced || relationLoopbacked)
-				unrolled.setEnabled(false);
-			if (relationUnrolled)
-				unrolled.setSelected(true);
-		}
 
 		// The subclass/unsubclass option allows subclassing, but is
 		// only selectable when the relation is unmasked and not

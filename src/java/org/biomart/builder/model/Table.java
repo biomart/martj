@@ -41,6 +41,7 @@ import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * The table class provides the basic idea of what constitutes a database table
@@ -95,6 +96,12 @@ public class Table implements Comparable, TransactionListener {
 		}
 	};
 
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Table.this.setDirectModified(true);
+		}
+	};
+
 	/**
 	 * Make a new table in the given schema. It won't add itself, so you'll need
 	 * to do that separately.
@@ -130,13 +137,8 @@ public class Table implements Comparable, TransactionListener {
 		this.getColumns().addPropertyChangeListener(this.relationCacheBuilder);
 
 		// All changes to us make us modified.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Table.this.setDirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("masked", listener);
-		this.pcs.addPropertyChangeListener("restrictTable", listener);
+		this.pcs.addPropertyChangeListener("masked", this.listener);
+		this.pcs.addPropertyChangeListener("restrictTable", this.listener);
 	}
 
 	public boolean isDirectModified() {
@@ -154,10 +156,13 @@ public class Table implements Comparable, TransactionListener {
 	public boolean isVisibleModified() {
 		// Compute this from all keys and cols - if any are vis
 		// modified then we are too.
-		for (final Iterator i = this.getKeys().iterator(); i.hasNext(); ) 
-			if (((Key)i.next()).isVisibleModified()) return true;
-		for (final Iterator i = this.getColumns().values().iterator(); i.hasNext(); ) 
-			if (((Column)i.next()).isVisibleModified()) return true;
+		for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
+			if (((Key) i.next()).isVisibleModified())
+				return true;
+		for (final Iterator i = this.getColumns().values().iterator(); i
+				.hasNext();)
+			if (((Column) i.next()).isVisibleModified())
+				return true;
 		return false;
 	}
 
@@ -220,12 +225,8 @@ public class Table implements Comparable, TransactionListener {
 			for (final Iterator i = newCols.iterator(); i.hasNext();) {
 				final Column column = (Column) i.next();
 				column.addPropertyChangeListener("directModified",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								Table.this.setDirectModified(true);
-							}
-						});
+						new WeakPropertyChangeListener(column,
+								"directModified", this.listener));
 			}
 			this.columnCache.clear();
 			this.columnCache.addAll(this.getColumns().values());
@@ -248,14 +249,11 @@ public class Table implements Comparable, TransactionListener {
 			for (final Iterator i = newKeys.iterator(); i.hasNext();) {
 				final Key key = (Key) i.next();
 				key.getRelations().addPropertyChangeListener(
-						this.relationCacheBuilder);
+						new WeakPropertyChangeListener(key.getRelations(),
+								this.relationCacheBuilder));
 				key.addPropertyChangeListener("directModified",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								Table.this.setDirectModified(true);
-							}
-						});
+						new WeakPropertyChangeListener(key, "directModified",
+								this.listener));
 			}
 			this.keyCache.clear();
 			if (this.primaryKey != null)
@@ -480,7 +478,8 @@ public class Table implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							pcs.firePropertyChange("restrictTable", null, dataset);
+							Table.this.pcs.firePropertyChange("restrictTable",
+									null, dataset);
 						}
 					});
 			this.pcs.firePropertyChange("restrictTable", null, dataset);
@@ -512,7 +511,8 @@ public class Table implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							pcs.firePropertyChange("restrictTable", null, tableKey);
+							Table.this.pcs.firePropertyChange("restrictTable",
+									null, tableKey);
 						}
 					});
 			this.pcs.firePropertyChange("restrictTable", null, tableKey);

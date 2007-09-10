@@ -31,6 +31,7 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * This diagram draws a {@link SchemaComponent} for each schema in the mart. If
@@ -46,10 +47,16 @@ import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
  */
 public class AllSchemasDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
-	
+
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
 			AllSchemasDiagram.this.needsRedraw = true;
+		}
+	};
+
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			AllSchemasDiagram.this.needsRepaint = true;
 		}
 	};
 
@@ -71,24 +78,24 @@ public class AllSchemasDiagram extends Diagram {
 		// based on tables in schema, and keys+relations on those
 		// tables (presence/absence only).
 		// If any change, whole diagram needs redoing from scratch,
-		// and new listeners need setting up.		
-		martTab.getMart().getSchemas().addPropertyChangeListener(this.listener);
+		// and new listeners need setting up.
+		martTab.getMart().getSchemas().addPropertyChangeListener(
+				new WeakPropertyChangeListener(martTab.getMart().getSchemas(),
+						this.listener));
 
 		// Listen to when hide masked gets changed.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				AllSchemasDiagram.this.needsRepaint = true;
-			}
-		};
-		martTab.getMart().addPropertyChangeListener("hideMaskedSchemas", repaintListener);
-		
+		martTab.getMart().addPropertyChangeListener(
+				"hideMaskedSchemas",
+				new WeakPropertyChangeListener(martTab.getMart(),
+						"hideMaskedSchemas", this.repaintListener));
+
 		this.setHideMasked(martTab.getMart().isHideMaskedSchemas());
 	}
 
 	protected void hideMaskedChanged(final boolean newHideMasked) {
 		this.getMartTab().getMart().setHideMaskedSchemas(newHideMasked);
 	}
-	
+
 	public void doRecalculateDiagram() {
 		// Add a SchemaComponent for each schema.
 		final Set usedRels = new HashSet();
@@ -115,7 +122,9 @@ public class AllSchemasDiagram extends Diagram {
 					new SchemaLayoutConstraint(extRels.size()),
 					Diagram.TABLE_LAYER);
 			// Update ourselves when relations are added or removed.
-			schema.getRelations().addPropertyChangeListener(this.listener);
+			schema.getRelations().addPropertyChangeListener(
+					new WeakPropertyChangeListener(schema.getRelations(),
+							this.listener));
 		}
 	}
 }

@@ -170,6 +170,8 @@ public class Relation implements Comparable, TransactionListener {
 				if (firstKey.getColumns().length != secondKey.getColumns().length) {
 					firstKey.getRelations().remove(Relation.this);
 					secondKey.getRelations().remove(Relation.this);
+					firstKey.removePropertyChangeListener("columns", this);
+					secondKey.removePropertyChangeListener("columns", this);
 				}
 			}
 		};
@@ -192,7 +194,7 @@ public class Relation implements Comparable, TransactionListener {
 		this.pcs.addPropertyChangeListener("mergeRelation", listener);
 		this.pcs.addPropertyChangeListener("restrictRelation", listener);
 		this.pcs.addPropertyChangeListener("subclassRelation", listener);
-		
+
 		// All changes to us make us visible modified.
 		final PropertyChangeListener vlistener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
@@ -211,6 +213,10 @@ public class Relation implements Comparable, TransactionListener {
 							if (!firstKey.equals(evt.getNewValue())) {
 								firstKey.getRelations().remove(Relation.this);
 								secondKey.getRelations().remove(Relation.this);
+								firstKey.removePropertyChangeListener(
+										"columns", this);
+								secondKey.removePropertyChangeListener(
+										"columns", this);
 							}
 						}
 					});
@@ -222,6 +228,10 @@ public class Relation implements Comparable, TransactionListener {
 									firstKey)) {
 								firstKey.getRelations().remove(Relation.this);
 								secondKey.getRelations().remove(Relation.this);
+								firstKey.removePropertyChangeListener(
+										"columns", this);
+								secondKey.removePropertyChangeListener(
+										"columns", this);
 							}
 						}
 					});
@@ -232,6 +242,10 @@ public class Relation implements Comparable, TransactionListener {
 							if (!secondKey.equals(evt.getNewValue())) {
 								firstKey.getRelations().remove(Relation.this);
 								secondKey.getRelations().remove(Relation.this);
+								firstKey.removePropertyChangeListener(
+										"columns", this);
+								secondKey.removePropertyChangeListener(
+										"columns", this);
 							}
 						}
 					});
@@ -243,6 +257,10 @@ public class Relation implements Comparable, TransactionListener {
 									.contains(secondKey)) {
 								firstKey.getRelations().remove(Relation.this);
 								secondKey.getRelations().remove(Relation.this);
+								firstKey.removePropertyChangeListener(
+										"columns", this);
+								secondKey.removePropertyChangeListener(
+										"columns", this);
 							}
 						}
 					});
@@ -263,11 +281,11 @@ public class Relation implements Comparable, TransactionListener {
 	public boolean isVisibleModified() {
 		return this.visibleModified;
 	}
-	
+
 	public void setVisibleModified(final boolean modified) {
 		// Gets set internally so don't need to allow changes.
 	}
-	
+
 	public void transactionResetVisibleModified() {
 		this.visibleModified = false;
 	}
@@ -953,14 +971,10 @@ public class Relation implements Comparable, TransactionListener {
 	 * 
 	 * @param dataset
 	 *            the dataset to check for.
-	 * @param tableKey
-	 *            the table to check for.
 	 * @return the name column to use if it is, null otherwise.
 	 */
-	public Column getUnrolledRelation(final DataSet dataset,
-			final String tableKey) {
-		return (Column) this.getMods(dataset, tableKey).get(
-				"unrolledRelation");
+	public Column getUnrolledRelation(final DataSet dataset) {
+		return (Column) this.getMods(dataset, null).get("unrolledRelation");
 	}
 
 	/**
@@ -968,25 +982,22 @@ public class Relation implements Comparable, TransactionListener {
 	 * 
 	 * @param dataset
 	 *            the dataset to set for.
-	 * @param tableKey
-	 *            the dataset table to set for.
 	 * @param nameColumn
 	 *            the naming column to use - if null, it undoes it.
 	 */
 	public void setUnrolledRelation(final DataSet dataset,
-			final String tableKey, final Column nameColumn) {
-		final Column oldValue = this.getUnrolledRelation(dataset, tableKey);
+			final Column nameColumn) {
+		final Column oldValue = this.getUnrolledRelation(dataset);
 		if (nameColumn == oldValue || oldValue != null
 				&& oldValue.equals(nameColumn))
 			return;
 
 		if (nameColumn != null) {
-			this.getMods(dataset, tableKey).put("unrolledRelation",
-					nameColumn);
-			this.pcs.firePropertyChange("unrolledRelation", null, tableKey);
+			this.getMods(dataset, null).put("unrolledRelation", nameColumn);
+			this.pcs.firePropertyChange("unrolledRelation", null, dataset);
 		} else {
-			this.getMods(dataset, tableKey).remove("unrolledRelation");
-			this.pcs.firePropertyChange("unrolledRelation", tableKey, null);
+			this.getMods(dataset, null).remove("unrolledRelation");
+			this.pcs.firePropertyChange("unrolledRelation", dataset, null);
 		}
 	}
 
@@ -1085,8 +1096,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							pcs.firePropertyChange("restrictRelation", null,
-									dataset);
+							Relation.this.pcs.firePropertyChange(
+									"restrictRelation", null, dataset);
 						}
 					});
 			this.pcs.firePropertyChange("restrictRelation", null, dataset);
@@ -1128,8 +1139,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							pcs.firePropertyChange("restrictRelation", null,
-									tableKey);
+							Relation.this.pcs.firePropertyChange(
+									"restrictRelation", null, tableKey);
 						}
 					});
 			this.pcs.firePropertyChange("restrictRelation", null, tableKey);
@@ -1191,8 +1202,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							pcs.firePropertyChange("compoundRelation", null,
-									dataset);
+							Relation.this.pcs.firePropertyChange(
+									"compoundRelation", null, dataset);
 						}
 					});
 			this.pcs.firePropertyChange("compoundRelation", null, dataset);
@@ -1224,8 +1235,8 @@ public class Relation implements Comparable, TransactionListener {
 			def.addPropertyChangeListener("directModified",
 					new PropertyChangeListener() {
 						public void propertyChange(final PropertyChangeEvent e) {
-							pcs.firePropertyChange("compoundRelation", null,
-									tableKey);
+							Relation.this.pcs.firePropertyChange(
+									"compoundRelation", null, tableKey);
 						}
 					});
 			this.pcs.firePropertyChange("compoundRelation", null, tableKey);
@@ -1472,11 +1483,11 @@ public class Relation implements Comparable, TransactionListener {
 		public boolean isVisibleModified() {
 			return false;
 		}
-		
+
 		public void setVisibleModified(final boolean modified) {
 			// Ignore, for now.
 		}
-		
+
 		public void transactionResetVisibleModified() {
 			// Ignore, for now.
 		}
@@ -1668,11 +1679,11 @@ public class Relation implements Comparable, TransactionListener {
 		public boolean isVisibleModified() {
 			return false;
 		}
-		
+
 		public void setVisibleModified(final boolean modified) {
 			// Ignore, for now.
 		}
-		
+
 		public void transactionResetVisibleModified() {
 			// Ignore, for now.
 		}
@@ -1684,7 +1695,7 @@ public class Relation implements Comparable, TransactionListener {
 		public void transactionStarted(final TransactionEvent evt) {
 			// Don't really care for now.
 		}
-		
+
 		public void transactionEnded(final TransactionEvent evt) {
 			// Don't really care for now.
 		}

@@ -23,6 +23,7 @@ import java.awt.Dimension;
 
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.SchemaTabSet;
@@ -68,6 +69,7 @@ public class ExplainDataSetDialog extends JDialog {
 		this.setTitle(Resources.get("explainDataSetDialogTitle", dataset
 				.getName()));
 		this.setModal(true);
+		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.dataset = dataset;
 		this.schemaTabSet = martTab.getSchemaTabSet();
 		this.martTab = martTab;

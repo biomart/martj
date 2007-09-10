@@ -646,6 +646,7 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
+		dialog.dispose();
 
 		// Skip altogether if no change.
 		if (newN == def.getN() && newParallel == def.isParallel())
@@ -690,6 +691,7 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
+		dialog.dispose();
 
 		// Skip altogether if no change.
 		if (newN == def.getN() && newParallel == def.isParallel())
@@ -712,16 +714,16 @@ public class DataSetTabSet extends JTabbedPane {
 	/**
 	 * Asks that a relation be unrolled.
 	 * 
-	 * @param dst
-	 *            the table to work with.
-	 * @param relation
-	 *            the schema relation to make unrolled.
+	 * @param ds
+	 *            the dataset to work with.
+	 * @param dim
+	 *            the dimension to make unrolled.
 	 */
-	public void requestUnrolledRelation(final DataSetTable dst,
-			final Relation relation) {
+	public void requestUnrolledDimension(final DataSet ds,
+			final DataSetTable dim) {
 		// Work out if it is already directional.
-		final Column def = relation.getUnrolledRelation(dst.getDataSet(), dst
-				.getName());
+		final Relation relation = dim.getFocusRelation();
+		final Column def = relation.getUnrolledRelation(ds);
 
 		// Pop up a dialog and update 'direction'.
 		final UnrolledRelationDialog dialog = new UnrolledRelationDialog(def,
@@ -729,13 +731,14 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
 		final Column newDef = dialog.getChosenColumn();
+		dialog.dispose();
 
 		// Skip altogether if no change.
 		if (newDef == def)
 			return;
 
 		Transaction.start();
-		relation.setUnrolledRelation(dst.getDataSet(), dst.getName(), newDef);
+		relation.setUnrolledRelation(ds, newDef);
 		Transaction.end();
 	}
 
@@ -767,6 +770,7 @@ public class DataSetTabSet extends JTabbedPane {
 		dialog.setVisible(true);
 		final int newN = dialog.getArity();
 		final boolean newParallel = dialog.getParallel();
+		dialog.dispose();
 
 		// Skip altogether if no change.
 		if (newN == def.getN() && newParallel == def.isParallel())
@@ -865,6 +869,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliasesRHS = dialog.getRHSColumnAliases();
 		final String expression = dialog.getExpression();
 		final boolean hard = dialog.getHard();
+		dialog.dispose();
 
 		Transaction.start();
 		RestrictedRelationDefinition def = dsTable == null ? relation
@@ -973,6 +978,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final boolean newIsLooped = dialog.isLoopback();
 		final Column newLoopedCol = newIsLooped ? dialog
 				.getLoopbackDiffColumn() : null;
+		dialog.dispose();
 
 		// Skip altogether if no change.
 		if (newLoopedCol == loopedCol && newIsLooped)
@@ -1087,6 +1093,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliases = dialog.getColumnAliases();
 		final String expression = dialog.getExpression();
 		final boolean groupBy = dialog.getGroupBy();
+		dialog.dispose();
 
 		Transaction.start();
 		if (column == null) {
@@ -1142,6 +1149,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliases = dialog.getColumnAliases();
 		final String expression = dialog.getExpression();
 		final boolean hard = dialog.getHard();
+		dialog.dispose();
 
 		Transaction.start();
 		RestrictedTableDefinition def = dsTable == null ? table
@@ -1379,6 +1387,7 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {
+			dialog.dispose();
 			Transaction.resetVisibleModified();
 			Transaction.end();
 		}
@@ -1414,6 +1423,7 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {
+			dialog.dispose();
 			Transaction.resetVisibleModified();
 			Transaction.end();
 		}

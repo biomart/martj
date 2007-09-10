@@ -42,6 +42,7 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A diagram component that represents a schema. It usually only has a label in
@@ -71,6 +72,18 @@ public class SchemaComponent extends BoxShapedComponent {
 	private GridBagConstraints constraints;
 
 	private GridBagLayout layout;
+
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			SchemaComponent.this.needsRepaint = true;
+		}
+	};
+
+	private final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			SchemaComponent.this.needsRecalc = true;
+		}
+	};
 
 	/**
 	 * Constructs a schema diagram component in the given diagram that displays
@@ -102,21 +115,17 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Repaint events.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				SchemaComponent.this.needsRepaint = true;
-			}
-		};
-		schema.addPropertyChangeListener("directModified", repaintListener);
+		schema.addPropertyChangeListener("directModified",
+				new WeakPropertyChangeListener(schema, "directModified",
+						this.repaintListener));
 
 		// Recalc events.
-		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				SchemaComponent.this.needsRecalc = true;
-			}
-		};
-		schema.addPropertyChangeListener("name", recalcListener);
-		schema.getRelations().addPropertyChangeListener(recalcListener);
+		schema.addPropertyChangeListener("name",
+				new WeakPropertyChangeListener(schema, "name",
+						this.recalcListener));
+		schema.getRelations().addPropertyChangeListener(
+				new WeakPropertyChangeListener(schema.getRelations(),
+						this.recalcListener));
 	}
 
 	private Schema getSchema() {

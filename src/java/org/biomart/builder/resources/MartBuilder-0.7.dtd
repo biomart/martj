@@ -95,7 +95,6 @@ renamedColumn*,distinctRows*,unrolledRelation*)>
 <!ATTLIST compoundRelation parallel (true|false) #REQUIRED>
 
 <!ELEMENT unrolledRelation EMPTY>
-<!ATTLIST unrolledRelation tableKey CDATA #REQUIRED>
 <!ATTLIST unrolledRelation relationId IDREF #REQUIRED>
 <!ATTLIST unrolledRelation columnId IDREF #REQUIRED>
 
@@ -165,8 +164,7 @@ renamedColumn*,distinctRows*,unrolledRelation*)>
 <!ATTLIST expressionColumn expression CDATA #REQUIRED>
 <!ATTLIST expressionColumn groupBy  (true|false) #REQUIRED>
 
-<!ELEMENT datasetPartitionTable (
-partitionRegex*,partitionApplication*)>
+<!ELEMENT datasetPartitionTable (partitionRegex*,partitionApplication*)>
 <!ATTLIST datasetPartitionTable name CDATA #REQUIRED>
 <!ATTLIST datasetPartitionTable selectedColumns CDATA #REQUIRED>
 

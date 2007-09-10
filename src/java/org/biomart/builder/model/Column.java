@@ -46,7 +46,7 @@ public class Column implements Comparable, TransactionListener {
 	private final String name;
 
 	private final Table table;
-	
+
 	/**
 	 * Some subclasses refer to this directly.
 	 */
@@ -105,11 +105,11 @@ public class Column implements Comparable, TransactionListener {
 		this.directModified = modified;
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
-	
+
 	public boolean isVisibleModified() {
 		return this.visibleModified;
 	}
-	
+
 	public void setVisibleModified(final boolean modified) {
 		// We don't care as this gets set internally.
 	}

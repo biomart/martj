@@ -32,6 +32,7 @@ import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.diagrams.Diagram;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * This simple component represents a single column within a table.
@@ -75,6 +76,18 @@ public class ColumnComponent extends BoxShapedComponent {
 
 	private GridBagLayout layout;
 
+	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			ColumnComponent.this.needsRepaint = true;
+		}
+	};
+
+	private final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent e) {
+			ColumnComponent.this.needsRecalc = true;
+		}
+	};
+
 	/**
 	 * The constructor creates a new column component representing the given
 	 * column. The diagram the column component is part of is also required.
@@ -106,20 +119,14 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Repaint events.
-		final PropertyChangeListener repaintListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				ColumnComponent.this.needsRepaint = true;
-			}
-		};
-		column.addPropertyChangeListener("directModified", repaintListener);
+		column.addPropertyChangeListener("directModified",
+				new WeakPropertyChangeListener(column, "directModified",
+						this.repaintListener));
 
 		// Recalc events.
-		final PropertyChangeListener recalcListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent e) {
-				ColumnComponent.this.needsRecalc = true;
-			}
-		};
-		column.addPropertyChangeListener("columnRename", recalcListener);
+		column.addPropertyChangeListener("columnRename",
+				new WeakPropertyChangeListener(column, "columnRename",
+						this.recalcListener));
 	}
 
 	private Column getColumn() {

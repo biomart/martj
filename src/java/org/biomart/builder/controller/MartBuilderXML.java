@@ -769,6 +769,18 @@ public class MartBuilderXML extends DefaultHandler {
 						this.closeElement("compoundRelation", xmlWriter);
 					}
 
+					// Unrolled relations.
+					if (r.getUnrolledRelation(ds) != null) {
+						this.openElement("unrolledRelation", xmlWriter);
+						this.writeAttribute("relationId",
+								(String) this.reverseMappedObjects.get(r),
+								xmlWriter);
+						this.writeAttribute("columnId",
+								(String) this.reverseMappedObjects.get(r
+										.getUnrolledRelation(ds)), xmlWriter);
+						this.closeElement("unrolledRelation", xmlWriter);
+					}
+
 					// Restrict relations.
 					if (r.isRestrictRelation(ds)) {
 						final CompoundRelationDefinition cdef = r
@@ -1007,21 +1019,6 @@ public class MartBuilderXML extends DefaultHandler {
 									(String) this.reverseMappedObjects.get(r),
 									xmlWriter);
 							this.closeElement("forcedRelation", xmlWriter);
-						}
-
-						// Unrolled relations.
-						if (r.getUnrolledRelation(ds, dsTable.getName()) != null) {
-							this.openElement("unrolledRelation", xmlWriter);
-							this.writeAttribute("tableKey", dsTable.getName(),
-									xmlWriter);
-							this.writeAttribute("relationId",
-									(String) this.reverseMappedObjects.get(r),
-									xmlWriter);
-							this.writeAttribute("columnId",
-									(String) this.reverseMappedObjects.get(r
-											.getUnrolledRelation(ds, dsTable
-													.getName())), xmlWriter);
-							this.closeElement("unrolledRelation", xmlWriter);
 						}
 
 						// Compound relations.
@@ -1760,11 +1757,10 @@ public class MartBuilderXML extends DefaultHandler {
 						.get(attributes.get("relationId"));
 				final Column col = (Column) this.mappedObjects.get(attributes
 						.get("columnId"));
-				final String tableKey = (String) attributes.get("tableKey");
 
 				// Compound it.
-				if (rel != null && col != null && tableKey != null)
-					rel.setUnrolledRelation(w, tableKey, col);
+				if (rel != null && col != null)
+					rel.setUnrolledRelation(w, col);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

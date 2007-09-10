@@ -53,8 +53,8 @@ import org.biomart.common.view.gui.dialogs.TransactionalDialog;
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *          $Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public class SchemaConnectionDialog extends TransactionalDialog {
@@ -75,7 +75,9 @@ public class SchemaConnectionDialog extends TransactionalDialog {
 						.get("addButton"), null);
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
-		return dialog.schema;
+		final Schema sch = dialog.schema;
+		dialog.dispose();
+		return sch;
 	}
 
 	/**
@@ -93,11 +95,14 @@ public class SchemaConnectionDialog extends TransactionalDialog {
 				.get("modifyButton"), schema);
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
+		final boolean result;
 		if (dialog.schema != null && dialog.schema instanceof JDBCSchema)
-			return ((JDBCSchemaConnectionPanel) dialog.connectionPanel)
+			result = ((JDBCSchemaConnectionPanel) dialog.connectionPanel)
 					.copySettingsToExistingSchema(schema) != null;
 		else
-			return false;
+			result = false;
+		dialog.dispose();
+		return result;
 	}
 
 	private JButton cancel;
