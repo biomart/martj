@@ -1073,8 +1073,23 @@ public class PartitionTableDialog extends TransactionalDialog {
 					final DataSet ds = (DataSet) candidates.iterator().next();
 					ds.setPartitionTable(true);
 					name = ds.getName();
+					// Find ds col for source col and select
+					// ds col's name - NOT source col name as may be
+					// different (e.g. in _key case).
+					DataSetColumn realSourceCol = null;
+					for (final Iterator i = ds.getMainTable().getColumns()
+							.values().iterator(); i.hasNext()
+							&& realSourceCol == null;) {
+						final DataSetColumn cand = (DataSetColumn) i.next();
+						if (cand instanceof WrappedColumn
+								&& ((WrappedColumn) cand).getWrappedColumn()
+										.equals(sourceCol))
+							realSourceCol = cand;
+					}
+					if (realSourceCol == null)
+						throw new BioMartError(); // Should never happen.
 					ds.asPartitionTable().setSelectedColumnNames(
-							Collections.singletonList(sourceCol.getName()));
+							Collections.singletonList(realSourceCol.getName()));
 				} catch (final Exception e) {
 					StackTrace.showStackTrace(e);
 					return;
