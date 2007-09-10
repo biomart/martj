@@ -2291,6 +2291,7 @@ public class DataSet extends Schema {
 			public UnrolledColumn(final String name, final DataSetTable dsTable) {
 				// The super constructor will make the alias for us.
 				super(name, dsTable);
+				this.visibleModified = false;
 			}
 
 			public void setColumnMasked(final boolean columnMasked)
