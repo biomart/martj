@@ -62,6 +62,7 @@ import org.biomart.builder.model.TransformationUnit.SkipTable;
 import org.biomart.builder.model.TransformationUnit.UnrollTable;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
+import org.biomart.common.exceptions.TransactionException;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanMap;
@@ -117,13 +118,7 @@ public class DataSet extends Schema {
 	private final PropertyChangeListener existenceListener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
 			// Are we deaded?
-			if (!DataSet.this.getMart().getSchemas().containsKey(
-					DataSet.this.centralTable.getSchema().getName())
-					|| !DataSet.this.centralTable.getSchema().getTables()
-							.containsKey(DataSet.this.centralTable.getName())) {
-				DataSet.this.getMart().getDataSets().remove(
-						DataSet.this.getName());
-			}
+			DataSet.this.deadCheck = true;
 		}
 	};
 
@@ -142,6 +137,8 @@ public class DataSet extends Schema {
 	private DataSetOptimiserType optimiser;
 
 	private boolean indexOptimiser;
+
+	private boolean deadCheck = false;
 
 	/**
 	 * Use this key for dataset-wide operations.
@@ -197,6 +194,22 @@ public class DataSet extends Schema {
 
 		// Recalculate completely if parent mart changes case.
 		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
+	}
+
+	public void transactionEnded(final TransactionEvent evt)
+			throws TransactionException {
+		try {
+			if (this.deadCheck
+					&& !this.getMart().getSchemas().containsKey(
+							this.centralTable.getSchema().getName())
+					|| !this.centralTable.getSchema().getTables().containsKey(
+							this.centralTable.getName()))
+				this.getMart().getDataSets().remove(this.getName());
+			else
+				super.transactionEnded(evt);
+		} finally {
+			this.deadCheck = false;
+		}
 	}
 
 	/**
