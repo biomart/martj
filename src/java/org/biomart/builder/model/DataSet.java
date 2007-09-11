@@ -332,8 +332,9 @@ public class DataSet extends Schema {
 		Connection conn = null;
 		final List rows = new ArrayList();
 		try {
-			final String usablePartition = jdbc.getPartitions().containsKey(
-					schemaPartition) ? schemaPartition : jdbc
+			final String usablePartition = (schemaPartition != null && jdbc
+					.getPartitions().containsKey(
+					schemaPartition)) ? schemaPartition : jdbc
 					.getDataLinkSchema();
 			conn = jdbc.getConnection(schemaPartition);
 			// Construct SQL statement.
@@ -1686,20 +1687,6 @@ public class DataSet extends Schema {
 			return;
 		}
 
-		// Gather up the tables we have used or are linked to those we have
-		// used.
-		final Set listeningTables = new HashSet();
-		for (final Iterator i = this.includedRelations.iterator(); i.hasNext();) {
-			final Relation rel = (Relation) i.next();
-			// Don't bother listening to tables at end of incorrect
-			// relations - but those that are excluded because of
-			// non-relation-related reasons can be listened to.
-			if (!rel.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)) {
-				listeningTables.add(rel.getFirstKey().getTable());
-				listeningTables.add(rel.getSecondKey().getTable());
-			}
-		}
-
 		// Empty out used rels and schs.
 		this.includedRelations.clear();
 		this.includedSchemas.clear();
@@ -1734,6 +1721,12 @@ public class DataSet extends Schema {
 			this.getTables().remove(deadTbl.getName());
 		}
 
+		// TODO Add us as a listener to remove ourselves if our
+		// parent schema is removed.
+		
+		// TODO Add us as a listener to the schema's tables so that
+		// if the central table is removed, so are we.
+		
 		// Add us as a listener to all included rels and schs, replacing
 		// ourselves if we are already listening to them.
 		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();) {
@@ -1743,7 +1736,7 @@ public class DataSet extends Schema {
 							this.rebuildListener));
 		}
 		// Gather up the tables we have used and those linked to them.
-		final Set listeningRels = new HashSet();
+		final Set listeningTables = new HashSet();
 		for (final Iterator i = this.includedRelations.iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
 			// Don't bother listening to tables at end of incorrect
@@ -1755,7 +1748,7 @@ public class DataSet extends Schema {
 			}
 		}
 		// Listen to the tables and their children.
-		listeningRels.clear();
+		final Set listeningRels = new HashSet();
 		for (final Iterator i = listeningTables.iterator(); i.hasNext();) {
 			final Table tbl = (Table) i.next();
 			listeningRels.addAll(tbl.getRelations());
