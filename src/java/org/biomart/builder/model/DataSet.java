@@ -114,6 +114,19 @@ public class DataSet extends Schema {
 		}
 	};
 
+	private final PropertyChangeListener existenceListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			// Are we deaded?
+			if (!DataSet.this.getMart().getSchemas().containsKey(
+					DataSet.this.centralTable.getSchema().getName())
+					|| !DataSet.this.centralTable.getSchema().getTables()
+							.containsKey(DataSet.this.centralTable.getName())) {
+				DataSet.this.getMart().getDataSets().remove(
+						DataSet.this.getName());
+			}
+		}
+	};
+
 	private final Table centralTable;
 
 	private final Collection includedRelations;
@@ -333,9 +346,8 @@ public class DataSet extends Schema {
 		final List rows = new ArrayList();
 		try {
 			final String usablePartition = (schemaPartition != null && jdbc
-					.getPartitions().containsKey(
-					schemaPartition)) ? schemaPartition : jdbc
-					.getDataLinkSchema();
+					.getPartitions().containsKey(schemaPartition)) ? schemaPartition
+					: jdbc.getDataLinkSchema();
 			conn = jdbc.getConnection(schemaPartition);
 			// Construct SQL statement.
 			Log.debug("Building SQL");
@@ -1678,15 +1690,6 @@ public class DataSet extends Schema {
 		Log.debug("Regenerating dataset " + this.getName());
 		super.synchronise();
 
-		// Are we deaded?
-		if (!this.getMart().getSchemas().containsKey(
-				this.centralTable.getSchema().getName())
-				|| !this.centralTable.getSchema().getTables().containsKey(
-						this.centralTable.getName())) {
-			this.getMart().getDataSets().remove(this.getName());
-			return;
-		}
-
 		// Empty out used rels and schs.
 		this.includedRelations.clear();
 		this.includedSchemas.clear();
@@ -1721,12 +1724,18 @@ public class DataSet extends Schema {
 			this.getTables().remove(deadTbl.getName());
 		}
 
-		// TODO Add us as a listener to remove ourselves if our
-		// parent schema is removed.
-		
-		// TODO Add us as a listener to the schema's tables so that
+		// Add us as a listener to mart's schemas to remove ourselves
+		// if our central table's parent schema is removed.
+		this.getMart().getSchemas().addPropertyChangeListener(
+				new WeakPropertyChangeListener(this.getMart().getSchemas(),
+						this.existenceListener));
+
+		// Add us as a listener to the schema's tables so that
 		// if the central table is removed, so are we.
-		
+		this.centralTable.getSchema().getTables().addPropertyChangeListener(
+				new WeakPropertyChangeListener(this.centralTable.getSchema()
+						.getTables(), this.existenceListener));
+
 		// Add us as a listener to all included rels and schs, replacing
 		// ourselves if we are already listening to them.
 		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();) {
