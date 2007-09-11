@@ -534,7 +534,9 @@ public class SchemaTabSet extends JTabbedPane {
 			final Column[] columns) {
 		// DOES NOT AFFECT VISIBLE STATUS.
 		Transaction.start();
-		table.getForeignKeys().add(new ForeignKey(columns));
+		final ForeignKey fk = new ForeignKey(columns);
+		fk.setStatus(ComponentStatus.HANDMADE);
+		table.getForeignKeys().add(fk);
 		Transaction.end();
 	}
 
@@ -572,7 +574,9 @@ public class SchemaTabSet extends JTabbedPane {
 			final Column[] columns) {
 		// DOES NOT AFFECT VISIBLE STATUS.
 		Transaction.start();
-		table.setPrimaryKey(new PrimaryKey(columns));
+		final PrimaryKey pk = new PrimaryKey(columns);
+		pk.setStatus(ComponentStatus.HANDMADE);
+		table.setPrimaryKey(pk);
 		Transaction.end();
 	}
 
@@ -610,9 +614,9 @@ public class SchemaTabSet extends JTabbedPane {
 					to,
 					from instanceof PrimaryKey && to instanceof PrimaryKey ? Cardinality.ONE
 							: Cardinality.MANY);
+			rel.setStatus(ComponentStatus.HANDMADE);
 			from.getRelations().add(rel);
 			to.getRelations().add(rel);
-			rel.setStatus(ComponentStatus.HANDMADE);
 		} catch (final AssociationException e) {
 			StackTrace.showStackTrace(e);
 		} finally {
@@ -686,6 +690,7 @@ public class SchemaTabSet extends JTabbedPane {
 			Transaction.resetVisibleModified();
 			Transaction.start();
 			key.setColumns(cols);
+			key.setStatus(ComponentStatus.HANDMADE);
 			Transaction.end();
 		}
 	}

@@ -80,11 +80,11 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getTable());
-		sb.append(" as select parent.*, child.");
+		sb.append(" as select parent.*, parent.");
 		sb.append(action.getUnrollPKCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollIDCol());
-		sb.append(", child.");
+		sb.append(", parent.");
 		sb.append(action.getNamingCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollNameCol());
@@ -94,14 +94,7 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getSourceTable());
-		sb.append(" as parent left join ");
-		sb.append(schemaName);
-		sb.append('.');
-		sb.append(action.getSourceTable());
-		sb.append(" as child on parent.");
-		sb.append(action.getUnrollPKCol());
-		sb.append("=child.");
-		sb.append(action.getUnrollFKCol());
+		sb.append(" as parent");
 
 		statements.add(sb.toString());
 	}
@@ -135,7 +128,7 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(action.getUnrollNameCol());
 		sb.append(',');
 		sb.append(action.getUnrollIterationCol());
-		sb.append(") select ");
+		sb.append(") select distinct ");
 		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
 			sb.append("parent.");
 			sb.append((String) i.next());
@@ -170,6 +163,63 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append('=');
 		sb.append(action.getUnrollIteration());
 
+		statements.add(sb.toString());
+
+		// MySQL 4 has no 'delete from where' which can reference
+		// itself. Therefore we need a temp table workaround.
+		sb.setLength(0);
+		sb.append("create table ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append("__t as select distinct ");
+		sb.append(action.getUnrollPKCol());
+		sb.append(',');
+		sb.append(action.getUnrollIDCol());
+		sb.append(" from ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append(" where ");
+		sb.append(action.getUnrollIterationCol());
+		sb.append('<');
+		sb.append(action.getUnrollIteration()+1);
+		
+		statements.add(sb.toString());		
+		
+		sb.setLength(0);
+		sb.append("delete from ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append(" where ");
+		sb.append(action.getUnrollIterationCol());
+		sb.append('=');
+		sb.append(action.getUnrollIteration()+1);
+		sb.append(" and (");
+		sb.append(action.getUnrollPKCol());
+		sb.append(',');
+		sb.append(action.getUnrollIDCol());
+		sb.append(") in (select ");
+		sb.append(action.getUnrollPKCol());
+		sb.append(',');
+		sb.append(action.getUnrollIDCol());
+		sb.append(" from ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append("__t)");
+		
+		statements.add(sb.toString());
+		
+		sb.setLength(0);
+		
+		sb.append("drop table ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append("__t");
+		
 		statements.add(sb.toString());
 	}
 

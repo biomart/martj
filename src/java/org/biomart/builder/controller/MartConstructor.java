@@ -1162,10 +1162,8 @@ public interface MartConstructor {
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
 			// Note that it will run unpredictably if compound keys are used.
-			final String unrollFK = utu.getRelation().getManyKey().getColumns()[0]
-					.getName();
-			final String unrollPK = utu.getRelation().getOneKey().getColumns()[0]
-					.getName();
+			final String unrollFK = utu.getDataSetColumnFor(utu.getRelation().getManyKey().getColumns()[0]).getPartitionedName();
+			final String unrollPK = utu.getDataSetColumnFor(utu.getRelation().getOneKey().getColumns()[0]).getPartitionedName();
 			final String unrollIDColName = utu.getUnrolledIDColumn()
 					.getPartitionedName();
 			final String unrollNameColName = utu.getUnrolledNameColumn()
@@ -1181,7 +1179,6 @@ public interface MartConstructor {
 					this.datasetSchemaName, finalCombinedName);
 			iaction.setSchema(this.datasetSchemaName);
 			iaction.setSourceTable(previousTempTable);
-			iaction.setUnrollFKCol(unrollFK);
 			iaction.setUnrollPKCol(unrollPK);
 			iaction.setUnrollIDCol(unrollIDColName);
 			iaction.setUnrollNameCol(unrollNameColName);
@@ -1212,8 +1209,8 @@ public interface MartConstructor {
 						parentCols.add(dsCol.getPartitionedName());
 				}
 			parentCols.removeAll(droppedCols);
-			// Do n-1 expansion insert+update pairs.
-			for (int i = 1; i < n - 1; i++) {
+			// Do n expansion insert+update pairs.
+			for (int i = 1; i < n; i++) {
 				final ExpandUnroll eaction = new ExpandUnroll(
 						this.datasetSchemaName, finalCombinedName);
 				eaction.setSchema(this.datasetSchemaName);

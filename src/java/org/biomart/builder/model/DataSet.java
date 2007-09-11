@@ -908,12 +908,12 @@ public class DataSet extends Schema {
 						.get(i - 1);
 				final TransformationUnit ntu = (TransformationUnit) units
 						.get(i + 1);
+				ntu.setPreviousUnit(ptu);
 				final TransformationUnit ltu = (TransformationUnit) units
 						.get(units.size() - 1);
 				tu.setPreviousUnit(ltu);
-				ntu.setPreviousUnit(ptu);
-				units.add(tu);
 				units.remove(i);
+				units.add(tu);
 				break;
 			}
 		}
@@ -1436,6 +1436,8 @@ public class DataSet extends Schema {
 								dsTable);
 						dsTable.getColumns().put(unrolledName, unrolledNameCol);
 					}
+					unusedCols.remove(unrolledIDCol);
+					unusedCols.remove(unrolledNameCol);
 					newSourceDSCols.add(unrolledIDCol);
 					newSourceDSCols.add(unrolledNameCol);
 					// Create UnrollTable transformation unit.

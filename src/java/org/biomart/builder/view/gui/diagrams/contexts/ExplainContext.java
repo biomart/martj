@@ -628,6 +628,8 @@ public class ExplainContext extends SchemaContext {
 									iteration);
 				}
 			});
+			if (incorrect || relationUnrolled || relationMasked)
+				restriction.setEnabled(false);
 			contextMenu.add(restriction);
 		}
 

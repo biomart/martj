@@ -1159,8 +1159,6 @@ public abstract class MartConstructorAction {
 
 		private String sourceTable;
 
-		private String unrollFKCol;
-
 		private String unrollPKCol;
 
 		private String unrollIDCol;
@@ -1248,21 +1246,6 @@ public abstract class MartConstructorAction {
 		 */
 		public void setTable(final String table) {
 			this.table = table;
-		}
-
-		/**
-		 * @return the unrollFKCol
-		 */
-		public String getUnrollFKCol() {
-			return this.unrollFKCol;
-		}
-
-		/**
-		 * @param unrollFKCol
-		 *            the unrollFKCol to set
-		 */
-		public void setUnrollFKCol(final String unrollFKCol) {
-			this.unrollFKCol = unrollFKCol;
 		}
 
 		/**
