@@ -106,12 +106,6 @@ public class DataSetContext extends SchemaContext {
 			if (target.isDimensionMasked() || this.getDataSet().isMasked())
 				relcomp.setForeground(RelationComponent.MASKED_COLOUR);
 
-			// Fade MERGED DIMENSION relations.
-			else if (target.getFocusRelation() != null
-					&& target.getFocusRelation().isMergeRelation(
-							this.getDataSet()))
-				relcomp.setForeground(TableComponent.MASKED_COLOUR);
-
 			// Highlight SUBCLASS relations.
 			else if (target.getType().equals(DataSetTableType.MAIN_SUBCLASS))
 				relcomp.setForeground(RelationComponent.SUBCLASS_COLOUR);

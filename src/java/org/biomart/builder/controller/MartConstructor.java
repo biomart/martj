@@ -18,6 +18,8 @@
 
 package org.biomart.builder.controller;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +46,7 @@ import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TransformationUnit;
+import org.biomart.builder.model.DataLink.JDBCDataLink;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
@@ -124,6 +127,12 @@ public interface MartConstructor {
 	 * takes a dataset as a parameter.
 	 */
 	public interface ConstructorRunnable extends Runnable {
+		/**
+		 * Is this thread still going?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isAlive();
 
 		/**
 		 * This method adds a listener which will listen out for events emitted
@@ -197,6 +206,8 @@ public interface MartConstructor {
 		private String statusMessage = Resources.get("mcCreatingGraph");
 
 		private int tempNameCount = 0;
+
+		private boolean alive = true;
 
 		/**
 		 * Constructs a builder object that will construct an action graph
@@ -292,14 +303,13 @@ public interface MartConstructor {
 
 			// Work out the progress step size : 1 step = 1 table per source
 			// schema partition.
-			double stepPercent = 100.0 / dataset.getTables().size()
-					/ schemaPartitions.size();
+			final Collection tablesToProcess = this.getTablesToProcess(dataset);
+			double stepPercent = 100.0 / (double) totalDataSetCount;
+			stepPercent /= tablesToProcess.size();
+			stepPercent /= schemaPartitions.size();
 			if (dsPta != null)
 				stepPercent /= ((PartitionAppliedRow) dsPta
 						.getPartitionAppliedRows().get(0)).getCompound();
-
-			// Divide the progress step size by the number of datasets.
-			stepPercent /= totalDataSetCount;
 
 			// Process the tables.
 			for (final Iterator s = schemaPartitions.iterator(); s.hasNext();) {
@@ -336,8 +346,8 @@ public interface MartConstructor {
 					this.issueListenerEvent(
 							MartConstructorListener.DATASET_STARTED,
 							partitionedDataSetName);
-					for (final Iterator i = this.getTablesToProcess(dataset)
-							.iterator(); i.hasNext();) {
+					for (final Iterator i = tablesToProcess.iterator(); i
+							.hasNext();) {
 						final DataSetTable dsTable = (DataSetTable) i.next();
 						if (!droppedTables.contains(dsTable.getParent())) {
 							// Loop over dataset table partitions.
@@ -354,16 +364,13 @@ public interface MartConstructor {
 									&& dmPta.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
 								if (!this.makeActionsForDatasetTable(
-										templateSchema,
+										stepPercent, templateSchema,
 										(String) schemaPartition.getKey(),
 										(String) schemaPartition.getValue(),
 										dsPta, dmPta, dataset, dsTable))
 									droppedTables.add(dsTable);
 							}
 						}
-
-						// Update the progress percentage once per table.
-						this.percentComplete += stepPercent;
 
 						// Check not cancelled.
 						this.checkCancelled();
@@ -421,12 +428,13 @@ public interface MartConstructor {
 			return tablesToProcess;
 		}
 
-		private boolean makeActionsForDatasetTable(final Schema templateSchema,
-				final String schemaPartition, final String schemaPrefix,
+		private boolean makeActionsForDatasetTable(double stepPercent,
+				final Schema templateSchema, final String schemaPartition,
+				final String schemaPrefix,
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable) throws ListenerException,
-				SQLException, PartitionException {
+				SQLException, PartitionException, ConstructorException {
 			Log.debug("Creating actions for table " + dsTable);
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
@@ -437,9 +445,14 @@ public interface MartConstructor {
 			final Set droppedCols = new HashSet();
 
 			// Use the transformation units to create the basic table.
+			final Collection units = dsTable.getTransformationUnits();
+			stepPercent /= (double) units.size();
 			Relation firstJoinRel = null;
-			for (final Iterator j = dsTable.getTransformationUnits().iterator(); j
-					.hasNext();) {
+			this.percentComplete -= stepPercent; // Avoid early completion.
+			for (final Iterator j = units.iterator(); j.hasNext();) {
+				this.checkCancelled();
+				
+				this.percentComplete += stepPercent;
 				final TransformationUnit tu = (TransformationUnit) j.next();
 				final String tempTable = tempName + this.tempNameCount++;
 
@@ -1154,7 +1167,7 @@ public interface MartConstructor {
 				final DataSetTable dsTable, final UnrollTable utu,
 				final String previousTempTable, final String tempTable,
 				final Set droppedCols) throws SQLException, ListenerException,
-				PartitionException {
+				PartitionException, ConstructorException {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
@@ -1162,17 +1175,154 @@ public interface MartConstructor {
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
 			// Note that it will run unpredictably if compound keys are used.
-			final String unrollFK = utu.getDataSetColumnFor(utu.getRelation().getManyKey().getColumns()[0]).getPartitionedName();
-			final String unrollPK = utu.getDataSetColumnFor(utu.getRelation().getOneKey().getColumns()[0]).getPartitionedName();
+			final String unrollFK = utu.getDataSetColumnFor(
+					utu.getRelation().getManyKey().getColumns()[0])
+					.getPartitionedName();
+			final String unrollPK = utu.getDataSetColumnFor(
+					utu.getRelation().getOneKey().getColumns()[0])
+					.getPartitionedName();
 			final String unrollIDColName = utu.getUnrolledIDColumn()
 					.getPartitionedName();
 			final String unrollNameColName = utu.getUnrolledNameColumn()
 					.getPartitionedName();
 			final String unrollIterationColName = unrollIDColName + "__i";
 
-			// n=count rows in PK table from relation.
-			final int n = utu.getRelation().getOneKey().getTable().getSchema()
-					.countRows(utu.getRelation().getOneKey().getTable());
+			// Make n an efficient approximation of the
+			// number of unroll cycles required to get longest path
+			// covered.
+			// = SPREADING RULE. Mark root = 0, descendants = 1,
+			// next descendants = 2, etc. etc. until all nodes
+			// marked. Don't renumber nodes already numbered.
+			// Number used to mark last set of nodes is length of
+			// longest path.
+			// Open connection and query.
+			final Connection conn = ((JDBCDataLink) templateSchema)
+					.getConnection(schemaPartition);
+			final StringBuffer sql = new StringBuffer();
+			// Find other merged relation between these two tables, and
+			// the many key is the parent key col.
+			Relation otherRel = null;
+			for (final Iterator i = utu.getRelation().getOneKey()
+					.getRelations().iterator(); i.hasNext() && otherRel == null;) {
+				final Relation candRel = (Relation) i.next();
+				if (candRel.equals(utu.getRelation()))
+					continue;
+				if (candRel.getManyKey().getTable().equals(
+						utu.getRelation().getManyKey().getTable())
+						&& candRel.isMergeRelation(dataset))
+					otherRel = candRel;
+			}
+			if (otherRel == null)
+				throw new BioMartError(); // Should never happen.
+			// From lookup table joined with parent table,
+			// find both parent ID col and child ID col.
+			final Table parentTable = utu.getRelation().getOneKey().getTable();
+			final Table childTable = utu.getRelation().getManyKey().getTable();
+			sql.append("select child.");
+			sql.append(otherRel.getManyKey().getColumns()[0].getName());
+			sql.append(", child.");
+			sql
+					.append(utu.getRelation().getManyKey().getColumns()[0]
+							.getName());
+			sql.append(" from ");
+			sql
+					.append(schemaPartition == null ? ((JDBCDataLink) templateSchema)
+							.getDataLinkSchema()
+							: schemaPartition);
+			sql.append('.');
+			sql.append(parentTable.getName());
+			sql.append(" as parent, ");
+			sql
+					.append(schemaPartition == null ? ((JDBCDataLink) templateSchema)
+							.getDataLinkSchema()
+							: schemaPartition);
+			sql.append('.');
+			sql.append(childTable.getName());
+			sql.append(" as child where parent.");
+			sql.append(otherRel.getOneKey().getColumns()[0].getName());
+			sql.append("=child.");
+			sql.append(otherRel.getManyKey().getColumns()[0].getName());
+			if (parentTable.getRestrictTable(dataset, dsTable.getName()) != null) {
+				sql.append(" and ");
+				sql.append(parentTable.getRestrictTable(dataset,
+						dsTable.getName()).getSubstitutedExpression("parent"));
+			}
+			if (childTable.getRestrictTable(dataset, dsTable.getName()) != null) {
+				sql.append(" and ");
+				sql.append(childTable.getRestrictTable(dataset,
+						dsTable.getName()).getSubstitutedExpression("child"));
+			}
+			if (otherRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
+				sql.append(" and ");
+				sql.append(otherRel.getRestrictRelation(dataset,
+						dsTable.getName(), 0)
+						.getSubstitutedExpression(
+								otherRel.getFirstKey().equals(
+										otherRel.getOneKey()) ? "parent"
+										: "child",
+								otherRel.getFirstKey().equals(
+										otherRel.getManyKey()) ? "parent"
+										: "child", false, false, utu));
+			}
+			if (utu.getRelation().getRestrictRelation(dataset,
+					dsTable.getName(), 0) != null) {
+				sql.append(" and ");
+				sql.append(utu.getRelation().getRestrictRelation(dataset,
+						dsTable.getName(), 0).getSubstitutedExpression(
+						utu.getRelation().getFirstKey().equals(
+								utu.getRelation().getOneKey()) ? "parent"
+								: "child",
+						utu.getRelation().getFirstKey().equals(
+								utu.getRelation().getManyKey()) ? "parent"
+								: "child", false, false, utu));
+			}
+			final String sqlStr = sql.toString();
+			Log.debug("Executing unroll statement: " + sqlStr);
+			final ResultSet rs = conn.prepareStatement(sqlStr).executeQuery();
+			// Iterate over all pairs in db.
+			// For each pair:
+			// 1. if L not in allNodes, add.
+			// 2. if R not in childNodes, add.
+			// 3. get L from allNodes and add R to children.
+			final Map allNodes = new HashMap();
+			int max = 0;
+			int min = 0;
+			while (rs.next()) {
+				final String L = rs.getString(1);
+				final String R = rs.getString(2);
+				final boolean Lnew = !allNodes.containsKey(L);
+				final boolean Rnew = !allNodes.containsKey(R);
+				if (Rnew) {
+					if (Lnew) {
+						// R new L new
+						allNodes.put(L, new Integer(0));
+						allNodes.put(R, new Integer(1));
+					} else {
+						// R new L old
+						allNodes.put(R, new Integer(((Integer) allNodes.get(L))
+								.intValue() + 1));
+					}
+				} else {
+					if (Lnew) {
+						// R old L new
+						allNodes.put(L, new Integer(((Integer) allNodes.get(R))
+								.intValue() - 1));
+					} else {
+						// R old L old
+						allNodes.put(L, new Integer(Math.min(
+								((Integer) allNodes.get(L)).intValue(),
+								((Integer) allNodes.get(R)).intValue() - 1)));
+					}
+				}
+				min = Math.min(min, ((Integer) allNodes.get(L)).intValue());
+				max = Math.max(max, ((Integer) allNodes.get(R)).intValue());
+				this.checkCancelled();
+			}
+			final int n = max - min;
+			// Close query and connection.
+			rs.close();
+			conn.close();
+
 			// Create initial select table with unrolled child cols and
 			// iteration col.
 			final InitialUnroll iaction = new InitialUnroll(
@@ -1209,23 +1359,26 @@ public interface MartConstructor {
 						parentCols.add(dsCol.getPartitionedName());
 				}
 			parentCols.removeAll(droppedCols);
+
 			// Do n expansion insert+update pairs.
-			for (int i = 1; i < n; i++) {
+			// We start at 1 because InitialUnroll inserts using 1.
+			for (int i = 1; i <= n; i++) {
 				final ExpandUnroll eaction = new ExpandUnroll(
 						this.datasetSchemaName, finalCombinedName);
 				eaction.setSchema(this.datasetSchemaName);
 				eaction.setSourceTable(tempTable);
 				eaction.setParentCols(parentCols);
 				eaction.setUnrollPKCol(unrollPK);
+				eaction.setUnrollIteration(i);
 				eaction.setUnrollFKCol(unrollFK);
 				eaction.setUnrollIDCol(unrollIDColName);
 				eaction.setUnrollNameCol(unrollNameColName);
 				eaction.setUnrollIterationCol(unrollIterationColName);
-				eaction.setUnrollIteration(i);
 				eaction.setNamingCol(utu.getDataSetColumnFor(
 						utu.getNamingColumn()).getPartitionedName());
 				this.issueAction(eaction);
 			}
+
 			// Drop iteration column.
 			final DropColumns dropcol = new DropColumns(this.datasetSchemaName,
 					finalCombinedName);
@@ -1595,7 +1748,17 @@ public interface MartConstructor {
 				this.failure = e;
 			} catch (final Throwable t) {
 				this.failure = new ConstructorException(t);
+			} finally {
+				this.alive = false;
 			}
+		}
+
+		public boolean isAlive() {
+			return this.alive;
+		}
+
+		public void finalize() {
+			this.alive = false;
 		}
 	}
 

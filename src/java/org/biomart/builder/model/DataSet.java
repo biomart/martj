@@ -1315,9 +1315,11 @@ public class DataSet extends Schema {
 				// might still be possible for the user.
 				final Key skipKey = r.getKeyForTable(mergeTable);
 				final List newSourceDSCols = new ArrayList();
-				for (int j = 0; j < skipKey.getColumns().length; j++)
-					newSourceDSCols.add(tu.getDataSetColumnFor(skipKey
-							.getColumns()[j]));
+				for (int j = 0; j < skipKey.getColumns().length; j++) {
+					final DataSetColumn col = tu.getDataSetColumnFor(skipKey
+							.getColumns()[j]);
+					newSourceDSCols.add(col);
+				}
 				final SkipTable stu = new SkipTable(tu, skipKey.getTable(),
 						newSourceDSCols, skipKey, r, ((Integer) relationCount
 								.get(r)).intValue());

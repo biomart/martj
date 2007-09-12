@@ -291,6 +291,19 @@ public class SchemaTabSet extends JTabbedPane {
 		// The empty menu to start with.
 		final JPopupMenu contextMenu = new JPopupMenu();
 
+		// Update schema.
+		final JMenuItem updateSchema = new JMenuItem(Resources
+				.get("updateSchemaTitle"), new ImageIcon(Resources
+				.getResourceAsURL("refresh.gif")));
+		updateSchema.setMnemonic(Resources.get("updateSchemaMnemonic")
+				.charAt(0));
+		updateSchema.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaTabSet.this.requestModifySchema(schema);
+			}
+		});
+		contextMenu.add(updateSchema);
+
 		// Add an option to rename this schema tab and associated schema.
 		final JMenuItem rename = new JMenuItem(Resources
 				.get("renameSchemaTitle"));

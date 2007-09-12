@@ -111,7 +111,7 @@ public class MySQLDialect extends DatabaseDialect {
 	 */
 	public void doExpandUnroll(final ExpandUnroll action, final List statements)
 			throws Exception {
-		final String schemaName = action.getDataSetSchemaName();
+		final String schemaName = action.getDataSetSchemaName();		
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("insert into ");
@@ -186,6 +186,21 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(action.getUnrollIteration()+1);
 		
 		statements.add(sb.toString());		
+		
+		sb.setLength(0);
+		sb.append("create index ");
+		sb.append(action.getSourceTable());
+		sb.append("__ti on ");
+		sb.append(schemaName);
+		sb.append('.');
+		sb.append(action.getSourceTable());
+		sb.append("__t(");
+		sb.append(action.getUnrollPKCol());
+		sb.append(',');
+		sb.append(action.getUnrollIDCol());
+		sb.append(')');
+		
+		statements.add(sb.toString());
 		
 		sb.setLength(0);
 		sb.append("delete from ");

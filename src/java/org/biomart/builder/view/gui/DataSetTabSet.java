@@ -725,6 +725,26 @@ public class DataSetTabSet extends JTabbedPane {
 		final Relation relation = dim.getFocusRelation();
 		final Column def = relation.getUnrolledRelation(ds);
 
+		try {
+			Relation otherRel = null;
+			for (final Iterator i = relation.getOneKey().getRelations()
+					.iterator(); i.hasNext() && otherRel == null;) {
+				final Relation candRel = (Relation) i.next();
+				if (candRel.equals(this))
+					continue;
+				if (candRel.getManyKey().getTable().equals(
+						relation.getManyKey().getTable())
+						&& candRel.isMergeRelation(ds))
+					otherRel = candRel;
+			}
+			if (otherRel == null)
+				throw new ValidationException(Resources
+						.get("cannotUnrollWithoutMerge"));
+		} catch (final ValidationException e) {
+			StackTrace.showStackTrace(e);
+			return;
+		}
+
 		// Pop up a dialog and update 'direction'.
 		final UnrolledRelationDialog dialog = new UnrolledRelationDialog(def,
 				relation);

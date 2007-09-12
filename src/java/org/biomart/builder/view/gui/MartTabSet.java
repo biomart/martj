@@ -44,7 +44,6 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
-import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
@@ -63,6 +62,8 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.SwingWorker;
+import org.biomart.common.view.gui.dialogs.ProgressDialog;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 
@@ -558,48 +559,56 @@ public class MartTabSet extends JTabbedPane {
 	public void requestMonitorConstructorRunnable(
 			final ConstructorRunnable constructor) {
 		// Create a progress monitor.
-		final ProgressMonitor progressMonitor = new ProgressMonitor(this
-				.getMartBuilder(), Resources.get("creatingMart"), "", 0, 100);
-		progressMonitor.setProgress(0); // Start with 0% complete.
-		progressMonitor.setMillisToPopup(0); // Open immediately.
+		final ProgressDialog progressMonitor = new ProgressDialog(this,
+				Resources
+				.get("creatingMart"), 0, 100);
+		progressMonitor.setVisible(true);
 
 		// Start the construction in a thread. It does not need to be
 		// Swing-thread-safe because it will never access the GUI. All
 		// GUI interaction is done through the Timer below.
-		final Thread thread = new Thread(constructor);
-		thread.start();
+		final SwingWorker worker = new SwingWorker() {
+			public Object construct() {
+				constructor.run();
+				return null;
+			}
+		};
+		worker.start();
 
 		// Create a timer thread that will update the progress dialog.
 		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
 		// equals 1 second.)
 		final Timer timer = new Timer(300, null);
-		timer.setInitialDelay(0); // Start immediately upon request.
+		timer.setInitialDelay(300); // Start immediately upon request.
 		timer.setCoalesce(true); // Coalesce delayed events.
 		timer.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						// Did the job complete yet?
-						if (thread.isAlive() && !progressMonitor.isCanceled()) {
-							// If not, update the progress report.
-							progressMonitor.setNote(constructor
-									.getStatusMessage());
-							progressMonitor.setProgress(constructor
-									.getPercentComplete());
+						if (constructor.isAlive()) {
+							if (progressMonitor.isCanceled())
+								// Stop the thread if required.
+								constructor.cancel();
+							else {
+								// If not, update the progress report.
+								progressMonitor.setLabel(constructor
+										.getStatusMessage());
+								progressMonitor.setProgress(constructor
+										.getPercentComplete());
+							}
 						} else {
 							// If it completed, close the task and tidy up.
 							// Stop the timer.
 							timer.stop();
-							// Stop the thread.
-							constructor.cancel();
 							// Close the progress dialog.
-							progressMonitor.close();
+							progressMonitor.setVisible(false);
+							progressMonitor.dispose();
 							// If it failed, show the exception.
 							final Exception failure = constructor
 									.getFailureException();
 							// By singling out ConstructorException we can show
-							// users useful
-							// messages straight away.
+							// users useful messages straight away.
 							if (failure != null)
 								StackTrace
 										.showStackTrace(failure instanceof ConstructorException ? failure

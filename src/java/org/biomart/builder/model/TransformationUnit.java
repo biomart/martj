@@ -176,11 +176,7 @@ public abstract class TransformationUnit {
 							candidate = dsCol;
 					}
 				}
-			if (candidate != null)
-				return candidate;
-			else
-				// Should never happen.
-				throw new BioMartError();
+			return candidate;
 		}
 	}
 
@@ -270,11 +266,7 @@ public abstract class TransformationUnit {
 			if (candidate == null)
 				candidate = this.getDataSetColumnFor(column, name
 						+ Resources.get("keySuffix"));
-			if (candidate != null)
-				return candidate;
-			else
-				// Should never happen.
-				throw new BioMartError();
+			return candidate;
 		}
 
 		private DataSetColumn getDataSetColumnFor(final Column column,
@@ -506,8 +498,7 @@ public abstract class TransformationUnit {
 			if (this.getPreviousUnit() != null)
 				return this.getPreviousUnit().getDataSetColumnFor(column);
 			else
-				// Should never happen.
-				throw new BioMartError();
+				return null;
 		}
 	}
 }

@@ -664,20 +664,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	}
 
 	/**
-	 * Count the rows for a table.
-	 * 
-	 * @param table
-	 *            the table to get rows from.
-	 * @return the count of rows. It will be 0 if the operation is not possible.
-	 * @throws SQLException
-	 *             if anything goes wrong.
-	 */
-	public int countRows(final Table table) throws SQLException {
-		// Default returns 0.
-		return 0;
-	}
-
-	/**
 	 * Retrieve the regex used to work out schema partitions. If this regex is
 	 * <tt>null</tt> then no partitioning will be done.
 	 * 
@@ -886,24 +872,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 			// Return the results.
 			return results;
-		}
-
-		public int countRows(final Table table) throws SQLException {
-			final String tableName = table.getName();
-
-			// Do the select.
-			final String schemaName = this.getDataLinkSchema();
-			final Connection conn = this.getConnection(null);
-			final String sql = "select count(1) from " + schemaName + "."
-					+ tableName;
-			Log.debug("About to run query: " + sql);
-			final ResultSet rs = conn.prepareStatement(sql).executeQuery();
-			rs.next();
-			final int result = rs.getInt(1);
-			rs.close();
-
-			// Return the results.
-			return result;
 		}
 
 		public void populatePartitionCache(final Map partitions)
