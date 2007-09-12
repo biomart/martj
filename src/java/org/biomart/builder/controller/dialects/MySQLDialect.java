@@ -172,7 +172,9 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getSourceTable());
-		sb.append("__t as select distinct ");
+		sb.append('_');
+		sb.append(action.getUnrollIteration());
+		sb.append("t as select distinct ");
 		sb.append(action.getUnrollPKCol());
 		sb.append(',');
 		sb.append(action.getUnrollIDCol());
@@ -190,11 +192,15 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.setLength(0);
 		sb.append("create index ");
 		sb.append(action.getSourceTable());
-		sb.append("__ti on ");
+		sb.append('_');
+		sb.append(action.getUnrollIteration());
+		sb.append("ti on ");
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getSourceTable());
-		sb.append("__t(");
+		sb.append('_');
+		sb.append(action.getUnrollIteration());
+		sb.append("t(");
 		sb.append(action.getUnrollPKCol());
 		sb.append(',');
 		sb.append(action.getUnrollIDCol());
@@ -223,7 +229,9 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getSourceTable());
-		sb.append("__t)");
+		sb.append('_');
+		sb.append(action.getUnrollIteration());
+		sb.append("t)");
 		
 		statements.add(sb.toString());
 		
@@ -233,7 +241,9 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getSourceTable());
-		sb.append("__t");
+		sb.append('_');
+		sb.append(action.getUnrollIteration());
+		sb.append('t');
 		
 		statements.add(sb.toString());
 	}
