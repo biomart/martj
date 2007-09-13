@@ -92,6 +92,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 	private String dataLinkSchema;
 
+	private String dataLinkDatabase;
+
 	private BeanMap tables;
 
 	private String partitionRegex;
@@ -141,12 +143,14 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 *            the mart this schema will belong to.
 	 * @param name
 	 *            the name for this new schema.
+	 * @param dataLinkDatabase
+	 *            the database name we are using.
 	 * @param dataLinkSchema
 	 *            the database schema name we are using.
 	 */
 	public Schema(final Mart mart, final String name,
-			final String dataLinkSchema) {
-		this(mart, name, false, dataLinkSchema);
+			final String dataLinkDatabase, final String dataLinkSchema) {
+		this(mart, name, false, dataLinkDatabase, dataLinkSchema);
 	}
 
 	/**
@@ -160,16 +164,20 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * @param keyGuessing
 	 *            <tt>true</tt>if you want keyguessing, <tt>false</tt> if
 	 *            not.
+	 * @param dataLinkDatabase
+	 *            the database name we are using.
 	 * @param dataLinkSchema
 	 *            the database schema name we are using.
 	 */
 	public Schema(final Mart mart, final String name,
-			final boolean keyGuessing, final String dataLinkSchema) {
+			final boolean keyGuessing, final String dataLinkDatabase,
+			final String dataLinkSchema) {
 		Log.debug("Creating schema " + name);
 		this.mart = mart;
 		this.setName(name);
 		this.setKeyGuessing(keyGuessing);
 		this.setDataLinkSchema(dataLinkSchema);
+		this.setDataLinkDatabase(dataLinkDatabase);
 		this.setMasked(false);
 		this.setPartitionRegex(null);
 		this.setPartitionNameExpression(null);
@@ -408,21 +416,28 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		return this.name;
 	}
 
-	/**
-	 * Gets the actual schema name of this schema.
-	 * 
-	 * @return the name of this schema.
-	 */
+	public String getDataLinkDatabase() {
+		return this.dataLinkDatabase;
+	}
+
+	public void setDataLinkDatabase(final String dataLinkDatabase) {
+		Log.debug("Setting data link database on " + this + " to "
+				+ dataLinkDatabase);
+		final String oldValue = this.dataLinkDatabase;
+		if (this.dataLinkDatabase == dataLinkDatabase
+				|| this.dataLinkDatabase != null
+				&& this.dataLinkDatabase.equals(dataLinkDatabase))
+			return;
+		this.dataLinkDatabase = dataLinkDatabase;
+		this.needsFullSync = true;
+		this.pcs.firePropertyChange("dataLinkDatabase", oldValue,
+				dataLinkDatabase);
+	}
+
 	public String getDataLinkSchema() {
 		return this.dataLinkSchema;
 	}
 
-	/**
-	 * Sets the actual schema name of this schema.
-	 * 
-	 * @param dataLinkSchema
-	 *            the new name of this schema.
-	 */
 	public void setDataLinkSchema(final String dataLinkSchema) {
 		Log.debug("Setting data link schema on " + this + " to "
 				+ dataLinkSchema);
@@ -781,6 +796,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *            <tt>com.mysql.jdbc.Driver</tt>.
 		 * @param url
 		 *            the JDBC URL of the database server to connect to.
+		 * @param dataLinkDatabase
+		 *            the database to read tables from.
 		 * @param dataLinkSchema
 		 *            the database schema name to read tables from. In MySQL
 		 *            this should be the same as the database name specified in
@@ -798,12 +815,13 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *            <tt>false</tt> otherwise.
 		 */
 		public JDBCSchema(final Mart mart, final String driverClassName,
-				final String url, final String dataLinkSchema,
-				final String username, final String password,
-				final String name, final boolean keyGuessing) {
+				final String url, final String dataLinkDatabase,
+				final String dataLinkSchema, final String username,
+				final String password, final String name,
+				final boolean keyGuessing) {
 			// Call the Schema constructor first, to set up our name,
 			// and set up keyguessing.
-			super(mart, name, keyGuessing, dataLinkSchema);
+			super(mart, name, keyGuessing, dataLinkDatabase, dataLinkSchema);
 
 			Log.debug("Creating JDBC schema");
 
@@ -1037,6 +1055,16 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 			// Return the connection.
 			return this.connection;
+		}
+
+		public void setDataLinkDatabase(final String databaseName) {
+			super.setDataLinkDatabase(databaseName);
+			// Reset the cached database connection.
+			try {
+				this.closeConnection();
+			} catch (final SQLException e) {
+				// We don't care.
+			}
 		}
 
 		public void setDataLinkSchema(final String schemaName) {

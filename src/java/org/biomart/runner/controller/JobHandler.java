@@ -147,6 +147,8 @@ public class JobHandler {
 	 * 
 	 * @param jobId
 	 *            the job ID.
+	 * @param targetSchema
+	 *            the schema we will be constructing.
 	 * @param jdbcDriverClassName
 	 *            the JDBC driver classname for the server the job will run
 	 *            against.
@@ -159,7 +161,7 @@ public class JobHandler {
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public static void beginJob(final String jobId,
+	public static void beginJob(final String jobId, final String targetSchema,
 			final String jdbcDriverClassName, final String jdbcURL,
 			final String jdbcUsername, final String jdbcPassword)
 			throws JobException {
@@ -167,6 +169,7 @@ public class JobHandler {
 			// Create a job list entry and a job plan.
 			final JobPlan jobPlan = JobHandler.getJobList().getJobPlan(jobId);
 			// Set the JDBC stuff.
+			jobPlan.setTargetSchema(targetSchema);
 			jobPlan.setJDBCDriverClassName(jdbcDriverClassName);
 			jobPlan.setJDBCURL(jdbcURL);
 			jobPlan.setJDBCUsername(jdbcUsername);
@@ -528,6 +531,29 @@ public class JobHandler {
 			JobHandler.saveJobList();
 			// Recursively delete the job directory.
 			FileUtils.delete(new File(JobHandler.jobsDir, jobId));
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Flag that a job skip drop status has changed.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param skipDropTable
+	 *            the new value - <tt>true</tt> to turn it on.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static void setSkipDropTable(final String jobId,
+			final boolean skipDropTable) throws JobException {
+		try {
+			// Create a job list entry.
+			final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
+			// Set the stuff.
+			jobPlan.setSkipDropTable(skipDropTable);
+			JobHandler.saveJobList();
 		} catch (final IOException e) {
 			throw new JobException(e);
 		}

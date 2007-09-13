@@ -36,6 +36,21 @@ import java.sql.SQLException;
 public interface DataLink {
 
 	/**
+	 * Gets the data source database name.
+	 * 
+	 * @return the data source database name.
+	 */
+	public String getDataLinkDatabase();
+
+	/**
+	 * Sets the data source database name.
+	 * 
+	 * @param databaseName
+	 *            the data source database name.
+	 */
+	public void setDataLinkDatabase(String databaseName);
+
+	/**
 	 * Gets the data source schema name.
 	 * 
 	 * @return the data source schema name.

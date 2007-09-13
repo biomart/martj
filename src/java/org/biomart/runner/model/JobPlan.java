@@ -69,6 +69,10 @@ public class JobPlan implements Serializable {
 
 	private final Map sectionIds = new HashMap();
 
+	private boolean skipDropTable;
+
+	private String targetSchema;
+
 	/**
 	 * Create a new job plan.
 	 * 
@@ -79,6 +83,7 @@ public class JobPlan implements Serializable {
 		this.root = new JobPlanSection(jobId, this, null);
 		this.jobId = jobId;
 		this.threadCount = 1;
+		this.skipDropTable = false;
 	}
 
 	/**
@@ -88,6 +93,25 @@ public class JobPlan implements Serializable {
 	 */
 	public JobPlanSection getRoot() {
 		return this.root;
+	}
+
+	/**
+	 * Set the database schema into which we will be building.
+	 * 
+	 * @param targetSchema
+	 *            the schema name.
+	 */
+	public void setTargetSchema(final String targetSchema) {
+		this.targetSchema = targetSchema;
+	}
+
+	/**
+	 * Obtain the database schema into which we will be building.
+	 * 
+	 * @return the schema name.
+	 */
+	public String getTargetSchema() {
+		return this.targetSchema;
 	}
 
 	/**
@@ -220,6 +244,25 @@ public class JobPlan implements Serializable {
 	 */
 	public void setJDBCUsername(final String username) {
 		this.JDBCUsername = username;
+	}
+
+	/**
+	 * Should we skip drop-table statements?
+	 * 
+	 * @return <tt>true</tt> if we should.
+	 */
+	public boolean isSkipDropTable() {
+		return this.skipDropTable;
+	}
+
+	/**
+	 * Should we skip drop-table statements?
+	 * 
+	 * @param skipDropTable
+	 *            <tt>true</tt> if we should.
+	 */
+	public void setSkipDropTable(final boolean skipDropTable) {
+		this.skipDropTable = skipDropTable;
 	}
 
 	public int hashCode() {

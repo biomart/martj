@@ -106,6 +106,8 @@ public interface MartConstructor {
 	 * Once started, the {@link Runnable} can be monitored using the methods
 	 * available in the {@link ConstructorRunnable} interface.
 	 * 
+	 * @param targetDatabaseName
+	 *            the name of the database to create the dataset tables in.
 	 * @param targetSchemaName
 	 *            the name of the schema to create the dataset tables in.
 	 * @param datasets
@@ -117,7 +119,8 @@ public interface MartConstructor {
 	 *             if there was any problem creating the {@link Runnable}
 	 *             object.
 	 */
-	public ConstructorRunnable getConstructorRunnable(String targetSchemaName,
+	public ConstructorRunnable getConstructorRunnable(
+			String targetDatabaseName, String targetSchemaName,
 			Collection datasets) throws Exception;
 
 	/**

@@ -151,8 +151,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	}
 
 	public ConstructorRunnable getConstructorRunnable(
-			final String targetSchemaName, final Collection datasets)
-			throws Exception {
+			final String targetDatabaseName, final String targetSchemaName,
+			final Collection datasets) throws Exception {
 		// Check that all the input schemas involved are cohabitable.
 		Log.info("Checking all schemas can cohabit");
 
@@ -187,7 +187,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		final DDLHelper helper = this.outputStringBuffer == null ? this.outputHost != null ? (DDLHelper) new RemoteHostHelper(
 				this.outputHost, this.outputPort, dd,
 				(JDBCDataLink) inputSchemaList.get(0), this.overrideHost,
-				this.overridePort)
+				this.overridePort, targetDatabaseName, targetSchemaName)
 				: (DDLHelper) new TableAsFileHelper(this.outputFile, dd)
 				: new SingleStringBufferHelper(this.outputStringBuffer, dd);
 		Log.debug("Chose helper " + helper.getClass().getName());
@@ -453,6 +453,10 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private String dataset;
 
+		private String targetDatabase;
+
+		private String targetSchema;
+
 		private String partition;
 
 		private JDBCDataLink targetJDBCDataLink;
@@ -473,11 +477,16 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		 *            the type of SQL the actions should contain.
 		 * @param targetJDBCDataLink
 		 *            the target JDBC connection to receive the SQL.
+		 * @param targetDatabase
+		 *            the database into which we will be building.
+		 * @param targetSchema
+		 *            the schema into which we will be building.
 		 */
 		public RemoteHostHelper(final String outputHost,
 				final String outputPort, final DatabaseDialect dialect,
 				final JDBCDataLink targetJDBCDataLink,
-				final String overrideHost, final String overridePort) {
+				final String overrideHost, final String overridePort,
+				final String targetDatabase, final String targetSchema) {
 			super(dialect);
 			this.outputHost = outputHost;
 			this.outputPort = outputPort;
@@ -485,6 +494,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 			this.overridePort = overridePort;
 			this.actions = new LinkedHashMap();
 			this.targetJDBCDataLink = targetJDBCDataLink;
+			this.targetDatabase = targetDatabase;
+			this.targetSchema = targetSchema;
 		}
 
 		/**
@@ -512,11 +523,13 @@ public class SaveDDLMartConstructor implements MartConstructor {
 							&& this.overridePort != null
 							&& this.overrideHost.trim().length()
 									+ this.overridePort.trim().length() > 0)
-						url = url.replaceAll("//[^:]+:\\d+", "//"
+						url = url.replaceAll("(//|@)[^:]+:\\d+", "$1"
 								+ this.overrideHost + ":" + this.overridePort);
+					url = url.replaceAll(this.targetJDBCDataLink
+						.getDataLinkDatabase(), targetDatabase);
 					MartRunnerProtocol.Client.beginJob(this.outputHost,
-							this.outputPort, this.job, this.targetJDBCDataLink
-									.getDriverClassName(), url,
+							this.outputPort, this.job, this.targetSchema,
+							this.targetJDBCDataLink.getDriverClassName(), url,
 							this.targetJDBCDataLink.getUsername(),
 							this.targetJDBCDataLink.getPassword());
 				} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {

@@ -66,6 +66,8 @@ public class MartRunnerProtocol {
 
 	private static final String EMAIL_ADDRESS = "EMAIL_ADDRESS";
 
+	private static final String SKIP_DROP_TABLE = "SKIP_DROP_TABLE";
+
 	private static final String THREAD_COUNT = "THREAD_COUNT";
 
 	private static final String START_JOB = "START_JOB";
@@ -182,12 +184,13 @@ public class MartRunnerProtocol {
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
 		final String jobId = in.readLine();
+		final String targetSchema = in.readLine();
 		final String jdbcDriverClassName = in.readLine();
 		final String jdbcURL = in.readLine();
 		final String jdbcUsername = in.readLine();
 		final String jdbcPassword = in.readLine();
-		JobHandler.beginJob(jobId, jdbcDriverClassName, jdbcURL, jdbcUsername,
-				jdbcPassword);
+		JobHandler.beginJob(jobId, targetSchema, jdbcDriverClassName, jdbcURL,
+				jdbcUsername, jdbcPassword);
 		out.println(MartRunnerProtocol.OK);
 	}
 
@@ -415,6 +418,34 @@ public class MartRunnerProtocol {
 	 * @throws IOException
 	 *             if IO fails.
 	 */
+	public static void handle_SKIP_DROP_TABLE(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final String value = in.readLine();
+		JobHandler.setSkipDropTable(jobId, Boolean.valueOf(value).booleanValue());
+		out.println(MartRunnerProtocol.OK);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
 	public static void handle_EMAIL_ADDRESS(final BufferedReader in,
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
@@ -559,6 +590,8 @@ public class MartRunnerProtocol {
 		 *            the remote port.
 		 * @param jobId
 		 *            the job ID.
+		 * @param targetSchema
+		 *            the schema into which we will be writing.
 		 * @param jdbcDriverClassName
 		 *            the JDBC driver classname for the server the job will run
 		 *            against.
@@ -572,9 +605,10 @@ public class MartRunnerProtocol {
 		 *             if something went wrong.
 		 */
 		public static void beginJob(final String host, final String port,
-				final String jobId, final String jdbcDriverClassName,
-				final String jdbcURL, final String jdbcUsername,
-				final String jdbcPassword) throws ProtocolException {
+				final String jobId, final String targetSchema,
+				final String jdbcDriverClassName, final String jdbcURL,
+				final String jdbcUsername, final String jdbcPassword)
+				throws ProtocolException {
 			Socket clientSocket = null;
 			try {
 				clientSocket = Client.getClientSocket(host, port);
@@ -584,6 +618,7 @@ public class MartRunnerProtocol {
 						new InputStreamReader(clientSocket.getInputStream()));
 				bos.println(MartRunnerProtocol.BEGIN_JOB);
 				bos.println(jobId);
+				bos.println(targetSchema);
 				bos.println(jdbcDriverClassName);
 				bos.println(jdbcURL);
 				bos.println(jdbcUsername);
@@ -790,6 +825,46 @@ public class MartRunnerProtocol {
 						.getInputStream()).readObject();
 			} catch (final ClassNotFoundException e) {
 				throw new ProtocolException(e);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Flag that a job skip drop status has changed.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param skipDropTable
+		 *            the new status - <tt>true</tt> to turn it on.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void setSkipDropTable(final String host,
+				final String port, final String jobId,
+				final boolean skipDropTable) throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
+				bos.println(MartRunnerProtocol.SKIP_DROP_TABLE);
+				bos.println(jobId);
+				bos.println(skipDropTable);
+				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {

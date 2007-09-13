@@ -94,6 +94,7 @@ added to MartBuilder (release 0.6), then any changes of relation
 cardinality you have made will NOT appear in this report, unless 
 they have been changed again SINCE this report feature was added. 
 
+Default target database for SQL output: <xsl:choose><xsl:when test="@outputDatabase"><xsl:value-of select="@outputDatabase"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 Default target schema for SQL output: <xsl:choose><xsl:when test="@outputSchema"><xsl:value-of select="@outputSchema"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 Default host/port for remote host output: <xsl:choose><xsl:when test="@outputHost"><xsl:value-of select="@outputHost"/>:<xsl:value-of select="@outputPort"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
 Override host/port for SQL output: <xsl:choose><xsl:when test="@overrideHost"><xsl:value-of select="@overrideHost"/>:<xsl:value-of select="@overridePort"/></xsl:when><xsl:otherwise>-- not specified --</xsl:otherwise></xsl:choose>
@@ -133,6 +134,7 @@ Name: <xsl:value-of select="@name"/>
 
 Driver class: <xsl:value-of select="@driverClassName"/>
 URL: <xsl:value-of select="@url"/>
+Database: <xsl:value-of select="@databaseName"/>
 Database schema: <xsl:value-of select="@schemaName"/>
 Username: <xsl:value-of select="@username"/>
 Password: <xsl:value-of select="@password"/>

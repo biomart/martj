@@ -1248,10 +1248,14 @@ public class Relation implements Comparable, TransactionListener {
 
 	public int compareTo(final Object o) throws ClassCastException {
 		final Relation r = (Relation) o;
-		return (this.firstKey.getTable().getSchema().getMart().getUniqueId()
-				+ "_" + this.toString()).compareTo(r.firstKey.getTable()
-				.getSchema().getMart().getUniqueId()
-				+ "_" + r.toString());
+		if (this.firstKey.equals(r.firstKey))
+			return this.secondKey.compareTo(r.secondKey);
+		else if (this.firstKey.equals(r.secondKey))
+			return this.secondKey.compareTo(r.firstKey);
+		else if (this.secondKey.equals(r.firstKey))
+			return this.firstKey.compareTo(r.secondKey);
+		else
+			return this.firstKey.compareTo(r.firstKey);
 	}
 
 	public int hashCode() {

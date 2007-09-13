@@ -521,14 +521,15 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				// Record the user's specifications.
 				final String driverClassName = this.driverClass.getText();
 				final String url = this.jdbcURL.getText();
+				final String database = this.database.getText();
 				final String schemaName = this.schemaName.getText();
 				final String username = this.username.getText();
 				final String password = new String(this.password.getPassword());
 
 				// Construct a JDBCSchema based on them.
 				final JDBCSchema schema = new JDBCSchema(this.mart,
-						driverClassName, url, schemaName, username, password,
-						name, false);
+						driverClassName, url, database, schemaName, username,
+						password, name, false);
 
 				// Return that schema.
 				return schema;
@@ -565,6 +566,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					final JDBCSchema jschema = (JDBCSchema) schema;
 					jschema.setDriverClassName(this.driverClass.getText());
 					jschema.setUrl(this.jdbcURL.getText());
+					jschema.setDataLinkDatabase(this.database.getText());
 					jschema.setDataLinkSchema(this.schemaName.getText());
 					jschema.setUsername(this.username.getText());
 					jschema

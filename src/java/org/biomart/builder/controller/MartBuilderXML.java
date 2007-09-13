@@ -476,6 +476,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("driverClassName", jdbcSchema
 					.getDriverClassName(), xmlWriter);
 			this.writeAttribute("url", jdbcSchema.getUrl(), xmlWriter);
+			this.writeAttribute("databaseName", jdbcSchema
+					.getDataLinkDatabase(), xmlWriter);
 			this.writeAttribute("schemaName", jdbcSchema.getDataLinkSchema(),
 					xmlWriter);
 			this
@@ -648,6 +650,8 @@ public class MartBuilderXML extends DefaultHandler {
 		// Start by enclosing the whole lot in a <mart> tag.
 		Log.debug("Writing mart: " + mart);
 		this.openElement("mart", xmlWriter);
+		this.writeAttribute("outputDatabase", mart.getOutputDatabase(),
+				xmlWriter);
 		this.writeAttribute("outputSchema", mart.getOutputSchema(), xmlWriter);
 		this.writeAttribute("outputHost", mart.getOutputHost(), xmlWriter);
 		this.writeAttribute("outputPort", mart.getOutputPort(), xmlWriter);
@@ -1337,6 +1341,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// per file, as if more than one is found, the later tags
 			// will override the earlier ones.
 			final Mart mart = new Mart();
+			mart.setOutputDatabase((String) attributes.get("outputDatabase"));
 			mart.setOutputSchema((String) attributes.get("outputSchema"));
 			mart.setOutputHost((String) attributes.get("outputHost"));
 			mart.setOutputPort((String) attributes.get("outputPort"));
@@ -1368,6 +1373,7 @@ public class MartBuilderXML extends DefaultHandler {
 			final String driverClassName = (String) attributes
 					.get("driverClassName");
 			final String url = (String) attributes.get("url");
+			final String databaseName = (String) attributes.get("databaseName");
 			final String schemaName = (String) attributes.get("schemaName");
 			final String username = (String) attributes.get("username");
 			final String name = (String) attributes.get("name");
@@ -1387,12 +1393,13 @@ public class MartBuilderXML extends DefaultHandler {
 			// Construct the JDBC schema.
 			try {
 				final Schema schema = new JDBCSchema(this.constructedMart,
-						driverClassName, url, schemaName, username, password,
-						name, keyguessing);
+						driverClassName, url, databaseName, schemaName,
+						username, password, name, keyguessing);
 				schema.setMasked(masked);
 				schema.setHideMasked(hideMasked);
 				schema.setPartitionRegex(partitionRegex);
 				schema.setPartitionNameExpression(partitionExpression);
+				// Return to normal.
 				schema.storeInHistory();
 				// Add the schema directly to the mart if outside a group.
 				this.constructedMart.getSchemas().put(schema.getName(), schema);

@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
@@ -167,7 +168,7 @@ public class DataSet extends Schema {
 	public DataSet(final Mart mart, final Table centralTable, final String name)
 			throws ValidationException {
 		// Super first, to set the name.
-		super(mart, name, name);
+		super(mart, name, name, name);
 
 		// Remember the settings and make some defaults.
 		this.invisible = false;
@@ -925,7 +926,7 @@ public class DataSet extends Schema {
 		else
 			dsTable.setPrimaryKey(null);
 
-		// Fish out any UnrollTable unit and move it to end of queue.
+		// Fish out any UnrollTable units and move to end of queue.
 		final List units = dsTable.getTransformationUnits();
 		for (int i = 1; i < units.size() - 1; i++) { // Skip very first+last.
 			final TransformationUnit tu = (TransformationUnit) units.get(i);
@@ -1269,8 +1270,8 @@ public class DataSet extends Schema {
 
 		// Update the three queues with relations that lead away from this
 		// table.
-		for (final Iterator i = mergeTable.getRelations().iterator(); i
-				.hasNext();) {
+		for (final Iterator i = new TreeSet(mergeTable.getRelations())
+				.iterator(); i.hasNext();) {
 			final Relation r = (Relation) i.next();
 
 			// Allow to go back up sourceRelation if it is a loopback
@@ -1408,11 +1409,13 @@ public class DataSet extends Schema {
 			// Otherwise, stop including dimensions on subsequent tables.
 			if (followRelation || forceFollowRelation) {
 
-				// Don't follow unrolled relations - just add unrolled cols.
+				// Don't follow unrolled relations.
 				final Column nameCol = r.getUnrolledRelation(this);
-				if (nameCol != null
-						&& !dsTable.getType()
-								.equals(DataSetTableType.DIMENSION)) {
+				if (nameCol != null) {
+					// From M end, skip.
+					if (mergeTable.equals(r.getManyKey().getTable()))
+						continue;
+					// From 1 end, do unroll.
 					// Make an UNROLL unit that involves the relation and
 					// includes the name column, the source and target keys,
 					// and the unrolled ID and name UnrolledColumns.

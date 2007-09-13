@@ -79,6 +79,8 @@ public class SaveDDLDialog extends JDialog {
 
 	private MartTab martTab;
 
+	private JTextField targetDatabaseName;
+
 	private JTextField targetSchemaName;
 
 	private JComboBox outputFormat;
@@ -167,6 +169,8 @@ public class SaveDDLDialog extends JDialog {
 
 		// Create input fields for target schema name and granularity,
 		// and for run ddl host/port.
+		this.targetDatabaseName = new JTextField(20);
+		this.targetDatabaseName.setText(martTab.getMart().getOutputDatabase());
 		this.targetSchemaName = new JTextField(20);
 		this.targetSchemaName.setText(martTab.getMart().getOutputSchema());
 
@@ -311,6 +315,13 @@ public class SaveDDLDialog extends JDialog {
 		field.add(new JScrollPane(this.datasetsList));
 		content.add(field, fieldConstraints);
 
+		// Add the target database settings label and field.
+		label = new JLabel(Resources.get("targetDatabaseLabel"));
+		content.add(label, labelConstraints);
+		field = new JPanel();
+		field.add(this.targetDatabaseName);
+		content.add(field, fieldConstraints);
+
 		// Add the target schema settings label and field.
 		label = new JLabel(Resources.get("targetSchemaLabel"));
 		content.add(label, labelConstraints);
@@ -428,10 +439,12 @@ public class SaveDDLDialog extends JDialog {
 					this.overrideHost.getText());
 			this.martTab.getMartTabSet().requestSetOverridePort(
 					this.overridePort.getText());
+			final String outputDatabase = this.targetDatabaseName.getText();
 			final String outputSchema = this.targetSchemaName.getText();
+			this.martTab.getMartTabSet().requestSetOutputDatabase(outputDatabase);
 			this.martTab.getMartTabSet().requestSetOutputSchema(outputSchema);
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(
-					outputSchema, selectedDataSets);
+					outputDatabase, outputSchema, selectedDataSets);
 			// If we want screen output, add a listener that listens for
 			// completion of construction. When completed, use the
 			// stringbuffer, which will contain the DDL, to pop up a simple
@@ -477,6 +490,11 @@ public class SaveDDLDialog extends JDialog {
 	private boolean validateFields() {
 		// List of messages to display, if any are necessary.
 		final List messages = new ArrayList();
+
+		// Must have a target schema.
+		if (this.isEmpty(this.targetDatabaseName.getText()))
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("targetDatabase")));
 
 		// Must have a target schema.
 		if (this.isEmpty(this.targetSchemaName.getText()))

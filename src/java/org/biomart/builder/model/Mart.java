@@ -66,6 +66,8 @@ public class Mart implements TransactionListener {
 
 	private final BeanMap schemas;
 
+	private String outputDatabase = null;
+
 	private String outputSchema = null;
 
 	private String outputHost = null;
@@ -421,6 +423,34 @@ public class Mart implements TransactionListener {
 	 */
 	public String getOutputSchema() {
 		return this.outputSchema;
+	}
+
+	/**
+	 * Optional, sets the default target database this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @param outputDatabase
+	 *            the target database.
+	 */
+	public void setOutputDatabase(final String outputDatabase) {
+		Log.debug("Changing outputDatabase for " + this + " to " + outputDatabase);
+		final String oldValue = this.outputDatabase;
+		if (this.outputDatabase == outputDatabase || this.outputDatabase != null
+				&& this.outputDatabase.equals(outputDatabase))
+			return;
+		// Make the change.
+		this.outputDatabase = outputDatabase;
+		this.pcs.firePropertyChange("outputDatabase", oldValue, outputDatabase);
+	}
+
+	/**
+	 * Optional, gets the default target database this mart will output dataset
+	 * DDL to later.
+	 * 
+	 * @return the target schema.
+	 */
+	public String getOutputDatabase() {
+		return this.outputDatabase;
 	}
 
 	/**

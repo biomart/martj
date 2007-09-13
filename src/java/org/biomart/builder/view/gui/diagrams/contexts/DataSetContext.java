@@ -717,7 +717,6 @@ public class DataSetContext extends SchemaContext {
 					compound.setEnabled(false);
 				if (isCompound)
 					compound.setSelected(true);
-				contextMenu.addSeparator();
 			}
 		}
 

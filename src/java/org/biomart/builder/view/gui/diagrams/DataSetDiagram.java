@@ -21,8 +21,11 @@ package org.biomart.builder.view.gui.diagrams;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Relation;
@@ -51,6 +54,8 @@ public class DataSetDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
 	private final DataSet dataset;
+
+	private final Collection listeningTables = new HashSet(); 
 
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
@@ -108,6 +113,7 @@ public class DataSetDiagram extends Diagram {
 	public void doRecalculateDiagram() {
 		// FIXME Recycle components.
 		// Add stuff.
+		final Set usedTables = new HashSet();
 		final List mainTables = new ArrayList();
 		mainTables.add(this.getDataSet().getMainTable());
 		for (int i = 0; i < mainTables.size(); i++) {
@@ -118,6 +124,13 @@ public class DataSetDiagram extends Diagram {
 			// Add main table.
 			this.add(new TableComponent(table, this), constraint,
 					Diagram.TABLE_LAYER);
+			if (!this.listeningTables.contains(table.getName())) {
+				table.addPropertyChangeListener("type",
+						new WeakPropertyChangeListener(table, "type",
+								this.listener));
+				this.listeningTables.add(table.getName());
+			}
+			usedTables.add(table.getName());
 			// Add dimension tables.
 			if (table.getPrimaryKey() != null)
 				for (final Iterator r = table.getPrimaryKey().getRelations()
@@ -132,6 +145,13 @@ public class DataSetDiagram extends Diagram {
 						// Add dimension table.
 						this.add(new TableComponent(target, this),
 								dimConstraint, Diagram.TABLE_LAYER);
+						if (!this.listeningTables.contains(table.getName())) {
+							table.addPropertyChangeListener("type",
+									new WeakPropertyChangeListener(table,
+											"type", this.listener));
+							this.listeningTables.add(table.getName());
+						}
+						usedTables.add(table.getName());
 					} else
 						mainTables.add(target);
 					// Add relation.
@@ -139,6 +159,7 @@ public class DataSetDiagram extends Diagram {
 							Diagram.RELATION_LAYER);
 				}
 		}
+		this.listeningTables.retainAll(usedTables);
 	}
 
 	/**

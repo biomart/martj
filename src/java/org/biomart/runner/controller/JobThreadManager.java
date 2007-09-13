@@ -23,15 +23,18 @@ import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -200,6 +203,8 @@ public class JobThreadManager extends Thread {
 
 		private JobPlanSection currentSection = null;
 
+		private Set tableNames = new HashSet();
+
 		private JobThread(final JobThreadManager manager, final JobPlan plan) {
 			super();
 			this.manager = manager;
@@ -209,6 +214,16 @@ public class JobThreadManager extends Thread {
 		public void run() {
 			try {
 				Log.info("Thread " + this.sequence + " starting");
+				// Build list of tables in target schema.
+				final Connection conn = this.getConnection();
+				// Load tables and views from database, then loop over them.
+				final ResultSet dbTables = conn.getMetaData().getTables(
+						conn.getCatalog(),
+						this.plan.getTargetSchema(), "%",
+						new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
+				while (dbTables.next())
+					this.tableNames.add(dbTables.getString("TABLE_NAME"));
+				dbTables.close();
 				// Each thread grabs sections from the queue until none are
 				// left.
 				while (this.continueRunning()
@@ -231,7 +246,7 @@ public class JobThreadManager extends Thread {
 					}
 					this.currentSection = null;
 				}
-			} catch (final JobException e) {
+			} catch (final Exception e) {
 				// Break out early and complain.
 				Log.error(e);
 			} finally {
@@ -268,12 +283,63 @@ public class JobThreadManager extends Thread {
 				String failureMessage = null;
 				try {
 					final Connection conn = this.getConnection();
-					final Statement stmt = conn.createStatement();
-					stmt.execute(action.toString());
-					final SQLWarning warning = conn.getWarnings();
-					if (warning != null)
-						throw warning;
-					stmt.close();
+					final String sql = action.toString();
+					// If action is create table (), check in stored
+					// list to see if it needs dropping first.
+					String dropTableSchema = null;
+					String dropTableName = null;
+					if (sql.startsWith("create table")) {
+						dropTableName = sql.split(" ")[2];
+						if (dropTableName.indexOf('.') >= 0) {
+							final String[] parts = dropTableName.split("\\.");
+							dropTableSchema = parts[0];
+							dropTableName = parts[1];
+						}
+					} else if (sql.indexOf("rename")>=0) {
+						if (sql.startsWith("rename table")) {
+							// MySQL table rename.
+							dropTableName = sql.split(" ")[4];
+							if (dropTableName.indexOf('.') >= 0) {
+								final String[] parts = dropTableName.split("\\.");
+								dropTableSchema = parts[0];
+								dropTableName = parts[1];
+							}
+						} else if (sql.startsWith("alter table") && sql.indexOf("rename to")>0) {
+							// Oracle+Postgres table rename.
+							dropTableName = sql.split(" ")[5];
+							if (dropTableName.indexOf('.') >= 0) {
+								final String[] parts = dropTableName.split("\\.");
+								dropTableSchema = parts[0];
+								dropTableName = parts[1];
+							}
+						}
+					}
+					if (dropTableName!=null && this.tableNames.contains(dropTableName)) {
+						final Statement stmt = conn.createStatement();
+						final StringBuffer dropSql = new StringBuffer();
+						dropSql.append("drop table ");
+						if (dropTableSchema!=null) {
+							dropSql.append(dropTableSchema);
+							dropSql.append('.');
+						}
+						dropSql.append(dropTableName);
+						stmt.execute(dropSql.toString());
+						final SQLWarning warning = conn.getWarnings();
+						if (warning != null)
+							throw warning;
+						stmt.close();
+					}
+					// If action is drop table (), check to see if
+					// we should skip over it instead.
+					if (!(this.plan.isSkipDropTable()
+							&& sql.startsWith("drop table"))) {
+						final Statement stmt = conn.createStatement();
+						stmt.execute(sql);
+						final SQLWarning warning = conn.getWarnings();
+						if (warning != null)
+							throw warning;
+						stmt.close();
+					}
 				} catch (final Throwable t) {
 					final StringWriter messageWriter = new StringWriter();
 					final PrintWriter pw = new PrintWriter(messageWriter);

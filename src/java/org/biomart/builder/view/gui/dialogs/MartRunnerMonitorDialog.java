@@ -51,6 +51,7 @@ import java.util.Vector;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -497,6 +498,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		private final JButton stopJob;
 
+		private final JCheckBox skipDropTable;
+
 		/**
 		 * Create a new job description panel. In the top half goes two panes -
 		 * an email settings pane, and the job tree view. In the bottom half
@@ -647,9 +650,26 @@ public class MartRunnerMonitorDialog extends JFrame {
 						}
 				}
 			});
+			this.skipDropTable = new JCheckBox(Resources
+					.get("skipDropTableLabel"));
+			this.skipDropTable.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (JobPlanPanel.this.jobId != null)
+						try {
+							Client.setSkipDropTable(JobPlanPanel.this.host,
+									JobPlanPanel.this.port,
+									JobPlanPanel.this.jobId,
+									JobPlanPanel.this.skipDropTable
+											.isSelected());
+						} catch (final ProtocolException pe) {
+							StackTrace.showStackTrace(pe);
+						}
+				}
+			});
 			field.add(this.startJob);
 			field.add(this.stopJob);
 			field.add(this.testJob);
+			field.add(this.skipDropTable);
 			headerPanel.add(field, fieldLastRowConstraints);
 
 			// Create a panel to hold the footer details.
@@ -927,6 +947,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.startJob.setEnabled(false);
 			this.testJob.setEnabled(false);
 			this.stopJob.setEnabled(false);
+			this.skipDropTable.setSelected(false);
+			this.skipDropTable.setEnabled(false);
 			try {
 				this.treeModel.setJobPlan(null);
 			} catch (final ProtocolException e) {
@@ -951,6 +973,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 						JobPlanPanel.this.threadSpinner.setEnabled(true);
 						JobPlanPanel.this.contactEmail.setEnabled(true);
 						JobPlanPanel.this.updateEmailButton.setEnabled(true);
+						JobPlanPanel.this.skipDropTable.setEnabled(true);
 
 						// Same job ID as before? Remember expansion set.
 						final boolean jobIdChanged = !jobId
@@ -1064,6 +1087,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 						.getStatus().equals(JobStatus.RUNNING));
 				this.planPanel.stopJob.setEnabled(jobPlan.getRoot().getStatus()
 						.equals(JobStatus.RUNNING));
+				this.planPanel.skipDropTable.setSelected(jobPlan
+						.isSkipDropTable());
 			}
 		}
 

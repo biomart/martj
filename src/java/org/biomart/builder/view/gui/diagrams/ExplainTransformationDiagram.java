@@ -794,7 +794,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		 *            the name.
 		 */
 		public FakeSchema(final String name) {
-			super(new FakeMart(), name, name);
+			super(new FakeMart(), name, name, name);
 		}
 	}
 

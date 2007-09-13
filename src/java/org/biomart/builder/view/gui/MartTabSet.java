@@ -493,6 +493,16 @@ public class MartTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Sets the output database on the currently selected mart.
+	 * 
+	 * @param outputDatabase
+	 *            the new output database.
+	 */
+	public void requestSetOutputDatabase(final String outputDatabase) {
+		this.getSelectedMartTab().getMart().setOutputDatabase(outputDatabase);
+	}
+
+	/**
 	 * Sets the output schema on the currently selected mart.
 	 * 
 	 * @param outputSchema
