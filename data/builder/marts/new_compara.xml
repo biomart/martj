@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mart PUBLIC "-//EBI//DTD MartBuilder 0.7-//EBI//DTD MartBuilder " "http://www.biomart.org/DTD/MartBuilder-0.7.dtd">
-<mart outputSchema="arek_compara_homology" outputHost="localhost" outputPort="10000" overrideHost="mart1" overridePort="3306" nameCase="0">
-	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3309/ensembl_compara_45" schemaName="ensembl_compara_45" username="ensadmin" password="ensembl" name="compara" keyguessing="true" masked="false">
+<mart outputSchema="arek_compara_homology" outputHost="localhost" outputPort="10000" overrideHost="mart1" overridePort="3306" nameCase="0" hideMaskedDataSets="false" hideMaskedSchemas="false">
+	<jdbcSchema driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3309/ensembl_compara_45" schemaName="ensembl_compara_45" username="ensadmin" password="ensembl" name="compara" keyguessing="true" masked="false" hideMasked="false">
 		<table id="1" name="method_link" ignore="false">
 			<column id="2" name="type"/>
 			<column id="3" name="class"/>
@@ -11,11 +11,11 @@
 		<table id="6" name="family" ignore="false">
 			<column id="7" name="description_score"/>
 			<column id="8" name="stable_id"/>
-			<column id="9" name="family_id"/>
-			<column id="10" name="description"/>
+			<column id="9" name="description"/>
+			<column id="10" name="family_id"/>
 			<column id="11" name="method_link_species_set_id"/>
 			<foreignKey id="12" columnIds="11" status="INFERRED"/>
-			<primaryKey id="13" columnIds="9" status="INFERRED"/>
+			<primaryKey id="13" columnIds="10" status="INFERRED"/>
 		</table>
 		<table id="14" name="peptide_align_feature_echinops_telfairi_33" ignore="false">
 			<column id="15" name="perc_pos"/>
@@ -31,29 +31,29 @@
 			<column id="25" name="perc_ident"/>
 			<column id="26" name="score"/>
 			<column id="27" name="qmember_id"/>
-			<column id="28" name="qend"/>
-			<column id="29" name="identical_matches"/>
-			<column id="30" name="qstart"/>
-			<column id="31" name="peptide_align_feature_id"/>
-			<column id="32" name="hmember_id"/>
-			<column id="33" name="hit_rank"/>
+			<column id="28" name="identical_matches"/>
+			<column id="29" name="qend"/>
+			<column id="30" name="peptide_align_feature_id"/>
+			<column id="31" name="qstart"/>
+			<column id="32" name="hit_rank"/>
+			<column id="33" name="hmember_id"/>
 			<foreignKey id="34" columnIds="16" status="INFERRED"/>
-			<foreignKey id="35" columnIds="31" status="INFERRED"/>
-			<primaryKey id="36" columnIds="31" status="INFERRED"/>
+			<foreignKey id="35" columnIds="30" status="INFERRED"/>
+			<primaryKey id="36" columnIds="30" status="INFERRED"/>
 		</table>
 		<table id="37" name="homology_member" ignore="false">
 			<column id="38" name="perc_pos"/>
 			<column id="39" name="cigar_start"/>
 			<column id="40" name="cigar_end"/>
-			<column id="41" name="member_id"/>
-			<column id="42" name="peptide_member_id"/>
+			<column id="41" name="peptide_member_id"/>
+			<column id="42" name="member_id"/>
 			<column id="43" name="perc_cov"/>
 			<column id="44" name="peptide_align_feature_id"/>
-			<column id="45" name="homology_id"/>
-			<column id="46" name="cigar_line"/>
+			<column id="45" name="cigar_line"/>
+			<column id="46" name="homology_id"/>
 			<column id="47" name="perc_id"/>
-			<foreignKey id="48" columnIds="45" status="INFERRED"/>
-			<foreignKey id="49" columnIds="41" status="INFERRED"/>
+			<foreignKey id="48" columnIds="46" status="INFERRED"/>
+			<foreignKey id="49" columnIds="42" status="INFERRED"/>
 			<foreignKey id="50" columnIds="44" status="INFERRED"/>
 		</table>
 		<table id="51" name="peptide_align_feature_bos_taurus_45" ignore="false">
@@ -70,15 +70,15 @@
 			<column id="62" name="perc_ident"/>
 			<column id="63" name="score"/>
 			<column id="64" name="qmember_id"/>
-			<column id="65" name="qend"/>
-			<column id="66" name="identical_matches"/>
-			<column id="67" name="qstart"/>
-			<column id="68" name="peptide_align_feature_id"/>
-			<column id="69" name="hmember_id"/>
-			<column id="70" name="hit_rank"/>
+			<column id="65" name="identical_matches"/>
+			<column id="66" name="qend"/>
+			<column id="67" name="peptide_align_feature_id"/>
+			<column id="68" name="qstart"/>
+			<column id="69" name="hit_rank"/>
+			<column id="70" name="hmember_id"/>
 			<foreignKey id="71" columnIds="53" status="INFERRED"/>
-			<foreignKey id="72" columnIds="68" status="INFERRED"/>
-			<primaryKey id="73" columnIds="68" status="INFERRED"/>
+			<foreignKey id="72" columnIds="67" status="INFERRED"/>
+			<primaryKey id="73" columnIds="67" status="INFERRED"/>
 		</table>
 		<table id="74" name="peptide_align_feature_homo_sapiens_22" ignore="false">
 			<column id="75" name="perc_pos"/>
@@ -94,15 +94,15 @@
 			<column id="85" name="perc_ident"/>
 			<column id="86" name="score"/>
 			<column id="87" name="qmember_id"/>
-			<column id="88" name="qend"/>
-			<column id="89" name="identical_matches"/>
-			<column id="90" name="qstart"/>
-			<column id="91" name="peptide_align_feature_id"/>
-			<column id="92" name="hmember_id"/>
-			<column id="93" name="hit_rank"/>
+			<column id="88" name="identical_matches"/>
+			<column id="89" name="qend"/>
+			<column id="90" name="peptide_align_feature_id"/>
+			<column id="91" name="qstart"/>
+			<column id="92" name="hit_rank"/>
+			<column id="93" name="hmember_id"/>
 			<foreignKey id="94" columnIds="76" status="INFERRED"/>
-			<foreignKey id="95" columnIds="91" status="INFERRED"/>
-			<primaryKey id="96" columnIds="91" status="INFERRED"/>
+			<foreignKey id="95" columnIds="90" status="INFERRED"/>
+			<primaryKey id="96" columnIds="90" status="INFERRED"/>
 		</table>
 		<table id="97" name="peptide_align_feature_sorex_araneus_55" ignore="false">
 			<column id="98" name="perc_pos"/>
@@ -118,15 +118,15 @@
 			<column id="108" name="perc_ident"/>
 			<column id="109" name="score"/>
 			<column id="110" name="qmember_id"/>
-			<column id="111" name="identical_matches"/>
-			<column id="112" name="qend"/>
-			<column id="113" name="peptide_align_feature_id"/>
-			<column id="114" name="qstart"/>
-			<column id="115" name="hit_rank"/>
-			<column id="116" name="hmember_id"/>
+			<column id="111" name="qend"/>
+			<column id="112" name="identical_matches"/>
+			<column id="113" name="qstart"/>
+			<column id="114" name="peptide_align_feature_id"/>
+			<column id="115" name="hmember_id"/>
+			<column id="116" name="hit_rank"/>
 			<foreignKey id="117" columnIds="99" status="INFERRED"/>
-			<foreignKey id="118" columnIds="113" status="INFERRED"/>
-			<primaryKey id="119" columnIds="113" status="INFERRED"/>
+			<foreignKey id="118" columnIds="114" status="INFERRED"/>
+			<primaryKey id="119" columnIds="114" status="INFERRED"/>
 		</table>
 		<table id="120" name="peptide_align_feature_takifugu_rubripes_4" ignore="false">
 			<column id="121" name="perc_pos"/>
@@ -142,15 +142,15 @@
 			<column id="131" name="perc_ident"/>
 			<column id="132" name="score"/>
 			<column id="133" name="qmember_id"/>
-			<column id="134" name="qend"/>
-			<column id="135" name="identical_matches"/>
-			<column id="136" name="qstart"/>
-			<column id="137" name="peptide_align_feature_id"/>
-			<column id="138" name="hmember_id"/>
-			<column id="139" name="hit_rank"/>
+			<column id="134" name="identical_matches"/>
+			<column id="135" name="qend"/>
+			<column id="136" name="peptide_align_feature_id"/>
+			<column id="137" name="qstart"/>
+			<column id="138" name="hit_rank"/>
+			<column id="139" name="hmember_id"/>
 			<foreignKey id="140" columnIds="122" status="INFERRED"/>
-			<foreignKey id="141" columnIds="137" status="INFERRED"/>
-			<primaryKey id="142" columnIds="137" status="INFERRED"/>
+			<foreignKey id="141" columnIds="136" status="INFERRED"/>
+			<primaryKey id="142" columnIds="136" status="INFERRED"/>
 		</table>
 		<table id="143" name="synteny_region" ignore="false">
 			<column id="144" name="synteny_region_id"/>
@@ -172,15 +172,15 @@
 			<column id="159" name="perc_ident"/>
 			<column id="160" name="score"/>
 			<column id="161" name="qmember_id"/>
-			<column id="162" name="qend"/>
-			<column id="163" name="identical_matches"/>
-			<column id="164" name="qstart"/>
-			<column id="165" name="peptide_align_feature_id"/>
-			<column id="166" name="hmember_id"/>
-			<column id="167" name="hit_rank"/>
+			<column id="162" name="identical_matches"/>
+			<column id="163" name="qend"/>
+			<column id="164" name="peptide_align_feature_id"/>
+			<column id="165" name="qstart"/>
+			<column id="166" name="hit_rank"/>
+			<column id="167" name="hmember_id"/>
 			<foreignKey id="168" columnIds="150" status="INFERRED"/>
-			<foreignKey id="169" columnIds="165" status="INFERRED"/>
-			<primaryKey id="170" columnIds="165" status="INFERRED"/>
+			<foreignKey id="169" columnIds="164" status="INFERRED"/>
+			<primaryKey id="170" columnIds="164" status="INFERRED"/>
 		</table>
 		<table id="171" name="peptide_align_feature_ciona_intestinalis_18" ignore="false">
 			<column id="172" name="perc_pos"/>
@@ -196,15 +196,15 @@
 			<column id="182" name="perc_ident"/>
 			<column id="183" name="score"/>
 			<column id="184" name="qmember_id"/>
-			<column id="185" name="qend"/>
-			<column id="186" name="identical_matches"/>
-			<column id="187" name="qstart"/>
-			<column id="188" name="peptide_align_feature_id"/>
-			<column id="189" name="hmember_id"/>
-			<column id="190" name="hit_rank"/>
+			<column id="185" name="identical_matches"/>
+			<column id="186" name="qend"/>
+			<column id="187" name="peptide_align_feature_id"/>
+			<column id="188" name="qstart"/>
+			<column id="189" name="hit_rank"/>
+			<column id="190" name="hmember_id"/>
 			<foreignKey id="191" columnIds="173" status="INFERRED"/>
-			<foreignKey id="192" columnIds="188" status="INFERRED"/>
-			<primaryKey id="193" columnIds="188" status="INFERRED"/>
+			<foreignKey id="192" columnIds="187" status="INFERRED"/>
+			<primaryKey id="193" columnIds="187" status="INFERRED"/>
 		</table>
 		<table id="194" name="peptide_align_feature_ornithorhynchus_anatinus_43" ignore="false">
 			<column id="195" name="perc_pos"/>
@@ -220,21 +220,21 @@
 			<column id="205" name="perc_ident"/>
 			<column id="206" name="score"/>
 			<column id="207" name="qmember_id"/>
-			<column id="208" name="qend"/>
-			<column id="209" name="identical_matches"/>
-			<column id="210" name="qstart"/>
-			<column id="211" name="peptide_align_feature_id"/>
-			<column id="212" name="hmember_id"/>
-			<column id="213" name="hit_rank"/>
+			<column id="208" name="identical_matches"/>
+			<column id="209" name="qend"/>
+			<column id="210" name="peptide_align_feature_id"/>
+			<column id="211" name="qstart"/>
+			<column id="212" name="hit_rank"/>
+			<column id="213" name="hmember_id"/>
 			<foreignKey id="214" columnIds="196" status="INFERRED"/>
-			<foreignKey id="215" columnIds="211" status="INFERRED"/>
-			<primaryKey id="216" columnIds="211" status="INFERRED"/>
+			<foreignKey id="215" columnIds="210" status="INFERRED"/>
+			<primaryKey id="216" columnIds="210" status="INFERRED"/>
 		</table>
 		<table id="217" name="sequence" ignore="false">
 			<column id="218" name="length"/>
-			<column id="219" name="sequence_id"/>
-			<column id="220" name="sequence"/>
-			<primaryKey id="221" columnIds="219" status="INFERRED"/>
+			<column id="219" name="sequence"/>
+			<column id="220" name="sequence_id"/>
+			<primaryKey id="221" columnIds="220" status="INFERRED"/>
 		</table>
 		<table id="222" name="meta" ignore="false">
 			<column id="223" name="meta_value"/>
@@ -256,19 +256,19 @@
 			<column id="238" name="perc_ident"/>
 			<column id="239" name="score"/>
 			<column id="240" name="qmember_id"/>
-			<column id="241" name="identical_matches"/>
-			<column id="242" name="qend"/>
-			<column id="243" name="peptide_align_feature_id"/>
-			<column id="244" name="qstart"/>
-			<column id="245" name="hit_rank"/>
-			<column id="246" name="hmember_id"/>
+			<column id="241" name="qend"/>
+			<column id="242" name="identical_matches"/>
+			<column id="243" name="qstart"/>
+			<column id="244" name="peptide_align_feature_id"/>
+			<column id="245" name="hmember_id"/>
+			<column id="246" name="hit_rank"/>
 			<foreignKey id="247" columnIds="229" status="INFERRED"/>
-			<foreignKey id="248" columnIds="243" status="INFERRED"/>
-			<primaryKey id="249" columnIds="243" status="INFERRED"/>
+			<foreignKey id="248" columnIds="244" status="INFERRED"/>
+			<primaryKey id="249" columnIds="244" status="INFERRED"/>
 		</table>
 		<table id="250" name="genome_db" ignore="false">
-			<column id="251" name="taxon_id"/>
-			<column id="252" name="genebuild"/>
+			<column id="251" name="genebuild"/>
+			<column id="252" name="taxon_id"/>
 			<column id="253" name="locator"/>
 			<column id="254" name="assembly_default"/>
 			<column id="255" name="assembly"/>
@@ -276,7 +276,7 @@
 			<column id="257" name="name"/>
 			<primaryKey id="258" columnIds="256" status="INFERRED"/>
 		</table>
-		<table id="259" name="peptide_align_feature_caenorhabditis_elegans_54" ignore="false">
+		<table id="259" name="peptide_align_feature_anopheles_gambiae_5" ignore="false">
 			<column id="260" name="perc_pos"/>
 			<column id="261" name="analysis_id"/>
 			<column id="262" name="align_length"/>
@@ -300,7 +300,7 @@
 			<foreignKey id="280" columnIds="275" status="INFERRED"/>
 			<primaryKey id="281" columnIds="275" status="INFERRED"/>
 		</table>
-		<table id="282" name="peptide_align_feature_anopheles_gambiae_5" ignore="false">
+		<table id="282" name="peptide_align_feature_caenorhabditis_elegans_54" ignore="false">
 			<column id="283" name="perc_pos"/>
 			<column id="284" name="analysis_id"/>
 			<column id="285" name="align_length"/>
@@ -328,8 +328,8 @@
 			<column id="306" name="left_index"/>
 			<column id="307" name="taxon_id"/>
 			<column id="308" name="rank"/>
-			<column id="309" name="genbank_hidden_flag"/>
-			<column id="310" name="right_index"/>
+			<column id="309" name="right_index"/>
+			<column id="310" name="genbank_hidden_flag"/>
 			<column id="311" name="parent_id"/>
 			<column id="312" name="root_id"/>
 			<primaryKey id="313" columnIds="307" status="INFERRED"/>
@@ -348,17 +348,17 @@
 			<column id="325" name="perc_ident"/>
 			<column id="326" name="score"/>
 			<column id="327" name="qmember_id"/>
-			<column id="328" name="identical_matches"/>
-			<column id="329" name="qend"/>
-			<column id="330" name="peptide_align_feature_id"/>
-			<column id="331" name="qstart"/>
-			<column id="332" name="hit_rank"/>
-			<column id="333" name="hmember_id"/>
+			<column id="328" name="qend"/>
+			<column id="329" name="identical_matches"/>
+			<column id="330" name="qstart"/>
+			<column id="331" name="peptide_align_feature_id"/>
+			<column id="332" name="hmember_id"/>
+			<column id="333" name="hit_rank"/>
 			<foreignKey id="334" columnIds="316" status="INFERRED"/>
-			<foreignKey id="335" columnIds="330" status="INFERRED"/>
-			<primaryKey id="336" columnIds="330" status="INFERRED"/>
+			<foreignKey id="335" columnIds="331" status="INFERRED"/>
+			<primaryKey id="336" columnIds="331" status="INFERRED"/>
 		</table>
-		<table id="337" name="peptide_align_feature_mus_musculus_25" ignore="false">
+		<table id="337" name="peptide_align_feature_macaca_mulatta_31" ignore="false">
 			<column id="338" name="perc_pos"/>
 			<column id="339" name="analysis_id"/>
 			<column id="340" name="align_length"/>
@@ -372,17 +372,17 @@
 			<column id="348" name="perc_ident"/>
 			<column id="349" name="score"/>
 			<column id="350" name="qmember_id"/>
-			<column id="351" name="qend"/>
-			<column id="352" name="identical_matches"/>
-			<column id="353" name="qstart"/>
-			<column id="354" name="peptide_align_feature_id"/>
-			<column id="355" name="hmember_id"/>
-			<column id="356" name="hit_rank"/>
+			<column id="351" name="identical_matches"/>
+			<column id="352" name="qend"/>
+			<column id="353" name="peptide_align_feature_id"/>
+			<column id="354" name="qstart"/>
+			<column id="355" name="hit_rank"/>
+			<column id="356" name="hmember_id"/>
 			<foreignKey id="357" columnIds="339" status="INFERRED"/>
-			<foreignKey id="358" columnIds="354" status="INFERRED"/>
-			<primaryKey id="359" columnIds="354" status="INFERRED"/>
+			<foreignKey id="358" columnIds="353" status="INFERRED"/>
+			<primaryKey id="359" columnIds="353" status="INFERRED"/>
 		</table>
-		<table id="360" name="peptide_align_feature_macaca_mulatta_31" ignore="false">
+		<table id="360" name="peptide_align_feature_mus_musculus_25" ignore="false">
 			<column id="361" name="perc_pos"/>
 			<column id="362" name="analysis_id"/>
 			<column id="363" name="align_length"/>
@@ -396,15 +396,15 @@
 			<column id="371" name="perc_ident"/>
 			<column id="372" name="score"/>
 			<column id="373" name="qmember_id"/>
-			<column id="374" name="qend"/>
-			<column id="375" name="identical_matches"/>
-			<column id="376" name="qstart"/>
-			<column id="377" name="peptide_align_feature_id"/>
-			<column id="378" name="hmember_id"/>
-			<column id="379" name="hit_rank"/>
+			<column id="374" name="identical_matches"/>
+			<column id="375" name="qend"/>
+			<column id="376" name="peptide_align_feature_id"/>
+			<column id="377" name="qstart"/>
+			<column id="378" name="hit_rank"/>
+			<column id="379" name="hmember_id"/>
 			<foreignKey id="380" columnIds="362" status="INFERRED"/>
-			<foreignKey id="381" columnIds="377" status="INFERRED"/>
-			<primaryKey id="382" columnIds="377" status="INFERRED"/>
+			<foreignKey id="381" columnIds="376" status="INFERRED"/>
+			<primaryKey id="382" columnIds="376" status="INFERRED"/>
 		</table>
 		<table id="383" name="peptide_align_feature_felis_catus_47" ignore="false">
 			<column id="384" name="perc_pos"/>
@@ -420,15 +420,15 @@
 			<column id="394" name="perc_ident"/>
 			<column id="395" name="score"/>
 			<column id="396" name="qmember_id"/>
-			<column id="397" name="qend"/>
-			<column id="398" name="identical_matches"/>
-			<column id="399" name="qstart"/>
-			<column id="400" name="peptide_align_feature_id"/>
-			<column id="401" name="hmember_id"/>
-			<column id="402" name="hit_rank"/>
+			<column id="397" name="identical_matches"/>
+			<column id="398" name="qend"/>
+			<column id="399" name="peptide_align_feature_id"/>
+			<column id="400" name="qstart"/>
+			<column id="401" name="hit_rank"/>
+			<column id="402" name="hmember_id"/>
 			<foreignKey id="403" columnIds="385" status="INFERRED"/>
-			<foreignKey id="404" columnIds="400" status="INFERRED"/>
-			<primaryKey id="405" columnIds="400" status="INFERRED"/>
+			<foreignKey id="404" columnIds="399" status="INFERRED"/>
+			<primaryKey id="405" columnIds="399" status="INFERRED"/>
 		</table>
 		<table id="406" name="peptide_align_feature_danio_rerio_26" ignore="false">
 			<column id="407" name="perc_pos"/>
@@ -444,15 +444,15 @@
 			<column id="417" name="perc_ident"/>
 			<column id="418" name="score"/>
 			<column id="419" name="qmember_id"/>
-			<column id="420" name="qend"/>
-			<column id="421" name="identical_matches"/>
-			<column id="422" name="qstart"/>
-			<column id="423" name="peptide_align_feature_id"/>
-			<column id="424" name="hmember_id"/>
-			<column id="425" name="hit_rank"/>
+			<column id="420" name="identical_matches"/>
+			<column id="421" name="qend"/>
+			<column id="422" name="peptide_align_feature_id"/>
+			<column id="423" name="qstart"/>
+			<column id="424" name="hit_rank"/>
+			<column id="425" name="hmember_id"/>
 			<foreignKey id="426" columnIds="408" status="INFERRED"/>
-			<foreignKey id="427" columnIds="423" status="INFERRED"/>
-			<primaryKey id="428" columnIds="423" status="INFERRED"/>
+			<foreignKey id="427" columnIds="422" status="INFERRED"/>
+			<primaryKey id="428" columnIds="422" status="INFERRED"/>
 		</table>
 		<table id="429" name="peptide_align_feature_xenopus_tropicalis_16" ignore="false">
 			<column id="430" name="perc_pos"/>
@@ -468,26 +468,26 @@
 			<column id="440" name="perc_ident"/>
 			<column id="441" name="score"/>
 			<column id="442" name="qmember_id"/>
-			<column id="443" name="qend"/>
-			<column id="444" name="identical_matches"/>
-			<column id="445" name="qstart"/>
-			<column id="446" name="peptide_align_feature_id"/>
-			<column id="447" name="hmember_id"/>
-			<column id="448" name="hit_rank"/>
+			<column id="443" name="identical_matches"/>
+			<column id="444" name="qend"/>
+			<column id="445" name="peptide_align_feature_id"/>
+			<column id="446" name="qstart"/>
+			<column id="447" name="hit_rank"/>
+			<column id="448" name="hmember_id"/>
 			<foreignKey id="449" columnIds="431" status="INFERRED"/>
-			<foreignKey id="450" columnIds="446" status="INFERRED"/>
-			<primaryKey id="451" columnIds="446" status="INFERRED"/>
+			<foreignKey id="450" columnIds="445" status="INFERRED"/>
+			<primaryKey id="451" columnIds="445" status="INFERRED"/>
 		</table>
 		<table id="452" name="method_link_species_set" ignore="false">
 			<column id="453" name="species_set_id"/>
 			<column id="454" name="url"/>
-			<column id="455" name="method_link_id"/>
-			<column id="456" name="source"/>
-			<column id="457" name="method_link_species_set_id"/>
-			<column id="458" name="name"/>
-			<foreignKey id="459" columnIds="455" status="INFERRED"/>
+			<column id="455" name="source"/>
+			<column id="456" name="method_link_id"/>
+			<column id="457" name="name"/>
+			<column id="458" name="method_link_species_set_id"/>
+			<foreignKey id="459" columnIds="456" status="INFERRED"/>
 			<foreignKey id="460" columnIds="453" status="HANDMADE"/>
-			<primaryKey id="461" columnIds="457" status="INFERRED"/>
+			<primaryKey id="461" columnIds="458" status="INFERRED"/>
 		</table>
 		<table id="462" name="peptide_align_feature_dasypus_novemcinctus_35" ignore="false">
 			<column id="463" name="perc_pos"/>
@@ -503,15 +503,15 @@
 			<column id="473" name="perc_ident"/>
 			<column id="474" name="score"/>
 			<column id="475" name="qmember_id"/>
-			<column id="476" name="qend"/>
-			<column id="477" name="identical_matches"/>
-			<column id="478" name="qstart"/>
-			<column id="479" name="peptide_align_feature_id"/>
-			<column id="480" name="hmember_id"/>
-			<column id="481" name="hit_rank"/>
+			<column id="476" name="identical_matches"/>
+			<column id="477" name="qend"/>
+			<column id="478" name="peptide_align_feature_id"/>
+			<column id="479" name="qstart"/>
+			<column id="480" name="hit_rank"/>
+			<column id="481" name="hmember_id"/>
 			<foreignKey id="482" columnIds="464" status="INFERRED"/>
-			<foreignKey id="483" columnIds="479" status="INFERRED"/>
-			<primaryKey id="484" columnIds="479" status="INFERRED"/>
+			<foreignKey id="483" columnIds="478" status="INFERRED"/>
+			<primaryKey id="484" columnIds="478" status="INFERRED"/>
 		</table>
 		<table id="485" name="species_set" ignore="false">
 			<column id="486" name="species_set_id"/>
@@ -534,15 +534,15 @@
 			<column id="502" name="perc_ident"/>
 			<column id="503" name="score"/>
 			<column id="504" name="qmember_id"/>
-			<column id="505" name="qend"/>
-			<column id="506" name="identical_matches"/>
-			<column id="507" name="qstart"/>
-			<column id="508" name="peptide_align_feature_id"/>
-			<column id="509" name="hmember_id"/>
-			<column id="510" name="hit_rank"/>
+			<column id="505" name="identical_matches"/>
+			<column id="506" name="qend"/>
+			<column id="507" name="peptide_align_feature_id"/>
+			<column id="508" name="qstart"/>
+			<column id="509" name="hit_rank"/>
+			<column id="510" name="hmember_id"/>
 			<foreignKey id="511" columnIds="493" status="INFERRED"/>
-			<foreignKey id="512" columnIds="508" status="INFERRED"/>
-			<primaryKey id="513" columnIds="508" status="INFERRED"/>
+			<foreignKey id="512" columnIds="507" status="INFERRED"/>
+			<primaryKey id="513" columnIds="507" status="INFERRED"/>
 		</table>
 		<table id="514" name="analysis" ignore="false">
 			<column id="515" name="analysis_id"/>
@@ -556,35 +556,35 @@
 			<column id="523" name="db_file"/>
 			<column id="524" name="program_file"/>
 			<column id="525" name="program_version"/>
-			<column id="526" name="gff_feature"/>
-			<column id="527" name="program"/>
-			<column id="528" name="module"/>
+			<column id="526" name="module"/>
+			<column id="527" name="gff_feature"/>
+			<column id="528" name="program"/>
 			<primaryKey id="529" columnIds="515" status="INFERRED"/>
 		</table>
 		<table id="530" name="protein_tree_node" ignore="false">
 			<column id="531" name="left_index"/>
-			<column id="532" name="node_id"/>
-			<column id="533" name="right_index"/>
+			<column id="532" name="right_index"/>
+			<column id="533" name="node_id"/>
 			<column id="534" name="parent_id"/>
 			<column id="535" name="distance_to_parent"/>
 			<column id="536" name="root_id"/>
-			<primaryKey id="537" columnIds="532" status="INFERRED"/>
+			<primaryKey id="537" columnIds="533" status="INFERRED"/>
 		</table>
 		<table id="538" name="homology" ignore="false">
 			<column id="539" name="ds"/>
 			<column id="540" name="dn"/>
-			<column id="541" name="stable_id"/>
-			<column id="542" name="threshold_on_ds"/>
+			<column id="541" name="threshold_on_ds"/>
+			<column id="542" name="stable_id"/>
 			<column id="543" name="node_id"/>
 			<column id="544" name="description"/>
 			<column id="545" name="subtype"/>
 			<column id="546" name="n"/>
-			<column id="547" name="homology_id"/>
+			<column id="547" name="lnl"/>
 			<column id="548" name="method_link_species_set_id"/>
-			<column id="549" name="lnl"/>
+			<column id="549" name="homology_id"/>
 			<column id="550" name="s"/>
 			<foreignKey id="551" columnIds="548" status="INFERRED"/>
-			<primaryKey id="552" columnIds="547" status="INFERRED"/>
+			<primaryKey id="552" columnIds="549" status="INFERRED"/>
 		</table>
 		<table id="553" name="peptide_align_feature_ciona_savignyi_27" ignore="false">
 			<column id="554" name="perc_pos"/>
@@ -600,15 +600,15 @@
 			<column id="564" name="perc_ident"/>
 			<column id="565" name="score"/>
 			<column id="566" name="qmember_id"/>
-			<column id="567" name="qend"/>
-			<column id="568" name="identical_matches"/>
-			<column id="569" name="qstart"/>
-			<column id="570" name="peptide_align_feature_id"/>
-			<column id="571" name="hmember_id"/>
-			<column id="572" name="hit_rank"/>
+			<column id="567" name="identical_matches"/>
+			<column id="568" name="qend"/>
+			<column id="569" name="peptide_align_feature_id"/>
+			<column id="570" name="qstart"/>
+			<column id="571" name="hit_rank"/>
+			<column id="572" name="hmember_id"/>
 			<foreignKey id="573" columnIds="555" status="INFERRED"/>
-			<foreignKey id="574" columnIds="570" status="INFERRED"/>
-			<primaryKey id="575" columnIds="570" status="INFERRED"/>
+			<foreignKey id="574" columnIds="569" status="INFERRED"/>
+			<primaryKey id="575" columnIds="569" status="INFERRED"/>
 		</table>
 		<table id="576" name="peptide_align_feature_aedes_aegypti_29" ignore="false">
 			<column id="577" name="perc_pos"/>
@@ -624,15 +624,15 @@
 			<column id="587" name="perc_ident"/>
 			<column id="588" name="score"/>
 			<column id="589" name="qmember_id"/>
-			<column id="590" name="qend"/>
-			<column id="591" name="identical_matches"/>
-			<column id="592" name="qstart"/>
-			<column id="593" name="peptide_align_feature_id"/>
-			<column id="594" name="hmember_id"/>
-			<column id="595" name="hit_rank"/>
+			<column id="590" name="identical_matches"/>
+			<column id="591" name="qend"/>
+			<column id="592" name="peptide_align_feature_id"/>
+			<column id="593" name="qstart"/>
+			<column id="594" name="hit_rank"/>
+			<column id="595" name="hmember_id"/>
 			<foreignKey id="596" columnIds="578" status="INFERRED"/>
-			<foreignKey id="597" columnIds="593" status="INFERRED"/>
-			<primaryKey id="598" columnIds="593" status="INFERRED"/>
+			<foreignKey id="597" columnIds="592" status="INFERRED"/>
+			<primaryKey id="598" columnIds="592" status="INFERRED"/>
 		</table>
 		<table id="599" name="peptide_align_feature_gallus_gallus_42" ignore="false">
 			<column id="600" name="perc_pos"/>
@@ -648,15 +648,15 @@
 			<column id="610" name="perc_ident"/>
 			<column id="611" name="score"/>
 			<column id="612" name="qmember_id"/>
-			<column id="613" name="qend"/>
-			<column id="614" name="identical_matches"/>
-			<column id="615" name="qstart"/>
-			<column id="616" name="peptide_align_feature_id"/>
-			<column id="617" name="hmember_id"/>
-			<column id="618" name="hit_rank"/>
+			<column id="613" name="identical_matches"/>
+			<column id="614" name="qend"/>
+			<column id="615" name="peptide_align_feature_id"/>
+			<column id="616" name="qstart"/>
+			<column id="617" name="hit_rank"/>
+			<column id="618" name="hmember_id"/>
 			<foreignKey id="619" columnIds="601" status="INFERRED"/>
-			<foreignKey id="620" columnIds="616" status="INFERRED"/>
-			<primaryKey id="621" columnIds="616" status="INFERRED"/>
+			<foreignKey id="620" columnIds="615" status="INFERRED"/>
+			<primaryKey id="621" columnIds="615" status="INFERRED"/>
 		</table>
 		<table id="622" name="peptide_align_feature_saccharomyces_cerevisiae_44" ignore="false">
 			<column id="623" name="perc_pos"/>
@@ -672,23 +672,23 @@
 			<column id="633" name="perc_ident"/>
 			<column id="634" name="score"/>
 			<column id="635" name="qmember_id"/>
-			<column id="636" name="qend"/>
-			<column id="637" name="identical_matches"/>
-			<column id="638" name="qstart"/>
-			<column id="639" name="peptide_align_feature_id"/>
-			<column id="640" name="hmember_id"/>
-			<column id="641" name="hit_rank"/>
+			<column id="636" name="identical_matches"/>
+			<column id="637" name="qend"/>
+			<column id="638" name="peptide_align_feature_id"/>
+			<column id="639" name="qstart"/>
+			<column id="640" name="hit_rank"/>
+			<column id="641" name="hmember_id"/>
 			<foreignKey id="642" columnIds="624" status="INFERRED"/>
-			<foreignKey id="643" columnIds="639" status="INFERRED"/>
-			<primaryKey id="644" columnIds="639" status="INFERRED"/>
+			<foreignKey id="643" columnIds="638" status="INFERRED"/>
+			<primaryKey id="644" columnIds="638" status="INFERRED"/>
 		</table>
 		<table id="645" name="genomic_align_block" ignore="false">
 			<column id="646" name="genomic_align_block_id"/>
 			<column id="647" name="score"/>
 			<column id="648" name="length"/>
 			<column id="649" name="method_link_species_set_id"/>
-			<column id="650" name="group_id"/>
-			<column id="651" name="perc_id"/>
+			<column id="650" name="perc_id"/>
+			<column id="651" name="group_id"/>
 			<foreignKey id="652" columnIds="649" status="INFERRED"/>
 			<primaryKey id="653" columnIds="646" status="INFERRED"/>
 		</table>
@@ -706,15 +706,15 @@
 			<column id="665" name="perc_ident"/>
 			<column id="666" name="score"/>
 			<column id="667" name="qmember_id"/>
-			<column id="668" name="qend"/>
-			<column id="669" name="identical_matches"/>
-			<column id="670" name="qstart"/>
-			<column id="671" name="peptide_align_feature_id"/>
-			<column id="672" name="hmember_id"/>
-			<column id="673" name="hit_rank"/>
+			<column id="668" name="identical_matches"/>
+			<column id="669" name="qend"/>
+			<column id="670" name="peptide_align_feature_id"/>
+			<column id="671" name="qstart"/>
+			<column id="672" name="hit_rank"/>
+			<column id="673" name="hmember_id"/>
 			<foreignKey id="674" columnIds="656" status="INFERRED"/>
-			<foreignKey id="675" columnIds="671" status="INFERRED"/>
-			<primaryKey id="676" columnIds="671" status="INFERRED"/>
+			<foreignKey id="675" columnIds="670" status="INFERRED"/>
+			<primaryKey id="676" columnIds="670" status="INFERRED"/>
 		</table>
 		<table id="677" name="peptide_align_feature_canis_familiaris_39" ignore="false">
 			<column id="678" name="perc_pos"/>
@@ -730,15 +730,15 @@
 			<column id="688" name="perc_ident"/>
 			<column id="689" name="score"/>
 			<column id="690" name="qmember_id"/>
-			<column id="691" name="qend"/>
-			<column id="692" name="identical_matches"/>
-			<column id="693" name="qstart"/>
-			<column id="694" name="peptide_align_feature_id"/>
-			<column id="695" name="hmember_id"/>
-			<column id="696" name="hit_rank"/>
+			<column id="691" name="identical_matches"/>
+			<column id="692" name="qend"/>
+			<column id="693" name="peptide_align_feature_id"/>
+			<column id="694" name="qstart"/>
+			<column id="695" name="hit_rank"/>
+			<column id="696" name="hmember_id"/>
 			<foreignKey id="697" columnIds="679" status="INFERRED"/>
-			<foreignKey id="698" columnIds="694" status="INFERRED"/>
-			<primaryKey id="699" columnIds="694" status="INFERRED"/>
+			<foreignKey id="698" columnIds="693" status="INFERRED"/>
+			<primaryKey id="699" columnIds="693" status="INFERRED"/>
 		</table>
 		<table id="700" name="peptide_align_feature_gasterosteus_aculeatus_36" ignore="false">
 			<column id="701" name="perc_pos"/>
@@ -754,15 +754,15 @@
 			<column id="711" name="perc_ident"/>
 			<column id="712" name="score"/>
 			<column id="713" name="qmember_id"/>
-			<column id="714" name="qend"/>
-			<column id="715" name="identical_matches"/>
-			<column id="716" name="qstart"/>
-			<column id="717" name="peptide_align_feature_id"/>
-			<column id="718" name="hmember_id"/>
-			<column id="719" name="hit_rank"/>
+			<column id="714" name="identical_matches"/>
+			<column id="715" name="qend"/>
+			<column id="716" name="peptide_align_feature_id"/>
+			<column id="717" name="qstart"/>
+			<column id="718" name="hit_rank"/>
+			<column id="719" name="hmember_id"/>
 			<foreignKey id="720" columnIds="702" status="INFERRED"/>
-			<foreignKey id="721" columnIds="717" status="INFERRED"/>
-			<primaryKey id="722" columnIds="717" status="INFERRED"/>
+			<foreignKey id="721" columnIds="716" status="INFERRED"/>
+			<primaryKey id="722" columnIds="716" status="INFERRED"/>
 		</table>
 		<table id="723" name="member" ignore="false">
 			<column id="724" name="display_label"/>
@@ -804,29 +804,29 @@
 			<column id="758" name="perc_ident"/>
 			<column id="759" name="score"/>
 			<column id="760" name="qmember_id"/>
-			<column id="761" name="qend"/>
-			<column id="762" name="identical_matches"/>
-			<column id="763" name="qstart"/>
-			<column id="764" name="peptide_align_feature_id"/>
-			<column id="765" name="hmember_id"/>
-			<column id="766" name="hit_rank"/>
+			<column id="761" name="identical_matches"/>
+			<column id="762" name="qend"/>
+			<column id="763" name="peptide_align_feature_id"/>
+			<column id="764" name="qstart"/>
+			<column id="765" name="hit_rank"/>
+			<column id="766" name="hmember_id"/>
 			<foreignKey id="767" columnIds="749" status="INFERRED"/>
-			<foreignKey id="768" columnIds="764" status="INFERRED"/>
-			<primaryKey id="769" columnIds="764" status="INFERRED"/>
+			<foreignKey id="768" columnIds="763" status="INFERRED"/>
+			<primaryKey id="769" columnIds="763" status="INFERRED"/>
 		</table>
 		<table id="770" name="genomic_align" ignore="false">
 			<column id="771" name="genomic_align_block_id"/>
 			<column id="772" name="dnafrag_start"/>
-			<column id="773" name="dnafrag_id"/>
-			<column id="774" name="dnafrag_strand"/>
+			<column id="773" name="dnafrag_strand"/>
+			<column id="774" name="dnafrag_id"/>
 			<column id="775" name="dnafrag_end"/>
-			<column id="776" name="method_link_species_set_id"/>
-			<column id="777" name="cigar_line"/>
+			<column id="776" name="cigar_line"/>
+			<column id="777" name="method_link_species_set_id"/>
 			<column id="778" name="level_id"/>
 			<column id="779" name="genomic_align_id"/>
-			<foreignKey id="780" columnIds="773" status="INFERRED"/>
+			<foreignKey id="780" columnIds="774" status="INFERRED"/>
 			<foreignKey id="781" columnIds="771" status="INFERRED"/>
-			<foreignKey id="782" columnIds="776" status="INFERRED"/>
+			<foreignKey id="782" columnIds="777" status="INFERRED"/>
 			<primaryKey id="783" columnIds="779" status="INFERRED"/>
 		</table>
 		<table id="784" name="genomic_align_group" ignore="false">
@@ -849,15 +849,15 @@
 			<column id="800" name="perc_ident"/>
 			<column id="801" name="score"/>
 			<column id="802" name="qmember_id"/>
-			<column id="803" name="qend"/>
-			<column id="804" name="identical_matches"/>
-			<column id="805" name="qstart"/>
-			<column id="806" name="peptide_align_feature_id"/>
-			<column id="807" name="hmember_id"/>
-			<column id="808" name="hit_rank"/>
+			<column id="803" name="identical_matches"/>
+			<column id="804" name="qend"/>
+			<column id="805" name="peptide_align_feature_id"/>
+			<column id="806" name="qstart"/>
+			<column id="807" name="hit_rank"/>
+			<column id="808" name="hmember_id"/>
 			<foreignKey id="809" columnIds="791" status="INFERRED"/>
-			<foreignKey id="810" columnIds="806" status="INFERRED"/>
-			<primaryKey id="811" columnIds="806" status="INFERRED"/>
+			<foreignKey id="810" columnIds="805" status="INFERRED"/>
+			<primaryKey id="811" columnIds="805" status="INFERRED"/>
 		</table>
 		<table id="812" name="peptide_align_feature_loxodonta_africana_32" ignore="false">
 			<column id="813" name="perc_pos"/>
@@ -873,15 +873,15 @@
 			<column id="823" name="perc_ident"/>
 			<column id="824" name="score"/>
 			<column id="825" name="qmember_id"/>
-			<column id="826" name="qend"/>
-			<column id="827" name="identical_matches"/>
-			<column id="828" name="qstart"/>
-			<column id="829" name="peptide_align_feature_id"/>
-			<column id="830" name="hmember_id"/>
-			<column id="831" name="hit_rank"/>
+			<column id="826" name="identical_matches"/>
+			<column id="827" name="qend"/>
+			<column id="828" name="peptide_align_feature_id"/>
+			<column id="829" name="qstart"/>
+			<column id="830" name="hit_rank"/>
+			<column id="831" name="hmember_id"/>
 			<foreignKey id="832" columnIds="814" status="INFERRED"/>
-			<foreignKey id="833" columnIds="829" status="INFERRED"/>
-			<primaryKey id="834" columnIds="829" status="INFERRED"/>
+			<foreignKey id="833" columnIds="828" status="INFERRED"/>
+			<primaryKey id="834" columnIds="828" status="INFERRED"/>
 		</table>
 		<table id="835" name="ncbi_taxa_name" ignore="false">
 			<column id="836" name="taxon_id"/>
@@ -906,11 +906,11 @@
 		</table>
 		<table id="853" name="dnafrag_region" ignore="false">
 			<column id="854" name="dnafrag_start"/>
-			<column id="855" name="dnafrag_id"/>
-			<column id="856" name="dnafrag_strand"/>
+			<column id="855" name="dnafrag_strand"/>
+			<column id="856" name="dnafrag_id"/>
 			<column id="857" name="dnafrag_end"/>
 			<column id="858" name="synteny_region_id"/>
-			<foreignKey id="859" columnIds="855" status="INFERRED"/>
+			<foreignKey id="859" columnIds="856" status="INFERRED"/>
 			<foreignKey id="860" columnIds="858" status="INFERRED"/>
 		</table>
 		<table id="861" name="peptide_align_feature_rattus_norvegicus_3" ignore="false">
@@ -927,28 +927,28 @@
 			<column id="872" name="perc_ident"/>
 			<column id="873" name="score"/>
 			<column id="874" name="qmember_id"/>
-			<column id="875" name="qend"/>
-			<column id="876" name="identical_matches"/>
-			<column id="877" name="qstart"/>
-			<column id="878" name="peptide_align_feature_id"/>
-			<column id="879" name="hmember_id"/>
-			<column id="880" name="hit_rank"/>
+			<column id="875" name="identical_matches"/>
+			<column id="876" name="qend"/>
+			<column id="877" name="peptide_align_feature_id"/>
+			<column id="878" name="qstart"/>
+			<column id="879" name="hit_rank"/>
+			<column id="880" name="hmember_id"/>
 			<foreignKey id="881" columnIds="863" status="INFERRED"/>
-			<foreignKey id="882" columnIds="878" status="INFERRED"/>
-			<primaryKey id="883" columnIds="878" status="INFERRED"/>
+			<foreignKey id="882" columnIds="877" status="INFERRED"/>
+			<primaryKey id="883" columnIds="877" status="INFERRED"/>
 		</table>
-		<table id="884" name="conservation_score" ignore="false">
-			<column id="885" name="expected_score"/>
-			<column id="886" name="genomic_align_block_id"/>
-			<column id="887" name="position"/>
-			<column id="888" name="diff_score"/>
-			<column id="889" name="window_size"/>
-			<foreignKey id="890" columnIds="886" status="INFERRED"/>
+		<table id="884" name="protein_tree_tag" ignore="false">
+			<column id="885" name="value"/>
+			<column id="886" name="node_id"/>
+			<column id="887" name="tag"/>
 		</table>
-		<table id="891" name="protein_tree_tag" ignore="false">
-			<column id="892" name="value"/>
-			<column id="893" name="node_id"/>
-			<column id="894" name="tag"/>
+		<table id="888" name="conservation_score" ignore="false">
+			<column id="889" name="expected_score"/>
+			<column id="890" name="genomic_align_block_id"/>
+			<column id="891" name="position"/>
+			<column id="892" name="diff_score"/>
+			<column id="893" name="window_size"/>
+			<foreignKey id="894" columnIds="890" status="INFERRED"/>
 		</table>
 		<table id="895" name="mlss_checks" ignore="false">
 			<column id="896" name="species_name"/>
@@ -971,24 +971,24 @@
 			<column id="912" name="perc_ident"/>
 			<column id="913" name="score"/>
 			<column id="914" name="qmember_id"/>
-			<column id="915" name="qend"/>
-			<column id="916" name="identical_matches"/>
-			<column id="917" name="qstart"/>
-			<column id="918" name="peptide_align_feature_id"/>
-			<column id="919" name="hmember_id"/>
-			<column id="920" name="hit_rank"/>
+			<column id="915" name="identical_matches"/>
+			<column id="916" name="qend"/>
+			<column id="917" name="peptide_align_feature_id"/>
+			<column id="918" name="qstart"/>
+			<column id="919" name="hit_rank"/>
+			<column id="920" name="hmember_id"/>
 			<foreignKey id="921" columnIds="903" status="INFERRED"/>
-			<primaryKey id="922" columnIds="918" status="INFERRED"/>
+			<primaryKey id="922" columnIds="917" status="INFERRED"/>
 		</table>
 		<table id="923" name="domain" ignore="false">
 			<column id="924" name="stable_id"/>
-			<column id="925" name="domain_id"/>
-			<column id="926" name="description"/>
+			<column id="925" name="description"/>
+			<column id="926" name="domain_id"/>
 			<column id="927" name="method_link_species_set_id"/>
 			<foreignKey id="928" columnIds="927" status="INFERRED"/>
-			<primaryKey id="929" columnIds="925" status="INFERRED"/>
+			<primaryKey id="929" columnIds="926" status="INFERRED"/>
 		</table>
-		<table id="930" name="peptide_align_feature_otolemur_garnettii_51" ignore="false">
+		<table id="930" name="peptide_align_feature_pan_troglodytes_38" ignore="false">
 			<column id="931" name="perc_pos"/>
 			<column id="932" name="analysis_id"/>
 			<column id="933" name="align_length"/>
@@ -1012,7 +1012,7 @@
 			<foreignKey id="951" columnIds="946" status="INFERRED"/>
 			<primaryKey id="952" columnIds="946" status="INFERRED"/>
 		</table>
-		<table id="953" name="peptide_align_feature_pan_troglodytes_38" ignore="false">
+		<table id="953" name="peptide_align_feature_otolemur_garnettii_51" ignore="false">
 			<column id="954" name="perc_pos"/>
 			<column id="955" name="analysis_id"/>
 			<column id="956" name="align_length"/>
@@ -1050,15 +1050,15 @@
 			<column id="987" name="perc_ident"/>
 			<column id="988" name="score"/>
 			<column id="989" name="qmember_id"/>
-			<column id="990" name="identical_matches"/>
-			<column id="991" name="qend"/>
-			<column id="992" name="peptide_align_feature_id"/>
-			<column id="993" name="qstart"/>
-			<column id="994" name="hit_rank"/>
-			<column id="995" name="hmember_id"/>
+			<column id="990" name="qend"/>
+			<column id="991" name="identical_matches"/>
+			<column id="992" name="qstart"/>
+			<column id="993" name="peptide_align_feature_id"/>
+			<column id="994" name="hmember_id"/>
+			<column id="995" name="hit_rank"/>
 			<foreignKey id="996" columnIds="978" status="INFERRED"/>
-			<foreignKey id="997" columnIds="992" status="INFERRED"/>
-			<primaryKey id="998" columnIds="992" status="INFERRED"/>
+			<foreignKey id="997" columnIds="993" status="INFERRED"/>
+			<primaryKey id="998" columnIds="993" status="INFERRED"/>
 		</table>
 		<table id="999" name="dnafrag" ignore="false">
 			<column id="1000" name="length"/>
@@ -1069,7 +1069,7 @@
 			<foreignKey id="1005" columnIds="1003" status="INFERRED"/>
 			<primaryKey id="1006" columnIds="1002" status="INFERRED"/>
 		</table>
-		<table id="1007" name="peptide_align_feature_oryzias_latipes_37" ignore="false">
+		<table id="1007" name="peptide_align_feature_erinaceus_europaeus_49" ignore="false">
 			<column id="1008" name="perc_pos"/>
 			<column id="1009" name="analysis_id"/>
 			<column id="1010" name="align_length"/>
@@ -1083,17 +1083,17 @@
 			<column id="1018" name="perc_ident"/>
 			<column id="1019" name="score"/>
 			<column id="1020" name="qmember_id"/>
-			<column id="1021" name="qend"/>
-			<column id="1022" name="identical_matches"/>
-			<column id="1023" name="qstart"/>
-			<column id="1024" name="peptide_align_feature_id"/>
-			<column id="1025" name="hmember_id"/>
-			<column id="1026" name="hit_rank"/>
+			<column id="1021" name="identical_matches"/>
+			<column id="1022" name="qend"/>
+			<column id="1023" name="peptide_align_feature_id"/>
+			<column id="1024" name="qstart"/>
+			<column id="1025" name="hit_rank"/>
+			<column id="1026" name="hmember_id"/>
 			<foreignKey id="1027" columnIds="1009" status="INFERRED"/>
-			<foreignKey id="1028" columnIds="1024" status="INFERRED"/>
-			<primaryKey id="1029" columnIds="1024" status="INFERRED"/>
+			<foreignKey id="1028" columnIds="1023" status="INFERRED"/>
+			<primaryKey id="1029" columnIds="1023" status="INFERRED"/>
 		</table>
-		<table id="1030" name="peptide_align_feature_erinaceus_europaeus_49" ignore="false">
+		<table id="1030" name="peptide_align_feature_oryzias_latipes_37" ignore="false">
 			<column id="1031" name="perc_pos"/>
 			<column id="1032" name="analysis_id"/>
 			<column id="1033" name="align_length"/>
@@ -1107,27 +1107,27 @@
 			<column id="1041" name="perc_ident"/>
 			<column id="1042" name="score"/>
 			<column id="1043" name="qmember_id"/>
-			<column id="1044" name="qend"/>
-			<column id="1045" name="identical_matches"/>
-			<column id="1046" name="qstart"/>
-			<column id="1047" name="peptide_align_feature_id"/>
-			<column id="1048" name="hmember_id"/>
-			<column id="1049" name="hit_rank"/>
+			<column id="1044" name="identical_matches"/>
+			<column id="1045" name="qend"/>
+			<column id="1046" name="peptide_align_feature_id"/>
+			<column id="1047" name="qstart"/>
+			<column id="1048" name="hit_rank"/>
+			<column id="1049" name="hmember_id"/>
 			<foreignKey id="1050" columnIds="1032" status="INFERRED"/>
-			<foreignKey id="1051" columnIds="1047" status="INFERRED"/>
-			<primaryKey id="1052" columnIds="1047" status="INFERRED"/>
+			<foreignKey id="1051" columnIds="1046" status="INFERRED"/>
+			<primaryKey id="1052" columnIds="1046" status="INFERRED"/>
 		</table>
 		<table id="1053" name="protein_tree_member" ignore="false">
 			<column id="1054" name="cigar_start"/>
 			<column id="1055" name="cigar_end"/>
 			<column id="1056" name="member_id"/>
 			<column id="1057" name="node_id"/>
-			<column id="1058" name="method_link_species_set_id"/>
-			<column id="1059" name="cigar_line"/>
+			<column id="1058" name="cigar_line"/>
+			<column id="1059" name="method_link_species_set_id"/>
 			<foreignKey id="1060" columnIds="1056" status="INFERRED"/>
-			<foreignKey id="1061" columnIds="1058" status="INFERRED"/>
+			<foreignKey id="1061" columnIds="1059" status="INFERRED"/>
 		</table>
-		<relation id="1062" cardinality="1" firstKeyId="922" secondKeyId="280" status="INFERRED"/>
+		<relation id="1062" cardinality="1" firstKeyId="922" secondKeyId="303" status="INFERRED"/>
 		<relation id="1063" cardinality="1" firstKeyId="922" secondKeyId="483" status="INFERRED"/>
 		<relation id="1064" cardinality="M" firstKeyId="529" secondKeyId="140" status="INFERRED"/>
 		<relation id="1065" cardinality="M" firstKeyId="529" secondKeyId="191" status="INFERRED"/>
@@ -1136,12 +1136,12 @@
 		<relation id="1068" cardinality="1" firstKeyId="922" secondKeyId="192" status="INFERRED"/>
 		<relation id="1069" cardinality="M" firstKeyId="461" secondKeyId="782" status="INFERRED"/>
 		<relation id="1070" cardinality="M" firstKeyId="489" secondKeyId="460" status="HANDMADE"/>
-		<relation id="1071" cardinality="M" firstKeyId="529" secondKeyId="1027" status="INFERRED"/>
+		<relation id="1071" cardinality="M" firstKeyId="529" secondKeyId="1050" status="INFERRED"/>
 		<relation id="1072" cardinality="M" firstKeyId="529" secondKeyId="247" status="INFERRED"/>
 		<relation id="1073" cardinality="M" firstKeyId="529" secondKeyId="511" status="INFERRED"/>
 		<relation id="1074" cardinality="M" firstKeyId="461" secondKeyId="900" status="INFERRED"/>
 		<relation id="1075" cardinality="1" firstKeyId="922" secondKeyId="248" status="INFERRED"/>
-		<relation id="1076" cardinality="1" firstKeyId="922" secondKeyId="1028" status="INFERRED"/>
+		<relation id="1076" cardinality="1" firstKeyId="922" secondKeyId="1051" status="INFERRED"/>
 		<relation id="1077" cardinality="M" firstKeyId="529" secondKeyId="881" status="INFERRED"/>
 		<relation id="1078" cardinality="M" firstKeyId="461" secondKeyId="551" status="INFERRED"/>
 		<relation id="1079" cardinality="M" firstKeyId="529" secondKeyId="573" status="INFERRED"/>
@@ -1150,43 +1150,43 @@
 		<relation id="1082" cardinality="1" firstKeyId="922" secondKeyId="95" status="INFERRED"/>
 		<relation id="1083" cardinality="1" firstKeyId="922" secondKeyId="833" status="INFERRED"/>
 		<relation id="1084" cardinality="1" firstKeyId="922" secondKeyId="574" status="INFERRED"/>
-		<relation id="1085" cardinality="1" firstKeyId="922" secondKeyId="358" status="INFERRED"/>
+		<relation id="1085" cardinality="1" firstKeyId="922" secondKeyId="381" status="INFERRED"/>
 		<relation id="1086" cardinality="M" firstKeyId="783" secondKeyId="788" status="INFERRED"/>
-		<relation id="1087" cardinality="M" firstKeyId="529" secondKeyId="950" status="INFERRED"/>
+		<relation id="1087" cardinality="M" firstKeyId="529" secondKeyId="973" status="INFERRED"/>
 		<relation id="1088" cardinality="M" firstKeyId="461" secondKeyId="652" status="INFERRED"/>
 		<relation id="1089" cardinality="M" firstKeyId="1006" secondKeyId="780" status="INFERRED"/>
 		<relation id="1090" cardinality="M" firstKeyId="529" secondKeyId="117" status="INFERRED"/>
 		<relation id="1091" cardinality="M" firstKeyId="461" secondKeyId="146" status="INFERRED"/>
 		<relation id="1092" cardinality="M" firstKeyId="13" secondKeyId="745" status="INFERRED"/>
 		<relation id="1093" cardinality="1" firstKeyId="922" secondKeyId="882" status="INFERRED"/>
-		<relation id="1094" cardinality="M" firstKeyId="529" secondKeyId="279" status="INFERRED"/>
+		<relation id="1094" cardinality="M" firstKeyId="529" secondKeyId="302" status="INFERRED"/>
 		<relation id="1095" cardinality="1" firstKeyId="922" secondKeyId="335" status="INFERRED"/>
-		<relation id="1096" cardinality="1" firstKeyId="922" secondKeyId="951" status="INFERRED"/>
+		<relation id="1096" cardinality="1" firstKeyId="922" secondKeyId="974" status="INFERRED"/>
 		<relation id="1097" cardinality="M" firstKeyId="529" secondKeyId="482" status="INFERRED"/>
 		<relation id="1098" cardinality="M" firstKeyId="1006" secondKeyId="859" status="INFERRED"/>
 		<relation id="1099" cardinality="M" firstKeyId="529" secondKeyId="168" status="INFERRED"/>
 		<relation id="1100" cardinality="1" firstKeyId="922" secondKeyId="997" status="INFERRED"/>
 		<relation id="1101" cardinality="1" firstKeyId="922" secondKeyId="620" status="INFERRED"/>
 		<relation id="1102" cardinality="M" firstKeyId="147" secondKeyId="860" status="INFERRED"/>
-		<relation id="1103" cardinality="M" firstKeyId="529" secondKeyId="302" status="INFERRED"/>
+		<relation id="1103" cardinality="M" firstKeyId="529" secondKeyId="279" status="INFERRED"/>
 		<relation id="1104" cardinality="1" firstKeyId="922" secondKeyId="768" status="INFERRED"/>
-		<relation id="1105" cardinality="1" firstKeyId="922" secondKeyId="381" status="INFERRED"/>
+		<relation id="1105" cardinality="1" firstKeyId="922" secondKeyId="358" status="INFERRED"/>
 		<relation id="1106" cardinality="M" firstKeyId="221" secondKeyId="739" status="INFERRED"/>
 		<relation id="1107" cardinality="M" firstKeyId="529" secondKeyId="214" status="INFERRED"/>
 		<relation id="1108" cardinality="M" firstKeyId="529" secondKeyId="996" status="INFERRED"/>
 		<relation id="1109" cardinality="1" firstKeyId="922" secondKeyId="512" status="INFERRED"/>
 		<relation id="1110" cardinality="M" firstKeyId="740" secondKeyId="746" status="INFERRED"/>
-		<relation id="1111" cardinality="M" firstKeyId="529" secondKeyId="767" status="INFERRED"/>
-		<relation id="1112" cardinality="M" firstKeyId="529" secondKeyId="845" status="INFERRED"/>
+		<relation id="1111" cardinality="M" firstKeyId="529" secondKeyId="845" status="INFERRED"/>
+		<relation id="1112" cardinality="M" firstKeyId="529" secondKeyId="767" status="INFERRED"/>
 		<relation id="1113" cardinality="1" firstKeyId="922" secondKeyId="215" status="INFERRED"/>
 		<relation id="1114" cardinality="M" firstKeyId="258" secondKeyId="488" status="INFERRED"/>
 		<relation id="1115" cardinality="1" firstKeyId="922" secondKeyId="72" status="INFERRED"/>
 		<relation id="1116" cardinality="M" firstKeyId="529" secondKeyId="809" status="INFERRED"/>
 		<relation id="1117" cardinality="1" firstKeyId="922" secondKeyId="698" status="INFERRED"/>
 		<relation id="1118" cardinality="M" firstKeyId="461" secondKeyId="928" status="INFERRED"/>
-		<relation id="1119" cardinality="M" firstKeyId="653" secondKeyId="890" status="INFERRED"/>
+		<relation id="1119" cardinality="M" firstKeyId="653" secondKeyId="894" status="INFERRED"/>
 		<relation id="1120" cardinality="M" firstKeyId="653" secondKeyId="781" status="INFERRED"/>
-		<relation id="1121" cardinality="1" firstKeyId="922" secondKeyId="1051" status="INFERRED"/>
+		<relation id="1121" cardinality="1" firstKeyId="922" secondKeyId="1028" status="INFERRED"/>
 		<relation id="1122" cardinality="M" firstKeyId="929" secondKeyId="851" status="INFERRED"/>
 		<relation id="1123" cardinality="M" firstKeyId="529" secondKeyId="334" status="INFERRED"/>
 		<relation id="1124" cardinality="M" firstKeyId="529" secondKeyId="697" status="INFERRED"/>
@@ -1200,13 +1200,13 @@
 		<relation id="1132" cardinality="M" firstKeyId="529" secondKeyId="94" status="INFERRED"/>
 		<relation id="1133" cardinality="M" firstKeyId="529" secondKeyId="674" status="INFERRED"/>
 		<relation id="1134" cardinality="M" firstKeyId="529" secondKeyId="596" status="INFERRED"/>
-		<relation id="1135" cardinality="M" firstKeyId="529" secondKeyId="380" status="INFERRED"/>
-		<relation id="1136" cardinality="1" firstKeyId="922" secondKeyId="303" status="INFERRED"/>
+		<relation id="1135" cardinality="M" firstKeyId="529" secondKeyId="357" status="INFERRED"/>
+		<relation id="1136" cardinality="1" firstKeyId="922" secondKeyId="280" status="INFERRED"/>
 		<relation id="1137" cardinality="M" firstKeyId="529" secondKeyId="921" status="INFERRED"/>
 		<relation id="1138" cardinality="M" firstKeyId="529" secondKeyId="449" status="INFERRED"/>
 		<relation id="1139" cardinality="M" firstKeyId="529" secondKeyId="720" status="INFERRED"/>
 		<relation id="1140" cardinality="1" firstKeyId="922" secondKeyId="675" status="INFERRED"/>
-		<relation id="1141" cardinality="M" firstKeyId="529" secondKeyId="357" status="INFERRED"/>
+		<relation id="1141" cardinality="M" firstKeyId="529" secondKeyId="380" status="INFERRED"/>
 		<relation id="1142" cardinality="M" firstKeyId="529" secondKeyId="71" status="INFERRED"/>
 		<relation id="1143" cardinality="M" firstKeyId="461" secondKeyId="1061" status="INFERRED"/>
 		<relation id="1144" cardinality="M" firstKeyId="529" secondKeyId="34" status="INFERRED"/>
@@ -1218,20 +1218,30 @@
 		<relation id="1150" cardinality="M" firstKeyId="529" secondKeyId="426" status="INFERRED"/>
 		<relation id="1151" cardinality="1" firstKeyId="922" secondKeyId="141" status="INFERRED"/>
 		<relation id="1152" cardinality="M" firstKeyId="740" secondKeyId="49" status="INFERRED"/>
-		<relation id="1153" cardinality="1" firstKeyId="922" secondKeyId="974" status="INFERRED"/>
+		<relation id="1153" cardinality="1" firstKeyId="922" secondKeyId="951" status="INFERRED"/>
 		<relation id="1154" cardinality="1" firstKeyId="922" secondKeyId="810" status="INFERRED"/>
 		<relation id="1155" cardinality="1" firstKeyId="922" secondKeyId="169" status="INFERRED"/>
 		<relation id="1156" cardinality="1" firstKeyId="922" secondKeyId="35" status="INFERRED"/>
-		<relation id="1157" cardinality="M" firstKeyId="529" secondKeyId="973" status="INFERRED"/>
+		<relation id="1157" cardinality="M" firstKeyId="529" secondKeyId="950" status="INFERRED"/>
 		<relation id="1158" cardinality="1" firstKeyId="922" secondKeyId="427" status="INFERRED"/>
-		<relation id="1159" cardinality="M" firstKeyId="529" secondKeyId="1050" status="INFERRED"/>
+		<relation id="1159" cardinality="M" firstKeyId="529" secondKeyId="1027" status="INFERRED"/>
 		<relation id="1160" cardinality="M" firstKeyId="529" secondKeyId="403" status="INFERRED"/>
 		<relation id="1161" cardinality="M" firstKeyId="5" secondKeyId="459" status="INFERRED"/>
 	</jdbcSchema>
-	<dataset name="genomic_align" centralTableId="770" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+	<dataset name="genomic_align" centralTableId="770" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
 		<renamedTable tableKey="genomic_align__genomic_align_group" newName="genomic_align_group"/>
+		<maskedRelation tableKey="genomic_align" relationId="1069"/>
+		<maskedRelation tableKey="genomic_align" relationId="1070"/>
+		<maskedRelation tableKey="genomic_align" relationId="1074"/>
+		<maskedRelation tableKey="genomic_align" relationId="1078"/>
+		<maskedRelation tableKey="genomic_align" relationId="1088"/>
+		<maskedRelation tableKey="genomic_align" relationId="1091"/>
+		<maskedRelation tableKey="genomic_align" relationId="1118"/>
+		<maskedRelation tableKey="genomic_align" relationId="1143"/>
+		<maskedRelation tableKey="genomic_align" relationId="1148"/>
+		<maskedRelation tableKey="genomic_align" relationId="1161"/>
 	</dataset>
-	<dataset name="homology" centralTableId="538" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+	<dataset name="homology" centralTableId="538" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
 		<mergedRelation relationId="1080"/>
 		<renamedTable tableKey="homology__homology_member" newName="homology_member"/>
 		<maskedColumn tableKey="homology" colKey="ds"/>
@@ -1246,7 +1256,7 @@
 		<maskedColumn tableKey="homology" colKey="s"/>
 		<maskedColumn tableKey="homology" colKey="description"/>
 	</dataset>
-	<dataset name="homology_1" centralTableId="538" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+	<dataset name="homology_1" centralTableId="538" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
 		<mergedRelation relationId="1080"/>
 		<renamedTable tableKey="homology__homology_member" newName="homology_member"/>
 		<maskedRelation tableKey="homology__homology_member" relationId="1062"/>
@@ -1351,7 +1361,7 @@
 		<maskedRelation tableKey="homology" relationId="1158"/>
 		<maskedRelation tableKey="homology" relationId="1161"/>
 	</dataset>
-	<dataset name="species_set" centralTableId="485" optimiser="NONE" invisible="false" masked="false" indexOptimiser="false">
+	<dataset name="species_set" centralTableId="485" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
 		<restrictedTable tableKey="species_set" tableId="1" aliasColumnIds="2" aliasNames="col1" expression=":col1=&quot;ENSEMBL_ORTHOLOGUES&quot;" hard="true"/>
 	</dataset>
 	<datasetPartitionTable name="species_set" selectedColumns="method_link_species_set_id,name_method_link_species_set,__SUBDIVISION_BOUNDARY__,genome_db_id_key,name">
