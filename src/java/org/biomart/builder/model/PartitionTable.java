@@ -18,6 +18,10 @@
 
 package org.biomart.builder.model;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -37,6 +42,12 @@ import org.biomart.builder.model.Schema.JDBCSchema;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.BeanList;
+import org.biomart.common.utils.BeanMap;
+import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.Transaction.TransactionEvent;
+import org.biomart.common.utils.Transaction.TransactionListener;
+import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * The partition table interface allows lists of values to be stored, with those
@@ -49,12 +60,27 @@ import org.biomart.common.resources.Resources;
  *          $Author$
  * @since 0.7
  */
-public abstract class PartitionTable {
+public abstract class PartitionTable implements TransactionListener {
+	/**
+	 * Subclasses use this field to fire events of their own.
+	 */
+	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-	// TODO Beanify
-	// TODO Change control
-	// TODO Listener on tables of parent dataset - rebuild if change in any way.
-	// TODO Transaction control.
+	private boolean visibleModified = true;
+
+	private boolean directModified = false;
+
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			PartitionTable.this.setDirectModified(true);
+		}
+	};
+
+	private final PropertyChangeListener deadListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			PartitionTable.this.needsClearDead = true;
+		}
+	};
 
 	/**
 	 * Use this constant to pass to methods which require a number of rows as a
@@ -75,9 +101,9 @@ public abstract class PartitionTable {
 	public static final String NO_DIMENSION = "";
 
 	/**
-	 * Internal use only, by anonymous subclass.
+	 * Internal use only, by anonymous subclass. Sorted by column name.
 	 */
-	protected Map columnMap = new TreeMap(); // Sorted by column name.
+	protected BeanMap columnMap = new BeanMap(new TreeMap());
 
 	private int rowIterator = -1;
 
@@ -93,7 +119,7 @@ public abstract class PartitionTable {
 	/**
 	 * Internal use only, by anonymous subclass.
 	 */
-	protected List selectedCols = new ArrayList();
+	protected List selectedColumnNames = new ArrayList();
 
 	/**
 	 * Internal use only, by anonymous subclass.
@@ -102,18 +128,131 @@ public abstract class PartitionTable {
 
 	private PartitionTable subdivision = null;
 
-	private final Map dmApplications = new HashMap();
+	private final Map dmApplications = new WeakHashMap();
 
 	// Unique IDs for avoiding listener probs.
 	private static int ID_SERIES = 0;
 
 	private final int uniqueId = PartitionTable.ID_SERIES++;
 
+	private boolean needsClearDead = false;
+
 	/**
 	 * Create a new, empty, partition table.
 	 */
 	public PartitionTable() {
-		// Nothing to do here yet.
+		// Set up listening for property changes.
+		Transaction.addTransactionListener(this);
+
+		// All changes to us make us modified.
+		this.pcs.addPropertyChangeListener(this.listener);
+	}
+
+	public boolean isDirectModified() {
+		return this.directModified;
+	}
+
+	public void setDirectModified(final boolean modified) {
+		if (modified == this.directModified)
+			return;
+		final boolean oldValue = this.directModified;
+		this.directModified = modified;
+		this.pcs.firePropertyChange("directModified", oldValue, modified);
+	}
+
+	public boolean isVisibleModified() {
+		return this.visibleModified;
+	}
+
+	public void setVisibleModified(final boolean modified) {
+		// We don't care as this gets set internally.
+	}
+
+	public void transactionResetVisibleModified() {
+		this.visibleModified = false;
+	}
+
+	public void transactionResetDirectModified() {
+		this.directModified = false;
+	}
+
+	public void transactionStarted(final TransactionEvent evt) {
+		// Don't really care for now.
+	}
+
+	public void transactionEnded(final TransactionEvent evt) {
+		if (this.needsClearDead)
+			// Clear out any dead applications from modified datasets.
+			for (final Iterator i = PartitionTable.this.dmApplications
+					.entrySet().iterator(); i.hasNext();) {
+				final Map.Entry entry2 = (Map.Entry) i.next();
+				if (((DataSet) entry2.getKey()).isDirectModified())
+					for (final Iterator j = ((Map) entry2.getValue()).values()
+							.iterator(); j.hasNext();) {
+						final WeakReference weakRef = (WeakReference) j.next();
+						if (weakRef.get() == null)
+							j.remove();
+					}
+			}
+		this.needsClearDead = false;
+	}
+
+	/**
+	 * Adds a property change listener.
+	 * 
+	 * @param listener
+	 *            the listener to add.
+	 */
+	public void addPropertyChangeListener(final PropertyChangeListener listener) {
+		this.pcs.addPropertyChangeListener(listener);
+	}
+
+	/**
+	 * Adds a property change listener.
+	 * 
+	 * @param property
+	 *            the property to listen to.
+	 * @param listener
+	 *            the listener to add.
+	 */
+	public void addPropertyChangeListener(final String property,
+			final PropertyChangeListener listener) {
+		this.pcs.addPropertyChangeListener(property, listener);
+	}
+
+	/**
+	 * Removes a property change listener.
+	 * 
+	 * @param listener
+	 *            the listener to remove.
+	 */
+	public void removePropertyChangeListener(
+			final PropertyChangeListener listener) {
+		this.pcs.removePropertyChangeListener(listener);
+	}
+
+	/**
+	 * Removes a property change listener.
+	 * 
+	 * @param property
+	 *            the property to listen to.
+	 * @param listener
+	 *            the listener to remove.
+	 */
+	public void removePropertyChangeListener(final String property,
+			final PropertyChangeListener listener) {
+		this.pcs.removePropertyChangeListener(property, listener);
+	}
+
+	/**
+	 * Return all applications of this table. Keys are datasets, values are
+	 * nested maps of dimension names to applications. Note that the
+	 * applications are wrapped in WeakReferences and when resolved may be null.
+	 * 
+	 * @return the map.
+	 */
+	public Map getAllApplications() {
+		return this.dmApplications;
 	}
 
 	/**
@@ -122,6 +261,13 @@ public abstract class PartitionTable {
 	 * @return the name.
 	 */
 	public abstract String getName();
+
+	/**
+	 * What columns can we list and include?
+	 * 
+	 * @return the list of includable columns.
+	 */
+	public abstract Collection getAvailableColumnNames();
 
 	/**
 	 * Get ready to iterate over the rows in this table. After calling this, a
@@ -213,30 +359,12 @@ public abstract class PartitionTable {
 	}
 
 	/**
-	 * Obtain the named column definition.
-	 * 
-	 * @param name
-	 *            the column name.
-	 * @return the definition.
-	 * @throws PartitionException
-	 *             if there is no such column.
-	 */
-	public PartitionColumn getSelectedColumn(final String name)
-			throws PartitionException {
-		// Throw exception if it does not exist or is subdivided.
-		if (!this.columnMap.containsKey(name))
-			throw new PartitionException(Resources.get("partitionNoSuchColumn",
-					name));
-		return (PartitionColumn) this.columnMap.get(name);
-	}
-
-	/**
 	 * What columns do we have?
 	 * 
-	 * @return the column names.
+	 * @return the column names in keys and the columns themselves in values.
 	 */
-	public Collection getAllColumnNames() {
-		return this.columnMap.keySet();
+	public BeanMap getColumns() {
+		return this.columnMap;
 	}
 
 	/**
@@ -247,7 +375,7 @@ public abstract class PartitionTable {
 	 * @return the ordered list of selected columns.
 	 */
 	public List getSelectedColumnNames() {
-		return this.selectedCols;
+		return this.selectedColumnNames;
 	}
 
 	/**
@@ -255,24 +383,28 @@ public abstract class PartitionTable {
 	 * equal to {@link #DIV_COLUMN} which indicate the location of subdivision
 	 * boundaries.)
 	 * 
-	 * @param selectedColumns
-	 *            the ordered list of selected columns.
+	 * @param selectedColumnNames
+	 *            the ordered list of selected column names.
 	 * @throws PartitionException
 	 *             if any of them are invalid.
 	 */
-	public void setSelectedColumnNames(final List selectedColumns)
+	public void setSelectedColumnNames(final List selectedColumnNames)
 			throws PartitionException {
+		final List oldValue = this.selectedColumnNames;
+		if (oldValue.equals(selectedColumnNames))
+			return;
+
 		// Preserve any existing regexes.
 		final Map regexStore = new HashMap(this.columnMap);
 
 		// Clear-out.
-		this.selectedCols.clear();
+		this.selectedColumnNames.clear();
 		this.groupCols.clear();
 		this.columnMap.clear();
 
 		// Construct new table hierarchy.
 		String previous = "";
-		for (final Iterator i = selectedColumns.iterator(); i.hasNext();) {
+		for (final Iterator i = selectedColumnNames.iterator(); i.hasNext();) {
 			final String col = (String) i.next();
 			if (col.equals(PartitionTable.DIV_COLUMN))
 				// Don't allow back-to-back divs.
@@ -284,22 +416,23 @@ public abstract class PartitionTable {
 				// Don't allow div-at-start.
 				else if ("".equals(previous))
 					continue;
-			this.selectedCols.add(col);
+			this.selectedColumnNames.add(col);
 			previous = col;
 		}
 
 		// Column groupings into subdivisions.
 		final List currentGroupCols = new ArrayList();
 		int groupPos = 0;
-		while (groupPos < this.selectedCols.size()
-				&& !this.selectedCols.get(groupPos).equals(
+		while (groupPos < this.selectedColumnNames.size()
+				&& !this.selectedColumnNames.get(groupPos).equals(
 						PartitionTable.DIV_COLUMN))
-			currentGroupCols.add(this.selectedCols.get(groupPos++));
+			currentGroupCols.add(this.selectedColumnNames.get(groupPos++));
 		// Set up initial table.
 		for (final Iterator i = currentGroupCols.iterator(); i.hasNext();) {
 			final String col = (String) i.next();
 			this.groupCols.add(col);
 			final PartitionColumn pcol = new PartitionColumn(this, col);
+			pcol.addPropertyChangeListener(this.listener);
 			final PartitionColumn regexStored = (PartitionColumn) regexStore
 					.get(pcol.getName());
 			if (regexStored != null) {
@@ -309,16 +442,17 @@ public abstract class PartitionTable {
 			this.columnMap.put(col, pcol);
 		}
 		PartitionTable currentPT = this;
-		while (groupPos < this.selectedCols.size()) {
+		while (groupPos < this.selectedColumnNames.size()) {
 			// Skip DIV itself.
-			if (groupPos < this.selectedCols.size())
+			if (groupPos < this.selectedColumnNames.size())
 				groupPos++;
 			// Extend group cols to next DIV
 			final List newGroupCols = new ArrayList();
-			while (groupPos < this.selectedCols.size()
-					&& !this.selectedCols.get(groupPos).equals(
+			while (groupPos < this.selectedColumnNames.size()
+					&& !this.selectedColumnNames.get(groupPos).equals(
 							PartitionTable.DIV_COLUMN)) {
-				final String col = (String) this.selectedCols.get(groupPos++);
+				final String col = (String) this.selectedColumnNames
+						.get(groupPos++);
 				currentGroupCols.add(col);
 				newGroupCols.add(col);
 			}
@@ -329,7 +463,7 @@ public abstract class PartitionTable {
 					// Subdiv column map = pointer this column map.
 					this.columnMap = parent.columnMap;
 					// Subdiv selected cols = pointer this selected cols.
-					this.selectedCols = parent.selectedCols;
+					this.selectedColumnNames = parent.selectedColumnNames;
 					// Subdiv group cols = copy currentGroupCols
 					this.groupCols = new ArrayList(currentGroupCols);
 				}
@@ -339,8 +473,8 @@ public abstract class PartitionTable {
 					return this.subRows;
 				}
 
-				public Collection getAllColumnNames() {
-					return parent.getAllColumnNames();
+				public Collection getAvailableColumnNames() {
+					return parent.getAvailableColumnNames();
 				}
 
 				public String getName() {
@@ -355,6 +489,7 @@ public abstract class PartitionTable {
 				final String col = (String) i.next();
 				// Assign column objects to new subdiv
 				final PartitionColumn pcol = new PartitionColumn(subdiv, col);
+				pcol.addPropertyChangeListener(this.listener);
 				final PartitionColumn regexStored = (PartitionColumn) regexStore
 						.get(pcol.getName());
 				if (regexStored != null) {
@@ -366,30 +501,8 @@ public abstract class PartitionTable {
 			// Set current PT = new subdiv
 			currentPT = subdiv;
 		}
-	}
-
-	/**
-	 * Make a copy of ourselves in the target.
-	 * 
-	 * @param target
-	 *            the target to copy ourselves to.
-	 * @throws PartitionException
-	 *             if it went wrong.
-	 */
-	public void replicate(final PartitionTable target)
-			throws PartitionException {
-		target.setSelectedColumnNames(this.getSelectedColumnNames());
-		for (final Iterator i = this.getSelectedColumnNames().iterator(); i
-				.hasNext();) {
-			final String colName = (String) i.next();
-			final PartitionColumn ourPcol = this.getSelectedColumn(colName);
-			final PartitionColumn theirPcol = target.getSelectedColumn(colName);
-			theirPcol.setRegexMatch(ourPcol.getRegexMatch());
-			theirPcol.setRegexReplace(ourPcol.getRegexReplace());
-		}
-		// Note that we do NOT replicate applications. That would
-		// not make sense - cannot apply two partition tables to
-		// a single target!
+		this.pcs.firePropertyChange("selectedColumnNames", oldValue,
+				selectedColumnNames);
 	}
 
 	/**
@@ -412,28 +525,20 @@ public abstract class PartitionTable {
 			this.dmApplications.put(ds, new HashMap());
 		if (appl == null)
 			appl = PartitionTableApplication.createDefault(this, ds, dimension);
-		((Map) this.dmApplications.get(ds)).put(dimension, appl);
+		((Map) this.dmApplications.get(ds)).put(dimension, new WeakReference(
+				appl));
+		if (dimension != PartitionTable.NO_DIMENSION)
+			((DataSetTable) ds.getTables().get(dimension))
+					.setPartitionTableApplication(appl);
+		else
+			ds.setPartitionTableApplication(appl);
+		// Listen to appl and modification events.
+		appl.addPropertyChangeListener(this.listener);
+		ds.addPropertyChangeListener("directModified",
+				new WeakPropertyChangeListener(ds, this.deadListener));
+		// Fire event - we have no before/after, so a simple event will do.
+		this.pcs.firePropertyChange("partitionTableApplication", null, appl);
 		return appl;
-	}
-
-	/**
-	 * Gets the current definition of how this partition table is applied to the
-	 * dimension.
-	 * 
-	 * @param ds
-	 *            the dataset.
-	 * @param dimension
-	 *            the dimension.
-	 * @return the definition.
-	 */
-	public PartitionTableApplication getApplication(final DataSet ds,
-			String dimension) {
-		if (dimension == null)
-			dimension = PartitionTable.NO_DIMENSION;
-		if (!this.dmApplications.containsKey(ds))
-			return null;
-		return (PartitionTableApplication) ((Map) this.dmApplications.get(ds))
-				.get(dimension);
 	}
 
 	/**
@@ -449,20 +554,13 @@ public abstract class PartitionTable {
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
 			return;
-		((Map) this.dmApplications.get(ds)).remove(dimension);
-		if (((Map) this.dmApplications.get(ds)).isEmpty())
-			this.dmApplications.remove(ds);
-	}
-
-	/**
-	 * Get a map of all instances where this is applied to a dimension (or if
-	 * dimension is the empty string, to a dataset).
-	 * 
-	 * @return keys are datasets, values are nested maps where keys are
-	 *         dimension names and values are application definitions.
-	 */
-	public Map getAllApplications() {
-		return this.dmApplications;
+		if (dimension != null)
+			((DataSetTable) ds.getTables().get(dimension))
+					.setPartitionTableApplication(null);
+		else
+			ds.setPartitionTableApplication(null);
+		// Fire event - we have no before/after, so a simple event will do.
+		this.pcs.firePropertyChange("partitionTableApplication", null, null);
 	}
 
 	private boolean getNextRow(final boolean nudge) throws PartitionException {
@@ -488,8 +586,8 @@ public abstract class PartitionTable {
 				for (final Iterator i = this.groupCols.iterator(); i.hasNext()
 						&& keepGoing;) {
 					final String subColName = (String) i.next();
-					final PartitionColumn pcol = this
-							.getSelectedColumn(subColName);
+					final PartitionColumn pcol = (PartitionColumn) this
+							.getColumns().get(subColName);
 					final String parentValue = pcol
 							.getValueForRow(this.currentRow);
 					final String subValue = pcol.getValueForRow(subRow);
@@ -540,7 +638,20 @@ public abstract class PartitionTable {
 	/**
 	 * A column knows its name.
 	 */
-	public static class PartitionColumn {
+	public static class PartitionColumn implements TransactionListener {
+		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+				this);
+
+		private boolean visibleModified = true;
+
+		private boolean directModified = false;
+
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				PartitionColumn.this.setDirectModified(true);
+			}
+		};
+
 		private final PartitionTable table;
 
 		private String name;
@@ -561,8 +672,98 @@ public abstract class PartitionTable {
 		 *            the name.
 		 */
 		public PartitionColumn(final PartitionTable table, final String name) {
+			// Set up listening for property changes.
+			Transaction.addTransactionListener(this);
+
+			// All changes to us make us modified.
+			this.pcs.addPropertyChangeListener(this.listener);
+
 			this.table = table;
 			this.name = name;
+		}
+
+		public boolean isDirectModified() {
+			return this.directModified;
+		}
+
+		public void setDirectModified(final boolean modified) {
+			if (modified == this.directModified)
+				return;
+			final boolean oldValue = this.directModified;
+			this.directModified = modified;
+			this.pcs.firePropertyChange("directModified", oldValue, modified);
+		}
+
+		public boolean isVisibleModified() {
+			return this.visibleModified;
+		}
+
+		public void setVisibleModified(final boolean modified) {
+			// We don't care as this gets set internally.
+		}
+
+		public void transactionResetVisibleModified() {
+			this.visibleModified = false;
+		}
+
+		public void transactionResetDirectModified() {
+			this.directModified = false;
+		}
+
+		public void transactionStarted(final TransactionEvent evt) {
+			// Don't really care for now.
+		}
+
+		public void transactionEnded(final TransactionEvent evt) {
+			// Don't really care for now.
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(property, listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		/**
@@ -614,7 +815,12 @@ public abstract class PartitionTable {
 		 *            the regex.
 		 */
 		public void setRegexMatch(final String regexMatch) {
+			final String oldValue = this.regexMatch;
+			if (oldValue == regexMatch
+					|| (oldValue != null && oldValue.equals(regexMatch)))
+				return;
 			this.regexMatch = regexMatch;
+			this.pcs.firePropertyChange("regexMatch", oldValue, regexMatch);
 			this.compiled = null;
 		}
 
@@ -634,7 +840,12 @@ public abstract class PartitionTable {
 		 *            the regex.
 		 */
 		public void setRegexReplace(final String regexReplace) {
+			final String oldValue = this.regexReplace;
+			if (oldValue == regexReplace
+					|| (oldValue != null && oldValue.equals(regexReplace)))
+				return;
 			this.regexReplace = regexReplace;
+			this.pcs.firePropertyChange("regexReplace", oldValue, regexReplace);
 		}
 
 		/**
@@ -661,8 +872,12 @@ public abstract class PartitionTable {
 						return "__FAKE__TABLE__";
 					}
 
-					public Collection getAllColumnNames() {
-						return Collections.EMPTY_LIST;
+					public Collection getAvailableColumnNames() {
+						return Collections.EMPTY_SET;
+					}
+
+					public BeanMap getColumns() {
+						return new BeanMap(Collections.EMPTY_MAP);
 					}
 
 					protected List getRows(final String schemaPartition)
@@ -730,8 +945,8 @@ public abstract class PartitionTable {
 				if (colName.equals(PartitionTable.DIV_COLUMN))
 					continue;
 				try {
-					final PartitionColumn col = this.getPartitionTable()
-							.getSelectedColumn(colName);
+					final PartitionColumn col = (PartitionColumn) this
+							.getPartitionTable().getColumns().get(colName);
 					sbuff.append(col.getValueForRow(this));
 				} catch (final PartitionException pe) {
 					throw new BioMartError(pe);
@@ -748,8 +963,8 @@ public abstract class PartitionTable {
 				if (colName.equals(PartitionTable.DIV_COLUMN))
 					continue;
 				try {
-					final PartitionColumn col = this.getPartitionTable()
-							.getSelectedColumn(colName);
+					final PartitionColumn col = (PartitionColumn) this
+							.getPartitionTable().getColumns().get(colName);
 					if (!col.getValueForRow(this).equals(
 							col.getValueForRow(them)))
 						return col.getValueForRow(this).compareTo(
@@ -765,10 +980,27 @@ public abstract class PartitionTable {
 	/**
 	 * Defines how a partition table is applied in real life.
 	 */
-	public static class PartitionTableApplication {
+	public static class PartitionTableApplication implements
+			TransactionListener {
+		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+				this);
+
+		private boolean visibleModified = true;
+
+		private boolean directModified = false;
+
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				PartitionTableApplication.this.setDirectModified(true);
+			}
+		};
+
 		private final PartitionTable pt;
 
-		private final List partitions = new ArrayList();
+		private final BeanList partitionAppliedRows = new BeanList(
+				new ArrayList());
+
+		private final Collection rowCache = new HashSet();
 
 		/**
 		 * Construct a new, empty, partition table application.
@@ -777,7 +1009,119 @@ public abstract class PartitionTable {
 		 *            the partition table.
 		 */
 		public PartitionTableApplication(final PartitionTable pt) {
+			// Set up listening for property changes.
+			Transaction.addTransactionListener(this);
+
+			// All changes to us make us modified.
+			this.pcs.addPropertyChangeListener(this.listener);
+
 			this.pt = pt;
+
+			// Listen to partitionAppliedRows
+			// Also listen to each new row added.
+			this.partitionAppliedRows.addPropertyChangeListener(this.listener);
+			this.partitionAppliedRows
+					.addPropertyChangeListener(new PropertyChangeListener() {
+						public void propertyChange(final PropertyChangeEvent evt) {
+							final Collection newRows = new HashSet(
+									PartitionTableApplication.this.partitionAppliedRows);
+							newRows
+									.removeAll(PartitionTableApplication.this.rowCache);
+							for (final Iterator i = newRows.iterator(); i
+									.hasNext();)
+								((PartitionAppliedRow) i.next())
+										.addPropertyChangeListener(
+												"directModified",
+												PartitionTableApplication.this.listener);
+							PartitionTableApplication.this.rowCache.clear();
+							PartitionTableApplication.this.rowCache
+									.addAll(PartitionTableApplication.this.partitionAppliedRows);
+						}
+					});
+		}
+
+		public boolean isDirectModified() {
+			return this.directModified;
+		}
+
+		public void setDirectModified(final boolean modified) {
+			if (modified == this.directModified)
+				return;
+			final boolean oldValue = this.directModified;
+			this.directModified = modified;
+			this.pcs.firePropertyChange("directModified", oldValue, modified);
+		}
+
+		public boolean isVisibleModified() {
+			return this.visibleModified;
+		}
+
+		public void setVisibleModified(final boolean modified) {
+			// We don't care as this gets set internally.
+		}
+
+		public void transactionResetVisibleModified() {
+			this.visibleModified = false;
+		}
+
+		public void transactionResetDirectModified() {
+			this.directModified = false;
+		}
+
+		public void transactionStarted(final TransactionEvent evt) {
+			// Don't really care for now.
+		}
+
+		public void transactionEnded(final TransactionEvent evt) {
+			// Don't really care for now.
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(property, listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		/**
@@ -788,7 +1132,8 @@ public abstract class PartitionTable {
 		 * @return the applied row.
 		 */
 		public PartitionAppliedRow getAppliedRowForRelation(final Relation rel) {
-			for (final Iterator i = this.partitions.iterator(); i.hasNext();) {
+			for (final Iterator i = this.partitionAppliedRows.iterator(); i
+					.hasNext();) {
 				final PartitionAppliedRow row = (PartitionAppliedRow) i.next();
 				if (row.getRelation() != null && row.getRelation().equals(rel))
 					return row;
@@ -810,8 +1155,8 @@ public abstract class PartitionTable {
 		 * 
 		 * @return the list.
 		 */
-		public List getPartitionAppliedRows() {
-			return this.partitions;
+		public BeanList getPartitionAppliedRows() {
+			return this.partitionAppliedRows;
 		}
 
 		/**
@@ -823,20 +1168,9 @@ public abstract class PartitionTable {
 		 *             if it cannot.
 		 */
 		public PartitionColumn getNamePartitionCol() throws PartitionException {
-			return this.getPartitionTable().getSelectedColumn(
-					((PartitionAppliedRow) this.partitions.get(0))
+			return (PartitionColumn) this.getPartitionTable().getColumns().get(
+					((PartitionAppliedRow) this.partitionAppliedRows.get(0))
 							.getNamePartitionCol());
-		}
-
-		/**
-		 * Set the ordered list of partition applied rows.
-		 * 
-		 * @param partitions
-		 *            the list.
-		 */
-		public void setPartitionAppliedRows(final List partitions) {
-			this.partitions.clear();
-			this.partitions.addAll(partitions);
 		}
 
 		/**
@@ -847,12 +1181,12 @@ public abstract class PartitionTable {
 		 */
 		public void syncCounts() throws PartitionException {
 			// Get real partition table for each alias and count rows.
-			for (int i = 0; i < this.partitions.size(); i++) {
-				final PartitionAppliedRow prow = (PartitionAppliedRow) this.partitions
+			for (int i = 0; i < this.partitionAppliedRows.size(); i++) {
+				final PartitionAppliedRow prow = (PartitionAppliedRow) this.partitionAppliedRows
 						.get(i);
 				final String partitionCol = prow.getPartitionCol();
-				final PartitionTable realPT = this.pt.getSelectedColumn(
-						partitionCol).getPartitionTable();
+				final PartitionTable realPT = ((PartitionColumn) this.pt
+						.getColumns().get(partitionCol)).getPartitionTable();
 				int compound = 0;
 				realPT.prepareRows(null, PartitionTable.UNLIMITED_ROWS);
 				while (realPT.nextRow())
@@ -876,10 +1210,10 @@ public abstract class PartitionTable {
 					pt);
 			final String ptCol = (String) pt.getSelectedColumnNames()
 					.iterator().next();
-			pa.setPartitionAppliedRows(Collections
-					.singletonList(new PartitionAppliedRow(ptCol, (String) ds
-							.getMainTable().getColumns().keySet().iterator()
-							.next(), ptCol, null)));
+			pa.getPartitionAppliedRows().add(
+					new PartitionAppliedRow(ptCol, (String) ds.getMainTable()
+							.getColumns().keySet().iterator().next(), ptCol,
+							null));
 			return pa;
 		}
 
@@ -901,11 +1235,10 @@ public abstract class PartitionTable {
 					pt);
 			final String ptCol = (String) pt.getSelectedColumnNames()
 					.iterator().next();
-			pa.setPartitionAppliedRows(Collections
-					.singletonList(new PartitionAppliedRow(ptCol,
-							(String) ((DataSetTable) ds.getTables().get(
-									dimension)).getColumns().keySet()
-									.iterator().next(), ptCol, null)));
+			pa.getPartitionAppliedRows().add(
+					new PartitionAppliedRow(ptCol, (String) ((DataSetTable) ds
+							.getTables().get(dimension)).getColumns().keySet()
+							.iterator().next(), ptCol, null));
 			return pa;
 		}
 
@@ -913,16 +1246,29 @@ public abstract class PartitionTable {
 		 * Details of how a partition table is broken down into a particular
 		 * row.
 		 */
-		public static class PartitionAppliedRow {
+		public static class PartitionAppliedRow implements TransactionListener {
+			private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+					this);
+
+			private boolean visibleModified = true;
+
+			private boolean directModified = false;
+
+			private final PropertyChangeListener listener = new PropertyChangeListener() {
+				public void propertyChange(final PropertyChangeEvent evt) {
+					PartitionAppliedRow.this.setDirectModified(true);
+				}
+			};
+
 			private int compound;
 
-			private final String partitionCol;
+			private String partitionCol;
 
-			private final String rootDataSetCol;
+			private String rootDataSetCol;
 
-			private final String namePartitionCol;
+			private String namePartitionCol;
 
-			private final Relation relation;
+			private Relation relation;
 
 			/**
 			 * Construct a row of data from a single partition table.
@@ -946,6 +1292,97 @@ public abstract class PartitionTable {
 				this.rootDataSetCol = rootDataSetCol;
 				this.namePartitionCol = namePartitionCol;
 				this.relation = relation;
+
+				// Set up listening for property changes.
+				Transaction.addTransactionListener(this);
+
+				// All changes to us make us modified.
+				this.pcs.addPropertyChangeListener(this.listener);
+			}
+
+			public boolean isDirectModified() {
+				return this.directModified;
+			}
+
+			public void setDirectModified(final boolean modified) {
+				if (modified == this.directModified)
+					return;
+				final boolean oldValue = this.directModified;
+				this.directModified = modified;
+				this.pcs.firePropertyChange("directModified", oldValue,
+						modified);
+			}
+
+			public boolean isVisibleModified() {
+				return this.visibleModified;
+			}
+
+			public void setVisibleModified(final boolean modified) {
+				// We don't care as this gets set internally.
+			}
+
+			public void transactionResetVisibleModified() {
+				this.visibleModified = false;
+			}
+
+			public void transactionResetDirectModified() {
+				this.directModified = false;
+			}
+
+			public void transactionStarted(final TransactionEvent evt) {
+				// Don't really care for now.
+			}
+
+			public void transactionEnded(final TransactionEvent evt) {
+				// Don't really care for now.
+			}
+
+			/**
+			 * Adds a property change listener.
+			 * 
+			 * @param listener
+			 *            the listener to add.
+			 */
+			public void addPropertyChangeListener(
+					final PropertyChangeListener listener) {
+				this.pcs.addPropertyChangeListener(listener);
+			}
+
+			/**
+			 * Adds a property change listener.
+			 * 
+			 * @param property
+			 *            the property to listen to.
+			 * @param listener
+			 *            the listener to add.
+			 */
+			public void addPropertyChangeListener(final String property,
+					final PropertyChangeListener listener) {
+				this.pcs.addPropertyChangeListener(property, listener);
+			}
+
+			/**
+			 * Removes a property change listener.
+			 * 
+			 * @param listener
+			 *            the listener to remove.
+			 */
+			public void removePropertyChangeListener(
+					final PropertyChangeListener listener) {
+				this.pcs.removePropertyChangeListener(listener);
+			}
+
+			/**
+			 * Removes a property change listener.
+			 * 
+			 * @param property
+			 *            the property to listen to.
+			 * @param listener
+			 *            the listener to remove.
+			 */
+			public void removePropertyChangeListener(final String property,
+					final PropertyChangeListener listener) {
+				this.pcs.removePropertyChangeListener(property, listener);
 			}
 
 			/**
@@ -989,6 +1426,80 @@ public abstract class PartitionTable {
 			 */
 			public Relation getRelation() {
 				return this.relation;
+			}
+
+			/**
+			 * @param namePartitionCol
+			 *            the namePartitionCol to set
+			 */
+			public void setNamePartitionCol(String namePartitionCol) {
+				final String oldValue = this.namePartitionCol;
+				if (oldValue == namePartitionCol
+						|| (oldValue != null && oldValue
+								.equals(namePartitionCol)))
+					return;
+				this.namePartitionCol = namePartitionCol;
+				this.pcs.firePropertyChange("namePartitionCol", oldValue,
+						namePartitionCol);
+			}
+
+			/**
+			 * @param partitionCol
+			 *            the partitionCol to set
+			 */
+			public void setPartitionCol(String partitionCol) {
+				final String oldValue = this.partitionCol;
+				if (oldValue == partitionCol
+						|| (oldValue != null && oldValue.equals(partitionCol)))
+					return;
+				this.partitionCol = partitionCol;
+				this.pcs.firePropertyChange("partitionCol", oldValue,
+						partitionCol);
+			}
+
+			/**
+			 * @param rootDataSetCol
+			 *            the rootDataSetCol to set
+			 */
+			public void setRootDataSetCol(String rootDataSetCol) {
+				final String oldValue = this.rootDataSetCol;
+				if (oldValue == rootDataSetCol
+						|| (oldValue != null && oldValue.equals(rootDataSetCol)))
+					return;
+				this.rootDataSetCol = rootDataSetCol;
+				this.pcs.firePropertyChange("rootDataSetCol", oldValue,
+						rootDataSetCol);
+			}
+
+			/**
+			 * @param relation
+			 *            the relation to set
+			 */
+			public void setRelation(Relation relation) {
+				final Relation oldValue = this.relation;
+				if (oldValue == relation
+						|| (oldValue != null && oldValue.equals(relation)))
+					return;
+				this.relation = relation;
+				this.pcs.firePropertyChange("relation", oldValue, relation);
+
+			}
+
+			public int hashCode() {
+				return this.namePartitionCol.hashCode()
+						* this.partitionCol.hashCode()
+						* this.rootDataSetCol.hashCode()
+						* (this.relation == null ? 1 : this.relation.hashCode());
+			}
+
+			public boolean equals(Object o) {
+				if (!(o instanceof PartitionAppliedRow))
+					return false;
+				final PartitionAppliedRow them = (PartitionAppliedRow) o;
+				return this.namePartitionCol.equals(them.namePartitionCol)
+						&& this.partitionCol.equals(them.partitionCol)
+						&& this.rootDataSetCol.equals(them.rootDataSetCol)
+						&& (this.relation == them.relation);
 			}
 		}
 	}

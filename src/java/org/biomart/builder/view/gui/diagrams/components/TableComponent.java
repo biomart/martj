@@ -161,12 +161,19 @@ public class TableComponent extends BoxShapedComponent {
 		// conversion and merge/unrolled signals and repaint on that too.
 		if (table instanceof DataSetTable) {
 			final DataSetTable dsTbl = (DataSetTable) table;
-			if (dsTbl.getType().equals(DataSetTableType.MAIN))
+			if (dsTbl.getType().equals(DataSetTableType.MAIN)) {
+				dsTbl.getDataSet().addPropertyChangeListener(
+						"partitionTableApplication",
+						new WeakPropertyChangeListener(dsTbl.getDataSet(),
+								"partitionTable", this.repaintListener));
 				dsTbl.getDataSet().addPropertyChangeListener(
 						"partitionTable",
 						new WeakPropertyChangeListener(dsTbl.getDataSet(),
 								"partitionTable", this.repaintListener));
-			else {
+			} else {
+				dsTbl.addPropertyChangeListener("partitionTableApplication",
+						new WeakPropertyChangeListener(dsTbl, "partitionTable",
+								this.repaintListener));
 				dsTbl.getFocusRelation().addPropertyChangeListener(
 						"mergeRelation",
 						new WeakPropertyChangeListener(

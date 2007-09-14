@@ -161,12 +161,9 @@ public class DataSetContext extends SchemaContext {
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 			// Update dotted line (partitioned).
-			tblcomp.setRestricted(this.getMartTab().getMart()
-					.getPartitionTableApplicationForDimension(tbl) != null
+			tblcomp.setRestricted(tbl.getPartitionTableApplication() != null
 					|| tableType.equals(DataSetTableType.MAIN)
-					&& this.getMartTab().getMart()
-							.getPartitionTableApplicationForDataSet(
-									this.dataset) != null);
+					&& this.dataset.getPartitionTableApplication() != null);
 
 			tblcomp.setRenameable(true);
 			tblcomp.setSelectable(true);
@@ -667,11 +664,8 @@ public class DataSetContext extends SchemaContext {
 					}
 				});
 				contextMenu.add(partitionWizard);
-				partitionWizard
-						.setSelected(this
-								.getMartTab()
-								.getMart()
-								.getPartitionTableApplicationForDimension(table) != null);
+				partitionWizard.setSelected(table
+						.getPartitionTableApplication() != null);
 				if (isMasked || isMerged || isUnrolled)
 					partitionWizard.setEnabled(false);
 			}

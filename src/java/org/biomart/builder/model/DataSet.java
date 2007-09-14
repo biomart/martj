@@ -21,6 +21,7 @@ package org.biomart.builder.model;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -139,6 +140,8 @@ public class DataSet extends Schema {
 
 	private boolean indexOptimiser;
 
+	private PartitionTableApplication partitionTableApplication = null;
+
 	private boolean deadCheck = false;
 
 	/**
@@ -192,6 +195,7 @@ public class DataSet extends Schema {
 		this.pcs.addPropertyChangeListener("datasetOptimiser", listener);
 		this.pcs.addPropertyChangeListener("indexOptimiser", listener);
 		this.pcs.addPropertyChangeListener("invisible", listener);
+		this.pcs.addPropertyChangeListener("partitionTableApplication", listener);
 
 		// Recalculate completely if parent mart changes case.
 		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
@@ -272,6 +276,34 @@ public class DataSet extends Schema {
 	}
 
 	/**
+	 * Is this a partitioned dataset?
+	 * 
+	 * @return the definition if it is.
+	 */
+	public PartitionTableApplication getPartitionTableApplication() {
+		return this.partitionTableApplication;
+	}
+
+	/**
+	 * Partition this dataset.
+	 * 
+	 * @param partitionTableApplication
+	 *            the definition. <tt>null</tt> to un-partition.
+	 */
+	public void setPartitionTableApplication(
+			final PartitionTableApplication partitionTableApplication) {
+		final PartitionTableApplication oldValue = this
+				.getPartitionTableApplication();
+		if (partitionTableApplication == oldValue
+				|| partitionTableApplication != null
+				&& partitionTableApplication.equals(oldValue))
+			return;
+		this.partitionTableApplication = partitionTableApplication;
+		this.pcs.firePropertyChange("partitionTableApplication", oldValue,
+				partitionTableApplication);
+	}
+
+	/**
 	 * Is this dataset a partition table?
 	 * 
 	 * @return <tt>true</tt> if it is.
@@ -297,25 +329,24 @@ public class DataSet extends Schema {
 		final boolean oldValue = this.partitionTable != null;
 		if (partitionTable == oldValue)
 			return;
-		if (partitionTable)
+		if (partitionTable) {
 			this.partitionTable = new PartitionTable() {
 
 				// Keep map in alphabetical order.
-				private final Map allCols = new TreeMap();
+				private final Collection allCols = new TreeSet();
 
 				public String getName() {
 					return DataSet.this.getName();
 				}
 
-				public Collection getAllColumnNames() {
+				public Collection getAvailableColumnNames() {
 					if (this.allCols.isEmpty())
 						for (final Iterator i = DataSet.this.getMainTable()
 								.getColumns().values().iterator(); i.hasNext();) {
 							final DataSetColumn col = (DataSetColumn) i.next();
-							this.allCols.put(col.getModifiedName(), col
-									.getName());
+							this.allCols.add(col.getName());
 						}
-					return this.allCols.keySet();
+					return this.allCols;
 				}
 
 				protected List getRows(final String schemaPartition)
@@ -326,21 +357,34 @@ public class DataSet extends Schema {
 					return DataSet.this.getRowsBySimpleSQL(this,
 							schemaPartition);
 				}
-
-				public PartitionTableApplication applyTo(final DataSet ds,
-						final String dimension, PartitionTableApplication appl) {
-					appl = super.applyTo(ds, dimension, appl);
-					// TODO Attach listener to:
-					// a) mart ptable set (to spot removal of this
-					// entire ptable)
-					// b) ptable ds/dm application set (to spot removal
-					// of this entire application)
-					// c) each ptable applied row in this application
-					return appl;
-				}
 			};
-		else
+			// Listen to partition table and pass on modification events.
+			this.partitionTable.addPropertyChangeListener(this.listener);
+		} else {
+			// Remove all applications first.
+			for (final Iterator j = this.partitionTable.getAllApplications()
+					.entrySet().iterator(); j.hasNext();) {
+				final Map.Entry entry = (Map.Entry) j.next();
+				final DataSet target = (DataSet) entry.getKey();
+				for (final Iterator l = ((Map) entry.getValue()).entrySet()
+						.iterator(); l.hasNext();) {
+					final Map.Entry entry3 = (Map.Entry) l.next();
+					final PartitionTableApplication pta = (PartitionTableApplication) ((WeakReference) entry3
+							.getValue()).get();
+					if (pta == null)
+						continue;
+					// Drop the application.
+					final String dim = (String) entry3.getKey();
+					if (target.getTables().containsKey(dim))
+						((DataSetTable) target.getTables().get(dim))
+								.setPartitionTableApplication(null);
+					else
+						target.setPartitionTableApplication(null);
+				}
+			}
+			// Drop the table.
 			this.partitionTable = null;
+		}
 		this.pcs.firePropertyChange("partitionTable", oldValue, partitionTable);
 	}
 
@@ -560,13 +604,12 @@ public class DataSet extends Schema {
 		// The answer is yes, but only if our main table has no
 		// group-by expression columns and nothing uses partitions
 		// and there are no compound relations.
-		if (this.getMart().getPartitionTableApplicationForDataSet(this) != null)
+		if (this.partitionTableApplication != null)
 			return false;
 		for (final Iterator i = this.getTables().values().iterator(); i
 				.hasNext();) {
 			final DataSetTable dsTable = (DataSetTable) i.next();
-			if (this.getMart()
-					.getPartitionTableApplicationForDimension(dsTable) != null)
+			if (dsTable.getPartitionTableApplication() != null)
 				return false;
 			if (!dsTable.getType().equals(DataSetTableType.MAIN))
 				if (dsTable.getFocusRelation().getCompoundRelation(this,
@@ -1013,8 +1056,17 @@ public class DataSet extends Schema {
 			}
 			dsTable.getForeignKeys().remove(fk);
 		}
-		for (final Iterator i = unusedCols.iterator(); i.hasNext();)
-			dsTable.getColumns().remove(((Column) i.next()).getName());
+		for (final Iterator i = unusedCols.iterator(); i.hasNext();) {
+			final Column deadCol = (Column) i.next();
+			dsTable.getColumns().remove(deadCol.getName());
+			// mods is Map{tablename -> Map{propertyName -> Map{...}} }
+			for (final Iterator j = ((Map) this.mods.get(deadCol.getTable()
+					.getName())).entrySet().iterator(); j.hasNext();) {
+				final Map.Entry entry = (Map.Entry) j.next();
+				// entry is propertyName -> Map{columnName, Object}}
+				((Map)entry.getValue()).remove(deadCol.getName());
+			}
+		}
 
 		// Only dataset tables with primary keys can have subclasses
 		// or dimensions.
@@ -1507,14 +1559,11 @@ public class DataSet extends Schema {
 						// applies within a dimension, where dataset does
 						// not apply, but outside a dimension only dataset
 						// applies.
-						PartitionTableApplication usefulPart = this.getMart()
-								.getPartitionTableApplicationForDimension(
-										dsTable);
+						PartitionTableApplication usefulPart = dsTable
+								.getPartitionTableApplication();
 						if (usefulPart == null
 								&& dsTable.equals(this.getMainTable()))
-							usefulPart = this.getMart()
-									.getPartitionTableApplicationForDataSet(
-											this);
+							usefulPart = this.partitionTableApplication;
 						if (usefulPart == null)
 							childCompounded = 1;
 						else // When partitioning second level, only fork at
@@ -1740,6 +1789,7 @@ public class DataSet extends Schema {
 			deadTbl.setPrimaryKey(null);
 			deadTbl.getForeignKeys().clear();
 			this.getTables().remove(deadTbl.getName());
+			this.mods.remove(deadTbl.getName());
 		}
 
 		// Add us as a listener to mart's schemas to remove ourselves
@@ -1952,8 +2002,8 @@ public class DataSet extends Schema {
 			final StringBuffer buf = new StringBuffer();
 			for (final Iterator i = this.partitionCols.iterator(); i.hasNext();) {
 				final String pcolName = (String) i.next();
-				final PartitionColumn pcol = pta.getPartitionTable()
-						.getSelectedColumn(pcolName);
+				final PartitionColumn pcol = (PartitionColumn) pta
+						.getPartitionTable().getColumns().get(pcolName);
 				buf.append(pcol.getValueForRow(pcol.getPartitionTable()
 						.currentRow()));
 				buf.append(Resources.get("columnnameSep"));
@@ -2666,6 +2716,8 @@ public class DataSet extends Schema {
 			this.pcs.addPropertyChangeListener("tableRename", listener);
 			this.pcs.addPropertyChangeListener("dimensionMasked", listener);
 			this.pcs.addPropertyChangeListener("distinctTable", listener);
+			this.pcs.addPropertyChangeListener("partitionTableApplication",
+					listener);
 		}
 
 		/**
@@ -2958,6 +3010,40 @@ public class DataSet extends Schema {
 				this.getMods("distinctTable").remove(this.getName());
 			this.pcs.firePropertyChange("distinctTable", oldValue,
 					distinctTable);
+		}
+
+		/**
+		 * Is this a partitioned table?
+		 * 
+		 * @return the definition if it is.
+		 */
+		public PartitionTableApplication getPartitionTableApplication() {
+			return (PartitionTableApplication) this.getMods(
+					"partitionTableApplication").get(this.getName());
+		}
+
+		/**
+		 * Partition this table.
+		 * 
+		 * @param partitionTableApplication
+		 *            the definition. <tt>null</tt> to un-partition.
+		 */
+		public void setPartitionTableApplication(
+				final PartitionTableApplication partitionTableApplication) {
+			final PartitionTableApplication oldValue = this
+					.getPartitionTableApplication();
+			if (partitionTableApplication == oldValue
+					|| partitionTableApplication != null
+					&& partitionTableApplication.equals(oldValue))
+				return;
+			if (partitionTableApplication != null)
+				this.getMods("partitionTableApplication").put(this.getName(),
+						partitionTableApplication);
+			else
+				this.getMods("partitionTableApplication")
+						.remove(this.getName());
+			this.pcs.firePropertyChange("partitionTableApplication", oldValue,
+					partitionTableApplication);
 		}
 
 		/**

@@ -77,10 +77,8 @@ public class AllDataSetsContext implements DiagramContext {
 				dscomp.setBackground(DataSetComponent.VISIBLE_BACKGROUND);
 
 			// Update dotted line (partitioned).
-			dscomp
-					.setRestricted(this.getMartTab().getMart()
-							.getPartitionTableApplicationForDataSet(
-									(DataSet) object) != null);
+			dscomp.setRestricted(((DataSet) object)
+					.getPartitionTableApplication() != null);
 
 			dscomp.setRenameable(true);
 			dscomp.setSelectable(true);

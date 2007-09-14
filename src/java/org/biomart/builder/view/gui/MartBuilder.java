@@ -687,14 +687,6 @@ public class MartBuilder extends BioMartGUI {
 
 				public void menuSelected(final MenuEvent e) {
 					boolean hasMart = true;
-					final Mart mart;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
-							.getSelectedMartTab() == null) {
-						hasMart = false;
-						mart = null;
-					} else
-						mart = MartBuilderMenuBar.this.getMartBuilder().martTabSet
-								.getSelectedMartTab().getMart();
 					MartBuilderMenuBar.this.createDatasets
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -720,8 +712,7 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.partitionDSWizard
 							.setSelected(ds != null
-									&& mart
-											.getPartitionTableApplicationForDataSet(ds) != null);
+									&& ds.getPartitionTableApplication() != null);
 					MartBuilderMenuBar.this.explainDataset
 							.setEnabled(ds != null);
 					MartBuilderMenuBar.this.saveDatasetDDL

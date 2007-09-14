@@ -34,9 +34,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetTable;
-import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -188,8 +188,15 @@ public class Mart implements TransactionListener {
 					// Identify new ones.
 					newDss.removeAll(Mart.this.datasetCache);
 					// Drop dropped ones.
-					for (final Iterator i = dropped.iterator(); i.hasNext();)
-						Mart.this.datasetCache.remove(i.next());
+					for (final Iterator i = dropped.iterator(); i.hasNext();) {
+						final DataSet deadDS = (DataSet)i.next();
+						try {
+							deadDS.setPartitionTable(false);
+						} catch (final PartitionException pe) {
+							// Ignore.
+						}
+						Mart.this.datasetCache.remove(deadDS);
+					}
 					// Add added ones.
 					for (final Iterator i = newDss.iterator(); i.hasNext();) {
 						final DataSet ds = (DataSet) i.next();
@@ -1005,43 +1012,5 @@ public class Mart implements TransactionListener {
 		}
 		// Return the results.
 		return invisibleDataSets;
-	}
-
-	/**
-	 * If the dataset has had a partition applied to it, return it.
-	 * 
-	 * @param ds
-	 *            the dataset to check.
-	 * @return the partition application.
-	 */
-	public PartitionTableApplication getPartitionTableApplicationForDataSet(
-			final DataSet ds) {
-		for (final Iterator i = this.getPartitionTableNames().iterator(); i
-				.hasNext();) {
-			final PartitionTable pt = ((DataSet) this.getDataSets().get(
-					i.next())).asPartitionTable();
-			if (pt.getApplication(ds, PartitionTable.NO_DIMENSION) != null)
-				return pt.getApplication(ds, PartitionTable.NO_DIMENSION);
-		}
-		return null;
-	}
-
-	/**
-	 * If the dimension has had a partition applied to it, return it.
-	 * 
-	 * @param dm
-	 *            the dimension to check.
-	 * @return the partition application.
-	 */
-	public PartitionTableApplication getPartitionTableApplicationForDimension(
-			final DataSetTable dm) {
-		for (final Iterator i = this.getPartitionTableNames().iterator(); i
-				.hasNext();) {
-			final PartitionTable pt = ((DataSet) this.getDataSets().get(
-					i.next())).asPartitionTable();
-			if (pt.getApplication(dm.getDataSet(), dm.getName()) != null)
-				return pt.getApplication(dm.getDataSet(), dm.getName());
-		}
-		return null;
 	}
 }

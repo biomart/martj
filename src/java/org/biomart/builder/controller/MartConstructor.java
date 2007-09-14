@@ -280,8 +280,8 @@ public interface MartConstructor {
 			 */// TODO Commented until Arek decides what he wants.
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
-			final PartitionTableApplication dsPta = dataset.getMart()
-					.getPartitionTableApplicationForDataSet(dataset);
+			final PartitionTableApplication dsPta = dataset
+					.getPartitionTableApplication();
 
 			// Is it partitioned?
 			Collection schemaPartitions = templateSchema.getPartitions()
@@ -354,10 +354,8 @@ public interface MartConstructor {
 						final DataSetTable dsTable = (DataSetTable) i.next();
 						if (!droppedTables.contains(dsTable.getParent())) {
 							// Loop over dataset table partitions.
-							final PartitionTableApplication dmPta = dataset
-									.getMart()
-									.getPartitionTableApplicationForDimension(
-											dsTable);
+							final PartitionTableApplication dmPta = dsTable
+									.getPartitionTableApplication();
 							boolean fakeDMPartition = dmPta == null;
 							if (!fakeDMPartition)
 								dmPta.getPartitionTable().prepareRows(
@@ -454,7 +452,7 @@ public interface MartConstructor {
 			this.percentComplete -= stepPercent; // Avoid early completion.
 			for (final Iterator j = units.iterator(); j.hasNext();) {
 				this.checkCancelled();
-				
+
 				this.percentComplete += stepPercent;
 				final TransformationUnit tu = (TransformationUnit) j.next();
 				final String tempTable = tempName + this.tempNameCount++;
@@ -855,8 +853,9 @@ public interface MartConstructor {
 				// The naming column will also always be the first row,
 				// which will be on pta itself, so we don't need to
 				// initialise the table as it has already been done.
-				final PartitionColumn pcol = pta.getPartitionTable()
-						.getSelectedColumn(prow.getPartitionCol());
+				final PartitionColumn pcol = (PartitionColumn) pta
+						.getPartitionTable().getColumns().get(
+								prow.getPartitionCol());
 				// For each of the getNewColumnNameMap cols that are in the
 				// current ptable application, add a restriction for that col
 				// using current ptable column value.
@@ -881,9 +880,9 @@ public interface MartConstructor {
 				if (pta.getPartitionAppliedRows().size() > 1) {
 					final PartitionAppliedRow subprow = (PartitionAppliedRow) pta
 							.getPartitionAppliedRows().get(1);
-					pta.getPartitionTable().getSelectedColumn(
-							subprow.getPartitionCol()).getPartitionTable()
-							.prepareRows(schemaPartition,
+					((PartitionColumn) pta.getPartitionTable().getColumns()
+							.get(subprow.getPartitionCol()))
+							.getPartitionTable().prepareRows(schemaPartition,
 									PartitionTable.UNLIMITED_ROWS);
 				}
 			}
@@ -1004,11 +1003,12 @@ public interface MartConstructor {
 				final boolean nextRow = firstJoinRel.equals(ljtu
 						.getSchemaRelation());
 				if (nextRow && pta.getPartitionAppliedRows().size() > 1)
-					pta.getPartitionTable().getSelectedColumn(
-							((PartitionAppliedRow) pta
-									.getPartitionAppliedRows().get(1))
-									.getPartitionCol()).getPartitionTable()
-							.nextRow();
+					((PartitionColumn) pta.getPartitionTable().getColumns()
+							.get(
+									((PartitionAppliedRow) pta
+											.getPartitionAppliedRows().get(1))
+											.getPartitionCol()))
+							.getPartitionTable().nextRow();
 				// For all relations, if this is the one
 				// that some subdiv partition applies to, then apply it.
 				// This is a join, so we look up row by relation.
@@ -1021,8 +1021,9 @@ public interface MartConstructor {
 					// Look up the table that the naming column is on. It
 					// will be a subtable which needs initialising on the
 					// first pass, and next rowing on all passes.
-					final PartitionColumn pcol = pta.getPartitionTable()
-							.getSelectedColumn(prow.getPartitionCol());
+					final PartitionColumn pcol = (PartitionColumn) pta
+							.getPartitionTable().getColumns().get(
+									prow.getPartitionCol());
 					final PartitionTable ptbl = pcol.getPartitionTable();
 					// For each of the getNewColumnNameMap cols that are in the
 					// current ptable application, add a restriction for that

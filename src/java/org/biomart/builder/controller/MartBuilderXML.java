@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1183,8 +1184,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String colName = (String) i.next();
 				if (colName.equals(PartitionTable.DIV_COLUMN))
 					continue;
-				final PartitionColumn pcol = (PartitionColumn) pt
-						.getSelectedColumn(colName);
+				final PartitionColumn pcol = (PartitionColumn) pt.getColumns()
+						.get(colName);
 				if (pcol.getRegexMatch() != null
 						&& pcol.getRegexReplace() != null) {
 					this.openElement("partitionRegex", xmlWriter);
@@ -1205,8 +1206,10 @@ public class MartBuilderXML extends DefaultHandler {
 				for (final Iterator l = ((Map) entry.getValue()).entrySet()
 						.iterator(); l.hasNext();) {
 					final Map.Entry entry3 = (Map.Entry) l.next();
-					final PartitionTableApplication pta = (PartitionTableApplication) entry3
-							.getValue();
+					final PartitionTableApplication pta = (PartitionTableApplication) ((WeakReference) entry3
+							.getValue()).get();
+					if (pta == null)
+						continue;
 					this.openElement("partitionApplication", xmlWriter);
 					this.writeAttribute("name", target.getName(), xmlWriter);
 					this.writeAttribute("dimension", (String) entry3.getKey(),
@@ -2176,8 +2179,10 @@ public class MartBuilderXML extends DefaultHandler {
 			final String replace = (String) attributes.get("replace");
 
 			try {
-				pt.getSelectedColumn(name).setRegexMatch(match);
-				pt.getSelectedColumn(name).setRegexReplace(replace);
+				((PartitionColumn) pt.getColumns().get(name))
+						.setRegexMatch(match);
+				((PartitionColumn) pt.getColumns().get(name))
+						.setRegexReplace(replace);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2209,11 +2214,10 @@ public class MartBuilderXML extends DefaultHandler {
 
 			final PartitionTableApplication pta = new PartitionTableApplication(
 					pt);
-			final List parts = new ArrayList();
 			for (int i = 0; i < pCols.length; i++)
-				parts.add(new PartitionAppliedRow(pCols[i], dsCols[i],
-						nameCols[i], rels[i]));
-			pta.setPartitionAppliedRows(parts);
+				pta.getPartitionAppliedRows().add(
+						new PartitionAppliedRow(pCols[i], dsCols[i],
+								nameCols[i], rels[i]));
 			pt.applyTo(ds, dimension, pta);
 		} else
 			throw new SAXException(Resources.get("unknownTag", eName));
