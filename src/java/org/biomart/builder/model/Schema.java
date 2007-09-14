@@ -474,8 +474,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			return;
 		// Make new name unique.
 		final String baseName = name;
-		for (final int i = 1; this.mart.getSchemas().containsKey(name); name = baseName
-				+ "_" + i)
+		for (int i = 1; this.mart.getSchemas().containsKey(name); name = baseName
+				+ "_" + i++)
 			;
 		this.name = name;
 		this.pcs.firePropertyChange("name", oldValue, name);

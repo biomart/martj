@@ -231,8 +231,8 @@ public class DataSet extends Schema {
 			return;
 		// Make new name unique.
 		final String baseName = name;
-		for (final int i = 1; this.getMart().getDataSets().containsKey(name); name = baseName
-				+ "_" + i)
+		for (int i = 1; this.getMart().getDataSets().containsKey(name); name = baseName
+				+ "_" + i++)
 			;
 		this.name = name;
 		this.pcs.firePropertyChange("name", oldValue, name);

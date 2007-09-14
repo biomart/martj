@@ -24,13 +24,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
@@ -42,6 +45,7 @@ import javax.swing.JTabbedPane;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Column;
+import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
@@ -50,6 +54,8 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
 import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
 import org.biomart.builder.model.Table.RestrictedTableDefinition;
@@ -72,7 +78,9 @@ import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
+import org.biomart.builder.view.gui.dialogs.SuggestUnrolledDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.UnrolledRelationDialog;
+import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.dialogs.StackTrace;
@@ -1378,6 +1386,105 @@ public class DataSetTabSet extends JTabbedPane {
 		} catch (final ValidationException e) {
 			StackTrace.showStackTrace(e);
 		} finally {
+			Transaction.end();
+		}
+	}
+
+	/**
+	 * Given a table, suggest a possible unrolled ontology dataset. Refuse if
+	 * the table does not have at least two 1:M relations leading from its PK to
+	 * FKs on the same second table.
+	 * 
+	 * @param table
+	 *            the table to suggest datasets for.
+	 */
+	public void requestSuggestUnrolledDataSets(final Table table) {
+		SuggestUnrolledDataSetDialog dialog = null;
+		Relation parentRel = null;
+		Relation childRel = null;
+		Column namingCol = null;
+		try {
+			// Check that the table meets the requirements.
+			final PrimaryKey pk = table.getPrimaryKey();
+			if (pk == null)
+				throw new ValidationException(Resources
+						.get("unrollDataSetMustHavePK"));
+			// Find all candidate second tables.
+			final Map candidates = new TreeMap();
+			for (final Iterator i = pk.getRelations().iterator(); i.hasNext();) {
+				final Relation rel = (Relation) i.next();
+				if (rel.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
+						|| !rel.isOneToMany())
+					continue;
+				final ForeignKey fk = (ForeignKey) rel.getManyKey();
+				if (!candidates.containsKey(fk.getTable()))
+					candidates.put(fk.getTable(), new ArrayList());
+				((List) candidates.get(fk.getTable())).add(rel);
+			}
+			// Check that there is at least one candidate.
+			for (final Iterator i = candidates.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				if (((List) entry.getValue()).size() < 2)
+					i.remove();
+			}
+			if (candidates.isEmpty())
+				throw new ValidationException(Resources
+						.get("unrollDataSetMustHaveChild"));
+			// Ask user for candidate (dialog will switch other
+			// choices based on list contents), parent rel, child rel,
+			// and naming column.
+			dialog = new SuggestUnrolledDataSetDialog(
+					table, candidates);
+			dialog.setVisible(true);
+			// Cancelled?
+			if (dialog.isCancelled())
+				return;
+			parentRel = dialog.getParentRelation();
+			childRel = dialog.getChildRelation();
+			namingCol = dialog.getNamingColumn();
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+			return;
+		} finally {
+			if (dialog != null)
+				dialog.dispose();
+		}
+
+		try {
+			Transaction.start();
+			// Create a simple dataset based on the selected table.
+			final DataSet ds = new DataSet(this.getMartTab().getMart(), table,
+					table.getName());
+			this.getMartTab().getMart().getDataSets().put(ds.getName(), ds);
+			ds.synchronise(); // Must do now in order to locate dimensions.
+			// Locate the merge dimension based on parent rel and merge it.
+			// Locate the unroll dimension based on child rel and unroll it
+			DataSetTable mergeDM = null;
+			DataSetTable unrollDM = null;
+			for (final Iterator i = ds.getTables().values().iterator(); i
+					.hasNext()
+					&& (mergeDM == null || unrollDM == null);) {
+				final DataSetTable dst = (DataSetTable) i.next();
+				if (dst.getFocusRelation() != null) {
+					if (dst.getFocusRelation().equals(parentRel))
+						mergeDM = dst;
+					else if (dst.getFocusRelation().equals(childRel))
+						unrollDM = dst;
+				}
+			}
+			System.err.println("Here9");
+			if (mergeDM == null || unrollDM == null)
+				throw new BioMartError(); // Something's gone badly wrong.
+			// Apply the changes.
+			mergeDM.getFocusRelation().setMergeRelation(ds, true);
+			unrollDM.getFocusRelation().setUnrolledRelation(ds, namingCol);
+			System.err.println("Here10");
+			// All done!
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		} finally {
+			Transaction.resetVisibleModified();
 			Transaction.end();
 		}
 	}

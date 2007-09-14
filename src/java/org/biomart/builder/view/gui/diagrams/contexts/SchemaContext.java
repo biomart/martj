@@ -254,6 +254,21 @@ public class SchemaContext implements DiagramContext {
 			contextMenu.add(suggest);
 			suggest.setEnabled(!table.getSchema().isMasked());
 
+			// Menu option to suggest a bunch of datasets based around that
+			// table.
+			final JMenuItem createOntologyDS = new JMenuItem(Resources.get(
+					"suggestUnrolledDataSetsTableTitle", table.getName()));
+			createOntologyDS.setMnemonic(Resources.get(
+					"suggestUnrolledDataSetsTableMnemonic").charAt(0));
+			createOntologyDS.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.martTab.getDataSetTabSet()
+							.requestSuggestUnrolledDataSets(table);
+				}
+			});
+			contextMenu.add(createOntologyDS);
+			createOntologyDS.setEnabled(!table.getSchema().isMasked());
+
 			// Separator.
 			contextMenu.addSeparator();
 
