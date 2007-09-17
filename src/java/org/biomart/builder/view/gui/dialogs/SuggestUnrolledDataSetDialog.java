@@ -26,7 +26,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -36,7 +35,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.biomart.builder.model.Column;
-import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.common.resources.Resources;
 
@@ -51,26 +49,27 @@ import org.biomart.common.resources.Resources;
 public class SuggestUnrolledDataSetDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private final JComboBox childTable;
+	private final JComboBox nTable;
 
-	private final JComboBox childRelation;
+	private final JComboBox nrTable;
 
-	private final JComboBox parentRelation;
+	private final JComboBox nIDColumn;
 
-	private final JComboBox namingColumn;
+	private final JComboBox nrParentIDColumn;
+
+	private final JComboBox nrChildIDColumn;
+
+	private final JComboBox nNamingColumn;
 
 	private boolean cancelled = true;
 
 	/**
 	 * Pop up a suggest unrolled dataset dialog.
 	 * 
-	 * @param parent
-	 *            the parent table we are working with.
-	 * @param candidates
-	 *            choice of possible children. Keys are tables, values are lists
-	 *            of relations to that table.
+	 * @param nTable
+	 *            the parent table we are initially working with.
 	 */
-	public SuggestUnrolledDataSetDialog(final Table parent, final Map candidates) {
+	public SuggestUnrolledDataSetDialog(final Table nTable) {
 		// Create the basic dialog centred on the main mart builder window.
 		super();
 		this.setTitle(Resources.get("suggestUnrolledDataSetDialogTitle"));
@@ -105,54 +104,103 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Build Insert drop downs.
-		this.childTable = new JComboBox(candidates.keySet().toArray());
-		this.namingColumn = new JComboBox(parent.getColumns().values()
+		this.nTable = new JComboBox(nTable.getSchema().getTables().values()
 				.toArray());
-		this.parentRelation = new JComboBox();
-		this.childRelation = new JComboBox();
-		// Add listener to update parent and child relations.
-		this.childTable.addActionListener(new ActionListener() {
+		this.nIDColumn = new JComboBox();
+		this.nNamingColumn = new JComboBox();
+		this.nrTable = new JComboBox();
+		this.nrParentIDColumn = new JComboBox();
+		this.nrChildIDColumn = new JComboBox();
+		// Add listener to update parent and child columns.
+		this.nrTable.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				SuggestUnrolledDataSetDialog.this.parentRelation
+				SuggestUnrolledDataSetDialog.this.nrParentIDColumn
 						.removeAllItems();
-				SuggestUnrolledDataSetDialog.this.childRelation
+				SuggestUnrolledDataSetDialog.this.nrChildIDColumn
 						.removeAllItems();
-				final Table child = (Table) SuggestUnrolledDataSetDialog.this.childTable
+				final Table nrTable = (Table) SuggestUnrolledDataSetDialog.this.nrTable
 						.getSelectedItem();
-				if (child != null) {
-					for (final Iterator i = ((List) candidates.get(child))
+				if (nrTable != null) {
+					for (final Iterator i = nrTable.getColumns().values()
 							.iterator(); i.hasNext();) {
-						final Relation rel = (Relation) i.next();
-						SuggestUnrolledDataSetDialog.this.parentRelation
-								.addItem(rel);
-						SuggestUnrolledDataSetDialog.this.childRelation
-								.addItem(rel);
+						final Column col = (Column) i.next();
+						SuggestUnrolledDataSetDialog.this.nrParentIDColumn
+								.addItem(col);
+						SuggestUnrolledDataSetDialog.this.nrChildIDColumn
+								.addItem(col);
 					}
-					SuggestUnrolledDataSetDialog.this.parentRelation
+					SuggestUnrolledDataSetDialog.this.nrParentIDColumn
 							.setSelectedIndex(0);
-					SuggestUnrolledDataSetDialog.this.childRelation
+					SuggestUnrolledDataSetDialog.this.nrChildIDColumn
 							.setSelectedIndex(0);
 				} else {
-					SuggestUnrolledDataSetDialog.this.parentRelation
+					SuggestUnrolledDataSetDialog.this.nrParentIDColumn
 							.setSelectedIndex(-1);
-					SuggestUnrolledDataSetDialog.this.childRelation
+					SuggestUnrolledDataSetDialog.this.nrChildIDColumn
+							.setSelectedIndex(-1);
+				}
+			}
+		});
+		// Add listener to update n and nr tables.
+		this.nTable.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				SuggestUnrolledDataSetDialog.this.nIDColumn.removeAllItems();
+				SuggestUnrolledDataSetDialog.this.nNamingColumn
+						.removeAllItems();
+				SuggestUnrolledDataSetDialog.this.nrTable.removeAllItems();
+				final Table nTable = (Table) SuggestUnrolledDataSetDialog.this.nTable
+						.getSelectedItem();
+				if (nTable != null) {
+					for (final Iterator i = nTable.getColumns().values()
+							.iterator(); i.hasNext();) {
+						final Column col = (Column) i.next();
+						SuggestUnrolledDataSetDialog.this.nIDColumn
+								.addItem(col);
+						SuggestUnrolledDataSetDialog.this.nNamingColumn
+								.addItem(col);
+					}
+					for (final Iterator i = nTable.getSchema().getTables()
+							.values().iterator(); i.hasNext();) {
+						final Table cand = (Table) i.next();
+						if (!cand.equals(nTable))
+							SuggestUnrolledDataSetDialog.this.nrTable
+									.addItem(cand);
+					}
+					SuggestUnrolledDataSetDialog.this.nIDColumn
+							.setSelectedIndex(0);
+					SuggestUnrolledDataSetDialog.this.nNamingColumn
+							.setSelectedIndex(0);
+					SuggestUnrolledDataSetDialog.this.nrTable
+							.setSelectedIndex(0);
+				} else {
+					SuggestUnrolledDataSetDialog.this.nIDColumn
+							.setSelectedIndex(-1);
+					SuggestUnrolledDataSetDialog.this.nNamingColumn
+							.setSelectedIndex(-1);
+					SuggestUnrolledDataSetDialog.this.nrTable
 							.setSelectedIndex(-1);
 				}
 			}
 		});
 
-		JLabel label = new JLabel(Resources.get("childTableLabel"));
+		JLabel label = new JLabel(Resources.get("nTableLabel"));
 		content.add(label, labelConstraints);
-		content.add(this.childTable, fieldConstraints);
-		label = new JLabel(Resources.get("parentRelationLabel"));
+		content.add(this.nTable, fieldConstraints);
+		label = new JLabel(Resources.get("nIDColumnLabel"));
 		content.add(label, labelConstraints);
-		content.add(this.parentRelation, fieldConstraints);
-		label = new JLabel(Resources.get("childRelationLabel"));
+		content.add(this.nIDColumn, fieldConstraints);
+		label = new JLabel(Resources.get("nNamingColumnLabel"));
 		content.add(label, labelConstraints);
-		content.add(this.childRelation, fieldConstraints);
-		label = new JLabel(Resources.get("namingColumnLabel"));
+		content.add(this.nNamingColumn, fieldConstraints);
+		label = new JLabel(Resources.get("nrTableLabel"));
 		content.add(label, labelConstraints);
-		content.add(this.namingColumn, fieldConstraints);
+		content.add(this.nrTable, fieldConstraints);
+		label = new JLabel(Resources.get("nrParentIDColumnLabel"));
+		content.add(label, labelConstraints);
+		content.add(this.nrParentIDColumn, fieldConstraints);
+		label = new JLabel(Resources.get("nrChildIDColumnLabel"));
+		content.add(label, labelConstraints);
+		content.add(this.nrChildIDColumn, fieldConstraints);
 
 		// Add the buttons.
 		final JButton cancel = new JButton(Resources.get("cancelButton"));
@@ -185,8 +233,7 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 		});
 
 		// Select first available values.
-		this.childTable.setSelectedIndex(0);
-		this.namingColumn.setSelectedIndex(0);
+		this.nTable.setSelectedItem(nTable);
 
 		// Make the execute button the default button.
 		this.getRootPane().setDefaultButton(execute);
@@ -208,30 +255,51 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 	}
 
 	/**
-	 * Get the selected parent relation.
 	 * 
-	 * @return the selected parent relation.
+	 * @return the chosen item.
 	 */
-	public Relation getParentRelation() {
-		return (Relation) this.parentRelation.getSelectedItem();
+	public Table getNTable() {
+		return (Table) this.nTable.getSelectedItem();
 	}
 
 	/**
-	 * Get the selected child relation.
 	 * 
-	 * @return the selected child relation.
+	 * @return the chosen item.
 	 */
-	public Relation getChildRelation() {
-		return (Relation) this.childRelation.getSelectedItem();
+	public Table getNRTable() {
+		return (Table) this.nrTable.getSelectedItem();
 	}
 
 	/**
-	 * Get the selected naming column.
 	 * 
-	 * @return the selected naming column.
+	 * @return the chosen item.
 	 */
-	public Column getNamingColumn() {
-		return (Column) this.namingColumn.getSelectedItem();
+	public Column getNIDColumn() {
+		return (Column) this.nIDColumn.getSelectedItem();
+	}
+
+	/**
+	 * 
+	 * @return the chosen item.
+	 */
+	public Column getNRParentIDColumn() {
+		return (Column) this.nrParentIDColumn.getSelectedItem();
+	}
+
+	/**
+	 * 
+	 * @return the chosen item.
+	 */
+	public Column getNRChildIDColumn() {
+		return (Column) this.nrChildIDColumn.getSelectedItem();
+	}
+
+	/**
+	 * 
+	 * @return the chosen item.
+	 */
+	public Column getNNamingColumn() {
+		return (Column) this.nNamingColumn.getSelectedItem();
 	}
 
 	private boolean validateFields() {
@@ -239,20 +307,29 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 		final List messages = new ArrayList();
 
 		// We don't like missing drop-downs.
-		if (this.parentRelation.getSelectedIndex() == -1)
+		if (this.nTable.getSelectedIndex() == -1)
+			messages
+					.add(Resources.get("fieldIsEmpty", Resources.get("nTable")));
+		if (this.nrTable.getSelectedIndex() == -1)
+			messages.add(Resources
+					.get("fieldIsEmpty", Resources.get("nrTable")));
+		if (this.nIDColumn.getSelectedIndex() == -1)
 			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("parentRelation")));
-		if (this.childRelation.getSelectedIndex() == -1)
+					.get("nIDColumn")));
+		if (this.nrParentIDColumn.getSelectedIndex() == -1)
 			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("childRelation")));
-		if (this.namingColumn.getSelectedIndex() == -1)
+					.get("nrParentIDColumn")));
+		if (this.nrChildIDColumn.getSelectedIndex() == -1)
 			messages.add(Resources.get("fieldIsEmpty", Resources
-					.get("namingColumn")));
+					.get("nrChildIDColumn")));
+		if (this.nNamingColumn.getSelectedIndex() == -1)
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("nNamingColumn")));
 
 		// We don't like same-as relations.
-		if (this.parentRelation.getSelectedIndex() == this.childRelation
+		if (this.nrParentIDColumn.getSelectedIndex() == this.nrChildIDColumn
 				.getSelectedIndex())
-			messages.add(Resources.get("childParentRelationSame"));
+			messages.add(Resources.get("childParentColumnSame"));
 
 		// If we have any messages, show them.
 		if (!messages.isEmpty())

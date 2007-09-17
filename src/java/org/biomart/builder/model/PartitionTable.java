@@ -554,7 +554,7 @@ public abstract class PartitionTable implements TransactionListener {
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
 			return;
-		if (dimension != null)
+		if (!dimension.equals(PartitionTable.NO_DIMENSION))
 			((DataSetTable) ds.getTables().get(dimension))
 					.setPartitionTableApplication(null);
 		else
