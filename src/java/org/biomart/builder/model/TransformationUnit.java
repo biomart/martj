@@ -162,6 +162,8 @@ public abstract class TransformationUnit {
 		 * @return <tt>true</tt> if it does.
 		 */
 		protected boolean columnMatches(final Column column, DataSetColumn dsCol) {
+			if (dsCol==null)
+				return false;
 			while (dsCol instanceof InheritedColumn)
 				dsCol = ((InheritedColumn) dsCol).getInheritedColumn();
 			if (dsCol instanceof WrappedColumn)
@@ -189,13 +191,9 @@ public abstract class TransformationUnit {
 					final Column entry = (Column) i.next();
 					if (entry instanceof DataSetColumn) {
 						DataSetColumn dsCol = (DataSetColumn) entry;
-						while (dsCol instanceof InheritedColumn)
-							dsCol = ((InheritedColumn) dsCol)
-									.getInheritedColumn();
-						if (dsCol instanceof WrappedColumn
-								&& ((WrappedColumn) dsCol).getWrappedColumn()
-										.equals(column))
-							candidate = dsCol;
+						candidate = dsCol;
+						if (!this.columnMatches(column, candidate))
+							candidate = null;
 					}
 				}
 			return candidate;
@@ -308,9 +306,13 @@ public abstract class TransformationUnit {
 				if (pos >= 0)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
 							parentKey.getColumns()[pos]);
+				if (!this.columnMatches(column, candidate))
+					candidate = null;
 				if (candidate == null)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
 							column);
+				if (!this.columnMatches(column, candidate))
+					candidate = null;
 			}
 			return candidate;
 		}

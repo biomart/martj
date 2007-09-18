@@ -1314,7 +1314,7 @@ public class MartBuilderXML extends DefaultHandler {
 		String eName = sName;
 		if ("".equals(eName))
 			eName = qName;
-
+		
 		// Construct a set of attributes from the tag.
 		final Map attributes = new HashMap();
 		if (attrs != null)
@@ -2211,14 +2211,15 @@ public class MartBuilderXML extends DefaultHandler {
 				rels[i] = (Relation) this.mappedObjects.get(relIds[i]);
 			final String[] nameCols = this.readListAttribute(
 					(String) attributes.get("nameCols"), false);
-
 			final PartitionTableApplication pta = new PartitionTableApplication(
 					pt);
 			for (int i = 0; i < pCols.length; i++)
 				pta.getPartitionAppliedRows().add(
 						new PartitionAppliedRow(pCols[i], dsCols[i],
 								nameCols[i], rels[i]));
-			pt.applyTo(ds, dimension, pta);
+			// This is purely for dodgy XML.
+			if (dimension==null || dimension.equals(PartitionTable.NO_DIMENSION) || ds.getTables().containsKey(dimension))
+				pt.applyTo(ds, dimension, pta);
 		} else
 			throw new SAXException(Resources.get("unknownTag", eName));
 

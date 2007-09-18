@@ -515,11 +515,10 @@ public abstract class PartitionTable implements TransactionListener {
 	 *            the dimension.
 	 * @param appl
 	 *            the application definition (null for default).
-	 * @return the application definition.
 	 */
-	public PartitionTableApplication applyTo(final DataSet ds,
+	public void applyTo(final DataSet ds,
 			String dimension, PartitionTableApplication appl) {
-		if (dimension == null)
+		if (dimension == null || dimension.equals(PartitionTable.NO_DIMENSION))
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
 			this.dmApplications.put(ds, new HashMap());
@@ -527,7 +526,7 @@ public abstract class PartitionTable implements TransactionListener {
 			appl = PartitionTableApplication.createDefault(this, ds, dimension);
 		((Map) this.dmApplications.get(ds)).put(dimension, new WeakReference(
 				appl));
-		if (dimension != PartitionTable.NO_DIMENSION)
+		if (!dimension.equals(PartitionTable.NO_DIMENSION))
 			((DataSetTable) ds.getTables().get(dimension))
 					.setPartitionTableApplication(appl);
 		else
@@ -538,7 +537,6 @@ public abstract class PartitionTable implements TransactionListener {
 				new WeakPropertyChangeListener(ds, this.deadListener));
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, appl);
-		return appl;
 	}
 
 	/**
@@ -550,7 +548,7 @@ public abstract class PartitionTable implements TransactionListener {
 	 *            the dimension.
 	 */
 	public void removeFrom(final DataSet ds, String dimension) {
-		if (dimension == null)
+		if (dimension == null || dimension.equals(PartitionTable.NO_DIMENSION))
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
 			return;
