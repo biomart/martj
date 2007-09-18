@@ -152,12 +152,34 @@ public abstract class TransformationUnit {
 			return this.table;
 		}
 
+		/**
+		 * Does the column come from this dataset column?
+		 * 
+		 * @param column
+		 *            the column.
+		 * @param dsCol
+		 *            the dataset column.
+		 * @return <tt>true</tt> if it does.
+		 */
+		protected boolean columnMatches(final Column column, DataSetColumn dsCol) {
+			while (dsCol instanceof InheritedColumn)
+				dsCol = ((InheritedColumn) dsCol).getInheritedColumn();
+			if (dsCol instanceof WrappedColumn)
+				return ((WrappedColumn) dsCol).getWrappedColumn()
+						.equals(column);
+			return false;
+		}
+
 		public DataSetColumn getDataSetColumnFor(final Column column) {
 			DataSetColumn candidate = (DataSetColumn) this
 					.getNewColumnNameMap().get(column.getName());
+			if (!this.columnMatches(column, candidate))
+				candidate = null;
 			if (candidate == null)
 				candidate = (DataSetColumn) this.getNewColumnNameMap().get(
 						column.getName() + Resources.get("keySuffix"));
+			if (!this.columnMatches(column, candidate))
+				candidate = null;
 			if (candidate == null)
 				// We need to check each of our columns to see if they
 				// are dataset columns, and if so, if they point to
@@ -273,6 +295,8 @@ public abstract class TransformationUnit {
 				final String name) {
 			DataSetColumn candidate = (DataSetColumn) this
 					.getNewColumnNameMap().get(name);
+			if (!this.columnMatches(column, candidate))
+				candidate = null;
 			if (candidate == null && this.getPreviousUnit() != null) {
 				final Key ourKey = Arrays.asList(
 						this.schemaRelation.getFirstKey().getColumns())

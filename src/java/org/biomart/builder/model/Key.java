@@ -321,10 +321,11 @@ public abstract class Key implements Comparable, TransactionListener {
 			return false;
 		else if (o instanceof Key) {
 			final Key k = (Key) o;
-			return (k.getTable().getSchema().getMart().getUniqueId() + "_" + k
-					.toString()).equals(this.getTable().getSchema().getMart()
-					.getUniqueId()
-					+ "_" + this.toString());
+			return k.getClass().equals(this.getClass())
+					&& (k.getTable().getSchema().getMart().getUniqueId() + "_" + k
+							.toString()).equals(this.getTable().getSchema()
+							.getMart().getUniqueId()
+							+ "_" + this.toString());
 		} else
 			return false;
 	}

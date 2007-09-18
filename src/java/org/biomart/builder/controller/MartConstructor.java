@@ -268,16 +268,6 @@ public interface MartConstructor {
 			// Check not cancelled.
 			this.checkCancelled();
 
-			// Check is valid for dataset construction.
-			/*
-			 * boolean valid = false; for (final Iterator i =
-			 * dataset.getMainTable().getColumns() .values().iterator();
-			 * i.hasNext() && !valid;) valid |= ((DataSetColumn)
-			 * i.next()).getModifiedName().endsWith(
-			 * Resources.get("keySuffix")); if (!valid) throw new
-			 * ConstructorException(Resources.get( "datasetNoKeyColumn",
-			 * dataset.getName()));
-			 */// TODO Commented until Arek decides what he wants.
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 			final PartitionTableApplication dsPta = dataset
@@ -443,6 +433,7 @@ public interface MartConstructor {
 			String previousTempTable = null;
 			boolean firstJoin = true;
 			boolean requiresFinalLeftJoin = false;
+			boolean requiresDistinct = dsTable.isDistinctTable();
 			final Set droppedCols = new HashSet();
 
 			// Use the transformation units to create the basic table.
@@ -468,11 +459,13 @@ public interface MartConstructor {
 						continue;
 				}
 				// Unroll?
-				else if (tu instanceof UnrollTable)
+				else if (tu instanceof UnrollTable) {
 					this.doUnrollTable(templateSchema, schemaPartition,
 							schemaPrefix, dsPta, dmPta, dataset, dsTable,
 							(UnrollTable) tu, previousTempTable, tempTable,
 							droppedCols);
+					requiresDistinct = true;
+				}
 				// Skip?
 				else if (tu instanceof SkipTable)
 					// Ignore.
@@ -553,7 +546,7 @@ public interface MartConstructor {
 			}
 
 			// Does it need a final distinct?
-			if (dsTable.isDistinctTable()) {
+			if (requiresDistinct) {
 				final String tempTable = tempName + this.tempNameCount++;
 				final Set keepColNames = new HashSet();
 				for (final Iterator i = keepCols.iterator(); i.hasNext();)
@@ -1182,7 +1175,7 @@ public interface MartConstructor {
 			final String unrollFK = utu.getDataSetColumnFor(
 					utu.getRelation().getManyKey().getColumns()[0])
 					.getPartitionedName();
-			final String unrollPK = utu.getDataSetColumnFor(
+			final String unrollPK = utu.getDataSetColumnFor( 
 					utu.getRelation().getOneKey().getColumns()[0])
 					.getPartitionedName();
 			final String unrollIDColName = utu.getUnrolledIDColumn()

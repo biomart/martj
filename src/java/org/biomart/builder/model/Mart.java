@@ -36,7 +36,14 @@ import java.util.TreeSet;
 
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetColumn.UnrolledColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Key.ForeignKey;
+import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -189,7 +196,7 @@ public class Mart implements TransactionListener {
 					newDss.removeAll(Mart.this.datasetCache);
 					// Drop dropped ones.
 					for (final Iterator i = dropped.iterator(); i.hasNext();) {
-						final DataSet deadDS = (DataSet)i.next();
+						final DataSet deadDS = (DataSet) i.next();
 						try {
 							deadDS.setPartitionTable(false);
 						} catch (final PartitionException pe) {
@@ -440,9 +447,11 @@ public class Mart implements TransactionListener {
 	 *            the target database.
 	 */
 	public void setOutputDatabase(final String outputDatabase) {
-		Log.debug("Changing outputDatabase for " + this + " to " + outputDatabase);
+		Log.debug("Changing outputDatabase for " + this + " to "
+				+ outputDatabase);
 		final String oldValue = this.outputDatabase;
-		if (this.outputDatabase == outputDatabase || this.outputDatabase != null
+		if (this.outputDatabase == outputDatabase
+				|| this.outputDatabase != null
 				&& this.outputDatabase.equals(outputDatabase))
 			return;
 		// Make the change.
@@ -1012,5 +1021,182 @@ public class Mart implements TransactionListener {
 		}
 		// Return the results.
 		return invisibleDataSets;
+	}
+
+	/**
+	 * Given a pair of tables, construct an unrolled dataset with all defaults
+	 * in place for a useful ontology structure.
+	 * <p>
+	 * Datasets are synchronised before being returned. It will always return
+	 * exactly one dataset.
+	 * 
+	 * @param nTable
+	 *            the vocabulary definition table.
+	 * @param nIDCol
+	 *            the unique ID column for each vocab term.
+	 * @param nNamingCol
+	 *            the human readable version of each vocab term.
+	 * @param nrTable
+	 *            the relationship table.
+	 * @param nrParentIDCol
+	 *            the ID of the parent term in the relationship.
+	 * @param nrChildIDCol
+	 *            the ID of the child term in the relationship.
+	 * @return the resulting dataset.
+	 * @throws SQLException
+	 *             if there is any problem talking to the source database whilst
+	 *             generating the dataset.
+	 * @throws AssociationException
+	 *             if some logic problem occurs.
+	 * @throws ValidationException
+	 *             if some logic problem occurs.
+	 * @throws DataModelException
+	 *             if synchronisation fails.
+	 */
+	public DataSet suggestUnrolledDataSets(final Table nTable,
+			final Column nIDCol, final Column nNamingCol, final Table nrTable,
+			final Column nrParentIDCol, final Column nrChildIDCol)
+			throws SQLException, DataModelException, AssociationException,
+			ValidationException {
+		// Create PK on nTable.nIDCol (or reuse).
+		PrimaryKey pk = new PrimaryKey(new Column[] { nIDCol });
+		nTable.setPrimaryKey(pk);
+		pk = nTable.getPrimaryKey();
+		pk.setStatus(ComponentStatus.HANDMADE);
+		pk.getTable().setMasked(false);
+		// Create FKs on nrTable.nrParent/ChildIDCol (or reuse).
+		ForeignKey parentFk = new ForeignKey(new Column[] { nrParentIDCol });
+		ForeignKey childFk = new ForeignKey(new Column[] { nrChildIDCol });
+		if (!nrTable.getForeignKeys().add(parentFk)) {
+			// Reuse.
+			ForeignKey reuse = null;
+			for (final Iterator i = nrTable.getForeignKeys().iterator(); i
+					.hasNext()
+					&& reuse == null;) {
+				final ForeignKey cand = (ForeignKey) i.next();
+				if (cand.equals(parentFk))
+					reuse = cand;
+			}
+			parentFk = reuse;
+		}
+		parentFk.setStatus(ComponentStatus.HANDMADE);
+		parentFk.getTable().setMasked(false);
+		if (!nrTable.getForeignKeys().add(childFk)) {
+			// Reuse.
+			ForeignKey reuse = null;
+			for (final Iterator i = nrTable.getForeignKeys().iterator(); i
+					.hasNext()
+					&& reuse == null;) {
+				final ForeignKey cand = (ForeignKey) i.next();
+				if (cand.equals(childFk))
+					reuse = cand;
+			}
+			childFk = reuse;
+		}
+		childFk.setStatus(ComponentStatus.HANDMADE);
+		childFk.getTable().setMasked(false);
+		// Create or reuse relations between PK and each FK.
+		Relation parentRel = null;
+		try {
+			parentRel = new Relation(pk, parentFk, Cardinality.MANY);
+			pk.getRelations().add(parentRel);
+			parentFk.getRelations().add(parentRel);
+		} catch (final AssociationException e) {
+			// Reuse.
+			Relation reuse = null;
+			for (final Iterator i = pk.getRelations().iterator(); i.hasNext()
+					&& reuse == null;) {
+				final Relation cand = (Relation) i.next();
+				if (cand.getFirstKey().equals(parentFk)
+						&& cand.getSecondKey().equals(pk)
+						|| cand.getFirstKey().equals(pk)
+						&& cand.getSecondKey().equals(parentFk))
+					reuse = cand;
+			}
+			parentRel = reuse;
+		} finally {
+			parentRel.setCardinality(Cardinality.MANY);
+			parentRel.setStatus(ComponentStatus.HANDMADE);
+		}
+		Relation childRel = null;
+		try {
+			childRel = new Relation(pk, childFk, Cardinality.MANY);
+			pk.getRelations().add(childRel);
+			childFk.getRelations().add(childRel);
+		} catch (final AssociationException e) {
+			// Reuse.
+			Relation reuse = null;
+			for (final Iterator i = pk.getRelations().iterator(); i.hasNext()
+					&& reuse == null;) {
+				final Relation cand = (Relation) i.next();
+				if (cand.getFirstKey().equals(childFk)
+						&& cand.getSecondKey().equals(pk)
+						|| cand.getFirstKey().equals(pk)
+						&& cand.getSecondKey().equals(childFk))
+					reuse = cand;
+			}
+			childRel = reuse;
+		} finally {
+			childRel.setCardinality(Cardinality.MANY);
+			childRel.setStatus(ComponentStatus.HANDMADE);
+		}
+
+		// Create a simple dataset based on the selected table.
+		final DataSet ds = new DataSet(this, nTable, nTable.getName());
+		ds.synchronise(); // Must do now in order to locate dimensions.
+		final DataSetTable mainTable = ds.getMainTable();
+		// Locate the merge dimension based on parent rel and merge it.
+		// Locate the unroll dimension based on child rel and unroll it
+		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();) {
+			final DataSetTable dst = (DataSetTable) i.next();
+			if (dst.getFocusRelation() != null) {
+				if (dst.getFocusRelation().equals(parentRel))
+					dst.getFocusRelation().setMergeRelation(ds, true);
+				else if (dst.getFocusRelation().equals(childRel))
+					dst.getFocusRelation().setUnrolledRelation(ds, nNamingCol);
+				else
+					dst.setDimensionMasked(true);
+			}
+		}
+		ds.synchronise(); // Must do again to update dimensions.
+		// Locate all unimportant relations and mask them.
+		for (final Iterator i = mainTable.getIncludedRelations().iterator(); i
+				.hasNext();) {
+			final Relation cand = (Relation) i.next();
+			if (cand.equals(parentRel))
+				continue;
+			else if (cand.equals(childRel))
+				continue;
+			else
+				cand.setMaskRelation(ds, mainTable.getName(), true);
+		}
+		ds.synchronise(); // Must do again to update relations.
+		// Auto-mask all DS cols on main table which are not wrappers of
+		// nIDCol or nNamingCol.
+		for (final Iterator i = mainTable.getColumns().values().iterator(); i
+				.hasNext();) {
+			final DataSetColumn dsCol = (DataSetColumn) i.next();
+			if (dsCol instanceof UnrolledColumn)
+				continue;
+			else if (dsCol instanceof WrappedColumn) {
+				final WrappedColumn wcol = (WrappedColumn) dsCol;
+				if (wcol.getWrappedColumn().equals(nIDCol))
+					continue;
+				else if (wcol.getWrappedColumn().equals(nNamingCol))
+					continue;
+			}
+			dsCol.setColumnMasked(true);
+		}
+		// Locate all unimportant dimensions and mask them.
+		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();) {
+			final DataSetTable dst = (DataSetTable) i.next();
+			if (dst.getFocusRelation() != null
+					&& !dst.getFocusRelation().equals(parentRel)
+					&& !dst.getFocusRelation().equals(childRel))
+				dst.setDimensionMasked(true);
+		}
+
+		// All done!
+		return ds;
 	}
 }

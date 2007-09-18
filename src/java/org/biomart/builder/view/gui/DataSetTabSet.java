@@ -42,7 +42,6 @@ import javax.swing.JTabbedPane;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Column;
-import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
@@ -51,9 +50,6 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
-import org.biomart.builder.model.Key.ForeignKey;
-import org.biomart.builder.model.Key.PrimaryKey;
-import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
 import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
 import org.biomart.builder.model.Table.RestrictedTableDefinition;
@@ -78,8 +74,6 @@ import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestUnrolledDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.UnrolledRelationDialog;
-import org.biomart.common.exceptions.AssociationException;
-import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.dialogs.StackTrace;
@@ -1392,17 +1386,14 @@ public class DataSetTabSet extends JTabbedPane {
 	/**
 	 * Given a table, suggest a possible unrolled ontology dataset. Refuse if
 	 * the table does not have at least two 1:M relations leading from its PK to
-	 * FKs on the same second table. This will modify the source schema
-	 * to match the selected columns.
+	 * FKs on the same second table. This will modify the source schema to match
+	 * the selected columns.
 	 * 
 	 * @param nTable
 	 *            the table to suggest datasets for.
 	 */
 	public void requestSuggestUnrolledDataSets(Table nTable) {
 		SuggestUnrolledDataSetDialog dialog = null;
-		Relation parentRel = null;
-		Relation childRel = null;
-		Column nNamingCol = null;
 		try {
 			// Ask user for candidate (dialog will switch other
 			// choices based on list contents), parent rel, child rel,
@@ -1414,121 +1405,20 @@ public class DataSetTabSet extends JTabbedPane {
 				return;
 			nTable = dialog.getNTable();
 			final Column nIDCol = dialog.getNIDColumn();
-			nNamingCol = dialog.getNNamingColumn();
+			final Column nNamingCol = dialog.getNNamingColumn();
 			final Table nrTable = dialog.getNRTable();
 			final Column nrParentIDCol = dialog.getNRParentIDColumn();
 			final Column nrChildIDCol = dialog.getNRChildIDColumn();
-			// Create PK on nTable.nIDCol (or reuse).
-			PrimaryKey pk = new PrimaryKey(new Column[]{nIDCol});
-			nTable.setPrimaryKey(pk);
-			pk = nTable.getPrimaryKey();
-			pk.setStatus(ComponentStatus.HANDMADE);
-			pk.getTable().setMasked(false);
-			// Create FKs on nrTable.nrParent/ChildIDCol (or reuse).
-			ForeignKey parentFk = new ForeignKey(new Column[]{nrParentIDCol});
-			ForeignKey childFk = new ForeignKey(new Column[]{nrChildIDCol});
-			if (!nrTable.getForeignKeys().add(parentFk)) {
-				// Reuse.
-				ForeignKey reuse = null;
-				for (final Iterator i = nrTable.getForeignKeys().iterator(); 
-				i.hasNext() && reuse==null; ) {
-					final ForeignKey cand = (ForeignKey)i.next();
-					if (cand.equals(parentFk))
-						reuse = cand;
-				}
-				parentFk = reuse;
-			}
-			parentFk.setStatus(ComponentStatus.HANDMADE);
-			parentFk.getTable().setMasked(false);
-			if (!nrTable.getForeignKeys().add(childFk)) {
-				// Reuse.
-				ForeignKey reuse = null;
-				for (final Iterator i = nrTable.getForeignKeys().iterator(); 
-				i.hasNext() && reuse==null; ) {
-					final ForeignKey cand = (ForeignKey)i.next();
-					if (cand.equals(childFk))
-						reuse = cand;
-				}
-				childFk = reuse;
-			}
-			childFk.setStatus(ComponentStatus.HANDMADE);
-			childFk.getTable().setMasked(false);
-			// Create or reuse relations between PK and each FK.
-			try {
-				parentRel = new Relation(pk, parentFk, Cardinality.MANY);
-				pk.getRelations().add(parentRel);
-				parentFk.getRelations().add(parentRel);
-			} catch (final AssociationException e) {
-				// Reuse.
-				Relation reuse = null;
-				for (final Iterator i = pk.getRelations().iterator(); 
-				i.hasNext() && reuse==null; ) {
-					final Relation cand = (Relation)i.next();
-					if (cand.equals(parentRel))
-						reuse = cand;
-				}
-				parentRel = reuse;
-			} finally {
-				parentRel.setCardinality(Cardinality.MANY);
-				parentRel.setStatus(ComponentStatus.HANDMADE);
-			}
-			try {
-				childRel = new Relation(pk, childFk, Cardinality.MANY);
-				pk.getRelations().add(childRel);
-				childFk.getRelations().add(childRel);
-			} catch (final AssociationException e) {
-				// Reuse.
-				Relation reuse = null;
-				for (final Iterator i = pk.getRelations().iterator(); 
-				i.hasNext() && reuse==null; ) {
-					final Relation cand = (Relation)i.next();
-					if (cand.equals(childRel))
-						reuse = cand;
-				}
-				childRel = reuse;				
-			} finally {
-				childRel.setCardinality(Cardinality.MANY);
-				childRel.setStatus(ComponentStatus.HANDMADE);
-			}
+			Transaction.start();
+			final DataSet ds = this.getMartTab().getMart()
+					.suggestUnrolledDataSets(nTable, nIDCol, nNamingCol,
+							nrTable, nrParentIDCol, nrChildIDCol);
+			this.getMartTab().getMart().getDataSets().put(ds.getName(), ds);
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
-			return;
 		} finally {
 			if (dialog != null)
 				dialog.dispose();
-		}
-
-		try {
-			Transaction.start();
-			// Create a simple dataset based on the selected table.
-			final DataSet ds = new DataSet(this.getMartTab().getMart(), nTable,
-					nTable.getName());
-			this.getMartTab().getMart().getDataSets().put(ds.getName(), ds);
-			ds.synchronise(); // Must do now in order to locate dimensions.
-			// Locate the merge dimension based on parent rel and merge it.
-			// Locate the unroll dimension based on child rel and unroll it
-			DataSetTable mergeDM = null;
-			DataSetTable unrollDM = null;
-			for (final Iterator i = ds.getTables().values().iterator(); i
-					.hasNext()
-					&& (mergeDM == null || unrollDM == null);) {
-				final DataSetTable dst = (DataSetTable) i.next();
-				if (dst.getFocusRelation() != null) {
-					if (dst.getFocusRelation().equals(parentRel))
-						mergeDM = dst;
-					else if (dst.getFocusRelation().equals(childRel))
-						unrollDM = dst;
-				}
-			}
-			if (mergeDM == null || unrollDM == null)
-				throw new BioMartError(); // Something's gone badly wrong.
-			// Apply the changes.
-			mergeDM.getFocusRelation().setMergeRelation(ds, true);
-			unrollDM.getFocusRelation().setUnrolledRelation(ds, nNamingCol);
-			// All done!
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		} finally {
 			Transaction.resetVisibleModified();
 			Transaction.end();
 		}

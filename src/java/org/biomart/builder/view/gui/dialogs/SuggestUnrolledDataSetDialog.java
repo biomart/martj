@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -104,8 +105,8 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
 		// Build Insert drop downs.
-		this.nTable = new JComboBox(nTable.getSchema().getTables().values()
-				.toArray());
+		this.nTable = new JComboBox(new TreeSet(nTable.getSchema().getTables()
+				.values()).toArray());
 		this.nIDColumn = new JComboBox();
 		this.nNamingColumn = new JComboBox();
 		this.nrTable = new JComboBox();
@@ -121,8 +122,8 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 				final Table nrTable = (Table) SuggestUnrolledDataSetDialog.this.nrTable
 						.getSelectedItem();
 				if (nrTable != null) {
-					for (final Iterator i = nrTable.getColumns().values()
-							.iterator(); i.hasNext();) {
+					for (final Iterator i = new TreeSet(nrTable.getColumns()
+							.values()).iterator(); i.hasNext();) {
 						final Column col = (Column) i.next();
 						SuggestUnrolledDataSetDialog.this.nrParentIDColumn
 								.addItem(col);
@@ -151,16 +152,16 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 				final Table nTable = (Table) SuggestUnrolledDataSetDialog.this.nTable
 						.getSelectedItem();
 				if (nTable != null) {
-					for (final Iterator i = nTable.getColumns().values()
-							.iterator(); i.hasNext();) {
+					for (final Iterator i = new TreeSet(nTable.getColumns()
+							.values()).iterator(); i.hasNext();) {
 						final Column col = (Column) i.next();
 						SuggestUnrolledDataSetDialog.this.nIDColumn
 								.addItem(col);
 						SuggestUnrolledDataSetDialog.this.nNamingColumn
 								.addItem(col);
 					}
-					for (final Iterator i = nTable.getSchema().getTables()
-							.values().iterator(); i.hasNext();) {
+					for (final Iterator i = new TreeSet(nTable.getSchema()
+							.getTables().values()).iterator(); i.hasNext();) {
 						final Table cand = (Table) i.next();
 						if (!cand.equals(nTable))
 							SuggestUnrolledDataSetDialog.this.nrTable

@@ -130,8 +130,12 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(action.getUnrollIterationCol());
 		sb.append(") select distinct ");
 		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
-			sb.append("parent.");
-			sb.append((String) i.next());
+			final String parentCol = (String)i.next();
+			if (parentCol.equals(action.getUnrollFKCol()))
+				sb.append(" child.");
+			else
+				sb.append(" parent.");
+			sb.append(parentCol);
 			sb.append(',');
 		}
 		sb.append(" child.");
@@ -155,9 +159,9 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append('.');
 		sb.append(action.getSourceTable());
 		sb.append(" as child on parent.");
-		sb.append(action.getUnrollIDCol());
-		sb.append("=child.");
 		sb.append(action.getUnrollFKCol());
+		sb.append("=child.");
+		sb.append(action.getUnrollPKCol());
 		sb.append(" and parent.");
 		sb.append(action.getUnrollIterationCol());
 		sb.append('=');

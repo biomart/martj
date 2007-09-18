@@ -195,7 +195,8 @@ public class DataSet extends Schema {
 		this.pcs.addPropertyChangeListener("datasetOptimiser", listener);
 		this.pcs.addPropertyChangeListener("indexOptimiser", listener);
 		this.pcs.addPropertyChangeListener("invisible", listener);
-		this.pcs.addPropertyChangeListener("partitionTableApplication", listener);
+		this.pcs.addPropertyChangeListener("partitionTableApplication",
+				listener);
 
 		// Recalculate completely if parent mart changes case.
 		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
@@ -435,7 +436,8 @@ public class DataSet extends Schema {
 			sqlFrom.append(" from ");
 			final StringBuffer sqlWhere = new StringBuffer();
 			sqlWhere.append(" where ");
-			String prevSch = null;
+			char currSuffix = 'a'-1;
+			final Map prevSuffixes = new HashMap();
 			for (final Iterator i = DataSet.this.getMainTable()
 					.getTransformationUnits().iterator(); i.hasNext()
 					&& positionMap.size() <= trueSelectedCols.size();) {
@@ -450,34 +452,28 @@ public class DataSet extends Schema {
 					final String selSch = selTab.getSchema().equals(schema) ? usablePartition
 							: selTab.getSchema().getDataLinkSchema();
 					Key prevKey = null;
-					Table prevTab = null;
 					if (tu instanceof JoinTable) {
 						prevKey = ((JoinTable) tu).getSchemaSourceKey();
-						prevTab = prevKey.getTable();
 						sqlFrom.append(',');
 					}
 					sqlFrom.append(selSch);
 					sqlFrom.append('.');
 					sqlFrom.append(selTab.getName());
+					sqlFrom.append(" as ");
+					sqlFrom.append(++currSuffix);
+					prevSuffixes.put(tu, new Character(currSuffix));
 					if (tu instanceof JoinTable) {
 						final JoinTable jtu = (JoinTable) tu;
-						final StringBuffer lhs = new StringBuffer();
-						final StringBuffer rhs = new StringBuffer();
+						final char lhs;
+						final char rhs;
+						final TransformationUnit prevTu = jtu.getPreviousUnit();
 						if (prevKey.equals(jtu.getSchemaRelation()
 								.getFirstKey())) {
-							lhs.append(prevSch);
-							rhs.append(selSch);
-							lhs.append('.');
-							rhs.append('.');
-							lhs.append(prevTab.getName());
-							rhs.append(selTab.getName());
+							lhs = ((Character)prevSuffixes.get(prevTu)).charValue();
+							rhs = currSuffix;
 						} else {
-							lhs.append(selSch);
-							rhs.append(prevSch);
-							lhs.append('.');
-							rhs.append('.');
-							lhs.append(selTab.getName());
-							rhs.append(prevTab.getName());
+							rhs = ((Character)prevSuffixes.get(prevTu)).charValue();
+							lhs = currSuffix;
 						}
 						// Append join info to where clause.
 						if (!sqlWhere.toString().equals(" where "))
@@ -487,14 +483,14 @@ public class DataSet extends Schema {
 								sqlWhere.append(" and ");
 							sqlWhere.append(prevKey.equals(jtu
 									.getSchemaRelation().getFirstKey()) ? lhs
-									.toString() : rhs.toString());
+									: rhs);
 							sqlWhere.append('.');
 							sqlWhere.append(((Column) prevKey.getColumns()[k])
 									.getName());
 							sqlWhere.append('=');
 							sqlWhere.append(prevKey.equals(jtu
 									.getSchemaRelation().getFirstKey()) ? rhs
-									.toString() : lhs.toString());
+									: lhs);
 							sqlWhere.append('.');
 							sqlWhere.append(((Column) jtu.getSchemaRelation()
 									.getOtherKey(jtu.getSchemaSourceKey())
@@ -507,9 +503,8 @@ public class DataSet extends Schema {
 										jtu.getSchemaRelationIteration());
 						if (rr != null) {
 							sqlWhere.append(" and ");
-							sqlWhere.append(rr.getSubstitutedExpression(lhs
-									.toString(), rhs.toString(), false, false,
-									jtu));
+							sqlWhere.append(rr.getSubstitutedExpression(""
+									+ lhs, "" + rhs, false, false, jtu));
 						}
 					}
 					// Add any table restrictions to where clause.
@@ -519,8 +514,8 @@ public class DataSet extends Schema {
 					if (rt != null) {
 						if (!sqlWhere.toString().equals(" where "))
 							sqlWhere.append(" and ");
-						sqlWhere.append(rt.getSubstitutedExpression(selSch
-								+ "." + selTab.getName()));
+						sqlWhere.append(rt.getSubstitutedExpression(""
+								+ currSuffix));
 					}
 					// If any unit columns match selected columns,
 					// add them to the select statement and their
@@ -534,16 +529,13 @@ public class DataSet extends Schema {
 							final String col = (String) entry.getKey();
 							if (nextCol > 1)
 								sqlSel.append(',');
-							sqlSel.append(selSch);
-							sqlSel.append('.');
-							sqlSel.append(selTab.getName());
+							sqlSel.append(currSuffix);
 							sqlSel.append('.');
 							sqlSel.append(col);
 							positionMap.put(new Integer(nextCol++), dsCol
 									.getName());
 						}
 					}
-					prevSch = selSch;
 				} else
 					throw new PartitionException(Resources
 							.get("cannotDoBasicSQL"));
@@ -1064,7 +1056,7 @@ public class DataSet extends Schema {
 					.getName())).entrySet().iterator(); j.hasNext();) {
 				final Map.Entry entry = (Map.Entry) j.next();
 				// entry is propertyName -> Map{columnName, Object}}
-				((Map)entry.getValue()).remove(deadCol.getName());
+				((Map) entry.getValue()).remove(deadCol.getName());
 			}
 		}
 
