@@ -187,6 +187,19 @@ public class Table implements Comparable, TransactionListener {
 	}
 
 	/**
+	 * Drop modifications for the given dataset and optional table. 
+	 * @param dataset dataset
+	 * @param tableKey table key - <tt>null</tt> for all tables.
+	 */
+	public void dropMods(final DataSet dataset, String tableKey) {
+		// Drop all related mods.
+		if (tableKey == null)
+			this.mods.remove(dataset);
+		else
+			((Map)this.mods.get(dataset)).remove(tableKey);
+	}
+	
+	/**
 	 * This contains the set of modifications to this schema that apply to a
 	 * particular dataset and table (null table means all tables in dataset).
 	 * 

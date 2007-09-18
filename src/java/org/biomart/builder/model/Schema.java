@@ -256,6 +256,14 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				throw new TransactionException(e);
 			}
 	}
+	
+	/**
+	 * Indicate that a table has been dropped.
+	 * @param table the table that has been dropped.
+	 */
+	protected void tableDropped(final Table table) {
+		// Do nothing here.
+	}
 
 	private synchronized void recalculateCaches() {
 		final Collection newTables = new HashSet(this.tables.values());
@@ -268,8 +276,11 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			// Identify new ones.
 			newTables.removeAll(this.tableCache);
 			// Drop dropped ones.
-			for (final Iterator i = dropped.iterator(); i.hasNext();)
-				this.tableCache.remove(i.next());
+			for (final Iterator i = dropped.iterator(); i.hasNext();) {
+				final Table table = (Table)i.next();
+				this.tableDropped(table);
+				this.tableCache.remove(table);
+			}
 			// Add added ones.
 			for (final Iterator i = newTables.iterator(); i.hasNext();) {
 				final Table table = (Table) i.next();

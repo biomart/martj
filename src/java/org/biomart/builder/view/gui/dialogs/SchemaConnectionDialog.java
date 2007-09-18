@@ -24,6 +24,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -174,11 +175,16 @@ public class SchemaConnectionDialog extends TransactionalDialog {
 				// General stuff for all schema types, including populating
 				// the name combo-box with all historical schema objects
 				// of the same class as the currently selected type.
+				// We have to reverse this otherwise the last-accessed (ie.
+				// last-added) item gets moved to the top of the list and
+				// the whole list is reversed simply by displaying it.
 				SchemaConnectionDialog.this.name.removeAllItems();
-				for (final Iterator i = Settings.getHistoryNamesForClass(
+				final List names = new ArrayList(Settings.getHistoryNamesForClass(
 						SchemaConnectionDialog.this.connectionPanel
-								.getSchemaClass()).iterator(); i.hasNext();)
-					SchemaConnectionDialog.this.name.addItem(i.next());
+						.getSchemaClass()));
+				Collections.reverse(names);
+				for (final Iterator i = names.iterator(); i.hasNext();)
+					SchemaConnectionDialog.this.name.addItem(i.next()); 
 				SchemaConnectionDialog.this.name.setSelectedItem(null);
 			}
 		});

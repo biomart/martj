@@ -202,6 +202,14 @@ public class Mart implements TransactionListener {
 						} catch (final PartitionException pe) {
 							// Ignore.
 						}
+						// Also remove all related mods in rels and tbls.
+						for (final Iterator j = Mart.this.schemas.values().iterator(); j.hasNext(); ) {
+							final Schema sch = (Schema)j.next();
+							for (final Iterator k = sch.getTables().values().iterator(); k.hasNext(); )
+								((Table)k.next()).dropMods(deadDS, null);
+							for (final Iterator k = sch.getRelations().iterator(); k.hasNext(); )
+								((Relation)k.next()).dropMods(deadDS, null);
+						}
 						Mart.this.datasetCache.remove(deadDS);
 					}
 					// Add added ones.

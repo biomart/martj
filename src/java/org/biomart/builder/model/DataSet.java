@@ -202,6 +202,20 @@ public class DataSet extends Schema {
 		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
 	}
 
+	protected void tableDropped(final Table table) {
+		for (final Iterator j = this.getMart().getSchemas().values().iterator(); j
+				.hasNext();) {
+			final Schema sch = (Schema) j.next();
+			for (final Iterator k = sch.getTables().values().iterator(); k
+					.hasNext();)
+				((Table) k.next()).dropMods((DataSet) table.getSchema(), table
+						.getName());
+			for (final Iterator k = sch.getRelations().iterator(); k.hasNext();)
+				((Relation) k.next()).dropMods((DataSet) table.getSchema(),
+						table.getName());
+		}
+	}
+
 	public void transactionEnded(final TransactionEvent evt)
 			throws TransactionException {
 		try {
@@ -436,7 +450,7 @@ public class DataSet extends Schema {
 			sqlFrom.append(" from ");
 			final StringBuffer sqlWhere = new StringBuffer();
 			sqlWhere.append(" where ");
-			char currSuffix = 'a'-1;
+			char currSuffix = 'a' - 1;
 			final Map prevSuffixes = new HashMap();
 			for (final Iterator i = DataSet.this.getMainTable()
 					.getTransformationUnits().iterator(); i.hasNext()
@@ -469,10 +483,12 @@ public class DataSet extends Schema {
 						final TransformationUnit prevTu = jtu.getPreviousUnit();
 						if (prevKey.equals(jtu.getSchemaRelation()
 								.getFirstKey())) {
-							lhs = ((Character)prevSuffixes.get(prevTu)).charValue();
+							lhs = ((Character) prevSuffixes.get(prevTu))
+									.charValue();
 							rhs = currSuffix;
 						} else {
-							rhs = ((Character)prevSuffixes.get(prevTu)).charValue();
+							rhs = ((Character) prevSuffixes.get(prevTu))
+									.charValue();
 							lhs = currSuffix;
 						}
 						// Append join info to where clause.
