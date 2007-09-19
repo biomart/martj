@@ -556,9 +556,9 @@
 			<column id="523" name="db_file"/>
 			<column id="524" name="program_file"/>
 			<column id="525" name="program_version"/>
-			<column id="526" name="module"/>
-			<column id="527" name="gff_feature"/>
-			<column id="528" name="program"/>
+			<column id="526" name="gff_feature"/>
+			<column id="527" name="program"/>
+			<column id="528" name="module"/>
 			<primaryKey id="529" columnIds="515" status="INFERRED"/>
 		</table>
 		<table id="530" name="protein_tree_node" ignore="false">
@@ -1242,68 +1242,7 @@
 		<maskedRelation tableKey="genomic_align" relationId="1161"/>
 	</dataset>
 	<dataset name="homology" centralTableId="538" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
-		<mergedRelation relationId="1080"/>
 		<renamedTable tableKey="homology__homology_member" newName="homology_member"/>
-		<maskedColumn tableKey="homology" colKey="ds"/>
-		<maskedColumn tableKey="homology" colKey="dn"/>
-		<maskedColumn tableKey="homology" colKey="threshold_on_ds"/>
-		<maskedColumn tableKey="homology" colKey="node_id"/>
-		<maskedColumn tableKey="homology" colKey="subtype"/>
-		<maskedColumn tableKey="homology" colKey="lnl"/>
-		<maskedColumn tableKey="homology" colKey="s"/>
-		<maskedColumn tableKey="homology" colKey="description"/>
-		<maskedColumn tableKey="homology" colKey="n"/>
-		<maskedRelation tableKey="homology" relationId="1062"/>
-		<maskedRelation tableKey="homology" relationId="1063"/>
-		<maskedRelation tableKey="homology" relationId="1066"/>
-		<maskedRelation tableKey="homology" relationId="1068"/>
-		<maskedRelation tableKey="homology" relationId="1069"/>
-		<maskedRelation tableKey="homology" relationId="1070"/>
-		<maskedRelation tableKey="homology" relationId="1074"/>
-		<maskedRelation tableKey="homology" relationId="1075"/>
-		<maskedRelation tableKey="homology" relationId="1076"/>
-		<maskedRelation tableKey="homology" relationId="1078"/>
-		<maskedRelation tableKey="homology" relationId="1081"/>
-		<maskedRelation tableKey="homology" relationId="1082"/>
-		<maskedRelation tableKey="homology" relationId="1083"/>
-		<maskedRelation tableKey="homology" relationId="1084"/>
-		<maskedRelation tableKey="homology" relationId="1085"/>
-		<maskedRelation tableKey="homology" relationId="1088"/>
-		<maskedRelation tableKey="homology" relationId="1091"/>
-		<maskedRelation tableKey="homology" relationId="1093"/>
-		<maskedRelation tableKey="homology" relationId="1095"/>
-		<maskedRelation tableKey="homology" relationId="1096"/>
-		<maskedRelation tableKey="homology" relationId="1100"/>
-		<maskedRelation tableKey="homology" relationId="1101"/>
-		<maskedRelation tableKey="homology" relationId="1104"/>
-		<maskedRelation tableKey="homology" relationId="1105"/>
-		<maskedRelation tableKey="homology" relationId="1106"/>
-		<maskedRelation tableKey="homology" relationId="1109"/>
-		<maskedRelation tableKey="homology" relationId="1113"/>
-		<maskedRelation tableKey="homology" relationId="1114"/>
-		<maskedRelation tableKey="homology" relationId="1115"/>
-		<maskedRelation tableKey="homology" relationId="1117"/>
-		<maskedRelation tableKey="homology" relationId="1118"/>
-		<maskedRelation tableKey="homology" relationId="1121"/>
-		<maskedRelation tableKey="homology" relationId="1126"/>
-		<maskedRelation tableKey="homology" relationId="1128"/>
-		<maskedRelation tableKey="homology" relationId="1129"/>
-		<maskedRelation tableKey="homology" relationId="1130"/>
-		<maskedRelation tableKey="homology" relationId="1131"/>
-		<maskedRelation tableKey="homology" relationId="1136"/>
-		<maskedRelation tableKey="homology" relationId="1137"/>
-		<maskedRelation tableKey="homology" relationId="1140"/>
-		<maskedRelation tableKey="homology" relationId="1143"/>
-		<maskedRelation tableKey="homology" relationId="1145"/>
-		<maskedRelation tableKey="homology" relationId="1148"/>
-		<maskedRelation tableKey="homology" relationId="1149"/>
-		<maskedRelation tableKey="homology" relationId="1151"/>
-		<maskedRelation tableKey="homology" relationId="1153"/>
-		<maskedRelation tableKey="homology" relationId="1154"/>
-		<maskedRelation tableKey="homology" relationId="1155"/>
-		<maskedRelation tableKey="homology" relationId="1156"/>
-		<maskedRelation tableKey="homology" relationId="1158"/>
-		<maskedRelation tableKey="homology" relationId="1161"/>
 	</dataset>
 	<dataset name="species_set" centralTableId="485" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
 		<restrictedTable tableKey="species_set" tableId="1" aliasColumnIds="2" aliasNames="col1" expression=":col1=&quot;ENSEMBL_ORTHOLOGUES&quot;" hard="true"/>

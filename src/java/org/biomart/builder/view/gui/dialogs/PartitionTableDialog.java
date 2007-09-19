@@ -1129,8 +1129,10 @@ public class PartitionTableDialog extends TransactionalDialog {
 		}
 		Transaction.resetVisibleModified();
 		// Open selected table with dimension selected in appliedList.
-		new PartitionTableDialog((DataSet) mart.getDataSets().get(
-				pta.getPartitionTable().getName()), dimension).setVisible(true);
+		final PartitionTableDialog dialog = new PartitionTableDialog((DataSet) mart.getDataSets().get(
+				pta.getPartitionTable().getName()), dimension);
+		dialog.setVisible(true);
+		dialog.dispose();
 	}
 
 	/**
@@ -1243,7 +1245,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 		}
 		Transaction.resetVisibleModified();
 		// Open selected table with dimension selected in appliedList.
-		new PartitionTableDialog((DataSet) mart.getDataSets().get(
-				pta.getPartitionTable().getName()), dataset).setVisible(true);
+		final PartitionTableDialog dialog = new PartitionTableDialog((DataSet) mart.getDataSets().get(
+				pta.getPartitionTable().getName()), dataset);
+		dialog.setVisible(true);
+		dialog.dispose();
 	}
 }

@@ -47,7 +47,6 @@ import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * The partition table interface allows lists of values to be stored, with those
@@ -73,12 +72,6 @@ public abstract class PartitionTable implements TransactionListener {
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
 			PartitionTable.this.setDirectModified(true);
-		}
-	};
-
-	private final PropertyChangeListener deadListener = new PropertyChangeListener() {
-		public void propertyChange(final PropertyChangeEvent evt) {
-			PartitionTable.this.needsClearDead = true;
 		}
 	};
 
@@ -135,8 +128,6 @@ public abstract class PartitionTable implements TransactionListener {
 
 	private final int uniqueId = PartitionTable.ID_SERIES++;
 
-	private boolean needsClearDead = false;
-
 	/**
 	 * Create a new, empty, partition table.
 	 */
@@ -181,20 +172,7 @@ public abstract class PartitionTable implements TransactionListener {
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		if (this.needsClearDead)
-			// Clear out any dead applications from modified datasets.
-			for (final Iterator i = PartitionTable.this.dmApplications
-					.entrySet().iterator(); i.hasNext();) {
-				final Map.Entry entry2 = (Map.Entry) i.next();
-				if (((DataSet) entry2.getKey()).isDirectModified())
-					for (final Iterator j = ((Map) entry2.getValue()).values()
-							.iterator(); j.hasNext();) {
-						final WeakReference weakRef = (WeakReference) j.next();
-						if (weakRef.get() == null)
-							j.remove();
-					}
-			}
-		this.needsClearDead = false;
+		// Do nothing.
 	}
 
 	/**
@@ -531,10 +509,6 @@ public abstract class PartitionTable implements TransactionListener {
 					.setPartitionTableApplication(appl);
 		else
 			ds.setPartitionTableApplication(appl);
-		// Listen to appl and modification events.
-		appl.addPropertyChangeListener(this.listener);
-		ds.addPropertyChangeListener("directModified",
-				new WeakPropertyChangeListener(ds, this.deadListener));
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, appl);
 	}
@@ -552,10 +526,13 @@ public abstract class PartitionTable implements TransactionListener {
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
 			return;
-		if (!dimension.equals(PartitionTable.NO_DIMENSION))
+		((Map) this.dmApplications.get(ds)).remove(dimension);
+		if (((Map)this.dmApplications.get(ds)).isEmpty())
+			this.dmApplications.remove(ds);
+		if (!dimension.equals(PartitionTable.NO_DIMENSION)) 
 			((DataSetTable) ds.getTables().get(dimension))
 					.setPartitionTableApplication(null);
-		else
+		else 
 			ds.setPartitionTableApplication(null);
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, null);

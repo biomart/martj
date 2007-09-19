@@ -203,17 +203,23 @@ public class DataSet extends Schema {
 	}
 
 	protected void tableDropped(final Table table) {
+		final DataSetTable dsTable = (DataSetTable)table;
+		// Remove all mods.
 		for (final Iterator j = this.getMart().getSchemas().values().iterator(); j
 				.hasNext();) {
 			final Schema sch = (Schema) j.next();
 			for (final Iterator k = sch.getTables().values().iterator(); k
 					.hasNext();)
-				((Table) k.next()).dropMods((DataSet) table.getSchema(), table
+				((Table) k.next()).dropMods(dsTable.getDataSet(), dsTable
 						.getName());
 			for (final Iterator k = sch.getRelations().iterator(); k.hasNext();)
-				((Relation) k.next()).dropMods((DataSet) table.getSchema(),
-						table.getName());
+				((Relation) k.next()).dropMods(dsTable.getDataSet(),
+						dsTable.getName());
 		}
+		// Remove all partition table applications from this dimension.
+		final PartitionTableApplication pta = dsTable.getPartitionTableApplication();
+		if (pta!=null)
+			pta.getPartitionTable().removeFrom(dsTable.getDataSet(), dsTable.getName());
 	}
 
 	public void transactionEnded(final TransactionEvent evt)

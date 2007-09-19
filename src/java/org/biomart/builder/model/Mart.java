@@ -42,6 +42,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.UnrolledColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
@@ -210,6 +211,17 @@ public class Mart implements TransactionListener {
 							for (final Iterator k = sch.getRelations().iterator(); k.hasNext(); )
 								((Relation)k.next()).dropMods(deadDS, null);
 						}
+						// Remove all partition table applications.
+						PartitionTableApplication pta = deadDS.getPartitionTableApplication();
+						if (pta!=null)
+							pta.getPartitionTable().removeFrom(deadDS, null);
+						for (final Iterator j = deadDS.getTables().values().iterator(); j.hasNext(); ) {
+							final DataSetTable dsTable = (DataSetTable)j.next();
+							pta = dsTable.getPartitionTableApplication();
+							if (pta!=null)
+								pta.getPartitionTable().removeFrom(deadDS, dsTable.getName());
+						}
+						// Remove from cache.
 						Mart.this.datasetCache.remove(deadDS);
 					}
 					// Add added ones.
