@@ -25,7 +25,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,6 +52,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.undo.AbstractUndoableEdit;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
 
 import org.biomart.builder.controller.MartBuilderXML;
 import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
@@ -58,9 +66,12 @@ import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.MartRunnerConnectionDialog;
 import org.biomart.builder.view.gui.dialogs.MartRunnerMonitorDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
+import org.biomart.common.exceptions.TransactionException;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.Transaction.TransactionEvent;
+import org.biomart.common.utils.Transaction.TransactionListener;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.SwingWorker;
 import org.biomart.common.view.gui.dialogs.ProgressDialog;
@@ -76,7 +87,7 @@ import org.biomart.common.view.gui.dialogs.ViewTextDialog;
  *          $Author$
  * @since 0.5
  */
-public class MartTabSet extends JTabbedPane {
+public class MartTabSet extends JTabbedPane implements TransactionListener {
 	private static final long serialVersionUID = 1;
 
 	private MartBuilder martBuilder;
@@ -89,6 +100,8 @@ public class MartTabSet extends JTabbedPane {
 
 	private JFileChooser xmlFileChooser;
 
+	private final UndoManager undoManager = new UndoManager();
+
 	/**
 	 * Creates a new set of tabs and associates them with a given MartBuilder
 	 * GUI.
@@ -100,6 +113,8 @@ public class MartTabSet extends JTabbedPane {
 		// Tabbed-pane stuff first.
 		super();
 
+		Transaction.addTransactionListener(this);
+		
 		// Create the file chooser for opening MartBuilder XML files.
 		this.xmlFileChooser = new JFileChooser() {
 			private static final long serialVersionUID = 1L;
@@ -135,6 +150,103 @@ public class MartTabSet extends JTabbedPane {
 		this.martBuilder = martBuilder;
 		this.martModifiedStatus = new HashMap();
 		this.martXMLFile = new HashMap();
+	}
+
+	/**
+	 * Get the undo manager for this tabset.
+	 * @return the undo manager.
+	 */
+	public UndoManager getUndoManager() {
+		return this.undoManager;
+	}
+	
+	private Object stateBeforeTransaction = null;
+
+	/**
+	 * Save the application state for undo/redo and return that state as an
+	 * object.
+	 * 
+	 * @return the state.
+	 */
+	public Object saveState() {
+		try {
+			final ByteArrayOutputStream so = new ByteArrayOutputStream();
+			final ObjectOutputStream oo = new ObjectOutputStream(so);
+			// FIXME At some point actually work out how to do this.
+			oo.close();
+			return so.toByteArray();
+		} catch (final Exception e) {
+			// Ignore.
+			return null;
+		}
+	}
+
+	/**
+	 * Restore the application state from undo/redo.
+	 * 
+	 * @param state
+	 *            the state to restore.
+	 */
+	public void restoreState(final Object state) {
+		try {
+			final ByteArrayInputStream si = new ByteArrayInputStream(
+					(byte[]) state);
+			final ObjectInputStream oi = new ObjectInputStream(si);
+			// FIXME At some point actually work out how to do this.
+			oi.close();
+		} catch (final Exception e) {
+			// Ignore.
+		}
+	}
+
+	public boolean isDirectModified() {
+		return false;
+	}
+
+	public boolean isVisibleModified() {
+		return false;
+	}
+
+	public void setDirectModified(final boolean modified) {
+		// Ignore.
+	}
+
+	public void setVisibleModified(final boolean modified) {
+		// Ignore.
+	}
+
+	public void transactionEnded(final TransactionEvent evt)
+			throws TransactionException {
+		if (this.stateBeforeTransaction != null) {
+			final Object preservedStateBeforeTransaction = this.stateBeforeTransaction;
+			final Object stateAfterTransaction = this.saveState();
+			this.undoManager.addEdit(new AbstractUndoableEdit() {
+				private static final long serialVersionUID = 1L;
+
+				public void redo() throws CannotRedoException {
+					MartTabSet.this.restoreState(stateAfterTransaction);
+				}
+
+				public void undo() throws CannotUndoException {
+					MartTabSet.this
+							.restoreState(preservedStateBeforeTransaction);
+				}
+
+			});
+		}
+		this.stateBeforeTransaction = null;
+	}
+
+	public void transactionResetDirectModified() {
+		// Ignore.
+	}
+
+	public void transactionResetVisibleModified() {
+		// Ignore.
+	}
+
+	public void transactionStarted(final TransactionEvent evt) {
+		this.stateBeforeTransaction = this.saveState();
 	}
 
 	/**

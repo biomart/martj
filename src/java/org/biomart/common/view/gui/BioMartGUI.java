@@ -210,7 +210,7 @@ public abstract class BioMartGUI extends JFrame {
 
 		// Set a sensible size.
 		this.setSize(this.getToolkit().getScreenSize());
-	}
+	}	
 
 	/**
 	 * Starts the application.

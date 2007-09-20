@@ -494,8 +494,8 @@ public abstract class PartitionTable implements TransactionListener {
 	 * @param appl
 	 *            the application definition (null for default).
 	 */
-	public void applyTo(final DataSet ds,
-			String dimension, PartitionTableApplication appl) {
+	public void applyTo(final DataSet ds, String dimension,
+			PartitionTableApplication appl) {
 		if (dimension == null || dimension.equals(PartitionTable.NO_DIMENSION))
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
@@ -527,12 +527,12 @@ public abstract class PartitionTable implements TransactionListener {
 		if (!this.dmApplications.containsKey(ds))
 			return;
 		((Map) this.dmApplications.get(ds)).remove(dimension);
-		if (((Map)this.dmApplications.get(ds)).isEmpty())
+		if (((Map) this.dmApplications.get(ds)).isEmpty())
 			this.dmApplications.remove(ds);
-		if (!dimension.equals(PartitionTable.NO_DIMENSION)) 
+		if (!dimension.equals(PartitionTable.NO_DIMENSION))
 			((DataSetTable) ds.getTables().get(dimension))
 					.setPartitionTableApplication(null);
-		else 
+		else
 			ds.setPartitionTableApplication(null);
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, null);
@@ -791,8 +791,8 @@ public abstract class PartitionTable implements TransactionListener {
 		 */
 		public void setRegexMatch(final String regexMatch) {
 			final String oldValue = this.regexMatch;
-			if (oldValue == regexMatch
-					|| (oldValue != null && oldValue.equals(regexMatch)))
+			if (oldValue == regexMatch || oldValue != null
+					&& oldValue.equals(regexMatch))
 				return;
 			this.regexMatch = regexMatch;
 			this.pcs.firePropertyChange("regexMatch", oldValue, regexMatch);
@@ -816,8 +816,8 @@ public abstract class PartitionTable implements TransactionListener {
 		 */
 		public void setRegexReplace(final String regexReplace) {
 			final String oldValue = this.regexReplace;
-			if (oldValue == regexReplace
-					|| (oldValue != null && oldValue.equals(regexReplace)))
+			if (oldValue == regexReplace || oldValue != null
+					&& oldValue.equals(regexReplace))
 				return;
 			this.regexReplace = regexReplace;
 			this.pcs.firePropertyChange("regexReplace", oldValue, regexReplace);
@@ -1407,11 +1407,10 @@ public abstract class PartitionTable implements TransactionListener {
 			 * @param namePartitionCol
 			 *            the namePartitionCol to set
 			 */
-			public void setNamePartitionCol(String namePartitionCol) {
+			public void setNamePartitionCol(final String namePartitionCol) {
 				final String oldValue = this.namePartitionCol;
-				if (oldValue == namePartitionCol
-						|| (oldValue != null && oldValue
-								.equals(namePartitionCol)))
+				if (oldValue == namePartitionCol || oldValue != null
+						&& oldValue.equals(namePartitionCol))
 					return;
 				this.namePartitionCol = namePartitionCol;
 				this.pcs.firePropertyChange("namePartitionCol", oldValue,
@@ -1422,10 +1421,10 @@ public abstract class PartitionTable implements TransactionListener {
 			 * @param partitionCol
 			 *            the partitionCol to set
 			 */
-			public void setPartitionCol(String partitionCol) {
+			public void setPartitionCol(final String partitionCol) {
 				final String oldValue = this.partitionCol;
-				if (oldValue == partitionCol
-						|| (oldValue != null && oldValue.equals(partitionCol)))
+				if (oldValue == partitionCol || oldValue != null
+						&& oldValue.equals(partitionCol))
 					return;
 				this.partitionCol = partitionCol;
 				this.pcs.firePropertyChange("partitionCol", oldValue,
@@ -1436,10 +1435,10 @@ public abstract class PartitionTable implements TransactionListener {
 			 * @param rootDataSetCol
 			 *            the rootDataSetCol to set
 			 */
-			public void setRootDataSetCol(String rootDataSetCol) {
+			public void setRootDataSetCol(final String rootDataSetCol) {
 				final String oldValue = this.rootDataSetCol;
-				if (oldValue == rootDataSetCol
-						|| (oldValue != null && oldValue.equals(rootDataSetCol)))
+				if (oldValue == rootDataSetCol || oldValue != null
+						&& oldValue.equals(rootDataSetCol))
 					return;
 				this.rootDataSetCol = rootDataSetCol;
 				this.pcs.firePropertyChange("rootDataSetCol", oldValue,
@@ -1450,10 +1449,10 @@ public abstract class PartitionTable implements TransactionListener {
 			 * @param relation
 			 *            the relation to set
 			 */
-			public void setRelation(Relation relation) {
+			public void setRelation(final Relation relation) {
 				final Relation oldValue = this.relation;
-				if (oldValue == relation
-						|| (oldValue != null && oldValue.equals(relation)))
+				if (oldValue == relation || oldValue != null
+						&& oldValue.equals(relation))
 					return;
 				this.relation = relation;
 				this.pcs.firePropertyChange("relation", oldValue, relation);
@@ -1467,14 +1466,14 @@ public abstract class PartitionTable implements TransactionListener {
 						* (this.relation == null ? 1 : this.relation.hashCode());
 			}
 
-			public boolean equals(Object o) {
+			public boolean equals(final Object o) {
 				if (!(o instanceof PartitionAppliedRow))
 					return false;
 				final PartitionAppliedRow them = (PartitionAppliedRow) o;
 				return this.namePartitionCol.equals(them.namePartitionCol)
 						&& this.partitionCol.equals(them.partitionCol)
 						&& this.rootDataSetCol.equals(them.rootDataSetCol)
-						&& (this.relation == them.relation);
+						&& this.relation == them.relation;
 			}
 		}
 	}

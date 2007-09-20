@@ -162,7 +162,7 @@ public abstract class TransformationUnit {
 		 * @return <tt>true</tt> if it does.
 		 */
 		protected boolean columnMatches(final Column column, DataSetColumn dsCol) {
-			if (dsCol==null)
+			if (dsCol == null)
 				return false;
 			while (dsCol instanceof InheritedColumn)
 				dsCol = ((InheritedColumn) dsCol).getInheritedColumn();
@@ -190,7 +190,7 @@ public abstract class TransformationUnit {
 						.iterator(); i.hasNext() && candidate == null;) {
 					final Column entry = (Column) i.next();
 					if (entry instanceof DataSetColumn) {
-						DataSetColumn dsCol = (DataSetColumn) entry;
+						final DataSetColumn dsCol = (DataSetColumn) entry;
 						candidate = dsCol;
 						if (!this.columnMatches(column, candidate))
 							candidate = null;

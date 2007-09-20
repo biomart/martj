@@ -36,6 +36,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.undo.UndoManager;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
@@ -445,8 +446,9 @@ public class MartBuilder extends BioMartGUI {
 			}
 			final int firstRecentFileEntry = fileMenu.getMenuComponentCount();
 
-			// Adds the menus to the menu bar.
-			this.add(fileMenu);
+			// Construct the edit menu.
+			final JMenu editMenu = new JMenu(Resources.get("editMenuTitle"));
+			editMenu.setMnemonic(Resources.get("editMenuMnemonic").charAt(0));
 
 			// Construct the mart menu.
 			final JMenu martMenu = new JMenu(Resources.get("martMenuTitle"));
@@ -614,6 +616,44 @@ public class MartBuilder extends BioMartGUI {
 					}
 				}
 			});
+			editMenu.addMenuListener(new MenuListener() {
+				public void menuCanceled(final MenuEvent e) {
+				} // Interface requirement.
+
+				public void menuDeselected(final MenuEvent e) {
+				} // Interface requirement.
+
+				public void menuSelected(final MenuEvent e) {
+					// Wipe the existing undo+redo entries.
+					editMenu.removeAll();
+					// Then, re-insert them based on the current undo manager
+					// entries.
+					final UndoManager undoManager = MartBuilderMenuBar.this
+							.getMartBuilder().martTabSet.getUndoManager();
+					final JMenuItem undo = new JMenuItem(undoManager
+							.getUndoPresentationName());
+					undo.setMnemonic(undoManager.getUndoPresentationName()
+							.charAt(0));
+					undo.addActionListener(new ActionListener() {
+						public void actionPerformed(final ActionEvent e) {
+							undoManager.undo();
+						}
+					});
+					undo.setEnabled(undoManager.canUndo());
+					editMenu.add(undo);
+					final JMenuItem redo = new JMenuItem(undoManager
+							.getRedoPresentationName());
+					redo.setMnemonic(undoManager.getRedoPresentationName()
+							.charAt(0));
+					redo.addActionListener(new ActionListener() {
+						public void actionPerformed(final ActionEvent e) {
+							undoManager.redo();
+						}
+					});
+					redo.setEnabled(undoManager.canRedo());
+					editMenu.add(redo);
+				}
+			});
 			martMenu.addMenuListener(new MenuListener() {
 				public void menuCanceled(final MenuEvent e) {
 				} // Interface requirement.
@@ -686,7 +726,7 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
-					boolean hasMart = true;
+					final boolean hasMart = true;
 					MartBuilderMenuBar.this.createDatasets
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -764,6 +804,8 @@ public class MartBuilder extends BioMartGUI {
 			});
 
 			// Adds the menus to the menu bar.
+			this.add(fileMenu);
+			//this.add(editMenu); // FIXME Uncomment this when implemented.
 			this.add(martMenu);
 			this.add(schemaMenu);
 			this.add(datasetMenu);

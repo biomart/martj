@@ -203,7 +203,7 @@ public class DataSet extends Schema {
 	}
 
 	protected void tableDropped(final Table table) {
-		final DataSetTable dsTable = (DataSetTable)table;
+		final DataSetTable dsTable = (DataSetTable) table;
 		// Remove all mods.
 		for (final Iterator j = this.getMart().getSchemas().values().iterator(); j
 				.hasNext();) {
@@ -213,13 +213,15 @@ public class DataSet extends Schema {
 				((Table) k.next()).dropMods(dsTable.getDataSet(), dsTable
 						.getName());
 			for (final Iterator k = sch.getRelations().iterator(); k.hasNext();)
-				((Relation) k.next()).dropMods(dsTable.getDataSet(),
-						dsTable.getName());
+				((Relation) k.next()).dropMods(dsTable.getDataSet(), dsTable
+						.getName());
 		}
 		// Remove all partition table applications from this dimension.
-		final PartitionTableApplication pta = dsTable.getPartitionTableApplication();
-		if (pta!=null)
-			pta.getPartitionTable().removeFrom(dsTable.getDataSet(), dsTable.getName());
+		final PartitionTableApplication pta = dsTable
+				.getPartitionTableApplication();
+		if (pta != null)
+			pta.getPartitionTable().removeFrom(dsTable.getDataSet(),
+					dsTable.getName());
 	}
 
 	public void transactionEnded(final TransactionEvent evt)
@@ -424,8 +426,8 @@ public class DataSet extends Schema {
 		Connection conn = null;
 		final List rows = new ArrayList();
 		try {
-			final String usablePartition = (schemaPartition != null && jdbc
-					.getPartitions().containsKey(schemaPartition)) ? schemaPartition
+			final String usablePartition = schemaPartition != null
+					&& jdbc.getPartitions().containsKey(schemaPartition) ? schemaPartition
 					: jdbc.getDataLinkSchema();
 			conn = jdbc.getConnection(schemaPartition);
 			// Construct SQL statement.

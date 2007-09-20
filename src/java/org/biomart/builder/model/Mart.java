@@ -204,22 +204,29 @@ public class Mart implements TransactionListener {
 							// Ignore.
 						}
 						// Also remove all related mods in rels and tbls.
-						for (final Iterator j = Mart.this.schemas.values().iterator(); j.hasNext(); ) {
-							final Schema sch = (Schema)j.next();
-							for (final Iterator k = sch.getTables().values().iterator(); k.hasNext(); )
-								((Table)k.next()).dropMods(deadDS, null);
-							for (final Iterator k = sch.getRelations().iterator(); k.hasNext(); )
-								((Relation)k.next()).dropMods(deadDS, null);
+						for (final Iterator j = Mart.this.schemas.values()
+								.iterator(); j.hasNext();) {
+							final Schema sch = (Schema) j.next();
+							for (final Iterator k = sch.getTables().values()
+									.iterator(); k.hasNext();)
+								((Table) k.next()).dropMods(deadDS, null);
+							for (final Iterator k = sch.getRelations()
+									.iterator(); k.hasNext();)
+								((Relation) k.next()).dropMods(deadDS, null);
 						}
 						// Remove all partition table applications.
-						PartitionTableApplication pta = deadDS.getPartitionTableApplication();
-						if (pta!=null)
+						PartitionTableApplication pta = deadDS
+								.getPartitionTableApplication();
+						if (pta != null)
 							pta.getPartitionTable().removeFrom(deadDS, null);
-						for (final Iterator j = deadDS.getTables().values().iterator(); j.hasNext(); ) {
-							final DataSetTable dsTable = (DataSetTable)j.next();
+						for (final Iterator j = deadDS.getTables().values()
+								.iterator(); j.hasNext();) {
+							final DataSetTable dsTable = (DataSetTable) j
+									.next();
 							pta = dsTable.getPartitionTableApplication();
-							if (pta!=null)
-								pta.getPartitionTable().removeFrom(deadDS, dsTable.getName());
+							if (pta != null)
+								pta.getPartitionTable().removeFrom(deadDS,
+										dsTable.getName());
 						}
 						// Remove from cache.
 						Mart.this.datasetCache.remove(deadDS);
@@ -1169,14 +1176,13 @@ public class Mart implements TransactionListener {
 		// Locate the unroll dimension based on child rel and unroll it
 		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();) {
 			final DataSetTable dst = (DataSetTable) i.next();
-			if (dst.getFocusRelation() != null) {
+			if (dst.getFocusRelation() != null)
 				if (dst.getFocusRelation().equals(parentRel))
 					dst.getFocusRelation().setMergeRelation(ds, true);
 				else if (dst.getFocusRelation().equals(childRel))
 					dst.getFocusRelation().setUnrolledRelation(ds, nNamingCol);
 				else
 					dst.setDimensionMasked(true);
-			}
 		}
 		ds.synchronise(); // Must do again to update dimensions.
 		// Locate all unimportant relations and mask them.

@@ -640,6 +640,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * A realised relation is a generic relation with a specific iteration.
 	 */
 	public static class RealisedRelation extends Relation {
+		private static final long serialVersionUID = 1L;
 
 		private final Relation relation;
 
@@ -720,6 +721,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * Realised tables are copies of those found in real schemas.
 	 */
 	public static class RealisedTable extends Table {
+		private static final long serialVersionUID = 1L;
 
 		private final Table table;
 
@@ -775,6 +777,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * A fake mart does not really exist.
 	 */
 	public static class FakeMart extends Mart {
+		private static final long serialVersionUID = 1L;
 		/**
 		 * Construct a fake mart.
 		 */
@@ -787,6 +790,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * A fake schema does not really exist.
 	 */
 	public static class FakeSchema extends Schema {
+		private static final long serialVersionUID = 1L;
 		/**
 		 * Construct a fake schema with the given name.
 		 * 
@@ -802,6 +806,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * A fake table does not really exist.
 	 */
 	public static class FakeTable extends Table {
+		private static final long serialVersionUID = 1L;
 		/**
 		 * Construct a fake table with the given name in the given schema.
 		 * 
