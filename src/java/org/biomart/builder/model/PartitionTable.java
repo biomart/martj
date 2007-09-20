@@ -1235,7 +1235,7 @@ public abstract class PartitionTable implements TransactionListener {
 				}
 			};
 
-			private int compound;
+			private int compound = 1;
 
 			private String partitionCol;
 
@@ -1372,7 +1372,12 @@ public abstract class PartitionTable implements TransactionListener {
 			 *            the compound to set
 			 */
 			public void setCompound(final int compound) {
+				final int oldValue = this.compound;
+				if (oldValue == compound)
+					return;
 				this.compound = compound;
+				this.pcs.firePropertyChange("compound", oldValue,
+						compound);
 			}
 
 			/**
@@ -1460,9 +1465,12 @@ public abstract class PartitionTable implements TransactionListener {
 			}
 
 			public int hashCode() {
-				return this.namePartitionCol.hashCode()
-						* this.partitionCol.hashCode()
-						* this.rootDataSetCol.hashCode()
+				return (this.namePartitionCol == null ? 1
+						: this.namePartitionCol.hashCode())
+						* (this.partitionCol == null ? 1 : this.partitionCol
+								.hashCode())
+						* (this.rootDataSetCol == null ? 1
+								: this.rootDataSetCol.hashCode())
 						* (this.relation == null ? 1 : this.relation.hashCode());
 			}
 
@@ -1470,10 +1478,14 @@ public abstract class PartitionTable implements TransactionListener {
 				if (!(o instanceof PartitionAppliedRow))
 					return false;
 				final PartitionAppliedRow them = (PartitionAppliedRow) o;
-				return this.namePartitionCol.equals(them.namePartitionCol)
-						&& this.partitionCol.equals(them.partitionCol)
-						&& this.rootDataSetCol.equals(them.rootDataSetCol)
-						&& this.relation == them.relation;
+				return (this.namePartitionCol == them.namePartitionCol || (this.namePartitionCol != null && this.namePartitionCol
+						.equals(them.namePartitionCol)))
+						&& (this.partitionCol == them.partitionCol || (this.partitionCol != null && this.partitionCol
+								.equals(them.partitionCol)))
+						&& (this.rootDataSetCol == them.rootDataSetCol || (this.rootDataSetCol != null && this.rootDataSetCol
+								.equals(them.rootDataSetCol)))
+						&& (this.relation == them.relation || (this.relation != null && this.relation
+								.equals(them.relation)));
 			}
 		}
 	}

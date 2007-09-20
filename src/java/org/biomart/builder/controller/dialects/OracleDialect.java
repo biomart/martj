@@ -128,7 +128,7 @@ public class OracleDialect extends DatabaseDialect {
 		sb.append(action.getUnrollNameCol());
 		sb.append(',');
 		sb.append(action.getUnrollIterationCol());
-		sb.append(") select distinct ");
+		sb.append(") select distinct");
 		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
 			final String parentCol = (String)i.next();
 			if (parentCol.equals(action.getUnrollFKCol()))

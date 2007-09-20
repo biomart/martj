@@ -43,7 +43,9 @@ public class MartRunnerTestDialog extends JDialog {
 	 */
 	public static void showTests(final JobPlan jobPlan) {
 		// Open the dialog.
-		new MartRunnerTestDialog(jobPlan).setVisible(true);
+		final MartRunnerTestDialog dialog = new MartRunnerTestDialog(jobPlan);
+		dialog.setVisible(true);
+		dialog.dispose();
 	}
 
 	private MartRunnerTestDialog(final JobPlan jobPlan) {
@@ -52,7 +54,7 @@ public class MartRunnerTestDialog extends JDialog {
 		this.setModal(false); // User can move about freely.
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		// TODO
-		// LHS panel lists valid job tests for this plan.
+		// LHS panel lists all possible job tests.
 		// Selecting test in LHS updates panel on RHS.
 		// RHS panel shows valid settings for selected test.
 	}

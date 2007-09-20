@@ -865,7 +865,7 @@ public interface MartConstructor {
 											+ prow.getRootDataSetCol()))
 						// Apply restriction.
 						action.getPartitionRestrictions().put(
-								entry.getKey(),
+								((Column) entry.getKey()).getName(),
 								pcol.getValueForRow(pcol.getPartitionTable()
 										.currentRow()));
 				}
@@ -920,10 +920,10 @@ public interface MartConstructor {
 				if (col.isRequiredInterim())
 					selectCols
 							.put(
-									sourceTable instanceof DataSetTable ? ((DataSetColumn) sourceTable
-											.getColumns().get(entry.getKey()))
-											.getPartitionedName()
-											: entry.getKey(), col
+									sourceTable instanceof DataSetTable ? ((DataSetColumn) entry
+											.getKey()).getPartitionedName()
+											: ((Column) entry.getKey())
+													.getName(), col
 											.getPartitionedName());
 
 			}
@@ -1034,7 +1034,7 @@ public interface MartConstructor {
 												+ prow.getRootDataSetCol()))
 							// Apply restriction.
 							action.getPartitionRestrictions().put(
-									entry.getKey(),
+									((Column) entry.getKey()).getName(),
 									pcol.getValueForRow(ptbl.currentRow()));
 					}
 				}
@@ -1089,7 +1089,8 @@ public interface MartConstructor {
 				if (pta != null)
 					col.fixPartitionedName(pta);
 				if (col.isRequiredInterim())
-					selectCols.put(entry.getKey(), col.getPartitionedName());
+					selectCols.put(((Column) entry.getKey()).getName(), col
+							.getPartitionedName());
 			}
 			// Index the left-hand side of the join.
 			final Index index = new Index(this.datasetSchemaName,
@@ -1175,7 +1176,7 @@ public interface MartConstructor {
 			final String unrollFK = utu.getDataSetColumnFor(
 					utu.getRelation().getManyKey().getColumns()[0])
 					.getPartitionedName();
-			final String unrollPK = utu.getDataSetColumnFor( 
+			final String unrollPK = utu.getDataSetColumnFor(
 					utu.getRelation().getOneKey().getColumns()[0])
 					.getPartitionedName();
 			final String unrollIDColName = utu.getUnrolledIDColumn()

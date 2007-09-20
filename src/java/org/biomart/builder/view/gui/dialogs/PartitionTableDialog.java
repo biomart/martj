@@ -175,11 +175,12 @@ public class PartitionTableDialog extends TransactionalDialog {
 				if (sel != null)
 					if (sel instanceof DataSet)
 						PartitionTableDialog.this.wizardPanel = new WizardPanel(
-										((DataSet) sel).getPartitionTableApplication(),
+								((DataSet) sel).getPartitionTableApplication(),
 								((DataSet) sel).getMainTable());
 					else if (sel instanceof DataSetTable)
 						PartitionTableDialog.this.wizardPanel = new WizardPanel(
-								((DataSetTable) sel).getPartitionTableApplication(),
+								((DataSetTable) sel)
+										.getPartitionTableApplication(),
 								(DataSetTable) sel);
 				if (PartitionTableDialog.this.wizardPanel != null)
 					wizardHolder.add(PartitionTableDialog.this.wizardPanel);
@@ -402,22 +403,22 @@ public class PartitionTableDialog extends TransactionalDialog {
 		// Regex update/reset buttons.
 		regexUpdateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-					final PartitionColumn col = (PartitionColumn)dataset.asPartitionTable()
-							.getColumns().get(
-									(String) keyColList.getSelectedValue());
-					col.setRegexMatch(matchRegex.getText());
-					col.setRegexReplace(replaceRegex.getText());
+				final PartitionColumn col = (PartitionColumn) dataset
+						.asPartitionTable().getColumns().get(
+								(String) keyColList.getSelectedValue());
+				col.setRegexMatch(matchRegex.getText());
+				col.setRegexReplace(replaceRegex.getText());
 				// Regex update button also updates preview.
 				PartitionTableDialog.this.updatePreviewPanel(dataset);
 			}
 		});
 		regexResetButton.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-					final PartitionColumn col = (PartitionColumn)dataset.asPartitionTable()
-							.getColumns().get(
-									(String) keyColList.getSelectedValue());
-					matchRegex.setText(col.getRegexMatch());
-					replaceRegex.setText(col.getRegexReplace());
+				final PartitionColumn col = (PartitionColumn) dataset
+						.asPartitionTable().getColumns().get(
+								(String) keyColList.getSelectedValue());
+				matchRegex.setText(col.getRegexMatch());
+				replaceRegex.setText(col.getRegexReplace());
 			}
 		});
 
@@ -676,8 +677,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 	private void updateAvailableColumns(final DataSet ds) {
 		this.availableColumns.clear();
 		if (ds.isPartitionTable())
-			for (final Iterator i = ds.asPartitionTable().getAvailableColumnNames()
-					.iterator(); i.hasNext();)
+			for (final Iterator i = ds.asPartitionTable()
+					.getAvailableColumnNames().iterator(); i.hasNext();)
 				this.availableColumns.addElement(i.next());
 		// Only allow div if not already used.
 		this.availableColumns.addElement(PartitionTable.DIV_COLUMN);
@@ -744,10 +745,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 						if (col.equals(PartitionTable.DIV_COLUMN))
 							rowData.add("->");
 						else
-							rowData
-									.add(((PartitionColumn)row.getPartitionTable()
-											.getColumns().get(col))
-											.getValueForRow(row));
+							rowData.add(((PartitionColumn) row
+									.getPartitionTable().getColumns().get(col))
+									.getValueForRow(row));
 					}
 					// Add an entry to the data model using list.toArray();
 					PartitionTableDialog.this.previewData.addRow(rowData
@@ -896,7 +896,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 				subpanel.add(ptCombo);
 				subpanel.add(new JLabel(Resources.get("wizardDSColLabel")));
 				subpanel.add(dsCombo);
-				subpanel.add(new JLabel(Resources.get("wizardNameColLabel")));
+				subpanel.add(new JLabel(currLevel == 0 ? Resources
+						.get("wizardTableNameColLabel") : Resources
+						.get("wizardColumnNameColLabel")));
 				subpanel.add(nameCombo);
 				this.add(subpanel, fieldConstraints);
 				// Disable subsequent combos if this one is
@@ -956,9 +958,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 			if (WizardPanel.this.validateFields()) {
 				// How many rows? If less, remove extra ones.
 				final int rowCount = WizardPanel.this.ptLevels.size();
-				while (rowCount<this.pta.getPartitionAppliedRows().size())
+				while (rowCount < this.pta.getPartitionAppliedRows().size())
 					this.pta.getPartitionAppliedRows().remove(
-							this.pta.getPartitionAppliedRows().size()-1);
+							this.pta.getPartitionAppliedRows().size() - 1);
 				// Update or add existing rows.
 				for (int i = 0; i < WizardPanel.this.ptLevels.size()
 						&& ((JComboBox) WizardPanel.this.dsLevels.get(i))
@@ -969,16 +971,24 @@ public class PartitionTableDialog extends TransactionalDialog {
 							.get(i)).getSelectedItem();
 					final String nameCol = (String) ((JComboBox) WizardPanel.this.nameLevels
 							.get(i)).getSelectedItem();
-					if (i >= this.pta.getPartitionAppliedRows().size()) 
-						this.pta.getPartitionAppliedRows().add(new PartitionAppliedRow(ptCol, dsCol, nameCol,
-								(Relation) this.dsRelMap.get(dsCol)));
+					if (i >= this.pta.getPartitionAppliedRows().size())
+						this.pta.getPartitionAppliedRows().add(
+								new PartitionAppliedRow(ptCol, dsCol, nameCol,
+										(Relation) this.dsRelMap.get(dsCol)));
 					else {
-						final PartitionAppliedRow ptar = (PartitionAppliedRow)this.pta.getPartitionAppliedRows().get(i);
+						final PartitionAppliedRow ptar = (PartitionAppliedRow) this.pta
+								.getPartitionAppliedRows().get(i);
 						ptar.setPartitionCol(ptCol);
 						ptar.setRootDataSetCol(dsCol);
 						ptar.setNamePartitionCol(nameCol);
 						ptar.setRelation((Relation) this.dsRelMap.get(dsCol));
 					}
+				}
+				// Update counts.
+				try {
+					this.pta.syncCounts();
+				} catch (final Exception e) {
+					StackTrace.showStackTrace(e);
 				}
 			}
 		}
@@ -1129,8 +1139,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 		}
 		Transaction.resetVisibleModified();
 		// Open selected table with dimension selected in appliedList.
-		final PartitionTableDialog dialog = new PartitionTableDialog((DataSet) mart.getDataSets().get(
-				pta.getPartitionTable().getName()), dimension);
+		final PartitionTableDialog dialog = new PartitionTableDialog(
+				(DataSet) mart.getDataSets().get(
+						pta.getPartitionTable().getName()), dimension);
 		dialog.setVisible(true);
 		dialog.dispose();
 	}
@@ -1147,8 +1158,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 	public static void showForDataSet(final DataSet dataset) {
 		final Mart mart = dataset.getMart();
 		// Does it already have a partition table? Select that one.
-		PartitionTableApplication pta = dataset
-				.getPartitionTableApplication();
+		PartitionTableApplication pta = dataset.getPartitionTableApplication();
 		if (pta == null) {
 			// If not, select an existing one.
 			final List options = new ArrayList(mart.getPartitionTableNames());
@@ -1167,8 +1177,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 				// New dialog asking for a column to use from
 				// the currently selected table.
 				final Map newOptions = new TreeMap();
-				for (final Iterator i = dataset.getMainTable().getColumns().values()
-						.iterator(); i.hasNext();) {
+				for (final Iterator i = dataset.getMainTable().getColumns()
+						.values().iterator(); i.hasNext();) {
 					final DataSetColumn dsCol = (DataSetColumn) i.next();
 					if (dsCol instanceof WrappedColumn)
 						newOptions.put(dsCol.getModifiedName(), dsCol);
@@ -1245,8 +1255,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 		}
 		Transaction.resetVisibleModified();
 		// Open selected table with dimension selected in appliedList.
-		final PartitionTableDialog dialog = new PartitionTableDialog((DataSet) mart.getDataSets().get(
-				pta.getPartitionTable().getName()), dataset);
+		final PartitionTableDialog dialog = new PartitionTableDialog(
+				(DataSet) mart.getDataSets().get(
+						pta.getPartitionTable().getName()), dataset);
 		dialog.setVisible(true);
 		dialog.dispose();
 	}

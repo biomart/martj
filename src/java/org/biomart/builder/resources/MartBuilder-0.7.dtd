@@ -182,3 +182,4 @@ renamedColumn*,distinctRows*,unrolledRelation*)>
 <!ATTLIST partitionApplication dsCols CDATA #REQUIRED>
 <!ATTLIST partitionApplication relationIds IDREFS #REQUIRED>
 <!ATTLIST partitionApplication nameCols CDATA #REQUIRED>
+<!ATTLIST partitionApplication compounds CDATA #REQUIRED>

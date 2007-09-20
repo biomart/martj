@@ -322,6 +322,7 @@ public class DataSet extends Schema {
 				&& partitionTableApplication.equals(oldValue))
 			return;
 		this.partitionTableApplication = partitionTableApplication;
+		this.partitionTableApplication.addPropertyChangeListener("directModified", new WeakPropertyChangeListener("directModified", this.rebuildListener));
 		this.pcs.firePropertyChange("partitionTableApplication", oldValue,
 				partitionTableApplication);
 	}
@@ -550,12 +551,12 @@ public class DataSet extends Schema {
 						final DataSetColumn dsCol = (DataSetColumn) entry
 								.getValue();
 						if (trueSelectedCols.contains(dsCol.getName())) {
-							final String col = (String) entry.getKey();
+							final Column col = (Column) entry.getKey();
 							if (nextCol > 1)
 								sqlSel.append(',');
 							sqlSel.append(currSuffix);
 							sqlSel.append('.');
-							sqlSel.append(col);
+							sqlSel.append(col.getName());
 							positionMap.put(new Integer(nextCol++), dsCol
 									.getName());
 						}
@@ -851,8 +852,7 @@ public class DataSet extends Schema {
 					}
 				}
 				unusedCols.remove(dsCol);
-				parentTU.getNewColumnNameMap()
-						.put(parentDSCol.getName(), dsCol);
+				parentTU.getNewColumnNameMap().put(parentDSCol, dsCol);
 				uniqueBases.put(parentDSCol.getModifiedName(), new Integer(0));
 				// Add the column to the child's FK, but only if it was in
 				// the parent PK.
@@ -892,8 +892,7 @@ public class DataSet extends Schema {
 					final List childFKCols = new ArrayList();
 					for (int j = 0; j < parentFK.getColumns().length; j++)
 						childFKCols.add(parentTU.getNewColumnNameMap().get(
-								((DataSetColumn) parentFK.getColumns()[j])
-										.getName()));
+								parentFK.getColumns()[j]));
 					try {
 						// Create the child FK.
 						final ForeignKey dsTableFK = new ForeignKey(
@@ -1047,7 +1046,7 @@ public class DataSet extends Schema {
 				// Save up the aliases to make dependents later.
 				aliases.addAll(expCol.getDefinition().getAliases().keySet());
 				unusedCols.remove(expCol);
-				tu.getNewColumnNameMap().put(expCol.getName(), expCol);
+				tu.getNewColumnNameMap().put(expCol, expCol);
 				// Skip unique bases stuff here as no more cols get added after
 				// this point.
 			}
@@ -1320,7 +1319,7 @@ public class DataSet extends Schema {
 				}
 			}
 			unusedCols.remove(wc);
-			tu.getNewColumnNameMap().put(c.getName(), wc);
+			tu.getNewColumnNameMap().put(c, wc);
 			wc.setPartitionCols(nameCols);
 
 			// If the column is in any key on this table then it is a
@@ -1586,7 +1585,6 @@ public class DataSet extends Schema {
 						// top.
 						if (usefulPart.getPartitionAppliedRows().size() > 1
 								&& previousUnit == null) {
-							usefulPart.syncCounts();
 							// Get the row information for the relation.
 							final PartitionAppliedRow prow = (PartitionAppliedRow) usefulPart
 									.getPartitionAppliedRows().get(1);

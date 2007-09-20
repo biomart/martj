@@ -382,16 +382,17 @@ public class MartBuilderXML extends DefaultHandler {
 	 * @throws IOException
 	 *             if it failed to write it.
 	 */
-	private void writeListAttribute(final String name, final String[] values,
+	private void writeListAttribute(final String name, final Object[] values,
 			final Writer xmlWriter) throws IOException {
 		// Write it.
 		final StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < values.length; i++) {
-			final String value = values[i];
+			final String value = values[i] == null ? null : values[i]
+					.toString();
 			if (i > 0)
 				sb.append(",");
 			if (value != null)
-				sb.append(values[i].replaceAll(",", "__COMMA__"));
+				sb.append(value.replaceAll(",", "__COMMA__"));
 		}
 		this.writeAttribute(name, sb.length() == 0 ? null : sb.toString(),
 				xmlWriter);
@@ -1218,6 +1219,7 @@ public class MartBuilderXML extends DefaultHandler {
 					final List dsCols = new ArrayList();
 					final List rels = new ArrayList();
 					final List nameCols = new ArrayList();
+					final List compounds = new ArrayList();
 					for (final Iterator k = pta.getPartitionAppliedRows()
 							.iterator(); k.hasNext();) {
 						final PartitionAppliedRow prow = (PartitionAppliedRow) k
@@ -1227,6 +1229,7 @@ public class MartBuilderXML extends DefaultHandler {
 						rels.add((String) this.reverseMappedObjects.get(prow
 								.getRelation()));
 						nameCols.add(prow.getNamePartitionCol());
+						compounds.add(new Integer(prow.getCompound()));
 					}
 					this.writeListAttribute("pCols", (String[]) pCols
 							.toArray(new String[0]), xmlWriter);
@@ -1236,6 +1239,8 @@ public class MartBuilderXML extends DefaultHandler {
 							.toArray(new String[0]), xmlWriter);
 					this.writeListAttribute("nameCols", (String[]) nameCols
 							.toArray(new String[0]), xmlWriter);
+					this.writeListAttribute("compounds", (Integer[]) compounds
+							.toArray(new Integer[0]), xmlWriter);
 					this.closeElement("partitionApplication", xmlWriter);
 				}
 			}
@@ -1314,7 +1319,7 @@ public class MartBuilderXML extends DefaultHandler {
 		String eName = sName;
 		if ("".equals(eName))
 			eName = qName;
-		
+
 		// Construct a set of attributes from the tag.
 		final Map attributes = new HashMap();
 		if (attrs != null)
@@ -2211,14 +2216,21 @@ public class MartBuilderXML extends DefaultHandler {
 				rels[i] = (Relation) this.mappedObjects.get(relIds[i]);
 			final String[] nameCols = this.readListAttribute(
 					(String) attributes.get("nameCols"), false);
+			final String[] compounds = this.readListAttribute(
+					(String) attributes.get("compounds"), false);
 			final PartitionTableApplication pta = new PartitionTableApplication(
 					pt);
-			for (int i = 0; i < pCols.length; i++)
-				pta.getPartitionAppliedRows().add(
-						new PartitionAppliedRow(pCols[i], dsCols[i],
-								nameCols[i], rels[i]));
+			for (int i = 0; i < pCols.length; i++) {
+				final PartitionAppliedRow row = new PartitionAppliedRow(
+						pCols[i], dsCols[i], nameCols[i], rels[i]);
+				if (compounds.length > i)
+					row.setCompound(Integer.parseInt(compounds[i]));
+				pta.getPartitionAppliedRows().add(row);
+			}
 			// This is purely for dodgy XML.
-			if (dimension==null || dimension.equals(PartitionTable.NO_DIMENSION) || ds.getTables().containsKey(dimension))
+			if (dimension == null
+					|| dimension.equals(PartitionTable.NO_DIMENSION)
+					|| ds.getTables().containsKey(dimension))
 				pt.applyTo(ds, dimension, pta);
 		} else
 			throw new SAXException(Resources.get("unknownTag", eName));

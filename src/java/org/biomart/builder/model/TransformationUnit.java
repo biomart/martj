@@ -35,7 +35,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.InverseMap;
 
 /**
@@ -152,16 +151,7 @@ public abstract class TransformationUnit {
 			return this.table;
 		}
 
-		/**
-		 * Does the column come from this dataset column?
-		 * 
-		 * @param column
-		 *            the column.
-		 * @param dsCol
-		 *            the dataset column.
-		 * @return <tt>true</tt> if it does.
-		 */
-		protected boolean columnMatches(final Column column, DataSetColumn dsCol) {
+		private boolean columnMatches(final Column column, DataSetColumn dsCol) {
 			if (dsCol == null)
 				return false;
 			while (dsCol instanceof InheritedColumn)
@@ -174,27 +164,16 @@ public abstract class TransformationUnit {
 
 		public DataSetColumn getDataSetColumnFor(final Column column) {
 			DataSetColumn candidate = (DataSetColumn) this
-					.getNewColumnNameMap().get(column.getName());
-			if (!this.columnMatches(column, candidate))
-				candidate = null;
-			if (candidate == null)
-				candidate = (DataSetColumn) this.getNewColumnNameMap().get(
-						column.getName() + Resources.get("keySuffix"));
-			if (!this.columnMatches(column, candidate))
-				candidate = null;
+					.getNewColumnNameMap().get(column);
 			if (candidate == null)
 				// We need to check each of our columns to see if they
 				// are dataset columns, and if so, if they point to
 				// the appropriate real column.
 				for (final Iterator i = this.getNewColumnNameMap().values()
 						.iterator(); i.hasNext() && candidate == null;) {
-					final Column entry = (Column) i.next();
-					if (entry instanceof DataSetColumn) {
-						final DataSetColumn dsCol = (DataSetColumn) entry;
-						candidate = dsCol;
-						if (!this.columnMatches(column, candidate))
-							candidate = null;
-					}
+					candidate = (DataSetColumn) i.next();
+					if (!this.columnMatches(column, candidate))
+						candidate = null;
 				}
 			return candidate;
 		}
@@ -281,20 +260,8 @@ public abstract class TransformationUnit {
 		}
 
 		public DataSetColumn getDataSetColumnFor(final Column column) {
-			final String name = column.getName();
-			DataSetColumn candidate = this.getDataSetColumnFor(column, name);
-			if (candidate == null)
-				candidate = this.getDataSetColumnFor(column, name
-						+ Resources.get("keySuffix"));
-			return candidate;
-		}
-
-		private DataSetColumn getDataSetColumnFor(final Column column,
-				final String name) {
 			DataSetColumn candidate = (DataSetColumn) this
-					.getNewColumnNameMap().get(name);
-			if (!this.columnMatches(column, candidate))
-				candidate = null;
+					.getNewColumnNameMap().get(column); 
 			if (candidate == null && this.getPreviousUnit() != null) {
 				final Key ourKey = Arrays.asList(
 						this.schemaRelation.getFirstKey().getColumns())
@@ -306,13 +273,9 @@ public abstract class TransformationUnit {
 				if (pos >= 0)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
 							parentKey.getColumns()[pos]);
-				if (!this.columnMatches(column, candidate))
-					candidate = null;
 				if (candidate == null)
 					candidate = this.getPreviousUnit().getDataSetColumnFor(
 							column);
-				if (!this.columnMatches(column, candidate))
-					candidate = null;
 			}
 			return candidate;
 		}
@@ -370,7 +333,7 @@ public abstract class TransformationUnit {
 				public int compare(Object a, Object b) {
 					final Map.Entry entryA = (Map.Entry) a;
 					final Map.Entry entryB = (Map.Entry) b;
-					final String colNameA = (String) entryA.getKey();
+					final String colNameA = ((Column) entryA.getKey()).getName(); 
 					final ExpressionColumnDefinition exprA = ((ExpressionColumn) entryA
 							.getValue()).getDefinition();
 					final ExpressionColumnDefinition exprB = ((ExpressionColumn) entryB
@@ -387,7 +350,7 @@ public abstract class TransformationUnit {
 			for (final Iterator i = entries.iterator(); i.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
 				if (previousEntry != null) {
-					final String colNameA = (String) entry.getKey();
+					final String colNameA = ((Column) entry.getKey()).getName(); 
 					final ExpressionColumnDefinition exprA = ((ExpressionColumn) entry
 							.getValue()).getDefinition();
 					final ExpressionColumnDefinition exprB = ((ExpressionColumn) previousEntry

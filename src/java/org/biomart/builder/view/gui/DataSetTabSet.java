@@ -24,6 +24,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.PartitionTable;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
@@ -50,6 +52,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
 import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
 import org.biomart.builder.model.Table.RestrictedTableDefinition;
@@ -1018,6 +1021,50 @@ public class DataSetTabSet extends JTabbedPane {
 			Transaction.end();
 
 		}
+	}
+
+	/**
+	 * Update the counts on all applications of this partition table.
+	 */
+	public void requestUpdateAllPTCounts() {
+		Transaction.start();
+		for (final Iterator k = this.getMartTab().getMart()
+				.getPartitionTableNames().iterator(); k.hasNext();)
+			for (final Iterator i = ((DataSet) this.getMartTab().getMart()
+					.getDataSets().get(k.next())).asPartitionTable()
+					.getAllApplications().values().iterator(); i.hasNext();)
+				for (final Iterator j = ((Map) i.next()).values().iterator(); j
+						.hasNext();)
+					try {
+						final Object ref = ((WeakReference) j.next()).get();
+						if (ref != null)
+							((PartitionTableApplication) ref).syncCounts();
+					} catch (final Exception e) {
+						StackTrace.showStackTrace(e);
+					}
+		Transaction.end();
+	}
+
+	/**
+	 * Update the counts on all applications of this partition table.
+	 * 
+	 * @param pt
+	 *            the partition table to update counts on.
+	 */
+	public void requestUpdatePTCounts(final PartitionTable pt) {
+		Transaction.start();
+		for (final Iterator i = pt.getAllApplications().values().iterator(); i
+				.hasNext();)
+			for (final Iterator j = ((Map) i.next()).values().iterator(); j
+					.hasNext();)
+				try {
+					final Object ref = ((WeakReference) j.next()).get();
+					if (ref != null)
+						((PartitionTableApplication) ref).syncCounts();
+				} catch (final Exception e) {
+					StackTrace.showStackTrace(e);
+				}
+		Transaction.end();
 	}
 
 	/**

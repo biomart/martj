@@ -556,9 +556,9 @@
 			<column id="523" name="db_file"/>
 			<column id="524" name="program_file"/>
 			<column id="525" name="program_version"/>
-			<column id="526" name="gff_feature"/>
-			<column id="527" name="program"/>
-			<column id="528" name="module"/>
+			<column id="526" name="program"/>
+			<column id="527" name="module"/>
+			<column id="528" name="gff_feature"/>
 			<primaryKey id="529" columnIds="515" status="INFERRED"/>
 		</table>
 		<table id="530" name="protein_tree_node" ignore="false">
@@ -957,7 +957,7 @@
 			<column id="899" name="mlss_name"/>
 			<foreignKey id="900" columnIds="898" status="INFERRED"/>
 		</table>
-		<table id="901" name="peptide_align_feature" ignore="false">
+		<table id="901" name="peptide_align_feature" ignore="true">
 			<column id="902" name="perc_pos"/>
 			<column id="903" name="analysis_id"/>
 			<column id="904" name="align_length"/>
@@ -1242,6 +1242,7 @@
 		<maskedRelation tableKey="genomic_align" relationId="1161"/>
 	</dataset>
 	<dataset name="homology" centralTableId="538" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
+		<mergedRelation relationId="1080"/>
 		<renamedTable tableKey="homology__homology_member" newName="homology_member"/>
 	</dataset>
 	<dataset name="species_set" centralTableId="485" optimiser="NONE" invisible="false" masked="false" hideMasked="false" indexOptimiser="false">
@@ -1250,6 +1251,6 @@
 	<datasetPartitionTable name="species_set" selectedColumns="method_link_species_set_id,name_method_link_species_set,__SUBDIVISION_BOUNDARY__,genome_db_id_key,name">
 		<partitionRegex name="name_method_link_species_set" match="^(.).(...).(.).(...).*$" replace="$1$2_$3$4"/>
 		<partitionRegex name="name" match="^(.)[^ ]+ (...).*$" replace="$1$2"/>
-		<partitionApplication name="homology" pCols="method_link_species_set_id,genome_db_id_key" dsCols="method_link_species_set_id,genome_db_id" relationIds=",1152" nameCols="name_method_link_species_set,name"/>
+		<partitionApplication name="homology" pCols="method_link_species_set_id,genome_db_id_key" dsCols="method_link_species_set_id,genome_db_id" relationIds=",1152" nameCols="method_link_species_set_id,name" compounds="595,2"/>
 	</datasetPartitionTable>
 </mart>

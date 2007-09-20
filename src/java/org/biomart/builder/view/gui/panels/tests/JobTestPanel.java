@@ -145,6 +145,8 @@ public abstract class JobTestPanel extends JPanel {
 		this.addFields();
 
 		// TODO Add start/stop/report button and listeners.
+		// TODO Add progress bar.
+		// TODO Add status light and set to not-yet-run.
 		// TODO Disable stop, enable start, disable report.
 	}
 
@@ -152,9 +154,7 @@ public abstract class JobTestPanel extends JPanel {
 	 * Create and add input fields to the panel using global grid bag
 	 * constraints.
 	 */
-	protected void addFields() {
-		// TODO
-	}
+	protected abstract void addFields();
 
 	private boolean validateOptions() {
 		final String[] messages = this.doValidateOptions();
@@ -188,9 +188,11 @@ public abstract class JobTestPanel extends JPanel {
 				return;
 			}
 			// TODO Disable start, enable stop, disable report.
-			// TODO Run the progress bar.
+			// TODO Reset and start progress bar.
+			// TODO Set status light to running.
 			// TODO When ends, update started, disable stop, enable start,
-			// enable report if ended successfully.
+			// enable report, set progress bar to 100%, set status light to 
+			// OK/Failed as necessary.
 		}
 	}
 
