@@ -42,7 +42,7 @@ public interface DiagramComponent {
 	/**
 	 * The colour used to highlight changes.
 	 */
-	public static final Color GLOW_COLOUR = Color.yellow;
+	public static final Color GLOW_COLOUR = Color.BLUE;
 
 	/**
 	 * The width of the line used to highlight changes.
