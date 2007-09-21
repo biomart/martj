@@ -776,7 +776,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 
 		private final PartitionTableApplication pta;
 
-		private Map dsRelMap;
+		private Map dsRelMap = new HashMap();
 
 		private WizardPanel(final PartitionTableApplication pta,
 				final DataSetTable dsTable) {
@@ -790,12 +790,15 @@ public class PartitionTableDialog extends TransactionalDialog {
 
 		private void recalculate() {
 			this.removeAll();
+			this.ptLevels.clear();
+			this.dsLevels.clear();
+			this.nameLevels.clear();
+			this.dsRelMap.clear();
 			// Convert column list to include blank.
 			// Make drop-down display modified names, with
 			// prefix stripped if necessary. But, it selects real
 			// names (with stripped prefixes) in background.
 			final Map dsColMap = new TreeMap();
-			this.dsRelMap = new HashMap();
 			for (final Iterator j = this.dsTable.getTransformationUnits()
 					.iterator(); j.hasNext();) {
 				final TransformationUnit tu = (TransformationUnit) j.next();
@@ -971,7 +974,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 							.get(i)).getSelectedItem();
 					final String nameCol = (String) ((JComboBox) WizardPanel.this.nameLevels
 							.get(i)).getSelectedItem();
-					if (i >= this.pta.getPartitionAppliedRows().size())
+					if (i >= this.pta.getPartitionAppliedRows().size()) 
 						this.pta.getPartitionAppliedRows().add(
 								new PartitionAppliedRow(ptCol, dsCol, nameCol,
 										(Relation) this.dsRelMap.get(dsCol)));
