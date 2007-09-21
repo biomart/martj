@@ -83,7 +83,8 @@ public class Relation implements Comparable, TransactionListener {
 
 	private ComponentStatus status;
 
-	private boolean visibleModified = Transaction.getCurrentTransaction().isAllowVisModChange();
+	private boolean visibleModified = Transaction.getCurrentTransaction() == null ? false
+			: Transaction.getCurrentTransaction().isAllowVisModChange();
 
 	private boolean directModified = false;
 
@@ -193,8 +194,8 @@ public class Relation implements Comparable, TransactionListener {
 		this.pcs.addPropertyChangeListener("maskRelation", listener);
 		this.pcs.addPropertyChangeListener("mergeRelation", listener);
 		this.pcs.addPropertyChangeListener("restrictRelation", listener);
-		this.pcs.addPropertyChangeListener("subclassRelation", listener);	
-		
+		this.pcs.addPropertyChangeListener("subclassRelation", listener);
+
 		// All changes to us make us visible modified.
 		final PropertyChangeListener vlistener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
@@ -203,7 +204,6 @@ public class Relation implements Comparable, TransactionListener {
 			}
 		};
 		this.pcs.addPropertyChangeListener("cardinality", vlistener);
-
 
 		// Add listeners to tables at both end so that if key
 		// is removed, relation is also removed.

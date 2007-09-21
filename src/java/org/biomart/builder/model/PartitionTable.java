@@ -1376,8 +1376,7 @@ public abstract class PartitionTable implements TransactionListener {
 				if (oldValue == compound)
 					return;
 				this.compound = compound;
-				this.pcs.firePropertyChange("compound", oldValue,
-						compound);
+				this.pcs.firePropertyChange("compound", oldValue, compound);
 			}
 
 			/**

@@ -322,7 +322,9 @@ public class DataSet extends Schema {
 				&& partitionTableApplication.equals(oldValue))
 			return;
 		this.partitionTableApplication = partitionTableApplication;
-		this.partitionTableApplication.addPropertyChangeListener("directModified", new WeakPropertyChangeListener("directModified", this.rebuildListener));
+		this.partitionTableApplication.addPropertyChangeListener(
+				"directModified", new WeakPropertyChangeListener(
+						"directModified", this.rebuildListener));
 		this.pcs.firePropertyChange("partitionTableApplication", oldValue,
 				partitionTableApplication);
 	}
@@ -1028,8 +1030,7 @@ public class DataSet extends Schema {
 		// First time round only - do we have an initial set of
 		// partition table application defs to create on this table?
 		// If so, create them.
-		final Map initialPTAs = this.getMods(dsTable.getName(),
-				"initialPTAs");
+		final Map initialPTAs = this.getMods(dsTable.getName(), "initialPTAs");
 		if (initialPTAs != null && !initialPTAs.isEmpty()) {
 			for (final Iterator i = initialPTAs.values().iterator(); i
 					.hasNext();) {
@@ -2778,17 +2779,20 @@ public class DataSet extends Schema {
 		private void acceptRejectChanges(final Table targetTable,
 				final boolean reject) {
 			// Find parent relation and reset that.
-			if (this.getType()!=DataSetTableType.MAIN) {
+			if (this.getType() != DataSetTableType.MAIN) {
 				Relation rel = null;
-				for (final Iterator i = this.getForeignKeys().iterator(); i.hasNext() && rel==null; )
-					for (final Iterator j = ((Key)i.next()).getRelations().iterator(); j.hasNext() && rel==null; ) 
-						rel = (Relation)j.next();
+				for (final Iterator i = this.getForeignKeys().iterator(); i
+						.hasNext()
+						&& rel == null;)
+					for (final Iterator j = ((Key) i.next()).getRelations()
+							.iterator(); j.hasNext() && rel == null;)
+						rel = (Relation) j.next();
 				// Reset it.
 				rel.transactionResetVisibleModified();
 			}
 			// Reset all keys.
-			for (final Iterator i = this.getKeys().iterator(); i.hasNext(); )
-				((Key)i.next()).transactionResetVisibleModified();
+			for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
+				((Key) i.next()).transactionResetVisibleModified();
 			// Locate the TU that provides the target table.
 			for (final Iterator i = this.getTransformationUnits().iterator(); i
 					.hasNext();) {

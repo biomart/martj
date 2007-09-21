@@ -261,7 +261,7 @@ public abstract class TransformationUnit {
 
 		public DataSetColumn getDataSetColumnFor(final Column column) {
 			DataSetColumn candidate = (DataSetColumn) this
-					.getNewColumnNameMap().get(column); 
+					.getNewColumnNameMap().get(column);
 			if (candidate == null && this.getPreviousUnit() != null) {
 				final Key ourKey = Arrays.asList(
 						this.schemaRelation.getFirstKey().getColumns())
@@ -333,7 +333,8 @@ public abstract class TransformationUnit {
 				public int compare(Object a, Object b) {
 					final Map.Entry entryA = (Map.Entry) a;
 					final Map.Entry entryB = (Map.Entry) b;
-					final String colNameA = ((Column) entryA.getKey()).getName(); 
+					final String colNameA = ((Column) entryA.getKey())
+							.getName();
 					final ExpressionColumnDefinition exprA = ((ExpressionColumn) entryA
 							.getValue()).getDefinition();
 					final ExpressionColumnDefinition exprB = ((ExpressionColumn) entryB
@@ -350,7 +351,7 @@ public abstract class TransformationUnit {
 			for (final Iterator i = entries.iterator(); i.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
 				if (previousEntry != null) {
-					final String colNameA = ((Column) entry.getKey()).getName(); 
+					final String colNameA = ((Column) entry.getKey()).getName();
 					final ExpressionColumnDefinition exprA = ((ExpressionColumn) entry
 							.getValue()).getDefinition();
 					final ExpressionColumnDefinition exprB = ((ExpressionColumn) previousEntry
