@@ -1025,6 +1025,21 @@ public class DataSet extends Schema {
 			// Wipe it out so only happens first time.
 			initialExpCols.clear();
 		}
+		// First time round only - do we have an initial set of
+		// partition table application defs to create on this table?
+		// If so, create them.
+		final Map initialPTAs = this.getMods(dsTable.getName(),
+				"initialPTAs");
+		if (initialPTAs != null && !initialPTAs.isEmpty()) {
+			for (final Iterator i = initialPTAs.values().iterator(); i
+					.hasNext();) {
+				final PartitionTableApplication pta = (PartitionTableApplication) i
+						.next();
+				pta.getPartitionTable().applyTo(this, dsTable.getName(), pta);
+			}
+			// Wipe it out so only happens first time.
+			initialPTAs.clear();
+		}
 		// Insert Expression Column Transformation Unit
 		// containing all expression columns defined on this table.
 		final List exprCols = new ArrayList();

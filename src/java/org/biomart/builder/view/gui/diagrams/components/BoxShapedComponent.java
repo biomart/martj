@@ -669,6 +669,7 @@ public abstract class BoxShapedComponent extends JPanel implements
 					: BoxShapedComponent.OUTLINE;
 		this.setBorder(BorderFactory
 				.createLineBorder(this.changed ? DiagramComponent.GLOW_COLOUR
-						: this.getForeground()));
+						: this.getForeground(),
+						this.changed ? DiagramComponent.GLOW_WIDTH : 1));
 	}
 }

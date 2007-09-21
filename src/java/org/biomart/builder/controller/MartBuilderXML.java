@@ -2204,7 +2204,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 			final DataSet ds = (DataSet) this.constructedMart.getDataSets()
 					.get((String) attributes.get("name"));
-			final String dimension = (String) attributes.get("dimension");
+			String dimension = (String) attributes.get("dimension");
 			final String[] pCols = this.readListAttribute((String) attributes
 					.get("pCols"), false);
 			final String[] dsCols = this.readListAttribute((String) attributes
@@ -2227,10 +2227,11 @@ public class MartBuilderXML extends DefaultHandler {
 					row.setCompound(Integer.parseInt(compounds[i]));
 				pta.getPartitionAppliedRows().add(row);
 			}
-			// This is purely for dodgy XML.
-			if (dimension == null
-					|| dimension.equals(PartitionTable.NO_DIMENSION)
-					|| ds.getTables().containsKey(dimension))
+			if (dimension==null)
+				dimension = PartitionTable.NO_DIMENSION;
+			if (!dimension.equals(PartitionTable.NO_DIMENSION))
+				ds.getMods(dimension, "initialPTAs").put(dimension, pta);
+			else
 				pt.applyTo(ds, dimension, pta);
 		} else
 			throw new SAXException(Resources.get("unknownTag", eName));
