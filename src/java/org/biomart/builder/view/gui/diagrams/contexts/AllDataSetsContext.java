@@ -18,14 +18,18 @@
 
 package org.biomart.builder.view.gui.diagrams.contexts;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Collection;
 
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
+import org.biomart.common.resources.Resources;
 
 /**
  * Provides the context menus and colour schemes to use when viewing the all
@@ -99,6 +103,40 @@ public class AllDataSetsContext implements DiagramContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
-		// Nothing extra to do.
+		if (object instanceof DataSet) {
+			if (contextMenu.getComponentCount() > 0)
+				contextMenu.addSeparator();
+			
+			final DataSet ds = (DataSet) object;
+			// Accept/Reject changes - only enabled if dataset table
+			// is visible modified.
+			final JMenuItem accept = new JMenuItem(Resources
+					.get("acceptChangesTitle"));
+			accept
+					.setMnemonic(Resources.get("acceptChangesMnemonic").charAt(
+							0));
+			accept.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.getMartTab().getDataSetTabSet()
+							.requestAcceptAll(ds, null);
+				}
+			});
+			accept.setEnabled(ds.isVisibleModified());
+			contextMenu.add(accept);
+
+			final JMenuItem reject = new JMenuItem(Resources
+					.get("rejectChangesTitle"));
+			reject
+					.setMnemonic(Resources.get("rejectChangesMnemonic").charAt(
+							0));
+			reject.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.getMartTab().getDataSetTabSet()
+							.requestRejectAll(ds, null);
+				}
+			});
+			reject.setEnabled(ds.isVisibleModified());
+			contextMenu.add(reject);
+		}
 	}
 }

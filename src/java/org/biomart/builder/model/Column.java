@@ -112,12 +112,16 @@ public class Column implements Comparable, TransactionListener {
 	}
 
 	public void setVisibleModified(final boolean modified) {
-		// We don't care as this gets set internally.
+		if (modified == this.visibleModified)
+			return;
+		final boolean oldValue = this.visibleModified;
+		this.visibleModified = modified;
+		this.pcs.firePropertyChange("visibleModified", oldValue, modified);
+		this.setDirectModified(true);
 	}
 
 	public void transactionResetVisibleModified() {
-		this.visibleModified = false;
-		// Once reset, it is never true again.
+		this.setVisibleModified(false);
 	}
 
 	public void transactionResetDirectModified() {

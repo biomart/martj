@@ -122,7 +122,7 @@ public abstract class Key implements Comparable, TransactionListener {
 		final PropertyChangeListener vlistener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
 				if (Transaction.getCurrentTransaction().isAllowVisModChange())
-					Key.this.visibleModified = true;
+					Key.this.setVisibleModified(true);
 			}
 		};
 		this.pcs.addPropertyChangeListener("columns", vlistener);
@@ -145,11 +145,16 @@ public abstract class Key implements Comparable, TransactionListener {
 	}
 
 	public void setVisibleModified(final boolean modified) {
-		// We don't care as this gets set internally.
+		if (modified == this.visibleModified)
+			return;
+		final boolean oldValue = this.visibleModified;
+		this.visibleModified = modified;
+		this.pcs.firePropertyChange("visibleModified", oldValue, modified);
+		this.setDirectModified(true);
 	}
 
 	public void transactionResetVisibleModified() {
-		this.visibleModified = false;
+		this.setVisibleModified(false);
 	}
 
 	public void transactionResetDirectModified() {

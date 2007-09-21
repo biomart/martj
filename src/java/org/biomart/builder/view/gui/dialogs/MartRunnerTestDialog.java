@@ -18,9 +18,18 @@
 
 package org.biomart.builder.view.gui.dialogs;
 
-import javax.swing.JDialog;
-import javax.swing.WindowConstants;
+import java.awt.BorderLayout;
 
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+import org.biomart.builder.view.gui.panels.tests.JobTestPanel;
 import org.biomart.common.resources.Resources;
 import org.biomart.runner.model.JobPlan;
 
@@ -52,10 +61,37 @@ public class MartRunnerTestDialog extends JDialog {
 		super();
 		this.setTitle(Resources.get("testJobDialogTitle"));
 		this.setModal(false); // User can move about freely.
+		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		// TODO
-		// LHS panel lists all possible job tests.
-		// Selecting test in LHS updates panel on RHS.
-		// RHS panel shows valid settings for selected test.
+
+		final JList lhs = new JList(JobTestPanel.getPanelNames().toArray());
+		final JPanel rhs = new JPanel(new BorderLayout());
+		final JPanel rhsHolder = new JPanel();
+		final JPanel closeHolder = new JPanel();
+		final JButton close = new JButton(Resources.get("closeButton"));
+
+		closeHolder.add(close);
+		rhs.add(closeHolder, BorderLayout.PAGE_END);
+		rhs.add(rhsHolder, BorderLayout.CENTER);
+		this.add(new JScrollPane(lhs), BorderLayout.LINE_START);
+		this.add(rhs, BorderLayout.CENTER);
+
+		// Listen and update panel.
+		lhs.addListSelectionListener(new ListSelectionListener() {
+			public void valueChanged(ListSelectionEvent e) {
+				rhsHolder.removeAll();
+				if (lhs.getSelectedValue() != null) {
+					rhsHolder.add(JobTestPanel.getPanel((String) lhs
+							.getSelectedValue()));
+					MartRunnerTestDialog.this.pack();
+				}
+			}
+		});
+
+		// Set size of window.
+		this.pack();
+
+		// Move ourselves.
+		this.setLocationRelativeTo(null);
 	}
 }

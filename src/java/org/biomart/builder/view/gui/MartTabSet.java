@@ -709,13 +709,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 							if (progressMonitor.isCanceled())
 								// Stop the thread if required.
 								constructor.cancel();
-							else {
 								// If not, update the progress report.
-								progressMonitor.setLabel(constructor
-										.getStatusMessage());
 								progressMonitor.setProgress(constructor
 										.getPercentComplete());
-							}
 						} else {
 							// If it completed, close the task and tidy up.
 							// Stop the timer.

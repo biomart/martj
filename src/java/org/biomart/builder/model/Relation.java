@@ -200,7 +200,7 @@ public class Relation implements Comparable, TransactionListener {
 		final PropertyChangeListener vlistener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
 				if (Transaction.getCurrentTransaction().isAllowVisModChange())
-					Relation.this.visibleModified = true;
+					Relation.this.setVisibleModified(true);
 			}
 		};
 		this.pcs.addPropertyChangeListener("cardinality", vlistener);
@@ -284,11 +284,16 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	public void setVisibleModified(final boolean modified) {
-		// Gets set internally so don't need to allow changes.
+		if (modified == this.visibleModified)
+			return;
+		final boolean oldValue = this.visibleModified;
+		this.visibleModified = modified;
+		this.pcs.firePropertyChange("visibleModified", oldValue, modified);
+		this.setDirectModified(true);
 	}
 
 	public void transactionResetVisibleModified() {
-		this.visibleModified = false;
+		this.setVisibleModified(false);
 	}
 
 	public void transactionResetDirectModified() {

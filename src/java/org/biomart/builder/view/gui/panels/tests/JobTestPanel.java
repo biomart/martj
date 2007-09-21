@@ -21,15 +21,20 @@ package org.biomart.builder.view.gui.panels.tests;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.dialogs.StackTrace;
+import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 import org.biomart.runner.exceptions.TestException;
 import org.biomart.runner.model.tests.JobTest;
 
@@ -37,7 +42,9 @@ import org.biomart.runner.model.tests.JobTest;
  * Test panels represent all the different options that can be used to run a
  * particular test. They completely contain each kind of test and run those
  * tests, with the abstract parent class providing monitor functions. Static
- * methods allow for the registration and discovery of various panel types.
+ * methods allow for the registration and discovery of various panel types. This
+ * should be done using a static initialiser block which calls 
+ * {@link #addPanel(String, JobTestPanel)} with an instance of the panel.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
@@ -49,6 +56,14 @@ public abstract class JobTestPanel extends JPanel {
 	private static final Map panels = new TreeMap();
 
 	private boolean started = false;
+	
+	private final JButton start;
+	
+	private final JButton stop;
+	
+	private final JButton report;
+	
+	private final JProgressBar progress;
 
 	/**
 	 * Use this in {@link #addFields()}.
@@ -89,13 +104,7 @@ public abstract class JobTestPanel extends JPanel {
 	public static JobTestPanel getPanel(final String name) {
 		if (!JobTestPanel.panels.containsKey(name))
 			return null;
-		try {
-			return (JobTestPanel) ((Class) JobTestPanel.panels.get(name))
-					.newInstance();
-		} catch (final Exception e) {
-			StackTrace.showStackTrace(e);
-			return null;
-		}
+		return (JobTestPanel) JobTestPanel.panels.get(name);
 	}
 
 	/**
@@ -103,18 +112,18 @@ public abstract class JobTestPanel extends JPanel {
 	 * 
 	 * @param name
 	 *            the name of this new panel.
-	 * @param panelClass
-	 *            the class of the panel object.
+	 * @param panel
+	 *            the panel object.
 	 */
-	protected static void addPanel(final String name, final Class panelClass) {
-		JobTestPanel.panels.put(name, panelClass);
+	protected static void addPanel(final String name, final JobTestPanel panel) {
+		JobTestPanel.panels.put(name, panel);
 	}
-
+	
 	/**
 	 * Creates a new panel.
 	 * 
 	 */
-	public JobTestPanel() {
+	protected JobTestPanel() {
 		super();
 
 		// Create the layout manager for this panel.
@@ -144,10 +153,48 @@ public abstract class JobTestPanel extends JPanel {
 		// Construct our input fields.
 		this.addFields();
 
-		// TODO Add start/stop/report button and listeners.
-		// TODO Add progress bar.
-		// TODO Add status light and set to not-yet-run.
-		// TODO Disable stop, enable start, disable report.
+		// Create start/stop/report button.
+		this.start = new JButton(Resources.get("startTestButton"));
+		this.stop = new JButton(Resources.get("stopTestButton"));
+		this.report = new JButton(Resources.get("reportTestButton"));
+		// Listeners.
+		this.start.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				JobTestPanel.this.startTest();
+			}
+		});
+		this.stop.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				JobTestPanel.this.stopTest();
+			}
+		});
+		this.report.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				ViewTextDialog.displayText(Resources.get("testReportTitle"), JobTestPanel.this.getJobTest().getReport());
+			}
+		});
+		
+		// Create progress bar.
+		this.progress = new JProgressBar();
+		this.progress.setMinimum(0);
+		this.progress.setMaximum(100);
+		this.progress.setValue(0);
+		this.progress.setIndeterminate(false);
+		
+		// Add buttons and progress bar to GUI.
+		final JPanel buttonPanel = new JPanel();
+		buttonPanel.add(this.start);
+		buttonPanel.add(this.stop);
+		buttonPanel.add(this.progress);
+		this.add(this.progress, this.labelLastRowConstraints);
+		this.add(buttonPanel, this.fieldLastRowConstraints);
+
+		// Disable stop, enable start, disable report.
+		this.start.setEnabled(true);
+		this.stop.setEnabled(false);
+		this.report.setEnabled(false);
+
+		// TODO Set report button background status color to not-yet-run.
 	}
 
 	/**
@@ -173,6 +220,12 @@ public abstract class JobTestPanel extends JPanel {
 	 * @return the list of validation errors.
 	 */
 	protected abstract String[] doValidateOptions();
+	
+	/**
+	 * Called when the test is about to be run and needs the options
+	 * copying from user input fields to the test before execution.
+	 */
+	protected abstract void setJobTestOptions();
 
 	/**
 	 * Start the test this panel represents.
@@ -181,18 +234,25 @@ public abstract class JobTestPanel extends JPanel {
 		if (!this.started && this.validateOptions()) {
 			this.started = true;
 			try {
+				this.setJobTestOptions();
 				this.getJobTest().startTest();
 			} catch (final TestException e) {
 				StackTrace.showStackTrace(e);
 				this.started = false;
 				return;
 			}
-			// TODO Disable start, enable stop, disable report.
-			// TODO Reset and start progress bar.
-			// TODO Set status light to running.
+			// Disable start, enable stop, disable report.
+			this.start.setEnabled(false);
+			this.stop.setEnabled(true);
+			this.report.setEnabled(false);
+			// Reset and start progress bar.
+			this.progress.setValue(0);
+			this.progress.setIndeterminate(true);
+			// TODO Set report button background status to running.
+			// TODO Add progress bar update timer.
 			// TODO When ends, update started, disable stop, enable start,
-			// enable report, set progress bar to 100%, set status light to 
-			// OK/Failed as necessary.
+			// enable report, set progress bar to 100%, set report
+			// button background status to OK/failed.
 		}
 	}
 

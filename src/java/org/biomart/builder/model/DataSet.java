@@ -2806,10 +2806,20 @@ public class DataSet extends Schema {
 						final JoinTable jt = (JoinTable) st;
 						// Is the TU relation modified?
 						if (jt.getSchemaRelation().isVisibleModified()) {
-							jt.getSchemaRelation().setMaskRelation(
-									this.getDataSet(), this.getName(), true);
-							// No more needs to be done.
-							continue;
+							if (jt.getSchemaRelation().equals(
+									this.getFocusRelation()))
+								try {
+									this.setDimensionMasked(true);
+								} catch (final ValidationException e) {
+									// Don't care, really.
+								}
+							else {
+								jt.getSchemaRelation()
+										.setMaskRelation(this.getDataSet(),
+												this.getName(), true);
+								// No more needs to be done.
+								continue;
+							}
 						}
 					}
 					// Find all new columns from the TU.
@@ -2826,8 +2836,7 @@ public class DataSet extends Schema {
 								dsCol.setColumnMasked(true);
 							} catch (final ValidationException ve) {
 								// Ignore - if we can't mask it, it's because
-								// it's
-								// important.
+								// it's important.
 							}
 						// Reset visible modified on all of them.
 						dsCol.transactionResetVisibleModified();

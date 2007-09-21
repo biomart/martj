@@ -379,6 +379,17 @@ public class DataSetTabSet extends JTabbedPane {
 		Transaction.end();
 	}
 
+	private void removeLastVisMods() {
+		// Finally, if no datasets at all are visibly modified,
+		// remove the visible modified flag from all schema objects too.
+		for (final Iterator i = this.getMartTab().getMart().getDataSets()
+				.values().iterator(); i.hasNext();)
+			if (((DataSet) i.next()).isVisibleModified())
+				return;
+		// If get here, can do reset safely.
+		Transaction.resetVisibleModified();
+	}
+	
 	/**
 	 * Request that all changes on this dataset table associated with this
 	 * target are accepted. See {@link DataSetTable#acceptChanges(Table)}.
@@ -392,6 +403,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Table targetTable) {
 		Transaction.start(false);
 		dsTable.acceptChanges(targetTable);
+		this.removeLastVisMods();
 		Transaction.end();
 	}
 
@@ -408,6 +420,41 @@ public class DataSetTabSet extends JTabbedPane {
 			final Table targetTable) {
 		Transaction.start(false);
 		dsTable.rejectChanges(targetTable);
+		this.removeLastVisMods();
+		Transaction.end();
+	}
+
+	/**
+	 * Request that all changes on this dataset associated with this target are
+	 * accepted.
+	 * 
+	 * @param ds
+	 *            the dataset to work with.
+	 * @param targetTable
+	 *            the (optional) target table to accept changes from.
+	 */
+	public void requestAcceptAll(final DataSet ds, final Table targetTable) {
+		Transaction.start(false);
+		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
+			((DataSetTable) i.next()).acceptChanges(targetTable);
+		this.removeLastVisMods();
+		Transaction.end();
+	}
+
+	/**
+	 * Request that all changes on this dataset associated with this target are
+	 * rejected.
+	 * 
+	 * @param ds
+	 *            the dataset to work with.
+	 * @param targetTable
+	 *            the (optional) target table to reject changes from.
+	 */
+	public void requestRejectAll(final DataSet ds, final Table targetTable) {
+		Transaction.start(false);
+		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
+			((DataSetTable) i.next()).rejectChanges(targetTable);
+		this.removeLastVisMods();
 		Transaction.end();
 	}
 
@@ -1032,23 +1079,28 @@ public class DataSetTabSet extends JTabbedPane {
 		new LongProcess() {
 			public void run() throws Exception {
 
-		Transaction.start(false);
-		for (final Iterator k = DataSetTabSet.this.getMartTab().getMart()
-				.getPartitionTableNames().iterator(); k.hasNext();)
-			for (final Iterator i = ((DataSet) DataSetTabSet.this.getMartTab().getMart()
-					.getDataSets().get(k.next())).asPartitionTable()
-					.getAllApplications().values().iterator(); i.hasNext();)
-				for (final Iterator j = ((Map) i.next()).values().iterator(); j
+				Transaction.start(false);
+				for (final Iterator k = DataSetTabSet.this.getMartTab()
+						.getMart().getPartitionTableNames().iterator(); k
 						.hasNext();)
-					try {
-						final Object ref = ((WeakReference) j.next()).get();
-						if (ref != null)
-							((PartitionTableApplication) ref).syncCounts();
-					} catch (final Exception e) {
-						StackTrace.showStackTrace(e);
-					}
-		Transaction.end();
-			}}.start();
+					for (final Iterator i = ((DataSet) DataSetTabSet.this
+							.getMartTab().getMart().getDataSets().get(k.next()))
+							.asPartitionTable().getAllApplications().values()
+							.iterator(); i.hasNext();)
+						for (final Iterator j = ((Map) i.next()).values()
+								.iterator(); j.hasNext();)
+							try {
+								final Object ref = ((WeakReference) j.next())
+										.get();
+								if (ref != null)
+									((PartitionTableApplication) ref)
+											.syncCounts();
+							} catch (final Exception e) {
+								StackTrace.showStackTrace(e);
+							}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1061,20 +1113,21 @@ public class DataSetTabSet extends JTabbedPane {
 		// In the background, do the synchronisation.
 		new LongProcess() {
 			public void run() throws Exception {
-		Transaction.start(false);
-		for (final Iterator i = pt.getAllApplications().values().iterator(); i
-				.hasNext();)
-			for (final Iterator j = ((Map) i.next()).values().iterator(); j
-					.hasNext();)
-				try {
-					final Object ref = ((WeakReference) j.next()).get();
-					if (ref != null)
-						((PartitionTableApplication) ref).syncCounts();
-				} catch (final Exception e) {
-					StackTrace.showStackTrace(e);
-				}
-		Transaction.end();
-			}}.start();
+				Transaction.start(false);
+				for (final Iterator i = pt.getAllApplications().values()
+						.iterator(); i.hasNext();)
+					for (final Iterator j = ((Map) i.next()).values()
+							.iterator(); j.hasNext();)
+						try {
+							final Object ref = ((WeakReference) j.next()).get();
+							if (ref != null)
+								((PartitionTableApplication) ref).syncCounts();
+						} catch (final Exception e) {
+							StackTrace.showStackTrace(e);
+						}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**

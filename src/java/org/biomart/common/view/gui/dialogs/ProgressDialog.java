@@ -29,7 +29,6 @@ import java.awt.event.WindowEvent;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
@@ -46,8 +45,6 @@ import org.biomart.common.resources.Resources;
  */
 public class ProgressDialog extends JDialog {
 	private static final long serialVersionUID = 1;
-
-	private final JLabel label;
 
 	private final JProgressBar progress;
 
@@ -89,10 +86,6 @@ public class ProgressDialog extends JDialog {
 				.clone();
 		fieldLastRowConstraints.gridheight = GridBagConstraints.REMAINDER;
 
-		// Progress text.
-		this.label = new JLabel(initialLabel);
-		content.add(this.label, fieldConstraints);
-
 		// Progress bar.
 		this.progress = new JProgressBar(min, max);
 		this.progress.setOrientation(JProgressBar.HORIZONTAL);
@@ -132,16 +125,6 @@ public class ProgressDialog extends JDialog {
 	 */
 	public boolean isCanceled() {
 		return this.canceled;
-	}
-
-	/**
-	 * Change the label on the progress bar.
-	 * 
-	 * @param text
-	 *            the new label.
-	 */
-	public void setLabel(final String text) {
-		this.label.setText(text);
 	}
 
 	/**
