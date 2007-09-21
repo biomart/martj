@@ -198,7 +198,7 @@ public class Table implements Comparable, TransactionListener {
 		// Drop all related mods.
 		if (tableKey == null)
 			this.mods.remove(dataset);
-		else
+		else if (this.mods.containsKey(dataset))
 			((Map) this.mods.get(dataset)).remove(tableKey);
 	}
 

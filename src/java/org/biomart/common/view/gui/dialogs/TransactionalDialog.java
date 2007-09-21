@@ -39,8 +39,20 @@ public class TransactionalDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 
 	public void setVisible(final boolean visible) {
+		this.setVisible(visible, false);
+	}
+	
+	/**
+	 * @see #setVisible(boolean)
+	 * @param visible
+	 * @see #setVisible(boolean)
+	 * @param allowVisModChange
+	 *            <tt>true</tt> if this dialog should reset visible changes.
+	 */
+	public void setVisible(final boolean visible,
+			final boolean allowVisModChange) {
 		if (visible)
-			Transaction.start();
+			Transaction.start(allowVisModChange);
 		super.setVisible(visible);
 		if (!visible)
 			Transaction.end();

@@ -114,7 +114,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 		super();
 
 		Transaction.addTransactionListener(this);
-		
+
 		// Create the file chooser for opening MartBuilder XML files.
 		this.xmlFileChooser = new JFileChooser() {
 			private static final long serialVersionUID = 1L;
@@ -154,12 +154,13 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 
 	/**
 	 * Get the undo manager for this tabset.
+	 * 
 	 * @return the undo manager.
 	 */
 	public UndoManager getUndoManager() {
 		return this.undoManager;
 	}
-	
+
 	private Object stateBeforeTransaction = null;
 
 	/**
@@ -494,11 +495,8 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 					defaultTab = null;
 
 				// Load the files.
-				Transaction.start();
+				Transaction.start(false);
 				final Mart mart = MartBuilderXML.load(file);
-				Transaction.end();
-				Transaction.start();
-				Transaction.resetVisibleModified();
 				Transaction.end();
 
 				MartTabSet.this.martModifiedStatus.put(mart, Boolean.FALSE);
@@ -631,7 +629,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output host.
 	 */
 	public void requestSetOutputHost(final String host) {
-		Transaction.start();
+		Transaction.start(false);
 		MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(host);
 		Transaction.end();
 	}
@@ -643,7 +641,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output port.
 	 */
 	public void requestSetOutputPort(final String port) {
-		Transaction.start();
+		Transaction.start(false);
 		MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(port);
 		Transaction.end();
 	}
@@ -655,7 +653,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new host.
 	 */
 	public void requestSetOverrideHost(final String host) {
-		Transaction.start();
+		Transaction.start(false);
 		MartTabSet.this.getSelectedMartTab().getMart().setOverrideHost(host);
 		Transaction.end();
 	}
@@ -667,7 +665,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new port.
 	 */
 	public void requestSetOverridePort(final String port) {
-		Transaction.start();
+		Transaction.start(false);
 		MartTabSet.this.getSelectedMartTab().getMart().setOverridePort(port);
 		Transaction.end();
 	}
@@ -682,8 +680,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 			final ConstructorRunnable constructor) {
 		// Create a progress monitor.
 		final ProgressDialog progressMonitor = new ProgressDialog(this,
-				Resources
-				.get("creatingMart"), 0, 100);
+				Resources.get("creatingMart"), 0, 100);
 		progressMonitor.setVisible(true);
 
 		// Start the construction in a thread. It does not need to be
@@ -783,7 +780,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 */
 	public void requestMonitorRemoteHost(final String host, final String port,
 			final boolean defaultJob) {
-		Transaction.start();
+		Transaction.start(false);
 		MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(host);
 		MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(port);
 		Transaction.end();
@@ -873,7 +870,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new case.
 	 */
 	public void requestChangeNameCase(final int nameCase) {
-		Transaction.start();
+		Transaction.start(false);
 		MartTabSet.this.getSelectedMartTab().getMart().setCase(nameCase);
 		Transaction.end();
 	}

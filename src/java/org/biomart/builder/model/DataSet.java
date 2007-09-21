@@ -2762,6 +2762,18 @@ public class DataSet extends Schema {
 
 		private void acceptRejectChanges(final Table targetTable,
 				final boolean reject) {
+			// Find parent relation and reset that.
+			if (this.getType()!=DataSetTableType.MAIN) {
+				Relation rel = null;
+				for (final Iterator i = this.getForeignKeys().iterator(); i.hasNext() && rel==null; )
+					for (final Iterator j = ((Key)i.next()).getRelations().iterator(); j.hasNext() && rel==null; ) 
+						rel = (Relation)j.next();
+				// Reset it.
+				rel.transactionResetVisibleModified();
+			}
+			// Reset all keys.
+			for (final Iterator i = this.getKeys().iterator(); i.hasNext(); )
+				((Key)i.next()).transactionResetVisibleModified();
 			// Locate the TU that provides the target table.
 			for (final Iterator i = this.getTransformationUnits().iterator(); i
 					.hasNext();) {

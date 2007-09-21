@@ -79,6 +79,7 @@ import org.biomart.builder.view.gui.dialogs.SuggestUnrolledDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.UnrolledRelationDialog;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
@@ -373,7 +374,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestChangeOptimiserType(final DataSet dataset,
 			final DataSetOptimiserType type) {
-		Transaction.start();
+		Transaction.start(false);
 		dataset.setDataSetOptimiserType(type);
 		Transaction.end();
 	}
@@ -389,7 +390,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestAcceptAll(final DataSetTable dsTable,
 			final Table targetTable) {
-		Transaction.start();
+		Transaction.start(false);
 		dsTable.acceptChanges(targetTable);
 		Transaction.end();
 	}
@@ -405,7 +406,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRejectAll(final DataSetTable dsTable,
 			final Table targetTable) {
-		Transaction.start();
+		Transaction.start(false);
 		dsTable.rejectChanges(targetTable);
 		Transaction.end();
 	}
@@ -458,7 +459,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to make invisible.
 	 */
 	public void requestInvisibleDataSet(final DataSet dataset) {
-		Transaction.start();
+		Transaction.start(false);
 		dataset.setInvisible(true);
 		Transaction.end();
 	}
@@ -506,7 +507,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestMaskColumns(final DataSet ds, final Collection columns) {
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			for (final Iterator i = columns.iterator(); i.hasNext();)
 				((DataSetColumn) i.next()).setColumnMasked(true);
 		} catch (final ValidationException e) {
@@ -525,7 +526,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the column to index.
 	 */
 	public void requestIndexColumn(final DataSet ds, final DataSetColumn column) {
-		Transaction.start();
+		Transaction.start(false);
 		column.setColumnIndexed(true);
 		Transaction.end();
 	}
@@ -539,7 +540,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to make undistinct.
 	 */
 	public void requestUndistinctTable(final DataSet ds, final DataSetTable dst) {
-		Transaction.start();
+		Transaction.start(false);
 		dst.setDistinctTable(false);
 		Transaction.end();
 	}
@@ -553,7 +554,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to make distinct.
 	 */
 	public void requestDistinctTable(final DataSet ds, final DataSetTable dst) {
-		Transaction.start();
+		Transaction.start(false);
 		dst.setDistinctTable(true);
 		Transaction.end();
 	}
@@ -568,7 +569,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestMaskDimension(final DataSet ds, final DataSetTable dim) {
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			dim.setDimensionMasked(true);
 		} catch (final ValidationException e) {
 			StackTrace.showStackTrace(e);
@@ -587,7 +588,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnmaskDimension(final DataSet ds, final DataSetTable dim) {
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			dim.setDimensionMasked(false);
 		} catch (final ValidationException ve) {
 			StackTrace.showStackTrace(ve);
@@ -605,7 +606,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dimension to merge.
 	 */
 	public void requestMergeDimension(final DataSet ds, final DataSetTable dst) {
-		Transaction.start();
+		Transaction.start(false);
 		dst.getFocusRelation().setMergeRelation(ds, true);
 		Transaction.end();
 	}
@@ -619,7 +620,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dimension to unmerge.
 	 */
 	public void requestUnmergeDimension(final DataSet ds, final DataSetTable dst) {
-		Transaction.start();
+		Transaction.start(false);
 		dst.getFocusRelation().setMergeRelation(ds, false);
 		Transaction.end();
 	}
@@ -656,7 +657,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		if (newN <= 1)
 			// Uncompound the relation.
 			relation.setCompoundRelation(ds, null);
@@ -701,7 +702,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		if (newN <= 1)
 			// Uncompound the relation.
 			relation.setCompoundRelation(ds, null);
@@ -761,7 +762,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newDef == def)
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		relation.setUnrolledRelation(ds, newDef);
 		Transaction.end();
 	}
@@ -800,7 +801,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		// Do the work.
 		if (newN <= 1) {
 			// Uncompound the relation.
@@ -895,7 +896,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final boolean hard = dialog.getHard();
 		dialog.dispose();
 
-		Transaction.start();
+		Transaction.start(false);
 		RestrictedRelationDefinition def = dsTable == null ? relation
 				.getRestrictRelation(dataset, index) : relation
 				.getRestrictRelation(dataset, dsTable.getName(), index);
@@ -946,7 +947,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (index == -1)
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		if (dsTable != null)
 			relation.setRestrictRelation(dataset, dsTable.getName(), null,
 					iteration);
@@ -967,7 +968,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestMaskRelation(final DataSet ds, final DataSetTable dst,
 			final Relation relation) {
-		Transaction.start();
+		Transaction.start(false);
 		if (dst != null)
 			relation.setMaskRelation(ds, dst.getName(), true);
 		else
@@ -1009,7 +1010,7 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			// Do the work.
 			if (dst != null)
 				relation.setLoopbackRelation(ds, dst.getName(), loopedCol);
@@ -1027,10 +1028,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 * Update the counts on all applications of this partition table.
 	 */
 	public void requestUpdateAllPTCounts() {
-		Transaction.start();
-		for (final Iterator k = this.getMartTab().getMart()
+		// In the background, do the synchronisation.
+		new LongProcess() {
+			public void run() throws Exception {
+
+		Transaction.start(false);
+		for (final Iterator k = DataSetTabSet.this.getMartTab().getMart()
 				.getPartitionTableNames().iterator(); k.hasNext();)
-			for (final Iterator i = ((DataSet) this.getMartTab().getMart()
+			for (final Iterator i = ((DataSet) DataSetTabSet.this.getMartTab().getMart()
 					.getDataSets().get(k.next())).asPartitionTable()
 					.getAllApplications().values().iterator(); i.hasNext();)
 				for (final Iterator j = ((Map) i.next()).values().iterator(); j
@@ -1043,6 +1048,7 @@ public class DataSetTabSet extends JTabbedPane {
 						StackTrace.showStackTrace(e);
 					}
 		Transaction.end();
+			}}.start();
 	}
 
 	/**
@@ -1052,7 +1058,10 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the partition table to update counts on.
 	 */
 	public void requestUpdatePTCounts(final PartitionTable pt) {
-		Transaction.start();
+		// In the background, do the synchronisation.
+		new LongProcess() {
+			public void run() throws Exception {
+		Transaction.start(false);
 		for (final Iterator i = pt.getAllApplications().values().iterator(); i
 				.hasNext();)
 			for (final Iterator j = ((Map) i.next()).values().iterator(); j
@@ -1065,6 +1074,7 @@ public class DataSetTabSet extends JTabbedPane {
 					StackTrace.showStackTrace(e);
 				}
 		Transaction.end();
+			}}.start();
 	}
 
 	/**
@@ -1092,7 +1102,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            mask it?
 	 */
 	public void requestMaskDataSet(final DataSet ds, final boolean masked) {
-		Transaction.start();
+		Transaction.start(false);
 		ds.setMasked(masked);
 		Transaction.end();
 	}
@@ -1109,7 +1119,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestForceRelation(final DataSet ds, final DataSetTable dst,
 			final Relation relation) {
-		Transaction.start();
+		Transaction.start(false);
 		if (dst != null)
 			relation.setForceRelation(ds, dst.getName(), true);
 		else
@@ -1130,7 +1140,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestMaskAllRelations(final DataSet ds,
 			final DataSetTable dst, final Table table) {
-		Transaction.start();
+		Transaction.start(false);
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
 			if (dst != null)
@@ -1163,7 +1173,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final boolean groupBy = dialog.getGroupBy();
 		dialog.dispose();
 
-		Transaction.start();
+		Transaction.start(false);
 		if (column == null) {
 			final String name = dsTable.getNextExpressionColumn();
 			column = new ExpressionColumn(name, dsTable,
@@ -1189,7 +1199,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveExpressionColumn(final DataSetTable dsTable,
 			final ExpressionColumn column) {
-		Transaction.start();
+		Transaction.start(false);
 		dsTable.getColumns().remove(column.getName());
 		Transaction.end();
 	}
@@ -1219,7 +1229,7 @@ public class DataSetTabSet extends JTabbedPane {
 		final boolean hard = dialog.getHard();
 		dialog.dispose();
 
-		Transaction.start();
+		Transaction.start(false);
 		RestrictedTableDefinition def = dsTable == null ? table
 				.getRestrictTable(dataset) : table.getRestrictTable(dataset,
 				dsTable.getName());
@@ -1252,7 +1262,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (choice != JOptionPane.YES_OPTION)
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		DataSetTabSet.this.martTab.getMart().getDataSets().clear();
 		Transaction.end();
 	}
@@ -1274,7 +1284,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (choice != JOptionPane.YES_OPTION)
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		this.martTab.getMart().getDataSets().remove(dataset.getName());
 		Transaction.end();
 	}
@@ -1291,7 +1301,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnrestrictTable(final DataSet dataset,
 			final DataSetTable dsTable, final Table table) {
-		Transaction.start();
+		Transaction.start(false);
 		if (dsTable != null)
 			table.setRestrictTable(dataset, dsTable.getName(), null);
 		else
@@ -1327,7 +1337,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newName.length() == 0)
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		dataset.setName(newName);
 		Transaction.end();
 	}
@@ -1365,7 +1375,7 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			dsColumn.setColumnRename(newName);
 		} catch (final ValidationException e) {
 			StackTrace.showStackTrace(e);
@@ -1404,7 +1414,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newName.length() == 0)
 			return;
 
-		Transaction.start();
+		Transaction.start(false);
 		dsTable.setTableRename(newName);
 		Transaction.end();
 	}
@@ -1421,7 +1431,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Relation relation) {
 
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			relation.setSubclassRelation(ds, true);
 		} catch (final ValidationException e) {
 			StackTrace.showStackTrace(e);
@@ -1456,7 +1466,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Table nrTable = dialog.getNRTable();
 			final Column nrParentIDCol = dialog.getNRParentIDColumn();
 			final Column nrChildIDCol = dialog.getNRChildIDColumn();
-			Transaction.start();
+			Transaction.start(false);
 			final DataSet ds = this.getMartTab().getMart()
 					.suggestUnrolledDataSets(nTable, nIDCol, nNamingCol,
 							nrTable, nrParentIDCol, nrChildIDCol);
@@ -1466,7 +1476,6 @@ public class DataSetTabSet extends JTabbedPane {
 		} finally {
 			if (dialog != null)
 				dialog.dispose();
-			Transaction.resetVisibleModified();
 			Transaction.end();
 		}
 	}
@@ -1491,13 +1500,12 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			this.martTab.getMart().suggestDataSets(dialog.getSelectedTables());
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {
 			dialog.dispose();
-			Transaction.resetVisibleModified();
 			Transaction.end();
 		}
 	}
@@ -1526,14 +1534,13 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			this.martTab.getMart().suggestInvisibleDataSets(dataset,
 					dialog.getSelectedColumns());
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {
 			dialog.dispose();
-			Transaction.resetVisibleModified();
 			Transaction.end();
 		}
 	}
@@ -1560,7 +1567,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnmaskColumns(final DataSet ds, final Collection columns) {
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			for (final Iterator i = columns.iterator(); i.hasNext();)
 				((DataSetColumn) i.next()).setColumnMasked(false);
 		} catch (final ValidationException e) {
@@ -1580,7 +1587,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnindexColumn(final DataSet ds,
 			final DataSetColumn column) {
-		Transaction.start();
+		Transaction.start(false);
 		column.setColumnIndexed(false);
 		Transaction.end();
 	}
@@ -1597,7 +1604,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnforceRelation(final DataSet ds,
 			final DataSetTable dst, final Relation relation) {
-		Transaction.start();
+		Transaction.start(false);
 		if (dst != null)
 			relation.setForceRelation(ds, dst.getName(), false);
 		else
@@ -1617,7 +1624,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnmaskRelation(final DataSet ds, final DataSetTable dst,
 			final Relation relation) {
-		Transaction.start();
+		Transaction.start(false);
 		if (dst != null)
 			relation.setMaskRelation(ds, dst.getName(), false);
 		else
@@ -1637,7 +1644,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnmaskAllRelations(final DataSet ds,
 			final DataSetTable dst, final Table table) {
-		Transaction.start();
+		Transaction.start(false);
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
 			if (dst != null)
@@ -1659,7 +1666,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestUnsubclassRelation(final DataSet ds,
 			final Relation relation) {
 		try {
-			Transaction.start();
+			Transaction.start(false);
 			relation.setSubclassRelation(ds, false);
 		} catch (final ValidationException ve) {
 			StackTrace.showStackTrace(ve);
@@ -1675,7 +1682,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to do this to.
 	 */
 	public void requestNoIndexOptimiser(final DataSet dataset) {
-		Transaction.start();
+		Transaction.start(false);
 		dataset.setIndexOptimiser(false);
 		Transaction.end();
 	}
@@ -1687,7 +1694,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to do this to.
 	 */
 	public void requestIndexOptimiser(final DataSet dataset) {
-		Transaction.start();
+		Transaction.start(false);
 		dataset.setIndexOptimiser(true);
 		Transaction.end();
 	}
@@ -1699,7 +1706,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to make visible.
 	 */
 	public void requestVisibleDataSet(final DataSet dataset) {
-		Transaction.start();
+		Transaction.start(false);
 		dataset.setInvisible(false);
 		Transaction.end();
 	}

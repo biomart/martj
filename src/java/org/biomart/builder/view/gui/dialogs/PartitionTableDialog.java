@@ -81,7 +81,6 @@ import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.view.gui.DataSetTabSet;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.dialogs.TransactionalDialog;
@@ -1140,7 +1139,6 @@ public class PartitionTableDialog extends TransactionalDialog {
 			}
 			pt.applyTo(dimension.getDataSet(), dimension.getName(), pta);
 		}
-		Transaction.resetVisibleModified();
 		// Open selected table with dimension selected in appliedList.
 		final PartitionTableDialog dialog = new PartitionTableDialog(
 				(DataSet) mart.getDataSets().get(
@@ -1256,7 +1254,6 @@ public class PartitionTableDialog extends TransactionalDialog {
 			}
 			pt.applyTo(dataset, PartitionTable.NO_DIMENSION, pta);
 		}
-		Transaction.resetVisibleModified();
 		// Open selected table with dimension selected in appliedList.
 		final PartitionTableDialog dialog = new PartitionTableDialog(
 				(DataSet) mart.getDataSets().get(

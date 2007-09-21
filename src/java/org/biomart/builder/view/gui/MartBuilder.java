@@ -692,17 +692,17 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
-											.getSchemas().size() > 1);
+											.getSchemas().size() > 0);
 					MartBuilderMenuBar.this.removeAllDatasets
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
-											.getDataSets().size() > 1);
-					MartBuilderMenuBar.this.updateAllSchemas
+											.getDataSets().size() > 0);
+					MartBuilderMenuBar.this.updateAllPartitionCounts
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
-											.getPartitionTableNames().size() > 1);
+											.getPartitionTableNames().size() > 0);
 				}
 			});
 			schemaMenu.addMenuListener(new MenuListener() {

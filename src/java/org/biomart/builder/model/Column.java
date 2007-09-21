@@ -50,7 +50,7 @@ public class Column implements Comparable, TransactionListener {
 	/**
 	 * Some subclasses refer to this directly.
 	 */
-	protected boolean visibleModified = true;
+	protected boolean visibleModified = Transaction.getCurrentTransaction().isAllowVisModChange();
 
 	private boolean directModified = false;
 

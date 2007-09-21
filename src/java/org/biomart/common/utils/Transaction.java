@@ -363,11 +363,15 @@ public class Transaction {
 	 * and
 	 * {@link TransactionListener#transactionStarted(org.biomart.common.utils.Transaction.TransactionEvent)}
 	 * is called.
+	 * 
+	 * @param allowVisModChange
+	 *            does this transaction change visible modifiers?
 	 */
-	public static void start() {
+	public static void start(final boolean allowVisModChange) {
 		synchronized (Transaction.LOCK) {
 			if (++Transaction.inProgress == 1) {
-				Transaction.currentTransaction = new Transaction();
+				Transaction.currentTransaction = new Transaction(
+						allowVisModChange);
 				final TransactionEvent event = new TransactionEvent(
 						Transaction.currentTransaction);
 				for (final Iterator i = Transaction.getOrderedListeners()
@@ -375,6 +379,9 @@ public class Transaction {
 					final TransactionListener listener = (TransactionListener) i
 							.next();
 					listener.transactionResetDirectModified();
+					// FIXME
+					//if (allowVisModChange)
+					//	listener.transactionResetVisibleModified();
 					listener.transactionStarted(event);
 				}
 			}
@@ -511,10 +518,24 @@ public class Transaction {
 		}
 	}
 
+	private final boolean allowVisModChange;
+
 	/**
 	 * Create a new, empty transaction.
+	 * 
+	 * @param allowVisModChange
+	 *            Does this transaction modify visible modification flags?
 	 */
-	public Transaction() {
+	public Transaction(final boolean allowVisModChange) {
+		this.allowVisModChange = allowVisModChange;
+	}
 
+	/**
+	 * Does this transaction modify visible modification flags?
+	 * 
+	 * @return <tt>true</tt> if it does.
+	 */
+	public boolean isAllowVisModChange() {
+		return this.allowVisModChange;
 	}
 }

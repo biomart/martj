@@ -479,8 +479,6 @@ public class SchemaContext implements DiagramContext {
 				}
 			});
 			contextMenu.add(remove);
-			if (!key.getStatus().equals(ComponentStatus.HANDMADE))
-				remove.setEnabled(false);
 
 			// Separator.
 			contextMenu.addSeparator();

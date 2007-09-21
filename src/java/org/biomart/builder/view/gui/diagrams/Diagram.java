@@ -202,7 +202,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this.hideMasked = new JCheckBox(Resources.get("hideMaskedTitle"));
 		this.hideMasked.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				Transaction.start();
+				Transaction.start(false);
 				Diagram.this.hideMaskedChanged(Diagram.this.hideMasked
 						.isSelected());
 				Transaction.end();
