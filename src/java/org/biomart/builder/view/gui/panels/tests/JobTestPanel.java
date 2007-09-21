@@ -18,20 +18,21 @@
 
 package org.biomart.builder.view.gui.panels.tests;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
+import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.dialogs.ViewTextDialog;
@@ -41,10 +42,7 @@ import org.biomart.runner.model.tests.JobTest;
 /**
  * Test panels represent all the different options that can be used to run a
  * particular test. They completely contain each kind of test and run those
- * tests, with the abstract parent class providing monitor functions. Static
- * methods allow for the registration and discovery of various panel types. This
- * should be done using a static initialiser block which calls 
- * {@link #addPanel(String, JobTestPanel)} with an instance of the panel.
+ * tests, with the abstract parent class providing monitor functions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by $Author:
@@ -53,16 +51,22 @@ import org.biomart.runner.model.tests.JobTest;
  */
 public abstract class JobTestPanel extends JPanel {
 
-	private static final Map panels = new TreeMap();
+	private static final Color NOT_YET_RUN = Color.YELLOW;
+
+	private static final Color RUNNING = Color.ORANGE;
+
+	private static final Color FAILED = Color.RED;
+
+	private static final Color OK = Color.GREEN;
 
 	private boolean started = false;
-	
+
 	private final JButton start;
-	
+
 	private final JButton stop;
-	
+
 	private final JButton report;
-	
+
 	private final JProgressBar progress;
 
 	/**
@@ -85,40 +89,6 @@ public abstract class JobTestPanel extends JPanel {
 	 */
 	protected final GridBagConstraints fieldLastRowConstraints;
 
-	/**
-	 * Get the available panel names.
-	 * 
-	 * @return the names.
-	 */
-	public static Collection getPanelNames() {
-		return JobTestPanel.panels.keySet();
-	}
-
-	/**
-	 * Obtain the named panel from the map of available ones.
-	 * 
-	 * @param name
-	 *            the name to retrieve.
-	 * @return an instance of the panel.
-	 */
-	public static JobTestPanel getPanel(final String name) {
-		if (!JobTestPanel.panels.containsKey(name))
-			return null;
-		return (JobTestPanel) JobTestPanel.panels.get(name);
-	}
-
-	/**
-	 * Add a new panel to the list of available ones.
-	 * 
-	 * @param name
-	 *            the name of this new panel.
-	 * @param panel
-	 *            the panel object.
-	 */
-	protected static void addPanel(final String name, final JobTestPanel panel) {
-		JobTestPanel.panels.put(name, panel);
-	}
-	
 	/**
 	 * Creates a new panel.
 	 * 
@@ -170,17 +140,18 @@ public abstract class JobTestPanel extends JPanel {
 		});
 		this.report.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				ViewTextDialog.displayText(Resources.get("testReportTitle"), JobTestPanel.this.getJobTest().getReport());
+				ViewTextDialog.displayText(Resources.get("testReportTitle"),
+						JobTestPanel.this.getJobTest().getReport());
 			}
 		});
-		
+
 		// Create progress bar.
 		this.progress = new JProgressBar();
 		this.progress.setMinimum(0);
 		this.progress.setMaximum(100);
 		this.progress.setValue(0);
 		this.progress.setIndeterminate(false);
-		
+
 		// Add buttons and progress bar to GUI.
 		final JPanel buttonPanel = new JPanel();
 		buttonPanel.add(this.start);
@@ -194,7 +165,8 @@ public abstract class JobTestPanel extends JPanel {
 		this.stop.setEnabled(false);
 		this.report.setEnabled(false);
 
-		// TODO Set report button background status color to not-yet-run.
+		// Set report button background status color to not-yet-run.
+		this.report.setBackground(JobTestPanel.NOT_YET_RUN);
 	}
 
 	/**
@@ -202,6 +174,13 @@ public abstract class JobTestPanel extends JPanel {
 	 * constraints.
 	 */
 	protected abstract void addFields();
+
+	/**
+	 * Get the name to identify this panel in lists with.
+	 * 
+	 * @return the name to use.
+	 */
+	protected abstract String getDisplayName();
 
 	private boolean validateOptions() {
 		final String[] messages = this.doValidateOptions();
@@ -220,10 +199,10 @@ public abstract class JobTestPanel extends JPanel {
 	 * @return the list of validation errors.
 	 */
 	protected abstract String[] doValidateOptions();
-	
+
 	/**
-	 * Called when the test is about to be run and needs the options
-	 * copying from user input fields to the test before execution.
+	 * Called when the test is about to be run and needs the options copying
+	 * from user input fields to the test before execution.
 	 */
 	protected abstract void setJobTestOptions();
 
@@ -248,11 +227,76 @@ public abstract class JobTestPanel extends JPanel {
 			// Reset and start progress bar.
 			this.progress.setValue(0);
 			this.progress.setIndeterminate(true);
-			// TODO Set report button background status to running.
-			// TODO Add progress bar update timer.
-			// TODO When ends, update started, disable stop, enable start,
-			// enable report, set progress bar to 100%, set report
-			// button background status to OK/failed.
+			// Set report button background status to running.
+			this.report.setBackground(JobTestPanel.RUNNING);
+
+			// Create a timer thread that will update the progress dialog.
+			// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
+			// equals 1 second.)
+			final Timer timer = new Timer(300, null);
+			timer.setInitialDelay(300); // Start immediately upon request.
+			timer.setCoalesce(true); // Coalesce delayed events.
+			timer.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// Did the job complete yet?
+							if (!JobTestPanel.this.getJobTest().isFinished()) {
+								// If not, update the progress report.
+								final int value = JobTestPanel.this
+										.getJobTest().getProgress();
+								if (value > 0) {
+									JobTestPanel.this.progress
+											.setIndeterminate(false);
+									JobTestPanel.this.progress.setValue(value);
+								}
+							} else {
+								// If it completed, close the task and tidy up.
+								// Stop the timer.
+								timer.stop();
+								// If it failed, show the exception.
+								final Exception failure = JobTestPanel.this
+										.getJobTest().getException();
+								// By singling out ConstructorException we can
+								// show users useful messages straight away.
+								if (failure != null)
+									StackTrace
+											.showStackTrace(failure instanceof ConstructorException ? failure
+													: new ConstructorException(
+															Resources
+																	.get(
+																			"martTestFailed",
+																			JobTestPanel.this
+																					.getDisplayName()),
+															failure));
+								// Inform user of success, if it succeeded.
+								else
+									JOptionPane.showMessageDialog(null,
+											Resources.get("martTestComplete"),
+											Resources.get("messageTitle"),
+											JOptionPane.INFORMATION_MESSAGE);
+								// When ends, update started, disable stop,
+								// enable start,
+								// enable report, set progress bar to 100%, set
+								// report button background status to OK/failed.
+								JobTestPanel.this.start.setEnabled(true);
+								JobTestPanel.this.stop.setEnabled(false);
+								JobTestPanel.this.report
+										.setEnabled(failure != null);
+								JobTestPanel.this.progress.setValue(100);
+								JobTestPanel.this.progress
+										.setIndeterminate(false);
+								JobTestPanel.this.report
+										.setBackground(failure != null ? JobTestPanel.FAILED
+												: JobTestPanel.OK);
+							}
+						}
+					});
+				}
+			});
+
+			// Start the timer.
+			timer.start();
 		}
 	}
 

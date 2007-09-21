@@ -86,6 +86,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	protected String name;
 
+	private final String originalName;
+
 	private boolean keyGuessing;
 
 	private boolean masked;
@@ -175,6 +177,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		Log.debug("Creating schema " + name);
 		this.mart = mart;
 		this.setName(name);
+		this.originalName = this.getName();
 		this.setKeyGuessing(keyGuessing);
 		this.setDataLinkSchema(dataLinkSchema);
 		this.setDataLinkDatabase(dataLinkDatabase);
@@ -545,18 +548,16 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			return false;
 		else if (o instanceof Schema) {
 			final Schema t = (Schema) o;
-			return (this.mart.getUniqueId() + "_" + this.name).equals(t.mart
-					.getUniqueId()
-					+ "_" + t.name);
+			return (this.mart.getUniqueId() + "_" + this.originalName)
+					.equals(t.mart.getUniqueId() + "_" + t.originalName);
 		} else
 			return false;
 	}
 
 	public int compareTo(final Object obj) {
 		final Schema t = (Schema) obj;
-		return (this.mart.getUniqueId() + "_" + this.name).compareTo(t.mart
-				.getUniqueId()
-				+ "_" + t.name);
+		return (this.mart.getUniqueId() + "_" + this.originalName)
+				.compareTo(t.mart.getUniqueId() + "_" + t.originalName);
 	}
 
 	public String toString() {

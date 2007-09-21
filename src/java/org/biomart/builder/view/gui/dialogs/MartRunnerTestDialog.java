@@ -19,6 +19,7 @@
 package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.util.TreeMap;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -44,6 +45,12 @@ import org.biomart.runner.model.JobPlan;
 public class MartRunnerTestDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
+	private static final TreeMap panels = new TreeMap();
+
+	static {
+		// TODO Populate panels with panel names -> panels.
+	}
+
 	/**
 	 * Opens a test dialog to allow tests against a particular job plan.
 	 * 
@@ -64,7 +71,8 @@ public class MartRunnerTestDialog extends JDialog {
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-		final JList lhs = new JList(JobTestPanel.getPanelNames().toArray());
+		final JList lhs = new JList(MartRunnerTestDialog.panels.keySet()
+				.toArray());
 		final JPanel rhs = new JPanel(new BorderLayout());
 		final JPanel rhsHolder = new JPanel();
 		final JPanel closeHolder = new JPanel();
@@ -81,8 +89,8 @@ public class MartRunnerTestDialog extends JDialog {
 			public void valueChanged(ListSelectionEvent e) {
 				rhsHolder.removeAll();
 				if (lhs.getSelectedValue() != null) {
-					rhsHolder.add(JobTestPanel.getPanel((String) lhs
-							.getSelectedValue()));
+					rhsHolder.add((JobTestPanel) MartRunnerTestDialog.panels
+							.get((String) lhs.getSelectedValue()));
 					MartRunnerTestDialog.this.pack();
 				}
 			}
