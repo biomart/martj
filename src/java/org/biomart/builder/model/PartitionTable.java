@@ -611,8 +611,8 @@ public abstract class PartitionTable implements TransactionListener {
 			return false;
 		else if (obj instanceof PartitionTable) {
 			final PartitionTable pt = (PartitionTable) obj;
-			return (this.uniqueId + "_" + this.getName()).equals(pt.uniqueId
-					+ "_" + pt.getName());
+			return (this.uniqueId + "_" + this.getOriginalName()).equals(pt.uniqueId
+					+ "_" + pt.getOriginalName());
 		} else
 			return false;
 	}
