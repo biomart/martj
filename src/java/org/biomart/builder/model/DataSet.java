@@ -391,6 +391,12 @@ public class DataSet extends Schema {
 			};
 			// Listen to partition table and pass on modification events.
 			this.partitionTable.addPropertyChangeListener(this.listener);
+			// Update ourselves to remove dimensions and subclasses.
+			try {
+			this.synchronise();
+			} catch (final Exception e) {
+				throw new PartitionException(e);
+			}
 		} else {
 			// Remove all applications first.
 			for (final Iterator j = this.partitionTable.getAllApplications()
@@ -415,7 +421,13 @@ public class DataSet extends Schema {
 			}
 			// Drop the table.
 			this.partitionTable = null;
-		}
+			// Update ourselves to restore dimensions and subclasses.
+			try {
+			this.synchronise();
+			} catch (final Exception e) {
+				throw new PartitionException(e);
+			}
+			}
 		this.pcs.firePropertyChange("partitionTable", oldValue, partitionTable);
 	}
 
@@ -950,7 +962,7 @@ public class DataSet extends Schema {
 		// a dimension ourselves.
 		this.processTable(parentTU, dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
-				relationCount, subclassCount, !type
+				relationCount, subclassCount, !this.isPartitionTable() && !type
 						.equals(DataSetTableType.DIMENSION),
 				Collections.EMPTY_LIST, Collections.EMPTY_LIST,
 				relationIteration, 0, unusedCols, uniqueBases);
@@ -3020,6 +3032,33 @@ public class DataSet extends Schema {
 							.iterator().next()).getOneKey().getTable();
 			}
 			return null;
+		}
+
+		/**
+		 * Is this table masked in explain table dialog.
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isExplainHideMasked() {
+			return this.getMods("explainHideMasked").containsKey(this.getName());
+		}
+
+		/**
+		 * Mask this table in explain table dialog.
+		 * 
+		 * @param explainHideMasked
+		 *            <tt>true</tt> to mask.
+		 */
+		public void setExplainHideMasked(final boolean explainHideMasked) {
+			final boolean oldValue = this.isExplainHideMasked();
+			if (explainHideMasked == oldValue)
+				return;
+			if (explainHideMasked)
+				this.getMods("explainHideMasked").put(this.getName(), null);
+			else
+				this.getMods("explainHideMasked").remove(this.getName());
+			this.pcs.firePropertyChange("explainHideMasked", oldValue,
+					explainHideMasked);
 		}
 
 		/**

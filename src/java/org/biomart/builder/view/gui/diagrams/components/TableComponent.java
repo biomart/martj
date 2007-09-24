@@ -64,6 +64,8 @@ import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
  */
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
+	
+	private static final int GRIDBAG_LIMIT = 500;
 
 	/**
 	 * Background colour for all normal tables.
@@ -262,7 +264,7 @@ public class TableComponent extends BoxShapedComponent {
 		}
 
 		// GridBagLayout has a maximum number of components (512).
-		if (sortedColMap.size() <= 500) {
+		if (sortedColMap.size() <= TableComponent.GRIDBAG_LIMIT) {
 			// If dataset table...
 			if (this.getTable() instanceof DataSetTable
 					|| this.getTable() instanceof RealisedTable
@@ -304,7 +306,7 @@ public class TableComponent extends BoxShapedComponent {
 			}
 		} else
 			this.columnsListPanel.add(new JLabel(Resources.get(
-					"tooManyColsToDisplay", "500")));
+					"tooManyColsToDisplay", ""+TableComponent.GRIDBAG_LIMIT)));
 
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));

@@ -111,7 +111,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 
 	private final DataSet ds;
 
-	private String tableName;
+	private final DataSetTable dsTable;
 
 	private GridBagConstraints fieldConstraints;
 
@@ -137,6 +137,15 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		}
 	};
 
+	private final PropertyChangeListener recalcListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			ExplainTableDialog.this.maskedHidden
+					.setSelected(ExplainTableDialog.this.dsTable
+							.isExplainHideMasked());
+			ExplainTableDialog.this.recalculateTransformation();
+		}
+	};
+
 	/**
 	 * The background for the masked checkbox.
 	 */
@@ -150,7 +159,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		this.setModal(true);
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		this.ds = dsTable.getDataSet();
-		this.tableName = dsTable.getName();
+		this.dsTable = dsTable;
 		this.martTab = martTab;
 		this.schemaTabSet = martTab.getSchemaTabSet();
 
@@ -159,14 +168,22 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 
 		// Create the hide masked box.
 		this.maskedHidden = new JCheckBox(Resources.get("hideMaskedTitle"));
+		this.maskedHidden.setSelected(dsTable.isExplainHideMasked());
 		this.maskedHidden.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				ExplainTableDialog.this.recalculateTransformation();
+				dsTable
+						.setExplainHideMasked(ExplainTableDialog.this.maskedHidden
+								.isSelected());
 			}
 		});
 		// It has a semi-transparent background with no border.
 		this.maskedHidden.setOpaque(true);
 		this.maskedHidden.setBackground(ExplainTableDialog.MASK_BG_COLOR);
+
+		// Weak-listen to DataSetTable.explainHideMasked and recalc on change.
+		dsTable.addPropertyChangeListener("explainHideMasked",
+				new WeakPropertyChangeListener("explainHideMasked",
+						this.recalcListener));
 
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
@@ -348,8 +365,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 				// and performance issues. Refuse to do the display and
 				// instead put up a helpful message. Limit should be
 				// configurable from a properties file.
-				final Collection units = ((DataSetTable) ExplainTableDialog.this.ds
-						.getTables().get(ExplainTableDialog.this.tableName))
+				final Collection units = ExplainTableDialog.this.dsTable
 						.getTransformationUnits();
 				if (units.size() > ExplainTableDialog.MAX_UNITS)
 					ExplainTableDialog.this.transformation.add(new JLabel(
@@ -390,8 +406,8 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 									shownTables);
 						} else if (tu instanceof SkipTable) {
 							// Don't show these if we're hiding masked things.
-							if (ExplainTableDialog.this.maskedHidden
-									.isSelected())
+							if (ExplainTableDialog.this.dsTable
+									.isExplainHideMasked())
 								continue;
 							// Temp table to schema table join.
 							label = new JLabel(

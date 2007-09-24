@@ -379,9 +379,6 @@ public class Transaction {
 					final TransactionListener listener = (TransactionListener) i
 							.next();
 					listener.transactionResetDirectModified();
-					// FIXME
-					//if (allowVisModChange)
-					//	listener.transactionResetVisibleModified();
 					listener.transactionStarted(event);
 				}
 			}

@@ -301,6 +301,37 @@ public class MartRunnerMonitorDialog extends JFrame {
 						});
 						menu.add(remove);
 
+						// Remove all job.
+						final JMenuItem removeAll = new JMenuItem(Resources
+								.get("removeAllJobsTitle"));
+						removeAll.setMnemonic(Resources.get(
+								"removeAllJobsMnemonic").charAt(0));
+						removeAll.addActionListener(new ActionListener() {
+							public void actionPerformed(final ActionEvent evt) {
+								// Confirm.
+								if (JOptionPane.showConfirmDialog(jobList,
+										Resources.get("removeAllJobsConfirm"),
+										Resources.get("questionTitle"),
+										JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+									new LongProcess() {
+										public void run() throws Exception {
+											// Remove all jobs.
+											final Enumeration e = jobPlanListModel
+													.elements();
+											while (e.hasMoreElements())
+												Client.removeJob(host, port,
+														((JobPlan) e
+																.nextElement())
+																.getJobId());
+											// Update the list.
+											MartRunnerMonitorDialog.this.refreshJobList
+													.doClick();
+										}
+									}.start();
+							}
+						});
+						menu.add(removeAll);
+
 						// Show the menu.
 						menu.show(jobList, e.getX(), e.getY());
 						e.consume();

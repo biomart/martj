@@ -908,6 +908,13 @@ public class MartBuilderXML extends DefaultHandler {
 					this.writeAttribute("newName", renameTbl, xmlWriter);
 					this.closeElement("renamedTable", xmlWriter);
 				}
+				// Explain-hide-masked table.
+				if (dsTable.isExplainHideMasked()) {
+					this.openElement("explainHideMasked", xmlWriter);
+					this.writeAttribute("tableKey", dsTable.getName(),
+							xmlWriter);
+					this.closeElement("explainHideMasked", xmlWriter);
+				}
 				// Distinct table.
 				if (dsTable.isDistinctTable()) {
 					this.openElement("distinctRows", xmlWriter);
@@ -1409,7 +1416,8 @@ public class MartBuilderXML extends DefaultHandler {
 				// Return to normal.
 				schema.storeInHistory();
 				// Add the schema directly to the mart if outside a group.
-				this.constructedMart.getSchemas().put(schema.getOriginalName(), schema);
+				this.constructedMart.getSchemas().put(schema.getOriginalName(),
+						schema);
 				element = schema;
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -1648,6 +1656,26 @@ public class MartBuilderXML extends DefaultHandler {
 				// Merge it.
 				if (rel != null)
 					rel.setMergeRelation(w, true);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Explain-hide-masked (inside dataset).
+		else if ("explainHideMasked".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("explainHideMaskedOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Mask it.
+				w.getMods(tableKey, "explainHideMasked").put(tableKey, null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2124,7 +2152,8 @@ public class MartBuilderXML extends DefaultHandler {
 				// Construct the dataset.
 				final DataSet ds = new DataSet(this.constructedMart,
 						centralTable, name);
-				this.constructedMart.getDataSets().put(ds.getOriginalName(), ds);
+				this.constructedMart.getDataSets()
+						.put(ds.getOriginalName(), ds);
 
 				// Work out the optimiser.
 				DataSetOptimiserType opt = DataSetOptimiserType.NONE;
@@ -2226,7 +2255,7 @@ public class MartBuilderXML extends DefaultHandler {
 					row.setCompound(Integer.parseInt(compounds[i]));
 				pta.getPartitionAppliedRows().add(row);
 			}
-			if (dimension==null)
+			if (dimension == null)
 				dimension = PartitionTable.NO_DIMENSION;
 			if (!dimension.equals(PartitionTable.NO_DIMENSION))
 				ds.getMods(dimension, "initialPTAs").put(dimension, pta);
