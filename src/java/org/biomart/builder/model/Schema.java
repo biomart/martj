@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -432,6 +433,15 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		return this.name;
 	}
 
+	/**
+	 * Gets the original name of this schema.
+	 * 
+	 * @return the original name of this schema.
+	 */
+	public String getOriginalName() {
+		return this.originalName;
+	}
+
 	public String getDataLinkDatabase() {
 		return this.dataLinkDatabase;
 	}
@@ -488,9 +498,13 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		final String oldValue = this.name;
 		if (this.name == name || this.name != null && this.name.equals(name))
 			return;
+		// Work out all used names.
+		final Set usedNames = new HashSet();
+		for (final Iterator i = this.mart.getSchemas().values().iterator(); i.hasNext(); ) 
+			usedNames.add(((Schema)i.next()).getName());
 		// Make new name unique.
 		final String baseName = name;
-		for (int i = 1; this.mart.getSchemas().containsKey(name); name = baseName
+		for (int i = 1; usedNames.contains(name); name = baseName
 				+ "_" + i++)
 			;
 		this.name = name;

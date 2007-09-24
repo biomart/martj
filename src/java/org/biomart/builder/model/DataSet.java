@@ -229,10 +229,10 @@ public class DataSet extends Schema {
 		try {
 			if (this.deadCheck
 					&& !this.getMart().getSchemas().containsKey(
-							this.centralTable.getSchema().getName())
+							this.centralTable.getSchema().getOriginalName())
 					|| !this.centralTable.getSchema().getTables().containsKey(
 							this.centralTable.getName()))
-				this.getMart().getDataSets().remove(this.getName());
+				this.getMart().getDataSets().remove(this.getOriginalName());
 			else
 				super.transactionEnded(evt);
 		} finally {
@@ -252,9 +252,13 @@ public class DataSet extends Schema {
 		final String oldValue = this.name;
 		if (this.name == name || this.name != null && this.name.equals(name))
 			return;
+		// Work out all used names.
+		final Set usedNames = new HashSet();
+		for (final Iterator i = this.getMart().getDataSets().values().iterator(); i.hasNext(); ) 
+			usedNames.add(((Schema)i.next()).getName());
 		// Make new name unique.
 		final String baseName = name;
-		for (int i = 1; this.getMart().getDataSets().containsKey(name); name = baseName
+		for (int i = 1; usedNames.contains(name); name = baseName
 				+ "_" + i++)
 			;
 		this.name = name;
@@ -322,7 +326,8 @@ public class DataSet extends Schema {
 				&& partitionTableApplication.equals(oldValue))
 			return;
 		this.partitionTableApplication = partitionTableApplication;
-		this.partitionTableApplication.addPropertyChangeListener(
+		if (this.partitionTableApplication!=null)
+			this.partitionTableApplication.addPropertyChangeListener(
 				"directModified", new WeakPropertyChangeListener(
 						"directModified", this.rebuildListener));
 		this.pcs.firePropertyChange("partitionTableApplication", oldValue,
@@ -2778,34 +2783,30 @@ public class DataSet extends Schema {
 
 		private void acceptRejectChanges(final Table targetTable,
 				final boolean reject) {
-			// Find parent relation and reset that.
-			if (this.getType() != DataSetTableType.MAIN) {
-				Relation rel = null;
-				for (final Iterator i = this.getForeignKeys().iterator(); i
-						.hasNext()
-						&& rel == null;)
-					for (final Iterator j = ((Key) i.next()).getRelations()
-							.iterator(); j.hasNext() && rel == null;)
-						rel = (Relation) j.next();
-				// Reset it.
-				rel.transactionResetVisibleModified();
-			}
 			// Reset all keys.
 			for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
 				((Key) i.next()).transactionResetVisibleModified();
 			// Locate the TU that provides the target table.
+			final Set previousTUs = new HashSet();
 			for (final Iterator i = this.getTransformationUnits().iterator(); i
 					.hasNext();) {
 				final TransformationUnit tu = (TransformationUnit) i.next();
 				if (tu instanceof SelectFromTable
-						&& (targetTable == null || ((SelectFromTable) tu)
-								.getTable().equals(targetTable))) {
+						&& (targetTable == null || targetTable != null
+								&& (previousTUs.contains(tu.getPreviousUnit())
+										|| ((SelectFromTable) tu).getTable()
+												.equals(targetTable) || !this
+										.getType()
+										.equals(DataSetTableType.MAIN)
+										&& this.getFocusRelation().getOneKey()
+												.getTable().equals(targetTable)))) {
 					final SelectFromTable st = (SelectFromTable) tu;
+					previousTUs.add(st);
 					// Are we rejecting?
 					if (reject && st instanceof JoinTable) {
 						final JoinTable jt = (JoinTable) st;
 						// Is the TU relation modified?
-						if (jt.getSchemaRelation().isVisibleModified()) {
+						if (jt.getSchemaRelation().isVisibleModified())
 							if (jt.getSchemaRelation().equals(
 									this.getFocusRelation()))
 								try {
@@ -2820,7 +2821,6 @@ public class DataSet extends Schema {
 								// No more needs to be done.
 								continue;
 							}
-						}
 					}
 					// Find all new columns from the TU.
 					for (final Iterator j = st.getNewColumnNameMap().values()
@@ -2839,9 +2839,26 @@ public class DataSet extends Schema {
 								// it's important.
 							}
 						// Reset visible modified on all of them.
-						dsCol.transactionResetVisibleModified();
+						dsCol.setVisibleModified(false);
 					}
 				}
+			}
+			// Only reset parent relation if has one and all keys
+			// on this table are now not modified.
+			if (this.getType() != DataSetTableType.MAIN) {
+				for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
+					if (((Key) i.next()).isVisibleModified())
+						return;
+				// Find parent relation and reset that.
+				Relation rel = null;
+				for (final Iterator i = this.getForeignKeys().iterator(); i
+						.hasNext()
+						&& rel == null;)
+					for (final Iterator j = ((Key) i.next()).getRelations()
+							.iterator(); j.hasNext() && rel == null;)
+						rel = (Relation) j.next();
+				// Reset it.
+				rel.setVisibleModified(false);
 			}
 		}
 

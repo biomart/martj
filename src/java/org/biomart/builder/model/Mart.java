@@ -147,7 +147,7 @@ public class Mart implements TransactionListener {
 		this.schemaCache = new HashSet();
 		this.schemas.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				final Collection newSchs = new HashSet(Mart.this.getSchemas()
+				final Collection newSchs = new HashSet(Mart.this.schemas
 						.values());
 				if (!newSchs.equals(Mart.this.schemaCache)) {
 					Mart.this.setDirectModified(true);
@@ -164,17 +164,6 @@ public class Mart implements TransactionListener {
 					for (final Iterator i = newSchs.iterator(); i.hasNext();) {
 						final Schema sch = (Schema) i.next();
 						Mart.this.schemaCache.add(sch);
-						sch.addPropertyChangeListener("name",
-								new PropertyChangeListener() {
-									public void propertyChange(
-											final PropertyChangeEvent pe) {
-										Mart.this.setDirectModified(true);
-										Mart.this.schemas.remove(pe
-												.getOldValue());
-										Mart.this.schemas.put(pe.getNewValue(),
-												sch);
-									}
-								});
 						sch.addPropertyChangeListener("directModified",
 								listener);
 						sch.addPropertyChangeListener("hideMasked", listener);
@@ -185,7 +174,7 @@ public class Mart implements TransactionListener {
 		this.datasetCache = new HashSet();
 		this.datasets.addPropertyChangeListener(new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				final Collection newDss = new HashSet(Mart.this.getDataSets()
+				final Collection newDss = new HashSet(Mart.this.datasets
 						.values());
 				if (!newDss.equals(Mart.this.datasetCache)) {
 					Mart.this.setDirectModified(true);
@@ -235,17 +224,6 @@ public class Mart implements TransactionListener {
 					for (final Iterator i = newDss.iterator(); i.hasNext();) {
 						final DataSet ds = (DataSet) i.next();
 						Mart.this.datasetCache.add(ds);
-						ds.addPropertyChangeListener("name",
-								new PropertyChangeListener() {
-									public void propertyChange(
-											final PropertyChangeEvent pe) {
-										Mart.this.setDirectModified(true);
-										Mart.this.datasets.remove(pe
-												.getOldValue());
-										Mart.this.datasets.put(
-												pe.getNewValue(), ds);
-									}
-								});
 						ds
 								.addPropertyChangeListener("directModified",
 										listener);
@@ -626,10 +604,9 @@ public class Mart implements TransactionListener {
 	 */
 	public Collection getPartitionColumnNames() {
 		final List colNames = new ArrayList();
-		for (final Iterator i = this.getPartitionTableNames().iterator(); i
+		for (final Iterator i = this.getPartitionTables().iterator(); i
 				.hasNext();) {
-			final PartitionTable pt = ((DataSet) this.getDataSets().get(
-					i.next())).asPartitionTable();
+			final PartitionTable pt = ((DataSet) i.next()).asPartitionTable();
 			for (final Iterator j = pt.getSelectedColumnNames().iterator(); j
 					.hasNext();) {
 				final String col = (String) j.next();
@@ -647,16 +624,16 @@ public class Mart implements TransactionListener {
 	 * 
 	 * @return a set of partition table names (as strings).
 	 */
-	public Collection getPartitionTableNames() {
-		final List tblNames = new ArrayList();
-		for (final Iterator i = this.getDataSets().values().iterator(); i
+	public Collection getPartitionTables() {
+		final List tbls = new ArrayList();
+		for (final Iterator i = this.datasets.values().iterator(); i
 				.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 			if (ds.isPartitionTable())
-				tblNames.add(ds.getName());
+				tbls.add(ds);
 		}
-		Collections.sort(tblNames);
-		return Collections.unmodifiableCollection(tblNames);
+		Collections.sort(tbls);
+		return Collections.unmodifiableCollection(tbls);
 	}
 
 	/**
@@ -735,7 +712,7 @@ public class Mart implements TransactionListener {
 				// Skip this one.
 				continue;
 			}
-			this.getDataSets().put(dataset.getName(), dataset);
+			this.datasets.put(dataset.getOriginalName(), dataset);
 			// Process it.
 			final Collection tablesIncluded = new HashSet();
 			tablesIncluded.add(rootTable);
@@ -803,7 +780,7 @@ public class Mart implements TransactionListener {
 			for (final Iterator i = suggestedDataSets.iterator(); i.hasNext();) {
 				final DataSet candidate = (DataSet) i.next();
 				if (!candidate.equals(perfectDS)) {
-					this.getDataSets().remove(candidate.getName());
+					this.datasets.remove(candidate.getOriginalName());
 					i.remove();
 				}
 			}
@@ -1036,7 +1013,7 @@ public class Mart implements TransactionListener {
 				// Skip this one.
 				continue;
 			}
-			this.getDataSets().put(inv.getName(), inv);
+			this.datasets.put(inv.getOriginalName(), inv);
 			invisibleDataSets.add(inv);
 		}
 		// Synchronise them all and make them all invisible.

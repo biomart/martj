@@ -228,9 +228,44 @@ public class SchemaContext implements DiagramContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
+		if (object instanceof Schema) {
+			if (contextMenu.getComponentCount() > 0)
+				contextMenu.addSeparator();
+
+			final Schema sch = (Schema) object;
+			// Accept/Reject changes - only enabled if dataset table
+			// is visible modified.
+			final JMenuItem accept = new JMenuItem(Resources
+					.get("acceptChangesTitle"));
+			accept
+					.setMnemonic(Resources.get("acceptChangesMnemonic").charAt(
+							0));
+			accept.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.getMartTab().getSchemaTabSet()
+							.requestAcceptAll(sch);
+				}
+			});
+			accept.setEnabled(sch.isVisibleModified());
+			contextMenu.add(accept);
+
+			final JMenuItem reject = new JMenuItem(Resources
+					.get("rejectChangesTitle"));
+			reject
+					.setMnemonic(Resources.get("rejectChangesMnemonic").charAt(
+							0));
+			reject.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.getMartTab().getSchemaTabSet()
+							.requestRejectAll(sch);
+				}
+			});
+			reject.setEnabled(sch.isVisibleModified());
+			contextMenu.add(reject);
+		}
 
 		// Table objects have their own menus too.
-		if (object instanceof Table) {
+		else if (object instanceof Table) {
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)

@@ -292,7 +292,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 						this.utu.getRelation(), 0, this.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				tempRelation.transactionResetVisibleModified();
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
@@ -423,7 +422,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				tempRelation.transactionResetVisibleModified();
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);
@@ -550,7 +548,6 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 								.getExplainContext());
 				// DON'T add to keys else it causes trouble with
 				// the caching system!
-				tempRelation.transactionResetVisibleModified();
 			} catch (final AssociationException e) {
 				// Really should never happen.
 				throw new BioMartError(e);

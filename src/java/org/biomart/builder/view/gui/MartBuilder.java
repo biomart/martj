@@ -702,7 +702,7 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
-											.getPartitionTableNames().size() > 0);
+											.getPartitionTables().size() > 0);
 				}
 			});
 			schemaMenu.addMenuListener(new MenuListener() {

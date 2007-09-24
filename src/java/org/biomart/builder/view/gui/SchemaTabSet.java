@@ -47,6 +47,7 @@ import javax.swing.table.DefaultTableModel;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
@@ -130,11 +131,14 @@ public class SchemaTabSet extends JTabbedPane {
 		final PropertyChangeListener renameListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				final Schema sch = (Schema) evt.getSource();
-				if (evt.getPropertyName().equals("name"))
+				if (evt.getPropertyName().equals("name")) {
 					// Rename in diagram set.
 					SchemaTabSet.this.schemaToDiagram.put(evt.getNewValue(),
 							SchemaTabSet.this.schemaToDiagram.remove(evt
-									.getOldValue()));
+									.getOldValue()));		
+					SchemaTabSet.this.setTitleAt(SchemaTabSet.this.indexOfTab((String)evt
+											.getOldValue()), (String)evt.getNewValue());
+				}
 				else if (evt.getPropertyName().equals("masked")) {
 					// For masks, if unmasking, add a tab, otherwise
 					// remove the tab.
@@ -436,7 +440,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 				// Add the schema to the mart, then synchronise it.
 				SchemaTabSet.this.martTab.getMart().getSchemas().put(
-						schema.getName(), schema);
+						schema.getOriginalName(), schema);
 
 				// Sync it.
 				schema.synchronise();
@@ -790,7 +794,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 		Transaction.start(false);
 		SchemaTabSet.this.martTab.getMart().getSchemas().remove(
-				schema.getName());
+				schema.getOriginalName());
 		Transaction.end();
 	}
 
@@ -903,6 +907,60 @@ public class SchemaTabSet extends JTabbedPane {
 						.getName())).repaintDiagram();
 			}
 		}.start();
+	}
+
+	/**
+	 * Request that all changes on this schema are accepted.
+	 * 
+	 * @param sch
+	 *            the target schema.
+	 */
+	public void requestAcceptAll(final Schema sch) {
+		Transaction.start(false);
+		final List modTbls = new ArrayList();
+		for (final Iterator i = sch.getTables().values().iterator(); i
+				.hasNext();) {
+			final Table tbl = (Table) i.next();
+			if (tbl.isVisibleModified())
+				modTbls.add(tbl);
+		}
+		for (final Iterator i = sch.getMart().getDataSets().values().iterator(); i
+				.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
+			if (!ds.isVisibleModified())
+				continue;
+			for (final Iterator j = modTbls.iterator(); j.hasNext();)
+				this.getMartTab().getDataSetTabSet().requestAcceptAll(ds,
+						(Table) j.next());
+		}
+		Transaction.end();
+	}
+
+	/**
+	 * Request that all changes on this schema are rejected.
+	 * 
+	 * @param sch
+	 *            the target schema.
+	 */
+	public void requestRejectAll(final Schema sch) {
+		Transaction.start(false);
+		final List modTbls = new ArrayList();
+		for (final Iterator i = sch.getTables().values().iterator(); i
+				.hasNext();) {
+			final Table tbl = (Table) i.next();
+			if (tbl.isVisibleModified())
+				modTbls.add(tbl);
+		}
+		for (final Iterator i = sch.getMart().getDataSets().values().iterator(); i
+				.hasNext();) {
+			final DataSet ds = (DataSet) i.next();
+			if (!ds.isVisibleModified())
+				continue;
+			for (final Iterator j = modTbls.iterator(); j.hasNext();)
+				this.getMartTab().getDataSetTabSet().requestRejectAll(ds,
+						(Table) j.next());
+		}
+		Transaction.end();
 	}
 
 	/**

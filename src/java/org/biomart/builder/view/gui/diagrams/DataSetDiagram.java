@@ -102,6 +102,9 @@ public class DataSetDiagram extends Diagram {
 		dataset.addPropertyChangeListener("hideMasked",
 				new WeakPropertyChangeListener(dataset, "hideMasked",
 						this.repaintListener));
+		dataset.addPropertyChangeListener("name",
+				new WeakPropertyChangeListener(dataset, "name",
+						this.listener));
 
 		this.setHideMasked(dataset.isHideMasked());
 	}

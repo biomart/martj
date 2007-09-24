@@ -95,10 +95,13 @@ public class SchemaDiagram extends Diagram {
 				new WeakPropertyChangeListener(schema.getRelations(),
 						this.listener));
 
-		// Listen to when hide masked gets changed.
+		// Listen to when hide masked gets changed or gets renamed.
 		schema.addPropertyChangeListener("hideMasked",
 				new WeakPropertyChangeListener(schema, "hideMasked",
 						this.repaintListener));
+		schema.addPropertyChangeListener("name",
+				new WeakPropertyChangeListener(schema, "name",
+						this.listener));
 
 		this.setHideMasked(schema.isHideMasked());
 	}

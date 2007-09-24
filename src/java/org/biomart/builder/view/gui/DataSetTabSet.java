@@ -137,11 +137,14 @@ public class DataSetTabSet extends JTabbedPane {
 		final PropertyChangeListener renameListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
 				final DataSet ds = (DataSet) evt.getSource();
-				if (evt.getPropertyName().equals("name"))
+				if (evt.getPropertyName().equals("name")) {
 					// Rename in diagram set.
 					DataSetTabSet.this.datasetToDiagram.put(evt.getNewValue(),
 							DataSetTabSet.this.datasetToDiagram.remove(evt
 									.getOldValue()));
+					DataSetTabSet.this.setTitleAt(DataSetTabSet.this.indexOfTab((String)evt
+									.getOldValue()), (String)evt.getNewValue());
+				}
 				else if (evt.getPropertyName().equals("masked")) {
 					// For masks, if unmasking, add a tab, otherwise
 					// remove the tab.
@@ -1081,10 +1084,9 @@ public class DataSetTabSet extends JTabbedPane {
 
 				Transaction.start(false);
 				for (final Iterator k = DataSetTabSet.this.getMartTab()
-						.getMart().getPartitionTableNames().iterator(); k
+						.getMart().getPartitionTables().iterator(); k
 						.hasNext();)
-					for (final Iterator i = ((DataSet) DataSetTabSet.this
-							.getMartTab().getMart().getDataSets().get(k.next()))
+					for (final Iterator i = ((DataSet) k.next())
 							.asPartitionTable().getAllApplications().values()
 							.iterator(); i.hasNext();)
 						for (final Iterator j = ((Map) i.next()).values()
@@ -1338,7 +1340,7 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		Transaction.start(false);
-		this.martTab.getMart().getDataSets().remove(dataset.getName());
+		this.martTab.getMart().getDataSets().remove(dataset.getOriginalName());
 		Transaction.end();
 	}
 
@@ -1523,7 +1525,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSet ds = this.getMartTab().getMart()
 					.suggestUnrolledDataSets(nTable, nIDCol, nNamingCol,
 							nrTable, nrParentIDCol, nrChildIDCol);
-			this.getMartTab().getMart().getDataSets().put(ds.getName(), ds);
+			this.getMartTab().getMart().getDataSets().put(ds.getOriginalName(), ds);
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {

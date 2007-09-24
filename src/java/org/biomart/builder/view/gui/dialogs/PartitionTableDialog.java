@@ -570,10 +570,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 				final List choices = new ArrayList(dataset.getMart()
 						.getDataSets().values());
 				// Remove those that are partition tables themselves.
-				for (final Iterator i = dataset.getMart()
-						.getPartitionTableNames().iterator(); i.hasNext();)
-					choices.remove(dataset.getMart().getDataSets()
-							.get(i.next()));
+				for (final Iterator i = dataset.getMart().getPartitionTables()
+						.iterator(); i.hasNext();)
+					choices.remove((DataSet) i.next());
 				// Remove all invisible and masked datasets.
 				for (final Iterator i = choices.iterator(); i.hasNext();) {
 					final DataSet ds = (DataSet) i.next();
@@ -973,7 +972,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 							.get(i)).getSelectedItem();
 					final String nameCol = (String) ((JComboBox) WizardPanel.this.nameLevels
 							.get(i)).getSelectedItem();
-					if (i >= this.pta.getPartitionAppliedRows().size()) 
+					if (i >= this.pta.getPartitionAppliedRows().size())
 						this.pta.getPartitionAppliedRows().add(
 								new PartitionAppliedRow(ptCol, dsCol, nameCol,
 										(Relation) this.dsRelMap.get(dsCol)));
@@ -1048,17 +1047,19 @@ public class PartitionTableDialog extends TransactionalDialog {
 				.getPartitionTableApplication();
 		if (pta == null) {
 			// If not, select an existing one.
-			final List options = new ArrayList(mart.getPartitionTableNames());
+			final List options = new ArrayList(mart.getPartitionTables());
 			options.add(0, Resources.get("createNewPartitionTable"));
-			String name = (String) JOptionPane.showInputDialog(null, Resources
+			Object ptSelected = JOptionPane.showInputDialog(null, Resources
 					.get("wizardSelectPartitionTable"), Resources
 					.get("questionTitle"), JOptionPane.QUESTION_MESSAGE, null,
 					options.toArray(), null);
 			WrappedColumn autoCol = null;
 			Column sourceCol = null;
-			if (name == null)
+			PartitionTable pt = null;
+			if (ptSelected == null)
 				return;
-			else if (name.equals(Resources.get("createNewPartitionTable"))) {
+			else if (ptSelected
+					.equals(Resources.get("createNewPartitionTable"))) {
 				// New dialog asking for a column to use from
 				// the currently selected table.
 				final Map newOptions = new TreeMap();
@@ -1085,7 +1086,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 									.singletonList(sourceCol.getTable()));
 					final DataSet ds = (DataSet) candidates.iterator().next();
 					ds.setPartitionTable(true);
-					name = ds.getName();
+					pt = ds.asPartitionTable();
 					// Find ds col for source col and select
 					// ds col's name - NOT source col name as may be
 					// different (e.g. in _key case).
@@ -1107,9 +1108,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 					StackTrace.showStackTrace(e);
 					return;
 				}
-			}
-			final PartitionTable pt = ((DataSet) mart.getDataSets().get(name))
-					.asPartitionTable();
+			} else
+				pt = (PartitionTable) ptSelected;
 			// Make a default definition and add to selected partition table.
 			pta = PartitionTableApplication.createDefault(pt, dimension
 					.getDataSet(), dimension.getName());
@@ -1162,19 +1162,21 @@ public class PartitionTableDialog extends TransactionalDialog {
 		PartitionTableApplication pta = dataset.getPartitionTableApplication();
 		if (pta == null) {
 			// If not, select an existing one.
-			final List options = new ArrayList(mart.getPartitionTableNames());
+			final List options = new ArrayList(mart.getPartitionTables());
 			options.add(0, Resources.get("createNewPartitionTable"));
-			String name = (String) JOptionPane.showInputDialog(null, Resources
+			Object ptSelected = JOptionPane.showInputDialog(null, Resources
 					.get("wizardSelectPartitionTable"), Resources
 					.get("questionTitle"), JOptionPane.QUESTION_MESSAGE, null,
 					options.toArray(), null);
-			if (name == null)
+			if (ptSelected == null)
 				return;
 			WrappedColumn autoCol = null;
 			Column sourceCol = null;
-			if (name == null)
+			PartitionTable pt = null;
+			if (ptSelected == null)
 				return;
-			else if (name.equals(Resources.get("createNewPartitionTable"))) {
+			else if (ptSelected
+					.equals(Resources.get("createNewPartitionTable"))) {
 				// New dialog asking for a column to use from
 				// the currently selected table.
 				final Map newOptions = new TreeMap();
@@ -1201,7 +1203,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 									.singletonList(sourceCol.getTable()));
 					final DataSet ds = (DataSet) candidates.iterator().next();
 					ds.setPartitionTable(true);
-					name = ds.getName();
+					pt = ds.asPartitionTable();
 					// Find ds col for source col and select
 					// ds col's name - NOT source col name as may be
 					// different (e.g. in _key case).
@@ -1223,9 +1225,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 					StackTrace.showStackTrace(e);
 					return;
 				}
-			}
-			final PartitionTable pt = ((DataSet) mart.getDataSets().get(name))
-					.asPartitionTable();
+			} else
+				pt = (PartitionTable) ptSelected;
 			// Make a default definition and add to selected partition table.
 			pta = PartitionTableApplication.createDefault(pt, dataset);
 			// If autoCol has been set, use it to modify the

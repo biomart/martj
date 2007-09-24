@@ -1166,10 +1166,9 @@ public class MartBuilderXML extends DefaultHandler {
 		}
 
 		// Write out partition tables.
-		for (final Iterator dsi = mart.getPartitionTableNames().iterator(); dsi
+		for (final Iterator dsi = mart.getPartitionTables().iterator(); dsi
 				.hasNext();) {
-			final PartitionTable pt = ((DataSet) mart.getDataSets().get(
-					(String) dsi.next())).asPartitionTable();
+			final PartitionTable pt = ((DataSet) dsi.next()).asPartitionTable();
 			Log.debug("Writing dataset partition table: " + pt);
 
 			this.openElement("datasetPartitionTable", xmlWriter);
@@ -1410,7 +1409,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Return to normal.
 				schema.storeInHistory();
 				// Add the schema directly to the mart if outside a group.
-				this.constructedMart.getSchemas().put(schema.getName(), schema);
+				this.constructedMart.getSchemas().put(schema.getOriginalName(), schema);
 				element = schema;
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -2125,7 +2124,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Construct the dataset.
 				final DataSet ds = new DataSet(this.constructedMart,
 						centralTable, name);
-				this.constructedMart.getDataSets().put(ds.getName(), ds);
+				this.constructedMart.getDataSets().put(ds.getOriginalName(), ds);
 
 				// Work out the optimiser.
 				DataSetOptimiserType opt = DataSetOptimiserType.NONE;
