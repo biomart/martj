@@ -447,6 +447,8 @@ public class MartBuilderXML extends DefaultHandler {
 					(String) this.reverseMappedObjects.get(r.getSecondKey()),
 					xmlWriter);
 			this.writeAttribute("status", r.getStatus().toString(), xmlWriter);
+			this.writeAttribute("visibleModified", Boolean.toString(r
+					.isVisibleModified()), xmlWriter);
 			this.closeElement("relation", xmlWriter);
 		}
 	}
@@ -568,6 +570,8 @@ public class MartBuilderXML extends DefaultHandler {
 				this.openElement("column", xmlWriter);
 				this.writeAttribute("id", colMappedID, xmlWriter);
 				this.writeAttribute("name", col.getName(), xmlWriter);
+				this.writeAttribute("visibleModified", Boolean.toString(col
+						.isVisibleModified()), xmlWriter);
 				this.closeElement("column", xmlWriter);
 			}
 
@@ -602,6 +606,8 @@ public class MartBuilderXML extends DefaultHandler {
 						.toArray(new String[0]), xmlWriter);
 				this.writeAttribute("status", key.getStatus().toString(),
 						xmlWriter);
+				this.writeAttribute("visibleModified", Boolean.toString(key
+						.isVisibleModified()), xmlWriter);
 				this.closeElement(elem, xmlWriter);
 			}
 
@@ -704,6 +710,36 @@ public class MartBuilderXML extends DefaultHandler {
 					.isHideMasked()), xmlWriter);
 			this.writeAttribute("indexOptimiser", Boolean.toString(ds
 					.isIndexOptimiser()), xmlWriter);
+
+			// Write out visibleModified keys (toString()) for
+			// all vismod relations, keys, and columns.
+			final Set vismodKeys = new HashSet();
+			for (final Iterator i = ds.getRelations().iterator(); i.hasNext();) {
+				final Relation rel = (Relation) i.next();
+				if (rel.isVisibleModified())
+					vismodKeys.add(rel.toString());
+			}
+			for (final Iterator i = ds.getTables().values().iterator(); i
+					.hasNext();) {
+				final Table tbl = (Table) i.next();
+				for (final Iterator j = tbl.getKeys().iterator(); j.hasNext();) {
+					final Key k = (Key) j.next();
+					if (k.isVisibleModified())
+						vismodKeys.add(k.toString());
+				}
+				for (final Iterator j = tbl.getColumns().values().iterator(); j
+						.hasNext();) {
+					final Column col = (Column) j.next();
+					if (col.isVisibleModified())
+						vismodKeys.add(col.toString());
+				}
+			}
+			for (final Iterator i = vismodKeys.iterator(); i.hasNext();) {
+				final String key = (String) i.next();
+				this.openElement("visibleModified", xmlWriter);
+				this.writeAttribute("key", key, xmlWriter);
+				this.closeElement("visibleModified", xmlWriter);
+			}
 
 			for (final Iterator s = mart.getSchemas().values().iterator(); s
 					.hasNext();) {
@@ -1478,6 +1514,8 @@ public class MartBuilderXML extends DefaultHandler {
 			// Get the id and name as these are common features.
 			final String id = (String) attributes.get("id");
 			final String name = (String) attributes.get("name");
+			final boolean visibleModified = Boolean.valueOf(
+					(String) attributes.get("visibleModified")).booleanValue();
 
 			try {
 				// DataSet table column?
@@ -1492,6 +1530,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Generic column?
 				else if (tbl instanceof Table) {
 					final Column column = new Column(tbl, name);
+					column.setVisibleModified(visibleModified);
 					tbl.getColumns().put(column.getName(), column);
 					element = column;
 				}
@@ -1532,6 +1571,9 @@ public class MartBuilderXML extends DefaultHandler {
 				// Work out what status the key is.
 				final ComponentStatus status = ComponentStatus
 						.get((String) attributes.get("status"));
+				final boolean visibleModified = Boolean.valueOf(
+						(String) attributes.get("visibleModified"))
+						.booleanValue();
 
 				// Decode the column IDs from the comma-separated list.
 				final String[] pkColIds = this.readListAttribute(
@@ -1543,6 +1585,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Make the key.
 				final PrimaryKey pk = new PrimaryKey(pkCols);
 				pk.setStatus(status);
+				pk.setVisibleModified(visibleModified);
 
 				// Assign it to the table.
 				tbl.setPrimaryKey(pk);
@@ -1575,6 +1618,9 @@ public class MartBuilderXML extends DefaultHandler {
 				// Work out what status it is.
 				final ComponentStatus status = ComponentStatus
 						.get((String) attributes.get("status"));
+				final boolean visibleModified = Boolean.valueOf(
+						(String) attributes.get("visibleModified"))
+						.booleanValue();
 
 				// Decode the column IDs from the comma-separated list.
 				final String[] fkColIds = this.readListAttribute(
@@ -1586,6 +1632,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Make the key.
 				final ForeignKey fk = new ForeignKey(fkCols);
 				fk.setStatus(status);
+				fk.setVisibleModified(visibleModified);
 
 				// Add it to the table.
 				tbl.getForeignKeys().add(fk);
@@ -1613,6 +1660,9 @@ public class MartBuilderXML extends DefaultHandler {
 						.get("firstKeyId"));
 				final Key secondKey = (Key) this.mappedObjects.get(attributes
 						.get("secondKeyId"));
+				final boolean visibleModified = Boolean.valueOf(
+						(String) attributes.get("visibleModified"))
+						.booleanValue();
 
 				// We don't do these for dataset tables since 0.6 as they
 				// get regenerated automatically. We can tell this is a
@@ -1629,6 +1679,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 					// Set its status.
 					rel.setStatus(status);
+					rel.setVisibleModified(visibleModified);
 					element = rel;
 				}
 			} catch (final Exception e) {
@@ -1676,6 +1727,26 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Mask it.
 				w.getMods(tableKey, "explainHideMasked").put(tableKey, null);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Explain-hide-masked (inside dataset).
+		else if ("visibleModified".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("visibleModifiedOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String key = (String) attributes.get("key");
+
+				// Mask it.
+				w.getMods(key, "visibleModified").put(key, null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

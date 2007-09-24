@@ -53,6 +53,7 @@
 <!ATTLIST relation firstKeyId IDREF #REQUIRED>
 <!ATTLIST relation secondKeyId IDREF #REQUIRED>
 <!ATTLIST relation status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
+<!ATTLIST relation visibleModified (true|false) #IMPLIED>
 
 <!ELEMENT table (column+,primaryKey?,foreignKey*)>
 <!ATTLIST table id ID #REQUIRED>
@@ -62,23 +63,27 @@
 <!ELEMENT column EMPTY>
 <!ATTLIST column id ID #REQUIRED>
 <!ATTLIST column name CDATA #REQUIRED>
+<!ATTLIST column visibleModified (true|false) #IMPLIED>
 
 <!ELEMENT primaryKey EMPTY>
 <!ATTLIST primaryKey id ID #REQUIRED>
 <!ATTLIST primaryKey columnIds IDREFS #REQUIRED>
 <!ATTLIST primaryKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
+<!ATTLIST primaryKey visibleModified (true|false) #IMPLIED>
 
 <!ELEMENT foreignKey EMPTY>
 <!ATTLIST foreignKey id ID #REQUIRED>
 <!ATTLIST foreignKey columnIds IDREFS #REQUIRED>
 <!ATTLIST foreignKey status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
+<!ATTLIST foreignKey visibleModified (true|false) #IMPLIED>
 
 <!ELEMENT dataset (
 compoundRelation*,subclassRelation*,maskedColumn*,
 indexedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,loopbackRelation*,forcedRelation*,restrictedTable*,
 restrictedRelation*,expressionColumn*,renamedTable*,
-renamedColumn*,distinctRows*,unrolledRelation*,explainHideMasked*)>
+renamedColumn*,distinctRows*,unrolledRelation*,explainHideMasked*,
+visibleModified*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN_INHERIT|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL_INHERIT|TABLE_INHERIT|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
@@ -89,6 +94,9 @@ renamedColumn*,distinctRows*,unrolledRelation*,explainHideMasked*)>
 
 <!ELEMENT explainHideMasked EMPTY>
 <!ATTLIST explainHideMasked tableKey CDATA #REQUIRED>
+
+<!ELEMENT visibleModified EMPTY>
+<!ATTLIST visibleModified key CDATA #REQUIRED>
 
 <!ELEMENT subclassRelation EMPTY>
 <!ATTLIST subclassRelation relationId IDREF #REQUIRED>

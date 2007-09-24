@@ -1924,6 +1924,33 @@ public class DataSet extends Schema {
 					new WeakPropertyChangeListener(rel, "subclassRelation",
 							this.rebuildListener));
 		}
+
+		// Check all visibleModified type/key pairs for
+		// all vismod relations, keys, and columns. Update, then remove.
+		for (final Iterator i = this.getRelations().iterator(); i.hasNext(); ) {
+			final Relation rel = (Relation)i.next();
+			final String key = rel.toString();
+			if (this.getMods(key, "visibleModified").containsKey(key))
+				rel.setVisibleModified(true);
+			this.mods.remove(key);
+		}
+		for (final Iterator i = this.getTables().values().iterator(); i.hasNext(); ) {
+			final Table tbl = (Table)i.next();
+			for (final Iterator j = tbl.getKeys().iterator(); j.hasNext(); ) {
+				final Key k = (Key)j.next();
+				final String key = k.toString();
+				if (this.getMods(key, "visibleModified").containsKey(key))
+					k.setVisibleModified(true);
+				this.mods.remove(key);
+			}
+			for (final Iterator j = tbl.getColumns().values().iterator(); j.hasNext(); ) {
+				final Column col = (Column)j.next();
+				final String key = col.toString();
+				if (this.getMods(key, "visibleModified").containsKey(key))
+					col.setVisibleModified(true);
+				this.mods.remove(key);
+			}
+		}
 	}
 
 	public boolean isMasked() {

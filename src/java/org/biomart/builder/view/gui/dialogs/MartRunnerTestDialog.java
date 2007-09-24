@@ -96,6 +96,9 @@ public class MartRunnerTestDialog extends JDialog {
 			}
 		});
 
+		// Select the first item in the list.
+		lhs.setSelectedIndex(0);
+		
 		// Set size of window.
 		this.pack();
 
