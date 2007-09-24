@@ -241,6 +241,13 @@ public abstract class PartitionTable implements TransactionListener {
 	public abstract String getName();
 
 	/**
+	 * What is our original name?
+	 * 
+	 * @return the original name.
+	 */
+	public abstract String getOriginalName();
+
+	/**
 	 * What columns can we list and include?
 	 * 
 	 * @return the list of includable columns.
@@ -457,6 +464,10 @@ public abstract class PartitionTable implements TransactionListener {
 
 				public String getName() {
 					return parent.getName();
+				}
+
+				public String getOriginalName() {
+					return parent.getOriginalName();
 				}
 
 			};
@@ -847,6 +858,10 @@ public abstract class PartitionTable implements TransactionListener {
 						return "__FAKE__TABLE__";
 					}
 
+					public String getOriginalName() {
+						return "__FAKE__TABLE__";
+					}
+					
 					public Collection getAvailableColumnNames() {
 						return Collections.EMPTY_SET;
 					}

@@ -370,6 +370,10 @@ public class DataSet extends Schema {
 					return DataSet.this.getName();
 				}
 
+				public String getOriginalName() {
+					return DataSet.this.getOriginalName();
+				}
+
 				public Collection getAvailableColumnNames() {
 					if (this.allCols.isEmpty())
 						for (final Iterator i = DataSet.this.getMainTable()

@@ -1142,7 +1142,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 		// Open selected table with dimension selected in appliedList.
 		final PartitionTableDialog dialog = new PartitionTableDialog(
 				(DataSet) mart.getDataSets().get(
-						pta.getPartitionTable().getName()), dimension);
+						pta.getPartitionTable().getOriginalName()), dimension);
 		dialog.setVisible(true);
 		dialog.dispose();
 	}
@@ -1258,7 +1258,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 		// Open selected table with dimension selected in appliedList.
 		final PartitionTableDialog dialog = new PartitionTableDialog(
 				(DataSet) mart.getDataSets().get(
-						pta.getPartitionTable().getName()), dataset);
+						pta.getPartitionTable().getOriginalName()), dataset);
 		dialog.setVisible(true);
 		dialog.dispose();
 	}
