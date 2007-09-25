@@ -933,6 +933,7 @@ public class SchemaTabSet extends JTabbedPane {
 				this.getMartTab().getDataSetTabSet().requestAcceptAll(ds,
 						(Table) j.next());
 		}
+		this.getMartTab().getDataSetTabSet().requestRemoveLastVisMods();
 		Transaction.end();
 	}
 
@@ -960,6 +961,7 @@ public class SchemaTabSet extends JTabbedPane {
 				this.getMartTab().getDataSetTabSet().requestRejectAll(ds,
 						(Table) j.next());
 		}
+		this.getMartTab().getDataSetTabSet().requestRemoveLastVisMods();
 		Transaction.end();
 	}
 

@@ -233,6 +233,7 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			final Schema sch = (Schema) object;
+			
 			// Accept/Reject changes - only enabled if dataset table
 			// is visible modified.
 			final JMenuItem accept = new JMenuItem(Resources

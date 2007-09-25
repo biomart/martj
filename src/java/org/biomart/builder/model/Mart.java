@@ -630,7 +630,7 @@ public class Mart implements TransactionListener {
 				.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 			if (ds.isPartitionTable())
-				tbls.add(ds);
+				tbls.add(ds.asPartitionTable());
 		}
 		Collections.sort(tbls);
 		return Collections.unmodifiableCollection(tbls);

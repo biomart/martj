@@ -382,7 +382,12 @@ public class DataSetTabSet extends JTabbedPane {
 		Transaction.end();
 	}
 
-	private void removeLastVisMods() {
+	/**
+	 * If no datasets are visibly modified, reset the visible modified 
+	 * flag.
+	 */
+	public void requestRemoveLastVisMods() {
+		Transaction.start(false);
 		// Finally, if no datasets at all are visibly modified,
 		// remove the visible modified flag from all schema objects too.
 		for (final Iterator i = this.getMartTab().getMart().getDataSets()
@@ -391,6 +396,7 @@ public class DataSetTabSet extends JTabbedPane {
 				return;
 		// If get here, can do reset safely.
 		Transaction.resetVisibleModified();
+		Transaction.end();
 	}
 	
 	/**
@@ -406,7 +412,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Table targetTable) {
 		Transaction.start(false);
 		dsTable.acceptChanges(targetTable);
-		this.removeLastVisMods();
+		this.requestRemoveLastVisMods();
 		Transaction.end();
 	}
 
@@ -423,7 +429,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final Table targetTable) {
 		Transaction.start(false);
 		dsTable.rejectChanges(targetTable);
-		this.removeLastVisMods();
+		this.requestRemoveLastVisMods();
 		Transaction.end();
 	}
 
@@ -440,7 +446,7 @@ public class DataSetTabSet extends JTabbedPane {
 		Transaction.start(false);
 		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
 			((DataSetTable) i.next()).acceptChanges(targetTable);
-		this.removeLastVisMods();
+		this.requestRemoveLastVisMods();
 		Transaction.end();
 	}
 
@@ -457,7 +463,7 @@ public class DataSetTabSet extends JTabbedPane {
 		Transaction.start(false);
 		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
 			((DataSetTable) i.next()).rejectChanges(targetTable);
-		this.removeLastVisMods();
+		this.requestRemoveLastVisMods();
 		Transaction.end();
 	}
 
