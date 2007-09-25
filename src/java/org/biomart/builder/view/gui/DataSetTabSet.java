@@ -387,7 +387,6 @@ public class DataSetTabSet extends JTabbedPane {
 	 * flag.
 	 */
 	public void requestRemoveLastVisMods() {
-		Transaction.start(false);
 		// Finally, if no datasets at all are visibly modified,
 		// remove the visible modified flag from all schema objects too.
 		for (final Iterator i = this.getMartTab().getMart().getDataSets()
@@ -396,7 +395,6 @@ public class DataSetTabSet extends JTabbedPane {
 				return;
 		// If get here, can do reset safely.
 		Transaction.resetVisibleModified();
-		Transaction.end();
 	}
 	
 	/**
@@ -410,7 +408,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestAcceptAll(final DataSetTable dsTable,
 			final Table targetTable) {
-		Transaction.start(false);
+		Transaction.start(true);
 		dsTable.acceptChanges(targetTable);
 		this.requestRemoveLastVisMods();
 		Transaction.end();
@@ -427,7 +425,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRejectAll(final DataSetTable dsTable,
 			final Table targetTable) {
-		Transaction.start(false);
+		Transaction.start(true);
 		dsTable.rejectChanges(targetTable);
 		this.requestRemoveLastVisMods();
 		Transaction.end();
@@ -443,7 +441,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the (optional) target table to accept changes from.
 	 */
 	public void requestAcceptAll(final DataSet ds, final Table targetTable) {
-		Transaction.start(false);
+		Transaction.start(true);
 		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
 			((DataSetTable) i.next()).acceptChanges(targetTable);
 		this.requestRemoveLastVisMods();
@@ -460,7 +458,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the (optional) target table to reject changes from.
 	 */
 	public void requestRejectAll(final DataSet ds, final Table targetTable) {
-		Transaction.start(false);
+		Transaction.start(true);
 		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
 			((DataSetTable) i.next()).rejectChanges(targetTable);
 		this.requestRemoveLastVisMods();

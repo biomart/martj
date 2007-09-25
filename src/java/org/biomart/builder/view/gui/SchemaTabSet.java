@@ -916,7 +916,6 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the target schema.
 	 */
 	public void requestAcceptAll(final Schema sch) {
-		Transaction.start(false);
 		final List modTbls = new ArrayList();
 		for (final Iterator i = sch.getTables().values().iterator(); i
 				.hasNext();) {
@@ -933,6 +932,7 @@ public class SchemaTabSet extends JTabbedPane {
 				this.getMartTab().getDataSetTabSet().requestAcceptAll(ds,
 						(Table) j.next());
 		}
+		Transaction.start(true);
 		this.getMartTab().getDataSetTabSet().requestRemoveLastVisMods();
 		Transaction.end();
 	}
@@ -944,7 +944,6 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the target schema.
 	 */
 	public void requestRejectAll(final Schema sch) {
-		Transaction.start(false);
 		final List modTbls = new ArrayList();
 		for (final Iterator i = sch.getTables().values().iterator(); i
 				.hasNext();) {
@@ -961,6 +960,7 @@ public class SchemaTabSet extends JTabbedPane {
 				this.getMartTab().getDataSetTabSet().requestRejectAll(ds,
 						(Table) j.next());
 		}
+		Transaction.start(true);
 		this.getMartTab().getDataSetTabSet().requestRemoveLastVisMods();
 		Transaction.end();
 	}
