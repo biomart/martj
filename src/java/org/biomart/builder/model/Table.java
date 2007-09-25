@@ -71,6 +71,8 @@ public class Table implements Comparable, TransactionListener {
 	private final BeanCollection foreignKeys;
 
 	private final String name;
+	
+	private final BeanCollection schemaPartitions = new BeanSet(new HashSet());
 
 	private PrimaryKey primaryKey;
 
@@ -382,6 +384,15 @@ public class Table implements Comparable, TransactionListener {
 	 */
 	public String getName() {
 		return this.name;
+	}
+	
+	/**
+	 * Retrieve the set of schema partition names this column applies to.
+	 * May be empty, in which case it applies to the default schema only.
+	 * @return the set of schema partition names.
+	 */
+	public BeanCollection getSchemaPartitions() {
+		return this.schemaPartitions;
 	}
 
 	/**

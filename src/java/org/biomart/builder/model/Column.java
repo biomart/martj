@@ -20,9 +20,12 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.HashSet;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.utils.BeanCollection;
+import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
@@ -46,6 +49,8 @@ public class Column implements Comparable, TransactionListener {
 	private final String name;
 
 	private final Table table;
+	
+	private final BeanCollection schemaPartitions = new BeanSet(new HashSet());
 
 	/**
 	 * Some subclasses refer to this directly.
@@ -199,6 +204,15 @@ public class Column implements Comparable, TransactionListener {
 	 */
 	public Table getTable() {
 		return this.table;
+	}
+	
+	/**
+	 * Retrieve the set of schema partition names this column applies to.
+	 * May be empty, in which case it applies to the default schema only.
+	 * @return the set of schema partition names.
+	 */
+	public BeanCollection getSchemaPartitions() {
+		return this.schemaPartitions;
 	}
 
 	public int compareTo(final Object o) {

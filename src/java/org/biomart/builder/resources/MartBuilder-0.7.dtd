@@ -59,11 +59,13 @@
 <!ATTLIST table id ID #REQUIRED>
 <!ATTLIST table name CDATA #REQUIRED>
 <!ATTLIST table ignore (true|false) #IMPLIED>
+<!ATTLIST table inSchemaPartition CDATA #IMPLIED>
 
 <!ELEMENT column EMPTY>
 <!ATTLIST column id ID #REQUIRED>
 <!ATTLIST column name CDATA #REQUIRED>
 <!ATTLIST column visibleModified (true|false) #IMPLIED>
+<!ATTLIST column inSchemaPartition CDATA #IMPLIED>
 
 <!ELEMENT primaryKey EMPTY>
 <!ATTLIST primaryKey id ID #REQUIRED>

@@ -297,7 +297,7 @@ public interface MartConstructor {
 			// Work out the progress step size : 1 step = 1 table per source
 			// schema partition.
 			final Collection tablesToProcess = this.getTablesToProcess(dataset);
-			double stepPercent = 100.0 / (double) totalDataSetCount;
+			double stepPercent = 100.0 / totalDataSetCount;
 			stepPercent /= tablesToProcess.size();
 			stepPercent /= schemaPartitions.size();
 			if (dsPta != null)
@@ -436,9 +436,16 @@ public interface MartConstructor {
 			boolean requiresDistinct = dsTable.isDistinctTable();
 			final Set droppedCols = new HashSet();
 
+			// Skip immediately if not applicable to current schema partition.
+			if (!(schemaPartition == null
+					|| dsTable.getFocusTable().getSchemaPartitions().isEmpty() || dsTable
+					.getFocusTable().getSchemaPartitions().contains(
+							schemaPrefix)))
+				return false;
+
 			// Use the transformation units to create the basic table.
 			final Collection units = dsTable.getTransformationUnits();
-			stepPercent /= (double) units.size();
+			stepPercent /= units.size();
 			Relation firstJoinRel = null;
 			this.percentComplete -= stepPercent; // Avoid early completion.
 			for (final Iterator j = units.iterator(); j.hasNext();) {
@@ -496,9 +503,9 @@ public interface MartConstructor {
 				}
 
 				if (tu instanceof JoinTable && firstJoin) {
-					if (!droppedCols.isEmpty()
+					if (droppedCols.size() == tu.getNewColumnNameMap().size()
 							&& !dsTable.getType().equals(DataSetTableType.MAIN)) {
-						// If first join of non-MAIN table produced droppedCols
+						// If first join of non-MAIN table dropped all cols
 						// then the target table does not exist and the entire
 						// non-MAIN table can be dropped. This also means that
 						// if this is SUBCLASS then all its DMS and further
@@ -539,9 +546,10 @@ public interface MartConstructor {
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
 				if (!droppedCols.contains(col.getPartitionedName()))
-					if (col.isRequiredInterim() && !col.isRequiredFinal())
+					if (col.isRequiredInterim(schemaPrefix)
+							&& !col.isRequiredFinal(schemaPrefix))
 						dropCols.add(col.getPartitionedName());
-					else if (col.isRequiredFinal())
+					else if (col.isRequiredFinal(schemaPrefix))
 						keepCols.add(col);
 			}
 
@@ -634,7 +642,7 @@ public interface MartConstructor {
 			for (final Iterator x = dsTable.getColumns().values().iterator(); x
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) x.next();
-				if (col.isRequiredInterim())
+				if (col.isRequiredInterim(schemaPrefix))
 					rightSelectCols.add(col.getPartitionedName());
 			}
 			rightSelectCols.removeAll(rightJoinCols);
@@ -776,7 +784,8 @@ public interface MartConstructor {
 						// We won't select masked cols as they won't be in
 						// the final table, and we won't select expression
 						// columns as they can genuinely be null.
-						if (!col.isColumnMasked()
+						if (col.isRequiredFinal(schemaPrefix)
+								&& !col.isColumnMasked()
 								&& !(col instanceof ExpressionColumn))
 							nonNullCols.add(col.getPartitionedName());
 					}
@@ -859,10 +868,12 @@ public interface MartConstructor {
 							.getValue();
 					// Only apply this to the dsCol which matches
 					// the partition row's ds col.
-					if (dsCol.getName().equals(prow.getRootDataSetCol())
-							|| dsCol.getName().endsWith(
-									Resources.get("columnnameSep")
-											+ prow.getRootDataSetCol()))
+					if (dsCol.isRequiredInterim(schemaPrefix)
+							&& (dsCol.getName()
+									.equals(prow.getRootDataSetCol()) || dsCol
+									.getName().endsWith(
+											Resources.get("columnnameSep")
+													+ prow.getRootDataSetCol())))
 						// Apply restriction.
 						action.getPartitionRestrictions().put(
 								((Column) entry.getKey()).getName(),
@@ -882,27 +893,31 @@ public interface MartConstructor {
 
 			final Table sourceTable = stu.getTable();
 			// Make sure that we use the same partition on the RHS
-			// if it exists, otherwise use the default partition.
+			// if it exists, otherwise use the default partition.	
 			String schema = null;
 			if (sourceTable instanceof DataSetTable)
 				schema = this.datasetSchemaName;
-			else if (sourceTable.getSchema() == templateSchema)
+			else if (stu.getTable().getSchema()==templateSchema) 
 				schema = schemaPartition;
 			else {
-				final Map sParts = sourceTable.getSchema().getPartitions();
-				if (sParts.isEmpty())
-					schema = sourceTable.getSchema().getDataLinkSchema();
-				else
-					for (final Iterator i = sParts.entrySet().iterator(); i
-							.hasNext()
+			final Collection schemaParts = stu.getTable()
+					.getSchemaPartitions();
+			if (!schemaParts.isEmpty()) {
+				if (schemaParts.contains(schemaPrefix))
+					for (final Iterator i = stu.getTable().getSchema()
+							.getPartitions().entrySet().iterator(); i.hasNext()
 							&& schema == null;) {
 						final Map.Entry entry = (Map.Entry) i.next();
 						if (entry.getValue().equals(schemaPrefix))
 							schema = (String) entry.getKey();
 					}
-				if (schema == null) // Can never happen.
-					throw new BioMartError();
+			} else
+				schema = stu.getTable().getSchema().getDataLinkSchema();
 			}
+			if (schema == null)  // Can never happen.
+				throw new BioMartError();
+			
+
 			// Source tables are always main or subclass and
 			// therefore are never partitioned.
 			final String table = sourceTable instanceof DataSetTable ? this
@@ -917,7 +932,7 @@ public interface MartConstructor {
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
 				if (pta != null)
 					col.fixPartitionedName(pta);
-				if (col.isRequiredInterim())
+				if (col.isRequiredInterim(schemaPrefix))
 					selectCols
 							.put(
 									sourceTable instanceof DataSetTable ? ((DataSetColumn) entry
@@ -1028,10 +1043,14 @@ public interface MartConstructor {
 								.getValue();
 						// Only apply this to the dsCol which matches
 						// the partition row's ds col.
-						if (dsCol.getName().equals(prow.getRootDataSetCol())
-								|| dsCol.getName().endsWith(
-										Resources.get("columnnameSep")
-												+ prow.getRootDataSetCol()))
+						if (dsCol.isRequiredInterim(schemaPrefix)
+								&& (dsCol.getName().equals(
+										prow.getRootDataSetCol()) || dsCol
+										.getName()
+										.endsWith(
+												Resources.get("columnnameSep")
+														+ prow
+																.getRootDataSetCol())))
 							// Apply restriction.
 							action.getPartitionRestrictions().put(
 									((Column) entry.getKey()).getName(),
@@ -1043,26 +1062,28 @@ public interface MartConstructor {
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
 			String rightSchema = null;
-			if (ljtu.getTable().getSchema() == templateSchema)
+			if (ljtu.getTable().getSchema()==templateSchema) 
 				rightSchema = schemaPartition;
 			else {
-				final Map ljParts = ljtu.getTable().getSchema().getPartitions();
-				if (ljParts.isEmpty())
-					rightSchema = ljtu.getTable().getSchema()
-							.getDataLinkSchema();
-				else
-					for (final Iterator i = ljParts.entrySet().iterator(); i
-							.hasNext()
+			final Collection rightSchemaParts = ljtu.getTable()
+					.getSchemaPartitions();
+			if (!rightSchemaParts.isEmpty()) {
+				if (rightSchemaParts.contains(schemaPrefix))
+					for (final Iterator i = ljtu.getTable().getSchema()
+							.getPartitions().entrySet().iterator(); i.hasNext()
 							&& rightSchema == null;) {
 						final Map.Entry entry = (Map.Entry) i.next();
 						if (entry.getValue().equals(schemaPrefix))
 							rightSchema = (String) entry.getKey();
 					}
-				if (rightSchema == null) {
-					droppedCols.addAll(ljtu.getNewColumnNameMap().values());
-					return false;
-				}
+			} else
+				rightSchema = ljtu.getTable().getSchema().getDataLinkSchema();
 			}
+			if (rightSchema == null) {
+				droppedCols.addAll(ljtu.getNewColumnNameMap().values());
+				return false;
+			}
+
 			final String rightTable = ljtu.getTable().getName();
 			final List leftJoinCols = new ArrayList();
 			final List rightJoinCols = new ArrayList();
@@ -1088,7 +1109,7 @@ public interface MartConstructor {
 				final DataSetColumn col = (DataSetColumn) entry.getValue();
 				if (pta != null)
 					col.fixPartitionedName(pta);
-				if (col.isRequiredInterim())
+				if (col.isRequiredInterim(schemaPrefix))
 					selectCols.put(((Column) entry.getKey()).getName(), col
 							.getPartitionedName());
 			}
@@ -1295,23 +1316,19 @@ public interface MartConstructor {
 						// R new L new
 						allNodes.put(L, new Integer(0));
 						allNodes.put(R, new Integer(1));
-					} else {
+					} else
 						// R new L old
 						allNodes.put(R, new Integer(((Integer) allNodes.get(L))
 								.intValue() + 1));
-					}
-				} else {
-					if (Lnew) {
-						// R old L new
-						allNodes.put(L, new Integer(((Integer) allNodes.get(R))
-								.intValue() - 1));
-					} else {
-						// R old L old
-						allNodes.put(L, new Integer(Math.min(
-								((Integer) allNodes.get(L)).intValue(),
-								((Integer) allNodes.get(R)).intValue() - 1)));
-					}
-				}
+				} else if (Lnew)
+					// R old L new
+					allNodes.put(L, new Integer(((Integer) allNodes.get(R))
+							.intValue() - 1));
+				else
+					// R old L old
+					allNodes.put(L, new Integer(Math.min(((Integer) allNodes
+							.get(L)).intValue(), ((Integer) allNodes.get(R))
+							.intValue() - 1)));
 				min = Math.min(min, ((Integer) allNodes.get(L)).intValue());
 				max = Math.max(max, ((Integer) allNodes.get(R)).intValue());
 				this.checkCancelled();
@@ -1353,7 +1370,7 @@ public interface MartConstructor {
 				for (final Iterator i = tu.getNewColumnNameMap().values()
 						.iterator(); i.hasNext();) {
 					final DataSetColumn dsCol = (DataSetColumn) i.next();
-					if (dsCol.isRequiredInterim())
+					if (dsCol.isRequiredInterim(schemaPrefix))
 						parentCols.add(dsCol.getPartitionedName());
 				}
 			parentCols.removeAll(droppedCols);
@@ -1406,7 +1423,8 @@ public interface MartConstructor {
 					.hasNext();) {
 				final DataSetColumn col = (DataSetColumn) z.next();
 				final String colName = col.getPartitionedName();
-				if (col.isRequiredInterim() && !droppedCols.contains(colName)
+				if (col.isRequiredInterim(schemaPrefix)
+						&& !droppedCols.contains(colName)
 						&& !(col instanceof ExpressionColumn))
 					selectCols.add(colName);
 			}
@@ -1448,9 +1466,10 @@ public interface MartConstructor {
 								.iterator(); x.hasNext();) {
 							final DataSetColumn col = (DataSetColumn) x.next();
 							final String colName = col.getPartitionedName();
-							if (expr.getAliases().keySet().contains(
-									col.getName())
-									|| !selectCols.contains(colName))
+							if (col.isRequiredInterim(schemaPrefix)
+									&& (expr.getAliases().keySet().contains(
+											col.getName()) || !selectCols
+											.contains(colName)))
 								continue;
 							groupByCols.add(colName);
 						}

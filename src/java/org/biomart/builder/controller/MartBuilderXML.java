@@ -555,6 +555,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("name", table.getName(), xmlWriter);
 			this.writeAttribute("ignore", Boolean.toString(table.isMasked()),
 					xmlWriter);
+			this.writeListAttribute("inSchemaPartition", table
+					.getSchemaPartitions().toArray(), xmlWriter);
 
 			// Write out columns inside each table.
 			for (final Iterator ci = table.getColumns().values().iterator(); ci
@@ -572,6 +574,8 @@ public class MartBuilderXML extends DefaultHandler {
 				this.writeAttribute("name", col.getName(), xmlWriter);
 				this.writeAttribute("visibleModified", Boolean.toString(col
 						.isVisibleModified()), xmlWriter);
+				this.writeListAttribute("inSchemaPartition", col
+						.getSchemaPartitions().toArray(), xmlWriter);
 				this.closeElement("column", xmlWriter);
 			}
 
@@ -1211,7 +1215,7 @@ public class MartBuilderXML extends DefaultHandler {
 		// Write out partition tables.
 		for (final Iterator dsi = mart.getPartitionTables().iterator(); dsi
 				.hasNext();) {
-			final PartitionTable pt = ((DataSet) dsi.next()).asPartitionTable();
+			final PartitionTable pt = (PartitionTable) dsi.next();
 			Log.debug("Writing dataset partition table: " + pt);
 
 			this.openElement("datasetPartitionTable", xmlWriter);
@@ -1476,6 +1480,8 @@ public class MartBuilderXML extends DefaultHandler {
 			final String name = (String) attributes.get("name");
 			final boolean ignore = Boolean.valueOf(
 					(String) attributes.get("ignore")).booleanValue();
+			final String[] schemaPartitions = this.readListAttribute(
+					(String) attributes.get("inSchemaPartition"), false);
 
 			// What kind of schema?
 			if (schema instanceof DataSet
@@ -1490,6 +1496,8 @@ public class MartBuilderXML extends DefaultHandler {
 				try {
 					final Table table = new Table(schema, name);
 					table.setMasked(ignore);
+					table.getSchemaPartitions().clear();
+					table.getSchemaPartitions().addAll(Arrays.asList(schemaPartitions));
 					schema.getTables().put(table.getName(), table);
 					element = table;
 				} catch (final Exception e) {
@@ -1516,6 +1524,8 @@ public class MartBuilderXML extends DefaultHandler {
 			final String name = (String) attributes.get("name");
 			final boolean visibleModified = Boolean.valueOf(
 					(String) attributes.get("visibleModified")).booleanValue();
+			final String[] schemaPartitions = this.readListAttribute(
+					(String) attributes.get("inSchemaPartition"), false);
 
 			try {
 				// DataSet table column?
@@ -1530,7 +1540,9 @@ public class MartBuilderXML extends DefaultHandler {
 				// Generic column?
 				else if (tbl instanceof Table) {
 					final Column column = new Column(tbl, name);
-					column.setVisibleModified(visibleModified);
+					column.setVisibleModified(visibleModified);	
+					column.getSchemaPartitions().clear();
+					column.getSchemaPartitions().addAll(Arrays.asList(schemaPartitions));
 					tbl.getColumns().put(column.getName(), column);
 					element = column;
 				}

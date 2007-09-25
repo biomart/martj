@@ -59,7 +59,7 @@ import org.biomart.common.utils.Transaction.TransactionListener;
  *          $Author$
  * @since 0.7
  */
-public abstract class PartitionTable implements TransactionListener {
+public abstract class PartitionTable implements TransactionListener, Comparable {
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
@@ -615,6 +615,12 @@ public abstract class PartitionTable implements TransactionListener {
 					+ "_" + pt.getOriginalName());
 		} else
 			return false;
+	}
+
+	public int compareTo(final Object obj) {
+		final PartitionTable pt = (PartitionTable) obj;
+		return (this.uniqueId + "_" + this.getOriginalName()).compareTo(pt.uniqueId
+					+ "_" + pt.getOriginalName());
 	}
 
 	public String toString() {

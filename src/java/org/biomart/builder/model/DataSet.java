@@ -254,12 +254,12 @@ public class DataSet extends Schema {
 			return;
 		// Work out all used names.
 		final Set usedNames = new HashSet();
-		for (final Iterator i = this.getMart().getDataSets().values().iterator(); i.hasNext(); ) 
-			usedNames.add(((Schema)i.next()).getName());
+		for (final Iterator i = this.getMart().getDataSets().values()
+				.iterator(); i.hasNext();)
+			usedNames.add(((Schema) i.next()).getName());
 		// Make new name unique.
 		final String baseName = name;
-		for (int i = 1; usedNames.contains(name); name = baseName
-				+ "_" + i++)
+		for (int i = 1; usedNames.contains(name); name = baseName + "_" + i++)
 			;
 		this.name = name;
 		this.pcs.firePropertyChange("name", oldValue, name);
@@ -326,10 +326,10 @@ public class DataSet extends Schema {
 				&& partitionTableApplication.equals(oldValue))
 			return;
 		this.partitionTableApplication = partitionTableApplication;
-		if (this.partitionTableApplication!=null)
+		if (this.partitionTableApplication != null)
 			this.partitionTableApplication.addPropertyChangeListener(
-				"directModified", new WeakPropertyChangeListener(
-						"directModified", this.rebuildListener));
+					"directModified", new WeakPropertyChangeListener(
+							"directModified", this.rebuildListener));
 		this.pcs.firePropertyChange("partitionTableApplication", oldValue,
 				partitionTableApplication);
 	}
@@ -397,7 +397,7 @@ public class DataSet extends Schema {
 			this.partitionTable.addPropertyChangeListener(this.listener);
 			// Update ourselves to remove dimensions and subclasses.
 			try {
-			this.synchronise();
+				this.synchronise();
 			} catch (final Exception e) {
 				throw new PartitionException(e);
 			}
@@ -427,11 +427,11 @@ public class DataSet extends Schema {
 			this.partitionTable = null;
 			// Update ourselves to restore dimensions and subclasses.
 			try {
-			this.synchronise();
+				this.synchronise();
 			} catch (final Exception e) {
 				throw new PartitionException(e);
 			}
-			}
+		}
 		this.pcs.firePropertyChange("partitionTable", oldValue, partitionTable);
 	}
 
@@ -966,8 +966,8 @@ public class DataSet extends Schema {
 		// a dimension ourselves.
 		this.processTable(parentTU, dsTable, dsTablePKCols, realTable, normalQ,
 				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
-				relationCount, subclassCount, !this.isPartitionTable() && !type
-						.equals(DataSetTableType.DIMENSION),
+				relationCount, subclassCount, !this.isPartitionTable()
+						&& !type.equals(DataSetTableType.DIMENSION),
 				Collections.EMPTY_LIST, Collections.EMPTY_LIST,
 				relationIteration, 0, unusedCols, uniqueBases);
 
@@ -1931,24 +1931,26 @@ public class DataSet extends Schema {
 
 		// Check all visibleModified type/key pairs for
 		// all vismod relations, keys, and columns. Update, then remove.
-		for (final Iterator i = this.getRelations().iterator(); i.hasNext(); ) {
-			final Relation rel = (Relation)i.next();
+		for (final Iterator i = this.getRelations().iterator(); i.hasNext();) {
+			final Relation rel = (Relation) i.next();
 			final String key = rel.toString();
 			if (this.getMods(key, "visibleModified").containsKey(key))
 				rel.setVisibleModified(true);
 			this.mods.remove(key);
 		}
-		for (final Iterator i = this.getTables().values().iterator(); i.hasNext(); ) {
-			final Table tbl = (Table)i.next();
-			for (final Iterator j = tbl.getKeys().iterator(); j.hasNext(); ) {
-				final Key k = (Key)j.next();
+		for (final Iterator i = this.getTables().values().iterator(); i
+				.hasNext();) {
+			final Table tbl = (Table) i.next();
+			for (final Iterator j = tbl.getKeys().iterator(); j.hasNext();) {
+				final Key k = (Key) j.next();
 				final String key = k.toString();
 				if (this.getMods(key, "visibleModified").containsKey(key))
 					k.setVisibleModified(true);
 				this.mods.remove(key);
 			}
-			for (final Iterator j = tbl.getColumns().values().iterator(); j.hasNext(); ) {
-				final Column col = (Column)j.next();
+			for (final Iterator j = tbl.getColumns().values().iterator(); j
+					.hasNext();) {
+				final Column col = (Column) j.next();
 				final String key = col.toString();
 				if (this.getMods(key, "visibleModified").containsKey(key))
 					col.setVisibleModified(true);
@@ -2123,9 +2125,11 @@ public class DataSet extends Schema {
 		 * Test to see if this column is required during intermediate
 		 * construction phases.
 		 * 
+		 * @param schemaPrefix
+		 *            the schema prefix to test for.
 		 * @return <tt>true</tt> if it is.
 		 */
-		public boolean isRequiredInterim() {
+		public boolean isRequiredInterim(final String schemaPrefix) {
 			return this.keyDependency || this.expressionDependency
 					|| !this.isColumnMasked();
 		}
@@ -2134,9 +2138,11 @@ public class DataSet extends Schema {
 		 * Test to see if this column is required in the final completed dataset
 		 * table.
 		 * 
+		 * @param schemaPrefix
+		 *            the schema prefix to test for.
 		 * @return <tt>true</tt> if it is.
 		 */
-		public boolean isRequiredFinal() {
+		public boolean isRequiredFinal(final String schemaPrefix) {
 			// Masked columns are not final.
 			if (this.isColumnMasked())
 				return false;
@@ -2516,6 +2522,14 @@ public class DataSet extends Schema {
 							.get("cannotRenameInheritedColumn"));
 				super.setColumnRename(columnRename);
 			}
+
+			public boolean isRequiredFinal(String schemaPrefix) {
+				return this.dsColumn.isRequiredFinal(schemaPrefix);
+			}
+
+			public boolean isRequiredInterim(String schemaPrefix) {
+				return this.dsColumn.isRequiredInterim(schemaPrefix);
+			}
 		}
 
 		/**
@@ -2556,6 +2570,18 @@ public class DataSet extends Schema {
 			 */
 			public Column getWrappedColumn() {
 				return this.column;
+			}
+
+			public boolean isRequiredFinal(String schemaPrefix) {
+				return (this.column.getSchemaPartitions().isEmpty() || this.column
+						.getSchemaPartitions().contains(schemaPrefix))
+						&& super.isRequiredFinal(schemaPrefix);
+			}
+
+			public boolean isRequiredInterim(String schemaPrefix) {
+				return (this.column.getSchemaPartitions().isEmpty() || this.column
+						.getSchemaPartitions().contains(schemaPrefix))
+						&& super.isRequiredInterim(schemaPrefix);
 			}
 		}
 	}
@@ -3071,7 +3097,8 @@ public class DataSet extends Schema {
 		 * @return <tt>true</tt> if it is.
 		 */
 		public boolean isExplainHideMasked() {
-			return this.getMods("explainHideMasked").containsKey(this.getName());
+			return this.getMods("explainHideMasked")
+					.containsKey(this.getName());
 		}
 
 		/**
