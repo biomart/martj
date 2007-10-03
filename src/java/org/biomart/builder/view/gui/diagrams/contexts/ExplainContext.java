@@ -21,6 +21,7 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.swing.ImageIcon;
@@ -109,7 +110,12 @@ public class ExplainContext extends SchemaContext {
 
 		// Schema objects.
 		else if (object instanceof Schema) {
+			final Schema schema = (Schema) object;
 			final SchemaComponent schcomp = (SchemaComponent) component;
+			if (this.isMasked(schema))
+				schcomp.setBackground(SchemaComponent.MASKED_BACKGROUND);
+			else
+				schcomp.setBackground(SchemaComponent.BACKGROUND_COLOUR);
 
 			schcomp.setRenameable(false);
 			schcomp.setSelectable(false);
@@ -122,7 +128,8 @@ public class ExplainContext extends SchemaContext {
 
 			// Fade out UNINCLUDED tables.
 			if (!(object instanceof DataSetTable)
-					&& (tblcomp.getDiagram() instanceof SkipTempReal || this.isMasked(table)))
+					&& (tblcomp.getDiagram() instanceof SkipTempReal || this
+							.isMasked(table)))
 				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
 			else
@@ -152,7 +159,37 @@ public class ExplainContext extends SchemaContext {
 		final String schemaPrefix = this.getMartTab()
 				.getPartitionViewSelection();
 
-		if (object instanceof Relation) {
+		// Schemas.
+		if (object instanceof Schema) {
+			final Schema schema = (Schema) object;
+
+			// Fade out UNINCLUDED schemas.
+			final Set includedSchs = new HashSet(
+					this.datasetTable != null ? this.datasetTable
+							.getIncludedSchemas() : this.dataset
+							.getIncludedSchemas());
+			if (!includedSchs.contains(schema))
+				return true;
+
+			// Fade out if all external tables are inapplicable.
+			boolean hasExternal = false;
+			for (final Iterator i = schema.getRelations().iterator(); i
+					.hasNext();) {
+				final Relation r = (Relation) i.next();
+				if (r.isExternal()) {
+					hasExternal = true;
+					if (r.getFirstKey().getTable().existsForPartition(
+							schemaPrefix)
+							&& r.getSecondKey().getTable().existsForPartition(
+									schemaPrefix))
+						return false;
+				}
+			}
+			return hasExternal;
+		}
+
+		// Relations
+		else if (object instanceof Relation) {
 			final Relation relation = (Relation) object;
 			// Fade out all UNINCLUDED and MASKED relations.
 			if (this.isMasked(relation.getFirstKey().getTable())

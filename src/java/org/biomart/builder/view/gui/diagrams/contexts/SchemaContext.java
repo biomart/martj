@@ -87,7 +87,7 @@ public class SchemaContext implements DiagramContext {
 		if (object instanceof Schema) {
 			final Schema schema = (Schema) object;
 			final SchemaComponent schcomp = (SchemaComponent) component;
-			if (schema.isMasked())
+			if (this.isMasked(schema))
 				schcomp.setBackground(SchemaComponent.MASKED_BACKGROUND);
 			else
 				schcomp.setBackground(SchemaComponent.BACKGROUND_COLOUR);
@@ -182,8 +182,26 @@ public class SchemaContext implements DiagramContext {
 				.getPartitionViewSelection();
 
 		if (object instanceof Schema) {
-			if (((Schema) object).isMasked())
+			final Schema schema = (Schema) object;
+
+			if (schema.isMasked())
 				return true;
+
+			// Fade out if all external tables are inapplicable.
+			boolean hasExternal = false;
+			for (final Iterator i = schema.getRelations().iterator(); i
+					.hasNext();) {
+				final Relation r = (Relation) i.next();
+				if (r.isExternal()) {
+					hasExternal = true;
+					if (r.getFirstKey().getTable().existsForPartition(
+							schemaPrefix)
+							&& r.getSecondKey().getTable().existsForPartition(
+									schemaPrefix))
+						return false;
+				}
+			}
+			return hasExternal;
 		}
 
 		// Incorrect and ignored stuff is 'masked'.
@@ -191,8 +209,7 @@ public class SchemaContext implements DiagramContext {
 			final Table table = (Table) object;
 
 			// Fade out all ignored and/or unreachable tables.
-			if (table.isMasked()
-					|| !table.existsForPartition(schemaPrefix))
+			if (table.isMasked() || !table.existsForPartition(schemaPrefix))
 				return true;
 			else {
 				for (final Iterator i = table.getRelations().iterator(); i

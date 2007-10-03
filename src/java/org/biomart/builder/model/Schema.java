@@ -773,6 +773,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			return;
 		this.partitionRegex = partitionRegex;
 		this.needsFullSync = true;
+		this.partitionCache.clear();
 		this.pcs.firePropertyChange("partitionRegex", oldValue, partitionRegex);
 	}
 
@@ -795,6 +796,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			return;
 		this.partitionNameExpression = partitionNameExpression;
 		this.needsFullSync = true;
+		this.partitionCache.clear();
 		this.pcs.firePropertyChange("partitionNameExpression", oldValue,
 				partitionNameExpression);
 	}

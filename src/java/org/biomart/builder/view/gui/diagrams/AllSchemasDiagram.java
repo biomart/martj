@@ -125,6 +125,13 @@ public class AllSchemasDiagram extends Diagram {
 			schema.getRelations().addPropertyChangeListener(
 					new WeakPropertyChangeListener(schema.getRelations(),
 							this.listener));
+			// Repaint when schemas become/stop being partitioned.
+			schema.addPropertyChangeListener("partitionNameExpression",
+					new WeakPropertyChangeListener(schema,
+							"partitionNameExpression", this.repaintListener));
+			schema.addPropertyChangeListener("partitionRegex",
+					new WeakPropertyChangeListener(schema, "partitionRegex",
+							this.repaintListener));
 		}
 	}
 }

@@ -451,7 +451,9 @@ public class DataSet extends Schema {
 		final List rows = new ArrayList();
 		try {
 			// Translate schemaPrefix to schemaPartition.
-			final String schemaPartition = schemaPrefix==null?null:(String)new InverseMap(jdbc.getPartitions()).get(schemaPrefix);
+			final String schemaPartition = schemaPrefix == null ? null
+					: (String) new InverseMap(jdbc.getPartitions())
+							.get(schemaPrefix);
 			final String usablePartition = schemaPartition != null ? schemaPartition
 					: jdbc.getDataLinkSchema();
 			conn = jdbc.getConnection(schemaPartition);
@@ -775,6 +777,7 @@ public class DataSet extends Schema {
 		}
 		dsTable.includedRelations.clear();
 		dsTable.includedTables.clear();
+		dsTable.includedSchemas.clear();
 
 		// Create the three relation-table pair queues we will work with. The
 		// normal queue holds pairs of relations and tables. The other two hold
@@ -1250,6 +1253,7 @@ public class DataSet extends Schema {
 			tu = new SelectFromTable(mergeTable);
 		this.includedTables.add(mergeTable);
 		dsTable.includedTables.add(mergeTable);
+		dsTable.includedSchemas.add(mergeTable.getSchema());
 
 		dsTable.addTransformationUnit(tu);
 
@@ -2003,7 +2007,7 @@ public class DataSet extends Schema {
 		private String partitionedName = null;
 
 		private final List partitionCols = new ArrayList();
-		
+
 		private TransformationUnit tu;
 
 		/**
@@ -2039,7 +2043,9 @@ public class DataSet extends Schema {
 
 		/**
 		 * Set the transformation unit causing this column to exist.
-		 * @param tu the unit.
+		 * 
+		 * @param tu
+		 *            the unit.
 		 */
 		public void setTransformationUnit(final TransformationUnit tu) {
 			this.tu = tu;
@@ -2047,6 +2053,7 @@ public class DataSet extends Schema {
 
 		/**
 		 * Get the transformation unit causing this column to exist.
+		 * 
 		 * @return the unit.
 		 */
 		public TransformationUnit getTransformationUnit() {
@@ -2155,7 +2162,7 @@ public class DataSet extends Schema {
 		 * @return <tt>true</tt> if it is.
 		 */
 		public boolean existsForPartition(final String schemaPrefix) {
-			return this.tu==null || this.tu.appliesToPartition(schemaPrefix);
+			return this.tu == null || this.tu.appliesToPartition(schemaPrefix);
 		}
 
 		/**
@@ -2427,7 +2434,7 @@ public class DataSet extends Schema {
 			 *            the definition of this column's expression.
 			 */
 			public ExpressionColumn(final String name,
-					final DataSetTable dsTable, 
+					final DataSetTable dsTable,
 					final ExpressionColumnDefinition definition) {
 				// The super constructor will make the alias for us.
 				super(name, dsTable);
@@ -2610,8 +2617,8 @@ public class DataSet extends Schema {
 			}
 
 			public boolean existsForPartition(String schemaPrefix) {
-				return this.column.existsForPartition(schemaPrefix) &&
-					super.existsForPartition(schemaPrefix);
+				return this.column.existsForPartition(schemaPrefix)
+						&& super.existsForPartition(schemaPrefix);
 			}
 		}
 	}
@@ -2807,6 +2814,8 @@ public class DataSet extends Schema {
 
 		private final Collection includedTables;
 
+		private final Collection includedSchemas;
+
 		/**
 		 * The constructor calls the parent table constructor. It uses a dataset
 		 * as a parent schema for itself. You must also supply a type that
@@ -2839,6 +2848,7 @@ public class DataSet extends Schema {
 			this.transformationUnits = new ArrayList();
 			this.includedRelations = new LinkedHashSet();
 			this.includedTables = new LinkedHashSet();
+			this.includedSchemas = new LinkedHashSet();
 
 			// Listen to own settings.
 			final PropertyChangeListener listener = new PropertyChangeListener() {
@@ -2856,7 +2866,9 @@ public class DataSet extends Schema {
 
 		/**
 		 * Does this dataset table exist for the given partition?
-		 * @param schemaPrefix the partition prefix.
+		 * 
+		 * @param schemaPrefix
+		 *            the partition prefix.
 		 * @return <tt>true</tt> if it does.
 		 */
 		public boolean existsForPartition(String schemaPrefix) {
@@ -3030,6 +3042,15 @@ public class DataSet extends Schema {
 		 */
 		public Collection getIncludedRelations() {
 			return this.includedRelations;
+		}
+
+		/**
+		 * Find out what schemas are used in this dataset table.
+		 * 
+		 * @return the set of schemas used.
+		 */
+		public Collection getIncludedSchemas() {
+			return this.includedSchemas;
 		}
 
 		/**
