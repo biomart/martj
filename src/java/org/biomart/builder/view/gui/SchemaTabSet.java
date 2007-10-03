@@ -135,11 +135,11 @@ public class SchemaTabSet extends JTabbedPane {
 					// Rename in diagram set.
 					SchemaTabSet.this.schemaToDiagram.put(evt.getNewValue(),
 							SchemaTabSet.this.schemaToDiagram.remove(evt
-									.getOldValue()));		
-					SchemaTabSet.this.setTitleAt(SchemaTabSet.this.indexOfTab((String)evt
-											.getOldValue()), (String)evt.getNewValue());
-				}
-				else if (evt.getPropertyName().equals("masked")) {
+									.getOldValue()));
+					SchemaTabSet.this.setTitleAt(SchemaTabSet.this
+							.indexOfTab((String) evt.getOldValue()),
+							(String) evt.getNewValue());
+				} else if (evt.getPropertyName().equals("masked")) {
 					// For masks, if unmasking, add a tab, otherwise
 					// remove the tab.
 					final boolean masked = ((Boolean) evt.getNewValue())
@@ -738,12 +738,17 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestModifySchemaPartitions(final Schema schema) {
 		final PartitionSchemaDialog dialog = new PartitionSchemaDialog(schema);
-		if (dialog.definePartitions()) {
-			Transaction.start(false);
-			schema.setPartitionNameExpression(dialog.getExpression());
-			schema.setPartitionRegex(dialog.getRegex());
-			Transaction.end();
-		}
+		if (dialog.definePartitions())
+			// In the background, do the synchronisation.
+			new LongProcess() {
+				public void run() throws Exception {
+
+					Transaction.start(false);
+					schema.setPartitionNameExpression(dialog.getExpression());
+					schema.setPartitionRegex(dialog.getRegex());
+					Transaction.end();
+				}
+			}.start();
 	}
 
 	/**
@@ -799,8 +804,7 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks user for a new name, then renames a schema, which is optionally part
-	 * of a schema group.
+	 * Asks user for a new name, then renames a schema.
 	 * 
 	 * @param schema
 	 *            the schema to rename.

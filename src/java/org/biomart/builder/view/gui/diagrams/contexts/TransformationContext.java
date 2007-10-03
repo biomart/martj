@@ -99,10 +99,16 @@ public class TransformationContext extends DataSetContext {
 	}
 
 	public boolean isMasked(final Object object) {
+
+		final String schemaPrefix = this.getMartTab()
+				.getPartitionViewSelection();
+		
 		// Is it a column?
-		if (object instanceof DataSetColumn)
-			if (((DataSetColumn) object).isColumnMasked())
+		if (object instanceof DataSetColumn) {
+			final DataSetColumn dsCol = (DataSetColumn)object;
+			if (dsCol.isColumnMasked() || !dsCol.existsForPartition(schemaPrefix))		
 				return true;
+		}
 
 		return false;
 	}

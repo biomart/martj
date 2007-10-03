@@ -73,9 +73,9 @@ import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 public class SaveDDLDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
-	private Collection datasets;
-
 	private JList datasetsList;
+
+	private JList prefixesList;
 
 	private MartTab martTab;
 
@@ -123,11 +123,13 @@ public class SaveDDLDialog extends JDialog {
 	 *            the tab in which this will be displayed.
 	 * @param datasets
 	 *            the datasets to list.
+	 * @param prefixes
+	 *            the schema partition prefixes to list.
 	 * @param generateOption
 	 *            the option to select in the dropdown.
 	 */
 	public SaveDDLDialog(final MartTab martTab, final Collection datasets,
-			final String generateOption) {
+			final Collection prefixes, final String generateOption) {
 		// Create the base dialog.
 		super();
 		this.setTitle(Resources.get("saveDDLDialogTitle"));
@@ -137,7 +139,6 @@ public class SaveDDLDialog extends JDialog {
 		// Remember the tabset that the schema we are working with is part of
 		// (or will be part of if it's not been created yet).
 		this.martTab = martTab;
-		this.datasets = datasets;
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
@@ -183,11 +184,22 @@ public class SaveDDLDialog extends JDialog {
 		this.datasetsList = new JList(datasets.toArray(new DataSet[0]));
 		this.datasetsList
 				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-		this.datasetsList.setSelectionInterval(0, this.datasets.size() - 1);
+		this.datasetsList.setSelectionInterval(0, datasets.size() - 1);
 		this.datasetsList.setVisibleRowCount(4); // Arbitrary.
 		// Set the list to 30-characters wide. Longer than this and it will
 		// show a horizontal scrollbar.
 		this.datasetsList
+				.setPrototypeCellValue("012345678901234567890123456789");
+
+		// Create the list for choosing partitions.
+		this.prefixesList = new JList(prefixes.toArray(new String[0]));
+		this.prefixesList
+				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		this.prefixesList.setSelectionInterval(0, prefixes.size() - 1);
+		this.prefixesList.setVisibleRowCount(4); // Arbitrary.
+		// Set the list to 30-characters wide. Longer than this and it will
+		// show a horizontal scrollbar.
+		this.prefixesList
 				.setPrototypeCellValue("012345678901234567890123456789");
 
 		// Create a file chooser for finding the DDL file we will save.
@@ -314,6 +326,13 @@ public class SaveDDLDialog extends JDialog {
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(this.datasetsList));
 		content.add(field, fieldConstraints);
+		
+		// Add the prefix lists.
+		label = new JLabel(Resources.get("selectedPrefixesLabel"));
+		content.add(label, labelConstraints);
+		field = new JPanel();
+		field.add(new JScrollPane(this.prefixesList));
+		content.add(field, fieldConstraints);
 
 		// Add the target database settings label and field.
 		label = new JLabel(Resources.get("targetDatabaseLabel"));
@@ -413,6 +432,8 @@ public class SaveDDLDialog extends JDialog {
 		// What datasets are we making DDL for?
 		final Collection selectedDataSets = Arrays.asList(this.datasetsList
 				.getSelectedValues());
+		final Collection selectedPrefixes = Arrays.asList(this.prefixesList
+				.getSelectedValues());
 		// Make a stringbuffer in case we want screen output.
 		final StringBuffer sb = new StringBuffer();
 		// Make the constructor object which will create the DDL.
@@ -444,7 +465,8 @@ public class SaveDDLDialog extends JDialog {
 			this.martTab.getMartTabSet().requestSetOutputDatabase(outputDatabase);
 			this.martTab.getMartTabSet().requestSetOutputSchema(outputSchema);
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(
-					outputDatabase, outputSchema, selectedDataSets);
+					outputDatabase, outputSchema, selectedDataSets,
+					selectedPrefixes);
 			// If we want screen output, add a listener that listens for
 			// completion of construction. When completed, use the
 			// stringbuffer, which will contain the DDL, to pop up a simple
@@ -530,6 +552,12 @@ public class SaveDDLDialog extends JDialog {
 		if (this.datasetsList.getSelectedValues().length == 0)
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("selectedDataSets")));
+
+		// Must have at least one prefix selected.
+		if (this.prefixesList.getModel().getSize()>0 && 
+				this.prefixesList.getSelectedValues().length == 0)
+			messages.add(Resources.get("fieldIsEmpty", Resources
+					.get("selectedPrefixes")));
 
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())

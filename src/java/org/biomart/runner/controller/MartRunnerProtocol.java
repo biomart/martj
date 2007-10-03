@@ -38,14 +38,15 @@ import org.biomart.runner.exceptions.JobException;
 import org.biomart.runner.exceptions.ProtocolException;
 import org.biomart.runner.model.JobList;
 import org.biomart.runner.model.JobPlan;
+import org.biomart.runner.model.JobPlan.JobPlanAction;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
 
 /**
- * Handles client communication and runs background jobs.
+ * Handles client communication.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class MartRunnerProtocol {
@@ -77,6 +78,14 @@ public class MartRunnerProtocol {
 	private static final String QUEUE = "QUEUE";
 
 	private static final String UNQUEUE = "UNQUEUE";
+
+	private static final String RUN_SQL = "RUN_SQL";
+
+	private static final String LIST_TABLES = "LIST_TABLES";
+
+	private static final String LIST_COLUMNS = "LIST_COLUMNS";
+
+	private static final String UPDATE_ACTION = "UPDATE_ACTION";
 
 	// Short-cut for ending messages and actions.
 	private static final String END_MESSAGE = "___END_MESSAGE___";
@@ -390,6 +399,119 @@ public class MartRunnerProtocol {
 	 * @throws IOException
 	 *             if IO fails.
 	 */
+	public static void handle_LIST_TABLES(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		(new ObjectOutputStream(outRaw)).writeObject(JobHandler
+				.listTables(jobId));
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_LIST_COLUMNS(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final String table = in.readLine();
+		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.listColumns(
+				jobId, table));
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_RUN_SQL(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final String sql = in.readLine();
+		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.runSQL(jobId,
+				sql));
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_UPDATE_ACTION(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final String sectionId = in.readLine();
+		final String actionId = in.readLine();
+		final String action = in.readLine();
+		JobHandler.updateAction(jobId, sectionId, actionId, action);
+		out.println(MartRunnerProtocol.OK);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
 	public static void handle_GET_ACTIONS(final BufferedReader in,
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
@@ -424,7 +546,8 @@ public class MartRunnerProtocol {
 			IOException {
 		final String jobId = in.readLine();
 		final String value = in.readLine();
-		JobHandler.setSkipDropTable(jobId, Boolean.valueOf(value).booleanValue());
+		JobHandler.setSkipDropTable(jobId, Boolean.valueOf(value)
+				.booleanValue());
 		out.println(MartRunnerProtocol.OK);
 	}
 
@@ -744,7 +867,51 @@ public class MartRunnerProtocol {
 		}
 
 		/**
-		 * Add an action to a job.
+		 * Update an action in a job.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param section
+		 *            the section to update.
+		 * @param action
+		 *            the action to update.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void updateAction(final String host, final String port,
+				final String jobId, final JobPlanSection section,
+				final JobPlanAction action) throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
+				bos.println(MartRunnerProtocol.UPDATE_ACTION);
+				bos.println(jobId);
+				bos.println(section.getIdentifier());
+				bos.println(action.getIdentifier());
+				bos.println(action.getAction());
+				bis.readLine(); // OK
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Add actions to a job by defining a new section.
 		 * 
 		 * @param host
 		 *            the remote host.
@@ -783,6 +950,130 @@ public class MartRunnerProtocol {
 				}
 				bos.println(MartRunnerProtocol.END_MESSAGE);
 				bis.readLine(); // OK
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * List tables for the given job.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @return the rows. These will be one-row-per-entry, with a map of
+		 *         column names to raw objects.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static Collection listTables(final String host,
+				final String port, final String jobId) throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.LIST_TABLES);
+				bos.println(jobId);
+				return (Collection) new ObjectInputStream(clientSocket
+						.getInputStream()).readObject();
+			} catch (final ClassNotFoundException e) {
+				throw new ProtocolException(e);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * List columns on the given table for the given job.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param table
+		 *            the table to query.
+		 * @return the rows. These will be one-row-per-entry, with a map of
+		 *         column names to raw objects.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static Collection listColumns(final String host,
+				final String port, final String jobId, final String table)
+				throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.LIST_COLUMNS);
+				bos.println(jobId);
+				bos.println(table);
+				return (Collection) new ObjectInputStream(clientSocket
+						.getInputStream()).readObject();
+			} catch (final ClassNotFoundException e) {
+				throw new ProtocolException(e);
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Run SQL against the connection for the given job.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param sql
+		 *            the SQL to run.
+		 * @return the rows. These will be one-row-per-entry, with a map of
+		 *         column names to raw objects.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static Collection runSQL(final String host, final String port,
+				final String jobId, final String sql) throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				bos.println(MartRunnerProtocol.RUN_SQL);
+				bos.println(jobId);
+				bos.println(sql);
+				return (Collection) new ObjectInputStream(clientSocket
+						.getInputStream()).readObject();
+			} catch (final ClassNotFoundException e) {
+				throw new ProtocolException(e);
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			} finally {

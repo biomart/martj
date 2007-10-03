@@ -29,6 +29,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
@@ -120,13 +121,8 @@ public class ExplainContext extends SchemaContext {
 			final TableComponent tblcomp = (TableComponent) component;
 
 			// Fade out UNINCLUDED tables.
-			final Set included = new HashSet(
-					this.datasetTable != null ? this.datasetTable
-							.getIncludedTables() : this.dataset
-							.getIncludedTables());
 			if (!(object instanceof DataSetTable)
-					&& (tblcomp.getDiagram() instanceof SkipTempReal || !included
-							.contains(object)))
+					&& (tblcomp.getDiagram() instanceof SkipTempReal || this.isMasked(table)))
 				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 			// All others are normal.
 			else
@@ -153,15 +149,14 @@ public class ExplainContext extends SchemaContext {
 
 	public boolean isMasked(final Object object) {
 
+		final String schemaPrefix = this.getMartTab()
+				.getPartitionViewSelection();
+
 		if (object instanceof Relation) {
 			final Relation relation = (Relation) object;
 			// Fade out all UNINCLUDED and MASKED relations.
-			final Set includedTabs = new HashSet(
-					this.datasetTable != null ? this.datasetTable
-							.getIncludedTables() : this.dataset
-							.getIncludedTables());
-			if (!(includedTabs.contains(relation.getFirstKey().getTable()) && includedTabs
-					.contains(relation.getSecondKey().getTable())))
+			if (this.isMasked(relation.getFirstKey().getTable())
+					|| this.isMasked(relation.getSecondKey().getTable()))
 				return true;
 		}
 
@@ -173,8 +168,15 @@ public class ExplainContext extends SchemaContext {
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedTables() : this.dataset
 							.getIncludedTables());
-			if (!includedTabs.contains(table))
+			if (!includedTabs.contains(table)
+					|| !table.existsForPartition(schemaPrefix))
 				return true;
+		}
+
+		// This section is for columns.
+		else if (object instanceof Column) {
+			final Column col = (Column) object;
+			return !col.existsForPartition(schemaPrefix);
 		}
 
 		return false;

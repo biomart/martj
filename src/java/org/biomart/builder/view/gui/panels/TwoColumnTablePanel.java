@@ -50,8 +50,8 @@ import org.biomart.builder.model.Column;
  * contents, including stripping out rows with blank keys.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public abstract class TwoColumnTablePanel extends JPanel {

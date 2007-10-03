@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,7 +53,7 @@ import org.biomart.runner.model.JobPlan.JobPlanAction;
 import org.biomart.runner.model.JobPlan.JobPlanSection;
 
 /**
- * Tools for running SQL.
+ * Tools for managing job statuses, and manipulating job objects.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
  * @version $Revision$, $Date$, modified by
@@ -356,6 +357,27 @@ public class JobHandler {
 	}
 
 	/**
+	 * Update an action.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param sectionId
+	 *            the section ID.
+	 * @param actionId
+	 *            the action ID.
+	 * @param action
+	 *            the new action.
+	 * @throws JobException
+	 *             if it cannot do it.
+	 */
+	public static void updateAction(final String jobId, final String sectionId,
+			final String actionId, final String action) throws JobException {
+		final Map actions = JobHandler.getActions(jobId, sectionId);
+		actions.put(actionId, action);
+		JobHandler.setActions(jobId, sectionId, actions, false);
+	}
+
+	/**
 	 * Flag that an action is to be set to the job.
 	 * 
 	 * @param jobId
@@ -482,6 +504,63 @@ public class JobHandler {
 			if (!sectionDir.exists())
 				sectionDir.mkdirs();
 			return new File(sectionDir, sectionId);
+		}
+	}
+
+	/**
+	 * Lists tables made by a job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @return the plan.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static Collection listTables(final String jobId) throws JobException {
+		try {
+			return JobHandler.getJobList().getJobPlan(jobId).listTables();
+		} catch (final SQLException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Lists columns for a table for a job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param table
+	 *            the table.
+	 * @return the plan.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static Collection listColumns(final String jobId, final String table)
+			throws JobException {
+		try {
+			return JobHandler.getJobList().getJobPlan(jobId).listColumns(table);
+		} catch (final SQLException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
+	 * Runs SQL for a job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param sql
+	 *            the SQL.
+	 * @return the plan.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static Collection runSQL(final String jobId, final String sql)
+			throws JobException {
+		try {
+			return JobHandler.getJobList().getJobPlan(jobId).runSQL(sql);
+		} catch (final SQLException e) {
+			throw new JobException(e);
 		}
 	}
 

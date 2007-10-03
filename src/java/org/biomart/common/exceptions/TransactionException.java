@@ -19,13 +19,13 @@
 package org.biomart.common.exceptions;
 
 /**
- * This is a basic {@link Exception} for all exceptions where something does not
- * fit into the expected data model.
+ * This is a basic {@link Exception} for all exceptions where a transaction
+ * cannot be completed.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
- * @since 0.5
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
+ * @since 0.7
  */
 public class TransactionException extends BioMartException {
 	private static final long serialVersionUID = 1;

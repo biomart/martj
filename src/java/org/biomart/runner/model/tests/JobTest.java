@@ -19,10 +19,7 @@
 package org.biomart.runner.model.tests;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 
 import org.biomart.runner.exceptions.TestException;
 import org.biomart.runner.model.JobPlan;
@@ -31,8 +28,8 @@ import org.biomart.runner.model.JobPlan;
  * Represents a process that tests a job.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public abstract class JobTest implements Serializable {
@@ -45,31 +42,41 @@ public abstract class JobTest implements Serializable {
 
 	private boolean stopped = false;
 
+	private final String host;
+
+	private final String port;
+
 	/**
-	 * Update this during {@link #runTest(Connection)} up to a maximum of 100
-	 * when the test is complete.
+	 * Update this during {@link #runTest(String, String)} up to a maximum of
+	 * 100 when the test is complete.
 	 */
 	protected int progress = 0;
 
 	/**
-	 * Append to this buffer during {@link #runTest(Connection)} to generate the
-	 * textual report.
+	 * Append to this buffer during {@link #runTest(String, String)} to generate
+	 * the textual report.
 	 */
 	protected final StringBuffer report = new StringBuffer();
 
 	/**
-	 * Set this if anything goes wrong during {@link #runTest(Connection)}.
+	 * Set this if anything goes wrong during {@link #runTest(String, String)}.
 	 */
 	protected TestException exception = null;
 
 	/**
 	 * Set up a new test against the given job plan.
 	 * 
+	 * @param host
+	 *            the host to run SQL against.
+	 * @param port
+	 *            the port to run SQL against.
 	 * @param plan
 	 *            the plan to test.
 	 */
-	public JobTest(final JobPlan plan) {
+	public JobTest(final String host, final String port, final JobPlan plan) {
 		this.plan = plan;
+		this.host = host;
+		this.port = port;
 	}
 
 	/**
@@ -85,33 +92,18 @@ public abstract class JobTest implements Serializable {
 		this.finished = false;
 		this.exception = null;
 		this.stopped = false;
-		// Open connection.
-		final Connection conn;
-		try {
-			// Connect!
-			Class.forName(this.plan.getJDBCDriverClassName());
-			final Properties properties = new Properties();
-			properties.setProperty("user", this.plan.getJDBCUsername());
-			final String pwd = this.plan.getJDBCPassword();
-			if (!pwd.equals(""))
-				properties.setProperty("password", pwd);
-			conn = DriverManager.getConnection(this.plan.getJDBCURL(),
-					properties);
-		} catch (final Exception e) {
-			throw new TestException(e);
-		}
 		// Delegate and start a runnable.
 		new Runnable() {
 			public void run() {
-				JobTest.this.runTest(conn);
+				try {
+					JobTest.this.runTest(JobTest.this.host, JobTest.this.port);
+				} catch (final SQLException se) {
+					// Log it.
+					exception = new TestException(se);
+				}
 				// When runnable complete, close connection
 				// and update report ready flag.
 				JobTest.this.finished = true;
-				try {
-					conn.close();
-				} catch (final SQLException se) {
-					// Don't care.
-				}
 			}
 		}.run();
 	}
@@ -122,14 +114,25 @@ public abstract class JobTest implements Serializable {
 	 * {@link #exception} if any needs to be set. It should check to see if the
 	 * user has stopped it by periodically calling {@link #isTestStopped()}.
 	 * 
-	 * @param conn
-	 *            the connection to connect to when running the test.
-	 * @return <tt>false</tt> in case the test cannot run (but NOT if the test
-	 *         'fails', i.e. produces valid results that do not meet
-	 *         requirements). In which case, the exception should be set.
-	 *         <tt>true</tt> otherwise.
+	 * @param host
+	 *            the host to send SQL to.
+	 * @param port
+	 *            the port to send SQL to.
+	 * @throws SQLException
+	 *             if it goes seriously wrong. Anything less minor should be
+	 *             stored in {@link #exception}.
 	 */
-	protected abstract boolean runTest(final Connection conn);
+	protected abstract void runTest(final String host, final String port)
+			throws SQLException;
+
+	/**
+	 * Get the job plan we are testing.
+	 * 
+	 * @return the plan.
+	 */
+	protected JobPlan getJobPlan() {
+		return this.plan;
+	}
 
 	/**
 	 * Stops the test, even if it is not yet ready.
@@ -139,7 +142,7 @@ public abstract class JobTest implements Serializable {
 	}
 
 	/**
-	 * The {@link #runTest(Connection)} method uses this to find out if it needs
+	 * The {@link #runTest(String, String)} method uses this to find out if it needs
 	 * to stop early.
 	 * 
 	 * @return <tt>true</tt> if it has been stopped.

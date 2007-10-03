@@ -54,8 +54,8 @@ import org.biomart.common.view.gui.dialogs.TransactionalDialog;
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.5
  */
 public class SchemaConnectionDialog extends TransactionalDialog {

@@ -1150,7 +1150,7 @@ public abstract class MartConstructorAction {
 	}
 
 	/**
-	 * Drop column actions.
+	 * Initial unroll actions.
 	 */
 	public static class InitialUnroll extends MartConstructorAction {
 		private static final long serialVersionUID = 1L;
@@ -1310,7 +1310,7 @@ public abstract class MartConstructorAction {
 	}
 
 	/**
-	 * Drop column actions.
+	 * Expand unroll actions.
 	 */
 	public static class ExpandUnroll extends MartConstructorAction {
 		private static final long serialVersionUID = 1L;

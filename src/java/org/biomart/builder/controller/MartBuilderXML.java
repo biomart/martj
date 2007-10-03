@@ -82,14 +82,15 @@ import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * The MartBuilderXML class provides two static methods which serialize and
- * deserialize {@link Mart} objects to/from a basic XML format.
+ * deserialize {@link Mart} objects to/from a basic XML format. A third method
+ * saves a human-readable report based on the XML.
  * <p>
  * Writing is done by building up a map of objects to unique IDs. Where objects
  * cross-reference each other, they look up the unique ID in the map and
  * reference that instead. When reading, the reverse map is built up to achieve
  * the same effect. This system relies on objects being written out before they
  * are cross-referenced by other objects, so circular references are not
- * possible, and the file structure has been carefully planned to avoid other
+ * possible, and the file structure must be carefully planned to avoid other
  * situations where this may arise.
  * <p>
  * NOTE: The XML is version-specific. A formal DTD will be included with each
@@ -158,7 +159,7 @@ public class MartBuilderXML extends DefaultHandler {
 			throw new DataModelException(Resources.get("fileNotSchemaVersion",
 					MartBuilderXML.CURRENT_DTD_VERSION));
 		// Return.
-		Log.info("Done loading XML");
+		Log.info("Done loading XML from "+file.getPath());
 		return mart;
 	}
 
@@ -195,7 +196,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// Close the output stream.
 			fw.close();
 		}
-		Log.info("Done saving XML");
+		Log.info("Done saving XML as "+file.getPath());
 	}
 
 	/**
@@ -717,6 +718,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Write out visibleModified keys (toString()) for
 			// all vismod relations, keys, and columns.
+			Log.debug("Writing visible modified keys/rels/cols");
 			final Set vismodKeys = new HashSet();
 			for (final Iterator i = ds.getRelations().iterator(); i.hasNext();) {
 				final Relation rel = (Relation) i.next();
@@ -745,6 +747,7 @@ public class MartBuilderXML extends DefaultHandler {
 				this.closeElement("visibleModified", xmlWriter);
 			}
 
+			Log.debug("Writing global modifications");
 			for (final Iterator s = mart.getSchemas().values().iterator(); s
 					.hasNext();) {
 				final Schema sch = (Schema) s.next();
@@ -932,6 +935,7 @@ public class MartBuilderXML extends DefaultHandler {
 			for (final Iterator i = ds.getTables().values().iterator(); i
 					.hasNext();) {
 				final DataSetTable dsTable = (DataSetTable) i.next();
+				Log.debug("Writing modifications for "+dsTable);
 				// Write out masked tables inside dataset.
 				if (dsTable.isDimensionMasked()) {
 					this.openElement("maskedTable", xmlWriter);
@@ -1226,6 +1230,7 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 
 			// Write out partition regex columns.
+			Log.debug("Writing partition regexes");
 			for (final Iterator i = pt.getSelectedColumnNames().iterator(); i
 					.hasNext();) {
 				final String colName = (String) i.next();
@@ -1246,6 +1251,7 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 
 			// Write out applications.
+			Log.debug("Writing partition applications");
 			for (final Iterator j = pt.getAllApplications().entrySet()
 					.iterator(); j.hasNext();) {
 				final Map.Entry entry = (Map.Entry) j.next();
@@ -1365,7 +1371,7 @@ public class MartBuilderXML extends DefaultHandler {
 		String eName = sName;
 		if ("".equals(eName))
 			eName = qName;
-
+		
 		// Construct a set of attributes from the tag.
 		final Map attributes = new HashMap();
 		if (attrs != null)
@@ -1382,12 +1388,12 @@ public class MartBuilderXML extends DefaultHandler {
 						.replaceAll("&amp;", "&"));
 			}
 
-		// Start by assuming the tag produces an unnested element;
-		Object element = "";
-
 		// Now, attempt to recognise the tag by checking its name
 		// against a set of names known to us.
-		Log.debug("Reading tag " + eName);
+		Log.debug("Reading tag " + eName + " with attributes "+attributes);
+
+		// Start by assuming the tag produces an unnested element;
+		Object element = "";
 
 		// Mart (top-level only).
 		if ("mart".equals(eName)) {
@@ -1448,11 +1454,10 @@ public class MartBuilderXML extends DefaultHandler {
 			try {
 				final Schema schema = new JDBCSchema(this.constructedMart,
 						driverClassName, url, databaseName, schemaName,
-						username, password, name, keyguessing);
+						username, password, name, keyguessing, partitionRegex,
+						partitionExpression);
 				schema.setMasked(masked);
 				schema.setHideMasked(hideMasked);
-				schema.setPartitionRegex(partitionRegex);
-				schema.setPartitionNameExpression(partitionExpression);
 				// Return to normal.
 				schema.storeInHistory();
 				// Add the schema directly to the mart if outside a group.
@@ -1497,7 +1502,8 @@ public class MartBuilderXML extends DefaultHandler {
 					final Table table = new Table(schema, name);
 					table.setMasked(ignore);
 					table.getSchemaPartitions().clear();
-					table.getSchemaPartitions().addAll(Arrays.asList(schemaPartitions));
+					table.getSchemaPartitions().addAll(
+							Arrays.asList(schemaPartitions));
 					schema.getTables().put(table.getName(), table);
 					element = table;
 				} catch (final Exception e) {
@@ -1540,9 +1546,10 @@ public class MartBuilderXML extends DefaultHandler {
 				// Generic column?
 				else if (tbl instanceof Table) {
 					final Column column = new Column(tbl, name);
-					column.setVisibleModified(visibleModified);	
+					column.setVisibleModified(visibleModified);
 					column.getSchemaPartitions().clear();
-					column.getSchemaPartitions().addAll(Arrays.asList(schemaPartitions));
+					column.getSchemaPartitions().addAll(
+							Arrays.asList(schemaPartitions));
 					tbl.getColumns().put(column.getName(), column);
 					element = column;
 				}
@@ -1737,14 +1744,14 @@ public class MartBuilderXML extends DefaultHandler {
 				// Look up the table.
 				final String tableKey = (String) attributes.get("tableKey");
 
-				// Mask it.
+				// Hide-mask it.
 				w.getMods(tableKey, "explainHideMasked").put(tableKey, null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
 		}
 
-		// Explain-hide-masked (inside dataset).
+		// Visible modified (inside dataset).
 		else if ("visibleModified".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
@@ -1757,7 +1764,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Look up the table.
 				final String key = (String) attributes.get("key");
 
-				// Mask it.
+				// Vis-mod it.
 				w.getMods(key, "visibleModified").put(key, null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -1777,7 +1784,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// Look up the table.
 				final String tableKey = (String) attributes.get("tableKey");
 
-				// Mask it.
+				// Distinct it.
 				w.getMods(tableKey, "distinctTable").put(tableKey, null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -1864,7 +1871,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 		// Directional Relation (inside dataset).
 		else if ("directionalRelation".equals(eName)) {
-			// Ignore - historical.
+			// Ignore - relict from 0.6.
 		}
 
 		// Unrolled Relation (inside dataset).
@@ -1883,7 +1890,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final Column col = (Column) this.mappedObjects.get(attributes
 						.get("columnId"));
 
-				// Compound it.
+				// Unroll it.
 				if (rel != null && col != null)
 					rel.setUnrolledRelation(w, col);
 			} catch (final Exception e) {
@@ -1906,7 +1913,7 @@ public class MartBuilderXML extends DefaultHandler {
 						.get(attributes.get("relationId"));
 				final String tableKey = (String) attributes.get("tableKey");
 
-				// Mask it.
+				// Force it.
 				if (rel != null)
 					if (tableKey == null)
 						rel.setForceRelation(w, true);
@@ -1917,7 +1924,7 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// Forced Relation (inside dataset).
+		// Looped-back Relation (inside dataset).
 		else if ("loopbackRelation".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
 			if (this.objectStack.empty()
@@ -2003,7 +2010,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 				final String colKey = (String) attributes.get("colKey");
 
-				// Subclass it.
+				// Index it.
 				w.getMods(tableKey, "columnIndexed").put(colKey, null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
@@ -2085,7 +2092,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final boolean hard = Boolean.valueOf(
 						(String) attributes.get("hard")).booleanValue();
 
-				// Flag it as restricted
+				// Set up the restriction.
 				if (expr != null && !aliases.isEmpty() && tbl != null) {
 					final RestrictedTableDefinition def = new RestrictedTableDefinition(
 							expr, aliases, hard);
@@ -2128,7 +2135,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final boolean groupBy = Boolean.valueOf(
 						(String) attributes.get("groupBy")).booleanValue();
 
-				// Flag it as restricted
+				// Set the expression up.
 				if (expr != null && !aliases.isEmpty() && tableKey != null
 						&& colKey != null) {
 					final ExpressionColumnDefinition expdef = new ExpressionColumnDefinition(
@@ -2215,8 +2222,7 @@ public class MartBuilderXML extends DefaultHandler {
 		// DataSet (anywhere).
 		else if ("dataset".equals(eName))
 			try {
-				// Look up the name, optimiser type, partition on schema flag,
-				// central table reference, and mart constructor reference.
+				// Look up the name etc.
 				// Resolve them all.
 				final String name = (String) attributes.get("name");
 				final boolean invisible = Boolean.valueOf(
@@ -2247,8 +2253,7 @@ public class MartBuilderXML extends DefaultHandler {
 					opt = DataSetOptimiserType.NONE;
 				}
 
-				// Assign the mart constructor, optimiser, and partition on
-				// schema settings.
+				// Assign the settings.
 				ds.setDataSetOptimiserType(opt);
 				ds.setInvisible(invisible);
 				ds.setMasked(masked);

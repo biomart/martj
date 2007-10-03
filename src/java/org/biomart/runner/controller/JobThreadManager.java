@@ -21,8 +21,6 @@ package org.biomart.runner.controller;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -33,7 +31,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -376,26 +373,8 @@ public class JobThreadManager extends Thread {
 				}
 
 			// If we are not connected, we should attempt to (re)connect now.
-			if (this.connection == null) {
-				Log.debug("Establishing JDBC connection");
-				// Start out by loading the driver.
-				final Class loadedDriverClass = Class.forName(this.plan
-						.getJDBCDriverClassName());
-
-				// Check it really is an instance of Driver.
-				if (!Driver.class.isAssignableFrom(loadedDriverClass))
-					throw new ClassCastException(Resources
-							.get("driverClassNotJDBCDriver"));
-
-				// Connect!
-				final Properties properties = new Properties();
-				properties.setProperty("user", this.plan.getJDBCUsername());
-				if (!this.plan.getJDBCPassword().equals(""))
-					properties.setProperty("password", this.plan
-							.getJDBCPassword());
-				this.connection = DriverManager.getConnection(this.plan
-						.getJDBCURL(), properties);
-			}
+			if (this.connection == null)
+				this.connection = this.plan.getConnection();
 			return this.connection;
 		}
 

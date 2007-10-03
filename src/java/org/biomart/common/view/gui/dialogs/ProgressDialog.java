@@ -39,8 +39,8 @@ import org.biomart.common.resources.Resources;
  * but this one actually works.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 	
+ * 			$Author$
  * @since 0.7
  */
 public class ProgressDialog extends JDialog {

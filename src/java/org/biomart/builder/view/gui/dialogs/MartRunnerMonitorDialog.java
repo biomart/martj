@@ -129,6 +129,10 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 	private boolean listRefreshing = false;
 
+	private final String host;
+
+	private final String port;
+
 	static {
 		// Colours.
 		MartRunnerMonitorDialog.STATUS_COLOR_MAP.put(JobStatus.NOT_QUEUED,
@@ -190,6 +194,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		// Make the RHS scrollpane containing job descriptions.
 		final JobPlanPanel jobPlanPanel = new JobPlanPanel(this, host, port);
+		this.host = host;
+		this.port = port;
 
 		// Make the LHS list of jobs.
 		final JobPlanListModel jobPlanListModel = new JobPlanListModel(host,
@@ -664,8 +670,9 @@ public class MartRunnerMonitorDialog extends JFrame {
 			this.testJob.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent e) {
 					if (JobPlanPanel.this.jobId != null)
-						MartRunnerTestDialog
-								.showTests(JobPlanPanel.this.jobPlan);
+						MartRunnerTestDialog.showTests(JobPlanPanel.this.host,
+								JobPlanPanel.this.port,
+								JobPlanPanel.this.jobPlan);
 				}
 			});
 			this.stopJob.addActionListener(new ActionListener() {
@@ -739,11 +746,19 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 			// Create the tree and default model.
 			// Create a JTree to hold job details.
-			this.treeModel = new JobPlanTreeModel(this.host, this.port, this);
-			this.tree = new JTree(this.treeModel);
+			this.treeModel = new JobPlanTreeModel(this.host, this.port, this,
+					parentDialog);
+			this.tree = new JTree(this.treeModel) {
+				private static final long serialVersionUID = 1L;
+
+				public boolean isPathEditable(final TreePath path) {
+					return path.getPathCount() > 0
+							&& path.getLastPathComponent() instanceof ActionNode;
+				}
+			};
 			this.tree.setOpaque(true);
 			this.tree.setBackground(Color.WHITE);
-			this.tree.setEditable(false); // Make it read-only.
+			this.tree.setEditable(true);
 			this.tree.setRootVisible(true); // Always show the root node.
 			this.tree.setShowsRootHandles(true); // Allow root expansion.
 			this.tree.setCellRenderer(new JobPlanTreeCellRenderer());
@@ -1044,10 +1059,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 		}
 	}
 
-	/**
-	 * Represents a job plan as a tree model.
-	 */
-	public static class JobPlanTreeModel extends DefaultTreeModel implements
+	private static class JobPlanTreeModel extends DefaultTreeModel implements
 			TreeWillExpandListener {
 		private static final long serialVersionUID = 1L;
 
@@ -1063,22 +1075,16 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		private final String port;
 
-		/**
-		 * Creates a new tree model.
-		 * 
-		 * @param host
-		 *            the host.
-		 * @param port
-		 *            the port.
-		 * @param planPanel
-		 *            the panel we are appearing in.
-		 */
-		public JobPlanTreeModel(final String host, final String port,
-				final JobPlanPanel planPanel) {
+		private final MartRunnerMonitorDialog parentDialog;
+
+		private JobPlanTreeModel(final String host, final String port,
+				final JobPlanPanel planPanel,
+				final MartRunnerMonitorDialog parentDialog) {
 			super(JobPlanTreeModel.EMPTY_TREE, true);
 			this.planPanel = planPanel;
 			this.host = host;
 			this.port = port;
+			this.parentDialog = parentDialog;
 		}
 
 		/**
@@ -1099,7 +1105,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 				this.reload();
 				// Get job details.
 				final SectionNode rootNode = new SectionNode(null, jobPlan
-						.getRoot());
+						.getRoot(), this.parentDialog);
 				rootNode.expanded(this.host, this.port, this.planPanel.jobId);
 				this.setRoot(rootNode);
 				this.reload();
@@ -1147,13 +1153,17 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		private final SectionNode parent;
 
+		private final MartRunnerMonitorDialog parentDialog;
+
 		// Must use Vector to be able to provide enumeration.
 		private final Vector children = new Vector();
 
 		private SectionNode(final SectionNode parent,
-				final JobPlanSection section) {
+				final JobPlanSection section,
+				final MartRunnerMonitorDialog parentDialog) {
 			this.section = section;
 			this.parent = parent;
+			this.parentDialog = parentDialog;
 		}
 
 		private JobPlanSection getSection() {
@@ -1174,7 +1184,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 						this.section);
 				for (final Iterator i = actions.iterator(); i.hasNext();)
 					this.children.add(new ActionNode(this, (JobPlanAction) i
-							.next()));
+							.next(), this.parentDialog));
 			} catch (final ProtocolException e) {
 				// Log it.
 				Log.error(e);
@@ -1187,7 +1197,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			for (final Iterator i = this.section.getSubSections().iterator(); i
 					.hasNext();)
 				this.children.add(new SectionNode(this, (JobPlanSection) i
-						.next()));
+						.next(), this.parentDialog));
 		}
 
 		public Enumeration children() {
@@ -1224,15 +1234,21 @@ public class MartRunnerMonitorDialog extends JFrame {
 		}
 	}
 
-	private static class ActionNode implements TreeNode {
+	private static class ActionNode extends DefaultMutableTreeNode {
+		private static final long serialVersionUID = 1L;
 
 		private final JobPlanAction action;
 
 		private final SectionNode parent;
 
-		private ActionNode(final SectionNode parent, final JobPlanAction action) {
+		private final MartRunnerMonitorDialog parentDialog;
+
+		private ActionNode(final SectionNode parent,
+				final JobPlanAction action,
+				final MartRunnerMonitorDialog parentDialog) {
 			this.action = action;
 			this.parent = parent;
+			this.parentDialog = parentDialog;
 		}
 
 		private JobPlanAction getAction() {
@@ -1265,6 +1281,23 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 		public boolean isLeaf() {
 			return true;
+		}
+
+		public void setUserObject(final Object userObject) {
+			// Set the actions.
+			final String oldAction = this.action.getAction();
+			this.action.setAction((String) userObject);
+			final JobPlanSection section = this.parent.getSection();
+			// Send the update to the server.
+			try {
+				Client.updateAction(this.parentDialog.host,
+						this.parentDialog.port,
+						section.getJobPlan().getJobId(), 
+						section, this.action);
+			} catch (final ProtocolException pe) {
+				this.action.setAction(oldAction);
+				StackTrace.showStackTrace(pe);
+			}
 		}
 
 		public String toString() {

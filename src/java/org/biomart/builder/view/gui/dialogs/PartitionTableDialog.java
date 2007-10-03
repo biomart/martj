@@ -78,7 +78,7 @@ import org.biomart.builder.model.PartitionTable.PartitionRow;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
-import org.biomart.builder.view.gui.DataSetTabSet;
+import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.LongProcess;
@@ -121,12 +121,15 @@ public class PartitionTableDialog extends TransactionalDialog {
 	 * 
 	 * @param dataset
 	 *            the dataset.
+	 * @param martTab
+	 *            the mart tab the dataset lives in.
 	 */
-	public PartitionTableDialog(final DataSet dataset) {
-		this(dataset, null);
+	public PartitionTableDialog(final MartTab martTab, final DataSet dataset) {
+		this(martTab, dataset, null);
 	}
 
-	private PartitionTableDialog(final DataSet dataset, final Object preselect) {
+	private PartitionTableDialog(final MartTab martTab, final DataSet dataset,
+			final Object preselect) {
 		// Create the base dialog.
 		super();
 		this.setTitle(Resources.get("partitionTableDialogTitle", dataset
@@ -330,7 +333,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 						StackTrace.showStackTrace(pe);
 					}
 					PartitionTableDialog.this.updateAvailableColumns(dataset);
-					PartitionTableDialog.this.updatePreviewPanel(dataset);
+					PartitionTableDialog.this.updatePreviewPanel(martTab,
+							dataset);
 				}
 			}
 		});
@@ -349,7 +353,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 						StackTrace.showStackTrace(pe);
 					}
 					PartitionTableDialog.this.updateAvailableColumns(dataset);
-					PartitionTableDialog.this.updatePreviewPanel(dataset);
+					PartitionTableDialog.this.updatePreviewPanel(martTab,
+							dataset);
 				}
 			}
 		});
@@ -371,7 +376,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 						// Select the selected item again, as it will
 						// have moved.
 						keyColList.setSelectedIndex(currIndex - 1);
-						PartitionTableDialog.this.updatePreviewPanel(dataset);
+						PartitionTableDialog.this.updatePreviewPanel(martTab,
+								dataset);
 					}
 				}
 			}
@@ -393,7 +399,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 						// Select the selected item again, as it will
 						// have moved.
 						keyColList.setSelectedIndex(currIndex + 1);
-						PartitionTableDialog.this.updatePreviewPanel(dataset);
+						PartitionTableDialog.this.updatePreviewPanel(martTab,
+								dataset);
 					}
 				}
 			}
@@ -408,7 +415,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 				col.setRegexMatch(matchRegex.getText());
 				col.setRegexReplace(replaceRegex.getText());
 				// Regex update button also updates preview.
-				PartitionTableDialog.this.updatePreviewPanel(dataset);
+				PartitionTableDialog.this.updatePreviewPanel(martTab, dataset);
 			}
 		});
 		regexResetButton.addActionListener(new ActionListener() {
@@ -433,7 +440,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 		showHide.add(previewCountPanel, fieldConstraints);
 		previewUpdate.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
-				PartitionTableDialog.this.updatePreviewPanel(dataset);
+				PartitionTableDialog.this.updatePreviewPanel(martTab, dataset);
 			}
 		});
 
@@ -505,7 +512,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 								.updateSelectedColumns(dataset);
 						PartitionTableDialog.this
 								.updateAvailableColumns(dataset);
-						PartitionTableDialog.this.updatePreviewPanel(dataset);
+						PartitionTableDialog.this.updatePreviewPanel(martTab,
+								dataset);
 						PartitionTableDialog.this.appliedList.removeAllItems();
 					}
 				} catch (final PartitionException pe) {
@@ -528,7 +536,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 			showHide.setVisible(true);
 			this.updateSelectedColumns(dataset);
 			this.updateAvailableColumns(dataset);
-			this.updatePreviewPanel(dataset);
+			this.updatePreviewPanel(martTab, dataset);
 			for (final Iterator i = dataset.asPartitionTable()
 					.getAllApplications().entrySet().iterator(); i.hasNext();) {
 				final Map.Entry entry = (Map.Entry) i.next();
@@ -699,7 +707,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 		return Arrays.asList(this.selectedColumns.toArray());
 	}
 
-	private void updatePreviewPanel(final DataSet ds) {
+	private void updatePreviewPanel(final MartTab martTab, final DataSet ds) {
 		new LongProcess() {
 			public void run() throws Exception {
 				// Update ds with new ones.
@@ -726,7 +734,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 					ds
 							.asPartitionTable()
 							.prepareRows(
-									null,
+									martTab.getPartitionViewSelection(),
 									Integer
 											.parseInt(PartitionTableDialog.this.previewRowCount
 													.getText()));
@@ -1034,14 +1042,14 @@ public class PartitionTableDialog extends TransactionalDialog {
 	 * table. It then applies a default application to the dimension and opens
 	 * the editor with that application selected.
 	 * 
-	 * @param tabSet
-	 *            the data set tab set we are showing in.
+	 * @param martTab
+	 *            the mart tab the dataset lives in.
 	 * @param dimension
 	 *            the dimension we want to run the wizard on.
 	 */
-	public static void showForDimension(final DataSetTabSet tabSet,
+	public static void showForDimension(final MartTab martTab,
 			final DataSetTable dimension) {
-		final Mart mart = dimension.getDataSet().getMart();
+		final Mart mart = martTab.getMart();
 		// Does it already have a partition table? Select that one.
 		PartitionTableApplication pta = dimension
 				.getPartitionTableApplication();
@@ -1140,7 +1148,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 			pt.applyTo(dimension.getDataSet(), dimension.getName(), pta);
 		}
 		// Open selected table with dimension selected in appliedList.
-		final PartitionTableDialog dialog = new PartitionTableDialog(
+		final PartitionTableDialog dialog = new PartitionTableDialog(martTab,
 				(DataSet) mart.getDataSets().get(
 						pta.getPartitionTable().getOriginalName()), dimension);
 		dialog.setVisible(true);
@@ -1153,11 +1161,14 @@ public class PartitionTableDialog extends TransactionalDialog {
 	 * table. It then applies a default application to the dataset and opens the
 	 * editor with that application selected.
 	 * 
+	 * @param martTab
+	 *            the mart tab the dataset lives in.
 	 * @param dataset
 	 *            the dataset we want to run the wizard on.
 	 */
-	public static void showForDataSet(final DataSet dataset) {
-		final Mart mart = dataset.getMart();
+	public static void showForDataSet(final MartTab martTab,
+			final DataSet dataset) {
+		final Mart mart = martTab.getMart();
 		// Does it already have a partition table? Select that one.
 		PartitionTableApplication pta = dataset.getPartitionTableApplication();
 		if (pta == null) {
@@ -1256,7 +1267,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 			pt.applyTo(dataset, PartitionTable.NO_DIMENSION, pta);
 		}
 		// Open selected table with dimension selected in appliedList.
-		final PartitionTableDialog dialog = new PartitionTableDialog(
+		final PartitionTableDialog dialog = new PartitionTableDialog(martTab,
 				(DataSet) mart.getDataSets().get(
 						pta.getPartitionTable().getOriginalName()), dataset);
 		dialog.setVisible(true);

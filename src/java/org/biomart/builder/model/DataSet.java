@@ -68,6 +68,7 @@ import org.biomart.common.exceptions.TransactionException;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanMap;
+import org.biomart.common.utils.InverseMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
@@ -171,7 +172,7 @@ public class DataSet extends Schema {
 	public DataSet(final Mart mart, final Table centralTable, final String name)
 			throws ValidationException {
 		// Super first, to set the name.
-		super(mart, name, name, name);
+		super(mart, name, name, name, null, null);
 
 		// Remember the settings and make some defaults.
 		this.invisible = false;
@@ -384,13 +385,12 @@ public class DataSet extends Schema {
 					return this.allCols;
 				}
 
-				protected List getRows(final String schemaPartition)
+				protected List getRows(final String schemaPrefix)
 						throws PartitionException {
 					if (this.getSelectedColumnNames().isEmpty())
 						throw new PartitionException(Resources
 								.get("initialColumnsNotSpecified"));
-					return DataSet.this.getRowsBySimpleSQL(this,
-							schemaPartition);
+					return DataSet.this.getRowsBySimpleSQL(this, schemaPrefix);
 				}
 			};
 			// Listen to partition table and pass on modification events.
@@ -436,7 +436,7 @@ public class DataSet extends Schema {
 	}
 
 	private List getRowsBySimpleSQL(final PartitionTable pt,
-			final String schemaPartition) throws PartitionException {
+			final String schemaPrefix) throws PartitionException {
 		Log.debug("Loading rows by simple SQL");
 
 		// Obtain schema.
@@ -450,8 +450,9 @@ public class DataSet extends Schema {
 		Connection conn = null;
 		final List rows = new ArrayList();
 		try {
-			final String usablePartition = schemaPartition != null
-					&& jdbc.getPartitions().containsKey(schemaPartition) ? schemaPartition
+			// Translate schemaPrefix to schemaPartition.
+			final String schemaPartition = schemaPrefix==null?null:(String)new InverseMap(jdbc.getPartitions()).get(schemaPrefix);
+			final String usablePartition = schemaPartition != null ? schemaPartition
 					: jdbc.getDataLinkSchema();
 			conn = jdbc.getConnection(schemaPartition);
 			// Construct SQL statement.
@@ -876,6 +877,7 @@ public class DataSet extends Schema {
 				}
 				unusedCols.remove(dsCol);
 				parentTU.getNewColumnNameMap().put(parentDSCol, dsCol);
+				dsCol.setTransformationUnit(parentTU);
 				uniqueBases.put(parentDSCol.getModifiedName(), new Integer(0));
 				// Add the column to the child's FK, but only if it was in
 				// the parent PK.
@@ -1084,6 +1086,7 @@ public class DataSet extends Schema {
 				aliases.addAll(expCol.getDefinition().getAliases().keySet());
 				unusedCols.remove(expCol);
 				tu.getNewColumnNameMap().put(expCol, expCol);
+				expCol.setTransformationUnit(tu);
 				// Skip unique bases stuff here as no more cols get added after
 				// this point.
 			}
@@ -1315,7 +1318,8 @@ public class DataSet extends Schema {
 									.get("keySuffix")))
 							+ "_" + numberSuffix + Resources.get("keySuffix")
 							: colName + "_" + numberSuffix;
-				}
+				} else
+					uniqueBases.put(colName, new Integer(0));
 			} else
 				uniqueBases.put(colName, new Integer(0));
 			// Rename all PK columns to have the '_key' suffix.
@@ -1357,6 +1361,7 @@ public class DataSet extends Schema {
 			}
 			unusedCols.remove(wc);
 			tu.getNewColumnNameMap().put(c, wc);
+			wc.setTransformationUnit(tu);
 			wc.setPartitionCols(nameCols);
 
 			// If the column is in any key on this table then it is a
@@ -1576,11 +1581,14 @@ public class DataSet extends Schema {
 					newSourceDSCols.add(unrolledIDCol);
 					newSourceDSCols.add(unrolledNameCol);
 					// Create UnrollTable transformation unit.
-					dsTable.addTransformationUnit(new UnrollTable(tu, r,
+					final UnrollTable utu = new UnrollTable(tu, r,
 							newSourceDSCols, nameCol, unrolledIDCol,
-							unrolledNameCol));
+							unrolledNameCol);
+					dsTable.addTransformationUnit(utu);
 					this.includedRelations.add(r);
 					dsTable.includedRelations.add(r);
+					unrolledIDCol.setTransformationUnit(utu);
+					unrolledNameCol.setTransformationUnit(utu);
 					// Skip onto next relation.
 					continue;
 				}
@@ -1995,6 +2003,8 @@ public class DataSet extends Schema {
 		private String partitionedName = null;
 
 		private final List partitionCols = new ArrayList();
+		
+		private TransformationUnit tu;
 
 		/**
 		 * This constructor gives the column a name.
@@ -2025,6 +2035,22 @@ public class DataSet extends Schema {
 			this.pcs.addPropertyChangeListener("columnMasked", listener);
 			this.pcs.addPropertyChangeListener("columnRename", listener);
 			this.pcs.addPropertyChangeListener("columnIndexed", listener);
+		}
+
+		/**
+		 * Set the transformation unit causing this column to exist.
+		 * @param tu the unit.
+		 */
+		public void setTransformationUnit(final TransformationUnit tu) {
+			this.tu = tu;
+		}
+
+		/**
+		 * Get the transformation unit causing this column to exist.
+		 * @return the unit.
+		 */
+		public TransformationUnit getTransformationUnit() {
+			return this.tu;
 		}
 
 		/**
@@ -2122,14 +2148,23 @@ public class DataSet extends Schema {
 		}
 
 		/**
-		 * Test to see if this column is required during intermediate
-		 * construction phases.
+		 * Test to see if this column exists for the given partition.
 		 * 
 		 * @param schemaPrefix
 		 *            the schema prefix to test for.
 		 * @return <tt>true</tt> if it is.
 		 */
-		public boolean isRequiredInterim(final String schemaPrefix) {
+		public boolean existsForPartition(final String schemaPrefix) {
+			return this.tu==null || this.tu.appliesToPartition(schemaPrefix);
+		}
+
+		/**
+		 * Test to see if this column is required during intermediate
+		 * construction phases.
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isRequiredInterim() {
 			return this.keyDependency || this.expressionDependency
 					|| !this.isColumnMasked();
 		}
@@ -2138,11 +2173,9 @@ public class DataSet extends Schema {
 		 * Test to see if this column is required in the final completed dataset
 		 * table.
 		 * 
-		 * @param schemaPrefix
-		 *            the schema prefix to test for.
 		 * @return <tt>true</tt> if it is.
 		 */
-		public boolean isRequiredFinal(final String schemaPrefix) {
+		public boolean isRequiredFinal() {
 			// Masked columns are not final.
 			if (this.isColumnMasked())
 				return false;
@@ -2394,7 +2427,7 @@ public class DataSet extends Schema {
 			 *            the definition of this column's expression.
 			 */
 			public ExpressionColumn(final String name,
-					final DataSetTable dsTable,
+					final DataSetTable dsTable, 
 					final ExpressionColumnDefinition definition) {
 				// The super constructor will make the alias for us.
 				super(name, dsTable);
@@ -2523,12 +2556,16 @@ public class DataSet extends Schema {
 				super.setColumnRename(columnRename);
 			}
 
-			public boolean isRequiredFinal(String schemaPrefix) {
-				return this.dsColumn.isRequiredFinal(schemaPrefix);
+			public boolean existsForPartition(String schemaPrefix) {
+				return this.dsColumn.existsForPartition(schemaPrefix);
 			}
 
-			public boolean isRequiredInterim(String schemaPrefix) {
-				return this.dsColumn.isRequiredInterim(schemaPrefix);
+			public boolean isRequiredFinal() {
+				return this.dsColumn.isRequiredFinal();
+			}
+
+			public boolean isRequiredInterim() {
+				return this.dsColumn.isRequiredInterim();
 			}
 		}
 
@@ -2572,16 +2609,9 @@ public class DataSet extends Schema {
 				return this.column;
 			}
 
-			public boolean isRequiredFinal(String schemaPrefix) {
-				return (this.column.getSchemaPartitions().isEmpty() || this.column
-						.getSchemaPartitions().contains(schemaPrefix))
-						&& super.isRequiredFinal(schemaPrefix);
-			}
-
-			public boolean isRequiredInterim(String schemaPrefix) {
-				return (this.column.getSchemaPartitions().isEmpty() || this.column
-						.getSchemaPartitions().contains(schemaPrefix))
-						&& super.isRequiredInterim(schemaPrefix);
+			public boolean existsForPartition(String schemaPrefix) {
+				return this.column.existsForPartition(schemaPrefix) &&
+					super.existsForPartition(schemaPrefix);
 			}
 		}
 	}
@@ -2822,6 +2852,15 @@ public class DataSet extends Schema {
 			this.pcs.addPropertyChangeListener("distinctTable", listener);
 			this.pcs.addPropertyChangeListener("partitionTableApplication",
 					listener);
+		}
+
+		/**
+		 * Does this dataset table exist for the given partition?
+		 * @param schemaPrefix the partition prefix.
+		 * @return <tt>true</tt> if it does.
+		 */
+		public boolean existsForPartition(String schemaPrefix) {
+			return this.getFocusTable().existsForPartition(schemaPrefix);
 		}
 
 		/**

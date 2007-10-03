@@ -31,8 +31,8 @@ import org.biomart.common.utils.Transaction;
  * A dialog which starts a transaction when it opens, and ends it when it shuts.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public class TransactionalDialog extends JDialog {

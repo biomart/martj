@@ -143,6 +143,15 @@ public class Table implements Comparable, TransactionListener {
 		this.pcs.addPropertyChangeListener("restrictTable", this.listener);
 	}
 
+	/**
+	 * Does this exist for the given schema prefix?
+	 * @param schemaPrefix the prefix.
+	 * @return <tt>true</tt> if it does.
+	 */
+	public boolean existsForPartition(final String schemaPrefix) {
+		return schemaPrefix==null || this.getSchemaPartitions().isEmpty() || this.getSchemaPartitions().contains(schemaPrefix);
+	}
+	
 	public boolean isDirectModified() {
 		return this.directModified;
 	}

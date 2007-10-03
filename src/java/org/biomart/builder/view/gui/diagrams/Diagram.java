@@ -238,6 +238,14 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this.setBackground(Diagram.BACKGROUND_COLOUR);
 		this.setOpaque(true);
 
+		// Repaint whenever the mart tab partition filter changes.
+		martTab.addPropertyChangeListener("partitionViewSelection",
+				new PropertyChangeListener() {
+					public void propertyChange(final PropertyChangeEvent e) {
+						Diagram.this.repaintDiagram();
+					}
+				});
+
 		// Register ourselves for transactions.
 		Transaction.addTransactionListener(this);
 	}

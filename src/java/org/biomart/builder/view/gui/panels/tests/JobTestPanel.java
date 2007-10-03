@@ -33,6 +33,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.common.view.gui.dialogs.ViewTextDialog;
@@ -45,8 +46,8 @@ import org.biomart.runner.model.tests.JobTest;
  * tests, with the abstract parent class providing monitor functions.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public abstract class JobTestPanel extends JPanel {
@@ -156,6 +157,7 @@ public abstract class JobTestPanel extends JPanel {
 		final JPanel buttonPanel = new JPanel();
 		buttonPanel.add(this.start);
 		buttonPanel.add(this.stop);
+		buttonPanel.add(this.report);
 		buttonPanel.add(this.progress);
 		this.add(this.progress, this.labelLastRowConstraints);
 		this.add(buttonPanel, this.fieldLastRowConstraints);
@@ -180,7 +182,7 @@ public abstract class JobTestPanel extends JPanel {
 	 * 
 	 * @return the name to use.
 	 */
-	protected abstract String getDisplayName();
+	public abstract String getDisplayName();
 
 	private boolean validateOptions() {
 		final String[] messages = this.doValidateOptions();
@@ -211,6 +213,7 @@ public abstract class JobTestPanel extends JPanel {
 	 */
 	public void startTest() {
 		if (!this.started && this.validateOptions()) {
+			Log.debug("Test starting: " + this.getDisplayName());
 			this.started = true;
 			try {
 				this.setJobTestOptions();
@@ -289,6 +292,8 @@ public abstract class JobTestPanel extends JPanel {
 								JobTestPanel.this.report
 										.setBackground(failure != null ? JobTestPanel.FAILED
 												: JobTestPanel.OK);
+								Log.debug("Test ended: "
+										+ JobTestPanel.this.getDisplayName());
 							}
 						}
 					});

@@ -35,7 +35,6 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.common.exceptions.BioMartError;
-import org.biomart.common.utils.InverseMap;
 
 /**
  * This interface defines a unit of transformation for mart construction.
@@ -63,6 +62,15 @@ public abstract class TransformationUnit {
 	public TransformationUnit(final TransformationUnit previousUnit) {
 		this.newColumnNameMap = new HashMap();
 		this.previousUnit = previousUnit;
+	}
+	
+	/**
+	 * Does this unit apply to the given schema prefix?
+	 * @param schemaPrefix the prefix.
+	 * @return <tt>true</tt> if it does.
+	 */
+	public boolean appliesToPartition(final String schemaPrefix) {
+		return this.previousUnit==null ? true : this.previousUnit.appliesToPartition(schemaPrefix);
 	}
 
 	/**
@@ -96,16 +104,6 @@ public abstract class TransformationUnit {
 	}
 
 	/**
-	 * Obtains an inverse map of the output of {@link #getNewColumnNameMap()}.
-	 * See {@link InverseMap}.
-	 * 
-	 * @return the inverse of {@link #getNewColumnNameMap()}.
-	 */
-	public Map getReverseNewColumnNameMap() {
-		return new InverseMap(this.newColumnNameMap);
-	}
-
-	/**
 	 * Given a schema column, work out which dataset column in the
 	 * transformation so far refers to it. If the column was not adopted in this
 	 * particular unit it will go back until it finds the unit that adopted it,
@@ -130,6 +128,10 @@ public abstract class TransformationUnit {
 				final Table table) {
 			super(previousUnit);
 			this.table = table;
+		}
+		
+		public boolean appliesToPartition(final String schemaPrefix) {
+			return this.table.existsForPartition(schemaPrefix) && super.appliesToPartition(schemaPrefix);
 		}
 
 		/**
@@ -221,6 +223,15 @@ public abstract class TransformationUnit {
 			this.schemaRelation = schemaRelation;
 			this.schemaRelationIteration = schemaRelationIteration;
 		}
+		
+		public boolean appliesToPartition(final String schemaPrefix) {
+			for (final Iterator i = this.sourceDataSetColumns.iterator(); i.hasNext(); ) {
+				final DataSetColumn dsCol = (DataSetColumn)i.next();
+				if (!dsCol.existsForPartition(schemaPrefix))
+					return false;
+			}
+			return super.appliesToPartition(schemaPrefix);
+		}
 
 		/**
 		 * Get the dataset columns this transformation starts from.
@@ -303,7 +314,7 @@ public abstract class TransformationUnit {
 			super(previousUnit);
 			this.dsTable = dsTable;
 		}
-
+		
 		public DataSetColumn getDataSetColumnFor(final Column column) {
 			if (this.getPreviousUnit() != null)
 				return this.getPreviousUnit().getDataSetColumnFor(column);

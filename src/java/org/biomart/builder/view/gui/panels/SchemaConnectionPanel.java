@@ -59,8 +59,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * validation of input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.5
  */
 public abstract class SchemaConnectionPanel extends JPanel {
@@ -192,6 +192,10 @@ public abstract class SchemaConnectionPanel extends JPanel {
 		private JTextField schemaName;
 
 		private JTextField username;
+
+		private String partitionRegex;
+
+		private String partitionNameExpression;
 
 		/**
 		 * This constructor creates a panel with all the fields necessary to
@@ -365,6 +369,9 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			this.username.setText(template.getProperty("username"));
 			this.password.setText(template.getProperty("password"));
 			this.schemaName.setText(template.getProperty("schema"));
+			this.partitionRegex = template.getProperty("partitionRegex");
+			this.partitionNameExpression = template
+					.getProperty("partitionNameExpression");
 
 			// Parse the JDBC URL into host, port and database, if the
 			// driver is known to us (defined in the map at the start
@@ -529,7 +536,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				// Construct a JDBCSchema based on them.
 				final JDBCSchema schema = new JDBCSchema(this.mart,
 						driverClassName, url, database, schemaName, username,
-						password, name, false);
+						password, name, false, this.partitionRegex,
+						this.partitionNameExpression);
 
 				// Return that schema.
 				return schema;
@@ -571,6 +579,9 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					jschema.setUsername(this.username.getText());
 					jschema
 							.setPassword(new String(this.password.getPassword()));
+					jschema.setPartitionRegex(this.partitionRegex);
+					jschema
+							.setPartitionNameExpression(this.partitionNameExpression);
 				} catch (final Throwable t) {
 					StackTrace.showStackTrace(t);
 				}
@@ -605,6 +616,9 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				this.username.setText(jdbcSchema.getUsername());
 				this.password.setText(jdbcSchema.getPassword());
 				this.schemaName.setText(jdbcSchema.getDataLinkSchema());
+				this.partitionRegex = jdbcSchema.getPartitionRegex();
+				this.partitionNameExpression = jdbcSchema
+						.getPartitionNameExpression();
 
 				// Parse the JDBC URL into host, port and database, if the
 				// driver is known to us (defined in the map at the start

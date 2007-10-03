@@ -48,8 +48,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * event handler queue.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public class Transaction {
@@ -132,7 +132,10 @@ public class Transaction {
 
 	/**
 	 * A weak property change listener that dies when the wrapped listener goes
-	 * out of scope.
+	 * out of scope. This is very important to use when the object being
+	 * listened to could outlive the listening object (e.g. a GUI component
+	 * will 99% of the time outlive the object it represents, so the GUI
+	 * component should listen via weak listener reference).
 	 */
 	public static class WeakPropertyChangeListener implements
 			PropertyChangeListener {

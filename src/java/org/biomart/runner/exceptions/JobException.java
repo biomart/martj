@@ -22,8 +22,8 @@ package org.biomart.runner.exceptions;
  * This refers to exceptions where some part of job management fails.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.5
  */
 public class JobException extends MartRunnerException {

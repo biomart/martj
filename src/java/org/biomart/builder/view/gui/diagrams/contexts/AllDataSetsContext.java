@@ -73,7 +73,7 @@ public class AllDataSetsContext implements DiagramContext {
 			// Set the background colour.
 			if (ds.isPartitionTable())
 				dscomp.setBackground(DataSetComponent.PARTITION_BACKGROUND);
-			else if (ds.isMasked())
+			else if (this.isMasked(ds))
 				dscomp.setBackground(DataSetComponent.MASKED_BACKGROUND);
 			else if (ds.isInvisible())
 				dscomp.setBackground(DataSetComponent.INVISIBLE_BACKGROUND);
@@ -90,9 +90,17 @@ public class AllDataSetsContext implements DiagramContext {
 	}
 
 	public boolean isMasked(final Object object) {
-		if (object instanceof DataSet)
-			if (((DataSet) object).isMasked())
+
+		final String schemaPrefix = this.getMartTab()
+				.getPartitionViewSelection();
+
+		if (object instanceof DataSet) {
+			final DataSet ds = (DataSet) object;
+			if (ds.isMasked()
+					|| !ds.getMainTable().existsForPartition(schemaPrefix))
 				return true;
+		}
+
 		return false;
 	}
 
@@ -106,7 +114,7 @@ public class AllDataSetsContext implements DiagramContext {
 		if (object instanceof DataSet) {
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
-			
+
 			final DataSet ds = (DataSet) object;
 			// Accept/Reject changes - only enabled if dataset table
 			// is visible modified.

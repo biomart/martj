@@ -25,6 +25,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,14 +33,19 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -48,9 +54,12 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
+import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.CannotRedoException;
@@ -62,6 +71,7 @@ import org.biomart.builder.controller.MartConstructor.ConstructorRunnable;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Mart;
+import org.biomart.builder.model.Schema;
 import org.biomart.builder.view.gui.diagrams.contexts.SchemaContext;
 import org.biomart.builder.view.gui.dialogs.MartRunnerConnectionDialog;
 import org.biomart.builder.view.gui.dialogs.MartRunnerMonitorDialog;
@@ -569,8 +579,11 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 					JOptionPane.INFORMATION_MESSAGE);
 		else
 			// Open the DDL creation dialog and let it do it's stuff.
-			(new SaveDDLDialog(currentMartTab, datasets, generateOption))
-					.setVisible(true);
+			(new SaveDDLDialog(currentMartTab, datasets, currentMartTab
+					.getPartitionViewSelection() == null ? currentMartTab
+					.getAllSchemaPrefixes() : Collections
+					.singleton(currentMartTab.getPartitionViewSelection()),
+					generateOption)).setVisible(true);
 	}
 
 	/**
@@ -709,9 +722,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 							if (progressMonitor.isCanceled())
 								// Stop the thread if required.
 								constructor.cancel();
-								// If not, update the progress report.
-								progressMonitor.setProgress(constructor
-										.getPercentComplete());
+							// If not, update the progress report.
+							progressMonitor.setProgress(constructor
+									.getPercentComplete());
 						} else {
 							// If it completed, close the task and tidy up.
 							// Stop the timer.
@@ -892,6 +905,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 
 		private SchemaTabSet schemaTabSet;
 
+		private String partitionViewSelection = null;
+
+		/**
+		 * Subclasses use this field to fire events of their own.
+		 */
+		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+				this);
+
 		/**
 		 * Constructs a new tab in the tabbed pane that represents the given
 		 * mart.
@@ -915,9 +936,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 			this.displayArea = new JPanel(new CardLayout());
 
 			// Create panel which contains the buttons.
-			final JPanel headerPanel = new JPanel(new BorderLayout());
-			final JPanel buttonsPanel = new JPanel();
-			headerPanel.add(buttonsPanel, BorderLayout.CENTER);
+			final JToolBar buttonsPanel = new JToolBar(Resources
+					.get("martTabToolbarTitle"));
+
+			// Add the Biomart logo to the buttons panel.
+			final JLabel logo = new JLabel(new ImageIcon(Resources
+					.getResourceAsURL("biomart-logo.gif")));
+			logo.setBorder(new EmptyBorder(4, 4, 4, 4));
+			buttonsPanel.add(logo);
 
 			// Create the Run DDL button.
 			final JButton runDDL = new JButton(Resources.get("runDDLButton"),
@@ -927,11 +953,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 					MartTab.this.martTabSet.requestRunDDL();
 				}
 			});
-
-			// Build the DDL+Hide Masked box.
-			final JPanel smallerPanel = new JPanel();
-			smallerPanel.add(runDDL);
-			headerPanel.add(smallerPanel, BorderLayout.SOUTH);
+			buttonsPanel.add(runDDL);
 
 			// Create the schema tabset.
 			this.schemaTabSet = new SchemaTabSet(this);
@@ -957,12 +979,6 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 				}
 			});
 			buttonsPanel.add(this.schemaButton);
-
-			// Add the Biomart logo to the buttons panel.
-			final JLabel logo = new JLabel(new ImageIcon(Resources
-					.getResourceAsURL("biomart-logo.gif")));
-			logo.setBorder(new EmptyBorder(2, 2, 2, 2));
-			buttonsPanel.add(logo);
 
 			// Create the dataset tabset.
 			this.datasetTabSet = new DataSetTabSet(this);
@@ -990,13 +1006,154 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 			buttons.add(this.schemaButton);
 			buttons.add(this.datasetButton);
 
+			// Drop-down menu to select current partition.
+			final DefaultComboBoxModel partitionModel = new DefaultComboBoxModel();
+			final JComboBox partitions = new JComboBox(partitionModel);
+			partitions.setBorder(new EmptyBorder(4, 4, 4, 4));
+			partitionModel.addElement(Resources.get("martTabAllPartitions"));
+			partitions.setSelectedIndex(0);
+			buttonsPanel.add(partitions);
+			// On-click, before open, update contents to match
+			// partitions of currently selected schema. Include an "All
+			// partitions" option. If no schema currently selected,
+			// show partitions from all.
+			partitions.addPopupMenuListener(new PopupMenuListener() {
+				public void popupMenuCanceled(PopupMenuEvent e) {
+				}
+
+				public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+				}
+
+				public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+					int items = partitionModel.getSize();
+					final Object selection = partitionModel.getSelectedItem();
+
+					partitionModel.removeAllElements();
+					partitionModel.addElement(Resources
+							.get("martTabAllPartitions"));
+					for (final Iterator i = MartTab.this.getAllSchemaPrefixes()
+							.iterator(); i.hasNext();)
+						partitionModel.addElement(i.next());
+
+					partitionModel.setSelectedItem(selection);
+
+					if (items != partitionModel.getSize()) {
+						partitions.hidePopup();
+						partitions.showPopup();
+					}
+				}
+			});
+			// When drop-down changes, update local variable.
+			partitions.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					if (partitions.getSelectedIndex() == 0)
+						MartTab.this.setPartitionViewSelection(null);
+					else
+						MartTab.this
+								.setPartitionViewSelection((String) partitions
+										.getSelectedItem());
+				}
+			});
+
 			// Add the buttons panel, and the display area containing the cards,
 			// to the panel.
-			this.add(headerPanel, BorderLayout.NORTH);
+			this.add(buttonsPanel, BorderLayout.NORTH);
 			this.add(this.displayArea, BorderLayout.CENTER);
 
 			// Select the default button (which shows the schema card).
 			this.selectSchemaEditor();
+		}
+
+		/**
+		 * Return all possible schema prefixes, except the all-prefixes one.
+		 * 
+		 * @return the collection.
+		 */
+		public Collection getAllSchemaPrefixes() {
+			// Rebuild list from all schemas.
+			final Set sortedPrefixes = new TreeSet();
+			for (final Iterator i = mart.getSchemas().values().iterator(); i
+					.hasNext();)
+				sortedPrefixes.addAll(((Schema) i.next())
+						.getReferencedPartitions());
+			return sortedPrefixes;
+		}
+
+		/**
+		 * Set which schema partition (if any) the user has selected.
+		 * 
+		 * @param partitionViewSelection
+		 *            the schema partition prefix. <tt>null</tt> if they have
+		 *            selected All Partitions.
+		 */
+		public void setPartitionViewSelection(
+				final String partitionViewSelection) {
+			if (partitionViewSelection == this.partitionViewSelection
+					|| (this.partitionViewSelection != null && this.partitionViewSelection
+							.equals(partitionViewSelection)))
+				return;
+			final String oldValue = this.partitionViewSelection;
+			this.partitionViewSelection = partitionViewSelection;
+			this.pcs.firePropertyChange("partitionViewSelection", oldValue,
+					partitionViewSelection);
+		}
+
+		/**
+		 * Get which schema partition (if any) the user has selected.
+		 * 
+		 * @return the schema partition prefix. <tt>null</tt> if they have
+		 *         selected All Partitions.
+		 */
+		public String getPartitionViewSelection() {
+			return this.partitionViewSelection;
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(property, listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		/**

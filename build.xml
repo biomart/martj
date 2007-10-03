@@ -88,7 +88,7 @@
         <include name="jython.jar" />
         <include name="libreadline-java.jar" />
         <include name="log4j-1.2.6.jar" />
-        <include name="mysql-connector-java-3.0.16-ga-bin.jar" />
+        <include name="mysql-connector-java-3.1.14-bin.jar" />
         <include name="pg73jdbc3.jar"/>
         <include name="optional.jar" />
         <include name="xalan.jar" />

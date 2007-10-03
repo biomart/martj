@@ -152,7 +152,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 	public ConstructorRunnable getConstructorRunnable(
 			final String targetDatabaseName, final String targetSchemaName,
-			final Collection datasets) throws Exception {
+			final Collection datasets, final Collection prefixes) throws Exception {
 		// Check that all the input schemas involved are cohabitable.
 		Log.info("Checking all schemas can cohabit");
 
@@ -199,7 +199,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 		// the database it is connected to.
 		Log.debug("Building constructor runnable");
 		final ConstructorRunnable cr = new GenericConstructorRunnable(
-				targetSchemaName, datasets);
+				targetSchemaName, datasets, prefixes);
 		cr.addMartConstructorListener(helper);
 		return cr;
 	}
@@ -207,7 +207,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 	/**
 	 * This abstract class is the base for all DDL helpers.
 	 */
-	public abstract static class DDLHelper implements MartConstructorListener {
+	private abstract static class DDLHelper implements MartConstructorListener {
 		private DatabaseDialect dialect;
 
 		private int tempTableSeq = 0;

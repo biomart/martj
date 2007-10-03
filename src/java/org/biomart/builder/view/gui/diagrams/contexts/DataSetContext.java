@@ -129,7 +129,7 @@ public class DataSetContext extends SchemaContext {
 				tblcomp.setBackground(DataSetComponent.PARTITION_BACKGROUND);
 
 			// Fade MASKED DIMENSION relations.
-			else if (tbl.isDimensionMasked())
+			else if (this.isMasked(tbl))
 				tblcomp.setBackground(TableComponent.MASKED_COLOUR);
 
 			// Fade MASKED datasets.
@@ -177,7 +177,7 @@ public class DataSetContext extends SchemaContext {
 			final ColumnComponent colcomp = (ColumnComponent) component;
 
 			// Fade out all MASKED columns.
-			if (column.isColumnMasked())
+			if (this.isMasked(column))
 				colcomp.setBackground(ColumnComponent.MASKED_COLOUR);
 			// Red INHERITED columns.
 			else if (column instanceof InheritedColumn)
@@ -373,6 +373,10 @@ public class DataSetContext extends SchemaContext {
 	}
 
 	public boolean isMasked(final Object object) {
+
+		final String schemaPrefix = this.getMartTab()
+				.getPartitionViewSelection();
+
 		// Is it a relation?
 		if (object instanceof Relation) {
 			// Which relation is it?
@@ -383,22 +387,26 @@ public class DataSetContext extends SchemaContext {
 					.getTable();
 
 			// Fade MASKED DIMENSION relations.
-			if (target.isDimensionMasked())
+			if (this.isMasked(target))
 				return true;
 		}
 
 		// Is it a table?
 		else if (object instanceof DataSetTable) {
-
+			final DataSetTable dsTable = (DataSetTable) object;
 			// Fade MASKED DIMENSION relations.
-			if (((DataSetTable) object).isDimensionMasked())
+			if (dsTable.isDimensionMasked()
+					|| !dsTable.existsForPartition(schemaPrefix))
 				return true;
 		}
 
 		// Is it a column?
-		else if (object instanceof DataSetColumn)
-			if (((DataSetColumn) object).isColumnMasked())
+		else if (object instanceof DataSetColumn) {
+			final DataSetColumn dsCol = (DataSetColumn) object;
+			if (dsCol.isColumnMasked()
+					|| !dsCol.existsForPartition(schemaPrefix))
 				return true;
+		}
 
 		return false;
 	}

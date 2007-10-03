@@ -48,8 +48,8 @@ import org.biomart.runner.exceptions.ProtocolException;
  * where <tt>&lt;port&gt;</tt> is the port that this server should listen on.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class MartRunner extends BioMartCLI {

@@ -258,7 +258,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 * Get ready to iterate over the rows in this table. After calling this, a
 	 * call to {@link #nextRow()} will return the first row.
 	 * 
-	 * @param schemaPartition
+	 * @param schemaPrefix
 	 *            the partition of the schema we are getting rows from, if the
 	 *            table needs it (<tt>null</tt> otherwise). This value is
 	 *            used when establishing a connection to the schema. See
@@ -271,11 +271,11 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 * @throws PartitionException
 	 *             if anything went wrong.
 	 */
-	public void prepareRows(final String schemaPartition, final int limit)
+	public void prepareRows(final String schemaPrefix, final int limit)
 			throws PartitionException {
 		Log.debug("Preparing rows");
 		this.currentRow = null;
-		this.rows = new ArrayList(this.getRows(schemaPartition));
+		this.rows = new ArrayList(this.getRows(schemaPrefix));
 		// Iterate over rows, apply transforms, drop duplicates.
 		final Set seen = new HashSet();
 		for (final Iterator i = this.rows.iterator(); i.hasNext();) {
@@ -594,14 +594,14 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 * will be handled by the parent, as will any regexing or special row
 	 * manipulation.
 	 * 
-	 * @param schemaPartition
+	 * @param schemaPrefix
 	 *            the partition to get rows for, or <tt>null</tt> if not to
 	 *            bother.
 	 * @return the rows. Never <tt>null</tt> but may be empty.
 	 * @throws PartitionException
 	 *             if the rows couldn't be obtained.
 	 */
-	protected abstract List getRows(final String schemaPartition)
+	protected abstract List getRows(final String schemaPrefix)
 			throws PartitionException;
 
 	public boolean equals(final Object obj) {

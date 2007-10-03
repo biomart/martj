@@ -46,8 +46,8 @@ import org.biomart.common.resources.Resources;
  * parents mention all children.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by
+ *  		$Author$
  * @since 0.7
  */
 public class UnrolledRelationDialog extends JDialog {

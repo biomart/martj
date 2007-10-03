@@ -31,6 +31,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.ComponentStatus;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
@@ -38,6 +39,7 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.KeyComponent;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
@@ -106,6 +108,20 @@ public class SchemaContext implements DiagramContext {
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 		}
 
+		// This bit removes a restricted outline from any restricted tables.
+		else if (object instanceof Column) {
+			final ColumnComponent colcomp = (ColumnComponent) component;
+			final Column col = (Column) object;
+
+			// Fade out all ignored tables.
+			if (this.isMasked(col))
+				colcomp.setBackground(ColumnComponent.MASKED_COLOUR);
+
+			// All others are normal.
+			else
+				colcomp.setBackground(ColumnComponent.NORMAL_COLOUR);
+		}
+
 		// Relations get pretty colours if they are incorrect or handmade.
 		else if (object instanceof Relation) {
 
@@ -124,12 +140,7 @@ public class SchemaContext implements DiagramContext {
 
 			// Fade out all INFERRED_INCORRECT relations and those which
 			// head to ignored tables.
-			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| relation.getFirstKey().getTable().isMasked()
-					|| relation.getSecondKey().getTable().isMasked()
-					|| relation.getFirstKey().getTable().getSchema().isMasked()
-					|| relation.getSecondKey().getTable().getSchema()
-							.isMasked())
+			if (this.isMasked(relation))
 				relcomp.setForeground(RelationComponent.INCORRECT_COLOUR);
 
 			// Highlight all HANDMADE relations.
@@ -167,6 +178,9 @@ public class SchemaContext implements DiagramContext {
 
 	public boolean isMasked(final Object object) {
 
+		final String schemaPrefix = this.getMartTab()
+				.getPartitionViewSelection();
+
 		if (object instanceof Schema) {
 			if (((Schema) object).isMasked())
 				return true;
@@ -177,7 +191,8 @@ public class SchemaContext implements DiagramContext {
 			final Table table = (Table) object;
 
 			// Fade out all ignored and/or unreachable tables.
-			if (table.isMasked())
+			if (table.isMasked()
+					|| !table.existsForPartition(schemaPrefix))
 				return true;
 			else {
 				for (final Iterator i = table.getRelations().iterator(); i
@@ -198,11 +213,12 @@ public class SchemaContext implements DiagramContext {
 			// Fade out all INFERRED_INCORRECT relations and those which
 			// head to ignored tables or masked schemas.
 			if (relation.getStatus().equals(ComponentStatus.INFERRED_INCORRECT)
-					|| relation.getFirstKey().getTable().isMasked()
-					|| relation.getSecondKey().getTable().isMasked()
-					|| relation.getFirstKey().getTable().getSchema().isMasked()
-					|| relation.getSecondKey().getTable().getSchema()
-							.isMasked())
+					|| this.isMasked(relation.getFirstKey().getTable())
+					|| this.isMasked(relation.getSecondKey().getTable())
+					|| this.isMasked(relation.getFirstKey().getTable()
+							.getSchema())
+					|| this.isMasked(relation.getSecondKey().getTable()
+							.getSchema()))
 				return true;
 
 		}
@@ -216,6 +232,12 @@ public class SchemaContext implements DiagramContext {
 			// Fade out all INFERRED_INCORRECT relations.
 			if (key.getStatus().equals(ComponentStatus.INFERRED_INCORRECT))
 				return true;
+		}
+
+		// Columns get masked.
+		else if (object instanceof Column) {
+			final Column col = (Column) object;
+			return !col.existsForPartition(schemaPrefix);
 		}
 
 		return false;
@@ -233,7 +255,7 @@ public class SchemaContext implements DiagramContext {
 				contextMenu.addSeparator();
 
 			final Schema sch = (Schema) object;
-			
+
 			// Accept/Reject changes - only enabled if dataset table
 			// is visible modified.
 			final JMenuItem accept = new JMenuItem(Resources

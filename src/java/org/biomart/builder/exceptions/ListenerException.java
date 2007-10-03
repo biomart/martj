@@ -19,12 +19,12 @@
 package org.biomart.builder.exceptions;
 
 /**
- * This is a basic {@link Exception} for all non-specific exceptions during mart
- * construction.
+ * This is a basic {@link Exception} for all listener-related exceptions during 
+ * mart construction.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public class ListenerException extends ConstructorException {

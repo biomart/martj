@@ -45,12 +45,12 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
- * This dialog asks users to create or modify a restriction over a particular
- * table for this dataset only.
+ * This dialog asks users to create or modify a rules for grouping
+ * a set of schemas into a one-fits-all schema.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.6
  */
 public class PartitionSchemaDialog extends JDialog {

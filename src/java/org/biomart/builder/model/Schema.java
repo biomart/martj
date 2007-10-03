@@ -55,6 +55,7 @@ import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.BeanCollection;
 import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.BeanSet;
+import org.biomart.common.utils.InverseMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
@@ -103,7 +104,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 	private String partitionNameExpression;
 
-	private final Map partitionCache;
+	private final Map partitionCache = new TreeMap();
 
 	/**
 	 * Subclasses use this to notify update requirements.
@@ -150,10 +151,16 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 *            the database name we are using.
 	 * @param dataLinkSchema
 	 *            the database schema name we are using.
+	 * @param partitionRegex
+	 *            partition stuff.
+	 * @param partitionNameExpression
+	 *            partition stuff.
 	 */
 	public Schema(final Mart mart, final String name,
-			final String dataLinkDatabase, final String dataLinkSchema) {
-		this(mart, name, false, dataLinkDatabase, dataLinkSchema);
+			final String dataLinkDatabase, final String dataLinkSchema,
+			final String partitionRegex, final String partitionNameExpression) {
+		this(mart, name, false, dataLinkDatabase, dataLinkSchema,
+				partitionRegex, partitionNameExpression);
 	}
 
 	/**
@@ -171,10 +178,15 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 *            the database name we are using.
 	 * @param dataLinkSchema
 	 *            the database schema name we are using.
+	 * @param partitionRegex
+	 *            partition stuff.
+	 * @param partitionNameExpression
+	 *            partition stuff.
 	 */
 	public Schema(final Mart mart, final String name,
 			final boolean keyGuessing, final String dataLinkDatabase,
-			final String dataLinkSchema) {
+			final String dataLinkSchema, final String partitionRegex,
+			final String partitionNameExpression) {
 		Log.debug("Creating schema " + name);
 		this.mart = mart;
 		this.setName(name);
@@ -183,10 +195,9 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.setDataLinkSchema(dataLinkSchema);
 		this.setDataLinkDatabase(dataLinkDatabase);
 		this.setMasked(false);
-		this.setPartitionRegex(null);
-		this.setPartitionNameExpression(null);
+		this.setPartitionRegex(partitionRegex);
+		this.setPartitionNameExpression(partitionNameExpression);
 		// TreeMap keeps the partition cache in alphabetical order by name.
-		this.partitionCache = new TreeMap();
 		this.tables = new BeanMap(new HashMap());
 		this.needsKeySync = false;
 		this.needsFullSync = false;
@@ -500,12 +511,12 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			return;
 		// Work out all used names.
 		final Set usedNames = new HashSet();
-		for (final Iterator i = this.mart.getSchemas().values().iterator(); i.hasNext(); ) 
-			usedNames.add(((Schema)i.next()).getName());
+		for (final Iterator i = this.mart.getSchemas().values().iterator(); i
+				.hasNext();)
+			usedNames.add(((Schema) i.next()).getName());
 		// Make new name unique.
 		final String baseName = name;
-		for (int i = 1; usedNames.contains(name); name = baseName
-				+ "_" + i++)
+		for (int i = 1; usedNames.contains(name); name = baseName + "_" + i++)
 			;
 		this.name = name;
 		this.pcs.firePropertyChange("name", oldValue, name);
@@ -593,6 +604,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 *             if there was any other kind of logical problem.
 	 */
 	public void synchronise() throws SQLException, DataModelException {
+		this.partitionCache.clear();
 		this.needsFullSync = false;
 		// Extend as required.
 	}
@@ -672,6 +684,19 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	}
 
 	/**
+	 * Return a collection (unordered) of all the partition schema prefixes
+	 * currently in use by any table in this schema.
+	 * 
+	 * @return the collection of prefixes.
+	 */
+	public Collection getReferencedPartitions() {
+		final Collection prefixes = new HashSet();
+		for (final Iterator i = this.tables.values().iterator(); i.hasNext();)
+			prefixes.addAll(((Table) i.next()).getSchemaPartitions());
+		return prefixes;
+	}
+
+	/**
 	 * This method is for subclasses to use {@link #getPartitionRegex()} and
 	 * {@link #getPartitionNameExpression()}, both of which are guaranteed to
 	 * be non-null when this method is called, to recalculate the set of
@@ -686,7 +711,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	protected void populatePartitionCache(final Map partitionCache)
 			throws SQLException {
-		// Default implementation does nothing.
+		// Do nothing.
 	}
 
 	/**
@@ -747,7 +772,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				&& this.partitionRegex.equals(partitionRegex))
 			return;
 		this.partitionRegex = partitionRegex;
-		this.partitionCache.clear();
+		this.needsFullSync = true;
 		this.pcs.firePropertyChange("partitionRegex", oldValue, partitionRegex);
 	}
 
@@ -769,7 +794,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				&& this.partitionNameExpression.equals(partitionNameExpression))
 			return;
 		this.partitionNameExpression = partitionNameExpression;
-		this.partitionCache.clear();
+		this.needsFullSync = true;
 		this.pcs.firePropertyChange("partitionNameExpression", oldValue,
 				partitionNameExpression);
 	}
@@ -841,15 +866,21 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 * @param keyGuessing
 		 *            <tt>true</tt> if you want keyguessing enabled,
 		 *            <tt>false</tt> otherwise.
+		 * @param partitionRegex
+		 *            partition stuff.
+		 * @param partitionNameExpression
+		 *            partition stuff.
 		 */
 		public JDBCSchema(final Mart mart, final String driverClassName,
 				final String url, final String dataLinkDatabase,
 				final String dataLinkSchema, final String username,
 				final String password, final String name,
-				final boolean keyGuessing) {
+				final boolean keyGuessing, final String partitionRegex,
+				final String partitionNameExpression) {
 			// Call the Schema constructor first, to set up our name,
 			// and set up keyguessing.
-			super(mart, name, keyGuessing, dataLinkDatabase, dataLinkSchema);
+			super(mart, name, keyGuessing, dataLinkDatabase, dataLinkSchema,
+					partitionRegex, partitionNameExpression);
 
 			Log.debug("Creating JDBC schema");
 
@@ -935,7 +966,9 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			final Connection conn = this.getConnection(null);
 			// List out all catalogs available.
 			Log.debug("Looking up JDBC catalogs");
-			ResultSet rs = conn.getMetaData().getCatalogs();
+			final DatabaseMetaData dmd = conn.getMetaData();
+			final ResultSet rs = "".equals(dmd.getSchemaTerm()) ? dmd
+					.getCatalogs() : dmd.getSchemas();
 			try {
 				while (rs.next()) {
 					final String schema = rs.getString(1);
@@ -954,31 +987,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				throw e;
 			} finally {
 				rs.close();
-			}
-			if (partitions.isEmpty()) {
-				// Did we get no catalogs? Try schemas instead.
-				Log.debug("Looking up JDBC schemas");
-				rs = conn.getMetaData().getSchemas();
-				try {
-					while (rs.next()) {
-						final String schema = rs.getString(1);
-						// Match them against the regex, retaining those
-						// that match and using the name expression to name
-						// them.
-						final Matcher m = p.matcher(schema);
-						if (m.matches())
-							try {
-								partitions.put(schema, m.replaceAll(this
-										.getPartitionNameExpression()));
-							} catch (final IndexOutOfBoundsException e) {
-								// We don't care if the expression is invalid.
-							}
-					}
-				} catch (final SQLException e) {
-					throw e;
-				} finally {
-					rs.close();
-				}
 			}
 		}
 
@@ -1055,6 +1063,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				properties.setProperty("user", this.username);
 				if (!this.password.equals(""))
 					properties.setProperty("password", this.password);
+				properties.setProperty("nullCatalogMeansCurrent", "false");
 				this.connection = DriverManager.getConnection(
 						overrideDataLinkSchema == null ? this.url : this.url
 								.replaceAll(this.getDataLinkSchema(),
@@ -1246,13 +1255,43 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			final Collection tablesToBeDropped = new HashSet(this.getTables()
 					.values());
 
+			// Clear the existing schema partition information.
+			for (final Iterator i = this.getTables().values().iterator(); i
+					.hasNext();)
+				((Table) i.next()).getSchemaPartitions().clear();
+
 			// Load tables and views from database, then loop over them.
-			final ResultSet dbTables = dmd.getTables(catalog,
-					this.realSchemaName, "%", new String[] { "TABLE", "VIEW",
-							"ALIAS", "SYNONYM" });
+			ResultSet dbTables;
+			if (this.getPartitions().isEmpty())
+				dbTables = dmd.getTables(catalog, this.realSchemaName, "%",
+						new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
+			else
+				dbTables = dmd.getTables("".equals(dmd.getSchemaTerm()) ? null
+						: catalog, null, "%", new String[] { "TABLE", "VIEW",
+						"ALIAS", "SYNONYM" });
 
 			// Do the loop.
+			final Collection tablesToBeKept = new HashSet();
 			while (dbTables.next()) {
+				// Check schema and catalog.
+				final String catalogName = dbTables.getString("TABLE_CAT");
+				final String schemaName = dbTables.getString("TABLE_SCHEM");
+				String schemaPrefix = null;
+				// No prefix if partitions are empty;
+				if (!this.getPartitions().isEmpty()) {
+					if ("".equals(dmd.getSchemaTerm()))
+						// Use catalog name to get prefix.
+						schemaPrefix = (String) this.getPartitions().get(
+								catalogName);
+					else
+						// Use schema name to get prefix.
+						schemaPrefix = (String) this.getPartitions().get(
+								schemaName);
+					// Don't want to include if prefix is still null.
+					if (schemaPrefix == null)
+						continue;
+				}
+
 				// What is the table called?
 				final String dbTableName = dbTables.getString("TABLE_NAME");
 				Log.debug("Processing table " + dbTableName);
@@ -1267,25 +1306,66 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 					} catch (final Throwable t) {
 						throw new BioMartError(t);
 					}
+				// Add schema prefix to list.
+				if (schemaPrefix != null)
+					dbTable.getSchemaPartitions().add(schemaPrefix);
 
 				// Table exists, so remove it from our list of tables to be
 				// dropped at the end of the method.
 				tablesToBeDropped.remove(dbTable);
+				tablesToBeKept.add(dbTable);
+			}
+			dbTables.close();
 
+			// Loop over all columns.
+			for (final Iterator i = tablesToBeKept.iterator(); i.hasNext();) {
+				final Table dbTable = (Table) i.next();
+				final String dbTableName = dbTable.getName();
 				// Make a list of all the columns in the table. Any columns
 				// remaining in this list by the end of the loop will be
 				// dropped.
 				final Collection colsToBeDropped = new HashSet(dbTable
 						.getColumns().values());
 
+				// Clear out the existing schema partition info on all cols.
+				for (final Iterator j = dbTable.getColumns().values()
+						.iterator(); j.hasNext();)
+					((Column) j.next()).getSchemaPartitions().clear();
+
 				// Load the table columns from the database, then loop over
 				// them.
-				Log.debug("Loading table column list");
-				final ResultSet dbTblCols = dmd.getColumns(catalog,
-						this.realSchemaName, dbTableName, "%");
+				Log.debug("Loading table column list for " + dbTableName);
+				ResultSet dbTblCols;
+				if (this.getPartitions().isEmpty())
+					dbTblCols = dmd.getColumns(catalog, this.realSchemaName,
+							dbTableName, "%");
+				else
+					dbTblCols = dmd.getColumns(
+							"".equals(dmd.getSchemaTerm()) ? null : catalog,
+							null, dbTableName, "%");
 				// FIXME: When using Oracle, if the table is a synonym then the
 				// above call returns no results.
 				while (dbTblCols.next()) {
+					// Check schema and catalog.
+					final String catalogName = dbTblCols.getString("TABLE_CAT");
+					final String schemaName = dbTblCols
+							.getString("TABLE_SCHEM");
+					String schemaPrefix = null;
+					// No prefix if partitions are empty;
+					if (!this.getPartitions().isEmpty()) {
+						if ("".equals(dmd.getSchemaTerm()))
+							// Use catalog name to get prefix.
+							schemaPrefix = (String) this.getPartitions().get(
+									catalogName);
+						else
+							// Use schema name to get prefix.
+							schemaPrefix = (String) this.getPartitions().get(
+									schemaName);
+						// Don't want to include if prefix is still null.
+						if (schemaPrefix == null)
+							continue;
+					}
+
 					// What is the column called, and is it nullable?
 					final String dbTblColName = dbTblCols
 							.getString("COLUMN_NAME");
@@ -1307,18 +1387,19 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 					// Column exists, so remove it from our list of columns to
 					// be dropped at the end of the loop.
 					colsToBeDropped.remove(dbTblCol);
+					if (schemaPrefix != null)
+						dbTblCol.getSchemaPartitions().add(schemaPrefix);
 				}
 				dbTblCols.close();
 
 				// Drop all columns that are left in the list, as they no longer
 				// exist in the database.
-				for (final Iterator i = colsToBeDropped.iterator(); i.hasNext();) {
-					final Column column = (Column) i.next();
+				for (final Iterator j = colsToBeDropped.iterator(); j.hasNext();) {
+					final Column column = (Column) j.next();
 					Log.debug("Dropping redundant column " + column.getName());
 					dbTable.getColumns().remove(column.getName());
 				}
 			}
-			dbTables.close();
 
 			// Remove from schema all tables not found in the database, using
 			// the list we constructed above.
@@ -1328,13 +1409,16 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				final String tableName = existingTable.getName();
 				// By clearing its keys we will also clear its relations.
 				for (final Iterator j = existingTable.getKeys().iterator(); j
-						.hasNext();)
-					for (final Iterator r = ((Key) j.next()).getRelations()
-							.iterator(); r.hasNext();) {
+						.hasNext();) {
+					// Deref to prevent concurrent mods.
+					final Collection rels = new ArrayList(((Key) j.next())
+							.getRelations());
+					for (final Iterator r = rels.iterator(); r.hasNext();) {
 						final Relation rel = (Relation) r.next();
 						rel.getFirstKey().getRelations().remove(rel);
 						rel.getSecondKey().getRelations().remove(rel);
 					}
+				}
 				existingTable.setPrimaryKey(null);
 				existingTable.getForeignKeys().clear();
 				this.getTables().remove(tableName);
@@ -1365,8 +1449,22 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				// without referential integrity, the primary key is still
 				// defined and can be obtained from the metadata.
 				Log.debug("Loading table primary keys");
-				final ResultSet dbTblPKCols = dmd.getPrimaryKeys(catalog,
-						this.realSchemaName, t.getName());
+				String searchCatalog = catalog;
+				String searchSchema = this.realSchemaName;
+				if (!t.getSchemaPartitions().isEmpty()) {
+					// Locate partition with first prefix.
+					final String prefix = (String) t.getSchemaPartitions()
+							.iterator().next();
+					String schemaName = (String) new InverseMap(this
+							.getPartitions()).get(prefix);
+					if (schemaName == null) // Should never happen.
+						throw new BioMartError();
+					if ("".equals(dmd.getSchemaTerm()))
+						searchCatalog = schemaName;
+					searchSchema = schemaName;
+				}
+				final ResultSet dbTblPKCols = dmd.getPrimaryKeys(searchCatalog,
+						searchSchema, t.getName());
 
 				// Load the primary key columns into a map keyed by column
 				// position.
@@ -1544,8 +1642,22 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				// Identify all foreign keys in the database metadata that refer
 				// to the current primary key.
 				Log.debug("Finding referring foreign keys");
-				final ResultSet dbTblFKCols = dmd.getExportedKeys(catalog,
-						schema, pkTable.getName());
+				String searchCatalog = catalog;
+				String searchSchema = this.realSchemaName;
+				if (!pkTable.getSchemaPartitions().isEmpty()) {
+					// Locate partition with first prefix.
+					final String prefix = (String) pkTable
+							.getSchemaPartitions().iterator().next();
+					String schemaName = (String) new InverseMap(this
+							.getPartitions()).get(prefix);
+					if (schemaName == null) // Should never happen.
+						throw new BioMartError();
+					if ("".equals(dmd.getSchemaTerm()))
+						searchCatalog = schemaName;
+					searchSchema = schemaName;
+				}
+				final ResultSet dbTblFKCols = dmd.getExportedKeys(
+						searchCatalog, searchSchema, pkTable.getName());
 
 				// Loop through the results. There will be one result row per
 				// column per key, so we need to build up a set of key columns

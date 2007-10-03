@@ -25,6 +25,9 @@ The main concepts in MartBuilder are:
   Subclass table - an extension of a main table with extra
      columns.
      
+  Partition table - a source of data to use when dividing up
+     datasets or dimension tables into smaller related units.
+     
 Essentially the process of transformation goes like this:
 
   1. Create a new, blank, mart.

@@ -19,6 +19,14 @@
 package org.biomart.runner.model;
 
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -26,6 +34,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -287,6 +296,164 @@ public class JobPlan implements Serializable {
 		if (!(other instanceof JobPlan))
 			return false;
 		return this.jobId.equals(((JobPlan) other).getJobId());
+	}
+
+	/**
+	 * Establish a connection.
+	 * 
+	 * @return the connection.
+	 * @throws SQLException
+	 *             if it couldn't connect.
+	 * @throws JobException
+	 *             if it couldn't connect.
+	 */
+	public Connection getConnection() throws SQLException, JobException {
+		final Class loadedDriverClass;
+		try {
+			// Start out by loading the driver.
+			loadedDriverClass = Class.forName(this.getJDBCDriverClassName());
+		} catch (final Exception e) {
+			throw new JobException(e);
+		}
+
+		// Check it really is an instance of Driver.
+		if (!Driver.class.isAssignableFrom(loadedDriverClass))
+			throw new ClassCastException(Resources
+					.get("driverClassNotJDBCDriver"));
+
+		// Connect!
+		final Properties properties = new Properties();
+		properties.setProperty("user", this.getJDBCUsername());
+		final String pwd = this.getJDBCPassword();
+		if (!pwd.equals(""))
+			properties.setProperty("password", pwd);
+		properties.setProperty("nullCatalogMeansCurrent", "false");
+		return DriverManager.getConnection(this.getJDBCURL(), properties);
+	}
+
+	/**
+	 * List all relevant tables on our connection.
+	 * 
+	 * @return the results, one row per entry.
+	 * @throws SQLException
+	 *             if anything went wrong.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public Collection listTables() throws SQLException, JobException {
+		// Open connection.
+		final Connection conn = this.getConnection();
+
+		// Get database metadata, catalog, and schema details.
+		final DatabaseMetaData dmd = conn.getMetaData();
+		final String catalog = conn.getCatalog();
+
+		// Load tables and views from database, then loop over them.
+		final ResultSet rs = dmd.getTables(
+				"".equals(dmd.getSchemaTerm()) ? this.getTargetSchema()
+						: catalog, this.getTargetSchema(), "%", new String[] {
+						"TABLE", "VIEW", "ALIAS", "SYNONYM" });
+		final Collection results = this.processResultSet(rs);
+		rs.close();
+
+		// Close connection.
+		try {
+			conn.close();
+		} catch (final SQLException e) {
+			// Dont' care.
+		}
+
+		// Return results;
+		return results;
+	}
+
+	/**
+	 * List columns for a table.
+	 * 
+	 * @param table
+	 *            the table.
+	 * @return the results, one row per entry.
+	 * @throws SQLException
+	 *             if anything went wrong.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public Collection listColumns(final String table) throws SQLException,
+			JobException {
+		// Open connection.
+		final Connection conn = this.getConnection();
+
+		// Get database metadata, catalog, and schema details.
+		final DatabaseMetaData dmd = conn.getMetaData();
+		final String catalog = conn.getCatalog();
+
+		// Gather columns for table.
+		final ResultSet rs = dmd.getColumns(
+				"".equals(dmd.getSchemaTerm()) ? this.getTargetSchema()
+						: catalog, this.getTargetSchema(), table, "%");
+		// FIXME: When using Oracle, if the table is a synonym then the
+		// above call returns no results.
+		final Collection results = this.processResultSet(rs);
+		rs.close();
+
+		// Close connection.
+		try {
+			conn.close();
+		} catch (final SQLException e) {
+			// Dont' care.
+		}
+
+		// Return results;
+		return results;
+	}
+
+	/**
+	 * Run some SQL against our connection.
+	 * 
+	 * @param sql
+	 *            the SQL.
+	 * @return the results, one row per entry.
+	 * @throws SQLException
+	 *             if anything went wrong.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public Collection runSQL(final String sql) throws SQLException,
+			JobException {
+		// Open connection.
+		final Connection conn = this.getConnection();
+
+		// Run SQL.
+		PreparedStatement pstmt = conn.prepareStatement(sql);
+		ResultSet rs = pstmt.executeQuery();
+		final Collection results = this.processResultSet(rs);
+		rs.close();
+		pstmt.close();
+
+		// Close connection.
+		try {
+			conn.close();
+		} catch (final SQLException e) {
+			// Dont' care.
+		}
+
+		// Return results;
+		return results;
+	}
+
+	private Collection processResultSet(final ResultSet rs) throws SQLException {
+		final int colCount = rs.getMetaData().getColumnCount();
+		final String[] colNames = new String[colCount + 1];
+		for (int i = 1; i <= colCount; i++)
+			colNames[i] = rs.getMetaData().getColumnName(i);
+		final Collection results = new ArrayList();
+		while (rs.next()) {
+			final Map row = new HashMap();
+			for (int i = 1; i <= colCount; i++)
+				row.put(colNames[i], rs.getObject(i));
+			results.add(row);
+		}
+		return results;
 	}
 
 	/**
@@ -575,7 +742,7 @@ public class JobPlan implements Serializable {
 	public static class JobPlanAction implements Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private final String action;
+		private String action;
 
 		private JobStatus status;
 
@@ -609,6 +776,25 @@ public class JobPlan implements Serializable {
 			this.status = JobStatus.NOT_QUEUED;
 			this.parentIdentifier = parentIdentifier;
 			this.jobId = jobId;
+		}
+
+		/**
+		 * Get the action.
+		 * 
+		 * @return the action.
+		 */
+		public String getAction() {
+			return this.action;
+		}
+
+		/**
+		 * Change the action.
+		 * 
+		 * @param action
+		 *            the new action.
+		 */
+		public void setAction(final String action) {
+			this.action = action;
 		}
 
 		/**
@@ -724,14 +910,7 @@ public class JobPlan implements Serializable {
 		}
 
 		public String toString() {
-			final StringBuffer buf = new StringBuffer();
-			buf.append(this.action);
-			if (this.getStatus().equals(JobStatus.INCOMPLETE)) {
-				buf.append(" [");
-				buf.append(Resources.get("jobStatusIncomplete"));
-				buf.append("]");
-			}
-			return buf.toString();
+			return this.getAction();
 		}
 
 		public boolean equals(final Object other) {

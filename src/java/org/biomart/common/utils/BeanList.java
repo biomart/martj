@@ -38,8 +38,8 @@ import java.util.ListIterator;
  * All events will have a property of {@link BeanList#propertyName}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public class BeanList extends BeanCollection implements List {

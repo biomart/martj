@@ -142,10 +142,10 @@ public class DataSetTabSet extends JTabbedPane {
 					DataSetTabSet.this.datasetToDiagram.put(evt.getNewValue(),
 							DataSetTabSet.this.datasetToDiagram.remove(evt
 									.getOldValue()));
-					DataSetTabSet.this.setTitleAt(DataSetTabSet.this.indexOfTab((String)evt
-									.getOldValue()), (String)evt.getNewValue());
-				}
-				else if (evt.getPropertyName().equals("masked")) {
+					DataSetTabSet.this.setTitleAt(DataSetTabSet.this
+							.indexOfTab((String) evt.getOldValue()),
+							(String) evt.getNewValue());
+				} else if (evt.getPropertyName().equals("masked")) {
 					// For masks, if unmasking, add a tab, otherwise
 					// remove the tab.
 					final boolean masked = ((Boolean) evt.getNewValue())
@@ -383,8 +383,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * If no datasets are visibly modified, reset the visible modified 
-	 * flag.
+	 * If no datasets are visibly modified, reset the visible modified flag.
 	 */
 	public void requestRemoveLastVisMods() {
 		// Finally, if no datasets at all are visibly modified,
@@ -396,7 +395,7 @@ public class DataSetTabSet extends JTabbedPane {
 		// If get here, can do reset safely.
 		Transaction.resetVisibleModified();
 	}
-	
+
 	/**
 	 * Request that all changes on this dataset table associated with this
 	 * target are accepted. See {@link DataSetTable#acceptChanges(Table)}.
@@ -480,7 +479,13 @@ public class DataSetTabSet extends JTabbedPane {
 					.get("messageTitle"), JOptionPane.INFORMATION_MESSAGE);
 		// Open the DDL creation dialog and let it do it's stuff.
 		else
-			(new SaveDDLDialog(this.martTab, Collections.singleton(dataset),
+			(new SaveDDLDialog(
+					this.martTab,
+					Collections.singleton(dataset),
+					this.martTab.getPartitionViewSelection() == null ? this.martTab
+							.getAllSchemaPrefixes()
+							: Collections.singleton(this.martTab
+									.getPartitionViewSelection()),
 					SaveDDLDialog.VIEW_DDL)).setVisible(true);
 	}
 
@@ -526,7 +531,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestDimensionPartitionWizard(final DataSetTable dim) {
 		// Create wizard dialog (specify dimension version)
-		PartitionTableDialog.showForDimension(this, dim);
+		PartitionTableDialog.showForDimension(this.getMartTab(), dim);
 	}
 
 	/**
@@ -536,7 +541,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to apply the wizard to.
 	 */
 	public void requestDataSetPartitionWizard(final DataSet ds) {
-		PartitionTableDialog.showForDataSet(ds);
+		PartitionTableDialog.showForDataSet(this.getMartTab(), ds);
 	}
 
 	/**
@@ -652,7 +657,7 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Asks that a dimension by merged.
+	 * Asks that a dimension be merged.
 	 * 
 	 * @param ds
 	 *            the dataset we are working with.
@@ -1088,8 +1093,7 @@ public class DataSetTabSet extends JTabbedPane {
 
 				Transaction.start(false);
 				for (final Iterator k = DataSetTabSet.this.getMartTab()
-						.getMart().getPartitionTables().iterator(); k
-						.hasNext();)
+						.getMart().getPartitionTables().iterator(); k.hasNext();)
 					for (final Iterator i = ((DataSet) k.next())
 							.asPartitionTable().getAllApplications().values()
 							.iterator(); i.hasNext();)
@@ -1146,7 +1150,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestConvertPartitionTable(final DataSet ds) {
 		if (ds.isConvertableToPartitionTable())
-			new PartitionTableDialog(ds).setVisible(true);
+			new PartitionTableDialog(this.getMartTab(), ds).setVisible(true);
 		else
 			StackTrace.showStackTrace(new PartitionException(Resources
 					.get("partitionTypesLimited")));
@@ -1529,7 +1533,8 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSet ds = this.getMartTab().getMart()
 					.suggestUnrolledDataSets(nTable, nIDCol, nNamingCol,
 							nrTable, nrParentIDCol, nrChildIDCol);
-			this.getMartTab().getMart().getDataSets().put(ds.getOriginalName(), ds);
+			this.getMartTab().getMart().getDataSets().put(ds.getOriginalName(),
+					ds);
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {

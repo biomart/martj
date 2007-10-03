@@ -32,8 +32,8 @@ import java.util.Iterator;
  * All events will have a property of {@link BeanIterator#propertyName}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
 public class BeanIterator extends PropertyChangeSupport implements Iterator {

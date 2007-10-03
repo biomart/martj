@@ -19,10 +19,10 @@
 package org.biomart.builder.view.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.util.Map;
 import java.util.TreeMap;
 
-import javax.swing.JButton;
-import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -30,6 +30,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.biomart.builder.view.gui.panels.tests.EmptyTableTestPanel;
 import org.biomart.builder.view.gui.panels.tests.JobTestPanel;
 import org.biomart.common.resources.Resources;
 import org.biomart.runner.model.JobPlan;
@@ -38,59 +39,59 @@ import org.biomart.runner.model.JobPlan;
  * This dialog runs tests against a job.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by $Author:
- *          rh4 $
+ * @version $Revision$, $Date$, modified by 
+ * 			$Author$
  * @since 0.7
  */
-public class MartRunnerTestDialog extends JDialog {
+public class MartRunnerTestDialog extends JFrame {
 	private static final long serialVersionUID = 1;
-
-	private static final TreeMap panels = new TreeMap();
-
-	static {
-		// TODO Populate panels with panel names -> panels.
-	}
 
 	/**
 	 * Opens a test dialog to allow tests against a particular job plan.
 	 * 
+	 * @param host
+	 *            the host to run SQL against.
+	 * @param port
+	 *            the port to run SQL against.
 	 * @param jobPlan
 	 *            the job to run tests against.
 	 */
-	public static void showTests(final JobPlan jobPlan) {
+	public static void showTests(final String host, final String port,
+			final JobPlan jobPlan) {
 		// Open the dialog.
-		final MartRunnerTestDialog dialog = new MartRunnerTestDialog(jobPlan);
-		dialog.setVisible(true);
-		dialog.dispose();
+		new MartRunnerTestDialog(host, port, jobPlan).setVisible(true);
 	}
 
-	private MartRunnerTestDialog(final JobPlan jobPlan) {
+	private MartRunnerTestDialog(final String host, final String port,
+			final JobPlan jobPlan) {
 		super();
 		this.setTitle(Resources.get("testJobDialogTitle"));
-		this.setModal(false); // User can move about freely.
-		this.setLayout(new BorderLayout());
+		this.getContentPane().setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-		final JList lhs = new JList(MartRunnerTestDialog.panels.keySet()
-				.toArray());
+		// Build the panels.
+		final Map panels = new TreeMap();
+		JobTestPanel panel = new EmptyTableTestPanel(host, port, jobPlan);
+		panels.put(panel.getDisplayName(), panel);
+		// TODO More panels.
+
+		// Construct the dialog.
+		final JList lhs = new JList(panels.keySet().toArray());
 		final JPanel rhs = new JPanel(new BorderLayout());
 		final JPanel rhsHolder = new JPanel();
-		final JPanel closeHolder = new JPanel();
-		final JButton close = new JButton(Resources.get("closeButton"));
 
-		closeHolder.add(close);
-		rhs.add(closeHolder, BorderLayout.PAGE_END);
 		rhs.add(rhsHolder, BorderLayout.CENTER);
-		this.add(new JScrollPane(lhs), BorderLayout.LINE_START);
-		this.add(rhs, BorderLayout.CENTER);
+		this.getContentPane()
+				.add(new JScrollPane(lhs), BorderLayout.LINE_START);
+		this.getContentPane().add(rhs, BorderLayout.CENTER);
 
 		// Listen and update panel.
 		lhs.addListSelectionListener(new ListSelectionListener() {
 			public void valueChanged(ListSelectionEvent e) {
 				rhsHolder.removeAll();
 				if (lhs.getSelectedValue() != null) {
-					rhsHolder.add((JobTestPanel) MartRunnerTestDialog.panels
-							.get((String) lhs.getSelectedValue()));
+					rhsHolder.add((JobTestPanel) panels.get((String) lhs
+							.getSelectedValue()));
 					MartRunnerTestDialog.this.pack();
 				}
 			}
@@ -98,7 +99,7 @@ public class MartRunnerTestDialog extends JDialog {
 
 		// Select the first item in the list.
 		lhs.setSelectedIndex(0);
-		
+
 		// Set size of window.
 		this.pack();
 
