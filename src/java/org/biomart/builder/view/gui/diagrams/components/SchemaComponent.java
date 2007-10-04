@@ -169,6 +169,41 @@ public class SchemaComponent extends BoxShapedComponent {
 		});
 		contextMenu.add(showTables);
 
+		// Separator
+		contextMenu.addSeparator();
+
+		// Update menu option.
+		final JMenuItem update = new JMenuItem(Resources
+				.get("updateSchemaTitle"), new ImageIcon(Resources
+				.getResourceAsURL("refresh.gif")));
+		update.setMnemonic(Resources.get("updateSchemaMnemonic").charAt(0));
+		update.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().requestModifySchema(
+								SchemaComponent.this.getSchema());
+			}
+		});
+		contextMenu.add(update);
+
+		// Add a separator.
+		contextMenu.addSeparator();
+
+		// Partition menu option.
+		final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(Resources
+				.get("partitionSchemaTitle"));
+		partition.setMnemonic(Resources.get("partitionSchemaMnemonic")
+				.charAt(0));
+		partition.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				SchemaComponent.this.getDiagram().getMartTab()
+						.getSchemaTabSet().requestModifySchemaPartitions(
+								SchemaComponent.this.getSchema());
+			}
+		});
+		contextMenu.add(partition);
+		partition.setSelected(this.getSchema().getPartitionRegex() != null);
+
 		// Add a separator.
 		contextMenu.addSeparator();
 
@@ -216,23 +251,6 @@ public class SchemaComponent extends BoxShapedComponent {
 		});
 		masked.setSelected(this.getSchema().isMasked());
 		contextMenu.add(masked);
-
-		// Separator
-		contextMenu.addSeparator();
-
-		// Update menu option.
-		final JMenuItem update = new JMenuItem(Resources
-				.get("updateSchemaTitle"), new ImageIcon(Resources
-				.getResourceAsURL("refresh.gif")));
-		update.setMnemonic(Resources.get("updateSchemaMnemonic").charAt(0));
-		update.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				SchemaComponent.this.getDiagram().getMartTab()
-						.getSchemaTabSet().requestModifySchema(
-								SchemaComponent.this.getSchema());
-			}
-		});
-		contextMenu.add(update);
 
 		// Return it. Will be further adapted by a listener elsewhere.
 		return contextMenu;
