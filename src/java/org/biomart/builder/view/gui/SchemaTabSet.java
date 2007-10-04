@@ -43,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
 
 import org.biomart.builder.model.Column;
@@ -67,6 +68,8 @@ import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.LongProcess;
+import org.biomart.common.view.gui.SwingWorker;
+import org.biomart.common.view.gui.dialogs.ProgressDialog;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
@@ -433,27 +436,12 @@ public class SchemaTabSet extends JTabbedPane {
 		if (schema == null)
 			return;
 
-		// In the background, add the schema to ourselves.
-		new LongProcess() {
-			public void run() throws Exception {
-				Transaction.start(false);
+		// Add the schema to the mart, then synchronise it.
+		SchemaTabSet.this.martTab.getMart().getSchemas().put(
+				schema.getOriginalName(), schema);
 
-				// Add the schema to the mart, then synchronise it.
-				SchemaTabSet.this.martTab.getMart().getSchemas().put(
-						schema.getOriginalName(), schema);
-
-				// Sync it.
-				schema.synchronise();
-
-				// If the schema has no relations, then maybe
-				// we should turn keyguessing on. The user can always
-				// turn it off again later.
-				if (schema.getRelations().size() == 0)
-					schema.setKeyGuessing(true);
-
-				Transaction.end();
-			}
-		}.start();
+		// Sync it.
+		this.requestSynchroniseSchema(schema, false, true);
 	}
 
 	/**
@@ -640,9 +628,9 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to turn keyguessing off for.
 	 */
 	public void requestDisableKeyGuessing(final Schema schema) {
-
 		Transaction.start(true);
 		schema.setKeyGuessing(false);
+		this.requestSynchroniseSchema(schema, true, false);
 		Transaction.end();
 	}
 
@@ -655,7 +643,6 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            ignore it?
 	 */
 	public void requestIgnoreTable(final Table table, final boolean ignored) {
-
 		Transaction.start(false);
 		table.setMasked(ignored);
 		Transaction.end();
@@ -711,9 +698,9 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to turn keyguessing on for.
 	 */
 	public void requestEnableKeyGuessing(final Schema schema) {
-
 		Transaction.start(true);
 		schema.setKeyGuessing(true);
+		this.requestSynchroniseSchema(schema, true, false);
 		Transaction.end();
 	}
 
@@ -726,7 +713,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestModifySchema(final Schema schema) {
 		if (SchemaConnectionDialog.modifySchema(schema))
-			this.requestSynchroniseSchema(schema);
+			this.requestSynchroniseSchema(schema, true, false);
 	}
 
 	/**
@@ -738,17 +725,14 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestModifySchemaPartitions(final Schema schema) {
 		final PartitionSchemaDialog dialog = new PartitionSchemaDialog(schema);
-		if (dialog.definePartitions())
+		if (dialog.definePartitions()) {
 			// In the background, do the synchronisation.
-			new LongProcess() {
-				public void run() throws Exception {
-
-					Transaction.start(false);
-					schema.setPartitionNameExpression(dialog.getExpression());
-					schema.setPartitionRegex(dialog.getRegex());
-					Transaction.end();
-				}
-			}.start();
+			Transaction.start(true);
+			schema.setPartitionNameExpression(dialog.getExpression());
+			schema.setPartitionRegex(dialog.getRegex());
+			SchemaTabSet.this.requestSynchroniseSchema(schema, true, false);
+			Transaction.end();
+		}
 	}
 
 	/**
@@ -758,7 +742,6 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the key to remove.
 	 */
 	public void requestRemoveKey(final Key key) {
-
 		Transaction.start(false);
 		if (key instanceof PrimaryKey)
 			key.getTable().setPrimaryKey(null);
@@ -887,9 +870,79 @@ public class SchemaTabSet extends JTabbedPane {
 	 * Synchronises all schemas in the mart.
 	 */
 	public void requestSynchroniseAllSchemas() {
-		for (final Iterator i = SchemaTabSet.this.martTab.getMart()
-				.getSchemas().values().iterator(); i.hasNext();)
-			this.requestSynchroniseSchema((Schema) i.next());
+		// Create a progress monitor.
+		final ProgressDialog progressMonitor = new ProgressDialog(this, 0, 100,
+				false);
+		progressMonitor.setVisible(true);
+
+		// Start the construction in a thread. It does not need to be
+		// Swing-thread-safe because it will never access the GUI. All
+		// GUI interaction is done through the Timer below.
+		final List allSchemas = new ArrayList(SchemaTabSet.this.martTab
+				.getMart().getSchemas().values());
+		final List doneSchemas = new ArrayList();
+		final double scale = 1.0 / (double) allSchemas.size();
+		final SwingWorker worker = new SwingWorker() {
+			public Object construct() {
+				Transaction.start(true);
+				while (allSchemas.size() > 0)
+					try {
+						((Schema) allSchemas.get(0)).synchronise();
+						doneSchemas.add(allSchemas.remove(0));
+					} catch (final Throwable t) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								StackTrace.showStackTrace(t);
+							}
+						});
+					}
+				Transaction.end();
+				// This is to ensure that any modified flags get cleared.
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						for (final Iterator i = SchemaTabSet.this.schemaToDiagram
+								.values().iterator(); i.hasNext();)
+							((SchemaDiagram) i.next()).repaintDiagram();
+					}
+				});
+				return null;
+			}
+		};
+		worker.start();
+
+		// Create a timer thread that will update the progress dialog.
+		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
+		// equals 1 second.)
+		final Timer timer = new Timer(300, null);
+		timer.setInitialDelay(300); // Start immediately upon request.
+		timer.setCoalesce(true); // Coalesce delayed events.
+		timer.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						double progress = (scale * 100.0 * doneSchemas.size())
+								+ (allSchemas.size() == 0 ? 0.0
+										: (((Schema) allSchemas.get(0))
+												.getProgress() * scale));
+						// Did the job complete yet?
+						if (progress < 100.0)
+							// If not, update the progress report.
+							progressMonitor.setProgress((int) progress);
+						else {
+							// If it completed, close the task and tidy up.
+							// Stop the timer.
+							timer.stop();
+							// Close the progress dialog.
+							progressMonitor.setVisible(false);
+							progressMonitor.dispose();
+						}
+					}
+				});
+			}
+		});
+
+		// Start the timer.
+		timer.start();
 	}
 
 	/**
@@ -897,20 +950,80 @@ public class SchemaTabSet extends JTabbedPane {
 	 * 
 	 * @param schema
 	 *            the schema to synchronise.
+	 * @param transactionMod
+	 *            <tt>true</tt> if the transaction is allowed to show visible
+	 *            modifications.
+	 * @param checkKeys
+	 *            include a check for relations and set key guessing on the
+	 *            schema if they are not found.
 	 */
-	public void requestSynchroniseSchema(final Schema schema) {
-		// In the background, do the synchronisation.
-		new LongProcess() {
-			public void run() throws Exception {
+	public void requestSynchroniseSchema(final Schema schema,
+			final boolean transactionMod, final boolean checkKeys) {
+		// Create a progress monitor.
+		final ProgressDialog progressMonitor = new ProgressDialog(this, 0, 100,
+				false);
+		progressMonitor.setVisible(true);
 
-				Transaction.start(true);
-				schema.synchronise();
+		// Start the construction in a thread. It does not need to be
+		// Swing-thread-safe because it will never access the GUI. All
+		// GUI interaction is done through the Timer below.
+		final SwingWorker worker = new SwingWorker() {
+			public Object construct() {
+				Transaction.start(transactionMod);
+				try {
+					schema.synchronise();
+					// If the schema has no relations, then maybe
+					// we should turn keyguessing on. The user can always
+					// turn it off again later.
+					if (checkKeys && schema.getRelations().size() == 0) {
+						schema.setKeyGuessing(true);
+						schema.synchronise();
+					}
+				} catch (final Throwable t) {
+					StackTrace.showStackTrace(t);
+				}
 				Transaction.end();
 				// This is to ensure that any modified flags get cleared.
 				((SchemaDiagram) SchemaTabSet.this.schemaToDiagram.get(schema
 						.getName())).repaintDiagram();
+				return null;
 			}
-		}.start();
+		};
+		worker.start();
+
+		// Create a timer thread that will update the progress dialog.
+		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
+		// equals 1 second.)
+		final Timer timer = new Timer(300, null);
+		timer.setInitialDelay(300); // Start immediately upon request.
+		timer.setCoalesce(true); // Coalesce delayed events.
+		timer.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						double progress = (schema.getProgress() * (checkKeys ? 0.5
+								: 1.0))
+								+ ((schema.isKeyGuessing() && checkKeys) ? 50.0
+										: 0.0);
+						// Did the job complete yet?
+						if (progress < 100.0)
+							// If not, update the progress report.
+							progressMonitor.setProgress((int) progress);
+						else {
+							// If it completed, close the task and tidy up.
+							// Stop the timer.
+							timer.stop();
+							// Close the progress dialog.
+							progressMonitor.setVisible(false);
+							progressMonitor.dispose();
+						}
+					}
+				});
+			}
+		});
+
+		// Start the timer.
+		timer.start();
 	}
 
 	/**

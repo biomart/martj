@@ -39,7 +39,7 @@ import org.biomart.common.resources.Resources;
  * but this one actually works.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 	
+ * @version $Revision$, $Date$, modified by 
  * 			$Author$
  * @since 0.7
  */
@@ -55,19 +55,19 @@ public class ProgressDialog extends JDialog {
 	 * 
 	 * @param parent
 	 *            the parent dialog to centre over.
-	 * @param initialLabel
-	 *            the initial text to display in the label.
 	 * @param min
 	 *            the minimum value of the progress bar.
 	 * @param max
 	 *            the maximum value of the progress bar.
+	 * @param showCancel
+	 *            <tt>true</tt> if a cancel button should be shown.
 	 */
-	public ProgressDialog(final JComponent parent, final String initialLabel,
-			final int min, final int max) {
+	public ProgressDialog(final JComponent parent, final int min,
+			final int max, final boolean showCancel) {
 		// Create the base dialog.
 		super();
-		this.setTitle(Resources.get("progressTitle"));
 		this.setModal(false);
+		this.setUndecorated(true);
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.
@@ -94,22 +94,25 @@ public class ProgressDialog extends JDialog {
 		this.progress.setIndeterminate(true);
 		this.progress.setValue(0);
 		this.progress.setStringPainted(false);
-		content.add(this.progress, fieldConstraints);
+		content.add(this.progress, showCancel ? fieldConstraints
+				: fieldLastRowConstraints);
 
 		// Cancel button.
-		final JButton cancel = new JButton(Resources.get("cancelButton"));
-		cancel.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				ProgressDialog.this.canceled = true;
-				cancel.setEnabled(false);
-			}
-		});
-		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(final WindowEvent evt) {
-				ProgressDialog.this.canceled = true;
-			}
-		});
-		content.add(cancel, fieldLastRowConstraints);
+		if (showCancel) {
+			final JButton cancel = new JButton(Resources.get("cancelButton"));
+			cancel.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ProgressDialog.this.canceled = true;
+					cancel.setEnabled(false);
+				}
+			});
+			this.addWindowListener(new WindowAdapter() {
+				public void windowClosing(final WindowEvent evt) {
+					ProgressDialog.this.canceled = true;
+				}
+			});
+			content.add(cancel, fieldLastRowConstraints);
+		}
 
 		// Set size of window.
 		this.pack();

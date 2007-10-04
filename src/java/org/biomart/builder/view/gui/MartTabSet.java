@@ -692,8 +692,8 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	public void requestMonitorConstructorRunnable(
 			final ConstructorRunnable constructor) {
 		// Create a progress monitor.
-		final ProgressDialog progressMonitor = new ProgressDialog(this,
-				Resources.get("creatingMart"), 0, 100);
+		final ProgressDialog progressMonitor = new ProgressDialog(this, 0, 100,
+				true);
 		progressMonitor.setVisible(true);
 
 		// Start the construction in a thread. It does not need to be

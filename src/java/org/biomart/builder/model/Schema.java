@@ -109,11 +109,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	/**
 	 * Subclasses use this to notify update requirements.
 	 */
-	protected boolean needsKeySync;
-
-	/**
-	 * Subclasses use this to notify update requirements.
-	 */
 	protected boolean needsFullSync;
 
 	private boolean hideMasked = false;
@@ -123,6 +118,11 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	private final Collection tableCache;
 
 	private final BeanCollection relationCache;
+
+	/**
+	 * Subclasses use this to update synchronisation progress.
+	 */
+	protected double progress = 0.0;
 
 	private final PropertyChangeListener relationCacheBuilder = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
@@ -199,7 +199,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.setPartitionNameExpression(partitionNameExpression);
 		// TreeMap keeps the partition cache in alphabetical order by name.
 		this.tables = new BeanMap(new HashMap());
-		this.needsKeySync = false;
 		this.needsFullSync = false;
 
 		Transaction.addTransactionListener(this);
@@ -217,6 +216,16 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.pcs.addPropertyChangeListener("partitionNameExpression",
 				this.listener);
 		this.pcs.addPropertyChangeListener("partitionRegex", this.listener);
+	}
+
+	/**
+	 * Work out how far synchronising has got. If this returns a value greater
+	 * than or equal to 100.0 then syncing is complete.
+	 * 
+	 * @return the progress so far on a scale of 0.0 to 100.0.
+	 */
+	public double getProgress() {
+		return this.progress;
 	}
 
 	public boolean isDirectModified() {
@@ -261,12 +270,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		if (this.needsFullSync)
 			try {
 				this.synchronise();
-			} catch (final Exception e) {
-				throw new TransactionException(e);
-			}
-		else if (this.needsKeySync)
-			try {
-				this.synchroniseKeys();
 			} catch (final Exception e) {
 				throw new TransactionException(e);
 			}
@@ -558,7 +561,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		if (this.keyGuessing == keyGuessing)
 			return;
 		this.keyGuessing = keyGuessing;
-		this.needsKeySync = true;
+		this.needsFullSync = true;
 		this.pcs.firePropertyChange("keyGuessing", oldValue, keyGuessing);
 	}
 
@@ -597,6 +600,10 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * <p>
 	 * After this method completes, it will call {@link #synchroniseKeys()}
 	 * before returning.
+	 * <p>
+	 * This method should set {@link #progress} to 0.0 and update it
+	 * periodically until syncing is complete, when {@link #progress} should be
+	 * greater than or equal to 100.0.
 	 * 
 	 * @throws SQLException
 	 *             if there was a problem connecting to the data source.
@@ -606,6 +613,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	public void synchronise() throws SQLException, DataModelException {
 		this.partitionCache.clear();
 		this.needsFullSync = false;
+		this.progress = 0.0;
 		// Extend as required.
 	}
 
@@ -616,6 +624,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * Any key or relation that was created by the user and is still valid, ie.
 	 * the underlying columns still exist, will not be affected by this
 	 * operation.
+	 * <p>
+	 * This method should also update {@link #progress}.
 	 * 
 	 * @throws DataModelException
 	 *             if anything went wrong to do with the calculation of keys and
@@ -623,8 +633,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * @throws SQLException
 	 *             if anything went wrong whilst talking to the database.
 	 */
-	public void synchroniseKeys() throws SQLException, DataModelException {
-		this.needsKeySync = false;
+	protected void synchroniseKeys() throws SQLException, DataModelException {
 		// Extend as required.
 	}
 
@@ -1319,8 +1328,12 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			}
 			dbTables.close();
 
+			// Work out progress increment step size.
+			double stepSize = 100.0 / (double)tablesToBeKept.size();
+
 			// Loop over all columns.
 			for (final Iterator i = tablesToBeKept.iterator(); i.hasNext();) {
+				this.progress += stepSize;
 				final Table dbTable = (Table) i.next();
 				final String dbTableName = dbTable.getName();
 				// Make a list of all the columns in the table. Any columns
@@ -1431,7 +1444,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			Log.info("Done synchronising");
 		}
 
-		public void synchroniseKeys() throws SQLException, DataModelException {
+		protected void synchroniseKeys() throws SQLException, DataModelException {
 			Log.debug("Synchronising JDBC schema keys");
 			super.synchroniseKeys();
 			Log.debug("Loading metadata");
