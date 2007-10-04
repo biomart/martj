@@ -598,9 +598,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * drop/add any that have changed, then check each column. and key and
 	 * relation and update those too.
 	 * <p>
-	 * After this method completes, it will call {@link #synchroniseKeys()}
-	 * before returning.
-	 * <p>
 	 * This method should set {@link #progress} to 0.0 and update it
 	 * periodically until syncing is complete, when {@link #progress} should be
 	 * greater than or equal to 100.0.
@@ -614,26 +611,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.partitionCache.clear();
 		this.needsFullSync = false;
 		this.progress = 0.0;
-		// Extend as required.
-	}
-
-	/**
-	 * This method can be called at any time to recalculate the foreign keys and
-	 * relations in the schema.
-	 * <p>
-	 * Any key or relation that was created by the user and is still valid, ie.
-	 * the underlying columns still exist, will not be affected by this
-	 * operation.
-	 * <p>
-	 * This method should also update {@link #progress}.
-	 * 
-	 * @throws DataModelException
-	 *             if anything went wrong to do with the calculation of keys and
-	 *             relations.
-	 * @throws SQLException
-	 *             if anything went wrong whilst talking to the database.
-	 */
-	protected void synchroniseKeys() throws SQLException, DataModelException {
 		// Extend as required.
 	}
 
@@ -1330,10 +1307,11 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 			// Work out progress increment step size.
 			double stepSize = 100.0 / (double)tablesToBeKept.size();
+			// Divide by 2 - columns then relations.
+			stepSize /= 2.0;
 
 			// Loop over all columns.
 			for (final Iterator i = tablesToBeKept.iterator(); i.hasNext();) {
-				this.progress += stepSize;
 				final Table dbTable = (Table) i.next();
 				final String dbTableName = dbTable.getName();
 				// Make a list of all the columns in the table. Any columns
@@ -1414,6 +1392,9 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 					Log.debug("Dropping redundant column " + column.getName());
 					dbTable.getColumns().remove(column.getName());
 				}
+				
+				// Update progress;
+				this.progress += stepSize;
 			}
 
 			// Remove from schema all tables not found in the database, using
@@ -1438,18 +1419,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				existingTable.getForeignKeys().clear();
 				this.getTables().remove(tableName);
 			}
-
-			// Sync the keys.
-			this.synchroniseKeys();
-			Log.info("Done synchronising");
-		}
-
-		protected void synchroniseKeys() throws SQLException, DataModelException {
-			Log.debug("Synchronising JDBC schema keys");
-			super.synchroniseKeys();
-			Log.debug("Loading metadata");
-			final DatabaseMetaData dmd = this.getConnection(null).getMetaData();
-			final String catalog = this.getConnection(null).getCatalog();
 
 			// Get and create primary keys.
 			// Work out a list of all foreign keys currently existing.
@@ -1583,14 +1552,14 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			// has completed, the list will contain all those foreign keys which
 			// no longer exist, and can safely be dropped.
 			if (this.isKeyGuessing())
-				this.synchroniseKeysUsingKeyGuessing(fksToBeDropped);
+				this.synchroniseKeysUsingKeyGuessing(fksToBeDropped, stepSize);
 			// Otherwise, use DMD to do the same, also passing in the list of
 			// existing foreign keys to be updated as the call progresses. Also
 			// pass in the DMD details so it doesn't have to work them out for
 			// itself.
 			else
 				this.synchroniseKeysUsingDMD(fksToBeDropped, dmd,
-						this.realSchemaName, catalog);
+						this.realSchemaName, catalog, stepSize);
 
 			// Drop any foreign keys that are left over (but not handmade ones).
 			for (final Iterator i = fksToBeDropped.iterator(); i.hasNext();) {
@@ -1606,7 +1575,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				}
 				k.getTable().getForeignKeys().remove(k);
 			}
-			Log.debug("Done synchronising JDBC schema keys");
+			Log.info("Done synchronising");
 		}
 
 		/**
@@ -1623,6 +1592,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *            the database schema to read metadata from.
 		 * @param catalog
 		 *            the database catalog to read metadata from.
+		 *            @param stepSize the progress step size to increment by.
 		 * @throws SQLException
 		 *             if there was a problem talking to the database.
 		 * @throws DataModelException
@@ -1631,13 +1601,16 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 */
 		private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
 				final DatabaseMetaData dmd, final String schema,
-				final String catalog) throws SQLException, DataModelException {
+				final String catalog, final double stepSize) throws SQLException, DataModelException {
 			Log.debug("Running DMD key synchronisation");
 			// Loop through all the tables in the database, which is the same
 			// as looping through all the primary keys.
 			Log.debug("Finding tables");
 			for (final Iterator i = this.getTables().values().iterator(); i
-					.hasNext();) {
+					.hasNext();) {				
+				// Update progress;
+				this.progress += stepSize;
+				
 				// Obtain the table and its primary key.
 				final Table pkTable = (Table) i.next();
 				final PrimaryKey pk = pkTable.getPrimaryKey();
@@ -1882,6 +1855,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *            end of the method, the only keys left in this list should
 		 *            be ones that no longer exist in the database and may be
 		 *            dropped.
+		 *            @param stepSize the progress step size to increment by.
 		 * @throws SQLException
 		 *             if there was a problem talking to the database.
 		 * @throws DataModelException
@@ -1889,14 +1863,17 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *             set of foreign keys.
 		 */
 		private void synchroniseKeysUsingKeyGuessing(
-				final Collection fksToBeDropped) throws SQLException,
+				final Collection fksToBeDropped, final double stepSize) throws SQLException,
 				DataModelException {
 			Log.debug("Running non-DMD key synchronisation");
 			// Loop through all the tables in the database, which is the same
 			// as looping through all the primary keys.
 			Log.debug("Finding tables");
 			for (final Iterator i = this.getTables().values().iterator(); i
-					.hasNext();) {
+					.hasNext();) {				
+				// Update progress;
+				this.progress += stepSize;
+				
 				// Obtain the table and its primary key.
 				final Table pkTable = (Table) i.next();
 				final PrimaryKey pk = pkTable.getPrimaryKey();
