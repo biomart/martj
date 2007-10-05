@@ -286,7 +286,7 @@ public interface MartConstructor {
 
 			// Is it partitioned?
 			Collection schemaPartitions = new ArrayList(templateSchema
-					.getReferencedPartitions());
+					.getPartitions().entrySet());
 			if (schemaPartitions.isEmpty()) {
 				Log.debug("Using dummy empty partition");
 				schemaPartitions = new ArrayList();
