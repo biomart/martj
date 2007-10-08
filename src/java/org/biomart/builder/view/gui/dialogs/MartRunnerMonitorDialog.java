@@ -1182,7 +1182,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			try {
 				final Collection actions = Client.getActions(host, port, jobId,
 						this.section);
-				for (final Iterator i = actions.iterator(); i.hasNext();)
+				for (final Iterator i = actions.iterator(); i.hasNext();) 
 					this.children.add(new ActionNode(this, (JobPlanAction) i
 							.next(), this.parentDialog));
 			} catch (final ProtocolException e) {

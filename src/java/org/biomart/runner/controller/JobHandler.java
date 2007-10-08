@@ -373,7 +373,7 @@ public class JobHandler {
 	public static void updateAction(final String jobId, final String sectionId,
 			final String actionId, final String action) throws JobException {
 		final Map actions = JobHandler.getActions(jobId, sectionId);
-		actions.put(actionId, action);
+		actions.put(actionId, new JobPlanAction(jobId, action, sectionId));
 		JobHandler.setActions(jobId, sectionId, actions, false);
 	}
 
