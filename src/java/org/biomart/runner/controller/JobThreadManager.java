@@ -246,11 +246,16 @@ public class JobThreadManager extends Thread {
 			} catch (final Exception e) {
 				// Break out early and complain.
 				Log.error(e);
+			}
+		}
+		
+		public void finalize() {
+			try {
+				Log.info("Thread " + this.sequence + " ending");
+				this.closeConnection();
 			} finally {
 				// Quit thread by removing ourselves.
 				this.manager.jobThreadPool.remove(this);
-				Log.info("Thread " + this.sequence + " ending");
-				this.closeConnection();
 			}
 		}
 

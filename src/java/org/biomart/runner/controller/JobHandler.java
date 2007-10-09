@@ -373,8 +373,10 @@ public class JobHandler {
 	public static void updateAction(final String jobId, final String sectionId,
 			final String actionId, final String action) throws JobException {
 		final Map actions = JobHandler.getActions(jobId, sectionId);
-		actions.put(actionId, new JobPlanAction(jobId, action, sectionId));
-		JobHandler.setActions(jobId, sectionId, actions, false);
+		final JobPlanAction jpAction = (JobPlanAction)actions.get(actionId);
+		jpAction.setAction(action);
+		jpAction.setStatus(JobStatus.NOT_QUEUED, actions.values());
+		JobHandler.setActions(jobId, sectionId, actions, true);
 	}
 
 	/**
@@ -386,15 +388,11 @@ public class JobHandler {
 	 *            the section this applies to.
 	 * @param actions
 	 *            the actions to add.
-	 * @param saveList
-	 *            <tt>true</tt> if the list should be updated after making the
-	 *            change.
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
 	public static void setActions(final String jobId,
-			final String[] sectionPath, final Collection actions,
-			final boolean saveList) throws JobException {
+			final String[] sectionPath, final Collection actions) throws JobException {
 		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
 		// Add the action to the job.
 		jobPlan.setActionCount(sectionPath, actions.size());
@@ -411,8 +409,7 @@ public class JobHandler {
 			actionMap.put(action.getIdentifier(), action);
 		}
 		// Do the work.
-		JobHandler.setActions(jobId, section.getIdentifier(), actionMap,
-				saveList);
+		JobHandler.setActions(jobId, section.getIdentifier(), actionMap, false);
 		// Update the status to QUEUED (for external requests only).
 		JobHandler.setStatus(jobId, actionMap.keySet(), JobStatus.QUEUED, null);
 	}

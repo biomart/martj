@@ -290,7 +290,7 @@ public class MartRunnerProtocol {
 				actions.setLength(0);
 			} else
 				actions.append(line);
-		JobHandler.setActions(jobId, sectionPath, finalActions, false);
+		JobHandler.setActions(jobId, sectionPath, finalActions);
 		out.println(MartRunnerProtocol.OK);
 	}
 
