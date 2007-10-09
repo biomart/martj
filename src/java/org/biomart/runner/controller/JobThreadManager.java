@@ -20,6 +20,7 @@ package org.biomart.runner.controller;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -170,18 +171,36 @@ public class JobThreadManager extends Thread {
 	private synchronized void resizeJobThreadPool(final JobPlan plan,
 			final int requiredSize) {
 		int actualSize = this.jobThreadPool.size();
+		// Remove dead threads.
+		for (final Iterator i = this.jobThreadPool.iterator(); i.hasNext();) {
+			final WeakJobThread wjt = (WeakJobThread) i.next();
+			if (wjt.get() == null)
+				i.remove();
+		}
 		if (requiredSize < actualSize)
-			// Reduce pool by removing oldest thread.
+			// Reduce pool by stopping oldest thread.
 			while (actualSize-- > requiredSize)
-				this.jobThreadPool.remove(0);
+				((WeakJobThread) this.jobThreadPool.get(0)).get().cancel();
 		else if (requiredSize > actualSize)
 			// Increase pool.
 			while (actualSize++ < requiredSize) {
 				// Add thread to pool and start it running.
-				final Thread thread = new JobThread(this, plan);
+				final JobThread thread = new JobThread(this, plan);
 				thread.start();
-				this.jobThreadPool.add(thread);
+				this.jobThreadPool.add(new WeakJobThread(thread));
 			}
+	}
+
+	private static class WeakJobThread {
+		private final WeakReference ref;
+
+		private WeakJobThread(final JobThread ref) {
+			this.ref = new WeakReference(ref);
+		}
+
+		private JobThread get() {
+			return (JobThread) this.ref.get();
+		}
 	}
 
 	private static class JobThread extends Thread {
@@ -202,10 +221,16 @@ public class JobThreadManager extends Thread {
 
 		private Set tableNames = new HashSet();
 
+		private boolean cancelled = false;
+
 		private JobThread(final JobThreadManager manager, final JobPlan plan) {
 			super();
 			this.manager = manager;
 			this.plan = plan;
+		}
+
+		private void cancel() {
+			this.cancelled = true;
 		}
 
 		public void run() {
@@ -215,8 +240,7 @@ public class JobThreadManager extends Thread {
 				final Connection conn = this.getConnection();
 				// Load tables and views from database, then loop over them.
 				final ResultSet dbTables = conn.getMetaData().getTables(
-						conn.getCatalog(),
-						this.plan.getTargetSchema(), "%",
+						conn.getCatalog(), this.plan.getTargetSchema(), "%",
 						new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
 				while (dbTables.next())
 					this.tableNames.add(dbTables.getString("TABLE_NAME"));
@@ -246,16 +270,9 @@ public class JobThreadManager extends Thread {
 			} catch (final Exception e) {
 				// Break out early and complain.
 				Log.error(e);
-			}
-		}
-		
-		public void finalize() {
-			try {
+			} finally {
 				Log.info("Thread " + this.sequence + " ending");
 				this.closeConnection();
-			} finally {
-				// Quit thread by removing ourselves.
-				this.manager.jobThreadPool.remove(this);
 			}
 		}
 
@@ -266,7 +283,7 @@ public class JobThreadManager extends Thread {
 
 		private boolean continueRunning() {
 			return !this.actionFailed && !this.manager.jobStopped
-					&& this.manager.jobThreadPool.contains(this);
+					&& !this.cancelled;
 		}
 
 		public boolean equals(final Object o) {
@@ -297,30 +314,34 @@ public class JobThreadManager extends Thread {
 							dropTableSchema = parts[0];
 							dropTableName = parts[1];
 						}
-					} else if (sql.indexOf("rename")>=0) {
+					} else if (sql.indexOf("rename") >= 0) {
 						if (sql.startsWith("rename table")) {
 							// MySQL table rename.
 							dropTableName = sql.split(" ")[4];
 							if (dropTableName.indexOf('.') >= 0) {
-								final String[] parts = dropTableName.split("\\.");
+								final String[] parts = dropTableName
+										.split("\\.");
 								dropTableSchema = parts[0];
 								dropTableName = parts[1];
 							}
-						} else if (sql.startsWith("alter table") && sql.indexOf("rename to")>0) {
+						} else if (sql.startsWith("alter table")
+								&& sql.indexOf("rename to") > 0) {
 							// Oracle+Postgres table rename.
 							dropTableName = sql.split(" ")[5];
 							if (dropTableName.indexOf('.') >= 0) {
-								final String[] parts = dropTableName.split("\\.");
+								final String[] parts = dropTableName
+										.split("\\.");
 								dropTableSchema = parts[0];
 								dropTableName = parts[1];
 							}
 						}
 					}
-					if (dropTableName!=null && this.tableNames.contains(dropTableName)) {
+					if (dropTableName != null
+							&& this.tableNames.contains(dropTableName)) {
 						final Statement stmt = conn.createStatement();
 						final StringBuffer dropSql = new StringBuffer();
 						dropSql.append("drop table ");
-						if (dropTableSchema!=null) {
+						if (dropTableSchema != null) {
 							dropSql.append(dropTableSchema);
 							dropSql.append('.');
 						}
@@ -333,8 +354,8 @@ public class JobThreadManager extends Thread {
 					}
 					// If action is drop table (), check to see if
 					// we should skip over it instead.
-					if (!(this.plan.isSkipDropTable()
-							&& sql.startsWith("drop table"))) {
+					if (!(this.plan.isSkipDropTable() && sql
+							.startsWith("drop table"))) {
 						final Statement stmt = conn.createStatement();
 						stmt.execute(sql);
 						final SQLWarning warning = conn.getWarnings();
@@ -436,13 +457,19 @@ public class JobThreadManager extends Thread {
 								for (final Iterator j = this.manager.jobThreadPool
 										.iterator(); !hasUnusableSiblings
 										&& j.hasNext();) {
-									final JobThread thread = (JobThread) j
+									final WeakJobThread wjt = (WeakJobThread) j
 											.next();
-									final String threadId = thread
-											.getCurrentSectionIdentifier();
-									hasUnusableSiblings = threadId != null
-											&& threadId.equals(sibling
-													.getIdentifier());
+									final JobThread thread = (JobThread) wjt
+											.get();
+									if (thread != null) {
+										final String threadId = thread
+												.getCurrentSectionIdentifier();
+										hasUnusableSiblings = threadId != null
+												&& threadId.equals(sibling
+														.getIdentifier());
+
+									} else
+										j.remove();
 								}
 						}
 					}
