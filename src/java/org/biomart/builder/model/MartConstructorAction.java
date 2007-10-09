@@ -582,6 +582,8 @@ public abstract class MartConstructorAction {
 
 		private boolean leftJoin;
 
+		private int bigTable;
+		
 		/**
 		 * Creates a new LeftJoin action.
 		 * 
@@ -821,6 +823,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setLeftJoin(final boolean leftJoin) {
 			this.leftJoin = leftJoin;
+		}
+
+		/**
+		 * @return the bigTable
+		 */
+		public int getBigTable() {
+			return this.bigTable;
+		}
+
+		/**
+		 * @param bigTable the bigTable to set
+		 */
+		public void setBigTable(int bigTable) {
+			this.bigTable = bigTable;
 		}
 	}
 

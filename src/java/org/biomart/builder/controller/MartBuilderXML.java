@@ -159,7 +159,7 @@ public class MartBuilderXML extends DefaultHandler {
 			throw new DataModelException(Resources.get("fileNotSchemaVersion",
 					MartBuilderXML.CURRENT_DTD_VERSION));
 		// Return.
-		Log.info("Done loading XML from "+file.getPath());
+		Log.info("Done loading XML from " + file.getPath());
 		return mart;
 	}
 
@@ -196,7 +196,7 @@ public class MartBuilderXML extends DefaultHandler {
 			// Close the output stream.
 			fw.close();
 		}
-		Log.info("Done saving XML as "+file.getPath());
+		Log.info("Done saving XML as " + file.getPath());
 	}
 
 	/**
@@ -896,6 +896,17 @@ public class MartBuilderXML extends DefaultHandler {
 						.hasNext();) {
 					final Table tbl = (Table) i.next();
 
+					// Big table.
+					if (tbl.getBigTable(ds) > 0) {
+						this.openElement("bigTable", xmlWriter);
+						this.writeAttribute("tableId",
+								(String) this.reverseMappedObjects.get(tbl),
+								xmlWriter);
+						this.writeAttribute("bigness",
+								"" + tbl.getBigTable(ds), xmlWriter);
+						this.closeElement("bigTable", xmlWriter);
+					}
+
 					// Restricted table.
 					if (tbl.getRestrictTable(ds) != null) {
 						final RestrictedTableDefinition def = tbl
@@ -935,7 +946,7 @@ public class MartBuilderXML extends DefaultHandler {
 			for (final Iterator i = ds.getTables().values().iterator(); i
 					.hasNext();) {
 				final DataSetTable dsTable = (DataSetTable) i.next();
-				Log.debug("Writing modifications for "+dsTable);
+				Log.debug("Writing modifications for " + dsTable);
 				// Write out masked tables inside dataset.
 				if (dsTable.isDimensionMasked()) {
 					this.openElement("maskedTable", xmlWriter);
@@ -1173,6 +1184,21 @@ public class MartBuilderXML extends DefaultHandler {
 							.hasNext();) {
 						final Table tbl = (Table) j.next();
 
+						// Big table.
+						if (tbl.getBigTable(ds, dsTable.getName()) > 0) {
+							this.openElement("bigTable", xmlWriter);
+							this.writeAttribute("tableKey", dsTable.getName(),
+									xmlWriter);
+							this
+									.writeAttribute("tableId",
+											(String) this.reverseMappedObjects
+													.get(tbl), xmlWriter);
+							this.writeAttribute("bigness", ""
+									+ tbl.getBigTable(ds, dsTable.getName()),
+									xmlWriter);
+							this.closeElement("bigTable", xmlWriter);
+						}
+
 						// Restricted table.
 						if (tbl.getRestrictTable(ds, dsTable.getName()) != null) {
 							final RestrictedTableDefinition def = tbl
@@ -1371,7 +1397,7 @@ public class MartBuilderXML extends DefaultHandler {
 		String eName = sName;
 		if ("".equals(eName))
 			eName = qName;
-		
+
 		// Construct a set of attributes from the tag.
 		final Map attributes = new HashMap();
 		if (attrs != null)
@@ -1390,7 +1416,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 		// Now, attempt to recognise the tag by checking its name
 		// against a set of names known to us.
-		Log.debug("Reading tag " + eName + " with attributes "+attributes);
+		Log.debug("Reading tag " + eName + " with attributes " + attributes);
 
 		// Start by assuming the tag produces an unnested element;
 		Object element = "";
@@ -2101,6 +2127,37 @@ public class MartBuilderXML extends DefaultHandler {
 					else
 						tbl.setRestrictTable(w, tableKey, def);
 				}
+			} catch (final Exception e) {
+				if (e instanceof SAXException)
+					throw (SAXException) e;
+				else
+					throw new SAXException(e);
+			}
+		}
+
+		// Big Table (inside dataset).
+		else if ("bigTable".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources.get("bigTableOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the restriction.
+				final Table tbl = (Table) this.mappedObjects.get(attributes
+						.get("tableId"));
+				// Default to dataset-wide restriction if 0.5 syntax used.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Get the aliases to use for the first table.
+				final int bigness = Integer.parseInt((String) attributes
+						.get("bigness"));
+
+				if (tableKey == null)
+					tbl.setBigTable(w, bigness);
+				else
+					tbl.setBigTable(w, tableKey, bigness);
 			} catch (final Exception e) {
 				if (e instanceof SAXException)
 					throw (SAXException) e;

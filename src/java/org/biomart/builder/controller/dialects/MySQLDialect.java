@@ -467,7 +467,12 @@ public class MySQLDialect extends DatabaseDialect {
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."
-				+ mergeTableName + " as select a.*");
+				+ mergeTableName);
+		if (action.getBigTable()>0) {
+			sb.append(" max_rows=");
+			sb.append(action.getBigTable());
+		}
+		sb.append(" as select a.*");
 		for (final Iterator i = action.getSelectColumns().entrySet().iterator(); i
 				.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();

@@ -335,6 +335,14 @@ Hard restriction?: <xsl:value-of select="@hard"/>
 Applies only to dataset table: <xsl:value-of select="@tableKey"/></xsl:if>
 </xsl:template>
 
+<xsl:template match="bigTable">
+
+Big table: 
+         Schema: <xsl:value-of select="key('ids',@tableId)/../@name"/>
+          Table: <xsl:value-of select="key('ids',@tableId)/@name"/>
+Bigness: <xsl:value-of select="@bigness"/>
+</xsl:template>
+
 <xsl:template match="restrictedRelation">
 
 Restricted relation: <xsl:apply-templates select="key('ids',@relationId)"/>

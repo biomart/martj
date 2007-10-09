@@ -71,7 +71,7 @@ public class Table implements Comparable, TransactionListener {
 	private final BeanCollection foreignKeys;
 
 	private final String name;
-	
+
 	private final BeanCollection schemaPartitions = new BeanSet(new HashSet());
 
 	private PrimaryKey primaryKey;
@@ -141,17 +141,21 @@ public class Table implements Comparable, TransactionListener {
 		// All changes to us make us modified.
 		this.pcs.addPropertyChangeListener("masked", this.listener);
 		this.pcs.addPropertyChangeListener("restrictTable", this.listener);
+		this.pcs.addPropertyChangeListener("bigTable", this.listener);
 	}
 
 	/**
 	 * Does this exist for the given schema prefix?
-	 * @param schemaPrefix the prefix.
+	 * 
+	 * @param schemaPrefix
+	 *            the prefix.
 	 * @return <tt>true</tt> if it does.
 	 */
 	public boolean existsForPartition(final String schemaPrefix) {
-		return schemaPrefix==null || this.getSchemaPartitions().isEmpty() || this.getSchemaPartitions().contains(schemaPrefix);
+		return schemaPrefix == null || this.getSchemaPartitions().isEmpty()
+				|| this.getSchemaPartitions().contains(schemaPrefix);
 	}
-	
+
 	public boolean isDirectModified() {
 		return this.directModified;
 	}
@@ -394,10 +398,11 @@ public class Table implements Comparable, TransactionListener {
 	public String getName() {
 		return this.name;
 	}
-	
+
 	/**
-	 * Retrieve the set of schema partition names this column applies to.
-	 * May be empty, in which case it applies to the default schema only.
+	 * Retrieve the set of schema partition names this column applies to. May be
+	 * empty, in which case it applies to the default schema only.
+	 * 
 	 * @return the set of schema partition names.
 	 */
 	public BeanCollection getSchemaPartitions() {
@@ -557,6 +562,82 @@ public class Table implements Comparable, TransactionListener {
 			this.pcs.firePropertyChange("restrictTable", tableKey, null);
 		}
 
+	}
+
+	/**
+	 * Is this table big?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
+	 * @return the big-ness to use if it is, 0 otherwise.
+	 */
+	public int getBigTable(final DataSet dataset) {
+		final Integer val = (Integer) this.getMods(dataset, null).get(
+				"bigTable");
+		return val == null ? 0 : val.intValue();
+	}
+
+	/**
+	 * Is this table big?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
+	 * @param tableKey
+	 *            the table to check for.
+	 * @return the big-ness to use if it is, 0 otherwise.
+	 */
+	public int getBigTable(final DataSet dataset, final String tableKey) {
+		Integer val = (Integer) this.getMods(dataset, tableKey).get("bigTable");
+		if (val == null)
+			return this.getBigTable(dataset);
+		else
+			return val.intValue();
+	}
+
+	/**
+	 * Big-up this table.
+	 * 
+	 * @param dataset
+	 *            the dataset to set for.
+	 * @param bigness
+	 *            the bigness to set - if 0, it undoes it.
+	 */
+	public void setBigTable(final DataSet dataset, final int bigness) {
+		final int oldValue = this.getBigTable(dataset);
+		if (bigness == oldValue)
+			return;
+		if (bigness > 0) {
+			this.getMods(dataset, null).put("bigTable", new Integer(bigness));
+			this.pcs.firePropertyChange("bigTable", null, dataset);
+		} else {
+			this.getMods(dataset, null).remove("bigTable");
+			this.pcs.firePropertyChange("bigTable", dataset, null);
+		}
+	}
+
+	/**
+	 * Big-up this table.
+	 * 
+	 * @param dataset
+	 *            the dataset to set for.
+	 * @param tableKey
+	 *            the dataset table to set for.
+	 * @param bigness
+	 *            the bigness to set - if 0, it undoes it.
+	 */
+	public void setBigTable(final DataSet dataset, final String tableKey,
+			final int bigness) {
+		final int oldValue = this.getBigTable(dataset, tableKey);
+		if (bigness == oldValue)
+			return;
+		if (bigness > 0) {
+			this.getMods(dataset, tableKey).put("bigTable",
+					new Integer(bigness));
+			this.pcs.firePropertyChange("bigTable", null, tableKey);
+		} else {
+			this.getMods(dataset, tableKey).remove("bigTable");
+			this.pcs.firePropertyChange("bigTable", tableKey, null);
+		}
 	}
 
 	public int compareTo(final Object o) throws ClassCastException {

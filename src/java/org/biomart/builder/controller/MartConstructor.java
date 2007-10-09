@@ -1011,6 +1011,9 @@ public interface MartConstructor {
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);
 			action.setLeftJoin(useLeftJoin);
+			// Big table?
+			action.setBigTable(ljtu.getTable().getBigTable(dataset,
+					dsTable.getName()));
 
 			PartitionTableApplication pta = null;
 			if (dsTable.getType().equals(DataSetTableType.DIMENSION)

@@ -444,11 +444,27 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(remove);
-			if ((this.datasetTable == null ? ((Table) object)
+			if ((this.datasetTable == null ? table
 					.getRestrictTable(this.dataset)
-					: ((Table) object).getRestrictTable(this.dataset,
+					: table.getRestrictTable(this.dataset,
 							this.datasetTable.getName())) == null)
 				remove.setEnabled(false);
+
+			// Option to set 'big table' value.
+			final JCheckBoxMenuItem bigTable = new JCheckBoxMenuItem(Resources
+					.get("bigTableTitle"));
+			bigTable.setMnemonic(Resources.get("bigTableMnemonic").charAt(0));
+			bigTable.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestBigTable(ExplainContext.this.dataset,
+									ExplainContext.this.datasetTable, table);
+				}
+			});
+			bigTable.setSelected((this.datasetTable == null ? table
+					.getBigTable(this.dataset) : table.getBigTable(
+					this.dataset, this.datasetTable.getName())) > 0);
+			contextMenu.add(bigTable);
 		}
 	}
 

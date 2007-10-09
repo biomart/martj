@@ -97,6 +97,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
 public class DataSetTabSet extends JTabbedPane {
 	private static final long serialVersionUID = 1;
 
+	private static final int DEFAULT_BIG_TABLE_SIZE = 100000000;
+
 	private AllDataSetsDiagram allDataSetsDiagram;
 
 	private final Map datasetToDiagram = new HashMap();
@@ -1308,6 +1310,50 @@ public class DataSetTabSet extends JTabbedPane {
 			else
 				table.setRestrictTable(dataset, def);
 		}
+		Transaction.end();
+	}
+
+	/**
+	 * Asks for a table bigness to be modified.
+	 * 
+	 * @param dataset
+	 *            the dataset we are working with.
+	 * @param dsTable
+	 *            the table to work with.
+	 * @param table
+	 *            the table to modify the bigness for.
+	 */
+	public void requestBigTable(final DataSet dataset,
+			final DataSetTable dsTable, final Table table) {
+		int currVal = dsTable == null ? table.getBigTable(dataset) : table
+				.getBigTable(dataset, dsTable.getName());
+		// Get new val from user.
+		final String newValStr = (String) JOptionPane.showInputDialog(null,
+				Resources.get("bigTableSize"), Resources.get("questionTitle"),
+				JOptionPane.QUESTION_MESSAGE, null, null, ""
+						+ (currVal == 0 ? DataSetTabSet.DEFAULT_BIG_TABLE_SIZE
+								: currVal));
+		// Cancelled?
+		if (newValStr == null)
+			return;
+
+		// Get updated details from the user.
+		final int newVal;
+		try {
+			newVal = "".equals(newValStr) ? 0 : Integer.parseInt(newValStr);
+		} catch (final NumberFormatException e) {
+			StackTrace.showStackTrace(e);
+			return;
+		}
+		if (newVal == currVal)
+			return;
+
+		// Change it.
+		Transaction.start(false);
+		if (dsTable != null)
+			table.setBigTable(dataset, dsTable.getName(), newVal);
+		else
+			table.setBigTable(dataset, newVal);
 		Transaction.end();
 	}
 
