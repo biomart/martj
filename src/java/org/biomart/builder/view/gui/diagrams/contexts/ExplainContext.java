@@ -21,7 +21,6 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.swing.ImageIcon;
@@ -168,24 +167,7 @@ public class ExplainContext extends SchemaContext {
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedSchemas() : this.dataset
 							.getIncludedSchemas());
-			if (!includedSchs.contains(schema))
-				return true;
-
-			// Fade out if all external tables are inapplicable.
-			boolean hasExternal = false;
-			for (final Iterator i = schema.getRelations().iterator(); i
-					.hasNext();) {
-				final Relation r = (Relation) i.next();
-				if (r.isExternal()) {
-					hasExternal = true;
-					if (r.getFirstKey().getTable().existsForPartition(
-							schemaPrefix)
-							&& r.getSecondKey().getTable().existsForPartition(
-									schemaPrefix))
-						return false;
-				}
-			}
-			return hasExternal;
+			 return !includedSchs.contains(schema);
 		}
 
 		// Relations
@@ -205,9 +187,8 @@ public class ExplainContext extends SchemaContext {
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedTables() : this.dataset
 							.getIncludedTables());
-			if (!includedTabs.contains(table)
-					|| !table.existsForPartition(schemaPrefix))
-				return true;
+			return (!includedTabs.contains(table)
+					|| !table.existsForPartition(schemaPrefix));
 		}
 
 		// This section is for columns.

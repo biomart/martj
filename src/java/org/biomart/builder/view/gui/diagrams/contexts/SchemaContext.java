@@ -21,7 +21,9 @@ package org.biomart.builder.view.gui.diagrams.contexts;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -187,21 +189,18 @@ public class SchemaContext implements DiagramContext {
 			if (schema.isMasked())
 				return true;
 
-			// Fade out if all external tables are inapplicable.
-			boolean hasExternal = false;
+			// Fade out if has external tables and all are inapplicable.
+			final Set extTbls = new HashSet();
 			for (final Iterator i = schema.getRelations().iterator(); i
 					.hasNext();) {
 				final Relation r = (Relation) i.next();
-				if (r.isExternal()) {
-					hasExternal = true;
-					if (r.getFirstKey().getTable().existsForPartition(
-							schemaPrefix)
-							&& r.getSecondKey().getTable().existsForPartition(
-									schemaPrefix))
-						return false;
-				}
+				if (r.isExternal())
+					extTbls.add(r.getKeyForSchema(schema).getTable());
 			}
-			return hasExternal;
+			for (final Iterator i = extTbls.iterator(); i.hasNext();)
+				if (((Table) i.next()).existsForPartition(schemaPrefix))
+					return false;
+			return !extTbls.isEmpty();
 		}
 
 		// Incorrect and ignored stuff is 'masked'.
@@ -209,16 +208,14 @@ public class SchemaContext implements DiagramContext {
 			final Table table = (Table) object;
 
 			// Fade out all ignored and/or unreachable tables.
-			if (table.isMasked() || !table.existsForPartition(schemaPrefix))
-				return true;
-			else {
+			if (!table.isMasked() && table.existsForPartition(schemaPrefix))
+				return false;
+			else
 				for (final Iterator i = table.getRelations().iterator(); i
 						.hasNext();)
 					if (!((Relation) i.next()).getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						return false;
-				return table.getSchema().getTables().size() > 1;
-			}
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.
