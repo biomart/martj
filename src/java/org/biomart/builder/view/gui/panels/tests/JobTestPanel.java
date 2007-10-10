@@ -285,7 +285,7 @@ public abstract class JobTestPanel extends JPanel {
 								JobTestPanel.this.start.setEnabled(true);
 								JobTestPanel.this.stop.setEnabled(false);
 								JobTestPanel.this.report
-										.setEnabled(failure != null);
+										.setEnabled(failure == null);
 								JobTestPanel.this.progress.setValue(100);
 								JobTestPanel.this.progress
 										.setIndeterminate(false);

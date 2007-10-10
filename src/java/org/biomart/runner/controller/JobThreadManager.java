@@ -20,7 +20,6 @@ package org.biomart.runner.controller;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -87,6 +86,9 @@ public class JobThreadManager extends Thread {
 	 * Starts us.
 	 */
 	public void startThreadManager() {
+		// Un-stop if necessary.
+		this.jobStopped = false;
+		// Start.
 		this.start();
 	}
 
@@ -171,36 +173,18 @@ public class JobThreadManager extends Thread {
 	private synchronized void resizeJobThreadPool(final JobPlan plan,
 			final int requiredSize) {
 		int actualSize = this.jobThreadPool.size();
-		// Remove dead threads.
-		for (final Iterator i = this.jobThreadPool.iterator(); i.hasNext();) {
-			final WeakJobThread wjt = (WeakJobThread) i.next();
-			if (wjt.get() == null)
-				i.remove();
-		}
 		if (requiredSize < actualSize)
 			// Reduce pool by stopping oldest thread.
 			while (actualSize-- > requiredSize)
-				((WeakJobThread) this.jobThreadPool.get(0)).get().cancel();
+				((JobThread) this.jobThreadPool.get(0)).cancel();
 		else if (requiredSize > actualSize)
 			// Increase pool.
 			while (actualSize++ < requiredSize) {
 				// Add thread to pool and start it running.
 				final JobThread thread = new JobThread(this, plan);
 				thread.start();
-				this.jobThreadPool.add(new WeakJobThread(thread));
+				this.jobThreadPool.add(thread);
 			}
-	}
-
-	private static class WeakJobThread {
-		private final WeakReference ref;
-
-		private WeakJobThread(final JobThread ref) {
-			this.ref = new WeakReference(ref);
-		}
-
-		private JobThread get() {
-			return (JobThread) this.ref.get();
-		}
 	}
 
 	private static class JobThread extends Thread {
@@ -267,12 +251,13 @@ public class JobThreadManager extends Thread {
 					}
 					this.currentSection = null;
 				}
-			} catch (final Exception e) {
+			} catch (final Throwable t) {
 				// Break out early and complain.
-				Log.error(e);
+				Log.error(t);
 			} finally {
 				Log.info("Thread " + this.sequence + " ending");
 				this.closeConnection();
+				this.manager.jobThreadPool.remove(this);
 			}
 		}
 
@@ -457,19 +442,12 @@ public class JobThreadManager extends Thread {
 								for (final Iterator j = this.manager.jobThreadPool
 										.iterator(); !hasUnusableSiblings
 										&& j.hasNext();) {
-									final WeakJobThread wjt = (WeakJobThread) j
-											.next();
-									final JobThread thread = (JobThread) wjt
-											.get();
-									if (thread != null) {
-										final String threadId = thread
-												.getCurrentSectionIdentifier();
-										hasUnusableSiblings = threadId != null
-												&& threadId.equals(sibling
-														.getIdentifier());
-
-									} else
-										j.remove();
+									final String threadId = ((JobThread) j
+											.next())
+											.getCurrentSectionIdentifier();
+									hasUnusableSiblings = threadId != null
+											&& threadId.equals(sibling
+													.getIdentifier());
 								}
 						}
 					}
