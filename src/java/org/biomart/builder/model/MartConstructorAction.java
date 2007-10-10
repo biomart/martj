@@ -337,6 +337,8 @@ public abstract class MartConstructorAction {
 
 		private String optTableName;
 
+		private int bigTable;
+
 		/**
 		 * Creates a new CreateOptimiser action.
 		 * 
@@ -383,6 +385,20 @@ public abstract class MartConstructorAction {
 		public void setOptTableName(final String optTableName) {
 			this.optTableName = optTableName;
 		}
+
+		/**
+		 * @return the bigTable
+		 */
+		public int getBigTable() {
+			return this.bigTable;
+		}
+
+		/**
+		 * @param bigTable the bigTable to set
+		 */
+		public void setBigTable(int bigTable) {
+			this.bigTable = bigTable;
+		}
 	}
 
 	/**
@@ -406,6 +422,8 @@ public abstract class MartConstructorAction {
 		private List rightSelectColumns;
 
 		private String resultTable;
+
+		private int bigTable;
 
 		/**
 		 * Creates a new LeftJoin action.
@@ -543,6 +561,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setRightTable(final String rightTable) {
 			this.rightTable = rightTable;
+		}
+
+		/**
+		 * @return the bigTable
+		 */
+		public int getBigTable() {
+			return this.bigTable;
+		}
+
+		/**
+		 * @param bigTable the bigTable to set
+		 */
+		public void setBigTable(int bigTable) {
+			this.bigTable = bigTable;
 		}
 	}
 
@@ -964,6 +996,8 @@ public abstract class MartConstructorAction {
 
 		private Collection keepCols;
 
+		private int bigTable;
+
 		/**
 		 * Creates a new Distinct action.
 		 * 
@@ -1041,6 +1075,20 @@ public abstract class MartConstructorAction {
 		public void setKeepCols(final Collection keepCols) {
 			this.keepCols = keepCols;
 		}
+
+		/**
+		 * @return the bigTable
+		 */
+		public int getBigTable() {
+			return this.bigTable;
+		}
+
+		/**
+		 * @param bigTable the bigTable to set
+		 */
+		public void setBigTable(int bigTable) {
+			this.bigTable = bigTable;
+		}
 	}
 
 	/**
@@ -1060,6 +1108,8 @@ public abstract class MartConstructorAction {
 		private RestrictedTableDefinition tableRestriction;
 
 		private final Map partitionRestrictions = new HashMap();
+
+		private int bigTable;
 
 		/**
 		 * Creates a new Select action.
@@ -1163,6 +1213,20 @@ public abstract class MartConstructorAction {
 				final RestrictedTableDefinition tableRestriction) {
 			this.tableRestriction = tableRestriction;
 		}
+
+		/**
+		 * @return the bigTable
+		 */
+		public int getBigTable() {
+			return this.bigTable;
+		}
+
+		/**
+		 * @param bigTable the bigTable to set
+		 */
+		public void setBigTable(int bigTable) {
+			this.bigTable = bigTable;
+		}
 	}
 
 	/**
@@ -1186,6 +1250,8 @@ public abstract class MartConstructorAction {
 		private String namingCol;
 
 		private String table;
+
+		private int bigTable;
 
 		/**
 		 * Creates a new InitialUnroll action.
@@ -1323,6 +1389,20 @@ public abstract class MartConstructorAction {
 		public void setUnrollPKCol(final String unrollPKCol) {
 			this.unrollPKCol = unrollPKCol;
 		}
+
+		/**
+		 * @return the bigTable
+		 */
+		public int getBigTable() {
+			return this.bigTable;
+		}
+
+		/**
+		 * @param bigTable the bigTable to set
+		 */
+		public void setBigTable(int bigTable) {
+			this.bigTable = bigTable;
+		}
 	}
 
 	/**
@@ -1350,6 +1430,8 @@ public abstract class MartConstructorAction {
 		private String namingCol;
 
 		private List parentCols;
+
+		private int bigTable;
 
 		/**
 		 * Creates a new ExpandUnroll action.
@@ -1516,6 +1598,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setParentCols(final List parentCols) {
 			this.parentCols = parentCols;
+		}
+
+		/**
+		 * @return the bigTable
+		 */
+		public int getBigTable() {
+			return this.bigTable;
+		}
+
+		/**
+		 * @param bigTable the bigTable to set
+		 */
+		public void setBigTable(int bigTable) {
+			this.bigTable = bigTable;
 		}
 	}
 

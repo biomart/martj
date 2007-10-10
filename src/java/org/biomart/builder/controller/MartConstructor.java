@@ -357,6 +357,7 @@ public interface MartConstructor {
 					this.issueListenerEvent(
 							MartConstructorListener.DATASET_STARTED,
 							partitionedDataSetName);
+					final Map bigParents = new HashMap();
 					for (final Iterator i = tablesToProcess.iterator(); i
 							.hasNext();) {
 						final DataSetTable dsTable = (DataSetTable) i.next();
@@ -373,7 +374,8 @@ public interface MartConstructor {
 									&& dmPta.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
 								if (!this.makeActionsForDatasetTable(
-										stepPercent, templateSchema,
+										bigParents, stepPercent,
+										templateSchema,
 										(String) schemaPartition.getKey(),
 										(String) schemaPartition.getValue(),
 										dsPta, dmPta, dataset, dsTable))
@@ -437,9 +439,9 @@ public interface MartConstructor {
 			return tablesToProcess;
 		}
 
-		private boolean makeActionsForDatasetTable(double stepPercent,
-				final Schema templateSchema, final String schemaPartition,
-				final String schemaPrefix,
+		private boolean makeActionsForDatasetTable(final Map bigParents,
+				double stepPercent, final Schema templateSchema,
+				final String schemaPartition, final String schemaPrefix,
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable) throws ListenerException,
@@ -453,6 +455,9 @@ public interface MartConstructor {
 			boolean requiresFinalLeftJoin = false;
 			boolean requiresDistinct = dsTable.isDistinctTable();
 			final Set droppedCols = new HashSet();
+			int bigness = dsTable.getType().equals(DataSetTableType.MAIN) ? 0
+					: ((Integer) bigParents.get(dsTable.getParent()))
+							.intValue();
 
 			// Skip immediately if not applicable to current schema partition.
 			if (!(schemaPartition == null
@@ -491,7 +496,7 @@ public interface MartConstructor {
 					this.doUnrollTable(templateSchema, schemaPartition,
 							schemaPrefix, dsPta, dmPta, dataset, dsTable,
 							(UnrollTable) tu, previousTempTable, tempTable,
-							droppedCols);
+							droppedCols, bigness);
 					requiresDistinct = true;
 				}
 				// Skip?
@@ -501,19 +506,23 @@ public interface MartConstructor {
 				else if (tu instanceof JoinTable) {
 					if (firstJoinRel == null)
 						firstJoinRel = ((JoinTable) tu).getSchemaRelation();
+					bigness = Math.max(bigness, ((JoinTable) tu).getTable()
+							.getBigTable(dataset, dsTable.getName()));
 					requiresFinalLeftJoin |= this.doJoinTable(templateSchema,
 							schemaPartition, schemaPrefix, dsPta, dmPta,
 							dataset, dsTable, (JoinTable) tu, firstJoinRel,
-							previousTempTable, tempTable, droppedCols);
+							previousTempTable, tempTable, droppedCols, bigness);
 				}
 
 				// Select-from?
-				else if (tu instanceof SelectFromTable)
+				else if (tu instanceof SelectFromTable) {
+					bigness = Math
+							.max(bigness, ((SelectFromTable) tu).getTable()
+									.getBigTable(dataset, dsTable.getName()));
 					this.doSelectFromTable(templateSchema, schemaPartition,
 							schemaPrefix, dsPta, dmPta, dataset, dsTable,
-							(SelectFromTable) tu, tempTable);
-
-				else
+							(SelectFromTable) tu, tempTable, bigness);
+				} else
 					throw new BioMartError();
 
 				if (previousTempTable != null) {
@@ -554,9 +563,11 @@ public interface MartConstructor {
 			if (requiresFinalLeftJoin
 					&& !dsTable.getType().equals(DataSetTableType.MAIN)) {
 				final String tempTable = tempName + this.tempNameCount++;
+				bigness = Math.max(bigness, ((Integer) bigParents.get(dsTable
+						.getParent())).intValue());
 				this.doParentLeftJoin(schemaPrefix, dsPta, dmPta, dataset,
 						dsTable, finalCombinedName, previousTempTable,
-						tempTable, droppedCols);
+						tempTable, droppedCols, bigness);
 				previousTempTable = tempTable;
 			}
 
@@ -582,7 +593,7 @@ public interface MartConstructor {
 					keepColNames.add(((DataSetColumn) i.next())
 							.getPartitionedName());
 				this.doDistinct(finalCombinedName, previousTempTable,
-						tempTable, keepColNames);
+						tempTable, keepColNames, bigness);
 				previousTempTable = tempTable;
 			} else if (!dropCols.isEmpty()) {
 				final DropColumns dropcol = new DropColumns(
@@ -639,7 +650,12 @@ public interface MartConstructor {
 						dsTable, oType, dsTable.getType().equals(
 								DataSetTableType.MAIN)
 								&& dataset.getDataSetOptimiserType().isTable(),
-						null);
+						null, bigness);
+
+			// Remember size for children.
+			bigParents.put(dsTable, new Integer(bigness));
+
+			// Return success.
 			return true;
 		}
 
@@ -648,8 +664,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final String finalCombinedName,
 				final String previousTempTable, final String tempTable,
-				final Set droppedCols) throws ListenerException,
-				PartitionException {
+				final Set droppedCols, final int bigness)
+				throws ListenerException, PartitionException {
 			// Work out the parent table.
 			final DataSetTable parent = dsTable.getParent();
 			// Work out what columns to take from each side.
@@ -693,6 +709,7 @@ public interface MartConstructor {
 			action.setLeftSelectColumns(leftSelectCols);
 			action.setRightSelectColumns(rightSelectCols);
 			action.setResultTable(tempTable);
+			action.setBigTable(bigness);
 			this.issueAction(action);
 			// Drop the old one.
 			final Drop drop = new Drop(this.datasetSchemaName,
@@ -703,7 +720,8 @@ public interface MartConstructor {
 
 		private void doDistinct(final String finalCombinedName,
 				final String previousTempTable, final String tempTable,
-				final Collection keepCols) throws ListenerException {
+				final Collection keepCols, final int bigness)
+				throws ListenerException {
 			// Make the join.
 			final Distinct action = new Distinct(this.datasetSchemaName,
 					finalCombinedName);
@@ -711,6 +729,7 @@ public interface MartConstructor {
 			action.setTable(previousTempTable);
 			action.setResultTable(tempTable);
 			action.setKeepCols(keepCols);
+			action.setBigTable(bigness);
 			this.issueAction(action);
 			// Drop the old one.
 			final Drop drop = new Drop(this.datasetSchemaName,
@@ -723,8 +742,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final DataSetOptimiserType oType,
-				final boolean createTable, final String copyDown)
-				throws ListenerException, PartitionException {
+				final boolean createTable, final String copyDown,
+				final int bigness) throws ListenerException, PartitionException {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
 			if (createTable) {
@@ -744,6 +763,7 @@ public interface MartConstructor {
 						this.datasetSchemaName, finalCombinedName);
 				create.setKeyColumns(keyCols);
 				create.setOptTableName(optTable);
+				create.setBigTable(bigness);
 				this.issueAction(create);
 
 				// Index the pk on the new table.
@@ -843,7 +863,7 @@ public interface MartConstructor {
 								DataSetTableType.MAIN_SUBCLASS))
 					this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
 							dsTable, oType, dataset.getDataSetOptimiserType()
-									.isTable(), optCol);
+									.isTable(), optCol, bigness);
 			}
 		}
 
@@ -852,13 +872,14 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final SelectFromTable stu,
-				final String tempTable) throws SQLException, ListenerException,
-				PartitionException {
+				final String tempTable, final int bigness) throws SQLException,
+				ListenerException, PartitionException {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
 			final Select action = new Select(this.datasetSchemaName,
 					finalCombinedName);
+			action.setBigTable(bigness);
 
 			// If this is a dimension, look up DM PT,
 			// otherwise if this is the main table, look up DS PT,
@@ -1000,7 +1021,7 @@ public interface MartConstructor {
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final JoinTable ljtu,
 				final Relation firstJoinRel, final String previousTempTable,
-				final String tempTable, final Set droppedCols)
+				final String tempTable, final Set droppedCols, final int bigness)
 				throws SQLException, ListenerException, PartitionException {
 
 			final boolean useLeftJoin = !dsTable.getType().equals(
@@ -1011,9 +1032,7 @@ public interface MartConstructor {
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);
 			action.setLeftJoin(useLeftJoin);
-			// Big table?
-			action.setBigTable(ljtu.getTable().getBigTable(dataset,
-					dsTable.getName()));
+			action.setBigTable(bigness);
 
 			PartitionTableApplication pta = null;
 			if (dsTable.getType().equals(DataSetTableType.DIMENSION)
@@ -1203,8 +1222,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final UnrollTable utu,
 				final String previousTempTable, final String tempTable,
-				final Set droppedCols) throws SQLException, ListenerException,
-				PartitionException, ConstructorException {
+				final Set droppedCols, final int bigness) throws SQLException,
+				ListenerException, PartitionException, ConstructorException {
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
@@ -1369,6 +1388,7 @@ public interface MartConstructor {
 			iaction.setNamingCol(utu.getDataSetColumnFor(utu.getNamingColumn())
 					.getPartitionedName());
 			iaction.setTable(tempTable);
+			iaction.setBigTable(bigness);
 			this.issueAction(iaction);
 			// Index FK of relation in new table.
 			Index index = new Index(this.datasetSchemaName, finalCombinedName);
@@ -1410,6 +1430,7 @@ public interface MartConstructor {
 				eaction.setUnrollIterationCol(unrollIterationColName);
 				eaction.setNamingCol(utu.getDataSetColumnFor(
 						utu.getNamingColumn()).getPartitionedName());
+				eaction.setBigTable(bigness);
 				this.issueAction(eaction);
 			}
 

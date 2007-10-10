@@ -80,6 +80,10 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(schemaName);
 		sb.append('.');
 		sb.append(action.getTable());
+		if (action.getBigTable() > 0) {
+			sb.append(" max_rows=");
+			sb.append(action.getBigTable());
+		}
 		sb.append(" as select parent.*, parent.");
 		sb.append(action.getUnrollPKCol());
 		sb.append(" as ");
@@ -111,7 +115,7 @@ public class MySQLDialect extends DatabaseDialect {
 	 */
 	public void doExpandUnroll(final ExpandUnroll action, final List statements)
 			throws Exception {
-		final String schemaName = action.getDataSetSchemaName();		
+		final String schemaName = action.getDataSetSchemaName();
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("insert into ");
@@ -130,7 +134,7 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(action.getUnrollIterationCol());
 		sb.append(") select distinct");
 		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
-			final String parentCol = (String)i.next();
+			final String parentCol = (String) i.next();
 			if (parentCol.equals(action.getUnrollFKCol()))
 				sb.append(" child.");
 			else
@@ -147,7 +151,7 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(" as ");
 		sb.append(action.getUnrollNameCol());
 		sb.append(", ");
-		sb.append(action.getUnrollIteration()+1);
+		sb.append(action.getUnrollIteration() + 1);
 		sb.append(" as ");
 		sb.append(action.getUnrollIterationCol());
 		sb.append(" from ");
@@ -178,7 +182,12 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(action.getSourceTable());
 		sb.append('_');
 		sb.append(action.getUnrollIteration());
-		sb.append("t as select distinct ");
+		sb.append('t');
+		if (action.getBigTable() > 0) {
+			sb.append(" max_rows=");
+			sb.append(action.getBigTable());
+		}
+		sb.append(" as select distinct ");
 		sb.append(action.getUnrollPKCol());
 		sb.append(',');
 		sb.append(action.getUnrollIDCol());
@@ -189,10 +198,10 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(" where ");
 		sb.append(action.getUnrollIterationCol());
 		sb.append('<');
-		sb.append(action.getUnrollIteration()+1);
-		
-		statements.add(sb.toString());		
-		
+		sb.append(action.getUnrollIteration() + 1);
+
+		statements.add(sb.toString());
+
 		sb.setLength(0);
 		sb.append("create index ");
 		sb.append(action.getSourceTable());
@@ -209,9 +218,9 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(',');
 		sb.append(action.getUnrollIDCol());
 		sb.append(')');
-		
+
 		statements.add(sb.toString());
-		
+
 		sb.setLength(0);
 		sb.append("delete from ");
 		sb.append(schemaName);
@@ -220,7 +229,7 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(" where ");
 		sb.append(action.getUnrollIterationCol());
 		sb.append('=');
-		sb.append(action.getUnrollIteration()+1);
+		sb.append(action.getUnrollIteration() + 1);
 		sb.append(" and (");
 		sb.append(action.getUnrollPKCol());
 		sb.append(',');
@@ -236,11 +245,11 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append('_');
 		sb.append(action.getUnrollIteration());
 		sb.append("t)");
-		
+
 		statements.add(sb.toString());
-		
+
 		sb.setLength(0);
-		
+
 		sb.append("drop table ");
 		sb.append(schemaName);
 		sb.append('.');
@@ -248,7 +257,7 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append('_');
 		sb.append(action.getUnrollIteration());
 		sb.append('t');
-		
+
 		statements.add(sb.toString());
 	}
 
@@ -292,8 +301,12 @@ public class MySQLDialect extends DatabaseDialect {
 		final String fromTableName = action.getTable();
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select ");
+		sb.append("create table " + createTableSchema + "." + createTableName);
+		if (action.getBigTable() > 0) {
+			sb.append(" max_rows=");
+			sb.append(action.getBigTable());
+		}
+		sb.append(" as select ");
 		for (final Iterator i = action.getSelectColumns().entrySet().iterator(); i
 				.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
@@ -354,8 +367,12 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + createTableSchema + "." + createTableName
-				+ " as select distinct " + cols + " from " + fromTableSchema
+		sb.append("create table " + createTableSchema + "." + createTableName);
+		if (action.getBigTable() > 0) {
+			sb.append(" max_rows=");
+			sb.append(action.getBigTable());
+		}
+		sb.append(" as select distinct " + cols + " from " + fromTableSchema
 				+ "." + fromTableName);
 
 		statements.add(sb.toString());
@@ -468,7 +485,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."
 				+ mergeTableName);
-		if (action.getBigTable()>0) {
+		if (action.getBigTable() > 0) {
 			sb.append(" max_rows=");
 			sb.append(action.getBigTable());
 		}
@@ -550,7 +567,12 @@ public class MySQLDialect extends DatabaseDialect {
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."
-				+ mergeTableName + " as select ");
+				+ mergeTableName);
+		if (action.getBigTable() > 0) {
+			sb.append(" max_rows=");
+			sb.append(action.getBigTable());
+		}
+		sb.append(" as select ");
 		for (final Iterator i = action.getLeftSelectColumns().iterator(); i
 				.hasNext();) {
 			final String entry = (String) i.next();
@@ -639,8 +661,12 @@ public class MySQLDialect extends DatabaseDialect {
 		this.checkTableName(optTableName);
 
 		final StringBuffer sb = new StringBuffer();
-		sb.append("create table " + schemaName + "." + optTableName
-				+ " as select ");
+		sb.append("create table " + schemaName + "." + optTableName);
+		if (action.getBigTable() > 0) {
+			sb.append(" max_rows=");
+			sb.append(action.getBigTable());
+		}
+		sb.append(" as select ");
 		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext();) {
 			sb.append((String) i.next());
 			if (i.hasNext())
