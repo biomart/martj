@@ -1209,8 +1209,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				for (int p = 0; p < otherFilters.length; p++){
 					String otherDS = otherFilters[p].split("\\.")[0];
 					String otherF = otherFilters[p].split("\\.")[1];
-					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherDS,"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
-					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherDS,otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
+					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherDS,"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[1]);  
+					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherDS,otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[1]));
 					if (otherDataset.containsFilterDescription(pointerFilter))
 						fd2 = otherDataset.getFilterDescriptionByInternalName(pointerFilter);
 					if (fd2 != null){
@@ -1257,8 +1257,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				for (int p = 0; p < otherFilters.length; p++){
 					String otherDS = otherFilters[p].split("\\.")[0];
 					String otherF = otherFilters[p].split("\\.")[1];
-					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherDS,"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);  
-					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherDS,otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
+					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(null,otherDS,"",MartEditor.getDatabaseDatasetConfigUtils().getSchema()[1]);  
+					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetID(null,otherDS,otherDataset.getDatasetID(),MartEditor.getDatabaseDatasetConfigUtils().getSchema()[1]));
 					if (otherDataset.containsFilterDescription(otherF))
 							fd2 = otherDataset.getFilterDescriptionByInternalName(otherF);
 					if (fd2 != null){
@@ -1294,7 +1294,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			//String opName = op.getDisplayName();// incase displayName comes from another co
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 			pa.addOptions(
-				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, dsConfig, joinKey, ourConf.getDataset(), field, opName, orderSQL,MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0],pushColForDisplay));
+				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, dsConfig, joinKey, ourConf.getDataset(), field, opName, orderSQL,MartEditor.getDatabaseDatasetConfigUtils().getSchema()[1],pushColForDisplay));
 
 			if (pa.getOptions().length > 200) {				
 				JOptionPane.showMessageDialog(null, "Many options have been found ("+pa.getOptions().length+" of them). This may affect the performance of MartEditor and MartView.");
