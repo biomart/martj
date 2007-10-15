@@ -208,14 +208,17 @@ public class SchemaContext implements DiagramContext {
 			final Table table = (Table) object;
 
 			// Fade out all ignored and/or unreachable tables.
-			if (!table.isMasked() && table.existsForPartition(schemaPrefix))
-				return false;
-			else
+			if (table.isMasked() || !table.existsForPartition(schemaPrefix))
+				return true;
+			else {
 				for (final Iterator i = table.getRelations().iterator(); i
 						.hasNext();)
 					if (!((Relation) i.next()).getStatus().equals(
 							ComponentStatus.INFERRED_INCORRECT))
 						return false;
+				// If get here, it's unreachable.
+				return true;
+			}
 		}
 
 		// Relations get pretty colours if they are incorrect or handmade.
