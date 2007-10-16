@@ -158,9 +158,9 @@
 			<column id="139" name="dna_align_feature_id" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="140" name="seq_region_id" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="141" name="hit_end" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="142" name="score" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="143" name="perc_ident" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="144" name="hit_strand" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="142" name="perc_ident" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="143" name="hit_strand" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="144" name="score" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<foreignKey id="145" columnIds="131" status="INFERRED" visibleModified="false"/>
 			<foreignKey id="146" columnIds="140" status="INFERRED" visibleModified="false"/>
 			<primaryKey id="147" columnIds="139" status="INFERRED" visibleModified="false"/>
@@ -237,9 +237,9 @@
 			<column id="210" name="db_file" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="211" name="program_file" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="212" name="program_version" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="213" name="program" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="214" name="module" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="215" name="gff_feature" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="213" name="module" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="214" name="gff_feature" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="215" name="program" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<primaryKey id="216" columnIds="202" status="INFERRED" visibleModified="false"/>
 		</table>
 		<table id="217" name="density_type" ignore="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur">
@@ -1804,6 +1804,8 @@
 		<maskedTable tableKey="variation__individual_genotype_multiple_bp"/>
 		<renamedTable tableKey="variation__individual_genotype_multiple_bp" newName="individual_genotype_multiple_bp"/>
 		<renamedTable tableKey="variation__strain_gtype_final" newName="polymorphic_strain"/>
+		<noFinalLeftJoin tableKey="variation__strain_gtype_final"/>
+		<bigTable tableKey="variation__strain_gtype_final" tableId="1555" bigness="100000000"/>
 		<renamedTable tableKey="variation__variation_synonym" newName="variation_synonym"/>
 		<renamedTable tableKey="variation__variation_feature" newName="variation_feature"/>
 		<maskedRelation tableKey="variation__variation_feature" relationId="1626"/>
@@ -1814,6 +1816,7 @@
 		<maskedRelation tableKey="variation__variation_feature" relationId="1659"/>
 		<maskedRelation tableKey="variation__variation_feature" relationId="1667"/>
 		<renamedTable tableKey="variation__tmp_individual_genotype_single_bp" newName="snp_strain"/>
+		<explainHideMasked tableKey="variation__tmp_individual_genotype_single_bp"/>
 		<distinctRows tableKey="variation__tmp_individual_genotype_single_bp"/>
 		<maskedColumn tableKey="variation__tmp_individual_genotype_single_bp" colKey="gender"/>
 		<maskedColumn tableKey="variation__tmp_individual_genotype_single_bp" colKey="mother_individual_sample_id"/>
