@@ -561,7 +561,8 @@ public interface MartConstructor {
 			// Do a final left-join against the parent to reinstate
 			// any potentially missing rows.
 			if (requiresFinalLeftJoin
-					&& !dsTable.getType().equals(DataSetTableType.MAIN)) {
+					&& !dsTable.getType().equals(DataSetTableType.MAIN)
+					&& !dsTable.isNoFinalLeftJoin()) {
 				final String tempTable = tempName + this.tempNameCount++;
 				bigness = Math.max(bigness, ((Integer) bigParents.get(dsTable
 						.getParent())).intValue());
@@ -1224,6 +1225,19 @@ public interface MartConstructor {
 				final String previousTempTable, final String tempTable,
 				final Set droppedCols, final int bigness) throws SQLException,
 				ListenerException, PartitionException, ConstructorException {
+
+	// TODO
+	// Set parentRel = utu.getRelation, childRel = otherRel
+	// Replace references to utu.getRelation with parentRel
+	// Replace references to otherRel with childRel
+	// If 'inverted sense' flag set on UnrollDefinition, swap
+	// the two around. Flag is set on definition by wizard, which
+	// merges child rel instead of parent rel and unrolls parent rel
+	// when chosen. This swap action restores this - so that the
+	// child records are merged but the correct path of unrolling
+	// is still followed.
+	// Proceed as normal.
+
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);

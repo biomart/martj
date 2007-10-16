@@ -2860,6 +2860,7 @@ public class DataSet extends Schema {
 			this.pcs.addPropertyChangeListener("tableRename", listener);
 			this.pcs.addPropertyChangeListener("dimensionMasked", listener);
 			this.pcs.addPropertyChangeListener("distinctTable", listener);
+			this.pcs.addPropertyChangeListener("noFinalLeftJoin", listener);
 			this.pcs.addPropertyChangeListener("partitionTableApplication",
 					listener);
 		}
@@ -3211,6 +3212,33 @@ public class DataSet extends Schema {
 				this.getMods("dimensionMasked").remove(this.getName());
 			this.pcs.firePropertyChange("dimensionMasked", oldValue,
 					dimensionMasked);
+		}
+
+		/**
+		 * Is this a no-left-join table?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isNoFinalLeftJoin() {
+			return this.getMods("noFinalLeftJoin").containsKey(this.getName());
+		}
+
+		/**
+		 * No-left-join this table.
+		 * 
+		 * @param noFinalLeftJoin
+		 *            <tt>true</tt> to make no-left-join.
+		 */
+		public void setNoFinalLeftJoin(final boolean noFinalLeftJoin) {
+			final boolean oldValue = this.isNoFinalLeftJoin();
+			if (noFinalLeftJoin == oldValue)
+				return;
+			if (noFinalLeftJoin)
+				this.getMods("noFinalLeftJoin").put(this.getName(), null);
+			else
+				this.getMods("noFinalLeftJoin").remove(this.getName());
+			this.pcs.firePropertyChange("noFinalLeftJoin", oldValue,
+					noFinalLeftJoin);
 		}
 
 		/**

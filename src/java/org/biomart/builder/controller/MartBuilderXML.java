@@ -977,6 +977,13 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					this.closeElement("distinctRows", xmlWriter);
 				}
+				// No-left-join table.
+				if (dsTable.isNoFinalLeftJoin()) {
+					this.openElement("noFinalLeftJoin", xmlWriter);
+					this.writeAttribute("tableKey", dsTable.getName(),
+							xmlWriter);
+					this.closeElement("noFinalLeftJoin", xmlWriter);
+				}
 				// Write out dscol mods from each table col.
 				for (final Iterator j = dsTable.getColumns().values()
 						.iterator(); j.hasNext();) {
@@ -1792,6 +1799,26 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Vis-mod it.
 				w.getMods(key, "visibleModified").put(key, null);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// No-left-join Table (inside dataset).
+		else if ("noFinalLeftJoin".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("noFinalLeftJoinOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Distinct it.
+				w.getMods(tableKey, "noFinalLeftJoin").put(tableKey, null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

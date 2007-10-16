@@ -621,6 +621,36 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Requests that a table be made un-no-left-join.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to make un-no-left-join.
+	 */
+	public void requestFinalLeftJoinTable(final DataSet ds,
+			final DataSetTable dst) {
+		Transaction.start(false);
+		dst.setNoFinalLeftJoin(false);
+		Transaction.end();
+	}
+
+	/**
+	 * Requests that a table be made no-left-join.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to make no-left-join.
+	 */
+	public void requestNoFinalLeftJoinTable(final DataSet ds,
+			final DataSetTable dst) {
+		Transaction.start(false);
+		dst.setNoFinalLeftJoin(true);
+		Transaction.end();
+	}
+
+	/**
 	 * Requests that a dimension be masked.
 	 * 
 	 * @param ds

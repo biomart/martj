@@ -513,6 +513,30 @@ public class DataSetContext extends SchemaContext {
 			// Dimension tables have their own options.
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
 
+				// The table can be no-left-joined by using this option.
+				final JCheckBoxMenuItem noLeftJoin = new JCheckBoxMenuItem(Resources
+						.get("noFinalLeftJoinTableTitle"));
+				noLeftJoin.setMnemonic(Resources.get("noFinalLeftJoinTableMnemonic").charAt(
+						0));
+				noLeftJoin.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						if (noLeftJoin.isSelected())
+							DataSetContext.this
+									.getMartTab()
+									.getDataSetTabSet()
+									.requestNoFinalLeftJoinTable(
+											DataSetContext.this.getDataSet(), table);
+						else
+							DataSetContext.this
+									.getMartTab()
+									.getDataSetTabSet()
+									.requestFinalLeftJoinTable(
+											DataSetContext.this.getDataSet(), table);
+					}
+				});
+				contextMenu.add(noLeftJoin);
+				noLeftJoin.setSelected(table.isNoFinalLeftJoin());
+
 				// The dimension can be merged by using this option. This
 				// affects all dimensions based on this relation.
 				final JCheckBoxMenuItem mergeDM = new JCheckBoxMenuItem(
