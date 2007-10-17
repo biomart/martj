@@ -93,8 +93,8 @@ public abstract class JobTest implements Serializable {
 		this.exception = null;
 		this.stopped = false;
 		// Delegate and start a runnable.
-		new Runnable() {
-			public void run() {
+		new Thread() {
+		    public void run() { 
 				try {
 					JobTest.this.runTest(JobTest.this.host, JobTest.this.port);
 				} catch (final SQLException se) {
@@ -105,7 +105,7 @@ public abstract class JobTest implements Serializable {
 				// and update report ready flag.
 				JobTest.this.finished = true;
 			}
-		}.run();
+		}.start();
 	}
 
 	/**

@@ -292,6 +292,7 @@ public abstract class JobTestPanel extends JPanel {
 								JobTestPanel.this.report
 										.setBackground(failure != null ? JobTestPanel.FAILED
 												: JobTestPanel.OK);
+								JobTestPanel.this.started = false;
 								Log.debug("Test ended: "
 										+ JobTestPanel.this.getDisplayName());
 							}

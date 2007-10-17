@@ -86,7 +86,8 @@ public class EmptyTableTest extends JobTest {
 
 		// For each table...
 		boolean failed = false;
-		for (final Iterator i = tables.iterator(); i.hasNext();) {
+		for (final Iterator i = tables.iterator(); i.hasNext()
+				&& !this.isTestStopped();) {
 			final String dbTableName = (String) i.next();
 			Log.debug("Testing " + dbTableName);
 			// List all columns.
@@ -112,9 +113,11 @@ public class EmptyTableTest extends JobTest {
 						.intValue() != DatabaseMetaData.columnNoNulls;
 				if (dbTblColName.endsWith(Resources.get("keySuffix")))
 					keyCols.add(dbTblColName);
-				else
-					(nullable ? nullableNonKeyCols : nonKeyCols)
-							.add(dbTblColName);
+				else {
+					nonKeyCols.add(dbTblColName);
+					if (nullable)
+						nullableNonKeyCols.add(dbTblColName);
+				}
 			}
 
 			// Construct SQL to count all rows.
@@ -156,7 +159,8 @@ public class EmptyTableTest extends JobTest {
 					sql.append(dbTableName);
 					sql.append(" where not (");
 					for (final Iterator j = nullableNonKeyCols.iterator(); j
-							.hasNext();) {
+							.hasNext()
+							&& !this.isTestStopped();) {
 						final String dbColName = (String) j.next();
 						sql.append(dbColName);
 						sql.append(" is null");
