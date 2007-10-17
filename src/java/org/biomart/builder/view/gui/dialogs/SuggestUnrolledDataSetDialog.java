@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -61,6 +62,8 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 	private final JComboBox nrChildIDColumn;
 
 	private final JComboBox nNamingColumn;
+
+	private final JCheckBox reversed;
 
 	private boolean cancelled = true;
 
@@ -112,6 +115,7 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 		this.nrTable = new JComboBox();
 		this.nrParentIDColumn = new JComboBox();
 		this.nrChildIDColumn = new JComboBox();
+		this.reversed = new JCheckBox(Resources.get("reversedLabel"));
 		// Add listener to update parent and child columns.
 		this.nrTable.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
@@ -202,6 +206,8 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 		label = new JLabel(Resources.get("nrChildIDColumnLabel"));
 		content.add(label, labelConstraints);
 		content.add(this.nrChildIDColumn, fieldConstraints);
+		content.add(new JLabel(), labelConstraints);
+		content.add(this.reversed, fieldConstraints);
 
 		// Add the buttons.
 		final JButton cancel = new JButton(Resources.get("cancelButton"));
@@ -261,6 +267,14 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 	 */
 	public Table getNTable() {
 		return (Table) this.nTable.getSelectedItem();
+	}
+
+	/**
+	 * 
+	 * @return the status of the reversed checkbox.
+	 */
+	public boolean isReversed() {
+		return this.reversed.isSelected();
 	}
 
 	/**

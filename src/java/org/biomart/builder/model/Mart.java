@@ -44,6 +44,7 @@ import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.DataModelException;
 import org.biomart.common.resources.Log;
@@ -626,8 +627,7 @@ public class Mart implements TransactionListener {
 	 */
 	public Collection getPartitionTables() {
 		final List tbls = new ArrayList();
-		for (final Iterator i = this.datasets.values().iterator(); i
-				.hasNext();) {
+		for (final Iterator i = this.datasets.values().iterator(); i.hasNext();) {
 			final DataSet ds = (DataSet) i.next();
 			if (ds.isPartitionTable())
 				tbls.add(ds.asPartitionTable());
@@ -1046,6 +1046,10 @@ public class Mart implements TransactionListener {
 	 *            the ID of the parent term in the relationship.
 	 * @param nrChildIDCol
 	 *            the ID of the child term in the relationship.
+	 * @param reversed
+	 *            <tt>true</tt> if the unrolling goes in the opposite sense of
+	 *            the data in the table, e.g. the table goes parent to child but
+	 *            we want to unroll child to parent.
 	 * @return the resulting dataset.
 	 * @throws SQLException
 	 *             if there is any problem talking to the source database whilst
@@ -1059,9 +1063,9 @@ public class Mart implements TransactionListener {
 	 */
 	public DataSet suggestUnrolledDataSets(final Table nTable,
 			final Column nIDCol, final Column nNamingCol, final Table nrTable,
-			final Column nrParentIDCol, final Column nrChildIDCol)
-			throws SQLException, DataModelException, AssociationException,
-			ValidationException {
+			final Column nrParentIDCol, final Column nrChildIDCol,
+			final boolean reversed) throws SQLException, DataModelException,
+			AssociationException, ValidationException {
 		// Create PK on nTable.nIDCol (or reuse).
 		PrimaryKey pk = new PrimaryKey(new Column[] { nIDCol });
 		nTable.setPrimaryKey(pk);
@@ -1145,6 +1149,13 @@ public class Mart implements TransactionListener {
 			childRel.setStatus(ComponentStatus.HANDMADE);
 		}
 
+		// Now swap parent and child if reversed.
+		if (reversed) {
+			final Relation otherRel = parentRel;
+			parentRel = childRel;
+			childRel = otherRel;
+		}
+		
 		// Create a simple dataset based on the selected table.
 		final DataSet ds = new DataSet(this, nTable, nTable.getName());
 		ds.synchronise(); // Must do now in order to locate dimensions.
@@ -1157,7 +1168,11 @@ public class Mart implements TransactionListener {
 				if (dst.getFocusRelation().equals(parentRel))
 					dst.getFocusRelation().setMergeRelation(ds, true);
 				else if (dst.getFocusRelation().equals(childRel))
-					dst.getFocusRelation().setUnrolledRelation(ds, nNamingCol);
+					dst.getFocusRelation()
+							.setUnrolledRelation(
+									ds,
+									new UnrolledRelationDefinition(nNamingCol,
+											reversed));
 				else
 					dst.setDimensionMasked(true);
 		}

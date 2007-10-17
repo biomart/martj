@@ -989,41 +989,6 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	/**
-	 * Is this relation unrolled?
-	 * 
-	 * @param dataset
-	 *            the dataset to check for.
-	 * @return the name column to use if it is, null otherwise.
-	 */
-	public Column getUnrolledRelation(final DataSet dataset) {
-		return (Column) this.getMods(dataset, null).get("unrolledRelation");
-	}
-
-	/**
-	 * Unroll this relation.
-	 * 
-	 * @param dataset
-	 *            the dataset to set for.
-	 * @param nameColumn
-	 *            the naming column to use - if null, it undoes it.
-	 */
-	public void setUnrolledRelation(final DataSet dataset,
-			final Column nameColumn) {
-		final Column oldValue = this.getUnrolledRelation(dataset);
-		if (nameColumn == oldValue || oldValue != null
-				&& oldValue.equals(nameColumn))
-			return;
-
-		if (nameColumn != null) {
-			this.getMods(dataset, null).put("unrolledRelation", nameColumn);
-			this.pcs.firePropertyChange("unrolledRelation", null, dataset);
-		} else {
-			this.getMods(dataset, null).remove("unrolledRelation");
-			this.pcs.firePropertyChange("unrolledRelation", dataset, null);
-		}
-	}
-
-	/**
 	 * Is this relation restricted, anywhere (regardless of iteration)?
 	 * 
 	 * @param dataset
@@ -1171,6 +1136,49 @@ public class Relation implements Comparable, TransactionListener {
 				((Map) this.getMods(dataset, tableKey).get("restrictRelation"))
 						.remove(new Integer(n));
 			this.pcs.firePropertyChange("restrictRelation", tableKey, null);
+		}
+	}
+
+	/**
+	 * Is this relation unrolled?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
+	 * @return the def to use if it is, null otherwise.
+	 */
+	public UnrolledRelationDefinition getUnrolledRelation(final DataSet dataset) {
+		return (UnrolledRelationDefinition) this.getMods(dataset, null).get(
+				"unrolledRelation");
+	}
+
+	/**
+	 * Unroll this relation.
+	 * 
+	 * @param dataset
+	 *            the dataset to set for.
+	 * @param def
+	 *            the definition to set - if null, it undoes it.
+	 */
+	public void setUnrolledRelation(final DataSet dataset,
+			final UnrolledRelationDefinition def) {
+		final UnrolledRelationDefinition oldValue = this
+				.getUnrolledRelation(dataset);
+		if (def == oldValue || oldValue != null && oldValue.equals(def))
+			return;
+
+		if (def != null) {
+			this.getMods(dataset, null).put("unrolledRelation", def);
+			def.addPropertyChangeListener("directModified",
+					new PropertyChangeListener() {
+						public void propertyChange(final PropertyChangeEvent e) {
+							Relation.this.pcs.firePropertyChange(
+									"unrolledRelation", null, dataset);
+						}
+					});
+			this.pcs.firePropertyChange("unrolledRelation", null, dataset);
+		} else {
+			this.getMods(dataset, null).remove("unrolledRelation");
+			this.pcs.firePropertyChange("unrolledRelation", dataset, null);
 		}
 	}
 
@@ -1574,6 +1582,180 @@ public class Relation implements Comparable, TransactionListener {
 			final boolean oldValue = this.parallel;
 			this.parallel = parallel;
 			this.pcs.firePropertyChange("parallel", oldValue, parallel);
+		}
+	}
+
+	/**
+	 * Defines an unrolled relation.
+	 */
+	public static class UnrolledRelationDefinition implements
+			TransactionListener {
+		private static final long serialVersionUID = 1L;
+
+		private Column nameColumn;
+
+		private boolean reversed;
+
+		private boolean directModified = false;
+
+		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+				this);
+
+		/**
+		 * This constructor gives the unrolled relation a name column and a flag
+		 * indicating whether to reverse the sense of the unrolling.
+		 * 
+		 * @param nameColumn
+		 *            the column to name each unrolled record with.
+		 * @param reversed
+		 *            whether this is a reversed (<tt>true</tt>) unrolling.
+		 */
+		public UnrolledRelationDefinition(final Column nameColumn,
+				final boolean reversed) {
+			// Remember the settings.
+			this.nameColumn = nameColumn;
+			this.reversed = reversed;
+
+			Transaction.addTransactionListener(this);
+
+			final PropertyChangeListener listener = new PropertyChangeListener() {
+				public void propertyChange(final PropertyChangeEvent e) {
+					UnrolledRelationDefinition.this.setDirectModified(true);
+				}
+			};
+			this.pcs.addPropertyChangeListener("nameColumn", listener);
+			this.pcs.addPropertyChangeListener("reversed", listener);
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(property, listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(listener);
+		}
+
+		/**
+		 * Removes a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to remove.
+		 */
+		public void removePropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.removePropertyChangeListener(property, listener);
+		}
+
+		public boolean isDirectModified() {
+			return this.directModified;
+		}
+
+		public void setDirectModified(final boolean modified) {
+			if (modified == this.directModified)
+				return;
+			final boolean oldValue = this.directModified;
+			this.directModified = modified;
+			this.pcs.firePropertyChange("directModified", oldValue, modified);
+		}
+
+		public boolean isVisibleModified() {
+			return false;
+		}
+
+		public void setVisibleModified(final boolean modified) {
+			// Ignore, for now.
+		}
+
+		public void transactionResetVisibleModified() {
+			// Ignore, for now.
+		}
+
+		public void transactionResetDirectModified() {
+			this.directModified = false;
+		}
+
+		public void transactionStarted(final TransactionEvent evt) {
+			// Don't really care for now.
+		}
+
+		public void transactionEnded(final TransactionEvent evt) {
+			// Don't really care for now.
+		}
+
+		/**
+		 * Get the name column of this unrolled relation.
+		 * 
+		 * @return the column.
+		 */
+		public Column getNameColumn() {
+			return this.nameColumn;
+		}
+
+		/**
+		 * Set the name column of this unrolled relation.
+		 * 
+		 * @param nameColumn
+		 *            the column.
+		 */
+		public void setNameColumn(final Column nameColumn) {
+			final Column oldValue = this.nameColumn;
+			if (nameColumn == oldValue
+					|| (oldValue != null && oldValue.equals(nameColumn)))
+				return;
+			this.nameColumn = nameColumn;
+			this.pcs.firePropertyChange("nameColumn", oldValue, nameColumn);
+		}
+
+		/**
+		 * Is this unrolled relation reversed?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isReversed() {
+			return this.reversed;
+		}
+
+		/**
+		 * Is this unrolled relation reversed?
+		 * 
+		 * @param reversed
+		 *            <tt>true</tt> if it is.
+		 */
+		public void setReversed(final boolean reversed) {
+			if (reversed == this.reversed)
+				return;
+			final boolean oldValue = this.reversed;
+			this.reversed = reversed;
+			this.pcs.firePropertyChange("reversed", oldValue, reversed);
 		}
 	}
 

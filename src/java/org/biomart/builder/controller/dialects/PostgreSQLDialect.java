@@ -115,6 +115,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
 
+		final boolean reversed = action.isReversed();
+		
 		final StringBuffer sb = new StringBuffer();
 		sb.append("insert into ");
 		sb.append(schemaName);
@@ -132,24 +134,35 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sb.append(action.getUnrollIterationCol());
 		sb.append(") select distinct");
 		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
-			final String parentCol = (String)i.next();
+			final String parentCol = (String) i.next();
+			if (reversed) {
+				if (parentCol.equals(action.getUnrollPKCol())) {
+					sb.append(" child.");
+					sb.append(action.getUnrollFKCol());
+				}
+				else {
+					sb.append(" parent.");
+				sb.append(parentCol);
+				}
+			} else {			
 			if (parentCol.equals(action.getUnrollFKCol()))
 				sb.append(" child.");
 			else
 				sb.append(" parent.");
 			sb.append(parentCol);
+			}
 			sb.append(',');
 		}
 		sb.append(" child.");
-		sb.append(action.getUnrollPKCol());
+		sb.append(reversed?action.getUnrollIDCol():action.getUnrollPKCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollIDCol());
 		sb.append(", child.");
-		sb.append(action.getNamingCol());
+		sb.append(reversed?action.getUnrollNameCol():action.getNamingCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollNameCol());
 		sb.append(", ");
-		sb.append(action.getUnrollIteration()+1);
+		sb.append(action.getUnrollIteration() + 1);
 		sb.append(" as ");
 		sb.append(action.getUnrollIterationCol());
 		sb.append(" from ");
@@ -161,9 +174,9 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sb.append('.');
 		sb.append(action.getSourceTable());
 		sb.append(" as child on parent.");
-		sb.append(action.getUnrollFKCol());
+		sb.append(reversed?action.getUnrollPKCol():action.getUnrollFKCol());
 		sb.append("=child.");
-		sb.append(action.getUnrollPKCol());
+		sb.append(reversed?action.getUnrollFKCol():action.getUnrollPKCol());
 		sb.append(" and parent.");
 		sb.append(action.getUnrollIterationCol());
 		sb.append('=');

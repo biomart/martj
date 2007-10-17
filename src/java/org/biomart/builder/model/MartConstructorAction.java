@@ -1432,6 +1432,8 @@ public abstract class MartConstructorAction {
 		private List parentCols;
 
 		private int bigTable;
+		
+		private boolean reversed;
 
 		/**
 		 * Creates a new ExpandUnroll action.
@@ -1612,6 +1614,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setBigTable(int bigTable) {
 			this.bigTable = bigTable;
+		}
+
+		/**
+		 * @return the reversed
+		 */
+		public boolean isReversed() {
+			return this.reversed;
+		}
+
+		/**
+		 * @param reversed the reversed to set
+		 */
+		public void setReversed(boolean reversed) {
+			this.reversed = reversed;
 		}
 	}
 

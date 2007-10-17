@@ -55,6 +55,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
 import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.builder.model.Table.RestrictedTableDefinition;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.AllDataSetsDiagram;
@@ -819,7 +820,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dim) {
 		// Work out if it is already directional.
 		final Relation relation = dim.getFocusRelation();
-		final Column def = relation.getUnrolledRelation(ds);
+		UnrolledRelationDefinition def = relation.getUnrolledRelation(ds);
 
 		try {
 			Relation otherRel = null;
@@ -846,16 +847,19 @@ public class DataSetTabSet extends JTabbedPane {
 				relation);
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
-		final Column newDef = dialog.getChosenColumn();
-		dialog.dispose();
-
-		// Skip altogether if no change.
-		if (newDef == def)
-			return;
-
-		Transaction.start(false);
-		relation.setUnrolledRelation(ds, newDef);
-		Transaction.end();
+		try {
+			Transaction.start(false);
+			if (def != null) {
+				def.setNameColumn(dialog.getChosenColumn());
+				def.setReversed(dialog.isReversed());
+			} else
+				relation.setUnrolledRelation(ds,
+						new UnrolledRelationDefinition(
+								dialog.getChosenColumn(), dialog.isReversed()));
+			dialog.dispose();
+		} finally {
+			Transaction.end();
+		}
 	}
 
 	/**
@@ -1605,10 +1609,11 @@ public class DataSetTabSet extends JTabbedPane {
 			final Table nrTable = dialog.getNRTable();
 			final Column nrParentIDCol = dialog.getNRParentIDColumn();
 			final Column nrChildIDCol = dialog.getNRChildIDColumn();
+			final boolean reversed = dialog.isReversed();
 			Transaction.start(false);
 			final DataSet ds = this.getMartTab().getMart()
 					.suggestUnrolledDataSets(nTable, nIDCol, nNamingCol,
-							nrTable, nrParentIDCol, nrChildIDCol);
+							nrTable, nrParentIDCol, nrChildIDCol, reversed);
 			this.getMartTab().getMart().getDataSets().put(ds.getOriginalName(),
 					ds);
 		} catch (final Throwable t) {

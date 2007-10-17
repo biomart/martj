@@ -69,6 +69,7 @@ import org.biomart.builder.model.PartitionTable.PartitionTableApplication.Partit
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
 import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.builder.model.Schema.JDBCSchema;
 import org.biomart.builder.model.Table.RestrictedTableDefinition;
 import org.biomart.common.exceptions.AssociationException;
@@ -820,13 +821,17 @@ public class MartBuilderXML extends DefaultHandler {
 
 					// Unrolled relations.
 					if (r.getUnrolledRelation(ds) != null) {
+						final UnrolledRelationDefinition def = r
+								.getUnrolledRelation(ds);
 						this.openElement("unrolledRelation", xmlWriter);
 						this.writeAttribute("relationId",
 								(String) this.reverseMappedObjects.get(r),
 								xmlWriter);
 						this.writeAttribute("columnId",
-								(String) this.reverseMappedObjects.get(r
-										.getUnrolledRelation(ds)), xmlWriter);
+								(String) this.reverseMappedObjects.get(def
+										.getNameColumn()), xmlWriter);
+						this.writeAttribute("reversed", "" + def.isReversed(),
+								xmlWriter);
 						this.closeElement("unrolledRelation", xmlWriter);
 					}
 
@@ -1942,10 +1947,13 @@ public class MartBuilderXML extends DefaultHandler {
 						.get(attributes.get("relationId"));
 				final Column col = (Column) this.mappedObjects.get(attributes
 						.get("columnId"));
+				final boolean reversed = Boolean.valueOf(
+						(String) attributes.get("reversed")).booleanValue();
 
 				// Unroll it.
 				if (rel != null && col != null)
-					rel.setUnrolledRelation(w, col);
+					rel.setUnrolledRelation(w, new UnrolledRelationDefinition(
+							col, reversed));
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

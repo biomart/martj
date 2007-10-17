@@ -116,6 +116,8 @@ public class MySQLDialect extends DatabaseDialect {
 	public void doExpandUnroll(final ExpandUnroll action, final List statements)
 			throws Exception {
 		final String schemaName = action.getDataSetSchemaName();
+		
+		final boolean reversed = action.isReversed();
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("insert into ");
@@ -135,19 +137,30 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append(") select distinct");
 		for (final Iterator i = action.getParentCols().iterator(); i.hasNext();) {
 			final String parentCol = (String) i.next();
+			if (reversed) {
+				if (parentCol.equals(action.getUnrollPKCol())) {
+					sb.append(" child.");
+					sb.append(action.getUnrollFKCol());
+				}
+				else {
+					sb.append(" parent.");
+				sb.append(parentCol);
+				}
+			} else {			
 			if (parentCol.equals(action.getUnrollFKCol()))
 				sb.append(" child.");
 			else
 				sb.append(" parent.");
 			sb.append(parentCol);
+			}
 			sb.append(',');
 		}
 		sb.append(" child.");
-		sb.append(action.getUnrollPKCol());
+		sb.append(reversed?action.getUnrollIDCol():action.getUnrollPKCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollIDCol());
 		sb.append(", child.");
-		sb.append(action.getNamingCol());
+		sb.append(reversed?action.getUnrollNameCol():action.getNamingCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollNameCol());
 		sb.append(", ");
@@ -163,9 +176,9 @@ public class MySQLDialect extends DatabaseDialect {
 		sb.append('.');
 		sb.append(action.getSourceTable());
 		sb.append(" as child on parent.");
-		sb.append(action.getUnrollFKCol());
+		sb.append(reversed?action.getUnrollPKCol():action.getUnrollFKCol());
 		sb.append("=child.");
-		sb.append(action.getUnrollPKCol());
+		sb.append(reversed?action.getUnrollFKCol():action.getUnrollPKCol());
 		sb.append(" and parent.");
 		sb.append(action.getUnrollIterationCol());
 		sb.append('=');

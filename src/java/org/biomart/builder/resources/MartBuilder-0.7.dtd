@@ -112,6 +112,7 @@ visibleModified*,bigTable*)>
 <!ELEMENT unrolledRelation EMPTY>
 <!ATTLIST unrolledRelation relationId IDREF #REQUIRED>
 <!ATTLIST unrolledRelation columnId IDREF #REQUIRED>
+<!ATTLIST unrolledRelation reversed (true|false) #IMPLIED>
 
 <!ELEMENT renamedTable EMPTY>
 <!ATTLIST renamedTable tableKey CDATA #REQUIRED>

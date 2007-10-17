@@ -39,6 +39,7 @@ import javax.swing.JPanel;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.common.resources.Resources;
 
 /**
@@ -46,14 +47,16 @@ import org.biomart.common.resources.Resources;
  * parents mention all children.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *  		$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class UnrolledRelationDialog extends JDialog {
 	private static final long serialVersionUID = 1;
 
 	private JComboBox chosenColumn;
+
+	private JCheckBox reversed;
 
 	/**
 	 * Pop up a dialog to define the unrolling of a relation.
@@ -63,7 +66,8 @@ public class UnrolledRelationDialog extends JDialog {
 	 * @param relation
 	 *            the relation we are working with.
 	 */
-	public UnrolledRelationDialog(final Column initialChoice,
+	public UnrolledRelationDialog(
+			final UnrolledRelationDefinition initialChoice,
 			final Relation relation) {
 		// Create the base dialog.
 		super();
@@ -92,9 +96,16 @@ public class UnrolledRelationDialog extends JDialog {
 		for (final Iterator i = relation.getOneKey().getTable().getColumns()
 				.values().iterator(); i.hasNext();)
 			this.chosenColumn.addItem(i.next());
-		this.chosenColumn.setSelectedItem(initialChoice);
+		this.chosenColumn.setSelectedItem(initialChoice != null ? initialChoice
+				.getNameColumn() : null);
 		if (initialChoice != null)
 			checkbox.setSelected(true);
+
+		// Set up the reversed checkbox.
+		this.reversed = new JCheckBox(Resources
+				.get("unrolledRelationReversedLabel"));
+		this.reversed.setSelected(initialChoice != null
+				&& initialChoice.isReversed());
 
 		// The close and execute buttons.
 		final JButton close = new JButton(Resources.get("closeButton"));
@@ -105,6 +116,11 @@ public class UnrolledRelationDialog extends JDialog {
 		field.add(checkbox);
 		field.add(new JLabel(Resources.get("unrolledRelationColLabel")));
 		field.add(this.chosenColumn);
+		content.add(field, fieldConstraints);
+
+		// Reversed field.
+		field = new JPanel();
+		field.add(this.reversed);
 		content.add(field, fieldConstraints);
 
 		// Close/Execute buttons at the bottom.
@@ -141,7 +157,8 @@ public class UnrolledRelationDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
 				UnrolledRelationDialog.this.chosenColumn
-						.setSelectedItem(initialChoice);
+						.setSelectedItem(initialChoice != null ? initialChoice
+								.getNameColumn() : null);
 				UnrolledRelationDialog.this.setVisible(false);
 			}
 		});
@@ -172,6 +189,15 @@ public class UnrolledRelationDialog extends JDialog {
 	 */
 	public Column getChosenColumn() {
 		return (Column) this.chosenColumn.getSelectedItem();
+	}
+
+	/**
+	 * See if the user wants to reverse the sense.
+	 * 
+	 * @return <tt>true</tt> if they do.
+	 */
+	public boolean isReversed() {
+		return this.reversed.isSelected();
 	}
 
 	private boolean validateFields() {

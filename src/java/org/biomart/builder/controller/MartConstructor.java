@@ -71,6 +71,7 @@ import org.biomart.builder.model.PartitionTable.PartitionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.builder.model.Table.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -1226,30 +1227,51 @@ public interface MartConstructor {
 				final Set droppedCols, final int bigness) throws SQLException,
 				ListenerException, PartitionException, ConstructorException {
 
-	// TODO
-	// Set parentRel = utu.getRelation, childRel = otherRel
-	// Replace references to utu.getRelation with parentRel
-	// Replace references to otherRel with childRel
-	// If 'inverted sense' flag set on UnrollDefinition, swap
-	// the two around. Flag is set on definition by wizard, which
-	// merges child rel instead of parent rel and unrolls parent rel
-	// when chosen. This swap action restores this - so that the
-	// child records are merged but the correct path of unrolling
-	// is still followed.
-	// Proceed as normal.
-
+			// Set parentRel = utu.getRelation, childRel = otherRel
+			// Replace references to utu.getRelation with parentRel
+			// Replace references to otherRel with childRel
+			// If 'inverted sense' flag set on UnrollDefinition, swap
+			// the two around. Flag is set on definition by wizard, which
+			// merges child rel instead of parent rel and unrolls parent rel
+			// when chosen. This swap action restores this - so that the
+			// child records are merged but the correct path of unrolling
+			// is still followed.
+			// Proceed as normal.
 
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
 
+			// Find other merged relation between these two tables, and
+			// the many key is the parent key col.
+			final UnrolledRelationDefinition unrollDef = utu.getUnrolledDef();
+			Relation otherRel = null;
+			for (final Iterator i = utu.getRelation().getOneKey()
+					.getRelations().iterator(); i.hasNext() && otherRel == null;) {
+				final Relation candRel = (Relation) i.next();
+				if (candRel.equals(utu.getRelation()))
+					continue;
+				if (candRel.getManyKey().getTable().equals(
+						utu.getRelation().getManyKey().getTable())
+						&& candRel.isMergeRelation(dataset))
+					otherRel = candRel;
+			}
+			if (otherRel == null)
+				throw new BioMartError(); // Should never happen.
+			final Relation parentRel = unrollDef.isReversed() ? otherRel : utu
+					.getRelation();
+			final Relation childRel = unrollDef.isReversed() ? utu
+					.getRelation() : otherRel;
+
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
 			// Note that it will run unpredictably if compound keys are used.
-			final String unrollFK = utu.getDataSetColumnFor(
-					utu.getRelation().getManyKey().getColumns()[0])
+			String unrollFK = unrollDef.isReversed() ? utu.getDataSetColumnFor(
+					childRel.getManyKey().getColumns()[0])
+					.getPartitionedName() : utu.getDataSetColumnFor(
+					parentRel.getManyKey().getColumns()[0])
 					.getPartitionedName();
-			final String unrollPK = utu.getDataSetColumnFor(
-					utu.getRelation().getOneKey().getColumns()[0])
+			String unrollPK = utu.getDataSetColumnFor(
+					parentRel.getOneKey().getColumns()[0])
 					.getPartitionedName();
 			final String unrollIDColName = utu.getUnrolledIDColumn()
 					.getPartitionedName();
@@ -1269,31 +1291,14 @@ public interface MartConstructor {
 			final Connection conn = ((JDBCDataLink) templateSchema)
 					.getConnection(schemaPartition);
 			final StringBuffer sql = new StringBuffer();
-			// Find other merged relation between these two tables, and
-			// the many key is the parent key col.
-			Relation otherRel = null;
-			for (final Iterator i = utu.getRelation().getOneKey()
-					.getRelations().iterator(); i.hasNext() && otherRel == null;) {
-				final Relation candRel = (Relation) i.next();
-				if (candRel.equals(utu.getRelation()))
-					continue;
-				if (candRel.getManyKey().getTable().equals(
-						utu.getRelation().getManyKey().getTable())
-						&& candRel.isMergeRelation(dataset))
-					otherRel = candRel;
-			}
-			if (otherRel == null)
-				throw new BioMartError(); // Should never happen.
 			// From lookup table joined with parent table,
 			// find both parent ID col and child ID col.
-			final Table parentTable = utu.getRelation().getOneKey().getTable();
-			final Table childTable = utu.getRelation().getManyKey().getTable();
+			final Table parentTable = parentRel.getOneKey().getTable();
+			final Table childTable = parentRel.getManyKey().getTable();
 			sql.append("select child.");
-			sql.append(otherRel.getManyKey().getColumns()[0].getName());
+			sql.append(childRel.getManyKey().getColumns()[0].getName());
 			sql.append(", child.");
-			sql
-					.append(utu.getRelation().getManyKey().getColumns()[0]
-							.getName());
+			sql.append(parentRel.getManyKey().getColumns()[0].getName());
 			sql.append(" from ");
 			sql
 					.append(schemaPartition == null ? ((JDBCDataLink) templateSchema)
@@ -1309,9 +1314,9 @@ public interface MartConstructor {
 			sql.append('.');
 			sql.append(childTable.getName());
 			sql.append(" as child where parent.");
-			sql.append(otherRel.getOneKey().getColumns()[0].getName());
+			sql.append(parentRel.getOneKey().getColumns()[0].getName());
 			sql.append("=child.");
-			sql.append(otherRel.getManyKey().getColumns()[0].getName());
+			sql.append(childRel.getManyKey().getColumns()[0].getName());
 			if (parentTable.getRestrictTable(dataset, dsTable.getName()) != null) {
 				sql.append(" and ");
 				sql.append(parentTable.getRestrictTable(dataset,
@@ -1322,29 +1327,29 @@ public interface MartConstructor {
 				sql.append(childTable.getRestrictTable(dataset,
 						dsTable.getName()).getSubstitutedExpression("child"));
 			}
-			if (otherRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
+			if (childRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
 				sql.append(" and ");
-				sql.append(otherRel.getRestrictRelation(dataset,
+				sql.append(childRel.getRestrictRelation(dataset,
 						dsTable.getName(), 0)
 						.getSubstitutedExpression(
-								otherRel.getFirstKey().equals(
-										otherRel.getOneKey()) ? "parent"
+								childRel.getFirstKey().equals(
+										childRel.getOneKey()) ? "parent"
 										: "child",
-								otherRel.getFirstKey().equals(
-										otherRel.getManyKey()) ? "parent"
+								childRel.getFirstKey().equals(
+										childRel.getManyKey()) ? "parent"
 										: "child", false, false, utu));
 			}
-			if (utu.getRelation().getRestrictRelation(dataset,
-					dsTable.getName(), 0) != null) {
+			if (parentRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
 				sql.append(" and ");
-				sql.append(utu.getRelation().getRestrictRelation(dataset,
-						dsTable.getName(), 0).getSubstitutedExpression(
-						utu.getRelation().getFirstKey().equals(
-								utu.getRelation().getOneKey()) ? "parent"
-								: "child",
-						utu.getRelation().getFirstKey().equals(
-								utu.getRelation().getManyKey()) ? "parent"
-								: "child", false, false, utu));
+				sql.append(parentRel.getRestrictRelation(dataset,
+						dsTable.getName(), 0)
+						.getSubstitutedExpression(
+								parentRel.getFirstKey().equals(
+										parentRel.getOneKey()) ? "parent"
+										: "child",
+								parentRel.getFirstKey().equals(
+										parentRel.getManyKey()) ? "parent"
+										: "child", false, false, utu));
 			}
 			final String sqlStr = sql.toString();
 			Log.debug("Executing unroll statement: " + sqlStr);
@@ -1399,8 +1404,8 @@ public interface MartConstructor {
 			iaction.setUnrollIDCol(unrollIDColName);
 			iaction.setUnrollNameCol(unrollNameColName);
 			iaction.setUnrollIterationCol(unrollIterationColName);
-			iaction.setNamingCol(utu.getDataSetColumnFor(utu.getNamingColumn())
-					.getPartitionedName());
+			iaction.setNamingCol(utu.getDataSetColumnFor(
+					unrollDef.getNameColumn()).getPartitionedName());
 			iaction.setTable(tempTable);
 			iaction.setBigTable(bigness);
 			this.issueAction(iaction);
@@ -1443,8 +1448,9 @@ public interface MartConstructor {
 				eaction.setUnrollNameCol(unrollNameColName);
 				eaction.setUnrollIterationCol(unrollIterationColName);
 				eaction.setNamingCol(utu.getDataSetColumnFor(
-						utu.getNamingColumn()).getPartitionedName());
+						unrollDef.getNameColumn()).getPartitionedName());
 				eaction.setBigTable(bigness);
+				eaction.setReversed(unrollDef.isReversed());
 				this.issueAction(eaction);
 			}
 

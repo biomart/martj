@@ -34,6 +34,7 @@ import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
+import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.common.exceptions.BioMartError;
 
 /**
@@ -63,14 +64,17 @@ public abstract class TransformationUnit {
 		this.newColumnNameMap = new HashMap();
 		this.previousUnit = previousUnit;
 	}
-	
+
 	/**
 	 * Does this unit apply to the given schema prefix?
-	 * @param schemaPrefix the prefix.
+	 * 
+	 * @param schemaPrefix
+	 *            the prefix.
 	 * @return <tt>true</tt> if it does.
 	 */
 	public boolean appliesToPartition(final String schemaPrefix) {
-		return this.previousUnit==null ? true : this.previousUnit.appliesToPartition(schemaPrefix);
+		return this.previousUnit == null ? true : this.previousUnit
+				.appliesToPartition(schemaPrefix);
 	}
 
 	/**
@@ -129,9 +133,10 @@ public abstract class TransformationUnit {
 			super(previousUnit);
 			this.table = table;
 		}
-		
+
 		public boolean appliesToPartition(final String schemaPrefix) {
-			return this.table.existsForPartition(schemaPrefix) && super.appliesToPartition(schemaPrefix);
+			return this.table.existsForPartition(schemaPrefix)
+					&& super.appliesToPartition(schemaPrefix);
 		}
 
 		/**
@@ -223,10 +228,11 @@ public abstract class TransformationUnit {
 			this.schemaRelation = schemaRelation;
 			this.schemaRelationIteration = schemaRelationIteration;
 		}
-		
+
 		public boolean appliesToPartition(final String schemaPrefix) {
-			for (final Iterator i = this.sourceDataSetColumns.iterator(); i.hasNext(); ) {
-				final DataSetColumn dsCol = (DataSetColumn)i.next();
+			for (final Iterator i = this.sourceDataSetColumns.iterator(); i
+					.hasNext();) {
+				final DataSetColumn dsCol = (DataSetColumn) i.next();
 				if (!dsCol.existsForPartition(schemaPrefix))
 					return false;
 			}
@@ -314,7 +320,7 @@ public abstract class TransformationUnit {
 			super(previousUnit);
 			this.dsTable = dsTable;
 		}
-		
+
 		public DataSetColumn getDataSetColumnFor(final Column column) {
 			if (this.getPreviousUnit() != null)
 				return this.getPreviousUnit().getDataSetColumnFor(column);
@@ -424,7 +430,7 @@ public abstract class TransformationUnit {
 
 		private final List sourceDataSetColumns;
 
-		private final Column namingColumn;
+		private final UnrolledRelationDefinition unrolledDef;
 
 		private final DataSetColumn unrolledIDColumn;
 
@@ -440,8 +446,8 @@ public abstract class TransformationUnit {
 		 * @param sourceDataSetColumns
 		 *            the columns in the existing dataset table that are used to
 		 *            make the join.
-		 * @param namingColumn
-		 *            the column to use to get names for the unrolled rows.
+		 * @param unrolledDef
+		 *            the unrolled relation definition.
 		 * @param unrolledIDColumn
 		 *            the unrolled ID column.
 		 * @param unrolledNameColumn
@@ -449,13 +455,13 @@ public abstract class TransformationUnit {
 		 */
 		public UnrollTable(final TransformationUnit previousUnit,
 				final Relation relation, final List sourceDataSetColumns,
-				final Column namingColumn,
+				final UnrolledRelationDefinition unrolledDef,
 				final DataSetColumn unrolledIDColumn,
 				final DataSetColumn unrolledNameColumn) {
 			super(previousUnit);
 			this.relation = relation;
 			this.sourceDataSetColumns = sourceDataSetColumns;
-			this.namingColumn = namingColumn;
+			this.unrolledDef = unrolledDef;
 			this.unrolledIDColumn = unrolledIDColumn;
 			this.unrolledNameColumn = unrolledNameColumn;
 		}
@@ -475,10 +481,10 @@ public abstract class TransformationUnit {
 		}
 
 		/**
-		 * @return the namingColumn
+		 * @return the unrolledDef
 		 */
-		public Column getNamingColumn() {
-			return this.namingColumn;
+		public UnrolledRelationDefinition getUnrolledDef() {
+			return this.unrolledDef;
 		}
 
 		/**

@@ -56,6 +56,7 @@ import org.biomart.builder.model.PartitionTable.PartitionTableApplication.Partit
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
 import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.builder.model.Table.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -1523,8 +1524,9 @@ public class DataSet extends Schema {
 			if (followRelation || forceFollowRelation) {
 
 				// Don't follow unrolled relations.
-				final Column nameCol = r.getUnrolledRelation(this);
-				if (nameCol != null) {
+				final UnrolledRelationDefinition unrollDef = r
+						.getUnrolledRelation(this);
+				if (unrollDef != null) {
 					// From M end, skip.
 					if (mergeTable.equals(r.getManyKey().getTable()))
 						continue;
@@ -1586,8 +1588,8 @@ public class DataSet extends Schema {
 					newSourceDSCols.add(unrolledNameCol);
 					// Create UnrollTable transformation unit.
 					final UnrollTable utu = new UnrollTable(tu, r,
-							newSourceDSCols, nameCol, unrolledIDCol,
-							unrolledNameCol);
+							newSourceDSCols, unrollDef,
+							unrolledIDCol, unrolledNameCol);
 					dsTable.addTransformationUnit(utu);
 					this.includedRelations.add(r);
 					dsTable.includedRelations.add(r);
