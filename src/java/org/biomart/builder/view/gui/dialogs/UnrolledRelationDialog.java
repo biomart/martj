@@ -104,8 +104,8 @@ public class UnrolledRelationDialog extends JDialog {
 		// Set up the reversed checkbox.
 		this.reversed = new JCheckBox(Resources
 				.get("unrolledRelationReversedLabel"));
-		this.reversed.setSelected(initialChoice != null
-				&& initialChoice.isReversed());
+		this.reversed.setSelected(initialChoice == null
+				|| initialChoice.isReversed());
 
 		// The close and execute buttons.
 		final JButton close = new JButton(Resources.get("closeButton"));

@@ -116,6 +116,7 @@ public class SuggestUnrolledDataSetDialog extends JDialog {
 		this.nrParentIDColumn = new JComboBox();
 		this.nrChildIDColumn = new JComboBox();
 		this.reversed = new JCheckBox(Resources.get("reversedLabel"));
+		this.reversed.setSelected(true);
 		// Add listener to update parent and child columns.
 		this.nrTable.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
