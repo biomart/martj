@@ -762,7 +762,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.partitionCache.clear();
 		this.pcs.firePropertyChange("partitionRegex", oldValue, partitionRegex);
 	}
-	
+
 	/**
 	 * Clears the partition cache.
 	 */
@@ -1206,8 +1206,12 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			history.setProperty("password", this.getPassword() == null ? ""
 					: this.getPassword());
 			history.setProperty("schema", this.getDataLinkSchema());
-			history.setProperty("partitionRegex", this.getPartitionRegex());
-			history.setProperty("partitionNameExpression", this.getPartitionNameExpression());
+			history.setProperty("partitionRegex",
+					this.getPartitionRegex() == null ? "" : this
+							.getPartitionRegex());
+			history.setProperty("partitionNameExpression", this
+					.getPartitionNameExpression() == null ? "" : this
+					.getPartitionNameExpression());
 			Settings.saveHistoryProperties(JDBCSchema.class, this.getName(),
 					history);
 		}
@@ -1256,7 +1260,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			for (final Iterator i = this.getTables().values().iterator(); i
 					.hasNext();)
 				((Table) i.next()).getSchemaPartitions().clear();
-			
+
 			// Load tables and views from database, then loop over them.
 			ResultSet dbTables;
 			if (this.getPartitions().isEmpty())
@@ -1315,7 +1319,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			dbTables.close();
 
 			// Work out progress increment step size.
-			double stepSize = 100.0 / (double)tablesToBeKept.size();
+			double stepSize = 100.0 / (double) tablesToBeKept.size();
 			// Divide by 2 - columns then relations.
 			stepSize /= 2.0;
 
@@ -1401,7 +1405,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 					Log.debug("Dropping redundant column " + column.getName());
 					dbTable.getColumns().remove(column.getName());
 				}
-				
+
 				// Update progress;
 				this.progress += stepSize;
 			}
@@ -1601,7 +1605,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *            the database schema to read metadata from.
 		 * @param catalog
 		 *            the database catalog to read metadata from.
-		 *            @param stepSize the progress step size to increment by.
+		 * @param stepSize
+		 *            the progress step size to increment by.
 		 * @throws SQLException
 		 *             if there was a problem talking to the database.
 		 * @throws DataModelException
@@ -1610,16 +1615,17 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 */
 		private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
 				final DatabaseMetaData dmd, final String schema,
-				final String catalog, final double stepSize) throws SQLException, DataModelException {
+				final String catalog, final double stepSize)
+				throws SQLException, DataModelException {
 			Log.debug("Running DMD key synchronisation");
 			// Loop through all the tables in the database, which is the same
 			// as looping through all the primary keys.
 			Log.debug("Finding tables");
 			for (final Iterator i = this.getTables().values().iterator(); i
-					.hasNext();) {				
+					.hasNext();) {
 				// Update progress;
 				this.progress += stepSize;
-				
+
 				// Obtain the table and its primary key.
 				final Table pkTable = (Table) i.next();
 				final PrimaryKey pk = pkTable.getPrimaryKey();
@@ -1864,7 +1870,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *            end of the method, the only keys left in this list should
 		 *            be ones that no longer exist in the database and may be
 		 *            dropped.
-		 *            @param stepSize the progress step size to increment by.
+		 * @param stepSize
+		 *            the progress step size to increment by.
 		 * @throws SQLException
 		 *             if there was a problem talking to the database.
 		 * @throws DataModelException
@@ -1872,17 +1879,17 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 *             set of foreign keys.
 		 */
 		private void synchroniseKeysUsingKeyGuessing(
-				final Collection fksToBeDropped, final double stepSize) throws SQLException,
-				DataModelException {
+				final Collection fksToBeDropped, final double stepSize)
+				throws SQLException, DataModelException {
 			Log.debug("Running non-DMD key synchronisation");
 			// Loop through all the tables in the database, which is the same
 			// as looping through all the primary keys.
 			Log.debug("Finding tables");
 			for (final Iterator i = this.getTables().values().iterator(); i
-					.hasNext();) {				
+					.hasNext();) {
 				// Update progress;
 				this.progress += stepSize;
-				
+
 				// Obtain the table and its primary key.
 				final Table pkTable = (Table) i.next();
 				final PrimaryKey pk = pkTable.getPrimaryKey();
