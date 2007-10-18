@@ -279,10 +279,6 @@ public class ExplainContext extends SchemaContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
-
-		// Not applicable in single-schema view.
-		if (this.getMartTab().getPartitionViewSelection()!=null)
-			return;
 		
 		if (object instanceof Relation)
 			this.populateRelationContextMenu(contextMenu, (Relation) object,
@@ -467,10 +463,6 @@ public class ExplainContext extends SchemaContext {
 	 */
 	public void populateRelationContextMenu(final JPopupMenu contextMenu,
 			final Relation relation, final int iteration) {
-
-		// Not applicable in single-schema view.
-		if (this.getMartTab().getPartitionViewSelection()!=null)
-			return;
 
 		// Add a separator if there's other stuff before us.
 		if (contextMenu.getComponentCount() > 0)

@@ -214,10 +214,6 @@ public class DataSetContext extends SchemaContext {
 	public void populateMultiContextMenu(final JPopupMenu contextMenu,
 			final Collection selectedItems, final Class clazz) {
 
-		// Not applicable in single-schema view.
-		if (this.getMartTab().getPartitionViewSelection()!=null)
-			return;
-
 		// Menu for multiple table selection.
 		if (DataSetTable.class.isAssignableFrom(clazz)) {
 			// If all are dimensions...
@@ -417,38 +413,12 @@ public class DataSetContext extends SchemaContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
-
 		// Did the user click on a dataset table?
 		if (object instanceof DataSetTable) {
-			// Work out which table we are dealing with, and what type it is.
-			final DataSetTable table = (DataSetTable) object;
 
 			// Add a separator if the menu is not empty.
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
-
-			// Option to explain how the table was constructed.
-			final JMenuItem explain = new JMenuItem(Resources
-					.get("explainTableTitle"), new ImageIcon(Resources
-					.getResourceAsURL("help.gif")));
-			explain
-					.setMnemonic(Resources.get("explainTableMnemonic")
-							.charAt(0));
-			explain.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestExplainTable(table);
-				}
-			});
-			contextMenu.add(explain);
-		}
-
-		// Only DSTable explain is applicable in single-schema view.
-		if (this.getMartTab().getPartitionViewSelection() != null)
-			return;
-
-		// Did the user click on a dataset table?
-		if (object instanceof DataSetTable) {
 
 			// Work out which table we are dealing with, and what type it is.
 			final DataSetTable table = (DataSetTable) object;
