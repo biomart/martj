@@ -78,11 +78,11 @@ public class EmptyTableTest extends JobTest {
 		final Set tables = new TreeSet();
 		for (final Iterator i = tableEntries.iterator(); i.hasNext();) {
 			final Map entry = (Map) i.next();
-			tables.add((String) entry.get("TABLE_NAME"));
+			tables.add(entry.get("TABLE_NAME"));
 		}
 
 		// Work out step size.
-		final double stepSize = 100.0 / (double) tables.size();
+		final double stepSize = 100.0 / tables.size();
 
 		// For each table...
 		boolean failed = false;
@@ -122,7 +122,7 @@ public class EmptyTableTest extends JobTest {
 
 			// Construct SQL to count all rows.
 			Log.debug("Executing select count(1).");
-			StringBuffer sql = new StringBuffer();
+			final StringBuffer sql = new StringBuffer();
 			sql.append("select count(1) from ");
 			sql.append(this.getJobPlan().getTargetSchema());
 			sql.append('.');
@@ -148,50 +148,58 @@ public class EmptyTableTest extends JobTest {
 					this.report.append(Resources.get("emptyTableNoNonKeyCols",
 							dbTableName));
 					failed = true;
+
+					// Update progress.
+					this.progress += stepSize;
 				} else if (nullableNonKeyCols.size() > 0) {
-					Log.debug("Executing select count(not null).");
-					// Construct SQL to count rows where all nullable-non-_key
-					// cols are null.
-					sql.setLength(0);
-					sql.append("select count(1) from ");
-					sql.append(this.getJobPlan().getTargetSchema());
-					sql.append('.');
-					sql.append(dbTableName);
-					sql.append(" where not (");
+					final double subStepSize = stepSize
+							/ nullableNonKeyCols.size();
 					for (final Iterator j = nullableNonKeyCols.iterator(); j
 							.hasNext()
 							&& !this.isTestStopped();) {
-						final String dbColName = (String) j.next();
-						sql.append(dbColName);
+						final String colName = (String) j.next();
+						Log.debug("Executing select count(not null) on "
+								+ colName);
+						// Use 'is null' and compare to total-row-count
+						// - this uses indexes if available, as opposed
+						// to 'is not null', and is therefore more efficient.
+						sql.setLength(0);
+						sql.append("select count(1) from ");
+						sql.append(this.getJobPlan().getTargetSchema());
+						sql.append('.');
+						sql.append(dbTableName);
+						sql.append(" where ");
+						sql.append(colName);
 						sql.append(" is null");
-						if (j.hasNext())
-							sql.append(" and ");
-					}
-					sql.append(')');
 
-					int countNonNull = 0;
-					try {
-						final Collection results = MartRunnerProtocol.Client
-								.runSQL(host, port, this.getJobPlan()
-										.getJobId(), sql.toString());
-						countNonNull = Integer
-								.parseInt(((Map.Entry) ((Map) results
-										.iterator().next()).entrySet()
-										.iterator().next()).getValue()
-										.toString());
-					} catch (final ProtocolException pe) {
-						this.exception = new TestException(pe);
-						return;
-					}
+						int countNull = 0;
+						try {
+							final Collection results = MartRunnerProtocol.Client
+									.runSQL(host, port, this.getJobPlan()
+											.getJobId(), sql.toString());
+							countNull = Integer
+									.parseInt(((Map.Entry) ((Map) results
+											.iterator().next()).entrySet()
+											.iterator().next()).getValue()
+											.toString());
+						} catch (final ProtocolException pe) {
+							this.exception = new TestException(pe);
+							return;
+						}
 
-					// Process results.
-					if (countNonNull == 0) {
-						// LOG - Table contains no values in columns.
-						this.report
-								.append(System.getProperty("line.separator"));
-						this.report.append(Resources.get(
-								"emptyTableAllNonKeyColsNull", dbTableName));
-						failed = true;
+						// Process results.
+						if (countNull == countAll) {
+							// LOG - Table contains no values in column.
+							this.report.append(System
+									.getProperty("line.separator"));
+							this.report.append(Resources.get(
+									"emptyTableColIsNull", new String[] {
+											dbTableName, colName }));
+							failed = true;
+						}
+
+						// Update progress.
+						this.progress += subStepSize;
 					}
 				}
 			} else {
@@ -200,13 +208,13 @@ public class EmptyTableTest extends JobTest {
 				this.report.append(Resources.get("emptyTableHasNoRows",
 						dbTableName));
 				failed = true;
-			}
 
-			// Update progress.
-			this.progress += stepSize;
+				// Update progress.
+				this.progress += stepSize;
+			}
 		}
 
-		if (failed) {
+		if (!failed) {
 			this.report.append(System.getProperty("line.separator"));
 			this.report.append(Resources.get("allTestsPassed"));
 		}
