@@ -403,9 +403,10 @@ public class MartRunnerProtocol {
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
+		final String overrideSchema = in.readLine();
 		final String jobId = in.readLine();
-		(new ObjectOutputStream(outRaw)).writeObject(JobHandler
-				.listTables(jobId));
+		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.listTables(
+				overrideSchema.length() == 0 ? null : overrideSchema, jobId));
 	}
 
 	/**
@@ -430,10 +431,12 @@ public class MartRunnerProtocol {
 			final InputStream inRaw, final PrintWriter out,
 			final OutputStream outRaw) throws ProtocolException, JobException,
 			IOException {
+		final String overrideSchema = in.readLine();
 		final String jobId = in.readLine();
 		final String table = in.readLine();
 		(new ObjectOutputStream(outRaw)).writeObject(JobHandler.listColumns(
-				jobId, table));
+				overrideSchema.length() == 0 ? null : overrideSchema, jobId,
+				table));
 	}
 
 	/**
@@ -969,6 +972,9 @@ public class MartRunnerProtocol {
 		 *            the remote host.
 		 * @param port
 		 *            the remote port.
+		 * @param overrideSchema
+		 *            if not <tt>null</tt> then overrides the schema used to
+		 *            query the database.
 		 * @param jobId
 		 *            the job ID.
 		 * @return the rows. These will be one-row-per-entry, with a map of
@@ -977,13 +983,15 @@ public class MartRunnerProtocol {
 		 *             if something went wrong.
 		 */
 		public static Collection listTables(final String host,
-				final String port, final String jobId) throws ProtocolException {
+				final String port, final String overrideSchema,
+				final String jobId) throws ProtocolException {
 			Socket clientSocket = null;
 			try {
 				clientSocket = Client.getClientSocket(host, port);
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
 				bos.println(MartRunnerProtocol.LIST_TABLES);
+				bos.println(overrideSchema == null ? "" : overrideSchema);
 				bos.println(jobId);
 				return (Collection) new ObjectInputStream(clientSocket
 						.getInputStream()).readObject();
@@ -1008,6 +1016,9 @@ public class MartRunnerProtocol {
 		 *            the remote host.
 		 * @param port
 		 *            the remote port.
+		 * @param overrideSchema
+		 *            if not <tt>null</tt> then overrides the schema used to
+		 *            query the database.
 		 * @param jobId
 		 *            the job ID.
 		 * @param table
@@ -1018,7 +1029,8 @@ public class MartRunnerProtocol {
 		 *             if something went wrong.
 		 */
 		public static Collection listColumns(final String host,
-				final String port, final String jobId, final String table)
+				final String port, final String overrideSchema,
+				final String jobId, final String table)
 				throws ProtocolException {
 			Socket clientSocket = null;
 			try {
@@ -1026,6 +1038,7 @@ public class MartRunnerProtocol {
 				final PrintWriter bos = new PrintWriter(clientSocket
 						.getOutputStream(), true);
 				bos.println(MartRunnerProtocol.LIST_COLUMNS);
+				bos.println(overrideSchema == null ? "" : overrideSchema);
 				bos.println(jobId);
 				bos.println(table);
 				return (Collection) new ObjectInputStream(clientSocket

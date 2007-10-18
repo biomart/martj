@@ -373,7 +373,7 @@ public class JobHandler {
 	public static void updateAction(final String jobId, final String sectionId,
 			final String actionId, final String action) throws JobException {
 		final Map actions = JobHandler.getActions(jobId, sectionId);
-		final JobPlanAction jpAction = (JobPlanAction)actions.get(actionId);
+		final JobPlanAction jpAction = (JobPlanAction) actions.get(actionId);
 		jpAction.setAction(action);
 		jpAction.setStatus(JobStatus.NOT_QUEUED, actions.values());
 		JobHandler.setActions(jobId, sectionId, actions, true);
@@ -392,7 +392,8 @@ public class JobHandler {
 	 *             if anything went wrong.
 	 */
 	public static void setActions(final String jobId,
-			final String[] sectionPath, final Collection actions) throws JobException {
+			final String[] sectionPath, final Collection actions)
+			throws JobException {
 		final JobPlan jobPlan = JobHandler.getJobPlan(jobId);
 		// Add the action to the job.
 		jobPlan.setActionCount(sectionPath, actions.size());
@@ -507,15 +508,19 @@ public class JobHandler {
 	/**
 	 * Lists tables made by a job.
 	 * 
+	 * @param overrideSchema
+	 *            to override the schema queried. <tt>null</tt> to not use.
 	 * @param jobId
 	 *            the job ID.
 	 * @return the plan.
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public static Collection listTables(final String jobId) throws JobException {
+	public static Collection listTables(final String overrideSchema,
+			final String jobId) throws JobException {
 		try {
-			return JobHandler.getJobList().getJobPlan(jobId).listTables();
+			return JobHandler.getJobList().getJobPlan(jobId).listTables(
+					overrideSchema);
 		} catch (final SQLException e) {
 			throw new JobException(e);
 		}
@@ -524,6 +529,8 @@ public class JobHandler {
 	/**
 	 * Lists columns for a table for a job.
 	 * 
+	 * @param overrideSchema
+	 *            to override the schema queried. <tt>null</tt> to not use.
 	 * @param jobId
 	 *            the job ID.
 	 * @param table
@@ -532,10 +539,11 @@ public class JobHandler {
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public static Collection listColumns(final String jobId, final String table)
-			throws JobException {
+	public static Collection listColumns(final String overrideSchema,
+			final String jobId, final String table) throws JobException {
 		try {
-			return JobHandler.getJobList().getJobPlan(jobId).listColumns(table);
+			return JobHandler.getJobList().getJobPlan(jobId).listColumns(
+					overrideSchema, table);
 		} catch (final SQLException e) {
 			throw new JobException(e);
 		}

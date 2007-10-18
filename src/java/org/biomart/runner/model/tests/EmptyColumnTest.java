@@ -68,7 +68,7 @@ public class EmptyColumnTest extends JobTest {
 		final Collection tableEntries;
 		try {
 			tableEntries = MartRunnerProtocol.Client.listTables(host, port,
-					this.getJobPlan().getJobId());
+					null, this.getJobPlan().getJobId());
 		} catch (final ProtocolException pe) {
 			this.exception = new TestException(pe);
 			return;
@@ -97,7 +97,7 @@ public class EmptyColumnTest extends JobTest {
 			final Collection columnEntries;
 			try {
 				columnEntries = MartRunnerProtocol.Client.listColumns(host,
-						port, this.getJobPlan().getJobId(), dbTableName);
+						port, null, this.getJobPlan().getJobId(), dbTableName);
 			} catch (final ProtocolException pe) {
 				this.exception = new TestException(pe);
 				return;

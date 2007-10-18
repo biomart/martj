@@ -334,25 +334,29 @@ public class JobPlan implements Serializable {
 	/**
 	 * List all relevant tables on our connection.
 	 * 
+	 * @param overrideSchema
+	 *            to override the schema queried. <tt>null</tt> to not use.
 	 * @return the results, one row per entry.
 	 * @throws SQLException
 	 *             if anything went wrong.
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public Collection listTables() throws SQLException, JobException {
+	public Collection listTables(final String overrideSchema)
+			throws SQLException, JobException {
 		// Open connection.
 		final Connection conn = this.getConnection();
 
 		// Get database metadata, catalog, and schema details.
 		final DatabaseMetaData dmd = conn.getMetaData();
 		final String catalog = conn.getCatalog();
+		final String schema = overrideSchema == null ? this.getTargetSchema()
+				: overrideSchema;
 
 		// Load tables and views from database, then loop over them.
 		final ResultSet rs = dmd.getTables(
-				"".equals(dmd.getSchemaTerm()) ? this.getTargetSchema()
-						: catalog, this.getTargetSchema(), "%", new String[] {
-						"TABLE", "VIEW", "ALIAS", "SYNONYM" });
+				"".equals(dmd.getSchemaTerm()) ? schema : catalog, schema, "%",
+				new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
 		final Collection results = this.processResultSet(rs);
 		rs.close();
 
@@ -370,6 +374,8 @@ public class JobPlan implements Serializable {
 	/**
 	 * List columns for a table.
 	 * 
+	 * @param overrideSchema
+	 *            to override the schema queried. <tt>null</tt> to not use.
 	 * @param table
 	 *            the table.
 	 * @return the results, one row per entry.
@@ -378,19 +384,21 @@ public class JobPlan implements Serializable {
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public Collection listColumns(final String table) throws SQLException,
-			JobException {
+	public Collection listColumns(final String overrideSchema,
+			final String table) throws SQLException, JobException {
 		// Open connection.
 		final Connection conn = this.getConnection();
 
 		// Get database metadata, catalog, and schema details.
 		final DatabaseMetaData dmd = conn.getMetaData();
 		final String catalog = conn.getCatalog();
+		final String schema = overrideSchema == null ? this.getTargetSchema()
+				: overrideSchema;
 
 		// Gather columns for table.
 		final ResultSet rs = dmd.getColumns(
-				"".equals(dmd.getSchemaTerm()) ? this.getTargetSchema()
-						: catalog, this.getTargetSchema(), table, "%");
+				"".equals(dmd.getSchemaTerm()) ? schema : catalog, schema,
+				table, "%");
 		// FIXME: When using Oracle, if the table is a synonym then the
 		// above call returns no results.
 		final Collection results = this.processResultSet(rs);
