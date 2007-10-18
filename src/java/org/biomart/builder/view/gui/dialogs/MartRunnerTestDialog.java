@@ -30,6 +30,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.biomart.builder.view.gui.panels.tests.EmptyColumnTestPanel;
 import org.biomart.builder.view.gui.panels.tests.EmptyTableTestPanel;
 import org.biomart.builder.view.gui.panels.tests.JobTestPanel;
 import org.biomart.common.resources.Resources;
@@ -72,6 +73,8 @@ public class MartRunnerTestDialog extends JFrame {
 		// Build the panels.
 		final Map panels = new TreeMap();
 		JobTestPanel panel = new EmptyTableTestPanel(host, port, jobPlan);
+		panels.put(panel.getDisplayName(), panel);
+		panel = new EmptyColumnTestPanel(host, port, jobPlan);
 		panels.put(panel.getDisplayName(), panel);
 		// TODO More panels.
 

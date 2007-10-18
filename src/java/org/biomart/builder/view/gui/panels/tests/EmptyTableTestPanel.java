@@ -17,7 +17,14 @@
  */
 package org.biomart.builder.view.gui.panels.tests;
 
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
 import org.biomart.common.resources.Resources;
 import org.biomart.runner.model.JobPlan;
@@ -29,14 +36,31 @@ import org.biomart.runner.model.tests.JobTest;
  * which checks for empty or all-null tables.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class EmptyTableTestPanel extends JobTestPanel {
 	private static final long serialVersionUID = 1;
 
-	private final JobTest test;
+	private final EmptyTableTest test;
+
+	private ButtonGroup emptyTableGroup;
+
+	private ButtonGroup noNonKeyGroup;
+
+	private ButtonGroup nullableGroup;
+
+	private static final Map BUTTON_MAP = new HashMap();
+
+	static {
+		EmptyTableTestPanel.BUTTON_MAP.put(Resources.get("emptyTableDrop"),
+				new Integer(EmptyTableTest.DROP));
+		EmptyTableTestPanel.BUTTON_MAP.put(Resources.get("emptyTableSkip"),
+				new Integer(EmptyTableTest.SKIP));
+		EmptyTableTestPanel.BUTTON_MAP.put(Resources.get("emptyTableReport"),
+				new Integer(EmptyTableTest.REPORT));
+	}
 
 	/**
 	 * Construct a new test panel.
@@ -55,13 +79,67 @@ public class EmptyTableTestPanel extends JobTestPanel {
 	}
 
 	protected void addFields() {
-		// Add 'we need no fields'.
-		this.add(new JLabel(Resources.get("testNeedsNoFields")),
-				this.fieldConstraints);
+		// Empty table test.
+		this.add(new JLabel(Resources.get("emptyTableNoRowsTest")),
+				this.labelConstraints);
+		JPanel field = new JPanel();
+		this.emptyTableGroup = new ButtonGroup();
+		// report
+		JRadioButton radio = new JRadioButton(
+				Resources.get("emptyTableReport"), true);
+		this.emptyTableGroup.add(radio);
+		field.add(radio);
+		// drop
+		radio = new JRadioButton(Resources.get("emptyTableDrop"));
+		this.emptyTableGroup.add(radio);
+		field.add(radio);
+		// skip
+		radio = new JRadioButton(Resources.get("emptyTableSkip"));
+		this.emptyTableGroup.add(radio);
+		field.add(radio);
+		this.add(field, this.fieldConstraints);
+
+		// Non-key cols test.
+		this.add(new JLabel(Resources.get("emptyTableNoNonKeyColsTest")),
+				this.labelConstraints);
+		field = new JPanel();
+		this.noNonKeyGroup = new ButtonGroup();
+		// report
+		radio = new JRadioButton(Resources.get("emptyTableReport"), true);
+		this.noNonKeyGroup.add(radio);
+		field.add(radio);
+		// drop
+		radio = new JRadioButton(Resources.get("emptyTableDrop"));
+		this.noNonKeyGroup.add(radio);
+		field.add(radio);
+		// skip
+		radio = new JRadioButton(Resources.get("emptyTableSkip"));
+		this.noNonKeyGroup.add(radio);
+		field.add(radio);
+		this.add(field, this.fieldConstraints);
+
+		// Nullable cols test.
+		this.add(new JLabel(Resources.get("emptyTableNullableColsTest")),
+				this.labelConstraints);
+		field = new JPanel();
+		this.nullableGroup = new ButtonGroup();
+		// report
+		radio = new JRadioButton(Resources.get("emptyTableReport"), true);
+		this.nullableGroup.add(radio);
+		field.add(radio);
+		// drop
+		radio = new JRadioButton(Resources.get("emptyTableDrop"));
+		this.nullableGroup.add(radio);
+		field.add(radio);
+		// skip
+		radio = new JRadioButton(Resources.get("emptyTableSkip"));
+		this.nullableGroup.add(radio);
+		field.add(radio);
+		this.add(field, this.fieldConstraints);
 	}
 
 	protected String[] doValidateOptions() {
-		// We have no options.
+		// We have no options that need to be validated.
 		return new String[0];
 	}
 
@@ -74,7 +152,20 @@ public class EmptyTableTestPanel extends JobTestPanel {
 	}
 
 	protected void setJobTestOptions() {
-		// Nothing needs doing.
+		this.test.setNoRowsTest(this.getSelection(this.emptyTableGroup));
+		this.test.setAllNullableColsEmptyTest(this
+				.getSelection(this.nullableGroup));
+		this.test.setNoNonKeyColsTest(this.getSelection(this.noNonKeyGroup));
 	}
 
+	// This method returns the selected radio button in a button group
+	private int getSelection(final ButtonGroup group) {
+		for (final Enumeration e = group.getElements(); e.hasMoreElements();) {
+			final JRadioButton b = (JRadioButton) e.nextElement();
+			if (b.getModel() == group.getSelection())
+				return ((Integer) EmptyTableTestPanel.BUTTON_MAP.get(b
+						.getText())).intValue();
+		}
+		return EmptyTableTest.SKIP;
+	}
 }

@@ -48,6 +48,27 @@ public class EmptyTableTest extends JobTest {
 	private static final long serialVersionUID = 1;
 
 	/**
+	 * Constant saying a test should be run.
+	 */
+	public static final int REPORT = 0;
+
+	/**
+	 * Constant saying a test should be skipped.
+	 */
+	public static final int SKIP = 1;
+
+	/**
+	 * Constant saying empty tables should be dropped.
+	 */
+	public static final int DROP = 2;
+
+	private int noRowsTest = EmptyTableTest.REPORT;
+
+	private int noNonKeyColsTest = EmptyTableTest.REPORT;
+
+	private int allNullableColsEmptyTest = EmptyTableTest.REPORT;
+
+	/**
 	 * Set up a new test against the given job plan.
 	 * 
 	 * @param host
@@ -142,76 +163,84 @@ public class EmptyTableTest extends JobTest {
 
 			// Process results.
 			if (countAll > 0) {
-				if (nonKeyCols.size() == 0) {
-					// LOG - Table has no non-key columns.
+				if (nonKeyCols.size() == 0
+						&& this.getNoNonKeyColsTest() != EmptyTableTest.SKIP) {
+					// LOG - Table has no rows.
 					this.report.append(System.getProperty("line.separator"));
-					this.report.append(Resources.get("emptyTableNoNonKeyCols",
-							dbTableName));
+					if (this.getNoNonKeyColsTest() == EmptyTableTest.DROP) {
+						this.dropTable(host, port, dbTableName);
+						this.report.append(Resources.get(
+								"emptyTableNoNonKeyColsDropped", dbTableName));
+					} else
+						this.report.append(Resources.get(
+								"emptyTableNoNonKeyCols", dbTableName));
 					failed = true;
-
-					// Update progress.
-					this.progress += stepSize;
-				} else if (nullableNonKeyCols.size() > 0) {
-					final double subStepSize = stepSize
-							/ nullableNonKeyCols.size();
+				} else if (nullableNonKeyCols.size() > 0
+						&& this.getAllNullableColsEmptyTest() != EmptyTableTest.SKIP) {
+					Log.debug("Executing select count(not null).");
+					sql.setLength(0);
+					sql.append("select count(1) from ");
+					sql.append(this.getJobPlan().getTargetSchema());
+					sql.append('.');
+					sql.append(dbTableName);
+					sql.append(" where not (");
 					for (final Iterator j = nullableNonKeyCols.iterator(); j
-							.hasNext()
-							&& !this.isTestStopped();) {
-						final String colName = (String) j.next();
-						Log.debug("Executing select count(not null) on "
-								+ colName);
-						// Use 'is null' and compare to total-row-count
-						// - this uses indexes if available, as opposed
-						// to 'is not null', and is therefore more efficient.
-						sql.setLength(0);
-						sql.append("select count(1) from ");
-						sql.append(this.getJobPlan().getTargetSchema());
-						sql.append('.');
-						sql.append(dbTableName);
-						sql.append(" where ");
-						sql.append(colName);
+							.hasNext();) {
+						sql.append(j.next());
 						sql.append(" is null");
+						if (j.hasNext())
+							sql.append(" and ");
+					}
+					sql.append(')');
 
-						int countNull = 0;
-						try {
-							final Collection results = MartRunnerProtocol.Client
-									.runSQL(host, port, this.getJobPlan()
-											.getJobId(), sql.toString());
-							countNull = Integer
-									.parseInt(((Map.Entry) ((Map) results
-											.iterator().next()).entrySet()
-											.iterator().next()).getValue()
-											.toString());
-						} catch (final ProtocolException pe) {
-							this.exception = new TestException(pe);
-							return;
-						}
+					int countNotNull = 0;
+					try {
+						final Collection results = MartRunnerProtocol.Client
+								.runSQL(host, port, this.getJobPlan()
+										.getJobId(), sql.toString());
+						countNotNull = Integer
+								.parseInt(((Map.Entry) ((Map) results
+										.iterator().next()).entrySet()
+										.iterator().next()).getValue()
+										.toString());
+					} catch (final ProtocolException pe) {
+						this.exception = new TestException(pe);
+						return;
+					}
 
-						// Process results.
-						if (countNull == countAll) {
-							// LOG - Table contains no values in column.
-							this.report.append(System
-									.getProperty("line.separator"));
+					// Process results.
+					if (countNotNull == 0) {
+						// LOG - Table contains no values in column.
+						this.report
+								.append(System.getProperty("line.separator"));
+						if (this.getAllNullableColsEmptyTest() == EmptyTableTest.DROP) {
+							this.dropTable(host, port, dbTableName);
 							this.report.append(Resources.get(
-									"emptyTableColIsNull", new String[] {
-											dbTableName, colName }));
-							failed = true;
-						}
-
-						// Update progress.
-						this.progress += subStepSize;
+									"emptyTableNullableColsEmptyDropped",
+									dbTableName));
+						} else
+							this.report
+									.append(Resources.get(
+											"emptyTableNullableColsEmpty",
+											dbTableName));
+						failed = true;
 					}
 				}
-			} else {
+			} else if (this.getNoRowsTest() != EmptyTableTest.SKIP) {
 				// LOG - Table contains no rows at all.
 				this.report.append(System.getProperty("line.separator"));
-				this.report.append(Resources.get("emptyTableHasNoRows",
-						dbTableName));
+				if (this.getNoRowsTest() == EmptyTableTest.DROP) {
+					this.dropTable(host, port, dbTableName);
+					this.report.append(Resources.get(
+							"emptyTableHasNoRowsDropped", dbTableName));
+				} else
+					this.report.append(Resources.get("emptyTableHasNoRows",
+							dbTableName));
 				failed = true;
-
-				// Update progress.
-				this.progress += stepSize;
 			}
+
+			// Update progress.
+			this.progress += stepSize;
 		}
 
 		if (!failed) {
@@ -219,5 +248,80 @@ public class EmptyTableTest extends JobTest {
 			this.report.append(Resources.get("allTestsPassed"));
 		}
 		Log.debug("Empty table test done.");
+	}
+
+	private void dropTable(final String host, final String port,
+			final String tableName) {
+		Log.debug("Executing drop table.");
+		final StringBuffer sql = new StringBuffer();
+		sql.append("drop table ");
+		sql.append(this.getJobPlan().getTargetSchema());
+		sql.append('.');
+		sql.append(tableName);
+
+		try {
+			MartRunnerProtocol.Client.runSQL(host, port, this.getJobPlan()
+					.getJobId(), sql.toString());
+		} catch (final ProtocolException pe) {
+			this.exception = new TestException(pe);
+			return;
+		}
+	}
+
+	/**
+	 * Defaults to {@link EmptyTableTest#REPORT}.
+	 * 
+	 * @return the allNullableColsEmptyTest
+	 */
+	public int getAllNullableColsEmptyTest() {
+		return this.allNullableColsEmptyTest;
+	}
+
+	/**
+	 * Defaults to {@link EmptyTableTest#REPORT}.
+	 * 
+	 * @param allNullableColsEmptyTest
+	 *            the allNullableColsEmptyTest to set
+	 */
+	public void setAllNullableColsEmptyTest(int allNullableColsEmptyTest) {
+		this.allNullableColsEmptyTest = allNullableColsEmptyTest;
+	}
+
+	/**
+	 * Defaults to {@link EmptyTableTest#REPORT}.
+	 * 
+	 * @return the noNonKeyColsTest
+	 */
+	public int getNoNonKeyColsTest() {
+		return this.noNonKeyColsTest;
+	}
+
+	/**
+	 * Defaults to {@link EmptyTableTest#REPORT}.
+	 * 
+	 * @param noNonKeyColsTest
+	 *            the noNonKeyColsTest to set
+	 */
+	public void setNoNonKeyColsTest(int noNonKeyColsTest) {
+		this.noNonKeyColsTest = noNonKeyColsTest;
+	}
+
+	/**
+	 * Defaults to {@link EmptyTableTest#REPORT}.
+	 * 
+	 * @return the noRowsTest
+	 */
+	public int getNoRowsTest() {
+		return this.noRowsTest;
+	}
+
+	/**
+	 * Defaults to {@link EmptyTableTest#REPORT}.
+	 * 
+	 * @param noRowsTest
+	 *            the noRowsTest to set
+	 */
+	public void setNoRowsTest(int noRowsTest) {
+		this.noRowsTest = noRowsTest;
 	}
 }
