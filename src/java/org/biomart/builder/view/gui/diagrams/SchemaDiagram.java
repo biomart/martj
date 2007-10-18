@@ -125,7 +125,6 @@ public class SchemaDiagram extends Diagram {
 	}
 
 	public void doRecalculateDiagram() {
-		// FIXME Recycle components.
 		// Add a TableComponent for each table in the schema.
 		final Set usedRels = new HashSet();
 		for (final Iterator i = this.getSchema().getTables().values()

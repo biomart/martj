@@ -114,7 +114,6 @@ public class DataSetDiagram extends Diagram {
 	}
 
 	public void doRecalculateDiagram() {
-		// FIXME Recycle components.
 		// Add stuff.
 		final Set usedTables = new HashSet();
 		final List mainTables = new ArrayList();

@@ -281,7 +281,8 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		final boolean visMod = this.relation.isVisibleModified();
+		final boolean visMod = this.relation.isVisibleModified()
+				&& this.getDiagram().getMartTab().getPartitionViewSelection() == null;
 		this.needsRepaint |= this.changed ^ visMod;
 		this.changed = visMod;
 		if (this.needsRecalc)

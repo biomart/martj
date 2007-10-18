@@ -225,7 +225,8 @@ public abstract class BoxShapedComponent extends JPanel implements
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		final boolean visMod = this.object.isVisibleModified();
+		final boolean visMod = this.object.isVisibleModified()
+				&& this.getDiagram().getMartTab().getPartitionViewSelection() == null;
 		this.needsRepaint |= this.changed ^ visMod;
 		this.changed = visMod;
 		if (this.needsRecalc)
@@ -667,9 +668,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 		else
 			this.stroke = this.compounded ? BoxShapedComponent.DOTTED_OUTLINE
 					: BoxShapedComponent.OUTLINE;
-		this.setBorder(BorderFactory
-				.createLineBorder(this.changed ? DiagramComponent.GLOW_COLOUR
-						: this.getForeground(),
-						this.changed ? DiagramComponent.GLOW_WIDTH : 1));
+		this.setBorder(BorderFactory.createLineBorder(
+				this.changed ? DiagramComponent.GLOW_COLOUR : this
+						.getForeground(),
+				this.changed ? DiagramComponent.GLOW_WIDTH : 1));
 	}
 }

@@ -182,10 +182,14 @@ public class KeyComponent extends BoxShapedComponent {
 			public void dragGestureRecognized(DragGestureEvent e) {
 				if (KeyComponent.this.isDraggable())
 					try {
-						Transferable transferable = new KeyTransferable(
-								((KeyComponent) e.getComponent()).getKey());
-						e.startDrag(DragSource.DefaultLinkNoDrop, transferable,
-								dsListener);
+						// Only drag in all-partition view.
+						if (KeyComponent.this.getDiagram().getMartTab()
+								.getPartitionViewSelection() == null) {
+							Transferable transferable = new KeyTransferable(
+									((KeyComponent) e.getComponent()).getKey());
+							e.startDrag(DragSource.DefaultLinkNoDrop,
+									transferable, dsListener);
+						}
 					} catch (final Throwable t) {
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {

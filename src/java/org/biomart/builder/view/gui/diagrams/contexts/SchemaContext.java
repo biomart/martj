@@ -267,6 +267,11 @@ public class SchemaContext implements DiagramContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
+
+		// Not applicable in single-schema view.
+		if (this.getMartTab().getPartitionViewSelection()!=null)
+			return;
+		
 		if (object instanceof Schema) {
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();
