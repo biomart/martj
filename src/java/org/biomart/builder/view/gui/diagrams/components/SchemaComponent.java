@@ -185,25 +185,7 @@ public class SchemaComponent extends BoxShapedComponent {
 			}
 		});
 		contextMenu.add(update);
-
-		// Add a separator.
-		contextMenu.addSeparator();
-
-		// Partition menu option.
-		final JCheckBoxMenuItem partition = new JCheckBoxMenuItem(Resources
-				.get("partitionSchemaTitle"));
-		partition.setMnemonic(Resources.get("partitionSchemaMnemonic")
-				.charAt(0));
-		partition.addActionListener(new ActionListener() {
-			public void actionPerformed(final ActionEvent evt) {
-				SchemaComponent.this.getDiagram().getMartTab()
-						.getSchemaTabSet().requestModifySchemaPartitions(
-								SchemaComponent.this.getSchema());
-			}
-		});
-		contextMenu.add(partition);
-		partition.setSelected(this.getSchema().getPartitionRegex() != null);
-
+		
 		// Add a separator.
 		contextMenu.addSeparator();
 

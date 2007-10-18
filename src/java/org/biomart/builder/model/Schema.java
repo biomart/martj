@@ -608,7 +608,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 *             if there was any other kind of logical problem.
 	 */
 	public void synchronise() throws SQLException, DataModelException {
-		this.partitionCache.clear();
+		this.clearPartitionCache();
 		this.needsFullSync = false;
 		this.progress = 0.0;
 		// Extend as required.
@@ -762,6 +762,13 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.partitionCache.clear();
 		this.pcs.firePropertyChange("partitionRegex", oldValue, partitionRegex);
 	}
+	
+	/**
+	 * Clears the partition cache.
+	 */
+	public void clearPartitionCache() {
+		this.partitionCache.clear();
+	}
 
 	/**
 	 * Set the expression used to reformat groups from the partition regex into
@@ -782,7 +789,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			return;
 		this.partitionNameExpression = partitionNameExpression;
 		this.needsFullSync = true;
-		this.partitionCache.clear();
+		this.clearPartitionCache();
 		this.pcs.firePropertyChange("partitionNameExpression", oldValue,
 				partitionNameExpression);
 	}
@@ -1199,6 +1206,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			history.setProperty("password", this.getPassword() == null ? ""
 					: this.getPassword());
 			history.setProperty("schema", this.getDataLinkSchema());
+			history.setProperty("partitionRegex", this.getPartitionRegex());
+			history.setProperty("partitionNameExpression", this.getPartitionNameExpression());
 			Settings.saveHistoryProperties(JDBCSchema.class, this.getName(),
 					history);
 		}
@@ -1247,7 +1256,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			for (final Iterator i = this.getTables().values().iterator(); i
 					.hasNext();)
 				((Table) i.next()).getSchemaPartitions().clear();
-
+			
 			// Load tables and views from database, then loop over them.
 			ResultSet dbTables;
 			if (this.getPartitions().isEmpty())

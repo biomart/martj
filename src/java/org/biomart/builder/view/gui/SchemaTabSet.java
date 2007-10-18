@@ -62,7 +62,6 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.KeyDialog;
-import org.biomart.builder.view.gui.dialogs.PartitionSchemaDialog;
 import org.biomart.builder.view.gui.dialogs.SchemaConnectionDialog;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.resources.Resources;
@@ -714,25 +713,6 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestModifySchema(final Schema schema) {
 		if (SchemaConnectionDialog.modifySchema(schema))
 			this.requestSynchroniseSchema(schema, true, false);
-	}
-
-	/**
-	 * Pops up a dialog with details of the schema partitions, which allows the
-	 * user to modify them.
-	 * 
-	 * @param schema
-	 *            the schema to modify partitions for.
-	 */
-	public void requestModifySchemaPartitions(final Schema schema) {
-		final PartitionSchemaDialog dialog = new PartitionSchemaDialog(schema);
-		if (dialog.definePartitions()) {
-			// In the background, do the synchronisation.
-			Transaction.start(true);
-			schema.setPartitionNameExpression(dialog.getExpression());
-			schema.setPartitionRegex(dialog.getRegex());
-			SchemaTabSet.this.requestSynchroniseSchema(schema, true, false);
-			Transaction.end();
-		}
 	}
 
 	/**

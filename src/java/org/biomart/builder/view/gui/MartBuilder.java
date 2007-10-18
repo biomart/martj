@@ -128,8 +128,6 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem keyguessingSchema;
 
-		private JMenuItem partitionedSchema;
-
 		private JMenuItem updateSchema;
 
 		private JMenuItem renameSchema;
@@ -302,13 +300,6 @@ public class MartBuilder extends BioMartGUI {
 			this.keyguessingSchema.setMnemonic(Resources.get(
 					"enableKeyGuessingMnemonic").charAt(0));
 			this.keyguessingSchema.addActionListener(this);
-
-			// Partitioned schema.
-			this.partitionedSchema = new JCheckBoxMenuItem(Resources
-					.get("partitionSchemaTitle"));
-			this.partitionedSchema.setMnemonic(Resources.get(
-					"partitionSchemaMnemonic").charAt(0));
-			this.partitionedSchema.addActionListener(this);
 
 			// Update schema.
 			this.updateSchema = new JMenuItem(Resources
@@ -495,7 +486,6 @@ public class MartBuilder extends BioMartGUI {
 			schemaMenu.add(this.updateSchema);
 			schemaMenu.addSeparator();
 			schemaMenu.add(this.keyguessingSchema);
-			schemaMenu.add(this.partitionedSchema);
 			schemaMenu.addSeparator();
 			schemaMenu.add(this.renameSchema);
 			schemaMenu.add(this.removeSchema);
@@ -730,11 +720,6 @@ public class MartBuilder extends BioMartGUI {
 					MartBuilderMenuBar.this.keyguessingSchema
 							.setSelected(schema != null
 									&& schema.isKeyGuessing());
-					MartBuilderMenuBar.this.partitionedSchema
-							.setEnabled(schema != null);
-					MartBuilderMenuBar.this.partitionedSchema
-							.setSelected(schema != null
-									&& schema.getPartitionRegex() != null);
 					MartBuilderMenuBar.this.updateSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.renameSchema
@@ -893,13 +878,6 @@ public class MartBuilder extends BioMartGUI {
 					this.getMartBuilder().martTabSet.getSelectedMartTab()
 							.getSchemaTabSet()
 							.requestDisableKeyGuessing(schema);
-			} else if (e.getSource() == this.partitionedSchema) {
-				final Schema schema = this.getMartBuilder().martTabSet
-						.getSelectedMartTab().getSchemaTabSet()
-						.getSelectedSchema();
-				this.getMartBuilder().martTabSet.getSelectedMartTab()
-						.getSchemaTabSet()
-						.requestModifySchemaPartitions(schema);
 			} else if (e.getSource() == this.updateSchema) {
 				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()

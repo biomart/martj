@@ -54,8 +54,8 @@ import org.biomart.common.view.gui.dialogs.TransactionalDialog;
  * before the result is returned to the caller.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.5
  */
 public class SchemaConnectionDialog extends TransactionalDialog {
@@ -179,12 +179,13 @@ public class SchemaConnectionDialog extends TransactionalDialog {
 				// last-added) item gets moved to the top of the list and
 				// the whole list is reversed simply by displaying it.
 				SchemaConnectionDialog.this.name.removeAllItems();
-				final List names = new ArrayList(Settings.getHistoryNamesForClass(
-						SchemaConnectionDialog.this.connectionPanel
-						.getSchemaClass()));
+				final List names = new ArrayList(
+						Settings
+								.getHistoryNamesForClass(SchemaConnectionDialog.this.connectionPanel
+										.getSchemaClass()));
 				Collections.reverse(names);
 				for (final Iterator i = names.iterator(); i.hasNext();)
-					SchemaConnectionDialog.this.name.addItem(i.next()); 
+					SchemaConnectionDialog.this.name.addItem(i.next());
 				SchemaConnectionDialog.this.name.setSelectedItem(null);
 			}
 		});
@@ -400,6 +401,6 @@ public class SchemaConnectionDialog extends TransactionalDialog {
 
 		// If there were no messages, then validated OK if the connection
 		// panel also validated OK.
-		return messages.isEmpty() && this.connectionPanel.validateFields();
+		return messages.isEmpty() && this.connectionPanel.validateFields(true);
 	}
 }

@@ -26,6 +26,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,6 +50,7 @@ import javax.swing.filechooser.FileFilter;
 import org.biomart.builder.model.Mart;
 import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Schema.JDBCSchema;
+import org.biomart.builder.view.gui.panels.TwoColumnTablePanel.StringStringTablePanel;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
@@ -59,8 +61,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * validation of input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *			$Author$
  * @since 0.5
  */
 public abstract class SchemaConnectionPanel extends JPanel {
@@ -97,10 +99,12 @@ public abstract class SchemaConnectionPanel extends JPanel {
 	/**
 	 * Validates the current values of the fields in the panel.
 	 * 
+	 * @param report
+	 *            <tt>true</tt> if the user needs to know about the failures.
 	 * @return <tt>true</tt> if all is well, <tt>false</tt> if not, and may
 	 *         possible pop up some messages for the user to read en route.
 	 */
-	public abstract boolean validateFields();
+	public abstract boolean validateFields(final boolean report);
 
 	/**
 	 * Using a properties object from history that matches this class, copy
@@ -193,9 +197,11 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 		private JTextField username;
 
-		private String partitionRegex;
+		private JTextField regex;
 
-		private String partitionNameExpression;
+		private JTextField expression;
+
+		private StringStringTablePanel preview;
 
 		/**
 		 * This constructor creates a panel with all the fields necessary to
@@ -307,6 +313,65 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					return Resources.get("JARFileFilterDescription");
 				}
 			});
+			// Create the regex and expression fields.
+			this.regex = new JTextField(50);
+			this.expression = new JTextField(20);
+
+			// Two-column string/string panel of matches
+			this.preview = new StringStringTablePanel(Collections.EMPTY_MAP) {
+				private static final long serialVersionUID = 1L;
+
+				public String getFirstColumnHeader() {
+					return Resources.get("partitionedSchemaHeader");
+				}
+
+				public String getSecondColumnHeader() {
+					return Resources.get("partitionedSchemaPrefixHeader");
+				}
+			};
+
+			// On-change listener for regex+expression to update panel of
+			// matches
+			// by creating a temporary dummy schema with the specified regexes
+			// and
+			// seeing what it produces. Alerts if nothing produced.
+			final DocumentListener dl = new DocumentListener() {
+				public void changedUpdate(DocumentEvent e) {
+					this.changed();
+				}
+
+				public void insertUpdate(DocumentEvent e) {
+					this.changed();
+				}
+
+				public void removeUpdate(DocumentEvent e) {
+					this.changed();
+				}
+
+				private void changed() {
+					// If the fields aren't valid, we can't create it.
+					if (!JDBCSchemaConnectionPanel.this.validateFields(false))
+						return;
+					Map partitions = Collections.EMPTY_MAP;
+					final Schema tempSch;
+					try {
+						tempSch = JDBCSchemaConnectionPanel.this
+								.privateCreateSchemaFromSettings("__PARTITION_PREVIEW");
+						if (tempSch.getPartitionRegex() != null
+								&& tempSch.getPartitionNameExpression() != null)
+							partitions = tempSch.getPartitions();
+					} catch (final Throwable t) {
+						// Make doubly sure.
+						partitions = Collections.EMPTY_MAP;
+					} finally {
+						JDBCSchemaConnectionPanel.this.preview
+								.setValues(partitions);
+					}
+				}
+			};
+			this.regex.getDocument().addDocumentListener(dl);
+			this.expression.getDocument().addDocumentListener(dl);
+			this.jdbcURL.getDocument().addDocumentListener(dl);
 
 			// Add the driver class label and field.
 			JLabel label = new JLabel(Resources.get("driverClassLabel"));
@@ -347,12 +412,33 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			// label and password field across the username field space
 			// in order to save space.
 			label = new JLabel(Resources.get("usernameLabel"));
-			this.add(label, labelLastRowConstraints);
+			this.add(label, labelConstraints);
 			field = new JPanel();
 			field.add(this.username);
 			label = new JLabel(Resources.get("passwordLabel"));
 			field.add(label);
 			field.add(this.password);
+			this.add(field, fieldConstraints);
+
+			// Add the partition stuff.
+
+			// Fields for the regex and expression
+			label = new JLabel(Resources.get("schemaRegexLabel"));
+			this.add(label, labelConstraints);
+			field = new JPanel();
+			field.add(this.regex);
+			this.add(field, fieldConstraints);
+			label = new JLabel(Resources.get("schemaExprLabel"));
+			this.add(label, labelConstraints);
+			field = new JPanel();
+			field.add(this.expression);
+			this.add(field, fieldConstraints);
+
+			// Two-column string/string panel of matches
+			label = new JLabel(Resources.get("partitionedSchemasLabel"));
+			this.add(label, labelLastRowConstraints);
+			field = new JPanel();
+			field.add(this.preview);
 			this.add(field, fieldLastRowConstraints);
 		}
 
@@ -369,9 +455,9 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			this.username.setText(template.getProperty("username"));
 			this.password.setText(template.getProperty("password"));
 			this.schemaName.setText(template.getProperty("schema"));
-			this.partitionRegex = template.getProperty("partitionRegex");
-			this.partitionNameExpression = template
-					.getProperty("partitionNameExpression");
+			this.regex.setText(template.getProperty("partitionRegex"));
+			this.expression.setText(template
+					.getProperty("partitionNameExpression"));
 
 			// Parse the JDBC URL into host, port and database, if the
 			// driver is known to us (defined in the map at the start
@@ -511,36 +597,14 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			this.documentEvent(e);
 		}
 
-		/**
-		 * Creates a {@link JDBCSchema} with the given name, based on the user
-		 * input inside the panel.
-		 * 
-		 * @param name
-		 *            the name to give the schema.
-		 * @return the created schema.
-		 */
 		public Schema createSchemaFromSettings(final String name) {
 			// If the fields aren't valid, we can't create it.
-			if (!this.validateFields())
+			if (!this.validateFields(true))
 				return null;
 
 			try {
-				// Record the user's specifications.
-				final String driverClassName = this.driverClass.getText();
-				final String url = this.jdbcURL.getText();
-				final String database = this.database.getText();
-				final String schemaName = this.schemaName.getText();
-				final String username = this.username.getText();
-				final String password = new String(this.password.getPassword());
-
-				// Construct a JDBCSchema based on them.
-				final JDBCSchema schema = new JDBCSchema(this.mart,
-						driverClassName, url, database, schemaName, username,
-						password, name, false, this.partitionRegex,
-						this.partitionNameExpression);
-
 				// Return that schema.
-				return schema;
+				return this.privateCreateSchemaFromSettings(name);
 			} catch (final Throwable t) {
 				StackTrace.showStackTrace(t);
 			}
@@ -550,20 +614,36 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			return null;
 		}
 
+		private Schema privateCreateSchemaFromSettings(final String name)
+				throws Exception {
+			// Record the user's specifications.
+			final String driverClassName = this.driverClass.getText();
+			final String url = this.jdbcURL.getText();
+			final String database = this.database.getText();
+			final String schemaName = this.schemaName.getText();
+			final String username = this.username.getText();
+			final String password = new String(this.password.getPassword());
+			final String regex = this.isEmpty(this.regex.getText()) ? null
+					: this.regex.getText().trim();
+			final String expression = this.isEmpty(this.expression.getText()) ? null
+					: this.expression.getText().trim();
+
+			// Construct a JDBCSchema based on them.
+			final JDBCSchema schema = new JDBCSchema(this.mart,
+					driverClassName, url, database, schemaName, username,
+					password, name, false, regex, expression);
+
+			// Return that schema.
+			return schema;
+		}
+
 		public void insertUpdate(final DocumentEvent e) {
 			this.documentEvent(e);
 		}
 
-		/**
-		 * Updates the specified schema based on the user input.
-		 * 
-		 * @param schema
-		 *            the schema to update.
-		 * @return the updated schema, or null if it was not updated.
-		 */
 		public Schema copySettingsToExistingSchema(final Schema schema) {
 			// If the fields are not valid, we can't modify it.
-			if (!this.validateFields())
+			if (!this.validateFields(true))
 				return null;
 
 			// We can only update JDBCSchema objects.
@@ -579,9 +659,12 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					jschema.setUsername(this.username.getText());
 					jschema
 							.setPassword(new String(this.password.getPassword()));
-					jschema.setPartitionRegex(this.partitionRegex);
-					jschema
-							.setPartitionNameExpression(this.partitionNameExpression);
+					jschema.setPartitionRegex(this
+							.isEmpty(this.regex.getText()) ? null : this.regex
+							.getText().trim());
+					jschema.setPartitionNameExpression(this
+							.isEmpty(this.expression.getText()) ? null
+							: this.expression.getText().trim());
 				} catch (final Throwable t) {
 					StackTrace.showStackTrace(t);
 				}
@@ -616,9 +699,9 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				this.username.setText(jdbcSchema.getUsername());
 				this.password.setText(jdbcSchema.getPassword());
 				this.schemaName.setText(jdbcSchema.getDataLinkSchema());
-				this.partitionRegex = jdbcSchema.getPartitionRegex();
-				this.partitionNameExpression = jdbcSchema
-						.getPartitionNameExpression();
+				this.regex.setText(jdbcSchema.getPartitionRegex());
+				this.expression
+						.setText(jdbcSchema.getPartitionNameExpression());
 
 				// Parse the JDBC URL into host, port and database, if the
 				// driver is known to us (defined in the map at the start
@@ -662,13 +745,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			}
 		}
 
-		/**
-		 * Validates the fields. If any are invalid, it pops up a message saying
-		 * so.
-		 * 
-		 * @return <tt>true</tt> if all is well, <tt>false</tt> if not.
-		 */
-		public boolean validateFields() {
+		public boolean validateFields(final boolean report) {
 			// Make a list to hold any validation messages that may occur.
 			final List messages = new ArrayList();
 
@@ -710,8 +787,13 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				messages.add(Resources.get("fieldIsEmpty", Resources
 						.get("username")));
 
+			// Check regex+expression are both missing or both present (EOR).
+			if (this.isEmpty(this.regex.getText())
+					^ this.isEmpty(this.expression.getText()))
+				messages.add(Resources.get("schemaRegexExprEmpty"));
+
 			// If there any messages to show the user, show them.
-			if (!messages.isEmpty())
+			if (report && !messages.isEmpty())
 				JOptionPane.showMessageDialog(null, messages
 						.toArray(new String[0]), Resources
 						.get("validationTitle"),
