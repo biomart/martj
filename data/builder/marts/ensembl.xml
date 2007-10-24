@@ -578,9 +578,9 @@
 			<column id="544" name="db_file" visibleModified="false"/>
 			<column id="545" name="program_file" visibleModified="false"/>
 			<column id="546" name="program_version" visibleModified="false"/>
-			<column id="547" name="module" visibleModified="false"/>
-			<column id="548" name="gff_feature" visibleModified="false"/>
-			<column id="549" name="program" visibleModified="false"/>
+			<column id="547" name="gff_feature" visibleModified="false"/>
+			<column id="548" name="program" visibleModified="false"/>
+			<column id="549" name="module" visibleModified="false"/>
 			<primaryKey id="550" columnIds="536" status="INFERRED" visibleModified="false"/>
 		</table>
 		<table id="551" name="protein_tree_node" ignore="false">
@@ -1378,9 +1378,9 @@
 			<column id="1294" name="dna_align_feature_id" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="1295" name="seq_region_id" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="1296" name="hit_end" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="1297" name="hit_strand" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="1298" name="score" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="1299" name="perc_ident" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="1297" name="score" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="1298" name="perc_ident" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="1299" name="hit_strand" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<foreignKey id="1300" columnIds="1286" status="INFERRED" visibleModified="false"/>
 			<foreignKey id="1301" columnIds="1295" status="INFERRED" visibleModified="false"/>
 			<primaryKey id="1302" columnIds="1294" status="INFERRED" visibleModified="false"/>
@@ -1457,9 +1457,9 @@
 			<column id="1365" name="db_file" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="1366" name="program_file" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<column id="1367" name="program_version" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="1368" name="gff_feature" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="1369" name="program" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
-			<column id="1370" name="module" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="1368" name="program" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="1369" name="module" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
+			<column id="1370" name="gff_feature" visibleModified="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur"/>
 			<primaryKey id="1371" columnIds="1357" status="INFERRED" visibleModified="false"/>
 		</table>
 		<table id="1372" name="density_type" ignore="false" inSchemaPartition="cfam,ogar,mmus,scer,oana,btau,fcat,ocun,lafr,mluc,drer,hsap,etel,csav,cint,ptro,dnov,cpor,trub,rnor,dmel,mdom,tnig,olat,sara,gacu,tbel,cele,ggal,aaeg,agam,stri,xtro,mmul,eeur">
@@ -3520,7 +3520,7 @@
 		<renamedTable tableKey="exon__supporting_feature" newName="supporting_feature"/>
 		<renamedTable tableKey="exon__exon_transcript" newName="exon_transcript"/>
 	</dataset>
-	<dataset name="gene" centralTableId="1178" optimiser="NONE" invisible="false" masked="false" hideMasked="true" indexOptimiser="false">
+	<dataset name="gene" centralTableId="1178" optimiser="COLUMN_BOOL_NULL_INHERIT" invisible="false" masked="false" hideMasked="true" indexOptimiser="true">
 		<compoundRelation relationId="1849" n="2" parallel="true"/>
 		<compoundRelation relationId="1862" n="2" parallel="true"/>
 		<subclassRelation relationId="1904"/>
@@ -3580,9 +3580,9 @@
 		<maskedColumn tableKey="translation__protein_feature" colKey="logic_name"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="program_file"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="program_version"/>
+		<maskedColumn tableKey="translation__protein_feature" colKey="gff_feature"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="module"/>
 		<maskedColumn tableKey="translation__protein_feature" colKey="program"/>
-		<maskedColumn tableKey="translation__protein_feature" colKey="gff_feature"/>
 		<compoundRelation tableKey="translation__protein_feature" relationId="1849" n="2" parallel="true"/>
 		<compoundRelation tableKey="translation__protein_feature" relationId="1862" n="2" parallel="true"/>
 		<maskedRelation tableKey="translation__protein_feature" relationId="1909"/>
@@ -4142,6 +4142,12 @@
 		<maskedRelation tableKey="object_xref" relationId="3248"/>
 		<maskedRelation tableKey="object_xref" relationId="3247"/>
 	</dataset>
+	<datasetPartitionTable name="protein_feature_partition" selectedColumns="logic_name">
+		<partitionApplication name="gene" dimension="translation__protein_feature" pCols="logic_name" dsCols="logic_name" relationIds="1865" nameCols="logic_name" compounds="12"/>
+	</datasetPartitionTable>
+	<datasetPartitionTable name="transcript_xref_partition" selectedColumns="db_name">
+		<partitionApplication name="gene" dimension="transcript__object_xref" pCols="db_name" dsCols="db_name" relationIds="1877" nameCols="db_name" compounds="29"/>
+	</datasetPartitionTable>
 	<datasetPartitionTable name="translation_xref_partition" selectedColumns="db_name">
 		<partitionApplication name="gene" dimension="translation__object_xref" pCols="db_name" dsCols="db_name" relationIds="1877" nameCols="db_name" compounds="14"/>
 	</datasetPartitionTable>
@@ -4153,11 +4159,5 @@
 	</datasetPartitionTable>
 	<datasetPartitionTable name="gene_xref_partition" selectedColumns="db_name">
 		<partitionApplication name="gene" dimension="gene__object_xref" pCols="db_name" dsCols="db_name" relationIds="1877" nameCols="db_name" compounds="1"/>
-	</datasetPartitionTable>
-	<datasetPartitionTable name="protein_feature_partition" selectedColumns="logic_name">
-		<partitionApplication name="gene" dimension="translation__protein_feature" pCols="logic_name" dsCols="logic_name" relationIds="1865" nameCols="logic_name" compounds="12"/>
-	</datasetPartitionTable>
-	<datasetPartitionTable name="transcript_xref_partition" selectedColumns="db_name">
-		<partitionApplication name="gene" dimension="transcript__object_xref" pCols="db_name" dsCols="db_name" relationIds="1877" nameCols="db_name" compounds="29"/>
 	</datasetPartitionTable>
 </mart>
