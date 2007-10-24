@@ -594,7 +594,7 @@ public interface MartConstructor {
 				for (final Iterator i = keepCols.iterator(); i.hasNext();)
 					keepColNames.add(((DataSetColumn) i.next())
 							.getPartitionedName());
-				this.doDistinct(finalCombinedName, previousTempTable,
+				this.doDistinct(dataset, dsTable, finalCombinedName, previousTempTable,
 						tempTable, keepColNames, bigness);
 				previousTempTable = tempTable;
 			} else if (!dropCols.isEmpty()) {
@@ -653,6 +653,19 @@ public interface MartConstructor {
 								DataSetTableType.MAIN)
 								&& dataset.getDataSetOptimiserType().isTable(),
 						null, bigness);
+
+			// Optimiser indexing.
+			if (dataset.isIndexOptimiser()
+					&& this.uniqueOptCols.containsKey(dsTable))
+				for (final Iterator i = ((Collection) this.uniqueOptCols
+						.get(dsTable)).iterator(); i.hasNext();) {
+					final String col = (String) i.next();
+					final Index index = new Index(this.datasetSchemaName,
+							finalCombinedName);
+					index.setTable(finalName);
+					index.setColumns(Collections.singletonList(col));
+					this.issueAction(index);
+				}
 
 			// Remember size for children.
 			bigParents.put(dsTable, new Integer(bigness));
@@ -720,17 +733,24 @@ public interface MartConstructor {
 			this.issueAction(drop);
 		}
 
-		private void doDistinct(final String finalCombinedName,
+		private void doDistinct(final DataSet dataset, final DataSetTable dsTable, final String finalCombinedName,
 				final String previousTempTable, final String tempTable,
 				final Collection keepCols, final int bigness)
 				throws ListenerException {
+			// Add to keepCols all the has columns for this table.
+			final Collection distinctCols = new HashSet(keepCols);
+			final Collection hasCols = dataset.getDataSetOptimiserType()
+					.isTable() ? null : (Collection) this.uniqueOptCols
+					.get(dsTable);
+			if (hasCols != null)
+				distinctCols.addAll(hasCols);
 			// Make the join.
 			final Distinct action = new Distinct(this.datasetSchemaName,
 					finalCombinedName);
 			action.setSchema(this.datasetSchemaName);
 			action.setTable(previousTempTable);
 			action.setResultTable(tempTable);
-			action.setKeepCols(keepCols);
+			action.setKeepCols(distinctCols);
 			action.setBigTable(bigness);
 			this.issueAction(action);
 			// Drop the old one.
@@ -804,10 +824,11 @@ public interface MartConstructor {
 					// tables as these does not need cols copying.
 					if (dataset.getDataSetOptimiserType().isTable())
 						return;
-					// Continue copying.
-					this.uniqueOptCols.put(dsTable, new HashSet());
+					if (!this.uniqueOptCols.containsKey(dsTable))
+						this.uniqueOptCols.put(dsTable, new HashSet());
 					((Collection) this.uniqueOptCols.get(dsTable))
 							.add(copyDown);
+					// Continue copying.
 					final String childOptTable = this.getOptimiserTableName(
 							schemaPrefix, dsPta, dmPta, dsTable, dataset
 									.getDataSetOptimiserType());
@@ -847,25 +868,28 @@ public interface MartConstructor {
 					update.setCountNotBool(!oType.isBool());
 					update.setNullNotZero(oType.isUseNull());
 					this.issueAction(update);
-				}
 
-				// Index the column if required.
-				if (dataset.isIndexOptimiser()) {
+					if (!this.uniqueOptCols.containsKey(parent))
+						this.uniqueOptCols.put(parent, new HashSet());
+					((Collection) this.uniqueOptCols.get(parent))
+							.add(optCol);
+					
+					// Index the column.
 					final Index index = new Index(this.datasetSchemaName,
 							finalCombinedName);
 					index.setTable(optTable);
 					index.setColumns(Collections.singletonList(optCol));
 					this.issueAction(index);
+					
+					// If subclass table, call this method a second
+					// time to copy the column down.
+					if (dsTable.getType()
+							.equals(DataSetTableType.MAIN_SUBCLASS))
+						this.doOptimiseTable(schemaPrefix, dsPta, dmPta,
+								dataset, dsTable, oType, dataset
+										.getDataSetOptimiserType().isTable(),
+								optCol, bigness);
 				}
-
-				// If subclass table, call this method a second
-				// time to copy the column down.
-				if (copyDown == null
-						&& dsTable.getType().equals(
-								DataSetTableType.MAIN_SUBCLASS))
-					this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
-							dsTable, oType, dataset.getDataSetOptimiserType()
-									.isTable(), optCol, bigness);
 			}
 		}
 
@@ -1266,13 +1290,12 @@ public interface MartConstructor {
 			// if it exists, otherwise use the default partition.
 			// Note that it will run unpredictably if compound keys are used.
 			String unrollFK = unrollDef.isReversed() ? utu.getDataSetColumnFor(
-					childRel.getManyKey().getColumns()[0])
-					.getPartitionedName() : utu.getDataSetColumnFor(
-					parentRel.getManyKey().getColumns()[0])
-					.getPartitionedName();
+					childRel.getManyKey().getColumns()[0]).getPartitionedName()
+					: utu.getDataSetColumnFor(
+							parentRel.getManyKey().getColumns()[0])
+							.getPartitionedName();
 			String unrollPK = utu.getDataSetColumnFor(
-					parentRel.getOneKey().getColumns()[0])
-					.getPartitionedName();
+					parentRel.getOneKey().getColumns()[0]).getPartitionedName();
 			final String unrollIDColName = utu.getUnrolledIDColumn()
 					.getPartitionedName();
 			final String unrollNameColName = utu.getUnrolledNameColumn()
@@ -1683,10 +1706,8 @@ public interface MartConstructor {
 					sb.append("" + counter);
 					sb.append(Resources.get("tablenameSubSep"));
 				}
-				sb
-						.append(oType.isBool() ? Resources
-								.get("boolColSuffix")
-								: Resources.get("countColSuffix"));
+				sb.append(oType.isBool() ? Resources.get("boolColSuffix")
+						: Resources.get("countColSuffix"));
 				name = sb.toString();
 			} while (((Collection) this.uniqueOptCols.get(parent))
 					.contains(name));
