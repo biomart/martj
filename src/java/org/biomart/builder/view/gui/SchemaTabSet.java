@@ -27,6 +27,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -265,7 +266,7 @@ public class SchemaTabSet extends JTabbedPane {
 		// this key may be linked to.
 
 		// Start by making a list to contain the candidates.
-		final Collection candidates = new ArrayList();
+		final List candidates = new ArrayList();
 
 		// We want all keys that have the same number of columns.
 		for (final Iterator i = this.martTab.getMart().getSchemas().values()
@@ -280,6 +281,8 @@ public class SchemaTabSet extends JTabbedPane {
 						candidates.add(key);
 				}
 			}
+		// Alphabetize.
+		Collections.sort(candidates);
 
 		// Put up a box asking which key to link this key to, based on the
 		// list of candidates we just made. Return the key that the user
