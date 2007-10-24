@@ -666,7 +666,7 @@ public class Table implements Comparable, TransactionListener {
 	}
 
 	public String toString() {
-		return this.name + " (" + this.schema + ")";
+		return "(" + this.schema + ") "+this.name;
 	}
 
 	/**

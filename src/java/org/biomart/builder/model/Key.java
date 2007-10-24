@@ -302,7 +302,7 @@ public abstract class Key implements Comparable, TransactionListener {
 		final StringBuffer sb = new StringBuffer();
 		sb.append(this.getTable() == null ? "<undef>" : this.getTable()
 				.toString());
-		sb.append('[');
+		sb.append(" [");
 		for (int i = 0; i < this.columns.length; i++) {
 			if (i > 0)
 				sb.append(',');
