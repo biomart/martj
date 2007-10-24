@@ -605,7 +605,7 @@ public class DataSet extends Schema {
 					.prepareStatement(sql.toString());
 			stmt.execute();
 			final ResultSet rs = stmt.getResultSet();
-			while (rs.next()) {
+			while (rs!=null && rs.next()) {
 				// Read rows.
 				final Map rowCols = new HashMap();
 				// Populate rowCols with column names as

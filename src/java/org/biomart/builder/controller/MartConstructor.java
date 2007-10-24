@@ -845,7 +845,7 @@ public interface MartConstructor {
 					update.setOptTableName(optTable);
 					update.setOptColumnName(optCol);
 					update.setCountNotBool(!oType.isBool());
-					update.setNullNotZero(!oType.isUseNull());
+					update.setNullNotZero(oType.isUseNull());
 					this.issueAction(update);
 				}
 
@@ -1674,7 +1674,7 @@ public interface MartConstructor {
 				sb.append(dsTable.getModifiedName());
 				sb.append(Resources.get("tablenameSubSep"));
 				if (dmPta != null) {
-					final PartitionColumn pcol = dsPta.getNamePartitionCol();
+					final PartitionColumn pcol = dmPta.getNamePartitionCol();
 					sb.append(pcol.getValueForRow(pcol.getPartitionTable()
 							.currentRow()));
 					sb.append(Resources.get("tablenameSubSep"));
@@ -1684,10 +1684,7 @@ public interface MartConstructor {
 					sb.append(Resources.get("tablenameSubSep"));
 				}
 				sb
-						.append(oType
-								.equals(DataSetOptimiserType.COLUMN_BOOL_INHERIT)
-								|| oType
-										.equals(DataSetOptimiserType.TABLE_BOOL_INHERIT) ? Resources
+						.append(oType.isBool() ? Resources
 								.get("boolColSuffix")
 								: Resources.get("countColSuffix"));
 				name = sb.toString();
