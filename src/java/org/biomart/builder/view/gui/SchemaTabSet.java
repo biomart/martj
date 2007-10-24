@@ -530,7 +530,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateForeignKey(final Table table,
 			final Column[] columns) {
-		Transaction.start(false);
+		Transaction.start(true);
 		final ForeignKey fk = new ForeignKey(columns);
 		fk.setStatus(ComponentStatus.HANDMADE);
 		table.getForeignKeys().add(fk);
@@ -569,7 +569,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreatePrimaryKey(final Table table,
 			final Column[] columns) {
-		Transaction.start(false);
+		Transaction.start(true);
 		final PrimaryKey pk = new PrimaryKey(columns);
 		pk.setStatus(ComponentStatus.HANDMADE);
 		table.setPrimaryKey(pk);
@@ -603,8 +603,7 @@ public class SchemaTabSet extends JTabbedPane {
 	public void requestCreateRelation(final Key from, final Key to) {
 		// Create the relation in the background.
 		try {
-
-			Transaction.start(false);
+			Transaction.start(true);
 			final Relation rel = new Relation(
 					from,
 					to,
