@@ -2849,6 +2849,8 @@ public class DataSet extends Schema {
 			this.pcs.addPropertyChangeListener("dimensionMasked", listener);
 			this.pcs.addPropertyChangeListener("distinctTable", listener);
 			this.pcs.addPropertyChangeListener("noFinalLeftJoin", listener);
+			this.pcs.addPropertyChangeListener("skipOptimiser", listener);
+			this.pcs.addPropertyChangeListener("skipIndexOptimiser", listener);
 			this.pcs.addPropertyChangeListener("partitionTableApplication",
 					listener);
 		}
