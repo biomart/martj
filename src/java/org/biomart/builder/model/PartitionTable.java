@@ -198,9 +198,9 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-				listener))
-		this.pcs.addPropertyChangeListener(property, listener);
+		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
+				.contains(listener))
+			this.pcs.addPropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -545,10 +545,11 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		((Map) this.dmApplications.get(ds)).remove(dimension);
 		if (((Map) this.dmApplications.get(ds)).isEmpty())
 			this.dmApplications.remove(ds);
-		if (!dimension.equals(PartitionTable.NO_DIMENSION))
-			((DataSetTable) ds.getTables().get(dimension))
-					.setPartitionTableApplication(null);
-		else
+		if (!dimension.equals(PartitionTable.NO_DIMENSION)) {
+			if (ds.getTables().containsKey(dimension))
+				((DataSetTable) ds.getTables().get(dimension))
+						.setPartitionTableApplication(null);
+		} else
 			ds.setPartitionTableApplication(null);
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, null);
@@ -616,16 +617,16 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			return false;
 		else if (obj instanceof PartitionTable) {
 			final PartitionTable pt = (PartitionTable) obj;
-			return (this.uniqueId + "_" + this.getOriginalName()).equals(pt.uniqueId
-					+ "_" + pt.getOriginalName());
+			return (this.uniqueId + "_" + this.getOriginalName())
+					.equals(pt.uniqueId + "_" + pt.getOriginalName());
 		} else
 			return false;
 	}
 
 	public int compareTo(final Object obj) {
 		final PartitionTable pt = (PartitionTable) obj;
-		return (this.uniqueId + "_" + this.getOriginalName()).compareTo(pt.uniqueId
-					+ "_" + pt.getOriginalName());
+		return (this.uniqueId + "_" + this.getOriginalName())
+				.compareTo(pt.uniqueId + "_" + pt.getOriginalName());
 	}
 
 	public String toString() {
@@ -721,7 +722,8 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 * @param listener
 		 *            the listener to add.
 		 */
-		public void addPropertyChangeListener(final PropertyChangeListener listener) {
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
 			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
 					listener))
 				this.pcs.addPropertyChangeListener(listener);
@@ -737,9 +739,9 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-					listener))
-			this.pcs.addPropertyChangeListener(property, listener);
+			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
+					.contains(listener))
+				this.pcs.addPropertyChangeListener(property, listener);
 		}
 
 		/**
@@ -875,7 +877,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 					public String getOriginalName() {
 						return "__FAKE__TABLE__";
 					}
-					
+
 					public Collection getAvailableColumnNames() {
 						return Collections.EMPTY_SET;
 					}
@@ -1086,7 +1088,8 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 * @param listener
 		 *            the listener to add.
 		 */
-		public void addPropertyChangeListener(final PropertyChangeListener listener) {
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
 			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
 					listener))
 				this.pcs.addPropertyChangeListener(listener);
@@ -1102,9 +1105,9 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-					listener))
-			this.pcs.addPropertyChangeListener(property, listener);
+			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
+					.contains(listener))
+				this.pcs.addPropertyChangeListener(property, listener);
 		}
 
 		/**
@@ -1350,9 +1353,10 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			 * @param listener
 			 *            the listener to add.
 			 */
-			public void addPropertyChangeListener(final PropertyChangeListener listener) {
-				if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-						listener))
+			public void addPropertyChangeListener(
+					final PropertyChangeListener listener) {
+				if (!Arrays.asList(this.pcs.getPropertyChangeListeners())
+						.contains(listener))
 					this.pcs.addPropertyChangeListener(listener);
 			}
 
@@ -1366,9 +1370,10 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			 */
 			public void addPropertyChangeListener(final String property,
 					final PropertyChangeListener listener) {
-				if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-						listener))
-				this.pcs.addPropertyChangeListener(property, listener);
+				if (!Arrays.asList(
+						this.pcs.getPropertyChangeListeners(property))
+						.contains(listener))
+					this.pcs.addPropertyChangeListener(property, listener);
 			}
 
 			/**
@@ -1512,14 +1517,15 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 				if (!(o instanceof PartitionAppliedRow))
 					return false;
 				final PartitionAppliedRow them = (PartitionAppliedRow) o;
-				return (this.namePartitionCol == them.namePartitionCol || (this.namePartitionCol != null && this.namePartitionCol
-						.equals(them.namePartitionCol)))
-						&& (this.partitionCol == them.partitionCol || (this.partitionCol != null && this.partitionCol
-								.equals(them.partitionCol)))
-						&& (this.rootDataSetCol == them.rootDataSetCol || (this.rootDataSetCol != null && this.rootDataSetCol
-								.equals(them.rootDataSetCol)))
-						&& (this.relation == them.relation || (this.relation != null && this.relation
-								.equals(them.relation)));
+				return (this.namePartitionCol == them.namePartitionCol || this.namePartitionCol != null
+						&& this.namePartitionCol.equals(them.namePartitionCol))
+						&& (this.partitionCol == them.partitionCol || this.partitionCol != null
+								&& this.partitionCol.equals(them.partitionCol))
+						&& (this.rootDataSetCol == them.rootDataSetCol || this.rootDataSetCol != null
+								&& this.rootDataSetCol
+										.equals(them.rootDataSetCol))
+						&& (this.relation == them.relation || this.relation != null
+								&& this.relation.equals(them.relation));
 			}
 		}
 	}
