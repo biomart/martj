@@ -1540,8 +1540,9 @@ public class MartBuilderXML extends DefaultHandler {
 					final Table table = new Table(schema, name);
 					table.setMasked(ignore);
 					table.getSchemaPartitions().clear();
-					table.getSchemaPartitions().addAll(
-							Arrays.asList(schemaPartitions));
+					for (int i = 0; i < schemaPartitions.length; i++)
+						table.getSchemaPartitions().add(
+								schemaPartitions[i].intern());
 					schema.getTables().put(table.getName(), table);
 					element = table;
 				} catch (final Exception e) {
@@ -1586,8 +1587,9 @@ public class MartBuilderXML extends DefaultHandler {
 					final Column column = new Column(tbl, name);
 					column.setVisibleModified(visibleModified);
 					column.getSchemaPartitions().clear();
-					column.getSchemaPartitions().addAll(
-							Arrays.asList(schemaPartitions));
+					for (int i = 0; i < schemaPartitions.length; i++)
+						column.getSchemaPartitions().add(
+								schemaPartitions[i].intern());
 					tbl.getColumns().put(column.getName(), column);
 					element = column;
 				}
@@ -1783,7 +1785,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Hide-mask it.
-				w.getMods(tableKey, "explainHideMasked").put(tableKey, null);
+				w.getMods(tableKey, "explainHideMasked").put(tableKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1803,7 +1805,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String key = (String) attributes.get("key");
 
 				// Vis-mod it.
-				w.getMods(key, "visibleModified").put(key, null);
+				w.getMods(key, "visibleModified").put(key.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1823,7 +1825,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Distinct it.
-				w.getMods(tableKey, "noFinalLeftJoin").put(tableKey, null);
+				w.getMods(tableKey, "noFinalLeftJoin").put(tableKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1843,7 +1845,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Distinct it.
-				w.getMods(tableKey, "distinctTable").put(tableKey, null);
+				w.getMods(tableKey, "distinctTable").put(tableKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1863,7 +1865,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Mask it.
-				w.getMods(tableKey, "dimensionMasked").put(tableKey, null);
+				w.getMods(tableKey, "dimensionMasked").put(tableKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2051,7 +2053,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String colKey = (String) attributes.get("colKey");
 
 				// Mask it.
-				w.getMods(tableKey, "columnMasked").put(colKey, null);
+				w.getMods(tableKey, "columnMasked").put(colKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2072,7 +2074,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String colKey = (String) attributes.get("colKey");
 
 				// Index it.
-				w.getMods(tableKey, "columnIndexed").put(colKey, null);
+				w.getMods(tableKey, "columnIndexed").put(colKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2092,7 +2094,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 				final String newName = (String) attributes.get("newName");
 
-				w.getMods(tableKey, "tableRename").put(tableKey, newName);
+				w.getMods(tableKey, "tableRename").put(tableKey.intern(), newName);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2113,7 +2115,7 @@ public class MartBuilderXML extends DefaultHandler {
 				final String colKey = (String) attributes.get("colKey");
 				final String newName = (String) attributes.get("newName");
 
-				w.getMods(tableKey, "columnRename").put(colKey, newName);
+				w.getMods(tableKey, "columnRename").put(colKey.intern(), newName);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2232,7 +2234,7 @@ public class MartBuilderXML extends DefaultHandler {
 						&& colKey != null) {
 					final ExpressionColumnDefinition expdef = new ExpressionColumnDefinition(
 							expr, aliases, groupBy, colKey);
-					w.getMods(tableKey, "initialExpressions").put(colKey,
+					w.getMods(tableKey, "initialExpressions").put(colKey.intern(),
 							expdef);
 				}
 			} catch (final Exception e) {
@@ -2438,7 +2440,7 @@ public class MartBuilderXML extends DefaultHandler {
 			if (dimension == null)
 				dimension = PartitionTable.NO_DIMENSION;
 			if (!dimension.equals(PartitionTable.NO_DIMENSION))
-				ds.getMods(dimension, "initialPTAs").put(dimension, pta);
+				ds.getMods(dimension, "initialPTAs").put(dimension.intern(), pta);
 			else
 				pt.applyTo(ds, dimension, pta);
 		} else

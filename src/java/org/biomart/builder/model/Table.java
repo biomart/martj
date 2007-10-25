@@ -236,7 +236,7 @@ public class Table implements Comparable, TransactionListener {
 			this.mods.put(dataset, new HashMap());
 		final Map dsMap = (Map) this.mods.get(dataset);
 		if (!dsMap.containsKey(tableKey))
-			dsMap.put(tableKey, new HashMap());
+			dsMap.put(tableKey.intern(), new HashMap());
 		return (Map) dsMap.get(tableKey);
 	}
 

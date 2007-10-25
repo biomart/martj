@@ -270,22 +270,6 @@ public class DataSet extends Schema {
 	/**
 	 * This contains the 'real' version of all dataset modifications. It is
 	 * accessed directly by MartBuilderXML, DataSetTable and DataSetColumn and
-	 * is not for use anywhere else at all under any circumstances. This is used
-	 * for applying dataset-wide modifications.
-	 * 
-	 * @param property
-	 *            the property to look up - e.g. maskedDimension, etc.
-	 * @return the set of tables that the property currently applies to. This
-	 *         set can be added to or removed from accordingly. The keys of the
-	 *         map are names, the values are optional subsidiary objects.
-	 */
-	public Map getMods(final String property) {
-		return this.getMods(DataSet.DATASET, property);
-	}
-
-	/**
-	 * This contains the 'real' version of all dataset modifications. It is
-	 * accessed directly by MartBuilderXML, DataSetTable and DataSetColumn and
 	 * is not for use anywhere else at all under any circumstances.
 	 * 
 	 * @param table
@@ -298,9 +282,9 @@ public class DataSet extends Schema {
 	 */
 	public Map getMods(final String table, final String property) {
 		if (!this.mods.containsKey(table))
-			this.mods.put(table, new HashMap());
+			this.mods.put(table.intern(), new HashMap());
 		if (!((Map) this.mods.get(table)).containsKey(property))
-			((Map) this.mods.get(table)).put(property, new HashMap());
+			((Map) this.mods.get(table)).put(property.intern(), new HashMap());
 		return (Map) ((Map) this.mods.get(table)).get(property);
 	}
 
@@ -605,7 +589,7 @@ public class DataSet extends Schema {
 					.prepareStatement(sql.toString());
 			stmt.execute();
 			final ResultSet rs = stmt.getResultSet();
-			while (rs!=null && rs.next()) {
+			while (rs != null && rs.next()) {
 				// Read rows.
 				final Map rowCols = new HashMap();
 				// Populate rowCols with column names as
@@ -1588,8 +1572,8 @@ public class DataSet extends Schema {
 					newSourceDSCols.add(unrolledNameCol);
 					// Create UnrollTable transformation unit.
 					final UnrollTable utu = new UnrollTable(tu, r,
-							newSourceDSCols, unrollDef,
-							unrolledIDCol, unrolledNameCol);
+							newSourceDSCols, unrollDef, unrolledIDCol,
+							unrolledNameCol);
 					dsTable.addTransformationUnit(utu);
 					this.includedRelations.add(r);
 					dsTable.includedRelations.add(r);
@@ -2308,7 +2292,7 @@ public class DataSet extends Schema {
 				throw new ValidationException(Resources
 						.get("cannotMaskNecessaryColumn"));
 			if (columnMasked)
-				this.getMods("columnMasked").put(this.getName(), null);
+				this.getMods("columnMasked").put(this.getName().intern(), null);
 			else
 				this.getMods("columnMasked").remove(this.getName());
 			this.pcs.firePropertyChange("columnMasked", oldValue, columnMasked);
@@ -2334,7 +2318,8 @@ public class DataSet extends Schema {
 			if (columnIndexed == oldValue)
 				return;
 			if (columnIndexed)
-				this.getMods("columnIndexed").put(this.getName(), null);
+				this.getMods("columnIndexed")
+						.put(this.getName().intern(), null);
 			else
 				this.getMods("columnIndexed").remove(this.getName());
 			this.pcs.firePropertyChange("columnIndexed", oldValue,
@@ -2404,7 +2389,8 @@ public class DataSet extends Schema {
 			}
 			// Check and change it.
 			if (columnRename != null)
-				this.getMods("columnRename").put(this.getName(), columnRename);
+				this.getMods("columnRename").put(this.getName().intern(),
+						columnRename);
 			else
 				this.getMods("columnRename").remove(this.getName());
 			this.pcs.firePropertyChange("columnRename", oldValue, columnRename);
@@ -3175,7 +3161,8 @@ public class DataSet extends Schema {
 			if (explainHideMasked == oldValue)
 				return;
 			if (explainHideMasked)
-				this.getMods("explainHideMasked").put(this.getName(), null);
+				this.getMods("explainHideMasked").put(this.getName().intern(),
+						null);
 			else
 				this.getMods("explainHideMasked").remove(this.getName());
 			this.pcs.firePropertyChange("explainHideMasked", oldValue,
@@ -3209,7 +3196,8 @@ public class DataSet extends Schema {
 				throw new ValidationException(Resources
 						.get("cannotMaskNonDimension"));
 			if (dimensionMasked)
-				this.getMods("dimensionMasked").put(this.getName(), null);
+				this.getMods("dimensionMasked").put(this.getName().intern(),
+						null);
 			else
 				this.getMods("dimensionMasked").remove(this.getName());
 			this.pcs.firePropertyChange("dimensionMasked", oldValue,
@@ -3236,7 +3224,8 @@ public class DataSet extends Schema {
 			if (noFinalLeftJoin == oldValue)
 				return;
 			if (noFinalLeftJoin)
-				this.getMods("noFinalLeftJoin").put(this.getName(), null);
+				this.getMods("noFinalLeftJoin").put(this.getName().intern(),
+						null);
 			else
 				this.getMods("noFinalLeftJoin").remove(this.getName());
 			this.pcs.firePropertyChange("noFinalLeftJoin", oldValue,
@@ -3263,7 +3252,8 @@ public class DataSet extends Schema {
 			if (distinctTable == oldValue)
 				return;
 			if (distinctTable)
-				this.getMods("distinctTable").put(this.getName(), null);
+				this.getMods("distinctTable")
+						.put(this.getName().intern(), null);
 			else
 				this.getMods("distinctTable").remove(this.getName());
 			this.pcs.firePropertyChange("distinctTable", oldValue,
@@ -3295,8 +3285,8 @@ public class DataSet extends Schema {
 					&& partitionTableApplication.equals(oldValue))
 				return;
 			if (partitionTableApplication != null)
-				this.getMods("partitionTableApplication").put(this.getName(),
-						partitionTableApplication);
+				this.getMods("partitionTableApplication").put(
+						this.getName().intern(), partitionTableApplication);
 			else
 				this.getMods("partitionTableApplication")
 						.remove(this.getName());
@@ -3346,7 +3336,8 @@ public class DataSet extends Schema {
 			}
 			// Check and change it.
 			if (tableRename != null)
-				this.getMods("tableRename").put(this.getName(), tableRename);
+				this.getMods("tableRename").put(this.getName().intern(),
+						tableRename);
 			else
 				this.getMods("tableRename").remove(this.getName());
 			this.pcs.firePropertyChange("tableRename", oldValue, tableRename);
