@@ -43,6 +43,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -112,7 +113,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * This is inherited by subclasses to indicate they need redrawing when the
 	 * next transaction ends.
 	 */
-	protected boolean needsRedraw = false;
+	protected boolean needsRecalc = false;
 
 	/**
 	 * This is inherited by subclasses to indicate they need repainting when the
@@ -153,7 +154,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public static final int RELATION_LAYER = -1;
 
 	// OK to use maps as it gets cleared out each time, the keys never change.
-	private final Map componentMap = new HashMap();
+	private final Map componentMap = Collections.synchronizedMap(new HashMap());
 
 	private DiagramContext diagramContext;
 
@@ -328,12 +329,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public void transactionEnded(final TransactionEvent evt) {
 		if (this.needsSubComps)
 			this.recalculateSubComps();
-		if (this.needsRedraw)
+		if (this.needsRecalc)
 			this.recalculateDiagram();
 		else if (this.needsRepaint)
 			this.repaintDiagram();
 		this.needsRepaint = false;
-		this.needsRedraw = false;
+		this.needsRecalc = false;
 		this.needsSubComps = false;
 	}
 
@@ -346,8 +347,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				i.remove();
 		}
 		final Map subCompMap = new HashMap();
-		for (final Iterator i = this.componentMap.values().iterator(); i
-				.hasNext();) {
+		for (final Iterator i = new HashMap(this.componentMap).values()
+				.iterator(); i.hasNext();) {
 			final Object o = i.next();
 			if (o instanceof DiagramComponent)
 				subCompMap.putAll(((DiagramComponent) o).getSubComponents());
@@ -802,54 +803,60 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public void recalculateDiagram() {
 		Log.debug("Recalculating diagram");
 		new LongProcess() {
-			public void run() {
-				Diagram.this.deselectAll();
+			public void run() throws Exception {
+				SwingUtilities.invokeAndWait(new Runnable() {
+					public void run() {
+						Diagram.this.deselectAll();
 
-				// Remember states.
-				final Map stateMap = new HashMap();
-				for (final Iterator i = Diagram.this.componentMap.entrySet()
-						.iterator(); i.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final Object o = entry.getValue();
-					if (o instanceof BoxShapedComponent)
-						stateMap.put(entry.getKey(), ((BoxShapedComponent) o)
-								.getState());
-				}
+						// Remember states.
+						final Map stateMap = new HashMap();
+						for (final Iterator i = Diagram.this.componentMap
+								.entrySet().iterator(); i.hasNext();) {
+							final Map.Entry entry = (Map.Entry) i.next();
+							final Object o = entry.getValue();
+							if (o instanceof BoxShapedComponent)
+								stateMap.put(entry.getKey(),
+										((BoxShapedComponent) o).getState());
+						}
 
-				// First of all, remove all our existing components.
-				Diagram.this.removeAll();
-				Diagram.this.componentMap.clear();
+						// First of all, remove all our existing components.
+						Diagram.this.removeAll();
+						Diagram.this.componentMap.clear();
 
-				// Delegate to do the actual diagram clear-and-repopulate.
-				Diagram.this.doRecalculateDiagram();
+						// Delegate to do the actual diagram
+						// clear-and-repopulate.
+						Diagram.this.doRecalculateDiagram();
 
-				// Do the subcomp thing.
-				Diagram.this.recalculateSubComps();
+						// Do the subcomp thing.
+						Diagram.this.recalculateSubComps();
 
-				// Reinstate states.
-				for (final Iterator i = stateMap.entrySet().iterator(); i
-						.hasNext();) {
-					final Map.Entry entry = (Map.Entry) i.next();
-					final BoxShapedComponent o = (BoxShapedComponent) Diagram.this.componentMap
-							.get(entry.getKey());
-					if (o != null && entry.getValue() != null)
-						o.setState(entry.getValue());
-				}
+						// Reinstate states.
+						for (final Iterator i = stateMap.entrySet().iterator(); i
+								.hasNext();) {
+							final Map.Entry entry = (Map.Entry) i.next();
+							final BoxShapedComponent o = (BoxShapedComponent) Diagram.this.componentMap
+									.get(entry.getKey());
+							if (o != null && entry.getValue() != null)
+								o.setState(entry.getValue());
+						}
 
-				// Set up a floating panel with the hide masked box.
-				if (Diagram.this.isUseHideMasked())
-					Diagram.this.add(Diagram.this.hideMasked, null,
-							Diagram.TOP_LAYER);
+						// Set up a floating panel with the hide masked box.
+						if (Diagram.this.isUseHideMasked())
+							Diagram.this.add(Diagram.this.hideMasked, null,
+									Diagram.TOP_LAYER);
 
-				// Resize the diagram to fit our new components.
-				Diagram.this.resizeDiagram();
+						// Resize the diagram to fit our new components.
+						Diagram.this.resizeDiagram();
 
-				// Initial placement of the hide masked button.
-				Diagram.this.adjustmentValueChanged(null);
+						// Initial placement of the hide masked button.
+						Diagram.this.adjustmentValueChanged(null);
 
-				// Repaint the whole diagram to update the state of any
-				// new bits and remove any ghosts that may be left on screen.
-				Diagram.this.repaintDiagram();
+						// Repaint the whole diagram to update the state of any
+						// new bits and remove any ghosts that may be left on
+						// screen.
+						Diagram.this.repaintDiagram();
+					}
+				});
 			}
 		}.start();
 	}
@@ -867,10 +874,37 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * on a table). Use {@link #recalculateDiagram()} instead.
 	 */
 	public void repaintDiagram() {
-		for (final Iterator i = this.componentMap.values().iterator(); i
-				.hasNext();)
-			((DiagramComponent) i.next()).repaintDiagramComponent();
-		this.repaint();
+		new LongProcess() {
+			public void run() throws Exception {
+				SwingUtilities.invokeAndWait(new Runnable() {
+					public void run() {
+						for (final Iterator i = Diagram.this.componentMap
+								.values().iterator(); i.hasNext();)
+							((DiagramComponent) i.next())
+									.repaintDiagramComponent();
+						Diagram.this.repaint();
+					}
+				});
+			}
+		}.start();
+	}
+
+	/**
+	 * Are we waiting to recalculate?
+	 * 
+	 * @return <tt>true</tt> if we are.
+	 */
+	public boolean isNeedsRecalc() {
+		return this.needsRecalc;
+	}
+
+	/**
+	 * Are we waiting to redraw?
+	 * 
+	 * @return <tt>true</tt> if we are.
+	 */
+	public boolean isNeedsRepaint() {
+		return this.needsRepaint;
 	}
 
 	/**

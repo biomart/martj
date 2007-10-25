@@ -26,6 +26,7 @@ package org.biomart.builder.model;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -168,7 +169,7 @@ public class Table implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public boolean isVisibleModified() {
+	public boolean isVisibleModified() {		
 		// Compute this from all keys and cols - if any are vis
 		// modified then we are too.
 		for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
@@ -328,7 +329,9 @@ public class Table implements Comparable, TransactionListener {
 	 *            the listener to add.
 	 */
 	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		this.pcs.addPropertyChangeListener(listener);
+		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
+				listener))
+			this.pcs.addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -341,6 +344,8 @@ public class Table implements Comparable, TransactionListener {
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
+		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
+				listener))
 		this.pcs.addPropertyChangeListener(property, listener);
 	}
 

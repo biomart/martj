@@ -167,7 +167,7 @@ public class ExplainContext extends SchemaContext {
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedSchemas() : this.dataset
 							.getIncludedSchemas());
-			 return !includedSchs.contains(schema);
+			return !includedSchs.contains(schema);
 		}
 
 		// Relations
@@ -187,8 +187,8 @@ public class ExplainContext extends SchemaContext {
 					this.datasetTable != null ? this.datasetTable
 							.getIncludedTables() : this.dataset
 							.getIncludedTables());
-			return (!includedTabs.contains(table)
-					|| !table.existsForPartition(schemaPrefix));
+			return (!includedTabs.contains(table) || !table
+					.existsForPartition(schemaPrefix));
 		}
 
 		// This section is for columns.
@@ -279,7 +279,7 @@ public class ExplainContext extends SchemaContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
-		
+
 		if (object instanceof Relation)
 			this.populateRelationContextMenu(contextMenu, (Relation) object,
 					RealisedRelation.NO_ITERATION);
@@ -426,9 +426,8 @@ public class ExplainContext extends SchemaContext {
 			});
 			contextMenu.add(remove);
 			if ((this.datasetTable == null ? table
-					.getRestrictTable(this.dataset)
-					: table.getRestrictTable(this.dataset,
-							this.datasetTable.getName())) == null)
+					.getRestrictTable(this.dataset) : table.getRestrictTable(
+					this.dataset, this.datasetTable.getName())) == null)
 				remove.setEnabled(false);
 
 			// Option to set 'big table' value.
@@ -509,14 +508,10 @@ public class ExplainContext extends SchemaContext {
 		mask.setMnemonic(Resources.get("maskRelationMnemonic").charAt(0));
 		mask.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				if (mask.isSelected())
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestMaskRelation(ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation);
-				else
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestUnmaskRelation(ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation);
+				ExplainContext.this.getMartTab().getDataSetTabSet()
+						.requestMaskRelation(ExplainContext.this.dataset,
+								ExplainContext.this.datasetTable, relation,
+								mask.isSelected());
 			}
 		});
 		contextMenu.add(mask);
@@ -553,15 +548,10 @@ public class ExplainContext extends SchemaContext {
 				0));
 		force.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				if (force.isSelected())
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestForceRelation(ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation);
-				else
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestUnforceRelation(
-									ExplainContext.this.dataset,
-									ExplainContext.this.datasetTable, relation);
+				ExplainContext.this.getMartTab().getDataSetTabSet()
+						.requestForceRelation(ExplainContext.this.dataset,
+								ExplainContext.this.datasetTable, relation,
+								force.isSelected());
 			}
 		});
 		contextMenu.add(force);
@@ -606,14 +596,9 @@ public class ExplainContext extends SchemaContext {
 				.charAt(0));
 		subclass.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				if (subclass.isSelected())
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestSubclassRelation(
-									ExplainContext.this.dataset, relation);
-				else
-					ExplainContext.this.getMartTab().getDataSetTabSet()
-							.requestUnsubclassRelation(
-									ExplainContext.this.dataset, relation);
+				ExplainContext.this.getMartTab().getDataSetTabSet()
+						.requestSubclassRelation(ExplainContext.this.dataset,
+								relation, subclass.isSelected());
 			}
 		});
 		contextMenu.add(subclass);

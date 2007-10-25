@@ -902,12 +902,9 @@ public class MartBuilder extends BioMartGUI {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				if (this.invisibleDataset.isSelected())
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestInvisibleDataSet(ds);
-				else
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestVisibleDataSet(ds);
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestInvisibleDataSet(ds,
+								this.invisibleDataset.isSelected());
 			} else if (e.getSource() == this.maskedDataset) {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
@@ -972,12 +969,9 @@ public class MartBuilder extends BioMartGUI {
 				final DataSet ds = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getDataSetTabSet()
 						.getSelectedDataSet();
-				if (this.indexOptimiser.isSelected())
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestIndexOptimiser(ds);
-				else
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getDataSetTabSet().requestNoIndexOptimiser(ds);
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestIndexOptimiser(ds,
+								this.indexOptimiser.isSelected());
 			}
 			// Others
 			else

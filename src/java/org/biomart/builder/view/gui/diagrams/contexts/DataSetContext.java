@@ -246,7 +246,8 @@ public class DataSetContext extends SchemaContext {
 										.getDataSetTabSet()
 										.requestMaskDimension(
 												DataSetContext.this
-														.getDataSet(), table);
+														.getDataSet(), table,
+												true);
 						}
 					}
 				});
@@ -267,9 +268,10 @@ public class DataSetContext extends SchemaContext {
 							if (isMasked)
 								DataSetContext.this.getMartTab()
 										.getDataSetTabSet()
-										.requestUnmaskDimension(
+										.requestMaskDimension(
 												DataSetContext.this
-														.getDataSet(), table);
+														.getDataSet(), table,
+												false);
 						}
 					}
 				});
@@ -303,7 +305,8 @@ public class DataSetContext extends SchemaContext {
 					}
 					DataSetContext.this.getMartTab().getDataSetTabSet()
 							.requestMaskColumns(
-									DataSetContext.this.getDataSet(), columns);
+									DataSetContext.this.getDataSet(), columns,
+									true);
 				}
 			});
 			contextMenu.add(mask);
@@ -324,8 +327,9 @@ public class DataSetContext extends SchemaContext {
 							columns.add(column);
 					}
 					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestUnmaskColumns(
-									DataSetContext.this.getDataSet(), columns);
+							.requestMaskColumns(
+									DataSetContext.this.getDataSet(), columns,
+									false);
 				}
 			});
 			contextMenu.add(unmask);
@@ -345,7 +349,7 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestIndexColumn(
 										DataSetContext.this.getDataSet(),
-										column);
+										column, true);
 					}
 				}
 			});
@@ -362,9 +366,9 @@ public class DataSetContext extends SchemaContext {
 							.hasNext();) {
 						final DataSetColumn column = (DataSetColumn) i.next();
 						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestUnindexColumn(
+								.requestIndexColumn(
 										DataSetContext.this.getDataSet(),
-										column);
+										column, false);
 					}
 				}
 			});
@@ -489,18 +493,10 @@ public class DataSetContext extends SchemaContext {
 					0));
 			distinct.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					if (distinct.isSelected())
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestDistinctTable(
-										DataSetContext.this.getDataSet(), table);
-					else
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestUndistinctTable(
-										DataSetContext.this.getDataSet(), table);
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestDistinctTable(
+									DataSetContext.this.getDataSet(), table,
+									distinct.isSelected());
 				}
 			});
 			contextMenu.add(distinct);
@@ -519,20 +515,47 @@ public class DataSetContext extends SchemaContext {
 						"noFinalLeftJoinTableMnemonic").charAt(0));
 				noLeftJoin.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						if (noLeftJoin.isSelected())
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestNoFinalLeftJoinTable(
-											DataSetContext.this.getDataSet(),
-											table);
-						else
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestFinalLeftJoinTable(
-											DataSetContext.this.getDataSet(),
-											table);
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestNoFinalLeftJoinTable(
+										DataSetContext.this.getDataSet(),
+										table, noLeftJoin.isSelected());
 					}
 				});
 				contextMenu.add(noLeftJoin);
 				noLeftJoin.setSelected(table.isNoFinalLeftJoin());
+
+				// The table can be no-optimised by using this option.
+				final JCheckBoxMenuItem skipOptimiser = new JCheckBoxMenuItem(
+						Resources.get("skipOptimiserTitle"));
+				skipOptimiser.setMnemonic(Resources
+						.get("skipOptimiserMnemonic").charAt(0));
+				skipOptimiser.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestSkipOptimiser(
+										DataSetContext.this.getDataSet(),
+										table, skipOptimiser.isSelected());
+					}
+				});
+				contextMenu.add(skipOptimiser);
+				skipOptimiser.setSelected(table.isSkipOptimiser());
+
+				// The table can be no-index-optimised by using this option.
+				final JCheckBoxMenuItem skipIndexOptimiser = new JCheckBoxMenuItem(
+						Resources.get("skipIndexOptimiserTitle"));
+				skipIndexOptimiser.setMnemonic(Resources.get(
+						"skipIndexOptimiserMnemonic").charAt(0));
+				skipIndexOptimiser.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestSkipIndexOptimiser(
+										DataSetContext.this.getDataSet(),
+										table, skipIndexOptimiser.isSelected());
+					}
+				});
+				contextMenu.add(skipIndexOptimiser);
+				skipIndexOptimiser.setEnabled(!table.isSkipOptimiser());
+				skipIndexOptimiser.setSelected(table.isSkipIndexOptimiser());
 
 				// The dimension can be merged by using this option. This
 				// affects all dimensions based on this relation.
@@ -542,16 +565,10 @@ public class DataSetContext extends SchemaContext {
 						.charAt(0));
 				mergeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						if (mergeDM.isSelected())
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestMergeDimension(
-											DataSetContext.this.getDataSet(),
-											table);
-						else
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestUnmergeDimension(
-											DataSetContext.this.getDataSet(),
-											table);
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestMergeDimension(
+										DataSetContext.this.getDataSet(),
+										table, mergeDM.isSelected());
 					}
 				});
 				contextMenu.add(mergeDM);
@@ -588,16 +605,10 @@ public class DataSetContext extends SchemaContext {
 						.charAt(0));
 				removeDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						if (removeDM.isSelected())
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestMaskDimension(
-											DataSetContext.this.getDataSet(),
-											table);
-						else
-							DataSetContext.this.getMartTab().getDataSetTabSet()
-									.requestUnmaskDimension(
-											DataSetContext.this.getDataSet(),
-											table);
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestMaskDimension(
+										DataSetContext.this.getDataSet(),
+										table, removeDM.isSelected());
 					}
 				});
 				contextMenu.add(removeDM);
@@ -640,7 +651,7 @@ public class DataSetContext extends SchemaContext {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestSubclassRelation(
 										DataSetContext.this.getDataSet(),
-										table.getFocusRelation());
+										table.getFocusRelation(), true);
 					}
 				});
 				if (isMerged || isMasked || isCompound || isUnrolled)
@@ -681,9 +692,9 @@ public class DataSetContext extends SchemaContext {
 				unsubclass.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestUnsubclassRelation(
+								.requestSubclassRelation(
 										DataSetContext.this.getDataSet(),
-										table.getFocusRelation());
+										table.getFocusRelation(), false);
 					}
 				});
 				contextMenu.add(unsubclass);
@@ -773,16 +784,10 @@ public class DataSetContext extends SchemaContext {
 			mask.setMnemonic(Resources.get("maskColumnMnemonic").charAt(0));
 			mask.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					if (mask.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestMaskColumn(
-										DataSetContext.this.getDataSet(),
-										column);
-					else
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestUnmaskColumn(
-										DataSetContext.this.getDataSet(),
-										column);
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestMaskColumn(
+									DataSetContext.this.getDataSet(), column,
+									mask.isSelected());
 				}
 			});
 			contextMenu.add(mask);
@@ -797,16 +802,10 @@ public class DataSetContext extends SchemaContext {
 			index.setMnemonic(Resources.get("indexColumnMnemonic").charAt(0));
 			index.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					if (index.isSelected())
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestIndexColumn(
-										DataSetContext.this.getDataSet(),
-										column);
-					else
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestUnindexColumn(
-										DataSetContext.this.getDataSet(),
-										column);
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestIndexColumn(
+									DataSetContext.this.getDataSet(), column,
+									index.isSelected());
 				}
 			});
 			contextMenu.add(index);

@@ -20,6 +20,7 @@ package org.biomart.common.utils;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -38,7 +39,7 @@ import java.util.Iterator;
  * All events will have a property of {@link BeanCollection#propertyName}.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
+ * @version $Revision$, $Date$, modified by 	
  * 			$Author$
  * @since 0.7
  */
@@ -89,6 +90,19 @@ public class BeanCollection extends PropertyChangeSupport implements Collection 
 				.getPropertyChangeListeners();
 		for (int i = 0; i < listeners.length; i++)
 			this.addPropertyChangeListener(listeners[i]);
+	}
+
+	public void addPropertyChangeListener(final PropertyChangeListener listener) {
+		if (!Arrays.asList(this.getPropertyChangeListeners())
+				.contains(listener))
+			super.addPropertyChangeListener(listener);
+	}
+
+	public void addPropertyChangeListener(final String property,
+			final PropertyChangeListener listener) {
+		if (!Arrays.asList(this.getPropertyChangeListeners(property)).contains(
+				listener))
+			super.addPropertyChangeListener(property, listener);
 	}
 
 	public boolean add(final Object arg0) {

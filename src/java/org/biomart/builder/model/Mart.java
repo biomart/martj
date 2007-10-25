@@ -159,8 +159,15 @@ public class Mart implements TransactionListener {
 					// Identify new ones.
 					newSchs.removeAll(Mart.this.schemaCache);
 					// Drop dropped ones.
-					for (final Iterator i = dropped.iterator(); i.hasNext();)
-						Mart.this.schemaCache.remove(i.next());
+					for (final Iterator i = dropped.iterator(); i.hasNext();) {
+						final Schema sch = (Schema) i.next();
+						Mart.this.schemaCache.remove(sch);
+						sch.removePropertyChangeListener("directModified",
+								listener);
+						sch
+								.removePropertyChangeListener("hideMasked",
+										listener);
+					}
 					// Add added ones.
 					for (final Iterator i = newSchs.iterator(); i.hasNext();) {
 						final Schema sch = (Schema) i.next();
@@ -220,6 +227,10 @@ public class Mart implements TransactionListener {
 						}
 						// Remove from cache.
 						Mart.this.datasetCache.remove(deadDS);
+						deadDS.removePropertyChangeListener("directModified",
+								listener);
+						deadDS.removePropertyChangeListener("hideMasked",
+								listener);
 					}
 					// Add added ones.
 					for (final Iterator i = newDss.iterator(); i.hasNext();) {
@@ -1155,7 +1166,7 @@ public class Mart implements TransactionListener {
 			parentRel = childRel;
 			childRel = otherRel;
 		}
-		
+
 		// Create a simple dataset based on the selected table.
 		final DataSet ds = new DataSet(this, nTable, nTable.getName());
 		ds.synchronise(); // Must do now in order to locate dimensions.

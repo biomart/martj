@@ -84,7 +84,7 @@ compoundRelation*,subclassRelation*,maskedColumn*,
 indexedColumn*,maskedRelation*,maskedTable*,
 mergedRelation*,loopbackRelation*,forcedRelation*,restrictedTable*,
 restrictedRelation*,expressionColumn*,renamedTable*,
-renamedColumn*,distinctRows*,noFinalLeftJoin*,unrolledRelation*,explainHideMasked*,
+renamedColumn*,distinctRows*,noFinalLeftJoin*,skipOptimiser*,skipIndexOptimiser*,unrolledRelation*,explainHideMasked*,
 visibleModified*,bigTable*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
@@ -155,6 +155,12 @@ visibleModified*,bigTable*)>
 
 <!ELEMENT noFinalLeftJoin EMPTY>
 <!ATTLIST noFinalLeftJoin tableKey CDATA #REQUIRED>
+
+<!ELEMENT skipOptimiser EMPTY>
+<!ATTLIST skipOptimiser tableKey CDATA #REQUIRED>
+
+<!ELEMENT skipIndexOptimiser EMPTY>
+<!ATTLIST skipIndexOptimiser tableKey CDATA #REQUIRED>
 
 <!ELEMENT restrictedTable EMPTY>
 <!ATTLIST restrictedTable tableKey CDATA #REQUIRED>

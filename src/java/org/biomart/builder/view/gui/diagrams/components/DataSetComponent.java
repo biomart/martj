@@ -215,14 +215,10 @@ public class DataSetComponent extends BoxShapedComponent {
 				0));
 		invisible.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				if (invisible.isSelected())
-					DataSetComponent.this.getDiagram().getMartTab()
-							.getDataSetTabSet().requestInvisibleDataSet(
-									DataSetComponent.this.getDataSet());
-				else
-					DataSetComponent.this.getDiagram().getMartTab()
-							.getDataSetTabSet().requestVisibleDataSet(
-									DataSetComponent.this.getDataSet());
+				DataSetComponent.this.getDiagram().getMartTab()
+						.getDataSetTabSet().requestInvisibleDataSet(
+								DataSetComponent.this.getDataSet(),
+								invisible.isSelected());
 			}
 		});
 		invisible.setSelected(this.getDataSet().isInvisible());

@@ -74,8 +74,8 @@ public abstract class LongProcess {
 	 */
 	public void start() {
 
-		new Thread(new Runnable() {
-			public void run() {
+		new SwingWorker() {
+			public Object construct() {
 				// Which window needs the hourglass?
 				final Component window = KeyboardFocusManager
 						.getCurrentKeyboardFocusManager().getFocusedWindow();
@@ -93,18 +93,18 @@ public abstract class LongProcess {
 												.setCursor(LongProcess.HOURGLASS_CURSOR);
 								}
 							}
-							try {
-								// Let the process run.
-								LongProcess.this.run();
-							} catch (final Throwable t) {
-								SwingUtilities.invokeLater(new Runnable() {
-									public void run() {
-										StackTrace.showStackTrace(t);
-									}
-								});
-							}
 						}
 					});
+					try {
+						// Let the process run.
+						LongProcess.this.run();
+					} catch (final Throwable t) {
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								StackTrace.showStackTrace(t);
+							}
+						});
+					}
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -139,8 +139,10 @@ public abstract class LongProcess {
 						});
 					}
 				}
+				// Nothing to return.
+				return null;
 			}
-		}).start();
+		}.start();
 	}
 
 	/**

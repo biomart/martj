@@ -59,7 +59,7 @@ public class DataSetDiagram extends Diagram {
 
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
-			DataSetDiagram.this.needsRedraw = true;
+			DataSetDiagram.this.needsRecalc = true;
 		}
 	};
 

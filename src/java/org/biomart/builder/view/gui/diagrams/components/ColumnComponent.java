@@ -78,13 +78,13 @@ public class ColumnComponent extends BoxShapedComponent {
 
 	private final PropertyChangeListener repaintListener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent e) {
-			ColumnComponent.this.needsRepaint = true;
+			ColumnComponent.this.needsRepaint = !ColumnComponent.this.getDiagram().isNeedsRepaint();
 		}
 	};
 
 	private final PropertyChangeListener recalcListener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent e) {
-			ColumnComponent.this.needsRecalc = true;
+			ColumnComponent.this.needsRepaint = !ColumnComponent.this.getDiagram().isNeedsRecalc();
 		}
 	};
 

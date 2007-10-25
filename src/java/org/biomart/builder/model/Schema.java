@@ -28,6 +28,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -378,7 +379,9 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 *            the listener to add.
 	 */
 	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		this.pcs.addPropertyChangeListener(listener);
+		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
+				listener))
+			this.pcs.addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -391,6 +394,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
+		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
+				listener))
 		this.pcs.addPropertyChangeListener(property, listener);
 	}
 

@@ -229,9 +229,9 @@ public abstract class BoxShapedComponent extends JPanel implements
 				&& this.getDiagram().getMartTab().getPartitionViewSelection() == null;
 		this.needsRepaint |= this.changed ^ visMod;
 		this.changed = visMod;
-		if (this.needsRecalc)
+		if (this.needsRecalc && !this.getDiagram().isNeedsRecalc())
 			this.recalculateDiagramComponent();
-		else if (this.needsRepaint)
+		else if (this.needsRepaint && !this.getDiagram().isNeedsRepaint())
 			this.repaintDiagramComponent();
 		this.needsRecalc = false;
 		this.needsRepaint = false;

@@ -264,6 +264,16 @@ Distinct rows only for table: <xsl:value-of select="@tableKey"/>
 No final left join for table: <xsl:value-of select="@tableKey"/>
 </xsl:template>
 
+<xsl:template match="skipOptimiser">
+
+No optimiser for table: <xsl:value-of select="@tableKey"/>
+</xsl:template>
+
+<xsl:template match="skipIndexOptimiser">
+
+No index optimiser for table: <xsl:value-of select="@tableKey"/>
+</xsl:template>
+
 <xsl:template match="renamedTable">
 
 Table renamed from <xsl:value-of select="@tableKey"/> to <xsl:value-of select="@newName"/>

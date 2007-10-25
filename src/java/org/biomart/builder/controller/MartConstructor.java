@@ -214,6 +214,8 @@ public interface MartConstructor {
 
 		private final Map uniqueOptCols = new HashMap();
 
+		private final Map indexOptCols = new HashMap();
+
 		private String statusMessage = Resources.get("mcCreatingGraph");
 
 		private int tempNameCount = 0;
@@ -330,6 +332,7 @@ public interface MartConstructor {
 				// Clear out optimiser col names so that they start
 				// again on this partition.
 				this.uniqueOptCols.clear();
+				this.indexOptCols.clear();
 
 				Log.debug("Starting schema partition " + schemaPartition);
 				this.issueListenerEvent(
@@ -594,8 +597,8 @@ public interface MartConstructor {
 				for (final Iterator i = keepCols.iterator(); i.hasNext();)
 					keepColNames.add(((DataSetColumn) i.next())
 							.getPartitionedName());
-				this.doDistinct(dataset, dsTable, finalCombinedName, previousTempTable,
-						tempTable, keepColNames, bigness);
+				this.doDistinct(dataset, dsTable, finalCombinedName,
+						previousTempTable, tempTable, keepColNames, bigness);
 				previousTempTable = tempTable;
 			} else if (!dropCols.isEmpty()) {
 				final DropColumns dropcol = new DropColumns(
@@ -647,7 +650,8 @@ public interface MartConstructor {
 			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)
 					&& oType.equals(DataSetOptimiserType.NONE))
 				oType = DataSetOptimiserType.COLUMN_INHERIT;
-			if (!oType.equals(DataSetOptimiserType.NONE))
+			if (!oType.equals(DataSetOptimiserType.NONE)
+					&& !dsTable.isSkipOptimiser())
 				this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
 						dsTable, oType, dsTable.getType().equals(
 								DataSetTableType.MAIN)
@@ -656,8 +660,8 @@ public interface MartConstructor {
 
 			// Optimiser indexing.
 			if (dataset.isIndexOptimiser()
-					&& this.uniqueOptCols.containsKey(dsTable))
-				for (final Iterator i = ((Collection) this.uniqueOptCols
+					&& this.indexOptCols.containsKey(dsTable))
+				for (final Iterator i = ((Collection) this.indexOptCols
 						.get(dsTable)).iterator(); i.hasNext();) {
 					final String col = (String) i.next();
 					final Index index = new Index(this.datasetSchemaName,
@@ -733,7 +737,8 @@ public interface MartConstructor {
 			this.issueAction(drop);
 		}
 
-		private void doDistinct(final DataSet dataset, final DataSetTable dsTable, final String finalCombinedName,
+		private void doDistinct(final DataSet dataset,
+				final DataSetTable dsTable, final String finalCombinedName,
 				final String previousTempTable, final String tempTable,
 				final Collection keepCols, final int bigness)
 				throws ListenerException {
@@ -828,6 +833,11 @@ public interface MartConstructor {
 						this.uniqueOptCols.put(dsTable, new HashSet());
 					((Collection) this.uniqueOptCols.get(dsTable))
 							.add(copyDown);
+					if (!this.indexOptCols.containsKey(dsTable))
+						this.indexOptCols.put(dsTable, new HashSet());
+					if (!dsTable.isSkipIndexOptimiser())
+						((Collection) this.indexOptCols.get(dsTable))
+								.add(copyDown);
 					// Continue copying.
 					final String childOptTable = this.getOptimiserTableName(
 							schemaPrefix, dsPta, dmPta, dsTable, dataset
@@ -871,16 +881,20 @@ public interface MartConstructor {
 
 					if (!this.uniqueOptCols.containsKey(parent))
 						this.uniqueOptCols.put(parent, new HashSet());
-					((Collection) this.uniqueOptCols.get(parent))
-							.add(optCol);
-					
-					// Index the column.
-					final Index index = new Index(this.datasetSchemaName,
-							finalCombinedName);
-					index.setTable(optTable);
-					index.setColumns(Collections.singletonList(optCol));
-					this.issueAction(index);
-					
+					((Collection) this.uniqueOptCols.get(parent)).add(optCol);
+					if (!this.indexOptCols.containsKey(parent))
+						this.indexOptCols.put(parent, new HashSet());
+					if (!dsTable.isSkipIndexOptimiser()) {
+						((Collection) this.indexOptCols.get(parent))
+								.add(optCol);
+						// Index the column.
+						final Index index = new Index(this.datasetSchemaName,
+								finalCombinedName);
+						index.setTable(optTable);
+						index.setColumns(Collections.singletonList(optCol));
+						this.issueAction(index);
+					}
+
 					// If subclass table, call this method a second
 					// time to copy the column down.
 					if (dsTable.getType()
@@ -1026,6 +1040,11 @@ public interface MartConstructor {
 					// Make inherited copies.
 					this.uniqueOptCols.put(dsTable, new HashSet(hasCols));
 				}
+				// Inherited indexed optimiser cols.
+				final Collection indCols = (Collection) this.indexOptCols
+						.get(sourceTable);
+				if (indCols != null)
+					this.indexOptCols.put(dsTable, new HashSet(indCols));
 			}
 			// Do the select.
 			action.setSchema(schema);
@@ -1689,6 +1708,8 @@ public interface MartConstructor {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
 				this.uniqueOptCols.put(parent, new HashSet());
+			if (!this.indexOptCols.containsKey(parent))
+				this.indexOptCols.put(parent, new HashSet());
 			// Make a unique name.
 			int counter = -1;
 			String name;
@@ -1723,6 +1744,8 @@ public interface MartConstructor {
 			}
 			// Store the name above in the unique list for the parent.
 			((Collection) this.uniqueOptCols.get(parent)).add(name);
+			if (!dsTable.isSkipIndexOptimiser())
+				((Collection) this.indexOptCols.get(parent)).add(name);
 			return name;
 		}
 

@@ -20,6 +20,7 @@ package org.biomart.common.utils;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -88,6 +89,19 @@ public class BeanIterator extends PropertyChangeSupport implements Iterator {
 				.getPropertyChangeListeners();
 		for (int i = 0; i < listeners.length; i++)
 			this.addPropertyChangeListener(listeners[i]);
+	}
+
+	public void addPropertyChangeListener(final PropertyChangeListener listener) {
+		if (!Arrays.asList(this.getPropertyChangeListeners())
+				.contains(listener))
+			super.addPropertyChangeListener(listener);
+	}
+
+	public void addPropertyChangeListener(final String property,
+			final PropertyChangeListener listener) {
+		if (!Arrays.asList(this.getPropertyChangeListeners(property)).contains(
+				listener))
+			super.addPropertyChangeListener(property, listener);
 	}
 
 	public boolean hasNext() {

@@ -50,7 +50,7 @@ public class AllSchemasDiagram extends Diagram {
 
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
-			AllSchemasDiagram.this.needsRedraw = true;
+			AllSchemasDiagram.this.needsRecalc = true;
 		}
 	};
 

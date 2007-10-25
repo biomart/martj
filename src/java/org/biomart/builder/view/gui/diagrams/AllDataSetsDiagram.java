@@ -41,7 +41,7 @@ public class AllDataSetsDiagram extends Diagram {
 
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
-			AllDataSetsDiagram.this.needsRedraw = true;
+			AllDataSetsDiagram.this.needsRecalc = true;
 		}
 	};
 

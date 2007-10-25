@@ -39,6 +39,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
@@ -380,9 +381,13 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestChangeOptimiserType(final DataSet dataset,
 			final DataSetOptimiserType type) {
-		Transaction.start(false);
-		dataset.setDataSetOptimiserType(type);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dataset.setDataSetOptimiserType(type);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -410,10 +415,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestAcceptAll(final DataSetTable dsTable,
 			final Table targetTable) {
-		Transaction.start(true);
-		dsTable.acceptChanges(targetTable);
-		this.requestRemoveLastVisMods();
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(true);
+				dsTable.acceptChanges(targetTable);
+				DataSetTabSet.this.requestRemoveLastVisMods();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -427,10 +436,14 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRejectAll(final DataSetTable dsTable,
 			final Table targetTable) {
-		Transaction.start(true);
-		dsTable.rejectChanges(targetTable);
-		this.requestRemoveLastVisMods();
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(true);
+				dsTable.rejectChanges(targetTable);
+				DataSetTabSet.this.requestRemoveLastVisMods();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -443,11 +456,16 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the (optional) target table to accept changes from.
 	 */
 	public void requestAcceptAll(final DataSet ds, final Table targetTable) {
-		Transaction.start(true);
-		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
-			((DataSetTable) i.next()).acceptChanges(targetTable);
-		this.requestRemoveLastVisMods();
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(true);
+				for (final Iterator i = ds.getTables().values().iterator(); i
+						.hasNext();)
+					((DataSetTable) i.next()).acceptChanges(targetTable);
+				DataSetTabSet.this.requestRemoveLastVisMods();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -460,11 +478,16 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the (optional) target table to reject changes from.
 	 */
 	public void requestRejectAll(final DataSet ds, final Table targetTable) {
-		Transaction.start(true);
-		for (final Iterator i = ds.getTables().values().iterator(); i.hasNext();)
-			((DataSetTable) i.next()).rejectChanges(targetTable);
-		this.requestRemoveLastVisMods();
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(true);
+				for (final Iterator i = ds.getTables().values().iterator(); i
+						.hasNext();)
+					((DataSetTable) i.next()).rejectChanges(targetTable);
+				DataSetTabSet.this.requestRemoveLastVisMods();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -519,11 +542,18 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param dataset
 	 *            the dataset to make invisible.
+	 * @param invisible
+	 *            whether to do it.
 	 */
-	public void requestInvisibleDataSet(final DataSet dataset) {
-		Transaction.start(false);
-		dataset.setInvisible(true);
-		Transaction.end();
+	public void requestInvisibleDataSet(final DataSet dataset,
+			final boolean invisible) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dataset.setInvisible(invisible);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -554,9 +584,12 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param column
 	 *            the column to mask.
+	 * @param masked
+	 *            whether to mask it.
 	 */
-	public void requestMaskColumn(final DataSet ds, final DataSetColumn column) {
-		this.requestMaskColumns(ds, Collections.singleton(column));
+	public void requestMaskColumn(final DataSet ds, final DataSetColumn column,
+			final boolean masked) {
+		this.requestMaskColumns(ds, Collections.singleton(column), masked);
 	}
 
 	/**
@@ -566,17 +599,22 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param columns
 	 *            the columns to mask.
+	 * @param masked
+	 *            whether to mask it.
 	 */
-	public void requestMaskColumns(final DataSet ds, final Collection columns) {
-		try {
-			Transaction.start(false);
-			for (final Iterator i = columns.iterator(); i.hasNext();)
-				((DataSetColumn) i.next()).setColumnMasked(true);
-		} catch (final ValidationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
+	public void requestMaskColumns(final DataSet ds, final Collection columns,
+			final boolean masked) {
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					for (final Iterator i = columns.iterator(); i.hasNext();)
+						((DataSetColumn) i.next()).setColumnMasked(masked);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -586,25 +624,18 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param column
 	 *            the column to index.
+	 * @param index
+	 *            whether to index it.
 	 */
-	public void requestIndexColumn(final DataSet ds, final DataSetColumn column) {
-		Transaction.start(false);
-		column.setColumnIndexed(true);
-		Transaction.end();
-	}
-
-	/**
-	 * Requests that a table be made undistinct.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dst
-	 *            the table to make undistinct.
-	 */
-	public void requestUndistinctTable(final DataSet ds, final DataSetTable dst) {
-		Transaction.start(false);
-		dst.setDistinctTable(false);
-		Transaction.end();
+	public void requestIndexColumn(final DataSet ds,
+			final DataSetColumn column, final boolean index) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				column.setColumnIndexed(index);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -614,26 +645,60 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param dst
 	 *            the table to make distinct.
+	 * @param distinct
+	 *            make it distinct?
 	 */
-	public void requestDistinctTable(final DataSet ds, final DataSetTable dst) {
-		Transaction.start(false);
-		dst.setDistinctTable(true);
-		Transaction.end();
+	public void requestDistinctTable(final DataSet ds, final DataSetTable dst,
+			final boolean distinct) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dst.setDistinctTable(distinct);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
-	 * Requests that a table be made un-no-left-join.
+	 * Requests that a table be not optimisered.
 	 * 
 	 * @param ds
 	 *            the dataset we are working with.
 	 * @param dst
-	 *            the table to make un-no-left-join.
+	 *            the table to make not optimisered.
+	 * @param skipOptimiser
+	 *            whether to do it.
 	 */
-	public void requestFinalLeftJoinTable(final DataSet ds,
-			final DataSetTable dst) {
-		Transaction.start(false);
-		dst.setNoFinalLeftJoin(false);
-		Transaction.end();
+	public void requestSkipOptimiser(final DataSet ds, final DataSetTable dst,
+			final boolean skipOptimiser) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dst.setSkipOptimiser(skipOptimiser);
+				Transaction.end();
+			}
+		}.start();
+	}
+
+	/**
+	 * Requests that a table be not index optimisered.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to make not index optimisered.
+	 * @param skipIndexOptimiser
+	 *            whether to do it.
+	 */
+	public void requestSkipIndexOptimiser(final DataSet ds,
+			final DataSetTable dst, final boolean skipIndexOptimiser) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dst.setSkipIndexOptimiser(skipIndexOptimiser);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -643,12 +708,18 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param dst
 	 *            the table to make no-left-join.
+	 * @param noLeftJoin
+	 *            whether to do it.
 	 */
 	public void requestNoFinalLeftJoinTable(final DataSet ds,
-			final DataSetTable dst) {
-		Transaction.start(false);
-		dst.setNoFinalLeftJoin(true);
-		Transaction.end();
+			final DataSetTable dst, final boolean noLeftJoin) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dst.setNoFinalLeftJoin(noLeftJoin);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -658,35 +729,21 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param dim
 	 *            the dimension to mask.
+	 * @param masked
+	 *            whether to mask it.
 	 */
-	public void requestMaskDimension(final DataSet ds, final DataSetTable dim) {
-		try {
-			Transaction.start(false);
-			dim.setDimensionMasked(true);
-		} catch (final ValidationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
-	}
-
-	/**
-	 * Requests that a dimension be unmasked.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dim
-	 *            the dimension to unmask.
-	 */
-	public void requestUnmaskDimension(final DataSet ds, final DataSetTable dim) {
-		try {
-			Transaction.start(false);
-			dim.setDimensionMasked(false);
-		} catch (final ValidationException ve) {
-			StackTrace.showStackTrace(ve);
-		} finally {
-			Transaction.end();
-		}
+	public void requestMaskDimension(final DataSet ds, final DataSetTable dim,
+			final boolean masked) {
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					dim.setDimensionMasked(masked);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -696,25 +753,18 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param dst
 	 *            the dimension to merge.
+	 * @param merged
+	 *            whether to merge it.
 	 */
-	public void requestMergeDimension(final DataSet ds, final DataSetTable dst) {
-		Transaction.start(false);
-		dst.getFocusRelation().setMergeRelation(ds, true);
-		Transaction.end();
-	}
-
-	/**
-	 * Asks that a dimension by unmerged.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dst
-	 *            the dimension to unmerge.
-	 */
-	public void requestUnmergeDimension(final DataSet ds, final DataSetTable dst) {
-		Transaction.start(false);
-		dst.getFocusRelation().setMergeRelation(ds, false);
-		Transaction.end();
+	public void requestMergeDimension(final DataSet ds, final DataSetTable dst,
+			final boolean merged) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dst.getFocusRelation().setMergeRelation(ds, merged);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -730,9 +780,11 @@ public class DataSetTabSet extends JTabbedPane {
 		final Relation relation = dst.getFocusRelation();
 		if (!relation.isSubclassRelation(ds))
 			return;
-		CompoundRelationDefinition def = relation.getCompoundRelation(ds);
-		if (def == null)
-			def = new CompoundRelationDefinition(1, false);
+		final CompoundRelationDefinition interimDef = relation
+				.getCompoundRelation(ds);
+		final CompoundRelationDefinition def = interimDef == null ? new CompoundRelationDefinition(
+				1, false)
+				: interimDef;
 
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
@@ -749,18 +801,22 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
-		Transaction.start(false);
-		if (newN <= 1)
-			// Uncompound the relation.
-			relation.setCompoundRelation(ds, null);
-		else {
-			// Compound the relation.
-			def.setN(newN);
-			def.setParallel(newParallel);
-			if (relation.getCompoundRelation(ds) == null)
-				relation.setCompoundRelation(ds, def);
-		}
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (newN <= 1)
+					// Uncompound the relation.
+					relation.setCompoundRelation(ds, null);
+				else {
+					// Compound the relation.
+					def.setN(newN);
+					def.setParallel(newParallel);
+					if (relation.getCompoundRelation(ds) == null)
+						relation.setCompoundRelation(ds, def);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -775,9 +831,11 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dst) {
 		// Work out if it is already compounded.
 		final Relation relation = dst.getFocusRelation();
-		CompoundRelationDefinition def = relation.getCompoundRelation(ds);
-		if (def == null)
-			def = new CompoundRelationDefinition(1, false);
+		final CompoundRelationDefinition interimDef = relation
+				.getCompoundRelation(ds);
+		final CompoundRelationDefinition def = interimDef == null ? new CompoundRelationDefinition(
+				1, false)
+				: interimDef;
 
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
@@ -794,18 +852,22 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
-		Transaction.start(false);
-		if (newN <= 1)
-			// Uncompound the relation.
-			relation.setCompoundRelation(ds, null);
-		else {
-			// Compound the relation.
-			def.setN(newN);
-			def.setParallel(newParallel);
-			if (relation.getCompoundRelation(ds) == null)
-				relation.setCompoundRelation(ds, def);
-		}
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (newN <= 1)
+					// Uncompound the relation.
+					relation.setCompoundRelation(ds, null);
+				else {
+					// Compound the relation.
+					def.setN(newN);
+					def.setParallel(newParallel);
+					if (relation.getCompoundRelation(ds) == null)
+						relation.setCompoundRelation(ds, def);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -820,7 +882,7 @@ public class DataSetTabSet extends JTabbedPane {
 			final DataSetTable dim) {
 		// Work out if it is already directional.
 		final Relation relation = dim.getFocusRelation();
-		UnrolledRelationDefinition def = relation.getUnrolledRelation(ds);
+		final UnrolledRelationDefinition def = relation.getUnrolledRelation(ds);
 
 		try {
 			Relation otherRel = null;
@@ -847,19 +909,22 @@ public class DataSetTabSet extends JTabbedPane {
 				relation);
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
-		try {
-			Transaction.start(false);
-			if (def != null) {
-				def.setNameColumn(dialog.getChosenColumn());
-				def.setReversed(dialog.isReversed());
-			} else
-				relation.setUnrolledRelation(ds,
-						new UnrolledRelationDefinition(
-								dialog.getChosenColumn(), dialog.isReversed()));
-			dialog.dispose();
-		} finally {
-			Transaction.end();
-		}
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (dialog.getChosenColumn() == null)
+					relation.setUnrolledRelation(ds, null);
+				else if (def != null) {
+					def.setNameColumn(dialog.getChosenColumn());
+					def.setReversed(dialog.isReversed());
+				} else
+					relation.setUnrolledRelation(ds,
+							new UnrolledRelationDefinition(dialog
+									.getChosenColumn(), dialog.isReversed()));
+				dialog.dispose();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -875,11 +940,12 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestCompoundRelation(final DataSet ds,
 			final DataSetTable dst, final Relation relation) {
 		// Work out if it is already compounded.
-		CompoundRelationDefinition def = dst == null ? relation
+		final CompoundRelationDefinition interimDef = dst == null ? relation
 				.getCompoundRelation(ds) : relation.getCompoundRelation(ds, dst
 				.getName());
-		if (def == null)
-			def = new CompoundRelationDefinition(1, false);
+		final CompoundRelationDefinition def = interimDef == null ? new CompoundRelationDefinition(
+				1, false)
+				: interimDef;
 
 		// Pop up a dialog and update 'compound'.
 		final CompoundRelationDialog dialog = new CompoundRelationDialog(def,
@@ -896,25 +962,30 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newN == def.getN() && newParallel == def.isParallel())
 			return;
 
-		Transaction.start(false);
-		// Do the work.
-		if (newN <= 1) {
-			// Uncompound the relation.
-			if (dst != null)
-				relation.setCompoundRelation(ds, dst.getName(), null);
-			else
-				relation.setCompoundRelation(ds, null);
-		} else {
-			// Compound the relation.
-			def.setN(newN);
-			def.setParallel(newParallel);
-			if (dst != null) {
-				if (relation.getCompoundRelation(ds, dst.getName()) == null)
-					relation.setCompoundRelation(ds, dst.getName(), def);
-			} else if (relation.getCompoundRelation(ds) == null)
-				relation.setCompoundRelation(ds, def);
-		}
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				// Do the work.
+				if (newN <= 1) {
+					// Uncompound the relation.
+					if (dst != null)
+						relation.setCompoundRelation(ds, dst.getName(), null);
+					else
+						relation.setCompoundRelation(ds, null);
+				} else {
+					// Compound the relation.
+					def.setN(newN);
+					def.setParallel(newParallel);
+					if (dst != null) {
+						if (relation.getCompoundRelation(ds, dst.getName()) == null)
+							relation
+									.setCompoundRelation(ds, dst.getName(), def);
+					} else if (relation.getCompoundRelation(ds) == null)
+						relation.setCompoundRelation(ds, def);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	private int askUserForCompoundRelationIndex(final DataSet dataset,
@@ -991,27 +1062,31 @@ public class DataSetTabSet extends JTabbedPane {
 		final boolean hard = dialog.getHard();
 		dialog.dispose();
 
-		Transaction.start(false);
-		RestrictedRelationDefinition def = dsTable == null ? relation
-				.getRestrictRelation(dataset, index) : relation
-				.getRestrictRelation(dataset, dsTable.getName(), index);
-		if (def == null) {
-			def = new RestrictedRelationDefinition(expression, aliasesLHS,
-					aliasesRHS, hard);
-			if (dsTable == null)
-				relation.setRestrictRelation(dataset, def, iteration);
-			else
-				relation.setRestrictRelation(dataset, dsTable.getName(), def,
-						iteration);
-		} else {
-			def.setExpression(expression);
-			def.setHard(hard);
-			def.getLeftAliases().clear();
-			def.getLeftAliases().putAll(aliasesLHS);
-			def.getRightAliases().clear();
-			def.getRightAliases().putAll(aliasesRHS);
-		}
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				RestrictedRelationDefinition def = dsTable == null ? relation
+						.getRestrictRelation(dataset, index) : relation
+						.getRestrictRelation(dataset, dsTable.getName(), index);
+				if (def == null) {
+					def = new RestrictedRelationDefinition(expression,
+							aliasesLHS, aliasesRHS, hard);
+					if (dsTable == null)
+						relation.setRestrictRelation(dataset, def, iteration);
+					else
+						relation.setRestrictRelation(dataset,
+								dsTable.getName(), def, iteration);
+				} else {
+					def.setExpression(expression);
+					def.setHard(hard);
+					def.getLeftAliases().clear();
+					def.getLeftAliases().putAll(aliasesLHS);
+					def.getRightAliases().clear();
+					def.getRightAliases().putAll(aliasesRHS);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1042,13 +1117,17 @@ public class DataSetTabSet extends JTabbedPane {
 		if (index == -1)
 			return;
 
-		Transaction.start(false);
-		if (dsTable != null)
-			relation.setRestrictRelation(dataset, dsTable.getName(), null,
-					iteration);
-		else
-			relation.setRestrictRelation(dataset, null, iteration);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (dsTable != null)
+					relation.setRestrictRelation(dataset, dsTable.getName(),
+							null, iteration);
+				else
+					relation.setRestrictRelation(dataset, null, iteration);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1060,15 +1139,21 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to work with.
 	 * @param relation
 	 *            the schema relation to mask.
+	 * @param masked
+	 *            whether to mask it.
 	 */
 	public void requestMaskRelation(final DataSet ds, final DataSetTable dst,
-			final Relation relation) {
-		Transaction.start(false);
-		if (dst != null)
-			relation.setMaskRelation(ds, dst.getName(), true);
-		else
-			relation.setMaskRelation(ds, true);
-		Transaction.end();
+			final Relation relation, final boolean masked) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (dst != null)
+					relation.setMaskRelation(ds, dst.getName(), masked);
+				else
+					relation.setMaskRelation(ds, masked);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1104,19 +1189,22 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newLoopedCol == loopedCol && newIsLooped)
 			return;
 
-		try {
-			Transaction.start(false);
-			// Do the work.
-			if (dst != null)
-				relation.setLoopbackRelation(ds, dst.getName(), loopedCol);
-			else
-				relation.setLoopbackRelation(ds, loopedCol);
-		} catch (final ValidationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					// Do the work.
+					if (dst != null)
+						relation.setLoopbackRelation(ds, dst.getName(),
+								loopedCol);
+					else
+						relation.setLoopbackRelation(ds, loopedCol);
+				} finally {
+					Transaction.end();
 
-		}
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -1142,7 +1230,11 @@ public class DataSetTabSet extends JTabbedPane {
 									((PartitionTableApplication) ref)
 											.syncCounts();
 							} catch (final Exception e) {
-								StackTrace.showStackTrace(e);
+								SwingUtilities.invokeLater(new Runnable() {
+									public void run() {
+										StackTrace.showStackTrace(e);
+									}
+								});
 							}
 				Transaction.end();
 			}
@@ -1169,7 +1261,11 @@ public class DataSetTabSet extends JTabbedPane {
 							if (ref != null)
 								((PartitionTableApplication) ref).syncCounts();
 						} catch (final Exception e) {
-							StackTrace.showStackTrace(e);
+							SwingUtilities.invokeLater(new Runnable() {
+								public void run() {
+									StackTrace.showStackTrace(e);
+								}
+							});
 						}
 				Transaction.end();
 			}
@@ -1201,9 +1297,13 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            mask it?
 	 */
 	public void requestMaskDataSet(final DataSet ds, final boolean masked) {
-		Transaction.start(false);
-		ds.setMasked(masked);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				ds.setMasked(masked);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1215,16 +1315,22 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the table to work with.
 	 * @param relation
 	 *            the schema relation to force.
+	 * @param force
+	 *            whether to force it.
 	 */
 	public void requestForceRelation(final DataSet ds, final DataSetTable dst,
-			final Relation relation) {
-		Transaction.start(false);
-		if (dst != null)
-			relation.setForceRelation(ds, dst.getName(), true);
-		else
-			relation.setForceRelation(ds, true);
+			final Relation relation, final boolean force) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (dst != null)
+					relation.setForceRelation(ds, dst.getName(), force);
+				else
+					relation.setForceRelation(ds, force);
 
-		Transaction.end();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1239,15 +1345,20 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestMaskAllRelations(final DataSet ds,
 			final DataSetTable dst, final Table table) {
-		Transaction.start(false);
-		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
-			final Relation rel = (Relation) i.next();
-			if (dst != null)
-				rel.setMaskRelation(ds, dst.getName(), true);
-			else
-				rel.setMaskRelation(ds, true);
-		}
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				for (final Iterator i = table.getRelations().iterator(); i
+						.hasNext();) {
+					final Relation rel = (Relation) i.next();
+					if (dst != null)
+						rel.setMaskRelation(ds, dst.getName(), true);
+					else
+						rel.setMaskRelation(ds, true);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1259,7 +1370,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the existing expression.
 	 */
 	public void requestExpressionColumn(final DataSetTable dsTable,
-			ExpressionColumn column) {
+			final ExpressionColumn column) {
 		final ExpressionColumnDialog dialog = new ExpressionColumnDialog(
 				dsTable, column == null ? null : column.getDefinition(), column);
 		dialog.setVisible(true);
@@ -1272,20 +1383,25 @@ public class DataSetTabSet extends JTabbedPane {
 		final boolean groupBy = dialog.getGroupBy();
 		dialog.dispose();
 
-		Transaction.start(false);
-		if (column == null) {
-			final String name = dsTable.getNextExpressionColumn();
-			column = new ExpressionColumn(name, dsTable,
-					new ExpressionColumnDefinition(expression, aliases,
-							groupBy, name));
-			dsTable.getColumns().put(column.getName(), column);
-		} else {
-			column.getDefinition().getAliases().clear();
-			column.getDefinition().getAliases().putAll(aliases);
-			column.getDefinition().setExpression(expression);
-			column.getDefinition().setGroupBy(groupBy);
-		}
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				ExpressionColumn col = column;
+				if (col == null) {
+					final String name = dsTable.getNextExpressionColumn();
+					col = new ExpressionColumn(name, dsTable,
+							new ExpressionColumnDefinition(expression, aliases,
+									groupBy, name));
+					dsTable.getColumns().put(col.getName(), col);
+				} else {
+					col.getDefinition().getAliases().clear();
+					col.getDefinition().getAliases().putAll(aliases);
+					col.getDefinition().setExpression(expression);
+					col.getDefinition().setGroupBy(groupBy);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1298,9 +1414,13 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestRemoveExpressionColumn(final DataSetTable dsTable,
 			final ExpressionColumn column) {
-		Transaction.start(false);
-		dsTable.getColumns().remove(column.getName());
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dsTable.getColumns().remove(column.getName());
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1328,23 +1448,28 @@ public class DataSetTabSet extends JTabbedPane {
 		final boolean hard = dialog.getHard();
 		dialog.dispose();
 
-		Transaction.start(false);
-		RestrictedTableDefinition def = dsTable == null ? table
-				.getRestrictTable(dataset) : table.getRestrictTable(dataset,
-				dsTable.getName());
-		if (def != null) {
-			def.getAliases().clear();
-			def.getAliases().putAll(aliases);
-			def.setExpression(expression);
-			def.setHard(hard);
-		} else {
-			def = new RestrictedTableDefinition(expression, aliases, hard);
-			if (dsTable != null)
-				table.setRestrictTable(dataset, dsTable.getName(), def);
-			else
-				table.setRestrictTable(dataset, def);
-		}
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				RestrictedTableDefinition def = dsTable == null ? table
+						.getRestrictTable(dataset) : table.getRestrictTable(
+						dataset, dsTable.getName());
+				if (def != null) {
+					def.getAliases().clear();
+					def.getAliases().putAll(aliases);
+					def.setExpression(expression);
+					def.setHard(hard);
+				} else {
+					def = new RestrictedTableDefinition(expression, aliases,
+							hard);
+					if (dsTable != null)
+						table.setRestrictTable(dataset, dsTable.getName(), def);
+					else
+						table.setRestrictTable(dataset, def);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1359,8 +1484,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestBigTable(final DataSet dataset,
 			final DataSetTable dsTable, final Table table) {
-		int currVal = dsTable == null ? table.getBigTable(dataset) : table
-				.getBigTable(dataset, dsTable.getName());
+		final int currVal = dsTable == null ? table.getBigTable(dataset)
+				: table.getBigTable(dataset, dsTable.getName());
 		// Get new val from user.
 		final String newValStr = (String) JOptionPane.showInputDialog(null,
 				Resources.get("bigTableSize"), Resources.get("questionTitle"),
@@ -1383,12 +1508,16 @@ public class DataSetTabSet extends JTabbedPane {
 			return;
 
 		// Change it.
-		Transaction.start(false);
-		if (dsTable != null)
-			table.setBigTable(dataset, dsTable.getName(), newVal);
-		else
-			table.setBigTable(dataset, newVal);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (dsTable != null)
+					table.setBigTable(dataset, dsTable.getName(), newVal);
+				else
+					table.setBigTable(dataset, newVal);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1405,9 +1534,13 @@ public class DataSetTabSet extends JTabbedPane {
 		if (choice != JOptionPane.YES_OPTION)
 			return;
 
-		Transaction.start(false);
-		DataSetTabSet.this.martTab.getMart().getDataSets().clear();
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				DataSetTabSet.this.martTab.getMart().getDataSets().clear();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1427,9 +1560,14 @@ public class DataSetTabSet extends JTabbedPane {
 		if (choice != JOptionPane.YES_OPTION)
 			return;
 
-		Transaction.start(false);
-		this.martTab.getMart().getDataSets().remove(dataset.getOriginalName());
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				DataSetTabSet.this.martTab.getMart().getDataSets().remove(
+						dataset.getOriginalName());
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1444,12 +1582,16 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnrestrictTable(final DataSet dataset,
 			final DataSetTable dsTable, final Table table) {
-		Transaction.start(false);
-		if (dsTable != null)
-			table.setRestrictTable(dataset, dsTable.getName(), null);
-		else
-			table.setRestrictTable(dataset, null);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (dsTable != null)
+					table.setRestrictTable(dataset, dsTable.getName(), null);
+				else
+					table.setRestrictTable(dataset, null);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1480,9 +1622,13 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newName.length() == 0)
 			return;
 
-		Transaction.start(false);
-		dataset.setName(newName);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dataset.setName(newName);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1517,14 +1663,16 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newName.length() == 0)
 			return;
 
-		try {
-			Transaction.start(false);
-			dsColumn.setColumnRename(newName);
-		} catch (final ValidationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					dsColumn.setColumnRename(newName);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -1557,9 +1705,13 @@ public class DataSetTabSet extends JTabbedPane {
 		if (newName.length() == 0)
 			return;
 
-		Transaction.start(false);
-		dsTable.setTableRename(newName);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dsTable.setTableRename(newName);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1569,18 +1721,21 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset we are working with.
 	 * @param relation
 	 *            the relation to subclass.
+	 * @param subclassed
+	 *            whether to do it.
 	 */
 	public void requestSubclassRelation(final DataSet ds,
-			final Relation relation) {
-
-		try {
-			Transaction.start(false);
-			relation.setSubclassRelation(ds, true);
-		} catch (final ValidationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
+			final Relation relation, final boolean subclassed) {
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					relation.setSubclassRelation(ds, subclassed);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -1592,7 +1747,7 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param nTable
 	 *            the table to suggest datasets for.
 	 */
-	public void requestSuggestUnrolledDataSets(Table nTable) {
+	public void requestSuggestUnrolledDataSets(final Table nTable) {
 		SuggestUnrolledDataSetDialog dialog = null;
 		try {
 			// Ask user for candidate (dialog will switch other
@@ -1603,25 +1758,34 @@ public class DataSetTabSet extends JTabbedPane {
 			// Cancelled?
 			if (dialog.isCancelled())
 				return;
-			nTable = dialog.getNTable();
 			final Column nIDCol = dialog.getNIDColumn();
 			final Column nNamingCol = dialog.getNNamingColumn();
 			final Table nrTable = dialog.getNRTable();
 			final Column nrParentIDCol = dialog.getNRParentIDColumn();
 			final Column nrChildIDCol = dialog.getNRChildIDColumn();
 			final boolean reversed = dialog.isReversed();
-			Transaction.start(false);
-			final DataSet ds = this.getMartTab().getMart()
-					.suggestUnrolledDataSets(nTable, nIDCol, nNamingCol,
-							nrTable, nrParentIDCol, nrChildIDCol, reversed);
-			this.getMartTab().getMart().getDataSets().put(ds.getOriginalName(),
-					ds);
+			final Table actualNTable = dialog.getNTable();
+			new LongProcess() {
+				public void run() throws Exception {
+					try {
+						Transaction.start(false);
+						final DataSet ds = DataSetTabSet.this.getMartTab()
+								.getMart().suggestUnrolledDataSets(
+										actualNTable, nIDCol, nNamingCol,
+										nrTable, nrParentIDCol, nrChildIDCol,
+										reversed);
+						DataSetTabSet.this.getMartTab().getMart().getDataSets()
+								.put(ds.getOriginalName(), ds);
+					} finally {
+						Transaction.end();
+					}
+				}
+			}.start();
 		} catch (final Throwable t) {
 			StackTrace.showStackTrace(t);
 		} finally {
 			if (dialog != null)
 				dialog.dispose();
-			Transaction.end();
 		}
 	}
 
@@ -1644,15 +1808,18 @@ public class DataSetTabSet extends JTabbedPane {
 		if (dialog.getSelectedTables().isEmpty())
 			return;
 
-		try {
-			Transaction.start(false);
-			this.martTab.getMart().suggestDataSets(dialog.getSelectedTables());
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		} finally {
-			dialog.dispose();
-			Transaction.end();
-		}
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					DataSetTabSet.this.martTab.getMart().suggestDataSets(
+							dialog.getSelectedTables());
+				} finally {
+					dialog.dispose();
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -1678,103 +1845,19 @@ public class DataSetTabSet extends JTabbedPane {
 		if (dialog.getSelectedColumns().isEmpty())
 			return;
 
-		try {
-			Transaction.start(false);
-			this.martTab.getMart().suggestInvisibleDataSets(dataset,
-					dialog.getSelectedColumns());
-		} catch (final Throwable t) {
-			StackTrace.showStackTrace(t);
-		} finally {
-			dialog.dispose();
-			Transaction.end();
-		}
-	}
-
-	/**
-	 * Requests that a column be unmasked.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param column
-	 *            the column to unmask.
-	 */
-	public void requestUnmaskColumn(final DataSet ds, final DataSetColumn column) {
-		this.requestUnmaskColumns(ds, Collections.singleton(column));
-	}
-
-	/**
-	 * Request that a bunch of columns be unmasked.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param columns
-	 *            the columns to unmask.
-	 */
-	public void requestUnmaskColumns(final DataSet ds, final Collection columns) {
-		try {
-			Transaction.start(false);
-			for (final Iterator i = columns.iterator(); i.hasNext();)
-				((DataSetColumn) i.next()).setColumnMasked(false);
-		} catch (final ValidationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
-	}
-
-	/**
-	 * Requests that a column be unindexed.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param column
-	 *            the column to unindex.
-	 */
-	public void requestUnindexColumn(final DataSet ds,
-			final DataSetColumn column) {
-		Transaction.start(false);
-		column.setColumnIndexed(false);
-		Transaction.end();
-	}
-
-	/**
-	 * Asks that a relation be unforced.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dst
-	 *            the table to work with.
-	 * @param relation
-	 *            the schema relation to unforce.
-	 */
-	public void requestUnforceRelation(final DataSet ds,
-			final DataSetTable dst, final Relation relation) {
-		Transaction.start(false);
-		if (dst != null)
-			relation.setForceRelation(ds, dst.getName(), false);
-		else
-			relation.setForceRelation(ds, false);
-		Transaction.end();
-	}
-
-	/**
-	 * Asks that a relation be unmasked.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param dst
-	 *            the table to work with.
-	 * @param relation
-	 *            the schema relation to unmask.
-	 */
-	public void requestUnmaskRelation(final DataSet ds, final DataSetTable dst,
-			final Relation relation) {
-		Transaction.start(false);
-		if (dst != null)
-			relation.setMaskRelation(ds, dst.getName(), false);
-		else
-			relation.setMaskRelation(ds, false);
-		Transaction.end();
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					DataSetTabSet.this.martTab.getMart()
+							.suggestInvisibleDataSets(dataset,
+									dialog.getSelectedColumns());
+				} finally {
+					dialog.dispose();
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -1789,47 +1872,20 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestUnmaskAllRelations(final DataSet ds,
 			final DataSetTable dst, final Table table) {
-		Transaction.start(false);
-		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
-			final Relation rel = (Relation) i.next();
-			if (dst != null)
-				rel.setMaskRelation(ds, dst.getName(), false);
-			else
-				rel.setMaskRelation(ds, false);
-		}
-		Transaction.end();
-	}
-
-	/**
-	 * Requests that the subclass flag be removed from a relation.
-	 * 
-	 * @param ds
-	 *            the dataset we are working with.
-	 * @param relation
-	 *            the relation to un-subclass.
-	 */
-	public void requestUnsubclassRelation(final DataSet ds,
-			final Relation relation) {
-		try {
-			Transaction.start(false);
-			relation.setSubclassRelation(ds, false);
-		} catch (final ValidationException ve) {
-			StackTrace.showStackTrace(ve);
-		} finally {
-			Transaction.end();
-		}
-	}
-
-	/**
-	 * Requests that the dataset be unindex optimised.
-	 * 
-	 * @param dataset
-	 *            the dataset to do this to.
-	 */
-	public void requestNoIndexOptimiser(final DataSet dataset) {
-		Transaction.start(false);
-		dataset.setIndexOptimiser(false);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				for (final Iterator i = table.getRelations().iterator(); i
+						.hasNext();) {
+					final Relation rel = (Relation) i.next();
+					if (dst != null)
+						rel.setMaskRelation(ds, dst.getName(), false);
+					else
+						rel.setMaskRelation(ds, false);
+				}
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1837,22 +1893,17 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param dataset
 	 *            the dataset to do this to.
+	 * @param indexOptimiser
+	 *            whether to do it.
 	 */
-	public void requestIndexOptimiser(final DataSet dataset) {
-		Transaction.start(false);
-		dataset.setIndexOptimiser(true);
-		Transaction.end();
-	}
-
-	/**
-	 * Requests that the dataset be made visible.
-	 * 
-	 * @param dataset
-	 *            the dataset to make visible.
-	 */
-	public void requestVisibleDataSet(final DataSet dataset) {
-		Transaction.start(false);
-		dataset.setInvisible(false);
-		Transaction.end();
+	public void requestIndexOptimiser(final DataSet dataset,
+			final boolean indexOptimiser) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dataset.setIndexOptimiser(indexOptimiser);
+				Transaction.end();
+			}
+		}.start();
 	}
 }

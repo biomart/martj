@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,8 +49,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * event handler queue.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by
+ *          $Author$
  * @since 0.7
  */
 public class Transaction {
@@ -133,9 +134,9 @@ public class Transaction {
 	/**
 	 * A weak property change listener that dies when the wrapped listener goes
 	 * out of scope. This is very important to use when the object being
-	 * listened to could outlive the listening object (e.g. a GUI component
-	 * will 99% of the time outlive the object it represents, so the GUI
-	 * component should listen via weak listener reference).
+	 * listened to could outlive the listening object (e.g. a GUI component will
+	 * 99% of the time outlive the object it represents, so the GUI component
+	 * should listen via weak listener reference).
 	 */
 	public static class WeakPropertyChangeListener implements
 			PropertyChangeListener {
@@ -182,6 +183,16 @@ public class Transaction {
 		 */
 		public PropertyChangeListener getListener() {
 			return (PropertyChangeListener) this.listenerRef.get();
+		}
+
+		public boolean equals(final Object obj) {
+			if (obj instanceof WeakPropertyChangeListener) {
+				final WeakPropertyChangeListener them = (WeakPropertyChangeListener) obj;
+				return them.property == this.property
+						&& them.parent == this.parent
+						&& them.listenerRef.get() == this.listenerRef.get();
+			} else
+				return false;
 		}
 
 		public void propertyChange(final PropertyChangeEvent evt) {
@@ -311,14 +322,15 @@ public class Transaction {
 
 		private void removeListener() {
 			try {
-				Transaction.removeTransactionListener(this);
+				Transaction.listeners.remove(this);
 			} catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
-	private final static Set listeners = new HashSet();
+	private final static Set listeners = Collections
+			.synchronizedSet(new HashSet());
 
 	/**
 	 * Adds a listener to the queue. Listeners are not stored in any particular
@@ -330,11 +342,6 @@ public class Transaction {
 	 */
 	public static void addTransactionListener(final TransactionListener listener) {
 		Transaction.listeners.add(new WeakTransactionListener(listener));
-	}
-
-	private static void removeTransactionListener(
-			final TransactionListener listener) {
-		Transaction.listeners.remove(listener);
 	}
 
 	private static int inProgress = 0;
@@ -416,77 +423,80 @@ public class Transaction {
 	}
 
 	private static List getOrderedListeners() {
-		final List sch = new ArrayList();
-		final List schComp = new ArrayList();
-		final List schRel = new ArrayList();
-		final List dsComp = new ArrayList();
-		final List dsRel = new ArrayList();
-		final List pts = new ArrayList();
-		final List ds = new ArrayList();
-		final List diag = new ArrayList();
-		final List diagComp = new ArrayList();
-		final List rest = new ArrayList();
-		for (final Iterator i = Transaction.listeners.iterator(); i.hasNext();) {
-			final TransactionListener tl = ((WeakTransactionListener) i.next())
-					.get();
-			if (tl == null)
-				continue;
-			else if (tl instanceof DataSet) {
-				if (((DataSet) tl).isPartitionTable())
-					pts.add(tl);
+		synchronized (Transaction.LOCK) {
+			final List sch = new ArrayList();
+			final List schComp = new ArrayList();
+			final List schRel = new ArrayList();
+			final List dsComp = new ArrayList();
+			final List dsRel = new ArrayList();
+			final List pts = new ArrayList();
+			final List ds = new ArrayList();
+			final List diag = new ArrayList();
+			final List diagComp = new ArrayList();
+			final List rest = new ArrayList();
+			for (final Iterator i = new ArrayList(Transaction.listeners)
+					.iterator(); i.hasNext();) {
+				final TransactionListener tl = ((WeakTransactionListener) i
+						.next()).get();
+				if (tl == null)
+					continue;
+				else if (tl instanceof DataSet) {
+					if (((DataSet) tl).isPartitionTable())
+						pts.add(tl);
+					else
+						ds.add(tl);
+				} else if (tl instanceof Schema)
+					sch.add(tl);
+				else if (tl instanceof DiagramComponent)
+					diagComp.add(tl);
+				else if (tl instanceof Diagram)
+					diag.add(tl);
+				else if (tl instanceof Relation) {
+					if (((Relation) tl).getFirstKey().getTable().getSchema() instanceof DataSet)
+						dsRel.add(tl);
+					else
+						schRel.add(tl);
+				} else if (tl instanceof Key) {
+					if (((Key) tl).getTable().getSchema() instanceof DataSet)
+						dsComp.add(tl);
+					else
+						schComp.add(tl);
+				} else if (tl instanceof Column) {
+					if (tl instanceof DataSetColumn)
+						dsComp.add(tl);
+					else
+						schComp.add(tl);
+				} else if (tl instanceof Table)
+					if (tl instanceof DataSetTable)
+						dsComp.add(tl);
+					else
+						schComp.add(tl);
 				else
-					ds.add(tl);
-			} else if (tl instanceof Schema)
-				sch.add(tl);
-			else if (tl instanceof DiagramComponent)
-				diagComp.add(tl);
-			else if (tl instanceof Diagram)
-				diag.add(tl);
-			else if (tl instanceof Relation) {
-				if (((Relation) tl).getFirstKey().getTable().getSchema() instanceof DataSet)
-					dsRel.add(tl);
-				else
-					schRel.add(tl);
-			} else if (tl instanceof Key) {
-				if (((Key) tl).getTable().getSchema() instanceof DataSet)
-					dsComp.add(tl);
-				else
-					schComp.add(tl);
-			} else if (tl instanceof Column) {
-				if (tl instanceof DataSetColumn)
-					dsComp.add(tl);
-				else
-					schComp.add(tl);
-			} else if (tl instanceof Table)
-				if (tl instanceof DataSetTable)
-					dsComp.add(tl);
-				else
-					schComp.add(tl);
-			else
-				rest.add(tl);
+					rest.add(tl);
+			}
+			final List list = new ArrayList();
+			// schemas.
+			list.addAll(sch);
+			// non-relation schema components.
+			list.addAll(schComp);
+			// relations.
+			list.addAll(schRel);
+			// partition tables.
+			list.addAll(pts);
+			// dataset.
+			list.addAll(ds);
+			// non-relation dataset components.
+			list.addAll(dsComp);
+			// dataset relations.
+			list.addAll(dsRel);
+			// diagram components.
+			list.addAll(diagComp);
+			// diagrams.
+			list.addAll(diag);
+			// anything else that is interested.
+			list.addAll(rest);
+			return list;
 		}
-		final List list = new ArrayList();
-		// schemas.
-		list.addAll(sch);
-		// non-relation schema components.
-		list.addAll(schComp);
-		// relations.
-		list.addAll(schRel);
-		// partition tables.
-		list.addAll(pts);
-		// dataset.
-		list.addAll(ds);
-		// non-relation dataset components.
-		list.addAll(dsComp);
-		// dataset relations.
-		list.addAll(dsRel);
-		// diagram components.
-		list.addAll(diagComp);
-		// diagrams.
-		list.addAll(diag);
-		// anything else that is interested.
-		list.addAll(rest);
-		return list;
 	}
 
 	/**

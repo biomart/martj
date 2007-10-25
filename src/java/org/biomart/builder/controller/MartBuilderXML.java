@@ -989,6 +989,20 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					this.closeElement("noFinalLeftJoin", xmlWriter);
 				}
+				// No-optimiser table.
+				if (dsTable.isSkipOptimiser()) {
+					this.openElement("skipOptimiser", xmlWriter);
+					this.writeAttribute("tableKey", dsTable.getName(),
+							xmlWriter);
+					this.closeElement("skipOptimiser", xmlWriter);
+				}
+				// No-index-optimiser table.
+				if (dsTable.isSkipIndexOptimiser()) {
+					this.openElement("skipIndexOptimiser", xmlWriter);
+					this.writeAttribute("tableKey", dsTable.getName(),
+							xmlWriter);
+					this.closeElement("skipIndexOptimiser", xmlWriter);
+				}
 				// Write out dscol mods from each table col.
 				for (final Iterator j = dsTable.getColumns().values()
 						.iterator(); j.hasNext();) {
@@ -1785,7 +1799,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Hide-mask it.
-				w.getMods(tableKey, "explainHideMasked").put(tableKey.intern(), null);
+				w.getMods(tableKey, "explainHideMasked").put(tableKey.intern(),
+						null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1825,7 +1840,50 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Distinct it.
-				w.getMods(tableKey, "noFinalLeftJoin").put(tableKey.intern(), null);
+				w.getMods(tableKey, "noFinalLeftJoin").put(tableKey.intern(),
+						null);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// No-optimiser Table (inside dataset).
+		else if ("skipOptimiser".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("skipOptimiserOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Distinct it.
+				w.getMods(tableKey, "skipOptimiser").put(tableKey.intern(),
+						null);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// No-index-optimiser Table (inside dataset).
+		else if ("skipIndexOptimiser".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("skipIndexOptimiserOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Distinct it.
+				w.getMods(tableKey, "skipIndexOptimiser").put(
+						tableKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1845,7 +1903,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Distinct it.
-				w.getMods(tableKey, "distinctTable").put(tableKey.intern(), null);
+				w.getMods(tableKey, "distinctTable").put(tableKey.intern(),
+						null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -1865,7 +1924,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Mask it.
-				w.getMods(tableKey, "dimensionMasked").put(tableKey.intern(), null);
+				w.getMods(tableKey, "dimensionMasked").put(tableKey.intern(),
+						null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2094,7 +2154,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String tableKey = (String) attributes.get("tableKey");
 				final String newName = (String) attributes.get("newName");
 
-				w.getMods(tableKey, "tableRename").put(tableKey.intern(), newName);
+				w.getMods(tableKey, "tableRename").put(tableKey.intern(),
+						newName);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2115,7 +2176,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String colKey = (String) attributes.get("colKey");
 				final String newName = (String) attributes.get("newName");
 
-				w.getMods(tableKey, "columnRename").put(colKey.intern(), newName);
+				w.getMods(tableKey, "columnRename").put(colKey.intern(),
+						newName);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}
@@ -2234,8 +2296,8 @@ public class MartBuilderXML extends DefaultHandler {
 						&& colKey != null) {
 					final ExpressionColumnDefinition expdef = new ExpressionColumnDefinition(
 							expr, aliases, groupBy, colKey);
-					w.getMods(tableKey, "initialExpressions").put(colKey.intern(),
-							expdef);
+					w.getMods(tableKey, "initialExpressions").put(
+							colKey.intern(), expdef);
 				}
 			} catch (final Exception e) {
 				if (e instanceof SAXException)
@@ -2440,7 +2502,8 @@ public class MartBuilderXML extends DefaultHandler {
 			if (dimension == null)
 				dimension = PartitionTable.NO_DIMENSION;
 			if (!dimension.equals(PartitionTable.NO_DIMENSION))
-				ds.getMods(dimension, "initialPTAs").put(dimension.intern(), pta);
+				ds.getMods(dimension, "initialPTAs").put(dimension.intern(),
+						pta);
 			else
 				pt.applyTo(ds, dimension, pta);
 		} else

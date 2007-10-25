@@ -506,8 +506,12 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 
 				// Load the files.
 				Transaction.start(false);
-				final Mart mart = MartBuilderXML.load(file);
-				Transaction.end();
+				final Mart mart;
+				try {
+					mart = MartBuilderXML.load(file);
+				} finally {
+					Transaction.end();
+				}
 
 				MartTabSet.this.martModifiedStatus.put(mart, Boolean.FALSE);
 				MartTabSet.this.addMartTab(mart, file);
@@ -622,7 +626,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output database.
 	 */
 	public void requestSetOutputDatabase(final String outputDatabase) {
-		this.getSelectedMartTab().getMart().setOutputDatabase(outputDatabase);
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				MartTabSet.this.getSelectedMartTab().getMart()
+						.setOutputDatabase(outputDatabase);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -632,7 +643,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output schema.
 	 */
 	public void requestSetOutputSchema(final String outputSchema) {
-		this.getSelectedMartTab().getMart().setOutputSchema(outputSchema);
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				MartTabSet.this.getSelectedMartTab().getMart().setOutputSchema(
+						outputSchema);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -642,9 +660,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output host.
 	 */
 	public void requestSetOutputHost(final String host) {
-		Transaction.start(false);
-		MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(host);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(
+						host);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -654,9 +677,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output port.
 	 */
 	public void requestSetOutputPort(final String port) {
-		Transaction.start(false);
-		MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(port);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(
+						port);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -666,9 +694,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new host.
 	 */
 	public void requestSetOverrideHost(final String host) {
-		Transaction.start(false);
-		MartTabSet.this.getSelectedMartTab().getMart().setOverrideHost(host);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				MartTabSet.this.getSelectedMartTab().getMart().setOverrideHost(
+						host);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -678,9 +711,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new port.
 	 */
 	public void requestSetOverridePort(final String port) {
-		Transaction.start(false);
-		MartTabSet.this.getSelectedMartTab().getMart().setOverridePort(port);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				MartTabSet.this.getSelectedMartTab().getMart().setOverridePort(
+						port);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -879,9 +917,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new case.
 	 */
 	public void requestChangeNameCase(final int nameCase) {
-		Transaction.start(false);
-		MartTabSet.this.getSelectedMartTab().getMart().setCase(nameCase);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				MartTabSet.this.getSelectedMartTab().getMart()
+						.setCase(nameCase);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -973,8 +1016,16 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 								"SCHEMA_EDITOR_CARD");
 						final CardLayout cards = (CardLayout) MartTab.this.displayArea
 								.getLayout();
-						cards.show(MartTab.this.displayArea,
-								"SCHEMA_EDITOR_CARD");
+						new LongProcess() {
+							public void run() throws Exception {
+								SwingUtilities.invokeAndWait(new Runnable() {
+									public void run() {
+										cards.show(MartTab.this.displayArea,
+												"SCHEMA_EDITOR_CARD");
+									}
+								});
+							}
+						}.start();
 					}
 				}
 			});
@@ -994,8 +1045,16 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 					if (e.getSource() == MartTab.this.datasetButton) {
 						final CardLayout cards = (CardLayout) MartTab.this.displayArea
 								.getLayout();
-						cards.show(MartTab.this.displayArea,
-								"DATASET_EDITOR_CARD");
+						new LongProcess() {
+							public void run() throws Exception {
+								SwingUtilities.invokeAndWait(new Runnable() {
+									public void run() {
+										cards.show(MartTab.this.displayArea,
+												"DATASET_EDITOR_CARD");
+									}
+								});
+							}
+						}.start();
 					}
 				}
 			});

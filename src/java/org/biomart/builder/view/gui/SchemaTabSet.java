@@ -64,7 +64,6 @@ import org.biomart.builder.view.gui.diagrams.SchemaDiagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.builder.view.gui.dialogs.KeyDialog;
 import org.biomart.builder.view.gui.dialogs.SchemaConnectionDialog;
-import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.view.gui.LongProcess;
@@ -456,9 +455,13 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestChangeKeyStatus(final Key key,
 			final ComponentStatus status) {
-		Transaction.start(false);
-		key.setStatus(status);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				key.setStatus(status);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -471,15 +474,17 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestChangeRelationCardinality(final Relation relation,
 			final Cardinality cardinality) {
-		try {
-			Transaction.start(false);
-			relation.setCardinality(cardinality);
-			relation.setStatus(ComponentStatus.HANDMADE);
-		} catch (final AssociationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					relation.setCardinality(cardinality);
+					relation.setStatus(ComponentStatus.HANDMADE);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -492,14 +497,16 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestChangeRelationStatus(final Relation relation,
 			final ComponentStatus status) {
-		try {
-			Transaction.start(false);
-			relation.setStatus(status);
-		} catch (final AssociationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					relation.setStatus(status);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -533,11 +540,15 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateForeignKey(final Table table,
 			final Column[] columns) {
-		Transaction.start(false);
-		final ForeignKey fk = new ForeignKey(columns);
-		fk.setStatus(ComponentStatus.HANDMADE);
-		table.getForeignKeys().add(fk);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				final ForeignKey fk = new ForeignKey(columns);
+				fk.setStatus(ComponentStatus.HANDMADE);
+				table.getForeignKeys().add(fk);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -572,11 +583,15 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreatePrimaryKey(final Table table,
 			final Column[] columns) {
-		Transaction.start(false);
-		final PrimaryKey pk = new PrimaryKey(columns);
-		pk.setStatus(ComponentStatus.HANDMADE);
-		table.setPrimaryKey(pk);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				final PrimaryKey pk = new PrimaryKey(columns);
+				pk.setStatus(ComponentStatus.HANDMADE);
+				table.setPrimaryKey(pk);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -605,21 +620,24 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestCreateRelation(final Key from, final Key to) {
 		// Create the relation in the background.
-		try {
-			Transaction.start(true);
-			final Relation rel = new Relation(
-					from,
-					to,
-					from instanceof PrimaryKey && to instanceof PrimaryKey ? Cardinality.ONE
-							: Cardinality.MANY);
-			rel.setStatus(ComponentStatus.HANDMADE);
-			from.getRelations().add(rel);
-			to.getRelations().add(rel);
-		} catch (final AssociationException e) {
-			StackTrace.showStackTrace(e);
-		} finally {
-			Transaction.end();
-		}
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(true);
+					final Relation rel = new Relation(
+							from,
+							to,
+							from instanceof PrimaryKey
+									&& to instanceof PrimaryKey ? Cardinality.ONE
+									: Cardinality.MANY);
+					rel.setStatus(ComponentStatus.HANDMADE);
+					from.getRelations().add(rel);
+					to.getRelations().add(rel);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -629,10 +647,13 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to turn keyguessing off for.
 	 */
 	public void requestDisableKeyGuessing(final Schema schema) {
-		Transaction.start(true);
-		schema.setKeyGuessing(false);
-		this.requestSynchroniseSchema(schema, true, false);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(true);
+				schema.setKeyGuessing(false);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -644,9 +665,13 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            ignore it?
 	 */
 	public void requestIgnoreTable(final Table table, final boolean ignored) {
-		Transaction.start(false);
-		table.setMasked(ignored);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				table.setMasked(ignored);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -658,10 +683,13 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            mask it?
 	 */
 	public void requestMaskSchema(final Schema s, final boolean masked) {
-
-		Transaction.start(false);
-		s.setMasked(masked);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				s.setMasked(masked);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -683,13 +711,15 @@ public class SchemaTabSet extends JTabbedPane {
 		dialog.dispose();
 
 		// If they selected any columns, modify the key.
-		if (cols.length > 0) {
-
-			Transaction.start(false);
-			key.setColumns(cols);
-			key.setStatus(ComponentStatus.HANDMADE);
-			Transaction.end();
-		}
+		if (cols.length > 0)
+			new LongProcess() {
+				public void run() {
+					Transaction.start(false);
+					key.setColumns(cols);
+					key.setStatus(ComponentStatus.HANDMADE);
+					Transaction.end();
+				}
+			}.start();
 	}
 
 	/**
@@ -699,10 +729,13 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the schema to turn keyguessing on for.
 	 */
 	public void requestEnableKeyGuessing(final Schema schema) {
-		Transaction.start(true);
-		schema.setKeyGuessing(true);
-		this.requestSynchroniseSchema(schema, true, false);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(true);
+				schema.setKeyGuessing(true);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -724,12 +757,16 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the key to remove.
 	 */
 	public void requestRemoveKey(final Key key) {
-		Transaction.start(false);
-		if (key instanceof PrimaryKey)
-			key.getTable().setPrimaryKey(null);
-		else
-			key.getTable().getForeignKeys().remove(key);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				if (key instanceof PrimaryKey)
+					key.getTable().setPrimaryKey(null);
+				else
+					key.getTable().getForeignKeys().remove(key);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -739,11 +776,14 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the relation to remove.
 	 */
 	public void requestRemoveRelation(final Relation relation) {
-
-		Transaction.start(false);
-		relation.getFirstKey().getRelations().remove(relation);
-		relation.getSecondKey().getRelations().remove(relation);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				relation.getFirstKey().getRelations().remove(relation);
+				relation.getSecondKey().getRelations().remove(relation);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -762,10 +802,14 @@ public class SchemaTabSet extends JTabbedPane {
 		if (choice != JOptionPane.YES_OPTION)
 			return;
 
-		Transaction.start(false);
-		SchemaTabSet.this.martTab.getMart().getSchemas().remove(
-				schema.getOriginalName());
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				SchemaTabSet.this.martTab.getMart().getSchemas().remove(
+						schema.getOriginalName());
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -799,9 +843,13 @@ public class SchemaTabSet extends JTabbedPane {
 		if (newName.length() == 0)
 			return;
 
-		Transaction.start(false);
-		schema.setName(newName);
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				schema.setName(newName);
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -863,7 +911,7 @@ public class SchemaTabSet extends JTabbedPane {
 		final List allSchemas = new ArrayList(SchemaTabSet.this.martTab
 				.getMart().getSchemas().values());
 		final List doneSchemas = new ArrayList();
-		final double scale = 1.0 / (double) allSchemas.size();
+		final double scale = 1.0 / allSchemas.size();
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
 				Transaction.start(true);
@@ -902,10 +950,13 @@ public class SchemaTabSet extends JTabbedPane {
 			public void actionPerformed(final ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
-						double progress = (scale * 100.0 * doneSchemas.size())
+						final double progress = scale
+								* 100.0
+								* doneSchemas.size()
 								+ (allSchemas.size() == 0 ? 0.0
-										: (((Schema) allSchemas.get(0))
-												.getProgress() * scale));
+										: ((Schema) allSchemas.get(0))
+												.getProgress()
+												* scale);
 						// Did the job complete yet?
 						if (progress < 100.0)
 							// If not, update the progress report.
@@ -962,7 +1013,11 @@ public class SchemaTabSet extends JTabbedPane {
 						schema.synchronise();
 					}
 				} catch (final Throwable t) {
-					StackTrace.showStackTrace(t);
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
 				}
 				Transaction.end();
 				// This is to ensure that any modified flags get cleared.
@@ -983,9 +1038,9 @@ public class SchemaTabSet extends JTabbedPane {
 			public void actionPerformed(final ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
-						double progress = (schema.getProgress() * (checkKeys ? 0.5
-								: 1.0))
-								+ ((schema.isKeyGuessing() && checkKeys) ? 50.0
+						final double progress = schema.getProgress()
+								* (checkKeys ? 0.5 : 1.0)
+								+ (schema.isKeyGuessing() && checkKeys ? 50.0
 										: 0.0);
 						// Did the job complete yet?
 						if (progress < 100.0)
@@ -1015,25 +1070,30 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the target schema.
 	 */
 	public void requestAcceptAll(final Schema sch) {
-		final List modTbls = new ArrayList();
-		for (final Iterator i = sch.getTables().values().iterator(); i
-				.hasNext();) {
-			final Table tbl = (Table) i.next();
-			if (tbl.isVisibleModified())
-				modTbls.add(tbl);
-		}
-		for (final Iterator i = sch.getMart().getDataSets().values().iterator(); i
-				.hasNext();) {
-			final DataSet ds = (DataSet) i.next();
-			if (!ds.isVisibleModified())
-				continue;
-			for (final Iterator j = modTbls.iterator(); j.hasNext();)
-				this.getMartTab().getDataSetTabSet().requestAcceptAll(ds,
-						(Table) j.next());
-		}
-		Transaction.start(true);
-		this.getMartTab().getDataSetTabSet().requestRemoveLastVisMods();
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				final List modTbls = new ArrayList();
+				for (final Iterator i = sch.getTables().values().iterator(); i
+						.hasNext();) {
+					final Table tbl = (Table) i.next();
+					if (tbl.isVisibleModified())
+						modTbls.add(tbl);
+				}
+				for (final Iterator i = sch.getMart().getDataSets().values()
+						.iterator(); i.hasNext();) {
+					final DataSet ds = (DataSet) i.next();
+					if (!ds.isVisibleModified())
+						continue;
+					for (final Iterator j = modTbls.iterator(); j.hasNext();)
+						SchemaTabSet.this.getMartTab().getDataSetTabSet()
+								.requestAcceptAll(ds, (Table) j.next());
+				}
+				Transaction.start(true);
+				SchemaTabSet.this.getMartTab().getDataSetTabSet()
+						.requestRemoveLastVisMods();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**
@@ -1043,25 +1103,30 @@ public class SchemaTabSet extends JTabbedPane {
 	 *            the target schema.
 	 */
 	public void requestRejectAll(final Schema sch) {
-		final List modTbls = new ArrayList();
-		for (final Iterator i = sch.getTables().values().iterator(); i
-				.hasNext();) {
-			final Table tbl = (Table) i.next();
-			if (tbl.isVisibleModified())
-				modTbls.add(tbl);
-		}
-		for (final Iterator i = sch.getMart().getDataSets().values().iterator(); i
-				.hasNext();) {
-			final DataSet ds = (DataSet) i.next();
-			if (!ds.isVisibleModified())
-				continue;
-			for (final Iterator j = modTbls.iterator(); j.hasNext();)
-				this.getMartTab().getDataSetTabSet().requestRejectAll(ds,
-						(Table) j.next());
-		}
-		Transaction.start(true);
-		this.getMartTab().getDataSetTabSet().requestRemoveLastVisMods();
-		Transaction.end();
+		new LongProcess() {
+			public void run() {
+				final List modTbls = new ArrayList();
+				for (final Iterator i = sch.getTables().values().iterator(); i
+						.hasNext();) {
+					final Table tbl = (Table) i.next();
+					if (tbl.isVisibleModified())
+						modTbls.add(tbl);
+				}
+				for (final Iterator i = sch.getMart().getDataSets().values()
+						.iterator(); i.hasNext();) {
+					final DataSet ds = (DataSet) i.next();
+					if (!ds.isVisibleModified())
+						continue;
+					for (final Iterator j = modTbls.iterator(); j.hasNext();)
+						SchemaTabSet.this.getMartTab().getDataSetTabSet()
+								.requestRejectAll(ds, (Table) j.next());
+				}
+				Transaction.start(true);
+				SchemaTabSet.this.getMartTab().getDataSetTabSet()
+						.requestRemoveLastVisMods();
+				Transaction.end();
+			}
+		}.start();
 	}
 
 	/**

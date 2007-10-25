@@ -2513,7 +2513,7 @@ public class DataSet extends Schema {
 				super(dsColumn.getModifiedName(), dsTable);
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
-				this.visibleModified = false;
+				this.visibleModified = dsColumn.visibleModified;
 			}
 
 			/**
@@ -2911,11 +2911,33 @@ public class DataSet extends Schema {
 												.getTable().equals(targetTable)))) {
 					final SelectFromTable st = (SelectFromTable) tu;
 					previousTUs.add(st);
+					// Find all new columns from the TU.
+					int unrejectedCols = st.getNewColumnNameMap().size();
+					for (final Iterator j = st.getNewColumnNameMap().values()
+							.iterator(); j.hasNext();) {
+						final DataSetColumn dsCol = (DataSetColumn) j.next();
+						// Is it new?
+						if (!dsCol.isVisibleModified())
+							continue;
+						// Are we rejecting?
+						if (reject)
+							// Mask it.
+							try {
+								dsCol.setColumnMasked(true);
+								unrejectedCols--;
+							} catch (final ValidationException ve) {
+								// Ignore - if we can't mask it, it's because
+								// it's important.
+							}
+						// Reset visible modified on all of them.
+						dsCol.setVisibleModified(false);
+					}
 					// Are we rejecting?
 					if (reject && st instanceof JoinTable) {
 						final JoinTable jt = (JoinTable) st;
 						// Is the TU relation modified?
-						if (jt.getSchemaRelation().isVisibleModified())
+						if (jt.getSchemaRelation().isVisibleModified()
+								|| unrejectedCols == 0)
 							if (jt.getSchemaRelation().equals(
 									this.getFocusRelation()))
 								try {
@@ -2930,25 +2952,6 @@ public class DataSet extends Schema {
 								// No more needs to be done.
 								continue;
 							}
-					}
-					// Find all new columns from the TU.
-					for (final Iterator j = st.getNewColumnNameMap().values()
-							.iterator(); j.hasNext();) {
-						final DataSetColumn dsCol = (DataSetColumn) j.next();
-						// Is it new?
-						if (!dsCol.isVisibleModified())
-							continue;
-						// Are we rejecting?
-						if (reject)
-							// Mask it.
-							try {
-								dsCol.setColumnMasked(true);
-							} catch (final ValidationException ve) {
-								// Ignore - if we can't mask it, it's because
-								// it's important.
-							}
-						// Reset visible modified on all of them.
-						dsCol.setVisibleModified(false);
 					}
 				}
 			}
@@ -3202,6 +3205,63 @@ public class DataSet extends Schema {
 				this.getMods("dimensionMasked").remove(this.getName());
 			this.pcs.firePropertyChange("dimensionMasked", oldValue,
 					dimensionMasked);
+		}
+
+		/**
+		 * Is this a no-optimiser table?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isSkipOptimiser() {
+			return this.getMods("skipOptimiser").containsKey(this.getName());
+		}
+
+		/**
+		 * No-optimiser this table.
+		 * 
+		 * @param skipOptimiser
+		 *            <tt>true</tt> to make no-optimiser.
+		 */
+		public void setSkipOptimiser(final boolean skipOptimiser) {
+			final boolean oldValue = this.isSkipOptimiser();
+			if (skipOptimiser == oldValue)
+				return;
+			if (skipOptimiser)
+				this.getMods("skipOptimiser")
+						.put(this.getName().intern(), null);
+			else
+				this.getMods("skipOptimiser").remove(this.getName());
+			this.pcs.firePropertyChange("skipOptimiser", oldValue,
+					skipOptimiser);
+		}
+
+		/**
+		 * Is this a no-index-optimiser table?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isSkipIndexOptimiser() {
+			return this.getMods("skipIndexOptimiser").containsKey(
+					this.getName());
+		}
+
+		/**
+		 * No-index-optimiser this table.
+		 * 
+		 * @param skipIndexOptimiser
+		 *            <tt>true</tt> to make no-index-optimiser.
+		 */
+		public void setSkipIndexOptimiser(final boolean skipIndexOptimiser) {
+			final boolean oldValue = this.isSkipIndexOptimiser();
+			if (skipIndexOptimiser == oldValue)
+				return;
+			if (skipIndexOptimiser)
+				this.getMods("skipIndexOptimiser").put(this.getName().intern(),
+						null);
+			else
+				this.getMods("skipIndexOptimiser").remove(this.getName());
+			this.pcs.firePropertyChange("skipIndexOptimiser", oldValue,
+					skipIndexOptimiser);
 		}
 
 		/**
@@ -3533,7 +3593,9 @@ public class DataSet extends Schema {
 		 */
 		public void addPropertyChangeListener(
 				final PropertyChangeListener listener) {
-			this.pcs.addPropertyChangeListener(listener);
+			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
+					listener))
+				this.pcs.addPropertyChangeListener(listener);
 		}
 
 		/**
@@ -3546,7 +3608,9 @@ public class DataSet extends Schema {
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			this.pcs.addPropertyChangeListener(property, listener);
+			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
+					.contains(listener))
+				this.pcs.addPropertyChangeListener(property, listener);
 		}
 
 		/**
