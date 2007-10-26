@@ -378,10 +378,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				int firstKeyInsetX = firstKeyRectangle.x;
 				firstKeyRectangle = SwingUtilities.convertRectangle(firstKey
 						.getParent(), firstKeyRectangle, parent);
-				if (firstKey.getParent() == null)
+				if (firstKey.getParent() == null || !firstKey.getParent().isValid()) 
 					continue;
-				if (!firstKey.getParent().isValid())
-					firstKey.getParent().validate();
 				if (firstKey.getParent().getParent() instanceof SchemaComponent)
 					firstKeyInsetX += firstKey.getParent().getBounds().x;
 				while (firstKeyRectangle.y >= firstRowBottom
@@ -400,10 +398,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				int secondKeyInsetX = secondKeyRectangle.x;
 				secondKeyRectangle = SwingUtilities.convertRectangle(secondKey
 						.getParent(), secondKeyRectangle, parent);
-				if (secondKey.getParent() == null)
+				if (secondKey.getParent() == null || !secondKey.getParent().isValid()) 
 					continue;
-				if (!secondKey.getParent().isValid())
-					secondKey.getParent().validate();
 				if (secondKey.getParent().getParent() instanceof SchemaComponent)
 					secondKeyInsetX += secondKey.getParent().getBounds().x;
 				while (secondKeyRectangle.y >= secondRowBottom

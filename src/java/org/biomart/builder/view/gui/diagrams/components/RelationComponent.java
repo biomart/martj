@@ -130,6 +130,11 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	private static final long serialVersionUID = 1;
 
 	/**
+	 * Constant referring to modified relation colour.
+	 */
+	public static Color MODIFIED_COLOUR = Color.BLUE;
+
+	/**
 	 * Constant referring to handmade relation colour.
 	 */
 	public static Color HANDMADE_COLOUR = Color.GREEN;
@@ -226,12 +231,12 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 						this.repaintListener));
 		relation.getFirstKey().addPropertyChangeListener(
 				"status",
-				new WeakPropertyChangeListener(relation, "status",
-						this.repaintListener));
+				new WeakPropertyChangeListener(relation.getFirstKey(),
+						"status", this.repaintListener));
 		relation.getFirstKey().getTable().addPropertyChangeListener(
 				"masked",
-				new WeakPropertyChangeListener(relation, "masked",
-						this.repaintListener));
+				new WeakPropertyChangeListener(relation.getFirstKey()
+						.getTable(), "masked", this.repaintListener));
 		relation.getFirstKey().getTable().addPropertyChangeListener(
 				"dimensionMasked",
 				new WeakPropertyChangeListener(relation.getFirstKey()
@@ -246,8 +251,8 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 						.getTable(), "masked", this.repaintListener));
 		relation.getSecondKey().getTable().addPropertyChangeListener(
 				"dimensionMasked",
-				new WeakPropertyChangeListener(relation.getSecondKey(),
-						"dimensionMasked", this.repaintListener));
+				new WeakPropertyChangeListener(relation.getSecondKey()
+						.getTable(), "dimensionMasked", this.repaintListener));
 
 		this.changed = this.relation.isVisibleModified();
 	}
@@ -400,9 +405,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	}
 
 	public void recalculateDiagramComponent() {
-		if (this.relation != null)
-			this.setToolTipText(this.relation.toString());
-		this.repaintDiagramComponent();
+		// Nothing to do here.
 	}
 
 	public void repaintDiagramComponent() {
@@ -499,5 +502,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 			this.revalidate();
 			this.repaint(this.getBounds());
 		}
+		if (this.relation != null)
+			this.setToolTipText(this.relation.toString());
 	}
 }

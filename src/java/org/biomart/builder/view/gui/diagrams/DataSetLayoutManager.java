@@ -380,15 +380,12 @@ public class DataSetLayoutManager implements LayoutManager2 {
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
 				final KeyComponent secondKey = comp.getSecondKeyComponent();
 				if (firstKey == null || firstKey.getParent() == null
-						|| !firstKey.isVisible())
+						|| !firstKey.isVisible() || !firstKey.getParent().isValid()) 
 					continue;
-				if (!firstKey.getParent().isValid())
-					firstKey.getParent().validate();
 				if (secondKey == null || secondKey.getParent() == null
-						|| !secondKey.isVisible())
+						|| !secondKey.isVisible()
+						|| !secondKey.getParent().isValid()) 	
 					continue;
-				if (!secondKey.getParent().isValid())
-					secondKey.getParent().validate();
 				// Update key locations.
 				Rectangle firstKeyRectangle = firstKey.getBounds();
 				final int firstKeyInsetX = firstKeyRectangle.x;

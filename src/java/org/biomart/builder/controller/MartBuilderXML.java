@@ -442,6 +442,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("id", relMappedID, xmlWriter);
 			this.writeAttribute("cardinality", r.getCardinality().getName(),
 					xmlWriter);
+			this.writeAttribute("originalCardinality", r.getOriginalCardinality().getName(),
+					xmlWriter);
 			this.writeAttribute("firstKeyId",
 					(String) this.reverseMappedObjects.get(r.getFirstKey()),
 					xmlWriter);
@@ -1729,6 +1731,8 @@ public class MartBuilderXML extends DefaultHandler {
 						.get((String) attributes.get("status"));
 				final Cardinality card = Cardinality.get((String) attributes
 						.get("cardinality"));
+				final Cardinality origCard = Cardinality.get((String) attributes
+						.get("originalCardinality"));
 				final Key firstKey = (Key) this.mappedObjects.get(attributes
 						.get("firstKeyId"));
 				final Key secondKey = (Key) this.mappedObjects.get(attributes
@@ -1751,6 +1755,8 @@ public class MartBuilderXML extends DefaultHandler {
 					secondKey.getRelations().add(rel);
 
 					// Set its status.
+					if (origCard!=null)
+						rel.setOriginalCardinality(origCard);
 					rel.setStatus(status);
 					rel.setVisibleModified(visibleModified);
 					element = rel;

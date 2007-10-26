@@ -259,6 +259,17 @@ public abstract class BoxShapedComponent extends JPanel implements
 		if (this.stroke != null)
 			g2d.setStroke(this.stroke);
 		super.paintBorder(g2d);
+		if (this.changed) {
+			this.getBorder().paintBorder(this, g,
+					DiagramComponent.GLOW_WIDTH / 2,
+					DiagramComponent.GLOW_WIDTH / 2,
+					this.getWidth() - DiagramComponent.GLOW_WIDTH,
+					this.getHeight() - DiagramComponent.GLOW_WIDTH);
+			this.getBorder().paintBorder(this, g, DiagramComponent.GLOW_WIDTH,
+					DiagramComponent.GLOW_WIDTH,
+					this.getWidth() - DiagramComponent.GLOW_WIDTH*2,
+					this.getHeight() - DiagramComponent.GLOW_WIDTH*2);
+		}
 	}
 
 	protected void paintComponent(final Graphics g) {
@@ -670,7 +681,6 @@ public abstract class BoxShapedComponent extends JPanel implements
 					: BoxShapedComponent.OUTLINE;
 		this.setBorder(BorderFactory.createLineBorder(
 				this.changed ? DiagramComponent.GLOW_COLOUR : this
-						.getForeground(),
-				this.changed ? DiagramComponent.GLOW_WIDTH : 1));
+						.getForeground(), 1));
 	}
 }

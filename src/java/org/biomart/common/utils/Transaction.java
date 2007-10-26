@@ -29,6 +29,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
@@ -54,6 +56,9 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * @since 0.7
  */
 public class Transaction {
+
+	// In seconds.
+	private final static int LISTENER_FLUSH_INTERVAL = 5;
 
 	private final static String LOCK = "__TRANSACTION__LOCK__";
 
@@ -232,8 +237,21 @@ public class Transaction {
 	private static class WeakTransactionListener implements TransactionListener {
 		private WeakReference listenerRef;
 
+		private static int nextHashCode = 0;
+
+		private int hashcode = WeakTransactionListener.nextHashCode++;
+
 		private WeakTransactionListener(final TransactionListener listener) {
 			this.listenerRef = new WeakReference(listener);
+		}
+
+		public int hashCode() {
+			return this.hashcode;
+		}
+
+		public boolean equals(final Object obj) {
+			return obj instanceof WeakTransactionListener
+					&& ((WeakTransactionListener) obj).hashcode == this.hashcode;
 		}
 
 		/**
@@ -242,82 +260,62 @@ public class Transaction {
 		 * @return the listener, or null if it has gone away.
 		 */
 		public TransactionListener get() {
-			return (TransactionListener) this.listenerRef.get();
-		}
-
-		public void transactionResetDirectModified() {
 			final TransactionListener listener = (TransactionListener) this.listenerRef
 					.get();
 			if (listener == null)
 				this.removeListener();
-			else
+			return listener;
+		}
+
+		public void transactionResetDirectModified() {
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				listener.transactionResetDirectModified();
 		}
 
 		public void transactionResetVisibleModified() {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null)
-				this.removeListener();
-			else
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				listener.transactionResetVisibleModified();
 		}
 
 		public void transactionStarted(final TransactionEvent evt) {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null)
-				this.removeListener();
-			else
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				listener.transactionStarted(evt);
 		}
 
 		public void transactionEnded(final TransactionEvent evt)
 				throws TransactionException {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null)
-				this.removeListener();
-			else
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				listener.transactionEnded(evt);
 		}
 
 		public void setVisibleModified(final boolean modified) {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null)
-				this.removeListener();
-			else
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				listener.setVisibleModified(modified);
 		}
 
 		public boolean isVisibleModified() {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null) {
-				this.removeListener();
-				return false;
-			} else
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				return listener.isVisibleModified();
+			return false;
 		}
 
 		public void setDirectModified(final boolean modified) {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null)
-				this.removeListener();
-			else
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				listener.setDirectModified(modified);
 		}
 
 		public boolean isDirectModified() {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null) {
-				this.removeListener();
-				return false;
-			} else
+			final TransactionListener listener = this.get();
+			if (listener != null)
 				return listener.isDirectModified();
+			return false;
 		}
 
 		private void removeListener() {
@@ -547,5 +545,20 @@ public class Transaction {
 	 */
 	public boolean isAllowVisModChange() {
 		return this.allowVisModChange;
+	}
+
+	// Timer thread to remove dead weak references.
+	private static final Timer t = new Timer();
+	static {
+		Transaction.t.schedule(new TimerTask() {
+			public void run() {
+				System.gc();
+				for (final Iterator i = new ArrayList(Transaction.listeners)
+						.iterator(); i.hasNext();)
+					((WeakTransactionListener) i.next()).get();
+				System.err.println(Transaction.listeners.size());
+			}
+		}, Transaction.LISTENER_FLUSH_INTERVAL * 1000,
+				Transaction.LISTENER_FLUSH_INTERVAL * 1000);
 	}
 }

@@ -50,9 +50,10 @@
 <!ELEMENT relation EMPTY>
 <!ATTLIST relation id ID #REQUIRED>
 <!ATTLIST relation cardinality (1|M) #REQUIRED>
+<!ATTLIST relation originalCardinality (1|M) #REQUIRED>
 <!ATTLIST relation firstKeyId IDREF #REQUIRED>
 <!ATTLIST relation secondKeyId IDREF #REQUIRED>
-<!ATTLIST relation status (HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
+<!ATTLIST relation status (MODIFIED|HANDMADE|INFERRED|INFERRED_INCORRECT) #REQUIRED>
 <!ATTLIST relation visibleModified (true|false) #IMPLIED>
 
 <!ELEMENT table (column+,primaryKey?,foreignKey*)>

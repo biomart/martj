@@ -144,13 +144,13 @@ Schema partitions: <xsl:choose><xsl:when test="@partitionRegex">Regex: <xsl:valu
 Uses keyguessing?: <xsl:value-of select="@keyguessing"/>
 Masked?: <xsl:value-of select="@masked"/>
 
-Incorrect keys and relations (if any)
--------------------------------------
-<xsl:apply-templates select="./table/primaryKey[@status='HANDMADE']"/> 
-<xsl:apply-templates select="./table/foreignKey[@status='HANDMADE']"/> 
-<xsl:apply-templates select="./relation[@status='HANDMADE']"/> 
-
 Additional/modified keys and relations (if any)
+-------------------------------------
+<xsl:apply-templates select="./table/primaryKey[@status='HANDMADE' or @status='MODIFIED']"/> 
+<xsl:apply-templates select="./table/foreignKey[@status='HANDMADE' or @status='MODIFIED']"/> 
+<xsl:apply-templates select="./relation[@status='HANDMADE' or @status='MODIFIED']"/> 
+
+Incorrect keys and relations (if any)
 -----------------------------------------------
 <xsl:apply-templates select="./table[@ignore='true']"/>
 <xsl:apply-templates select="./table/primaryKey[@status='INFERRED_INCORRECT']"/> 

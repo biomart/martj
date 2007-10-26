@@ -144,10 +144,14 @@ public class SchemaContext implements DiagramContext {
 			// head to ignored tables.
 			if (this.isMasked(relation))
 				relcomp.setForeground(RelationComponent.INCORRECT_COLOUR);
-
+			
 			// Highlight all HANDMADE relations.
 			else if (relation.getStatus().equals(ComponentStatus.HANDMADE))
 				relcomp.setForeground(RelationComponent.HANDMADE_COLOUR);
+
+			// Highlight MODIFIED relations.
+			else if (relation.getStatus().equals(ComponentStatus.MODIFIED))
+				relcomp.setForeground(RelationComponent.MODIFIED_COLOUR);
 
 			// All others are normal.
 			else
@@ -499,7 +503,8 @@ public class SchemaContext implements DiagramContext {
 			});
 			contextMenu.add(incorrect);
 			incorrect.setSelected(relationIncorrect);
-			if (relation.getStatus().equals(ComponentStatus.HANDMADE))
+			if (relation.getStatus().equals(ComponentStatus.MODIFIED) 
+					|| relation.getStatus().equals(ComponentStatus.HANDMADE))
 				incorrect.setEnabled(false);
 
 			// Separator

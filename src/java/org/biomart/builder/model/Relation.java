@@ -61,6 +61,8 @@ public class Relation implements Comparable, TransactionListener {
 	private static final long serialVersionUID = 1L;
 
 	private Cardinality cardinality;
+	
+	private Cardinality originalCardinality;
 
 	private final Key firstKey;
 
@@ -126,6 +128,7 @@ public class Relation implements Comparable, TransactionListener {
 		this.firstKey = firstKey;
 		this.secondKey = secondKey;
 		this.setCardinality(cardinality);
+		this.setOriginalCardinality(cardinality);
 		this.setStatus(ComponentStatus.INFERRED);
 
 		// Check the keys have the same number of columns.
@@ -187,6 +190,7 @@ public class Relation implements Comparable, TransactionListener {
 			}
 		};
 		this.pcs.addPropertyChangeListener("cardinality", listener);
+		this.pcs.addPropertyChangeListener("originalCardinality", listener);
 		this.pcs.addPropertyChangeListener("status", listener);
 		this.pcs.addPropertyChangeListener("compoundRelation", listener);
 		this.pcs.addPropertyChangeListener("unrolledRelation", listener);
@@ -196,15 +200,6 @@ public class Relation implements Comparable, TransactionListener {
 		this.pcs.addPropertyChangeListener("mergeRelation", listener);
 		this.pcs.addPropertyChangeListener("restrictRelation", listener);
 		this.pcs.addPropertyChangeListener("subclassRelation", listener);
-
-		// All changes to us make us visible modified.
-		final PropertyChangeListener vlistener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				if (Transaction.getCurrentTransaction().isAllowVisModChange())
-					Relation.this.setVisibleModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("cardinality", vlistener);
 
 		// Add listeners to tables at both end so that if key
 		// is removed, relation is also removed.
@@ -370,6 +365,18 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public Cardinality getCardinality() {
 		return this.cardinality;
+	}
+
+	/**
+	 * Returns the original cardinality of the foreign key end of this relation, in a 1:M
+	 * relation. In 1:1 relations this will always return 1, and in M:M
+	 * relations it will always return M.
+	 * 
+	 * @return the original cardinality of the foreign key end of this relation, in 1:M
+	 *         relations only. Otherwise determined by the relation type.
+	 */
+	public Cardinality getOriginalCardinality() {
+		return this.originalCardinality;
 	}
 
 	/**
@@ -570,6 +577,24 @@ public class Relation implements Comparable, TransactionListener {
 			}
 		}
 		this.pcs.firePropertyChange("cardinality", oldValue, cardinality);
+	}
+
+	/**
+	 * Sets the original cardinality of the foreign key end of this relation, in a 1:M
+	 * relation. If used on a 1:1 or M:M relation, then specifying M makes it
+	 * M:M and specifying 1 makes it 1:1.
+	 * 
+	 * @param originalCardinality
+	 *            the originalCardinality.
+	 */
+	public void setOriginalCardinality(Cardinality originalCardinality) {
+		Log.debug("Changing original cardinality of " + this + " to " + originalCardinality);
+		final Cardinality oldValue = this.originalCardinality;
+		if (this.originalCardinality == originalCardinality || this.originalCardinality != null
+				&& this.originalCardinality.equals(originalCardinality))
+			return;
+		this.originalCardinality = originalCardinality;
+		this.pcs.firePropertyChange("originalCardinality", oldValue, originalCardinality);
 	}
 
 	/**
@@ -1353,9 +1378,13 @@ public class Relation implements Comparable, TransactionListener {
 		 * 
 		 * @param name
 		 *            the name of the cardinality object.
-		 * @return the cardinality object.
+		 * @return the cardinality object or null if null was passed in.
 		 */
 		public static Cardinality get(final String name) {
+			// Return null for null name.
+			if (name==null)
+				return null;
+			
 			// Do we already have this one?
 			// If so, then return it.
 			if (Cardinality.singletons.containsKey(name))

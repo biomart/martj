@@ -477,9 +477,13 @@ public class SchemaTabSet extends JTabbedPane {
 		new LongProcess() {
 			public void run() throws Exception {
 				try {
-					Transaction.start(false);
+					Transaction.start(true);
 					relation.setCardinality(cardinality);
-					relation.setStatus(ComponentStatus.HANDMADE);
+					if (!relation.getStatus().equals(ComponentStatus.HANDMADE))
+						relation
+								.setStatus(cardinality.equals(relation
+										.getOriginalCardinality()) ? ComponentStatus.INFERRED
+										: ComponentStatus.MODIFIED);
 				} finally {
 					Transaction.end();
 				}

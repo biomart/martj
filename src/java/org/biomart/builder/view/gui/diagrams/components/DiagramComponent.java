@@ -47,7 +47,7 @@ public interface DiagramComponent {
 	/**
 	 * The width of the line used to highlight changes.
 	 */
-	public static final int GLOW_WIDTH = 3;
+	public static final int GLOW_WIDTH = 2;
 
 	/**
 	 * Construct a context menu for the model object.

@@ -38,6 +38,13 @@ public class ComponentStatus implements Comparable {
 	private final String name;
 
 	/**
+	 * Use this constant to refer to a component that was inferred but has
+	 * had different settings specified by the user.
+	 */
+	public static final ComponentStatus MODIFIED = ComponentStatus
+			.get("MODIFIED");
+
+	/**
 	 * Use this constant to refer to a component that was specified by the user.
 	 */
 	public static final ComponentStatus HANDMADE = ComponentStatus

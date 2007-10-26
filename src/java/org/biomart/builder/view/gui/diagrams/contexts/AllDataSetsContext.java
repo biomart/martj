@@ -96,7 +96,7 @@ public class AllDataSetsContext implements DiagramContext {
 
 		if (object instanceof DataSet) {
 			final DataSet ds = (DataSet) object;
-			if (ds.isMasked()
+			if (ds.isMasked() || ds.getMainTable() == null
 					|| !ds.getMainTable().existsForPartition(schemaPrefix))
 				return true;
 		}
@@ -111,7 +111,7 @@ public class AllDataSetsContext implements DiagramContext {
 
 	public void populateContextMenu(final JPopupMenu contextMenu,
 			final Object object) {
-		
+
 		if (object instanceof DataSet) {
 			if (contextMenu.getComponentCount() > 0)
 				contextMenu.addSeparator();

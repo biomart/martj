@@ -1697,7 +1697,8 @@ public class DataSet extends Schema {
 	}
 
 	/**
-	 * Returns the central table of this dataset.
+	 * Returns the central table of this dataset. If it currently
+	 * doesn't have one it will return null.
 	 * 
 	 * @return the central table of this dataset.
 	 */
@@ -1708,8 +1709,7 @@ public class DataSet extends Schema {
 			if (dst.getType().equals(DataSetTableType.MAIN))
 				return dst;
 		}
-		// Should never happen.
-		throw new BioMartError();
+		return null;
 	}
 
 	/**
@@ -2898,23 +2898,20 @@ public class DataSet extends Schema {
 			for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
 				((Key) i.next()).transactionResetVisibleModified();
 			// Locate the TU that provides the target table.
-			final Set previousTUs = new HashSet();
 			for (final Iterator i = this.getTransformationUnits().iterator(); i
 					.hasNext();) {
 				final TransformationUnit tu = (TransformationUnit) i.next();
 				if (tu instanceof SelectFromTable
 						&& (targetTable == null || targetTable != null
-								&& (previousTUs.contains(tu.getPreviousUnit())
-										|| ((SelectFromTable) tu).getTable()
+								&& (((SelectFromTable) tu).getTable()
 												.equals(targetTable) || !this
 										.getType()
 										.equals(DataSetTableType.MAIN)
 										&& this.getFocusRelation().getOneKey()
 												.getTable().equals(targetTable)))) {
 					final SelectFromTable st = (SelectFromTable) tu;
-					previousTUs.add(st);
 					// Find all new columns from the TU.
-					int unrejectedCols = st.getNewColumnNameMap().size();
+					int rejectedCols = 0;
 					for (final Iterator j = st.getNewColumnNameMap().values()
 							.iterator(); j.hasNext();) {
 						final DataSetColumn dsCol = (DataSetColumn) j.next();
@@ -2926,7 +2923,7 @@ public class DataSet extends Schema {
 							// Mask it.
 							try {
 								dsCol.setColumnMasked(true);
-								unrejectedCols--;
+								rejectedCols++;
 							} catch (final ValidationException ve) {
 								// Ignore - if we can't mask it, it's because
 								// it's important.
@@ -2939,7 +2936,8 @@ public class DataSet extends Schema {
 						final JoinTable jt = (JoinTable) st;
 						// Is the TU relation modified?
 						if (jt.getSchemaRelation().isVisibleModified()
-								|| unrejectedCols == 0)
+								|| (rejectedCols > 0 && rejectedCols == st
+										.getNewColumnNameMap().size()))
 							if (jt.getSchemaRelation().equals(
 									this.getFocusRelation()))
 								try {

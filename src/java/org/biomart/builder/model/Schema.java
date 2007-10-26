@@ -394,9 +394,9 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-				listener))
-		this.pcs.addPropertyChangeListener(property, listener);
+		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
+				.contains(listener))
+			this.pcs.addPropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -1781,6 +1781,18 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 								throw new BioMartError(t);
 							}
 
+						// Work out whether the relation from the FK to
+						// the PK should be 1:M or 1:1. The rule is that
+						// it will be 1:M in all cases except where the
+						// FK table has a PK with identical columns to
+						// the FK, in which case it is 1:1, as the FK
+						// is unique.
+						Cardinality card = Cardinality.MANY;
+						final PrimaryKey fkPK = fkTable.getPrimaryKey();
+						if (fkPK != null
+								&& fk.getColumns().equals(fkPK.getColumns()))
+							card = Cardinality.ONE;
+
 						// Check to see if it already has a relation.
 						boolean relationExists = false;
 						for (final Iterator f = fk.getRelations().iterator(); f
@@ -1791,18 +1803,31 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 							// a) a relation already exists between the FK
 							// and the PK.
 							if (candidateRel.getOtherKey(fk).equals(pk)) {
-								// Make it inferred if it is handmade.
-								// Don't override 1:1 defs.
-								if (candidateRel.getStatus().equals(
-										ComponentStatus.HANDMADE)
-										&& candidateRel.getCardinality()
-												.equals(Cardinality.MANY))
-									try {
+								// If cardinality matches, make it
+								// inferred. If doesn't match, make it
+								// modified and update original cardinality.
+								try {
+									if (card.equals(candidateRel
+											.getCardinality())) {
+										if (!candidateRel
+												.getStatus()
+												.equals(
+														ComponentStatus.INFERRED_INCORRECT))
+											candidateRel
+													.setStatus(ComponentStatus.INFERRED);
+									} else {
+										if (!candidateRel
+												.getStatus()
+												.equals(
+														ComponentStatus.INFERRED_INCORRECT))
+											candidateRel
+													.setStatus(ComponentStatus.MODIFIED);
 										candidateRel
-												.setStatus(ComponentStatus.INFERRED);
-									} catch (final AssociationException ae) {
-										throw new BioMartError(ae);
+												.setOriginalCardinality(card);
 									}
+								} catch (final AssociationException ae) {
+									throw new BioMartError(ae);
+								}
 								// Don't drop it at the end of the loop.
 								relationsToBeDropped.remove(candidateRel);
 								// Say we've found it.
@@ -1820,19 +1845,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 						// If relation did not already exist, create it.
 						if (!relationExists) {
-							// Work out whether the relation from the FK to
-							// the PK should be 1:M or 1:1. The rule is that
-							// it will be 1:M in all cases except where the
-							// FK table has a PK with identical columns to
-							// the FK, in which case it is 1:1, as the FK
-							// is unique.
-							Cardinality card = Cardinality.MANY;
-							final PrimaryKey fkPK = fkTable.getPrimaryKey();
-							if (fkPK != null
-									&& fk.getColumns()
-											.equals(fkPK.getColumns()))
-								card = Cardinality.ONE;
-
 							// Establish the relation.
 							try {
 								final Relation rel = new Relation(pk, fk, card);
@@ -2049,6 +2061,18 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 								throw new BioMartError(t);
 							}
 
+						// Work out whether the relation from the FK to
+						// the PK should be 1:M or 1:1. The rule is that
+						// it will be 1:M in all cases except where the
+						// FK table has a PK with identical columns to
+						// the FK, in which case it is 1:1, as the FK
+						// is unique.
+						Cardinality card = Cardinality.MANY;
+						final PrimaryKey fkPK = fkTable.getPrimaryKey();
+						if (fkPK != null
+								&& fk.getColumns().equals(fkPK.getColumns()))
+							card = Cardinality.ONE;
+
 						// Check to see if it already has a relation.
 						boolean relationExists = false;
 						for (final Iterator f = fk.getRelations().iterator(); f
@@ -2059,19 +2083,31 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 							// a) a relation already exists between the FK
 							// and the PK.
 							if (candidateRel.getOtherKey(fk).equals(pk)) {
-								// Make it inferred if it is handmade.
-								// Don't change status if is not 1:M as
-								// db can only tell us 1:M relations.
-								if (candidateRel.getStatus().equals(
-										ComponentStatus.HANDMADE)
-										&& candidateRel.getCardinality()
-												.equals(Cardinality.MANY))
-									try {
+								// If cardinality matches, make it
+								// inferred. If doesn't match, make it
+								// modified and update original cardinality.
+								try {
+									if (card.equals(candidateRel
+											.getCardinality())) {
+										if (!candidateRel
+												.getStatus()
+												.equals(
+														ComponentStatus.INFERRED_INCORRECT))
+											candidateRel
+													.setStatus(ComponentStatus.INFERRED);
+									} else {
+										if (!candidateRel
+												.getStatus()
+												.equals(
+														ComponentStatus.INFERRED_INCORRECT))
+											candidateRel
+													.setStatus(ComponentStatus.MODIFIED);
 										candidateRel
-												.setStatus(ComponentStatus.INFERRED);
-									} catch (final AssociationException ae) {
-										throw new BioMartError(ae);
+												.setOriginalCardinality(card);
 									}
+								} catch (final AssociationException ae) {
+									throw new BioMartError(ae);
+								}
 								// Don't drop it at the end of the loop.
 								relationsToBeDropped.remove(candidateRel);
 								// Say we've found it.
@@ -2089,19 +2125,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 						// If relation did not already exist, create it.
 						if (!relationExists) {
-							// Work out whether the relation from the FK to
-							// the PK should be 1:M or 1:1. The rule is that
-							// it will be 1:M in all cases except where the
-							// FK table has a PK with identical columns to
-							// the FK, in which case it is 1:1, as the FK
-							// is unique.
-							Cardinality card = Cardinality.MANY;
-							final PrimaryKey fkPK = fkTable.getPrimaryKey();
-							if (fkPK != null
-									&& fk.getColumns()
-											.equals(fkPK.getColumns()))
-								card = Cardinality.ONE;
-
 							// Establish the relation.
 							try {
 								final Relation rel = new Relation(pk, fk, card);
