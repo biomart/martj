@@ -201,7 +201,10 @@ public class DataSet extends Schema {
 				listener);
 
 		// Recalculate completely if parent mart changes case.
-		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
+		this.getMart().addPropertyChangeListener(
+				"case",
+				new WeakPropertyChangeListener(this.getMart(), "case",
+						this.rebuildListener));
 	}
 
 	protected void tableDropped(final Table table) {
@@ -1697,8 +1700,8 @@ public class DataSet extends Schema {
 	}
 
 	/**
-	 * Returns the central table of this dataset. If it currently
-	 * doesn't have one it will return null.
+	 * Returns the central table of this dataset. If it currently doesn't have
+	 * one it will return null.
 	 * 
 	 * @return the central table of this dataset.
 	 */
@@ -2903,10 +2906,9 @@ public class DataSet extends Schema {
 				final TransformationUnit tu = (TransformationUnit) i.next();
 				if (tu instanceof SelectFromTable
 						&& (targetTable == null || targetTable != null
-								&& (((SelectFromTable) tu).getTable()
-												.equals(targetTable) || !this
-										.getType()
-										.equals(DataSetTableType.MAIN)
+								&& (((SelectFromTable) tu).getTable().equals(
+										targetTable) || !this.getType().equals(
+										DataSetTableType.MAIN)
 										&& this.getFocusRelation().getOneKey()
 												.getTable().equals(targetTable)))) {
 					final SelectFromTable st = (SelectFromTable) tu;

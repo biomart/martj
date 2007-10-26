@@ -170,13 +170,10 @@ public class Table implements Comparable, TransactionListener {
 	}
 
 	public boolean isVisibleModified() {		
-		// Compute this from all rels and keys and cols - if any are vis
+		// Compute this from all rels and cols - if any are vis
 		// modified then we are too.
 		for (final Iterator i = this.getRelations().iterator(); i.hasNext();)
 			if (((Relation) i.next()).isVisibleModified())
-				return true;
-		for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
-			if (((Key) i.next()).isVisibleModified())
 				return true;
 		for (final Iterator i = this.getColumns().values().iterator(); i
 				.hasNext();)

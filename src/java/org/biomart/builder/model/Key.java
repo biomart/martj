@@ -66,9 +66,6 @@ public abstract class Key implements Comparable, TransactionListener {
 
 	private ComponentStatus status;
 
-	private boolean visibleModified = Transaction.getCurrentTransaction() == null ? false
-			: Transaction.getCurrentTransaction().isAllowVisModChange();
-
 	private boolean directModified = false;
 
 	private Collection relationCache;
@@ -118,15 +115,6 @@ public abstract class Key implements Comparable, TransactionListener {
 				Key.this.relationCache.addAll(Key.this.relations);
 			}
 		});
-
-		// Visible changes.
-		final PropertyChangeListener vlistener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				if (Transaction.getCurrentTransaction().isAllowVisModChange())
-					Key.this.setVisibleModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("columns", vlistener);
 	}
 
 	public boolean isDirectModified() {
@@ -142,16 +130,11 @@ public abstract class Key implements Comparable, TransactionListener {
 	}
 
 	public boolean isVisibleModified() {
-		return this.visibleModified;
+		return false;
 	}
 
 	public void setVisibleModified(final boolean modified) {
-		if (modified == this.visibleModified)
-			return;
-		final boolean oldValue = this.visibleModified;
-		this.visibleModified = modified;
-		this.pcs.firePropertyChange("visibleModified", oldValue, modified);
-		this.setDirectModified(true);
+		// Ignore.
 	}
 
 	public void transactionResetVisibleModified() {
