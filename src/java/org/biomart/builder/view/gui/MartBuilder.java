@@ -154,6 +154,14 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem convertPartitionTable;
 
+		private JMenuItem datasetAcceptAll;
+
+		private JMenuItem datasetRejectAll;
+
+		private JMenuItem schemaAcceptAll;
+
+		private JMenuItem schemaRejectAll;
+
 		private JMenuItem updatePartitionCounts;
 
 		private JMenuItem updateAllPartitionCounts;
@@ -324,6 +332,20 @@ public class MartBuilder extends BioMartGUI {
 					.charAt(0));
 			this.removeSchema.addActionListener(this);
 
+			// Accept all changes.
+			this.schemaAcceptAll = new JMenuItem(Resources
+					.get("acceptChangesTitle"));
+			this.schemaAcceptAll.setMnemonic(Resources.get(
+					"acceptChangesMnemonic").charAt(0));
+			this.schemaAcceptAll.addActionListener(this);
+
+			// Reject all changes.
+			this.schemaRejectAll = new JMenuItem(Resources
+					.get("rejectChangesTitle"));
+			this.schemaRejectAll.setMnemonic(Resources.get(
+					"rejectChangesMnemonic").charAt(0));
+			this.schemaRejectAll.addActionListener(this);
+
 			// Invisible.
 			this.invisibleDataset = new JCheckBoxMenuItem(Resources
 					.get("invisibleDataSetTitle"));
@@ -405,6 +427,20 @@ public class MartBuilder extends BioMartGUI {
 			this.convertPartitionTable.setMnemonic(Resources.get(
 					"convertPartitionTableMnemonic").charAt(0));
 			this.convertPartitionTable.addActionListener(this);
+
+			// Accept all changes.
+			this.datasetAcceptAll = new JMenuItem(Resources
+					.get("acceptChangesTitle"));
+			this.datasetAcceptAll.setMnemonic(Resources.get(
+					"acceptChangesMnemonic").charAt(0));
+			this.datasetAcceptAll.addActionListener(this);
+
+			// Reject all changes.
+			this.datasetRejectAll = new JMenuItem(Resources
+					.get("rejectChangesTitle"));
+			this.datasetRejectAll.setMnemonic(Resources.get(
+					"rejectChangesMnemonic").charAt(0));
+			this.datasetRejectAll.addActionListener(this);
 
 			// Make a submenu for the optimiser type.
 			this.optimiseDatasetSubmenu = new JMenu(Resources
@@ -489,6 +525,9 @@ public class MartBuilder extends BioMartGUI {
 			schemaMenu.addSeparator();
 			schemaMenu.add(this.renameSchema);
 			schemaMenu.add(this.removeSchema);
+			schemaMenu.addSeparator();
+			schemaMenu.add(this.schemaAcceptAll);
+			schemaMenu.add(this.schemaRejectAll);
 
 			// Construct the dataset menu.
 			final JMenu datasetMenu = new JMenu(Resources
@@ -511,6 +550,9 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.add(this.renameDataset);
 			datasetMenu.add(this.removeDataset);
 			datasetMenu.addSeparator();
+			datasetMenu.add(this.datasetAcceptAll);
+			datasetMenu.add(this.datasetRejectAll);
+			datasetMenu.addSeparator();
 			datasetMenu.add(this.extendDataset);
 
 			// Add a listener which checks which options to enable each time the
@@ -525,10 +567,8 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
-					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
-							.getSelectedMartTab() == null)
-						hasMart = false;
+					final boolean hasMart = MartBuilderMenuBar.this
+							.getMartBuilder().martTabSet.getSelectedMartTab() != null;
 					MartBuilderMenuBar.this.saveDDL
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -578,10 +618,8 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
-					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
-							.getSelectedMartTab() == null)
-						hasMart = false;
+					final boolean hasMart = MartBuilderMenuBar.this
+							.getMartBuilder().martTabSet.getSelectedMartTab() != null;
 					MartBuilderMenuBar.this.saveMart
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -674,10 +712,8 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
-					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
-							.getSelectedMartTab() == null)
-						hasMart = false;
+					final boolean hasMart = MartBuilderMenuBar.this
+							.getMartBuilder().martTabSet.getSelectedMartTab() != null;
 					MartBuilderMenuBar.this.updateAllSchemas
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -703,10 +739,8 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
-					boolean hasMart = true;
-					if (MartBuilderMenuBar.this.getMartBuilder().martTabSet
-							.getSelectedMartTab() == null)
-						hasMart = false;
+					final boolean hasMart = MartBuilderMenuBar.this
+							.getMartBuilder().martTabSet.getSelectedMartTab() != null;
 					final Schema schema;
 					if (hasMart)
 						schema = MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -726,6 +760,10 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.removeSchema
 							.setEnabled(schema != null);
+					MartBuilderMenuBar.this.schemaAcceptAll
+							.setEnabled(schema != null && schema.isVisibleModified());
+					MartBuilderMenuBar.this.schemaRejectAll
+							.setEnabled(schema != null && schema.isVisibleModified());
 				}
 			});
 			datasetMenu.addMenuListener(new MenuListener() {
@@ -736,7 +774,8 @@ public class MartBuilder extends BioMartGUI {
 				} // Interface requirement.
 
 				public void menuSelected(final MenuEvent e) {
-					final boolean hasMart = true;
+					final boolean hasMart = MartBuilderMenuBar.this
+							.getMartBuilder().martTabSet.getSelectedMartTab() != null;
 					MartBuilderMenuBar.this.createDatasets
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -781,6 +820,10 @@ public class MartBuilder extends BioMartGUI {
 							.setSelected(ds != null && ds.isPartitionTable());
 					MartBuilderMenuBar.this.updatePartitionCounts
 							.setEnabled(ds != null && ds.isPartitionTable());
+					MartBuilderMenuBar.this.datasetAcceptAll
+							.setEnabled(ds != null && ds.isVisibleModified());
+					MartBuilderMenuBar.this.datasetRejectAll
+							.setEnabled(ds != null && ds.isVisibleModified());
 				}
 			});
 			this.optimiseDatasetSubmenu.addMenuListener(new MenuListener() {
@@ -896,6 +939,18 @@ public class MartBuilder extends BioMartGUI {
 						.getSelectedSchema();
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestRemoveSchema(schema);
+			} else if (e.getSource() == this.schemaAcceptAll) {
+				final Schema schema = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getSchemaTabSet()
+						.getSelectedSchema();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getSchemaTabSet().requestAcceptAll(schema);
+			} else if (e.getSource() == this.schemaRejectAll) {
+				final Schema schema = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getSchemaTabSet()
+						.getSelectedSchema();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getSchemaTabSet().requestRejectAll(schema);
 			}
 			// Dataset menu.
 			else if (e.getSource() == this.invisibleDataset) {
@@ -972,6 +1027,18 @@ public class MartBuilder extends BioMartGUI {
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestIndexOptimiser(ds,
 								this.indexOptimiser.isSelected());
+			} else if (e.getSource() == this.datasetAcceptAll) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestAcceptAll(ds, null);
+			} else if (e.getSource() == this.datasetRejectAll) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestRejectAll(ds, null);
 			}
 			// Others
 			else
