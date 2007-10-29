@@ -80,6 +80,7 @@ import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
+import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.ComponentImageSaver;
 import org.biomart.common.view.gui.dialogs.ComponentPrinter;
 
@@ -329,19 +330,27 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		if (this.needsSubComps)
 			this.recalculateSubComps();
 		if (this.needsRecalc) {
-			// Make sure this is on the Swing event thread.
-			SwingUtilities.invokeLater(new Runnable() {
+			new LongProcess() {
 				public void run() {
-					Diagram.this.recalculateDiagram();
+					// Make sure this is on the Swing event thread.
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							Diagram.this.recalculateDiagram();
+						}
+					});
 				}
-			});
+			}.start();
 		} else if (this.needsRepaint) {
-			// Make sure this is on the Swing event thread.
-			SwingUtilities.invokeLater(new Runnable() {
+			new LongProcess() {
 				public void run() {
-					Diagram.this.repaintDiagram();
+					// Make sure this is on the Swing event thread.
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							Diagram.this.repaintDiagram();
+						}
+					});
 				}
-			});
+			}.start();
 		}
 		this.needsRepaint = false;
 		this.needsRecalc = false;
