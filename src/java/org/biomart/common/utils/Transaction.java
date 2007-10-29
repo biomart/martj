@@ -234,99 +234,6 @@ public class Transaction {
 		}
 	}
 
-	private static class WeakTransactionListener implements TransactionListener {
-		private WeakReference listenerRef;
-
-		private static int nextHashCode = 0;
-
-		private int hashcode = WeakTransactionListener.nextHashCode++;
-
-		private WeakTransactionListener(final TransactionListener listener) {
-			this.listenerRef = new WeakReference(listener);
-		}
-
-		public int hashCode() {
-			return this.hashcode;
-		}
-
-		public boolean equals(final Object obj) {
-			return obj instanceof WeakTransactionListener
-					&& ((WeakTransactionListener) obj).hashcode == this.hashcode;
-		}
-
-		/**
-		 * Obtain the wrapped listener.
-		 * 
-		 * @return the listener, or null if it has gone away.
-		 */
-		public TransactionListener get() {
-			final TransactionListener listener = (TransactionListener) this.listenerRef
-					.get();
-			if (listener == null)
-				this.removeListener();
-			return listener;
-		}
-
-		public void transactionResetDirectModified() {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				listener.transactionResetDirectModified();
-		}
-
-		public void transactionResetVisibleModified() {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				listener.transactionResetVisibleModified();
-		}
-
-		public void transactionStarted(final TransactionEvent evt) {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				listener.transactionStarted(evt);
-		}
-
-		public void transactionEnded(final TransactionEvent evt)
-				throws TransactionException {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				listener.transactionEnded(evt);
-		}
-
-		public void setVisibleModified(final boolean modified) {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				listener.setVisibleModified(modified);
-		}
-
-		public boolean isVisibleModified() {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				return listener.isVisibleModified();
-			return false;
-		}
-
-		public void setDirectModified(final boolean modified) {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				listener.setDirectModified(modified);
-		}
-
-		public boolean isDirectModified() {
-			final TransactionListener listener = this.get();
-			if (listener != null)
-				return listener.isDirectModified();
-			return false;
-		}
-
-		private void removeListener() {
-			try {
-				Transaction.listeners.remove(this);
-			} catch (final Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	private final static Set listeners = Collections
 			.synchronizedSet(new HashSet());
 
@@ -339,7 +246,7 @@ public class Transaction {
 	 *            the listener to add.
 	 */
 	public static void addTransactionListener(final TransactionListener listener) {
-		Transaction.listeners.add(new WeakTransactionListener(listener));
+		Transaction.listeners.add(new WeakReference(listener));
 	}
 
 	private static int inProgress = 0;
@@ -434,10 +341,12 @@ public class Transaction {
 			final List rest = new ArrayList();
 			for (final Iterator i = new ArrayList(Transaction.listeners)
 					.iterator(); i.hasNext();) {
-				final TransactionListener tl = ((WeakTransactionListener) i
+				final TransactionListener tl = (TransactionListener)((WeakReference) i
 						.next()).get();
-				if (tl == null)
+				if (tl == null) {
+					i.remove();
 					continue;
+				}
 				else if (tl instanceof DataSet) {
 					if (((DataSet) tl).isPartitionTable())
 						pts.add(tl);
@@ -555,7 +464,8 @@ public class Transaction {
 				System.gc();
 				for (final Iterator i = new ArrayList(Transaction.listeners)
 						.iterator(); i.hasNext();)
-					((WeakTransactionListener) i.next()).get();
+					if (((WeakReference) i.next()).get()==null)
+						i.remove();
 				System.err.println(Transaction.listeners.size());
 			}
 		}, Transaction.LISTENER_FLUSH_INTERVAL * 1000,

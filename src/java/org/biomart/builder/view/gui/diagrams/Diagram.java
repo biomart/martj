@@ -80,7 +80,6 @@ import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
-import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.ComponentImageSaver;
 import org.biomart.common.view.gui.dialogs.ComponentPrinter;
 
@@ -329,10 +328,21 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public void transactionEnded(final TransactionEvent evt) {
 		if (this.needsSubComps)
 			this.recalculateSubComps();
-		if (this.needsRecalc)
-			this.recalculateDiagram();
-		else if (this.needsRepaint)
-			this.repaintDiagram();
+		if (this.needsRecalc) {
+			// Make sure this is on the Swing event thread.
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					Diagram.this.recalculateDiagram();
+				}
+			});
+		} else if (this.needsRepaint) {
+			// Make sure this is on the Swing event thread.
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					Diagram.this.repaintDiagram();
+				}
+			});
+		}
 		this.needsRepaint = false;
 		this.needsRecalc = false;
 		this.needsSubComps = false;
@@ -340,20 +350,23 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 	private void recalculateSubComps() {
 		final Collection comps = Arrays.asList(this.getComponents());
-		for (final Iterator i = this.componentMap.entrySet().iterator(); i
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			if (!comps.contains(entry.getValue()))
-				i.remove();
+		synchronized (this.componentMap) {
+			for (final Iterator i = this.componentMap.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				if (!comps.contains(entry.getValue()))
+					i.remove();
+			}
+			final Map subCompMap = new HashMap();
+			for (final Iterator i = this.componentMap.values().iterator(); i
+					.hasNext();) {
+				final Object o = i.next();
+				if (o instanceof DiagramComponent)
+					subCompMap
+							.putAll(((DiagramComponent) o).getSubComponents());
+			}
+			this.componentMap.putAll(subCompMap);
 		}
-		final Map subCompMap = new HashMap();
-		for (final Iterator i = new HashMap(this.componentMap).values()
-				.iterator(); i.hasNext();) {
-			final Object o = i.next();
-			if (o instanceof DiagramComponent)
-				subCompMap.putAll(((DiagramComponent) o).getSubComponents());
-		}
-		this.componentMap.putAll(subCompMap);
 	}
 
 	/**
@@ -496,16 +509,18 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				otherCorner.getParent(), otherCorner.getBounds(), this);
 		final Rectangle clipRegion = firstCorner.union(secondCorner);
 		final Collection results = new HashSet();
-		for (final Iterator i = this.componentMap.entrySet().iterator(); i
-				.hasNext();) {
-			final Map.Entry entry = (Map.Entry) i.next();
-			if (!entry.getKey().getClass().equals(componentClass))
-				continue;
-			final Component candidate = (Component) entry.getValue();
-			final Rectangle candRect = SwingUtilities.convertRectangle(
-					candidate.getParent(), candidate.getBounds(), this);
-			if (clipRegion.contains(candRect))
-				results.add(candidate);
+		synchronized (this.componentMap) {
+			for (final Iterator i = this.componentMap.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				if (!entry.getKey().getClass().equals(componentClass))
+					continue;
+				final Component candidate = (Component) entry.getValue();
+				final Rectangle candRect = SwingUtilities.convertRectangle(
+						candidate.getParent(), candidate.getBounds(), this);
+				if (clipRegion.contains(candRect))
+					results.add(candidate);
+			}
 		}
 		return results;
 	}
@@ -517,13 +532,15 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 		// First, work out what tables are in this diagram.
 		final Map sortedTables = new TreeMap();
-		for (final Iterator i = this.componentMap.keySet().iterator(); i
-				.hasNext();) {
-			final Object o = i.next();
-			if (o instanceof DataSetTable)
-				sortedTables.put(((DataSetTable) o).getModifiedName(), o);
-			else if (o instanceof Table)
-				sortedTables.put(((Table) o).getName(), o);
+		synchronized (this.componentMap) {
+			for (final Iterator i = this.componentMap.keySet().iterator(); i
+					.hasNext();) {
+				final Object o = i.next();
+				if (o instanceof DataSetTable)
+					sortedTables.put(((DataSetTable) o).getModifiedName(), o);
+				else if (o instanceof Table)
+					sortedTables.put(((Table) o).getName(), o);
+			}
 		}
 		final Map lookup = new InverseMap(sortedTables);
 
@@ -802,63 +819,56 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 */
 	public void recalculateDiagram() {
 		Log.debug("Recalculating diagram");
-		new LongProcess() {
-			public void run() throws Exception {
-				SwingUtilities.invokeAndWait(new Runnable() {
-					public void run() {
-						Diagram.this.deselectAll();
+		this.deselectAll();
 
-						// Remember states.
-						final Map stateMap = new HashMap();
-						for (final Iterator i = Diagram.this.componentMap
-								.entrySet().iterator(); i.hasNext();) {
-							final Map.Entry entry = (Map.Entry) i.next();
-							final Object o = entry.getValue();
-							if (o instanceof BoxShapedComponent)
-								stateMap.put(entry.getKey(),
-										((BoxShapedComponent) o).getState());
-						}
+		// Remember states.
+		final Map stateMap = new HashMap();
+		synchronized (this.componentMap) {
+			for (final Iterator i = this.componentMap.entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final Object o = entry.getValue();
+				if (o instanceof BoxShapedComponent)
+					stateMap.put(entry.getKey(), ((BoxShapedComponent) o)
+							.getState());
 
-						// First of all, remove all our existing components.
-						Diagram.this.removeAll();
-						Diagram.this.componentMap.clear();
-
-						// Delegate to do the actual diagram
-						// clear-and-repopulate.
-						Diagram.this.doRecalculateDiagram();
-
-						// Do the subcomp thing.
-						Diagram.this.recalculateSubComps();
-
-						// Reinstate states.
-						for (final Iterator i = stateMap.entrySet().iterator(); i
-								.hasNext();) {
-							final Map.Entry entry = (Map.Entry) i.next();
-							final BoxShapedComponent o = (BoxShapedComponent) Diagram.this.componentMap
-									.get(entry.getKey());
-							if (o != null && entry.getValue() != null)
-								o.setState(entry.getValue());
-						}
-
-						// Set up a floating panel with the hide masked box.
-						if (Diagram.this.isUseHideMasked())
-							Diagram.this.add(Diagram.this.hideMasked, null,
-									Diagram.TOP_LAYER);
-
-						// Resize the diagram to fit our new components.
-						Diagram.this.resizeDiagram();
-
-						// Initial placement of the hide masked button.
-						Diagram.this.adjustmentValueChanged(null);
-
-						// Repaint the whole diagram to update the state of any
-						// new bits and remove any ghosts that may be left on
-						// screen.
-						Diagram.this.repaintDiagram();
-					}
-				});
 			}
-		}.start();
+		}
+
+		// First of all, remove all our existing components.
+		this.removeAll();
+		this.componentMap.clear();
+
+		// Delegate to do the actual diagram
+		// clear-and-repopulate.
+		this.doRecalculateDiagram();
+
+		// Do the subcomp thing.
+		this.recalculateSubComps();
+
+		// Reinstate states.
+		for (final Iterator i = stateMap.entrySet().iterator(); i.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			final BoxShapedComponent o = (BoxShapedComponent) this.componentMap
+					.get(entry.getKey());
+			if (o != null && entry.getValue() != null)
+				o.setState(entry.getValue());
+		}
+
+		// Set up a floating panel with the hide masked box.
+		if (this.isUseHideMasked())
+			this.add(Diagram.this.hideMasked, null, Diagram.TOP_LAYER);
+
+		// Resize the diagram to fit our new components.
+		this.resizeDiagram();
+
+		// Initial placement of the hide masked button.
+		this.adjustmentValueChanged(null);
+
+		// Repaint the whole diagram to update the state of any
+		// new bits and remove any ghosts that may be left on
+		// screen.
+		this.repaintDiagram();
 	}
 
 	/**
@@ -874,19 +884,12 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * on a table). Use {@link #recalculateDiagram()} instead.
 	 */
 	public void repaintDiagram() {
-		new LongProcess() {
-			public void run() throws Exception {
-				SwingUtilities.invokeAndWait(new Runnable() {
-					public void run() {
-						for (final Iterator i = Diagram.this.componentMap
-								.values().iterator(); i.hasNext();)
-							((DiagramComponent) i.next())
-									.repaintDiagramComponent();
-						Diagram.this.repaint();
-					}
-				});
-			}
-		}.start();
+		synchronized (this.componentMap) {
+			for (final Iterator i = this.componentMap.values().iterator(); i
+					.hasNext();)
+				((DiagramComponent) i.next()).repaintDiagramComponent();
+		}
+		this.repaint();
 	}
 
 	/**

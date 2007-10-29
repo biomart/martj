@@ -1044,5 +1044,5 @@ public class MartBuilder extends BioMartGUI {
 			else
 				super.actionPerformed(e);
 		}
-	}
+	}	
 }

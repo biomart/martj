@@ -821,22 +821,6 @@ public class DataSet extends Schema {
 					if (!inPK && !inSourceKey)
 						continue;
 				}
-				// If column is masked, don't inherit it.
-				if (parentDSCol.isColumnMasked()) {
-					// Remove it straight away if we had a copy of it before.
-					if (dsTable.getColumns().containsKey(
-							parentDSCol.getModifiedName())) {
-						final DataSetColumn dsCol = (DataSetColumn) dsTable
-								.getColumns()
-								.get(parentDSCol.getModifiedName());
-						if (dsCol instanceof InheritedColumn) {
-							dsTable.getColumns().remove(
-									parentDSCol.getModifiedName());
-							unusedCols.remove(dsCol);
-						}
-					}
-					continue;
-				}
 				// Only unfiltered columns reach this point. Create a copy of
 				// the column.
 				final InheritedColumn dsCol;
@@ -854,10 +838,6 @@ public class DataSet extends Schema {
 						// Listen to this column to modify ourselves.
 						if (!dsTable.getType().equals(
 								DataSetTableType.DIMENSION)) {
-							dsCol.addPropertyChangeListener("columnMasked",
-									new WeakPropertyChangeListener(dsCol,
-											"columnMasked",
-											this.rebuildListener));
 							dsCol.addPropertyChangeListener("columnRename",
 									new WeakPropertyChangeListener(dsCol,
 											"columnRename",
@@ -2517,6 +2497,14 @@ public class DataSet extends Schema {
 				// Remember the inherited column.
 				this.dsColumn = dsColumn;
 				this.visibleModified = dsColumn.visibleModified;
+
+				// Listen to inherited settings.
+				final PropertyChangeListener listener = new PropertyChangeListener() {
+					public void propertyChange(final PropertyChangeEvent e) {
+						InheritedColumn.this.setDirectModified(true);
+					}
+				};
+				dsColumn.addPropertyChangeListener("columnMasked", listener);
 			}
 
 			/**
@@ -2530,6 +2518,10 @@ public class DataSet extends Schema {
 
 			public String getModifiedName() {
 				return this.getName();
+			}
+
+			public boolean isColumnMasked() {
+				return this.dsColumn.isColumnMasked();
 			}
 
 			public void setColumnMasked(final boolean columnMasked)
@@ -2554,7 +2546,7 @@ public class DataSet extends Schema {
 				super.setColumnRename(columnRename);
 			}
 
-			public boolean existsForPartition(String schemaPrefix) {
+			public boolean existsForPartition(final String schemaPrefix) {
 				return this.dsColumn.existsForPartition(schemaPrefix);
 			}
 
@@ -2607,7 +2599,7 @@ public class DataSet extends Schema {
 				return this.column;
 			}
 
-			public boolean existsForPartition(String schemaPrefix) {
+			public boolean existsForPartition(final String schemaPrefix) {
 				return this.column.existsForPartition(schemaPrefix)
 						&& super.existsForPartition(schemaPrefix);
 			}
@@ -2865,7 +2857,7 @@ public class DataSet extends Schema {
 		 *            the partition prefix.
 		 * @return <tt>true</tt> if it does.
 		 */
-		public boolean existsForPartition(String schemaPrefix) {
+		public boolean existsForPartition(final String schemaPrefix) {
 			return this.getFocusTable().existsForPartition(schemaPrefix);
 		}
 
@@ -2913,55 +2905,32 @@ public class DataSet extends Schema {
 												.getTable().equals(targetTable)))) {
 					final SelectFromTable st = (SelectFromTable) tu;
 					// Find all new columns from the TU.
-					int rejectedCols = 0;
 					for (final Iterator j = st.getNewColumnNameMap().values()
 							.iterator(); j.hasNext();) {
 						final DataSetColumn dsCol = (DataSetColumn) j.next();
 						// Is it new?
 						if (!dsCol.isVisibleModified())
 							continue;
+						// Reset visible modified on all of them.
+						dsCol.setVisibleModified(false);
 						// Are we rejecting?
 						if (reject)
 							// Mask it.
 							try {
 								dsCol.setColumnMasked(true);
-								rejectedCols++;
 							} catch (final ValidationException ve) {
 								// Ignore - if we can't mask it, it's because
 								// it's important.
 							}
-						// Reset visible modified on all of them.
-						dsCol.setVisibleModified(false);
-					}
-					// Are we rejecting?
-					if (reject && st instanceof JoinTable) {
-						final JoinTable jt = (JoinTable) st;
-						// Is the TU relation modified?
-						if (jt.getSchemaRelation().isVisibleModified()
-								|| (rejectedCols > 0 && rejectedCols == st
-										.getNewColumnNameMap().size()))
-							if (jt.getSchemaRelation().equals(
-									this.getFocusRelation()))
-								try {
-									this.setDimensionMasked(true);
-								} catch (final ValidationException e) {
-									// Don't care, really.
-								}
-							else {
-								jt.getSchemaRelation()
-										.setMaskRelation(this.getDataSet(),
-												this.getName(), true);
-								// No more needs to be done.
-								continue;
-							}
 					}
 				}
 			}
-			// Only reset parent relation if has one and all keys
+			// Only reset parent relation if has one and all columns
 			// on this table are now not modified.
 			if (this.getType() != DataSetTableType.MAIN) {
-				for (final Iterator i = this.getKeys().iterator(); i.hasNext();)
-					if (((Key) i.next()).isVisibleModified())
+				for (final Iterator i = this.getColumns().values().iterator(); i
+						.hasNext();)
+					if (((Column) i.next()).isVisibleModified())
 						return;
 				// Find parent relation and reset that.
 				Relation rel = null;
@@ -2973,6 +2942,22 @@ public class DataSet extends Schema {
 						rel = (Relation) j.next();
 				// Reset it.
 				rel.setVisibleModified(false);
+			}
+			// Mask this table if it has no unmasked columns left.
+			if (this.getType().equals(DataSetTableType.MAIN))
+				return;
+			for (final Iterator i = this.getColumns().values().iterator(); i
+					.hasNext();) {
+				final DataSetColumn dsCol = (DataSetColumn) i.next();
+				if (dsCol instanceof ExpressionColumn
+						|| dsCol instanceof WrappedColumn
+						&& !dsCol.isColumnMasked())
+					return;
+			}
+			try {
+				this.setDimensionMasked(true);
+			} catch (final Throwable e) {
+				// Don't care.
 			}
 		}
 
@@ -3127,6 +3112,8 @@ public class DataSet extends Schema {
 				return;
 			this.type = type;
 			this.pcs.firePropertyChange("type", oldValue, type);
+			// Force a complete new rebuild.
+			this.getColumns().clear();
 		}
 
 		/**
