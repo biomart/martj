@@ -330,27 +330,27 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		if (this.needsSubComps)
 			this.recalculateSubComps();
 		if (this.needsRecalc) {
-			new LongProcess() {
+			// Make sure this is on the Swing event thread.
+			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
-					// Make sure this is on the Swing event thread.
-					SwingUtilities.invokeLater(new Runnable() {
+					new LongProcess() {
 						public void run() {
 							Diagram.this.recalculateDiagram();
 						}
-					});
+					}.start();
 				}
-			}.start();
+			});
 		} else if (this.needsRepaint) {
-			new LongProcess() {
+			// Make sure this is on the Swing event thread.
+			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
-					// Make sure this is on the Swing event thread.
-					SwingUtilities.invokeLater(new Runnable() {
+					new LongProcess() {
 						public void run() {
 							Diagram.this.repaintDiagram();
 						}
-					});
+					}.start();
 				}
-			}.start();
+			});
 		}
 		this.needsRepaint = false;
 		this.needsRecalc = false;

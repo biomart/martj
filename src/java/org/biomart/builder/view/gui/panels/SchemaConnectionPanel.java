@@ -742,6 +742,9 @@ public abstract class SchemaConnectionPanel extends JPanel {
 				this.schemaName.setText(null);
 				this.username.setText(null);
 				this.password.setText(null);
+				this.regex.setText(null);
+				this.expression.setText(null);
+				this.preview.setValues(Collections.EMPTY_MAP);
 			}
 		}
 
