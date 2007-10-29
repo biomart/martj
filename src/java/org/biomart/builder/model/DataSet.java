@@ -837,12 +837,11 @@ public class DataSet extends Schema {
 						dsCol = new InheritedColumn(dsTable, parentDSCol);
 						// Listen to this column to modify ourselves.
 						if (!dsTable.getType().equals(
-								DataSetTableType.DIMENSION)) {
+								DataSetTableType.DIMENSION))
 							dsCol.addPropertyChangeListener("columnRename",
 									new WeakPropertyChangeListener(dsCol,
 											"columnRename",
 											this.rebuildListener));
-						}
 						dsTable.getColumns().put(dsCol.getName(), dsCol);
 					}
 				}
@@ -1309,27 +1308,19 @@ public class DataSet extends Schema {
 					wc = new WrappedColumn(c, colName, dsTable);
 					dsTable.getColumns().put(wc.getName(), wc);
 					// Listen to this column to modify ourselves.
-					if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-						wc.addPropertyChangeListener("columnMasked",
-								new WeakPropertyChangeListener(wc,
-										"columnMasked", this.rebuildListener));
+					if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 						wc.addPropertyChangeListener("columnRename",
 								new WeakPropertyChangeListener(wc,
 										"columnRename", this.rebuildListener));
-					}
 				}
 			} else {
 				wc = new WrappedColumn(c, colName, dsTable);
 				dsTable.getColumns().put(wc.getName(), wc);
 				// Listen to this column to modify ourselves.
-				if (!dsTable.getType().equals(DataSetTableType.DIMENSION)) {
-					wc.addPropertyChangeListener("columnMasked",
-							new WeakPropertyChangeListener(wc, "columnMasked",
-									this.rebuildListener));
+				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					wc.addPropertyChangeListener("columnRename",
 							new WeakPropertyChangeListener(wc, "columnRename",
 									this.rebuildListener));
-				}
 			}
 			unusedCols.remove(wc);
 			tu.getNewColumnNameMap().put(c, wc);
