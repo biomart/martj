@@ -1287,12 +1287,12 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				if (!this.getPartitions().isEmpty()) {
 					if ("".equals(dmd.getSchemaTerm()))
 						// Use catalog name to get prefix.
-						schemaPrefix = ((String) this.getPartitions().get(
-								catalogName)).intern();
+						schemaPrefix = (String) this.getPartitions().get(
+								catalogName);
 					else
 						// Use schema name to get prefix.
-						schemaPrefix = ((String) this.getPartitions().get(
-								schemaName)).intern();
+						schemaPrefix = (String) this.getPartitions().get(
+								schemaName);
 					// Don't want to include if prefix is still null.
 					if (schemaPrefix == null)
 						continue;
