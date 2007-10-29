@@ -750,36 +750,13 @@ public class Mart implements TransactionListener {
 			// covered by the subclass relations is the same as the
 			// original set of tables requested.
 			final Collection scTables = new HashSet();
-			for (final Iterator j = candidate.getRelations().iterator(); j
+			for (final Iterator j = candidate.getIncludedRelations().iterator(); j
 					.hasNext();) {
 				final Relation r = (Relation) j.next();
 				if (!r.isSubclassRelation(candidate))
 					continue;
-				final Table t1 = r.getFirstKey().getTable();
-				final Table t2 = r.getSecondKey().getTable();
-				// Expand this to include all tables included by M:1/1:1/M:M
-				// relations from the actual subclassed tables. This will bring
-				// in all those available via 1:M:1 relations.
-				if (scTables.add(t1))
-					for (final Iterator k = t1.getRelations().iterator(); k
-							.hasNext();) {
-						final Relation r1 = (Relation) k.next();
-						if (r1.isOneToMany()
-								&& r1.getOneKey().getTable().equals(t1))
-							continue;
-						scTables.add(r1.getOtherKey(r1.getKeyForTable(t1))
-								.getTable());
-					}
-				if (scTables.add(t2))
-					for (final Iterator k = t2.getRelations().iterator(); k
-							.hasNext();) {
-						final Relation r2 = (Relation) k.next();
-						if (r2.isOneToMany()
-								&& r2.getOneKey().getTable().equals(t2))
-							continue;
-						scTables.add(r2.getOtherKey(r2.getKeyForTable(t2))
-								.getTable());
-					}
+				scTables.add(r.getFirstKey().getTable());
+				scTables.add(r.getSecondKey().getTable());
 			}
 			// Finally perform the check to see if we have them all.
 			if (scTables.containsAll(includeTables))
@@ -926,7 +903,10 @@ public class Mart implements TransactionListener {
 			try {
 				if (i.hasNext()) {
 					suggestedDataSet = new DataSet(this, dataset
-							.getCentralTable(), dataset.getName());
+							.getCentralTable(), dataset.getCentralTable()
+							.getName());
+					this.datasets.put(suggestedDataSet.getOriginalName(),
+							suggestedDataSet);
 					// Copy subclassed relations from existing dataset.
 					for (final Iterator j = dataset.getIncludedRelations()
 							.iterator(); j.hasNext();)
