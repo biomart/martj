@@ -18,10 +18,7 @@
 
 package org.biomart.common.utils;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventObject;
@@ -29,8 +26,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet;
@@ -56,9 +51,6 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * @since 0.7
  */
 public class Transaction {
-
-	// In seconds.
-	private final static int LISTENER_FLUSH_INTERVAL = 5;
 
 	private final static String LOCK = "__TRANSACTION__LOCK__";
 
@@ -134,104 +126,6 @@ public class Transaction {
 		 * @return <tt>true</tt> if it has.
 		 */
 		public boolean isDirectModified();
-	}
-
-	/**
-	 * A weak property change listener that dies when the wrapped listener goes
-	 * out of scope. This is very important to use when the object being
-	 * listened to could outlive the listening object (e.g. a GUI component will
-	 * 99% of the time outlive the object it represents, so the GUI component
-	 * should listen via weak listener reference).
-	 */
-	public static class WeakPropertyChangeListener implements
-			PropertyChangeListener {
-		private WeakReference listenerRef;
-
-		private Object parent;
-
-		private String property;
-
-		/**
-		 * Create a new weak property change listener.
-		 * 
-		 * @param parent
-		 *            the parent property change support object.
-		 * @param listener
-		 *            the listener to wrap.
-		 */
-		public WeakPropertyChangeListener(final Object parent,
-				final PropertyChangeListener listener) {
-			this(parent, null, listener);
-		}
-
-		/**
-		 * Create a new weak property change listener.
-		 * 
-		 * @param parent
-		 *            the parent property change support object.
-		 * @param property
-		 *            the property name to listen to - null for all.
-		 * @param listener
-		 *            the listener to wrap.
-		 */
-		public WeakPropertyChangeListener(final Object parent,
-				final String property, final PropertyChangeListener listener) {
-			this.listenerRef = new WeakReference(listener);
-			this.parent = parent;
-			this.property = property;
-		}
-
-		/**
-		 * Obtain the wrapped listener.
-		 * 
-		 * @return the listener, or null if it has gone away.
-		 */
-		public PropertyChangeListener getListener() {
-			return (PropertyChangeListener) this.listenerRef.get();
-		}
-
-		public boolean equals(final Object obj) {
-			if (obj instanceof WeakPropertyChangeListener) {
-				final WeakPropertyChangeListener them = (WeakPropertyChangeListener) obj;
-				return them.property == this.property
-						&& them.parent == this.parent
-						&& them.listenerRef.get() == this.listenerRef.get();
-			} else
-				return false;
-		}
-
-		public void propertyChange(final PropertyChangeEvent evt) {
-			final PropertyChangeListener listener = this.getListener();
-			if (listener == null) {
-				if (this.parent != null)
-					try {
-						if (this.property == null) {
-							final Method method = this.parent
-									.getClass()
-									.getMethod(
-											"removePropertyChangeListener",
-											new Class[] { PropertyChangeListener.class });
-							method.invoke(this.parent, new Object[] { this });
-						} else {
-							final Method method = this.parent
-									.getClass()
-									.getMethod(
-											"removePropertyChangeListener",
-											new Class[] {
-													String.class,
-													PropertyChangeListener.class });
-							method.invoke(this.parent, new Object[] {
-									this.property, this });
-						}
-					} catch (final Exception e) {
-						// Don't care.
-					} finally {
-						// Don't do it again.
-						this.parent = null;
-					}
-			} else
-				listener.propertyChange(evt);
-		}
 	}
 
 	private final static Set listeners = Collections
@@ -339,47 +233,49 @@ public class Transaction {
 			final List diag = new ArrayList();
 			final List diagComp = new ArrayList();
 			final List rest = new ArrayList();
-			for (final Iterator i = new ArrayList(Transaction.listeners)
-					.iterator(); i.hasNext();) {
-				final TransactionListener tl = (TransactionListener)((WeakReference) i
-						.next()).get();
-				if (tl == null) {
-					i.remove();
-					continue;
+			synchronized (Transaction.listeners) {
+				for (final Iterator i = Transaction.listeners.iterator(); i
+						.hasNext();) {
+					final TransactionListener tl = (TransactionListener) ((WeakReference) i
+							.next()).get();
+					if (tl == null) {
+						i.remove();
+						continue;
+					} else if (tl instanceof DataSet) {
+						if (((DataSet) tl).isPartitionTable())
+							pts.add(tl);
+						else
+							ds.add(tl);
+					} else if (tl instanceof Schema)
+						sch.add(tl);
+					else if (tl instanceof DiagramComponent)
+						diagComp.add(tl);
+					else if (tl instanceof Diagram)
+						diag.add(tl);
+					else if (tl instanceof Relation) {
+						if (((Relation) tl).getFirstKey().getTable()
+								.getSchema() instanceof DataSet)
+							dsRel.add(tl);
+						else
+							schRel.add(tl);
+					} else if (tl instanceof Key) {
+						if (((Key) tl).getTable().getSchema() instanceof DataSet)
+							dsComp.add(tl);
+						else
+							schComp.add(tl);
+					} else if (tl instanceof Column) {
+						if (tl instanceof DataSetColumn)
+							dsComp.add(tl);
+						else
+							schComp.add(tl);
+					} else if (tl instanceof Table)
+						if (tl instanceof DataSetTable)
+							dsComp.add(tl);
+						else
+							schComp.add(tl);
+					else
+						rest.add(tl);
 				}
-				else if (tl instanceof DataSet) {
-					if (((DataSet) tl).isPartitionTable())
-						pts.add(tl);
-					else
-						ds.add(tl);
-				} else if (tl instanceof Schema)
-					sch.add(tl);
-				else if (tl instanceof DiagramComponent)
-					diagComp.add(tl);
-				else if (tl instanceof Diagram)
-					diag.add(tl);
-				else if (tl instanceof Relation) {
-					if (((Relation) tl).getFirstKey().getTable().getSchema() instanceof DataSet)
-						dsRel.add(tl);
-					else
-						schRel.add(tl);
-				} else if (tl instanceof Key) {
-					if (((Key) tl).getTable().getSchema() instanceof DataSet)
-						dsComp.add(tl);
-					else
-						schComp.add(tl);
-				} else if (tl instanceof Column) {
-					if (tl instanceof DataSetColumn)
-						dsComp.add(tl);
-					else
-						schComp.add(tl);
-				} else if (tl instanceof Table)
-					if (tl instanceof DataSetTable)
-						dsComp.add(tl);
-					else
-						schComp.add(tl);
-				else
-					rest.add(tl);
 			}
 			final List list = new ArrayList();
 			// schemas.
@@ -454,21 +350,5 @@ public class Transaction {
 	 */
 	public boolean isAllowVisModChange() {
 		return this.allowVisModChange;
-	}
-
-	// Timer thread to remove dead weak references.
-	private static final Timer t = new Timer();
-	static {
-		Transaction.t.schedule(new TimerTask() {
-			public void run() {
-				System.gc();
-				for (final Iterator i = new ArrayList(Transaction.listeners)
-						.iterator(); i.hasNext();)
-					if (((WeakReference) i.next()).get()==null)
-						i.remove();
-				System.err.println(Transaction.listeners.size());
-			}
-		}, Transaction.LISTENER_FLUSH_INTERVAL * 1000,
-				Transaction.LISTENER_FLUSH_INTERVAL * 1000);
 	}
 }

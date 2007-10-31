@@ -33,7 +33,6 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Displays the contents of a schema within a diagram object. It adds a series
@@ -88,20 +87,12 @@ public class SchemaDiagram extends Diagram {
 		// tables (presence/absence only).
 		// If any change, whole diagram needs redoing from scratch,
 		// and new listeners need setting up.
-		schema.getTables().addPropertyChangeListener(
-				new WeakPropertyChangeListener(schema.getTables(),
-						this.listener));
-		schema.getRelations().addPropertyChangeListener(
-				new WeakPropertyChangeListener(schema.getRelations(),
-						this.listener));
+		schema.getTables().addPropertyChangeListener(this.listener);
+		schema.getRelations().addPropertyChangeListener(this.listener);
 
 		// Listen to when hide masked gets changed or gets renamed.
-		schema.addPropertyChangeListener("hideMasked",
-				new WeakPropertyChangeListener(schema, "hideMasked",
-						this.repaintListener));
-		schema.addPropertyChangeListener("name",
-				new WeakPropertyChangeListener(schema, "name",
-						this.listener));
+		schema.addPropertyChangeListener("hideMasked", this.repaintListener);
+		schema.addPropertyChangeListener("name", this.listener);
 
 		this.setHideMasked(schema.isHideMasked());
 	}
@@ -121,7 +112,7 @@ public class SchemaDiagram extends Diagram {
 	}
 
 	protected void hideMaskedChanged(final boolean newHideMasked) {
-		this.schema.setHideMasked(newHideMasked);
+		this.getSchema().setHideMasked(newHideMasked);
 	}
 
 	public void doRecalculateDiagram() {

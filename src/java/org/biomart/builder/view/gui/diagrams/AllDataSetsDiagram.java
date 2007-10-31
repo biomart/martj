@@ -26,7 +26,6 @@ import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * This diagram draws a {@link DataSetComponent} for each dataset in a mart.
@@ -69,15 +68,12 @@ public class AllDataSetsDiagram extends Diagram {
 		// based on mart dataset entries.
 		// If any change, whole diagram needs redoing from scratch,
 		// and new listeners need setting up.
-		martTab.getMart().getDataSets().addPropertyChangeListener(
-				new WeakPropertyChangeListener(martTab.getMart().getDataSets(),
-						this.listener));
+		martTab.getMart().getDataSets()
+				.addPropertyChangeListener(this.listener);
 
 		// Listen to when hide masked gets changed.
-		martTab.getMart().addPropertyChangeListener(
-				"hideMaskedDataSets",
-				new WeakPropertyChangeListener(martTab.getMart(),
-						"hideMaskedDataSets", this.repaintListener));
+		martTab.getMart().addPropertyChangeListener("hideMaskedDataSets",
+				this.repaintListener);
 
 		this.setHideMasked(martTab.getMart().isHideMaskedDataSets());
 	}

@@ -19,8 +19,6 @@ package org.biomart.common.utils;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +42,7 @@ import java.util.Set;
  * 			$Author$
  * @since 0.7
  */
-public class BeanMap extends PropertyChangeSupport implements Map {
+public class BeanMap extends WeakPropertyChangeSupport implements Map {
 
 	private static final long serialVersionUID = 1L;
 
@@ -87,19 +85,6 @@ public class BeanMap extends PropertyChangeSupport implements Map {
 			this.addPropertyChangeListener(listeners[i]);
 	}
 
-	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.getPropertyChangeListeners())
-				.contains(listener))
-			super.addPropertyChangeListener(listener);
-	}
-
-	public void addPropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.getPropertyChangeListeners(property)).contains(
-				listener))
-			super.addPropertyChangeListener(property, listener);
-	}
-
 	public void clear() {
 		this.delegate.clear();
 		this.firePropertyChange(BeanMap.propertyName, null, null);
@@ -113,20 +98,22 @@ public class BeanMap extends PropertyChangeSupport implements Map {
 		return this.delegate.containsValue(value);
 	}
 
+	private final PropertyChangeListener entrySetListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			final Map.Entry oldValue = (Map.Entry) evt.getOldValue();
+			final Map.Entry newValue = (Map.Entry) evt.getNewValue();
+			BeanMap.this.firePropertyChange(BeanMap.propertyName,
+					oldValue == null ? null : oldValue.getKey(),
+					newValue == null ? null : newValue.getKey());
+		}
+	};
+	
 	public Set entrySet() {
 		// Wrap the entry set in a BeanCollection.
 		final BeanSet beanSet = new BeanSet(this.delegate.entrySet());
 		// Add a PropertyChangeListener to the BeanSet
 		// which fires events as if they came from us.
-		beanSet.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				final Map.Entry oldValue = (Map.Entry) evt.getOldValue();
-				final Map.Entry newValue = (Map.Entry) evt.getNewValue();
-				BeanMap.this.firePropertyChange(BeanMap.propertyName,
-						oldValue == null ? null : oldValue.getKey(),
-						newValue == null ? null : newValue.getKey());
-			}
-		});
+		beanSet.addPropertyChangeListener(this.entrySetListener);
 		// Return the wrapped entry set.
 		return beanSet;
 	}
@@ -139,17 +126,19 @@ public class BeanMap extends PropertyChangeSupport implements Map {
 		return this.delegate.isEmpty();
 	}
 
+	private final PropertyChangeListener keySetListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			BeanMap.this.firePropertyChange(BeanMap.propertyName, evt
+					.getOldValue(), evt.getNewValue());
+		}
+	};
+	
 	public Set keySet() {
 		// Wrap the entry set in a BeanCollection.
 		final BeanSet beanSet = new BeanSet(this.delegate.keySet());
 		// Add a PropertyChangeListener to the BeanSet
 		// which fires events as if they came from us.
-		beanSet.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				BeanMap.this.firePropertyChange(BeanMap.propertyName, evt
-						.getOldValue(), evt.getNewValue());
-			}
-		});
+		beanSet.addPropertyChangeListener(this.keySetListener);
 		// Return the wrapped entry set.
 		return beanSet;
 	}

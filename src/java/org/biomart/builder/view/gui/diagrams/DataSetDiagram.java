@@ -23,6 +23,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Schema;
@@ -32,7 +33,6 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.DataSetLayoutManager.DataSetLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.TableComponent;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Displays the contents of a dataset within a standard diagram object. This is
@@ -49,7 +49,7 @@ import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 public class DataSetDiagram extends Diagram {
 	private static final long serialVersionUID = 1;
 
-	private final DataSet dataset;
+	private DataSet dataset;
 
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
@@ -85,30 +85,23 @@ public class DataSetDiagram extends Diagram {
 
 		// If any tables or relations change, whole diagram needs
 		// redoing from scratch, and new listeners need setting up.
-		dataset.getTables().addPropertyChangeListener(
-				new WeakPropertyChangeListener(dataset.getTables(),
-						this.listener));
-		dataset.getRelations().addPropertyChangeListener(
-				new WeakPropertyChangeListener(dataset.getRelations(),
-						this.listener));
+		dataset.getTables().addPropertyChangeListener(this.listener);
+		dataset.getRelations().addPropertyChangeListener(this.listener);
 
 		// Listen to when hide masked gets changed.
-		dataset.addPropertyChangeListener("hideMasked",
-				new WeakPropertyChangeListener(dataset, "hideMasked",
-						this.repaintListener));
-		dataset.addPropertyChangeListener("name",
-				new WeakPropertyChangeListener(dataset, "name", this.listener));
+		dataset.addPropertyChangeListener("hideMasked", this.repaintListener);
+		dataset.addPropertyChangeListener("name", this.listener);
 
 		this.setHideMasked(dataset.isHideMasked());
 	}
 
 	protected void hideMaskedChanged(final boolean newHideMasked) {
-		this.dataset.setHideMasked(newHideMasked);
+		this.getDataSet().setHideMasked(newHideMasked);
 	}
 
 	public void doRecalculateDiagram() {
 		// Skip if can't get main table.
-		if (this.getDataSet().getMainTable()==null)
+		if (this.getDataSet().getMainTable() == null)
 			return;
 		// Add stuff.
 		final List mainTables = new ArrayList();
@@ -121,13 +114,8 @@ public class DataSetDiagram extends Diagram {
 			// Add main table.
 			this.add(new TableComponent(table, this), constraint,
 					Diagram.TABLE_LAYER);
-			table
-					.addPropertyChangeListener("type",
-							new WeakPropertyChangeListener(table, "type",
-									this.listener));
-			table.getColumns().addPropertyChangeListener(
-					new WeakPropertyChangeListener(table.getColumns(),
-							this.listener));
+			table.addPropertyChangeListener("type", this.listener);
+			table.getColumns().addPropertyChangeListener(this.listener);
 			// Add dimension tables.
 			if (table.getPrimaryKey() != null)
 				for (final Iterator r = table.getPrimaryKey().getRelations()
@@ -142,12 +130,9 @@ public class DataSetDiagram extends Diagram {
 						// Add dimension table.
 						this.add(new TableComponent(target, this),
 								dimConstraint, Diagram.TABLE_LAYER);
-						table.addPropertyChangeListener("type",
-								new WeakPropertyChangeListener(table, "type",
-										this.listener));
-						table.getColumns().addPropertyChangeListener(
-								new WeakPropertyChangeListener(table
-										.getColumns(), this.listener));
+						target.addPropertyChangeListener("type", this.listener);
+						target.getColumns().addPropertyChangeListener(
+								this.listener);
 					} else
 						mainTables.add(target);
 					// Add relation.

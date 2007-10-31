@@ -25,6 +25,7 @@ import javax.swing.JPopupMenu;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
 import org.biomart.common.utils.BeanMap;
+import org.biomart.common.utils.Transaction.TransactionListener;
 
 /**
  * An element that can be drawn on a diagram. It can provide a context menu for
@@ -76,7 +77,7 @@ public interface DiagramComponent {
 	 * 
 	 * @return the model object.
 	 */
-	public Object getObject();
+	public TransactionListener getObject();
 
 	/**
 	 * The current state of the component is returned by this. States are

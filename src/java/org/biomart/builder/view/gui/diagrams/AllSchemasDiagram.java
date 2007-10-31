@@ -31,7 +31,6 @@ import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.SchemaLayoutManager.SchemaLayoutConstraint;
 import org.biomart.builder.view.gui.diagrams.components.RelationComponent;
 import org.biomart.builder.view.gui.diagrams.components.SchemaComponent;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * This diagram draws a {@link SchemaComponent} for each schema in the mart. If
@@ -79,15 +78,11 @@ public class AllSchemasDiagram extends Diagram {
 		// tables (presence/absence only).
 		// If any change, whole diagram needs redoing from scratch,
 		// and new listeners need setting up.
-		martTab.getMart().getSchemas().addPropertyChangeListener(
-				new WeakPropertyChangeListener(martTab.getMart().getSchemas(),
-						this.listener));
+		martTab.getMart().getSchemas().addPropertyChangeListener(this.listener);
 
 		// Listen to when hide masked gets changed.
-		martTab.getMart().addPropertyChangeListener(
-				"hideMaskedSchemas",
-				new WeakPropertyChangeListener(martTab.getMart(),
-						"hideMaskedSchemas", this.repaintListener));
+		martTab.getMart().addPropertyChangeListener("hideMaskedSchemas",
+				this.repaintListener);
 
 		this.setHideMasked(martTab.getMart().isHideMaskedSchemas());
 	}
@@ -122,16 +117,7 @@ public class AllSchemasDiagram extends Diagram {
 					new SchemaLayoutConstraint(extRels.size()),
 					Diagram.TABLE_LAYER);
 			// Update ourselves when relations are added or removed.
-			schema.getRelations().addPropertyChangeListener(
-					new WeakPropertyChangeListener(schema.getRelations(),
-							this.listener));
-			// Repaint when schemas become/stop being partitioned.
-			schema.addPropertyChangeListener("partitionNameExpression",
-					new WeakPropertyChangeListener(schema,
-							"partitionNameExpression", this.repaintListener));
-			schema.addPropertyChangeListener("partitionRegex",
-					new WeakPropertyChangeListener(schema, "partitionRegex",
-							this.repaintListener));
+			schema.getRelations().addPropertyChangeListener(this.listener);
 		}
 	}
 }

@@ -19,6 +19,7 @@
 package org.biomart.builder.view.gui.diagrams.contexts;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
@@ -76,8 +77,17 @@ public class TransformationContext extends DataSetContext {
 			final Table actualTbl = ((RealisedTable) object).getTable();
 			final ExplainContext explCon = ((RealisedTable) object)
 					.getExplainContext();
+
+			boolean allMasked = true;
+			for (final Iterator i = ((RealisedTable) object).getColumns()
+					.values().iterator(); allMasked && i.hasNext();)
+				allMasked &= ((DataSetColumn) i.next()).isColumnMasked();
+
 			// Call the ExplainContext method for this table.
-			explCon.customiseAppearance(component, actualTbl);
+			if (allMasked)
+				component.setBackground(TableComponent.MASKED_COLOUR);
+			else
+				explCon.customiseAppearance(component, actualTbl);
 		}
 
 		// Convert relations to real relations then process.
@@ -102,11 +112,12 @@ public class TransformationContext extends DataSetContext {
 
 		final String schemaPrefix = this.getMartTab()
 				.getPartitionViewSelection();
-		
+
 		// Is it a column?
 		if (object instanceof DataSetColumn) {
-			final DataSetColumn dsCol = (DataSetColumn)object;
-			if (dsCol.isColumnMasked() || !dsCol.existsForPartition(schemaPrefix))		
+			final DataSetColumn dsCol = (DataSetColumn) object;
+			if (dsCol.isColumnMasked()
+					|| !dsCol.existsForPartition(schemaPrefix))
 				return true;
 		}
 

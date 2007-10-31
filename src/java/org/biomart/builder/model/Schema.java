@@ -20,7 +20,6 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
@@ -28,7 +27,6 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,9 +56,9 @@ import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.InverseMap;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A schema provides one or more table objects with unique names for the user to
@@ -80,7 +78,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
-	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	protected final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
+			this);
 
 	private final Mart mart;
 
@@ -210,13 +209,14 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		this.getTables().addPropertyChangeListener(this.relationCacheBuilder);
 
 		// All changes to us make us modified.
-		this.pcs.addPropertyChangeListener("dataLinkSchema", this.listener);
-		this.pcs.addPropertyChangeListener("keyGuessing", this.listener);
-		this.pcs.addPropertyChangeListener("masked", this.listener);
-		this.pcs.addPropertyChangeListener("name", this.listener);
-		this.pcs.addPropertyChangeListener("partitionNameExpression",
-				this.listener);
-		this.pcs.addPropertyChangeListener("partitionRegex", this.listener);
+		this.addPropertyChangeListener("dataLinkSchema", this.listener);
+		this.addPropertyChangeListener("keyGuessing", this.listener);
+		this.addPropertyChangeListener("masked", this.listener);
+		this.addPropertyChangeListener("name", this.listener);
+		this
+				.addPropertyChangeListener("partitionNameExpression",
+						this.listener);
+		this.addPropertyChangeListener("partitionRegex", this.listener);
 	}
 
 	/**
@@ -307,22 +307,11 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				final Table table = (Table) i.next();
 				this.tableCache.add(table);
 				table.getRelations().addPropertyChangeListener(
-						new WeakPropertyChangeListener(table.getRelations(),
-								this.relationCacheBuilder));
-				table.addPropertyChangeListener("name",
-						new WeakPropertyChangeListener(table, "name",
-								this.listener));
-				table.addPropertyChangeListener("name",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent evt) {
-								Schema.this.tables.remove(evt.getOldValue());
-								Schema.this.tables
-										.put(evt.getNewValue(), table);
-							}
-						});
-				table.addPropertyChangeListener("directModified",
-						new WeakPropertyChangeListener(table, this.listener));
+						this.relationCacheBuilder);
+				table.addPropertyChangeListener("name", this.listener);
+				table
+						.addPropertyChangeListener("directModified",
+								this.listener);
 			}
 		}
 		final Collection newRels = new HashSet();
@@ -379,9 +368,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 *            the listener to add.
 	 */
 	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-				listener))
-			this.pcs.addPropertyChangeListener(listener);
+		this.pcs.addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -394,33 +381,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
-				.contains(listener))
-			this.pcs.addPropertyChangeListener(property, listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(property, listener);
+		this.pcs.addPropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -890,23 +851,10 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			this.setUsername(username);
 			this.setPassword(password);
 
-			this.pcs
-					.addPropertyChangeListener("driverClassName", this.listener);
-			this.pcs.addPropertyChangeListener("url", this.listener);
-			this.pcs.addPropertyChangeListener("username", this.listener);
-			this.pcs.addPropertyChangeListener("password", this.listener);
-
-			// Add a thread so that any connection established gets closed when
-			// the application exits.
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-				public void run() {
-					try {
-						JDBCSchema.this.closeConnection();
-					} catch (final Throwable t) {
-						// We don't care if it fails, so ignore it.
-					}
-				}
-			});
+			this.addPropertyChangeListener("driverClassName", this.listener);
+			this.addPropertyChangeListener("url", this.listener);
+			this.addPropertyChangeListener("username", this.listener);
+			this.addPropertyChangeListener("password", this.listener);
 		}
 
 		protected void finalize() throws Throwable {

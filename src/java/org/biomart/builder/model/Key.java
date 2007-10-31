@@ -20,8 +20,6 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,9 +29,9 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanCollection;
 import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * The key class is core to the way tables get associated. They are involved in
@@ -56,7 +54,8 @@ public abstract class Key implements Comparable, TransactionListener {
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
-	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	protected final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
+			this);
 
 	private static final long serialVersionUID = 1L;
 
@@ -73,6 +72,22 @@ public abstract class Key implements Comparable, TransactionListener {
 	private final PropertyChangeListener listener = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
 			Key.this.setDirectModified(true);
+		}
+	};
+	
+	private final PropertyChangeListener relationCacheBuilder = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Key.this.setDirectModified(true);
+			// Mass change.
+			final Collection addedRels = new HashSet(Key.this.relations);
+			addedRels.removeAll(Key.this.relationCache);
+			for (final Iterator i = addedRels.iterator(); i.hasNext();) {
+				final Relation rel = (Relation) i.next();
+				rel.addPropertyChangeListener("directModified",
+						Key.this.listener);
+			}
+			Key.this.relationCache.clear();
+			Key.this.relationCache.addAll(Key.this.relations);
 		}
 	};
 
@@ -95,26 +110,11 @@ public abstract class Key implements Comparable, TransactionListener {
 		Transaction.addTransactionListener(this);
 
 		// All changes to us make us modified.
-		this.pcs.addPropertyChangeListener(this.listener);
+		this.addPropertyChangeListener(this.listener);
 
 		// Changes on relations.
 		this.relationCache = new HashSet();
-		this.relations.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Key.this.setDirectModified(true);
-				// Mass change.
-				final Collection addedRels = new HashSet(Key.this.relations);
-				addedRels.removeAll(Key.this.relationCache);
-				for (final Iterator i = addedRels.iterator(); i.hasNext();) {
-					final Relation rel = (Relation) i.next();
-					rel.addPropertyChangeListener("directModified",
-							new WeakPropertyChangeListener(rel,
-									"directModified", Key.this.listener));
-				}
-				Key.this.relationCache.clear();
-				Key.this.relationCache.addAll(Key.this.relations);
-			}
-		});
+		this.relations.addPropertyChangeListener(this.relationCacheBuilder);
 	}
 
 	public boolean isDirectModified() {
@@ -160,9 +160,7 @@ public abstract class Key implements Comparable, TransactionListener {
 	 *            the listener to add.
 	 */
 	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-				listener))
-			this.pcs.addPropertyChangeListener(listener);
+		this.pcs.addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -175,33 +173,7 @@ public abstract class Key implements Comparable, TransactionListener {
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-				listener))
 		this.pcs.addPropertyChangeListener(property, listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -341,6 +313,14 @@ public abstract class Key implements Comparable, TransactionListener {
 	public static class PrimaryKey extends Key {
 		private static final long serialVersionUID = 1L;
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				if (!PrimaryKey.this.equals(PrimaryKey.this.getTable()
+						.getPrimaryKey()))
+					PrimaryKey.this.getRelations().clear();
+			}
+		};
+
 		/**
 		 * The constructor passes on all its work to the {@link Key}
 		 * constructor.
@@ -350,6 +330,10 @@ public abstract class Key implements Comparable, TransactionListener {
 		 */
 		public PrimaryKey(final Column[] columns) {
 			super(columns);
+
+			// If we are removed from the table, remove all our relations.
+			this.getTable().addPropertyChangeListener("primaryKey",
+					this.listener);
 		}
 
 		public String toString() {
@@ -363,6 +347,13 @@ public abstract class Key implements Comparable, TransactionListener {
 	public static class ForeignKey extends Key {
 		private static final long serialVersionUID = 1L;
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				if (!ForeignKey.this.getTable().getForeignKeys().contains(this))
+					ForeignKey.this.getRelations().clear();
+			}
+		};
+
 		/**
 		 * The constructor passes on all its work to the {@link Key}
 		 * constructor. It then adds itself to the set of foreign keys on the
@@ -373,6 +364,10 @@ public abstract class Key implements Comparable, TransactionListener {
 		 */
 		public ForeignKey(final Column[] columns) {
 			super(columns);
+
+			// If we are removed from the table, remove all our relations.
+			this.getTable().getForeignKeys().addPropertyChangeListener(
+					this.listener);
 		}
 
 		public String toString() {

@@ -19,8 +19,6 @@ package org.biomart.common.utils;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -43,7 +41,7 @@ import java.util.Iterator;
  * 			$Author$
  * @since 0.7
  */
-public class BeanCollection extends PropertyChangeSupport implements Collection {
+public class BeanCollection extends WeakPropertyChangeSupport implements Collection {
 
 	private static final long serialVersionUID = 1L;
 
@@ -92,19 +90,6 @@ public class BeanCollection extends PropertyChangeSupport implements Collection 
 			this.addPropertyChangeListener(listeners[i]);
 	}
 
-	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.getPropertyChangeListeners())
-				.contains(listener))
-			super.addPropertyChangeListener(listener);
-	}
-
-	public void addPropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.getPropertyChangeListeners(property)).contains(
-				listener))
-			super.addPropertyChangeListener(property, listener);
-	}
-
 	public boolean add(final Object arg0) {
 		final boolean result = this.delegate.add(arg0);
 		if (result)
@@ -135,6 +120,14 @@ public class BeanCollection extends PropertyChangeSupport implements Collection 
 	public boolean isEmpty() {
 		return this.delegate.isEmpty();
 	}
+	
+	private final PropertyChangeListener iteratorListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			BeanCollection.this.firePropertyChange(
+					BeanCollection.propertyName, evt.getOldValue(), evt
+							.getNewValue());
+		}
+	};
 
 	public Iterator iterator() {
 		// Wrap the entry set in a BeanIterator.
@@ -142,13 +135,7 @@ public class BeanCollection extends PropertyChangeSupport implements Collection 
 				.iterator());
 		// Add a PropertyChangeListener to the BeanSet
 		// which fires events as if they came from us.
-		beanIterator.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				BeanCollection.this.firePropertyChange(
-						BeanCollection.propertyName, evt.getOldValue(), evt
-								.getNewValue());
-			}
-		});
+		beanIterator.addPropertyChangeListener(this.iteratorListener);
 		// Return the wrapped entry set.
 		return beanIterator;
 	}

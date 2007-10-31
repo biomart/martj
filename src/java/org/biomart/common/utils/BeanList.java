@@ -69,6 +69,14 @@ public class BeanList extends BeanCollection implements List {
 		return ((List) this.delegate).lastIndexOf(o);
 	}
 
+	private final PropertyChangeListener iteratorListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			BeanList.this.firePropertyChange(
+					BeanCollection.propertyName, evt.getOldValue(),
+					evt.getNewValue());
+		}
+	};
+	
 	public ListIterator listIterator() {
 		// Wrap the entry set in a BeanIterator.
 		final BeanListIterator beanListIterator = new BeanListIterator(
@@ -76,13 +84,7 @@ public class BeanList extends BeanCollection implements List {
 		// Add a PropertyChangeListener to the BeanSet
 		// which fires events as if they came from us.
 		beanListIterator
-				.addPropertyChangeListener(new PropertyChangeListener() {
-					public void propertyChange(final PropertyChangeEvent evt) {
-						BeanList.this.firePropertyChange(
-								BeanCollection.propertyName, evt.getOldValue(),
-								evt.getNewValue());
-					}
-				});
+				.addPropertyChangeListener(this.iteratorListener);
 		// Return the wrapped entry set.
 		return beanListIterator;
 	}
@@ -94,13 +96,7 @@ public class BeanList extends BeanCollection implements List {
 		// Add a PropertyChangeListener to the BeanSet
 		// which fires events as if they came from us.
 		beanListIterator
-				.addPropertyChangeListener(new PropertyChangeListener() {
-					public void propertyChange(final PropertyChangeEvent evt) {
-						BeanList.this.firePropertyChange(
-								BeanCollection.propertyName, evt.getOldValue(),
-								evt.getNewValue());
-					}
-				});
+				.addPropertyChangeListener(this.iteratorListener);
 		// Return the wrapped entry set.
 		return beanListIterator;
 	}
@@ -111,15 +107,17 @@ public class BeanList extends BeanCollection implements List {
 		return result;
 	}
 
+	private final PropertyChangeListener subListIterator = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			BeanList.this.firePropertyChange(BeanCollection.propertyName,
+					evt.getOldValue(), evt.getNewValue());
+		}
+	};
+	
 	public List subList(final int fromIndex, final int toIndex) {
 		final BeanList subList = new BeanList(((List) this.delegate).subList(
 				fromIndex, toIndex));
-		subList.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				BeanList.this.firePropertyChange(BeanCollection.propertyName,
-						evt.getOldValue(), evt.getNewValue());
-			}
-		});
+		subList.addPropertyChangeListener(this.subListIterator);
 		return subList;
 	}
 

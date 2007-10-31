@@ -19,8 +19,6 @@
 package org.biomart.builder.model;
 
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.Arrays;
 import java.util.HashSet;
 
 import org.biomart.common.resources.Log;
@@ -28,6 +26,7 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanCollection;
 import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 
@@ -64,7 +63,7 @@ public class Column implements Comparable, TransactionListener {
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
-	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	protected final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(this);
 
 	/**
 	 * This constructor creates a column and remembers the name and parent
@@ -158,9 +157,7 @@ public class Column implements Comparable, TransactionListener {
 	 *            the listener to add.
 	 */
 	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-				listener))
-			this.pcs.addPropertyChangeListener(listener);
+		this.pcs.addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -173,33 +170,7 @@ public class Column implements Comparable, TransactionListener {
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-				listener))
 		this.pcs.addPropertyChangeListener(property, listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(property, listener);
 	}
 
 	/**

@@ -25,12 +25,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -111,6 +111,16 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	private JFileChooser xmlFileChooser;
 
 	private final UndoManager undoManager = new UndoManager();
+
+	private final PropertyChangeListener updateListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			final Mart mart = (Mart) evt.getSource();
+			if (evt.getNewValue().equals(Boolean.TRUE)
+					&& !Boolean.TRUE.equals(MartTabSet.this.martModifiedStatus
+							.put(mart, Boolean.TRUE)))
+				MartTabSet.this.updateMartTitle(mart);
+		}
+	};
 
 	/**
 	 * Creates a new set of tabs and associates them with a given MartBuilder
@@ -284,16 +294,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 		martTab.getSchemaTabSet().setSelectedIndex(0);
 
 		// Listen to modified changes.
-		mart.addPropertyChangeListener("directModified",
-				new PropertyChangeListener() {
-					public void propertyChange(final PropertyChangeEvent evt) {
-						if (evt.getNewValue().equals(Boolean.TRUE)
-								&& !Boolean.TRUE
-										.equals(MartTabSet.this.martModifiedStatus
-												.put(mart, Boolean.TRUE)))
-							MartTabSet.this.updateMartTitle(mart);
-					}
-				});
+		mart.addPropertyChangeListener("directModified", this.updateListener);
 	}
 
 	private void updateMartTitle(final Mart mart) {
@@ -402,7 +403,8 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 			return;
 
 		// Work out the current selected mart.
-		final Mart currentMart = this.getSelectedMartTab().getMart();
+		final MartTab currentMartTab = this.getSelectedMartTab();
+		final Mart currentMart = currentMartTab.getMart();
 
 		// Is it modified? If so, ask user for confirmation.
 		boolean canClose = true;
@@ -950,11 +952,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 
 		private String partitionViewSelection = null;
 
-		/**
-		 * Subclasses use this field to fire events of their own.
-		 */
-		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
-				this);
+		private final ArrayList listeners = new ArrayList();
 
 		/**
 		 * Constructs a new tab in the tabbed pane that represents the given
@@ -1151,10 +1149,30 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 					|| (this.partitionViewSelection != null && this.partitionViewSelection
 							.equals(partitionViewSelection)))
 				return;
-			final String oldValue = this.partitionViewSelection;
 			this.partitionViewSelection = partitionViewSelection;
-			this.pcs.firePropertyChange("partitionViewSelection", oldValue,
-					partitionViewSelection);
+			for (final Iterator i = this.listeners.iterator(); i.hasNext();) {
+				final WeakReference ref = (WeakReference) i.next();
+				final PartitionViewSelectionListener listener = (PartitionViewSelectionListener) ref
+						.get();
+				if (listener == null)
+					i.remove();
+				else
+					listener.partitionViewSelectionChanged();
+			}
+		}
+
+		/**
+		 * Add a listener to receive events when the partition view selection
+		 * dropdown changes. The listener will be stored with a
+		 * {@link WeakReference} and so will be dropped if it falls out of
+		 * scope.
+		 * 
+		 * @param listener
+		 *            the listener to register.
+		 */
+		public void addPartitionViewSelectionListener(
+				final PartitionViewSelectionListener listener) {
+			this.listeners.add(new WeakReference(listener));
 		}
 
 		/**
@@ -1165,54 +1183,6 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 		 */
 		public String getPartitionViewSelection() {
 			return this.partitionViewSelection;
-		}
-
-		/**
-		 * Adds a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to add.
-		 */
-		public void addPropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.addPropertyChangeListener(listener);
-		}
-
-		/**
-		 * Adds a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to add.
-		 */
-		public void addPropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		/**
@@ -1270,5 +1240,18 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 			if (this.schemaButton != null && !this.schemaButton.isSelected())
 				this.schemaButton.doClick();
 		}
+	}
+
+	/**
+	 * A listener that is called when the user changes the partition view
+	 * selection dropdown.
+	 */
+	public interface PartitionViewSelectionListener {
+
+		/**
+		 * This method is called when the partition view selection dropdown is
+		 * changed.
+		 */
+		public void partitionViewSelectionChanged();
 	}
 }

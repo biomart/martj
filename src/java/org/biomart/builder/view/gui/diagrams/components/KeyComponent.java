@@ -54,7 +54,6 @@ import org.biomart.builder.model.Key;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.view.gui.diagrams.Diagram;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 
 /**
@@ -141,14 +140,10 @@ public class KeyComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Repaint events.
-		key.addPropertyChangeListener("directModified",
-				new WeakPropertyChangeListener(key, "directModified",
-						this.repaintListener));
+		key.addPropertyChangeListener("directModified", this.repaintListener);
 
 		// Recalc events.
-		key.addPropertyChangeListener("columns",
-				new WeakPropertyChangeListener(key, "columns",
-						this.recalcListener));
+		key.addPropertyChangeListener("columns", this.recalcListener);
 
 		// Set up drag-and-drop capabilities.
 		final DragSource dragSource = DragSource.getDefaultDragSource();

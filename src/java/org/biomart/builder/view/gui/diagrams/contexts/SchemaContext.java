@@ -327,7 +327,7 @@ public class SchemaContext implements DiagramContext {
 					.charAt(0));
 			suggest.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getDataSetTabSet()
+					SchemaContext.this.getMartTab().getDataSetTabSet()
 							.requestSuggestDataSets(table);
 				}
 			});
@@ -342,7 +342,7 @@ public class SchemaContext implements DiagramContext {
 					"suggestUnrolledDataSetsTableMnemonic").charAt(0));
 			createOntologyDS.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getDataSetTabSet()
+					SchemaContext.this.getMartTab().getDataSetTabSet()
 							.requestSuggestUnrolledDataSets(table);
 				}
 			});
@@ -358,7 +358,7 @@ public class SchemaContext implements DiagramContext {
 			showRows.setMnemonic(Resources.get("showRowsMnemonic").charAt(0));
 			showRows.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestShowRows(table, 10);
 				}
 			});
@@ -374,7 +374,7 @@ public class SchemaContext implements DiagramContext {
 			pk.setMnemonic(Resources.get("createPrimaryKeyMnemonic").charAt(0));
 			pk.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestCreatePrimaryKey(table);
 				}
 			});
@@ -388,7 +388,7 @@ public class SchemaContext implements DiagramContext {
 			fk.setMnemonic(Resources.get("createForeignKeyMnemonic").charAt(0));
 			fk.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestCreateForeignKey(table);
 				}
 			});
@@ -403,7 +403,7 @@ public class SchemaContext implements DiagramContext {
 			ignore.setMnemonic(Resources.get("ignoreTableMnemonic").charAt(0));
 			ignore.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestIgnoreTable(table, ignore.isSelected());
 				}
 			});
@@ -433,7 +433,7 @@ public class SchemaContext implements DiagramContext {
 			oneToOne.setMnemonic(Resources.get("oneToOneMnemonic").charAt(0));
 			oneToOne.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestChangeRelationCardinality(relation,
 									Cardinality.ONE);
 				}
@@ -451,7 +451,7 @@ public class SchemaContext implements DiagramContext {
 			oneToMany.setMnemonic(Resources.get("oneToManyMnemonic").charAt(0));
 			oneToMany.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestChangeRelationCardinality(relation,
 									Cardinality.MANY);
 				}
@@ -470,7 +470,7 @@ public class SchemaContext implements DiagramContext {
 					.charAt(0));
 			manyToMany.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestChangeRelationCardinality(relation,
 									Cardinality.MANY);
 				}
@@ -493,7 +493,7 @@ public class SchemaContext implements DiagramContext {
 					.charAt(0));
 			incorrect.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab
+					SchemaContext.this.getMartTab()
 							.getSchemaTabSet()
 							.requestChangeRelationStatus(
 									relation,
@@ -518,7 +518,7 @@ public class SchemaContext implements DiagramContext {
 					.charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestRemoveRelation(relation);
 				}
 			});
@@ -542,7 +542,7 @@ public class SchemaContext implements DiagramContext {
 			editkey.setMnemonic(Resources.get("editKeyMnemonic").charAt(0));
 			editkey.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestEditKey(key);
 				}
 			});
@@ -555,7 +555,7 @@ public class SchemaContext implements DiagramContext {
 			remove.setMnemonic(Resources.get("removeKeyMnemonic").charAt(0));
 			remove.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestRemoveKey(key);
 				}
 			});
@@ -572,7 +572,7 @@ public class SchemaContext implements DiagramContext {
 					0));
 			incorrect.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab
+					SchemaContext.this.getMartTab()
 							.getSchemaTabSet()
 							.requestChangeKeyStatus(
 									key,
@@ -596,7 +596,7 @@ public class SchemaContext implements DiagramContext {
 					.charAt(0));
 			createrel.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.martTab.getSchemaTabSet()
+					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestCreateRelation(key);
 				}
 			});

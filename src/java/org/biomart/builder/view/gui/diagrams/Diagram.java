@@ -22,6 +22,7 @@ import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Point;
@@ -70,6 +71,7 @@ import javax.swing.SwingUtilities;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
+import org.biomart.builder.view.gui.MartTabSet.PartitionViewSelectionListener;
 import org.biomart.builder.view.gui.diagrams.components.BoxShapedComponent;
 import org.biomart.builder.view.gui.diagrams.components.DiagramComponent;
 import org.biomart.builder.view.gui.diagrams.contexts.DiagramContext;
@@ -79,7 +81,6 @@ import org.biomart.common.utils.InverseMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.ComponentImageSaver;
 import org.biomart.common.view.gui.dialogs.ComponentPrinter;
@@ -107,7 +108,7 @@ import org.biomart.common.view.gui.dialogs.ComponentPrinter;
  * @since 0.5
  */
 public abstract class Diagram extends JLayeredPane implements Scrollable,
-		Autoscroll, AdjustmentListener, TransactionListener {
+		Autoscroll, AdjustmentListener, TransactionListener, PartitionViewSelectionListener {
 
 	/**
 	 * This is inherited by subclasses to indicate they need redrawing when the
@@ -190,6 +191,8 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		super();
 		if (layout != null)
 			this.setLayout(layout);
+		else
+			this.setLayout(new FlowLayout());
 		Log.debug("Creating new diagram of type " + this.getClass().getName());
 
 		// Enable mouse events to be picked up all over the diagram.
@@ -240,12 +243,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 		this.setOpaque(true);
 
 		// Repaint whenever the mart tab partition filter changes.
-		martTab.addPropertyChangeListener("partitionViewSelection",
-				new PropertyChangeListener() {
-					public void propertyChange(final PropertyChangeEvent e) {
-						Diagram.this.repaintDiagram();
-					}
-				});
+		martTab.addPartitionViewSelectionListener(this);
 
 		// Register ourselves for transactions.
 		Transaction.addTransactionListener(this);
@@ -267,7 +265,11 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public Diagram(final MartTab martTab) {
 		this(null, martTab);
 	}
-
+	
+	public void partitionViewSelectionChanged() {
+		this.repaintDiagram();
+	}
+	
 	/**
 	 * Override this to find out when the hide masked checkbox changes.
 	 * 
@@ -680,9 +682,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 			final DiagramComponent dcomp = (DiagramComponent) comp;
 			this.needsSubComps = true;
 			this.componentMap.put(dcomp.getObject(), dcomp);
-			dcomp.getSubComponents().addPropertyChangeListener(
-					new WeakPropertyChangeListener(dcomp.getSubComponents(),
-							this.listener));
+			dcomp.getSubComponents().addPropertyChangeListener(this.listener);
 		}
 		super.addImpl(comp, constraints, index);
 	}

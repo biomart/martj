@@ -79,7 +79,7 @@ public class DataSetContext extends SchemaContext {
 	 * 
 	 * @return our dataset.
 	 */
-	public DataSet getDataSet() {
+	protected DataSet getDataSet() {
 		return this.dataset;
 	}
 
@@ -100,7 +100,7 @@ public class DataSetContext extends SchemaContext {
 			// Is it compounded?
 			if (target.getFocusRelation() != null)
 				relcomp.setCompounded(target.getFocusRelation()
-						.getCompoundRelation(this.dataset) != null);
+						.getCompoundRelation(this.getDataSet()) != null);
 
 			// Fade MASKED DIMENSION relations.
 			if (target.isDimensionMasked() || this.getDataSet().isMasked())
@@ -153,7 +153,7 @@ public class DataSetContext extends SchemaContext {
 				// Is it compounded?
 				tblcomp.setCompounded(tbl.getFocusRelation() != null
 						&& tbl.getFocusRelation().getCompoundRelation(
-								this.dataset) != null);
+								this.getDataSet()) != null);
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 			}
 
@@ -163,7 +163,7 @@ public class DataSetContext extends SchemaContext {
 			// Update dotted line (partitioned).
 			tblcomp.setRestricted(tbl.getPartitionTableApplication() != null
 					|| tableType.equals(DataSetTableType.MAIN)
-					&& this.dataset.getPartitionTableApplication() != null);
+					&& this.getDataSet().getPartitionTableApplication() != null);
 
 			tblcomp.setRenameable(true);
 			tblcomp.setSelectable(true);
@@ -239,7 +239,7 @@ public class DataSetContext extends SchemaContext {
 											DataSetContext.this.getDataSet());
 							final boolean isCompound = table.getFocusRelation()
 									.getCompoundRelation(
-											DataSetContext.this.dataset) != null;
+											DataSetContext.this.getDataSet()) != null;
 							contextMenu.add(removeDM);
 							if (!isMerged && !isCompound && !isMasked)
 								DataSetContext.this.getMartTab()
@@ -437,7 +437,7 @@ public class DataSetContext extends SchemaContext {
 							this.getDataSet()) != null;
 			final boolean isCompound = table.getFocusRelation() != null
 					&& table.getFocusRelation().getCompoundRelation(
-							this.dataset) != null;
+							this.getDataSet()) != null;
 
 			// Option to explain how the table was constructed.
 			final JMenuItem explain = new JMenuItem(Resources
@@ -586,10 +586,10 @@ public class DataSetContext extends SchemaContext {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestUnrolledDimension(
-										DataSetContext.this.dataset, table);
+										DataSetContext.this.getDataSet(), table);
 						unrolledDM.setSelected(table.getFocusRelation()
 								.getUnrolledRelation(
-										DataSetContext.this.dataset) != null);
+										DataSetContext.this.getDataSet()) != null);
 					}
 				});
 				contextMenu.add(unrolledDM);
@@ -626,10 +626,10 @@ public class DataSetContext extends SchemaContext {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestReplicateDimension(
-										DataSetContext.this.dataset, table);
+										DataSetContext.this.getDataSet(), table);
 						compound.setSelected(table.getFocusRelation()
 								.getCompoundRelation(
-										DataSetContext.this.dataset) != null);
+										DataSetContext.this.getDataSet()) != null);
 					}
 				});
 				contextMenu.add(compound);
@@ -708,10 +708,10 @@ public class DataSetContext extends SchemaContext {
 					public void actionPerformed(final ActionEvent evt) {
 						DataSetContext.this.getMartTab().getDataSetTabSet()
 								.requestRecurseSubclass(
-										DataSetContext.this.dataset, table);
+										DataSetContext.this.getDataSet(), table);
 						compound.setSelected(table.getFocusRelation()
 								.getCompoundRelation(
-										DataSetContext.this.dataset) != null);
+										DataSetContext.this.getDataSet()) != null);
 					}
 				});
 				contextMenu.add(compound);

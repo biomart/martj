@@ -73,7 +73,6 @@ import org.biomart.common.utils.InverseMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A {@link DataSet} instance serves two purposes. First, it contains lists of
@@ -123,6 +122,12 @@ public class DataSet extends Schema {
 		public void propertyChange(final PropertyChangeEvent evt) {
 			// Are we deaded?
 			DataSet.this.deadCheck = true;
+		}
+	};
+
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			DataSet.this.setDirectModified(true);
 		}
 	};
 
@@ -188,23 +193,15 @@ public class DataSet extends Schema {
 		this.needsFullSync = true;
 
 		// All changes to us make us modified.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				DataSet.this.setDirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("partitionTable", listener);
-		this.pcs.addPropertyChangeListener("datasetOptimiser", listener);
-		this.pcs.addPropertyChangeListener("indexOptimiser", listener);
-		this.pcs.addPropertyChangeListener("invisible", listener);
-		this.pcs.addPropertyChangeListener("partitionTableApplication",
-				listener);
+		this.addPropertyChangeListener("partitionTable", this.listener);
+		this.addPropertyChangeListener("datasetOptimiser", this.listener);
+		this.addPropertyChangeListener("indexOptimiser", this.listener);
+		this.addPropertyChangeListener("invisible", this.listener);
+		this.addPropertyChangeListener("partitionTableApplication",
+				this.listener);
 
 		// Recalculate completely if parent mart changes case.
-		this.getMart().addPropertyChangeListener(
-				"case",
-				new WeakPropertyChangeListener(this.getMart(), "case",
-						this.rebuildListener));
+		this.getMart().addPropertyChangeListener("case", this.rebuildListener);
 	}
 
 	protected void tableDropped(final Table table) {
@@ -317,8 +314,7 @@ public class DataSet extends Schema {
 		this.partitionTableApplication = partitionTableApplication;
 		if (this.partitionTableApplication != null)
 			this.partitionTableApplication.addPropertyChangeListener(
-					"directModified", new WeakPropertyChangeListener(
-							"directModified", this.rebuildListener));
+					"directModified", this.rebuildListener);
 		this.pcs.firePropertyChange("partitionTableApplication", oldValue,
 				partitionTableApplication);
 	}
@@ -839,9 +835,7 @@ public class DataSet extends Schema {
 						if (!dsTable.getType().equals(
 								DataSetTableType.DIMENSION))
 							dsCol.addPropertyChangeListener("columnRename",
-									new WeakPropertyChangeListener(dsCol,
-											"columnRename",
-											this.rebuildListener));
+									this.rebuildListener);
 						dsTable.getColumns().put(dsCol.getName(), dsCol);
 					}
 				}
@@ -1013,8 +1007,7 @@ public class DataSet extends Schema {
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					expCol.addPropertyChangeListener("columnRename",
-							new WeakPropertyChangeListener(expCol,
-									"columnRename", this.rebuildListener));
+							this.rebuildListener);
 				dsTable.getColumns().put(expCol.getName(), expCol);
 			}
 			// Wipe it out so only happens first time.
@@ -1310,8 +1303,7 @@ public class DataSet extends Schema {
 					// Listen to this column to modify ourselves.
 					if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 						wc.addPropertyChangeListener("columnRename",
-								new WeakPropertyChangeListener(wc,
-										"columnRename", this.rebuildListener));
+								this.rebuildListener);
 				}
 			} else {
 				wc = new WrappedColumn(c, colName, dsTable);
@@ -1319,8 +1311,7 @@ public class DataSet extends Schema {
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					wc.addPropertyChangeListener("columnRename",
-							new WeakPropertyChangeListener(wc, "columnRename",
-									this.rebuildListener));
+							this.rebuildListener);
 			}
 			unusedCols.remove(wc);
 			tu.getNewColumnNameMap().put(c, wc);
@@ -1465,7 +1456,7 @@ public class DataSet extends Schema {
 						forceFollowRelation = true;
 				}
 
-				// Forcibly follow forced or loopback relations.
+				// Forcibly follow forced or loopback or unrolled relations.
 				else if (r.getLoopbackRelation(this, dsTable.getName()) != null
 						|| r.isForceRelation(this, dsTable.getName()))
 					forceFollowRelation = true;
@@ -1475,6 +1466,9 @@ public class DataSet extends Schema {
 			// already in the subclass or dimension queues.
 			else
 				followRelation = true;
+			// TODO FollowRelation = target table is not a focus table on
+			// this dataset table or any main or subclass table so far, OR
+			// relation has been forced.
 
 			// If we follow a 1:1, and we are currently
 			// including dimensions, include them from the 1:1 as well.
@@ -1818,22 +1812,18 @@ public class DataSet extends Schema {
 		// Add us as a listener to mart's schemas to remove ourselves
 		// if our central table's parent schema is removed.
 		this.getMart().getSchemas().addPropertyChangeListener(
-				new WeakPropertyChangeListener(this.getMart().getSchemas(),
-						this.existenceListener));
+				this.existenceListener);
 
 		// Add us as a listener to the schema's tables so that
 		// if the central table is removed, so are we.
 		this.centralTable.getSchema().getTables().addPropertyChangeListener(
-				new WeakPropertyChangeListener(this.centralTable.getSchema()
-						.getTables(), this.existenceListener));
+				this.existenceListener);
 
 		// Add us as a listener to all included rels and schs, replacing
 		// ourselves if we are already listening to them.
 		for (final Iterator i = this.includedSchemas.iterator(); i.hasNext();) {
 			final Schema sch = (Schema) i.next();
-			sch.addPropertyChangeListener("masked",
-					new WeakPropertyChangeListener(sch, "masked",
-							this.rebuildListener));
+			sch.addPropertyChangeListener("masked", this.rebuildListener);
 		}
 		// Gather up the tables we have used and those linked to them.
 		final Set listeningTables = new HashSet();
@@ -1853,52 +1843,35 @@ public class DataSet extends Schema {
 			final Table tbl = (Table) i.next();
 			listeningRels.addAll(tbl.getRelations());
 			// Listen only to useful things.
-			tbl.addPropertyChangeListener("masked",
-					new WeakPropertyChangeListener(tbl, "masked",
-							this.rebuildListener));
-			tbl.addPropertyChangeListener("restrictTable",
-					new WeakPropertyChangeListener(tbl, "restrictTable",
-							this.rebuildListener));
-			tbl.getColumns().addPropertyChangeListener(
-					new WeakPropertyChangeListener(tbl.getColumns(),
-							this.rebuildListener));
-			tbl.getRelations().addPropertyChangeListener(
-					new WeakPropertyChangeListener(tbl.getRelations(),
-							this.rebuildListener));
+			tbl.addPropertyChangeListener("masked", this.rebuildListener);
+			tbl
+					.addPropertyChangeListener("restrictTable",
+							this.rebuildListener);
+			tbl.getColumns().addPropertyChangeListener(this.rebuildListener);
+			tbl.getRelations().addPropertyChangeListener(this.rebuildListener);
 		}
 		// Listen to useful bits of the relation.
 		for (final Iterator i = listeningRels.iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
-			rel.addPropertyChangeListener("cardinality",
-					new WeakPropertyChangeListener(rel, "cardinality",
-							this.rebuildListener));
-			rel.addPropertyChangeListener("status",
-					new WeakPropertyChangeListener(rel, "status",
-							this.rebuildListener));
+			rel.addPropertyChangeListener("cardinality", this.rebuildListener);
+			rel.addPropertyChangeListener("status", this.rebuildListener);
 			rel.addPropertyChangeListener("compoundRelation",
-					new WeakPropertyChangeListener(rel, "compoundRelation",
-							this.rebuildListener));
+					this.rebuildListener);
 			rel.addPropertyChangeListener("unrolledRelation",
-					new WeakPropertyChangeListener(rel, "unrolledRelation",
-							this.rebuildListener));
-			rel.addPropertyChangeListener("forceRelation",
-					new WeakPropertyChangeListener(rel, "forceRelation",
-							this.rebuildListener));
+					this.rebuildListener);
+			rel
+					.addPropertyChangeListener("forceRelation",
+							this.rebuildListener);
 			rel.addPropertyChangeListener("loopbackRelation",
-					new WeakPropertyChangeListener(rel, "loopbackRelation",
-							this.rebuildListener));
-			rel.addPropertyChangeListener("maskRelation",
-					new WeakPropertyChangeListener(rel, "maskRelation",
-							this.rebuildListener));
-			rel.addPropertyChangeListener("mergeRelation",
-					new WeakPropertyChangeListener(rel, "mergeRelation",
-							this.rebuildListener));
+					this.rebuildListener);
+			rel.addPropertyChangeListener("maskRelation", this.rebuildListener);
+			rel
+					.addPropertyChangeListener("mergeRelation",
+							this.rebuildListener);
 			rel.addPropertyChangeListener("restrictRelation",
-					new WeakPropertyChangeListener(rel, "restrictRelation",
-							this.rebuildListener));
+					this.rebuildListener);
 			rel.addPropertyChangeListener("subclassRelation",
-					new WeakPropertyChangeListener(rel, "subclassRelation",
-							this.rebuildListener));
+					this.rebuildListener);
 		}
 
 		// Check all visibleModified type/key pairs for
@@ -1970,6 +1943,12 @@ public class DataSet extends Schema {
 
 		private TransformationUnit tu;
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				DataSetColumn.this.setDirectModified(true);
+			}
+		};
+
 		/**
 		 * This constructor gives the column a name.
 		 * 
@@ -1991,14 +1970,9 @@ public class DataSet extends Schema {
 			this.expressionDependency = false;
 
 			// Listen to own settings.
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					DataSetColumn.this.setDirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener("columnMasked", listener);
-			this.pcs.addPropertyChangeListener("columnRename", listener);
-			this.pcs.addPropertyChangeListener("columnIndexed", listener);
+			this.addPropertyChangeListener("columnMasked", this.listener);
+			this.addPropertyChangeListener("columnRename", this.listener);
+			this.addPropertyChangeListener("columnIndexed", this.listener);
 		}
 
 		/**
@@ -2382,6 +2356,12 @@ public class DataSet extends Schema {
 		public static class ExpressionColumn extends DataSetColumn {
 			private static final long serialVersionUID = 1L;
 
+			private final PropertyChangeListener listener = new PropertyChangeListener() {
+				public void propertyChange(final PropertyChangeEvent e) {
+					ExpressionColumn.this.setDirectModified(true);
+				}
+			};
+
 			private final ExpressionColumnDefinition definition;
 
 			/**
@@ -2403,12 +2383,7 @@ public class DataSet extends Schema {
 				this.definition = definition;
 
 				definition.addPropertyChangeListener("directModified",
-						new PropertyChangeListener() {
-							public void propertyChange(
-									final PropertyChangeEvent e) {
-								ExpressionColumn.this.setDirectModified(true);
-							}
-						});
+						this.listener);
 				this.visibleModified = false;
 			}
 
@@ -2472,6 +2447,12 @@ public class DataSet extends Schema {
 
 			private DataSetColumn dsColumn;
 
+			private final PropertyChangeListener listener = new PropertyChangeListener() {
+				public void propertyChange(final PropertyChangeEvent e) {
+					InheritedColumn.this.setDirectModified(true);
+				}
+			};
+
 			/**
 			 * This constructor gives the column a name. The underlying relation
 			 * is not required here. The name is inherited from the column too.
@@ -2489,13 +2470,8 @@ public class DataSet extends Schema {
 				this.dsColumn = dsColumn;
 				this.visibleModified = dsColumn.visibleModified;
 
-				// Listen to inherited settings.
-				final PropertyChangeListener listener = new PropertyChangeListener() {
-					public void propertyChange(final PropertyChangeEvent e) {
-						InheritedColumn.this.setDirectModified(true);
-					}
-				};
-				dsColumn.addPropertyChangeListener("columnMasked", listener);
+				dsColumn.addPropertyChangeListener("columnMasked",
+						this.listener);
 			}
 
 			/**
@@ -2539,14 +2515,6 @@ public class DataSet extends Schema {
 
 			public boolean existsForPartition(final String schemaPrefix) {
 				return this.dsColumn.existsForPartition(schemaPrefix);
-			}
-
-			public boolean isRequiredFinal() {
-				return this.dsColumn.isRequiredFinal();
-			}
-
-			public boolean isRequiredInterim() {
-				return this.dsColumn.isRequiredInterim();
 			}
 		}
 
@@ -2790,6 +2758,12 @@ public class DataSet extends Schema {
 
 		private final Collection includedSchemas;
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				DataSetTable.this.setDirectModified(true);
+			}
+		};
+
 		/**
 		 * The constructor calls the parent table constructor. It uses a dataset
 		 * as a parent schema for itself. You must also supply a type that
@@ -2825,20 +2799,15 @@ public class DataSet extends Schema {
 			this.includedSchemas = new LinkedHashSet();
 
 			// Listen to own settings.
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					DataSetTable.this.setDirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener("type", listener);
-			this.pcs.addPropertyChangeListener("tableRename", listener);
-			this.pcs.addPropertyChangeListener("dimensionMasked", listener);
-			this.pcs.addPropertyChangeListener("distinctTable", listener);
-			this.pcs.addPropertyChangeListener("noFinalLeftJoin", listener);
-			this.pcs.addPropertyChangeListener("skipOptimiser", listener);
-			this.pcs.addPropertyChangeListener("skipIndexOptimiser", listener);
-			this.pcs.addPropertyChangeListener("partitionTableApplication",
-					listener);
+			this.addPropertyChangeListener("type", this.listener);
+			this.addPropertyChangeListener("tableRename", this.listener);
+			this.addPropertyChangeListener("dimensionMasked", this.listener);
+			this.addPropertyChangeListener("distinctTable", this.listener);
+			this.addPropertyChangeListener("noFinalLeftJoin", this.listener);
+			this.addPropertyChangeListener("skipOptimiser", this.listener);
+			this.addPropertyChangeListener("skipIndexOptimiser", this.listener);
+			this.addPropertyChangeListener("partitionTableApplication",
+					this.listener);
 		}
 
 		/**
@@ -3488,6 +3457,12 @@ public class DataSet extends Schema {
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				ExpressionColumnDefinition.this.setDirectModified(true);
+			}
+		};
+
 		/**
 		 * This constructor makes a new expression definition based on the given
 		 * expression and a set of column aliases.
@@ -3520,13 +3495,8 @@ public class DataSet extends Schema {
 
 			Transaction.addTransactionListener(this);
 
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					ExpressionColumnDefinition.this.setDirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener(listener);
-			this.aliases.addPropertyChangeListener(listener);
+			this.addPropertyChangeListener(this.listener);
+			this.aliases.addPropertyChangeListener(this.listener);
 		}
 
 		public boolean isDirectModified() {
@@ -3573,9 +3543,7 @@ public class DataSet extends Schema {
 		 */
 		public void addPropertyChangeListener(
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-					listener))
-				this.pcs.addPropertyChangeListener(listener);
+			this.pcs.addPropertyChangeListener(listener);
 		}
 
 		/**
@@ -3588,33 +3556,7 @@ public class DataSet extends Schema {
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
-					.contains(listener))
-				this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
+			this.pcs.addPropertyChangeListener(property, listener);
 		}
 
 		/**

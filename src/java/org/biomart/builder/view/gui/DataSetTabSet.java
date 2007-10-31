@@ -107,6 +107,59 @@ public class DataSetTabSet extends JTabbedPane {
 
 	private MartTab martTab;
 
+	// Make a listener which knows how to handle masking and
+	// renaming.
+	private final PropertyChangeListener renameListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			final DataSet ds = (DataSet) evt.getSource();
+			if (evt.getPropertyName().equals("name")) {
+				// Rename in diagram set.
+				DataSetTabSet.this.datasetToDiagram.put(evt.getNewValue(),
+						DataSetTabSet.this.datasetToDiagram.remove(evt
+								.getOldValue()));
+				DataSetTabSet.this.setTitleAt(DataSetTabSet.this
+						.indexOfTab((String) evt.getOldValue()), (String) evt
+						.getNewValue());
+			} else if (evt.getPropertyName().equals("masked")) {
+				// For masks, if unmasking, add a tab, otherwise
+				// remove the tab.
+				final boolean masked = ((Boolean) evt.getNewValue())
+						.booleanValue();
+				if (masked)
+					DataSetTabSet.this.removeDataSetTab(ds.getName(), true);
+				else
+					DataSetTabSet.this.addDataSetTab(ds, false);
+			}
+		}
+	};
+
+	// Listen to changes on tabs.
+	private final PropertyChangeListener tabListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			// Listen to masked schema and rename
+			// schema events on each new schema added
+			// regardless of tab presence.
+			// Mass change. Copy to prevent concurrent mods.
+			final Set oldDSs = new HashSet(DataSetTabSet.this.datasetToDiagram
+					.keySet());
+			for (final Iterator i = martTab.getMart().getDataSets().values()
+					.iterator(); i.hasNext();) {
+				final DataSet ds = (DataSet) i.next();
+				if (!oldDSs.remove(ds.getName())) {
+					// Single-add.
+					if (!ds.isMasked())
+						DataSetTabSet.this.addDataSetTab(ds, true);
+					ds.addPropertyChangeListener("masked",
+							DataSetTabSet.this.renameListener);
+					ds.addPropertyChangeListener("name",
+							DataSetTabSet.this.renameListener);
+				}
+			}
+			for (final Iterator i = oldDSs.iterator(); i.hasNext();)
+				DataSetTabSet.this.removeDataSetTab((String) i.next(), true);
+		}
+	};
+
 	/**
 	 * The constructor sets up a new set of tabs which represent all the
 	 * datasets in the given mart, plus an overview tab to represent all the
@@ -136,32 +189,6 @@ public class DataSetTabSet extends JTabbedPane {
 				this.allDataSetsDiagram);
 		this.addTab(Resources.get("multiDataSetOverviewTab"), scroller);
 
-		// Make a listener which knows how to handle masking and
-		// renaming.
-		final PropertyChangeListener renameListener = new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				final DataSet ds = (DataSet) evt.getSource();
-				if (evt.getPropertyName().equals("name")) {
-					// Rename in diagram set.
-					DataSetTabSet.this.datasetToDiagram.put(evt.getNewValue(),
-							DataSetTabSet.this.datasetToDiagram.remove(evt
-									.getOldValue()));
-					DataSetTabSet.this.setTitleAt(DataSetTabSet.this
-							.indexOfTab((String) evt.getOldValue()),
-							(String) evt.getNewValue());
-				} else if (evt.getPropertyName().equals("masked")) {
-					// For masks, if unmasking, add a tab, otherwise
-					// remove the tab.
-					final boolean masked = ((Boolean) evt.getNewValue())
-							.booleanValue();
-					if (masked)
-						DataSetTabSet.this.removeDataSetTab(ds.getName(), true);
-					else
-						DataSetTabSet.this.addDataSetTab(ds, false);
-				}
-			}
-		};
-
 		// Populate the map to hold the relation between schemas and the
 		// diagrams representing them.
 		for (final Iterator i = martTab.getMart().getDataSets().values()
@@ -170,38 +197,13 @@ public class DataSetTabSet extends JTabbedPane {
 			// Don't add schemas which are initially masked.
 			if (!ds.isMasked())
 				this.addDataSetTab(ds, false);
-			ds.addPropertyChangeListener("masked", renameListener);
-			ds.addPropertyChangeListener("name", renameListener);
+			ds.addPropertyChangeListener("masked", this.renameListener);
+			ds.addPropertyChangeListener("name", this.renameListener);
 		}
 
 		// Listen to add/remove/mass change schema events.
 		martTab.getMart().getDataSets().addPropertyChangeListener(
-				new PropertyChangeListener() {
-					public void propertyChange(final PropertyChangeEvent evt) {
-						// Listen to masked schema and rename
-						// schema events on each new schema added
-						// regardless of tab presence.
-						// Mass change. Copy to prevent concurrent mods.
-						final Set oldDSs = new HashSet(
-								DataSetTabSet.this.datasetToDiagram.keySet());
-						for (final Iterator i = martTab.getMart().getDataSets()
-								.values().iterator(); i.hasNext();) {
-							final DataSet ds = (DataSet) i.next();
-							if (!oldDSs.remove(ds.getName())) {
-								// Single-add.
-								if (!ds.isMasked())
-									DataSetTabSet.this.addDataSetTab(ds, true);
-								ds.addPropertyChangeListener("masked",
-										renameListener);
-								ds.addPropertyChangeListener("name",
-										renameListener);
-							}
-						}
-						for (final Iterator i = oldDSs.iterator(); i.hasNext();)
-							DataSetTabSet.this.removeDataSetTab((String) i
-									.next(), true);
-					}
-				});
+				this.tabListener);
 	}
 
 	/**
@@ -309,9 +311,10 @@ public class DataSetTabSet extends JTabbedPane {
 		final int tabIndex = this.indexOfTab(datasetName);
 
 		// Remove the tab, and it's mapping from the dataset-to-tab map.
-		this.removeTabAt(tabIndex);
-		this.datasetToDiagram.remove(datasetName);
+		this.remove(tabIndex);
 
+		this.datasetToDiagram.remove(datasetName);
+		
 		if (select)
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.

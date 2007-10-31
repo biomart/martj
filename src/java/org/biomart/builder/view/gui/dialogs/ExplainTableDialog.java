@@ -66,7 +66,6 @@ import org.biomart.common.resources.Settings;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 import org.biomart.common.view.gui.LongProcess;
 
 /**
@@ -182,8 +181,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 
 		// Weak-listen to DataSetTable.explainHideMasked and recalc on change.
 		dsTable.addPropertyChangeListener("explainHideMasked",
-				new WeakPropertyChangeListener("explainHideMasked",
-						this.recalcListener));
+				this.recalcListener);
 
 		// Make the content pane.
 		final JPanel displayArea = new JPanel(new CardLayout());
@@ -292,9 +290,8 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 		// changes, we recalculate ourselves entirely.
 		this.needsRebuild = false;
 		Transaction.addTransactionListener(this);
-		this.ds.addPropertyChangeListener("directModified",
-				new WeakPropertyChangeListener(this.ds, "directModified",
-						this.listener));
+
+		this.ds.addPropertyChangeListener("directModified", this.listener);
 
 		// Select the default button (which shows the transformation card).
 		// We must physically click on it to make the card show.
@@ -342,14 +339,13 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 				// Keep a note of shown tables.
 				final Map shownTables = new HashMap();
 				for (final Iterator i = ExplainTableDialog.this.transformationTableDiagrams
-						.iterator(); i.hasNext();)
-					for (final Iterator j = ((ExplainTransformationDiagram) i
-							.next()).getTableComponents().iterator(); j
-							.hasNext();) {
-						final TableComponent comp = (TableComponent) j.next();
-						shownTables.put(((Table) comp.getObject()).getName(),
-								comp.getState());
-					}
+						.iterator(); i.hasNext();) {
+					final TableComponent[] comps = ((ExplainTransformationDiagram) i
+							.next()).getTableComponents();
+					for (int j = 0; j < comps.length; j++)
+						shownTables.put(((Table) comps[j].getObject())
+								.getName(), comps[j].getState());
+				}
 
 				// Clear the transformation box.
 				ExplainTableDialog.this.transformation.removeAll();

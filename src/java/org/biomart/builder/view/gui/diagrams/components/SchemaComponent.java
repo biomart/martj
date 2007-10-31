@@ -42,7 +42,6 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A diagram component that represents a schema. It usually only has a label in
@@ -115,17 +114,13 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Repaint events.
-		schema.addPropertyChangeListener("directModified",
-				new WeakPropertyChangeListener(schema, "directModified",
-						this.repaintListener));
+		schema
+				.addPropertyChangeListener("directModified",
+						this.repaintListener);
 
 		// Recalc events.
-		schema.addPropertyChangeListener("name",
-				new WeakPropertyChangeListener(schema, "name",
-						this.recalcListener));
-		schema.getRelations().addPropertyChangeListener(
-				new WeakPropertyChangeListener(schema.getRelations(),
-						this.recalcListener));
+		schema.addPropertyChangeListener("name", this.recalcListener);
+		schema.getRelations().addPropertyChangeListener(this.recalcListener);
 	}
 
 	private Schema getSchema() {
@@ -185,7 +180,7 @@ public class SchemaComponent extends BoxShapedComponent {
 			}
 		});
 		contextMenu.add(update);
-		
+
 		// Add a separator.
 		contextMenu.addSeparator();
 

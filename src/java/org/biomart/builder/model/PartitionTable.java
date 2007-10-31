@@ -20,10 +20,8 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,6 +44,7 @@ import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanList;
 import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 
@@ -64,7 +63,8 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
-	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	protected final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
+			this);
 
 	private boolean visibleModified = true;
 
@@ -137,7 +137,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		Transaction.addTransactionListener(this);
 
 		// All changes to us make us modified.
-		this.pcs.addPropertyChangeListener(this.listener);
+		this.addPropertyChangeListener(this.listener);
 	}
 
 	public boolean isDirectModified() {
@@ -183,9 +183,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 *            the listener to add.
 	 */
 	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-				listener))
-			this.pcs.addPropertyChangeListener(listener);
+		this.pcs.addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -198,33 +196,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
-				.contains(listener))
-			this.pcs.addPropertyChangeListener(property, listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(property, listener);
+		this.pcs.addPropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -637,7 +609,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 * A column knows its name.
 	 */
 	public static class PartitionColumn implements TransactionListener {
-		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 				this);
 
 		private boolean visibleModified = true;
@@ -674,7 +646,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			Transaction.addTransactionListener(this);
 
 			// All changes to us make us modified.
-			this.pcs.addPropertyChangeListener(this.listener);
+			this.addPropertyChangeListener(this.listener);
 
 			this.table = table;
 			this.name = name;
@@ -724,9 +696,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 */
 		public void addPropertyChangeListener(
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-					listener))
-				this.pcs.addPropertyChangeListener(listener);
+			this.pcs.addPropertyChangeListener(listener);
 		}
 
 		/**
@@ -739,33 +709,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
-					.contains(listener))
-				this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
+			this.pcs.addPropertyChangeListener(property, listener);
 		}
 
 		/**
@@ -988,7 +932,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	 */
 	public static class PartitionTableApplication implements
 			TransactionListener {
-		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 				this);
 
 		private boolean visibleModified = true;
@@ -998,6 +942,23 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		private final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
 				PartitionTableApplication.this.setDirectModified(true);
+			}
+		};
+
+		private final PropertyChangeListener rowsListener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent evt) {
+				final Collection newRows = new HashSet(
+						PartitionTableApplication.this.partitionAppliedRows);
+				newRows.removeAll(PartitionTableApplication.this.rowCache);
+				for (final Iterator i = newRows.iterator(); i.hasNext();) {
+					final PartitionAppliedRow row = (PartitionAppliedRow) i
+							.next();
+					row.addPropertyChangeListener("directModified",
+							PartitionTableApplication.this.listener);
+				}
+				PartitionTableApplication.this.rowCache.clear();
+				PartitionTableApplication.this.rowCache
+						.addAll(PartitionTableApplication.this.partitionAppliedRows);
 			}
 		};
 
@@ -1019,7 +980,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			Transaction.addTransactionListener(this);
 
 			// All changes to us make us modified.
-			this.pcs.addPropertyChangeListener(this.listener);
+			this.addPropertyChangeListener(this.listener);
 
 			this.pt = pt;
 
@@ -1027,23 +988,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			// Also listen to each new row added.
 			this.partitionAppliedRows.addPropertyChangeListener(this.listener);
 			this.partitionAppliedRows
-					.addPropertyChangeListener(new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent evt) {
-							final Collection newRows = new HashSet(
-									PartitionTableApplication.this.partitionAppliedRows);
-							newRows
-									.removeAll(PartitionTableApplication.this.rowCache);
-							for (final Iterator i = newRows.iterator(); i
-									.hasNext();)
-								((PartitionAppliedRow) i.next())
-										.addPropertyChangeListener(
-												"directModified",
-												PartitionTableApplication.this.listener);
-							PartitionTableApplication.this.rowCache.clear();
-							PartitionTableApplication.this.rowCache
-									.addAll(PartitionTableApplication.this.partitionAppliedRows);
-						}
-					});
+					.addPropertyChangeListener(this.rowsListener);
 		}
 
 		public boolean isDirectModified() {
@@ -1090,9 +1035,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 */
 		public void addPropertyChangeListener(
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-					listener))
-				this.pcs.addPropertyChangeListener(listener);
+			this.pcs.addPropertyChangeListener(listener);
 		}
 
 		/**
@@ -1105,33 +1048,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property))
-					.contains(listener))
-				this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
+			this.pcs.addPropertyChangeListener(property, listener);
 		}
 
 		/**
@@ -1257,7 +1174,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		 * row.
 		 */
 		public static class PartitionAppliedRow implements TransactionListener {
-			private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+			private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 					this);
 
 			private boolean visibleModified = true;
@@ -1307,7 +1224,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 				Transaction.addTransactionListener(this);
 
 				// All changes to us make us modified.
-				this.pcs.addPropertyChangeListener(this.listener);
+				this.addPropertyChangeListener(this.listener);
 			}
 
 			public boolean isDirectModified() {
@@ -1355,9 +1272,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			 */
 			public void addPropertyChangeListener(
 					final PropertyChangeListener listener) {
-				if (!Arrays.asList(this.pcs.getPropertyChangeListeners())
-						.contains(listener))
-					this.pcs.addPropertyChangeListener(listener);
+				this.pcs.addPropertyChangeListener(listener);
 			}
 
 			/**
@@ -1370,34 +1285,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			 */
 			public void addPropertyChangeListener(final String property,
 					final PropertyChangeListener listener) {
-				if (!Arrays.asList(
-						this.pcs.getPropertyChangeListeners(property))
-						.contains(listener))
-					this.pcs.addPropertyChangeListener(property, listener);
-			}
-
-			/**
-			 * Removes a property change listener.
-			 * 
-			 * @param listener
-			 *            the listener to remove.
-			 */
-			public void removePropertyChangeListener(
-					final PropertyChangeListener listener) {
-				this.pcs.removePropertyChangeListener(listener);
-			}
-
-			/**
-			 * Removes a property change listener.
-			 * 
-			 * @param property
-			 *            the property to listen to.
-			 * @param listener
-			 *            the listener to remove.
-			 */
-			public void removePropertyChangeListener(final String property,
-					final PropertyChangeListener listener) {
-				this.pcs.removePropertyChangeListener(property, listener);
+				this.pcs.addPropertyChangeListener(property, listener);
 			}
 
 			/**

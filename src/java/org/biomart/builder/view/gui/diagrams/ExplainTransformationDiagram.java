@@ -48,7 +48,6 @@ import org.biomart.builder.view.gui.diagrams.contexts.ExplainContext;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Displays a transformation step, depending on what is passed to the
@@ -131,8 +130,23 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 * 
 	 * @return the list of components.
 	 */
-	public Collection getTableComponents() {
-		return this.tableComponents;
+	public TableComponent[] getTableComponents() {
+		final TableComponent[] comps = new TableComponent[this.tableComponents
+				.size()];
+		for (int i = 0; i < comps.length; i++)
+			comps[i] = (TableComponent) this.tableComponents
+					.get(i);
+		return comps;
+	}
+
+	/**
+	 * Add a table component to this diagram.
+	 * 
+	 * @param component
+	 *            the component to add.
+	 */
+	protected void addTableComponent(final TableComponent component) {
+		this.tableComponents.add(component);
 	}
 
 	/**
@@ -143,6 +157,10 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 */
 	public ExplainContext getExplainContext() {
 		return this.explainContext;
+	}
+
+	public void doRecalculateDiagram() {
+		this.tableComponents.clear();
 	}
 
 	/**
@@ -181,7 +199,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.getTableComponents().clear();
+			super.doRecalculateDiagram();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
 			final FakeSchema tempSourceSchema = new FakeSchema(this.stu
@@ -197,7 +215,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			}
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc);
+			this.addTableComponent(tc);
 			final Object tcState = this.getState(tc);
 			if (tcState != null)
 				tc.setState(tcState);
@@ -247,7 +265,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.getTableComponents().clear();
+			super.doRecalculateDiagram();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
 			final FakeSchema tempSourceSchema = new FakeSchema(Resources
@@ -300,13 +318,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			// Add source and target tables.
 			final TableComponent tc1 = new TableComponent(tempSource, this);
 			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc1);
+			this.addTableComponent(tc1);
 			final Object tc1State = this.getState(tc1);
 			if (tc1State != null)
 				tc1.setState(tc1State);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
 			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc2);
+			this.addTableComponent(tc2);
 			final Object tc2State = this.getState(tc2);
 			if (tc2State != null)
 				tc2.setState(tc2State);
@@ -361,7 +379,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.getTableComponents().clear();
+			super.doRecalculateDiagram();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
 			final FakeSchema tempSourceSchema = new FakeSchema(Resources
@@ -430,13 +448,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			// Add source and target tables.
 			final TableComponent tc1 = new TableComponent(tempSource, this);
 			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc1);
+			this.addTableComponent(tc1);
 			final Object tc1State = this.getState(tc1);
 			if (tc1State != null)
 				tc1.setState(tc1State);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
 			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc2);
+			this.addTableComponent(tc2);
 			final Object tc2State = this.getState(tc2);
 			if (tc2State != null)
 				tc2.setState(tc2State);
@@ -491,7 +509,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.getTableComponents().clear();
+			super.doRecalculateDiagram();
 			// Create a temp table called TEMP with the given columns
 			// and given foreign key.
 			final FakeSchema tempSourceSchema = new FakeSchema(Resources
@@ -556,13 +574,13 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			// Add source and target tables.
 			final TableComponent tc1 = new TableComponent(tempSource, this);
 			this.add(tc1, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc1);
+			this.addTableComponent(tc1);
 			final Object tc1State = this.getState(tc1);
 			if (tc1State != null)
 				tc1.setState(tc1State);
 			final TableComponent tc2 = new TableComponent(tempTarget, this);
 			this.add(tc2, new SchemaLayoutConstraint(1), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc2);
+			this.addTableComponent(tc2);
 			final Object tc2State = this.getState(tc2);
 			if (tc2State != null)
 				tc2.setState(tc2State);
@@ -611,7 +629,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 
 		public void doRecalculateDiagram() {
 			// Removes all existing components.
-			this.getTableComponents().clear();
+			super.doRecalculateDiagram();
 			// Replicate the table in an empty schema then add the columns
 			// requested.
 			final FakeSchema tempSourceSchema = new FakeSchema(Resources
@@ -627,7 +645,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			}
 			final TableComponent tc = new TableComponent(tempSource, this);
 			this.add(tc, new SchemaLayoutConstraint(0), Diagram.TABLE_LAYER);
-			this.getTableComponents().add(tc);
+			this.addTableComponent(tc);
 			final Object tcState = this.getState(tc);
 			if (tcState != null)
 				tc.setState(tcState);
@@ -689,8 +707,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			this.relation = relation;
 			this.relationIteration = relationIteration;
 			this.explainContext = explainContext;
-			relation.addPropertyChangeListener(new WeakPropertyChangeListener(
-					relation, this.listener));
+			relation.addPropertyChangeListener(this.listener);
 		}
 
 		/**
@@ -752,8 +769,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			super(schema, name);
 			this.table = table;
 			this.explainContext = explainContext;
-			table.addPropertyChangeListener(new WeakPropertyChangeListener(
-					table, this.listener));
+			table.addPropertyChangeListener(this.listener);
 		}
 
 		/**
@@ -776,6 +792,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 */
 	public static class FakeMart extends Mart {
 		private static final long serialVersionUID = 1L;
+
 		/**
 		 * Construct a fake mart.
 		 */
@@ -789,6 +806,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 */
 	public static class FakeSchema extends Schema {
 		private static final long serialVersionUID = 1L;
+
 		/**
 		 * Construct a fake schema with the given name.
 		 * 
@@ -805,6 +823,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 	 */
 	public static class FakeTable extends Table {
 		private static final long serialVersionUID = 1L;
+
 		/**
 		 * Construct a fake table with the given name in the given schema.
 		 * 

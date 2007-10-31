@@ -42,7 +42,6 @@ import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * This component represents a relation between two keys, in the form of a line.
@@ -176,7 +175,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 
 	private Shape outline;
 
-	private Relation relation;
+	private Relation object;
 
 	private RenderingHints renderHints;
 
@@ -203,7 +202,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 		super();
 
 		// Remember settings.
-		this.relation = relation;
+		this.object = relation;
 		this.diagram = diagram;
 
 		// Turn on the mouse.
@@ -227,34 +226,21 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 
 		// Repaint events.
 		relation.addPropertyChangeListener("directModified",
-				new WeakPropertyChangeListener(relation, "directModified",
-						this.repaintListener));
-		relation.getFirstKey().addPropertyChangeListener(
-				"status",
-				new WeakPropertyChangeListener(relation.getFirstKey(),
-						"status", this.repaintListener));
+				this.repaintListener);
+		relation.getFirstKey().addPropertyChangeListener("status",
+				this.repaintListener);
+		relation.getFirstKey().getTable().addPropertyChangeListener("masked",
+				this.repaintListener);
 		relation.getFirstKey().getTable().addPropertyChangeListener(
-				"masked",
-				new WeakPropertyChangeListener(relation.getFirstKey()
-						.getTable(), "masked", this.repaintListener));
-		relation.getFirstKey().getTable().addPropertyChangeListener(
-				"dimensionMasked",
-				new WeakPropertyChangeListener(relation.getFirstKey()
-						.getTable(), "dimensionMasked", this.repaintListener));
-		relation.getSecondKey().addPropertyChangeListener(
-				"status",
-				new WeakPropertyChangeListener(relation.getSecondKey(),
-						"status", this.repaintListener));
+				"dimensionMasked", this.repaintListener);
+		relation.getSecondKey().addPropertyChangeListener("status",
+				this.repaintListener);
+		relation.getSecondKey().getTable().addPropertyChangeListener("masked",
+				this.repaintListener);
 		relation.getSecondKey().getTable().addPropertyChangeListener(
-				"masked",
-				new WeakPropertyChangeListener(relation.getSecondKey()
-						.getTable(), "masked", this.repaintListener));
-		relation.getSecondKey().getTable().addPropertyChangeListener(
-				"dimensionMasked",
-				new WeakPropertyChangeListener(relation.getSecondKey()
-						.getTable(), "dimensionMasked", this.repaintListener));
+				"dimensionMasked", this.repaintListener);
 
-		this.changed = this.relation.isVisibleModified();
+		this.changed = this.getObject().isVisibleModified();
 	}
 
 	public void setDirectModified(final boolean modified) {
@@ -286,7 +272,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		final boolean visMod = this.relation.isVisibleModified()
+		final boolean visMod = this.getObject().isVisibleModified()
 				&& this.getDiagram().getMartTab().getPartitionViewSelection() == null;
 		this.needsRepaint |= this.changed ^ visMod;
 		this.changed = visMod;
@@ -376,12 +362,12 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	 * @return the diagram component for the first key.
 	 */
 	public KeyComponent getFirstKeyComponent() {
-		return (KeyComponent) this.diagram.getDiagramComponent(this.relation
+		return (KeyComponent) this.diagram.getDiagramComponent(((Relation)this.getObject())
 				.getFirstKey());
 	}
 
-	public Object getObject() {
-		return this.relation;
+	public TransactionListener getObject() {
+		return this.object;
 	}
 
 	/**
@@ -391,7 +377,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	 * @return the diagram component for the second key.
 	 */
 	public KeyComponent getSecondKeyComponent() {
-		return (KeyComponent) this.diagram.getDiagramComponent(this.relation
+		return (KeyComponent) this.diagram.getDiagramComponent(((Relation)this.getObject())
 				.getSecondKey());
 	}
 
@@ -486,7 +472,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 				mod.customiseAppearance(this, this.getObject());
 		// Work out what style to draw the relation line.
 		final Stroke oldStroke = this.stroke;
-		if (this.relation.isOneToOne())
+		if (((Relation)this.getObject()).isOneToOne())
 			this.stroke = this.restricted ? this.compounded ? RelationComponent.ONE_ONE_DOTTED_DASHED
 					: RelationComponent.ONE_ONE_DASHED
 					: this.compounded ? RelationComponent.ONE_ONE_DOTTED
@@ -502,7 +488,7 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 			this.revalidate();
 			this.repaint(this.getBounds());
 		}
-		if (this.relation != null)
-			this.setToolTipText(this.relation.toString());
+		if (this.getObject() != null)
+			this.setToolTipText(this.getObject().toString());
 	}
 }

@@ -25,8 +25,6 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,9 +38,9 @@ import org.biomart.common.utils.BeanCollection;
 import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.BeanSet;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * The table class provides the basic idea of what constitutes a database table
@@ -63,7 +61,8 @@ public class Table implements Comparable, TransactionListener {
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
-	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	protected final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
+			this);
 
 	private static final long serialVersionUID = 1L;
 
@@ -140,9 +139,32 @@ public class Table implements Comparable, TransactionListener {
 		this.getColumns().addPropertyChangeListener(this.relationCacheBuilder);
 
 		// All changes to us make us modified.
-		this.pcs.addPropertyChangeListener("masked", this.listener);
-		this.pcs.addPropertyChangeListener("restrictTable", this.listener);
-		this.pcs.addPropertyChangeListener("bigTable", this.listener);
+		this.addPropertyChangeListener("masked", this.listener);
+		this.addPropertyChangeListener("restrictTable", this.listener);
+		this.addPropertyChangeListener("bigTable", this.listener);
+	}
+
+	/**
+	 * Adds a property change listener.
+	 * 
+	 * @param listener
+	 *            the listener to add.
+	 */
+	public void addPropertyChangeListener(final PropertyChangeListener listener) {
+		this.pcs.addPropertyChangeListener(listener);
+	}
+
+	/**
+	 * Adds a property change listener.
+	 * 
+	 * @param property
+	 *            the property to listen to.
+	 * @param listener
+	 *            the listener to add.
+	 */
+	public void addPropertyChangeListener(final String property,
+			final PropertyChangeListener listener) {
+		this.pcs.addPropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -169,7 +191,7 @@ public class Table implements Comparable, TransactionListener {
 		this.pcs.firePropertyChange("directModified", oldValue, modified);
 	}
 
-	public boolean isVisibleModified() {		
+	public boolean isVisibleModified() {
 		// Compute this from all rels and cols - if any are vis
 		// modified then we are too.
 		for (final Iterator i = this.getRelations().iterator(); i.hasNext();)
@@ -257,8 +279,7 @@ public class Table implements Comparable, TransactionListener {
 			for (final Iterator i = newCols.iterator(); i.hasNext();) {
 				final Column column = (Column) i.next();
 				column.addPropertyChangeListener("directModified",
-						new WeakPropertyChangeListener(column,
-								"directModified", this.listener));
+						this.listener);
 			}
 			this.columnCache.clear();
 			this.columnCache.addAll(this.getColumns().values());
@@ -281,11 +302,10 @@ public class Table implements Comparable, TransactionListener {
 			for (final Iterator i = newKeys.iterator(); i.hasNext();) {
 				final Key key = (Key) i.next();
 				key.getRelations().addPropertyChangeListener(
-						new WeakPropertyChangeListener(key.getRelations(),
-								this.relationCacheBuilder));
+						this.relationCacheBuilder);
 				key.addPropertyChangeListener("directModified",
-						new WeakPropertyChangeListener(key, "directModified",
-								this.listener));
+						this.relationCacheBuilder);
+				key.addPropertyChangeListener("directModified", this.listener);
 			}
 			this.keyCache.clear();
 			if (this.primaryKey != null)
@@ -320,57 +340,6 @@ public class Table implements Comparable, TransactionListener {
 	 */
 	public BeanCollection getRelations() {
 		return this.relationCache;
-	}
-
-	/**
-	 * Adds a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to add.
-	 */
-	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-				listener))
-			this.pcs.addPropertyChangeListener(listener);
-	}
-
-	/**
-	 * Adds a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to add.
-	 */
-	public void addPropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-				listener))
-		this.pcs.addPropertyChangeListener(property, listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -521,13 +490,7 @@ public class Table implements Comparable, TransactionListener {
 
 		if (def != null) {
 			this.getMods(dataset, null).put("restrictTable", def);
-			def.addPropertyChangeListener("directModified",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Table.this.pcs.firePropertyChange("restrictTable",
-									null, dataset);
-						}
-					});
+			def.addPropertyChangeListener("directModified", this.listener);
 			this.pcs.firePropertyChange("restrictTable", null, dataset);
 		} else {
 			this.getMods(dataset, null).remove("restrictTable");
@@ -554,13 +517,7 @@ public class Table implements Comparable, TransactionListener {
 
 		if (def != null) {
 			this.getMods(dataset, tableKey).put("restrictTable", def);
-			def.addPropertyChangeListener("directModified",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Table.this.pcs.firePropertyChange("restrictTable",
-									null, tableKey);
-						}
-					});
+			def.addPropertyChangeListener("directModified", this.listener);
 			this.pcs.firePropertyChange("restrictTable", null, tableKey);
 		} else {
 			this.getMods(dataset, tableKey).remove("restrictTable");
@@ -671,7 +628,7 @@ public class Table implements Comparable, TransactionListener {
 	}
 
 	public String toString() {
-		return "(" + this.schema + ") "+this.name;
+		return "(" + this.schema + ") " + this.name;
 	}
 
 	/**
@@ -689,7 +646,7 @@ public class Table implements Comparable, TransactionListener {
 
 		private boolean directModified = false;
 
-		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 				this);
 
 		/**
@@ -727,7 +684,7 @@ public class Table implements Comparable, TransactionListener {
 					RestrictedTableDefinition.this.setDirectModified(true);
 				}
 			};
-			this.pcs.addPropertyChangeListener(listener);
+			this.addPropertyChangeListener(listener);
 			this.aliases.addPropertyChangeListener(listener);
 		}
 
@@ -753,30 +710,6 @@ public class Table implements Comparable, TransactionListener {
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
 			this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		public boolean isDirectModified() {

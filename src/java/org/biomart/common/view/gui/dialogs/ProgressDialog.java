@@ -68,6 +68,7 @@ public class ProgressDialog extends JDialog {
 		super();
 		this.setModal(false);
 		this.setUndecorated(true);
+		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
 		// Create the content pane for the dialog, ie. the bit that will hold
 		// all the various questions and answers.

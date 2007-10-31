@@ -20,7 +20,6 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,6 +50,7 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 
@@ -69,7 +69,8 @@ public class Mart implements TransactionListener {
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
-	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	protected final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
+			this);
 
 	private final BeanMap datasets;
 
@@ -119,6 +120,102 @@ public class Mart implements TransactionListener {
 
 	private Collection datasetCache;
 
+	// All changes to us make us modified.
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Mart.this.setDirectModified(true);
+		}
+	};
+	
+	private final PropertyChangeListener schemaCacheBuilder = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			final Collection newSchs = new HashSet(Mart.this.schemas
+					.values());
+			if (!newSchs.equals(Mart.this.schemaCache)) {
+				Mart.this.setDirectModified(true);
+				// Identify dropped ones.
+				final Collection dropped = new HashSet(
+						Mart.this.schemaCache);
+				dropped.removeAll(newSchs);
+				// Identify new ones.
+				newSchs.removeAll(Mart.this.schemaCache);
+				// Drop dropped ones.
+				for (final Iterator i = dropped.iterator(); i.hasNext();)
+					Mart.this.schemaCache.remove(i.next());
+				// Add added ones.
+				for (final Iterator i = newSchs.iterator(); i.hasNext();) {
+					final Schema sch = (Schema) i.next();
+					Mart.this.schemaCache.add(sch);
+					sch.addPropertyChangeListener("directModified",
+							Mart.this.listener);
+					sch.addPropertyChangeListener("hideMasked",
+							Mart.this.listener);
+				}
+			}
+		}
+	};
+
+	private final PropertyChangeListener datasetCacheBuilder = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			final Collection newDss = new HashSet(Mart.this.datasets
+					.values());
+			if (!newDss.equals(Mart.this.datasetCache)) {
+				Mart.this.setDirectModified(true);
+				// Identify dropped ones.
+				final Collection dropped = new HashSet(
+						Mart.this.datasetCache);
+				dropped.removeAll(newDss);
+				// Identify new ones.
+				newDss.removeAll(Mart.this.datasetCache);
+				// Drop dropped ones.
+				for (final Iterator i = dropped.iterator(); i.hasNext();) {
+					final DataSet deadDS = (DataSet) i.next();
+					try {
+						deadDS.setPartitionTable(false);
+					} catch (final PartitionException pe) {
+						// Ignore.
+					}
+					// Also remove all related mods in rels and tbls.
+					for (final Iterator j = Mart.this.schemas.values()
+							.iterator(); j.hasNext();) {
+						final Schema sch = (Schema) j.next();
+						for (final Iterator k = sch.getTables().values()
+								.iterator(); k.hasNext();)
+							((Table) k.next()).dropMods(deadDS, null);
+						for (final Iterator k = sch.getRelations()
+								.iterator(); k.hasNext();)
+							((Relation) k.next()).dropMods(deadDS, null);
+					}
+					// Remove all partition table applications.
+					PartitionTableApplication pta = deadDS
+							.getPartitionTableApplication();
+					if (pta != null)
+						pta.getPartitionTable().removeFrom(deadDS, null);
+					for (final Iterator j = deadDS.getTables().values()
+							.iterator(); j.hasNext();) {
+						final DataSetTable dsTable = (DataSetTable) j
+								.next();
+						pta = dsTable.getPartitionTableApplication();
+						if (pta != null)
+							pta.getPartitionTable().removeFrom(deadDS,
+									dsTable.getName());
+					}
+					// Remove from cache.
+					Mart.this.datasetCache.remove(deadDS);
+				}
+				// Add added ones.
+				for (final Iterator i = newDss.iterator(); i.hasNext();) {
+					final DataSet ds = (DataSet) i.next();
+					Mart.this.datasetCache.add(ds);
+					ds.addPropertyChangeListener("directModified",
+							Mart.this.listener);
+					ds.addPropertyChangeListener("hideMasked",
+							Mart.this.listener);
+				}
+			}
+		}
+	};
+	
 	/**
 	 * Construct a new, empty, mart.
 	 */
@@ -129,121 +226,20 @@ public class Mart implements TransactionListener {
 
 		Transaction.addTransactionListener(this);
 
-		// All changes to us make us modified.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Mart.this.setDirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("case", listener);
-		this.pcs.addPropertyChangeListener("outputHost", listener);
-		this.pcs.addPropertyChangeListener("outputPort", listener);
-		this.pcs.addPropertyChangeListener("outputSchema", listener);
-		this.pcs.addPropertyChangeListener("overrideHost", listener);
-		this.pcs.addPropertyChangeListener("hideMaskedSchemas", listener);
-		this.pcs.addPropertyChangeListener("hideMaskedDataSets", listener);
+		this.addPropertyChangeListener("case", this.listener);
+		this.addPropertyChangeListener("outputHost", this.listener);
+		this.addPropertyChangeListener("outputPort", this.listener);
+		this.addPropertyChangeListener("outputSchema", this.listener);
+		this.addPropertyChangeListener("overrideHost", this.listener);
+		this.addPropertyChangeListener("hideMaskedSchemas", this.listener);
+		this.addPropertyChangeListener("hideMaskedDataSets", this.listener);
 
 		// Listeners on schema and dataset additions to spot
 		// and handle renames.
 		this.schemaCache = new HashSet();
-		this.schemas.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				final Collection newSchs = new HashSet(Mart.this.schemas
-						.values());
-				if (!newSchs.equals(Mart.this.schemaCache)) {
-					Mart.this.setDirectModified(true);
-					// Identify dropped ones.
-					final Collection dropped = new HashSet(
-							Mart.this.schemaCache);
-					dropped.removeAll(newSchs);
-					// Identify new ones.
-					newSchs.removeAll(Mart.this.schemaCache);
-					// Drop dropped ones.
-					for (final Iterator i = dropped.iterator(); i.hasNext();) {
-						final Schema sch = (Schema) i.next();
-						Mart.this.schemaCache.remove(sch);
-						sch.removePropertyChangeListener("directModified",
-								listener);
-						sch
-								.removePropertyChangeListener("hideMasked",
-										listener);
-					}
-					// Add added ones.
-					for (final Iterator i = newSchs.iterator(); i.hasNext();) {
-						final Schema sch = (Schema) i.next();
-						Mart.this.schemaCache.add(sch);
-						sch.addPropertyChangeListener("directModified",
-								listener);
-						sch.addPropertyChangeListener("hideMasked", listener);
-					}
-				}
-			}
-		});
+		this.schemas.addPropertyChangeListener(this.schemaCacheBuilder);
 		this.datasetCache = new HashSet();
-		this.datasets.addPropertyChangeListener(new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				final Collection newDss = new HashSet(Mart.this.datasets
-						.values());
-				if (!newDss.equals(Mart.this.datasetCache)) {
-					Mart.this.setDirectModified(true);
-					// Identify dropped ones.
-					final Collection dropped = new HashSet(
-							Mart.this.datasetCache);
-					dropped.removeAll(newDss);
-					// Identify new ones.
-					newDss.removeAll(Mart.this.datasetCache);
-					// Drop dropped ones.
-					for (final Iterator i = dropped.iterator(); i.hasNext();) {
-						final DataSet deadDS = (DataSet) i.next();
-						try {
-							deadDS.setPartitionTable(false);
-						} catch (final PartitionException pe) {
-							// Ignore.
-						}
-						// Also remove all related mods in rels and tbls.
-						for (final Iterator j = Mart.this.schemas.values()
-								.iterator(); j.hasNext();) {
-							final Schema sch = (Schema) j.next();
-							for (final Iterator k = sch.getTables().values()
-									.iterator(); k.hasNext();)
-								((Table) k.next()).dropMods(deadDS, null);
-							for (final Iterator k = sch.getRelations()
-									.iterator(); k.hasNext();)
-								((Relation) k.next()).dropMods(deadDS, null);
-						}
-						// Remove all partition table applications.
-						PartitionTableApplication pta = deadDS
-								.getPartitionTableApplication();
-						if (pta != null)
-							pta.getPartitionTable().removeFrom(deadDS, null);
-						for (final Iterator j = deadDS.getTables().values()
-								.iterator(); j.hasNext();) {
-							final DataSetTable dsTable = (DataSetTable) j
-									.next();
-							pta = dsTable.getPartitionTableApplication();
-							if (pta != null)
-								pta.getPartitionTable().removeFrom(deadDS,
-										dsTable.getName());
-						}
-						// Remove from cache.
-						Mart.this.datasetCache.remove(deadDS);
-						deadDS.removePropertyChangeListener("directModified",
-								listener);
-						deadDS.removePropertyChangeListener("hideMasked",
-								listener);
-					}
-					// Add added ones.
-					for (final Iterator i = newDss.iterator(); i.hasNext();) {
-						final DataSet ds = (DataSet) i.next();
-						Mart.this.datasetCache.add(ds);
-						ds
-								.addPropertyChangeListener("directModified",
-										listener);
-						ds.addPropertyChangeListener("hideMasked", listener);
-					}
-				}
-			}
-		});
+		this.datasets.addPropertyChangeListener(this.datasetCacheBuilder);
 	}
 
 	/**
@@ -375,30 +371,6 @@ public class Mart implements TransactionListener {
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
 		this.pcs.addPropertyChangeListener(property, listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(property, listener);
 	}
 
 	/**

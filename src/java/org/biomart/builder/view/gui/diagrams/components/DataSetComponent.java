@@ -38,7 +38,6 @@ import javax.swing.JTextField;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * A diagram component that represents a dataset. It usually only has a label in
@@ -119,13 +118,10 @@ public class DataSetComponent extends BoxShapedComponent {
 
 		// Repaint events.
 		dataset.addPropertyChangeListener("directModified",
-				new WeakPropertyChangeListener(dataset, "directModified",
-						this.repaintListener));
+				this.repaintListener);
 
 		// Recalc events.
-		dataset.addPropertyChangeListener("name",
-				new WeakPropertyChangeListener(dataset, "name",
-						this.recalcListener));
+		dataset.addPropertyChangeListener("name", this.recalcListener);
 	}
 
 	private DataSet getDataSet() {

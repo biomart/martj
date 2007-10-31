@@ -49,7 +49,6 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.FakeTable;
 import org.biomart.builder.view.gui.diagrams.ExplainTransformationDiagram.RealisedTable;
 import org.biomart.common.resources.Resources;
-import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
 
 /**
  * Table components are box-shaped, and represent an individual table. Inside
@@ -64,7 +63,7 @@ import org.biomart.common.utils.Transaction.WeakPropertyChangeListener;
  */
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
-	
+
 	private static final int GRIDBAG_LIMIT = 500;
 
 	/**
@@ -147,17 +146,14 @@ public class TableComponent extends BoxShapedComponent {
 		this.recalculateDiagramComponent();
 
 		// Repaint events.
-		table.addPropertyChangeListener("directModified",
-				new WeakPropertyChangeListener(table, "directModified",
-						this.repaintListener));
+		table.addPropertyChangeListener("directModified", this.repaintListener);
 		// Listen to all relations on this table and repaint when needed.
 		// We don't need to monitor relations themselves as the entire
 		// diagram gets recalculated if they change.
 		for (final Iterator i = table.getRelations().iterator(); i.hasNext();) {
 			final Relation rel = (Relation) i.next();
 			rel.addPropertyChangeListener("directModified",
-					new WeakPropertyChangeListener(rel, "directModified",
-							this.repaintListener));
+					this.repaintListener);
 		}
 		// If this is a dataset table, listen to the partition table
 		// conversion and merge/unrolled signals and repaint on that too.
@@ -165,32 +161,20 @@ public class TableComponent extends BoxShapedComponent {
 			final DataSetTable dsTbl = (DataSetTable) table;
 			if (dsTbl.getType().equals(DataSetTableType.MAIN)) {
 				dsTbl.getDataSet().addPropertyChangeListener(
-						"partitionTableApplication",
-						new WeakPropertyChangeListener(dsTbl.getDataSet(),
-								"partitionTable", this.repaintListener));
-				dsTbl.getDataSet().addPropertyChangeListener(
-						"partitionTable",
-						new WeakPropertyChangeListener(dsTbl.getDataSet(),
-								"partitionTable", this.repaintListener));
+						"partitionTableApplication", this.repaintListener);
+				dsTbl.getDataSet().addPropertyChangeListener("partitionTable",
+						this.repaintListener);
 			} else {
 				dsTbl.addPropertyChangeListener("partitionTableApplication",
-						new WeakPropertyChangeListener(dsTbl, "partitionTable",
-								this.repaintListener));
+						this.repaintListener);
 				dsTbl.getFocusRelation().addPropertyChangeListener(
-						"mergeRelation",
-						new WeakPropertyChangeListener(
-								dsTbl.getFocusRelation(), "mergeRelation",
-								this.repaintListener));
+						"mergeRelation", this.repaintListener);
 				dsTbl.getFocusRelation().addPropertyChangeListener(
-						"unrolledRelation",
-						new WeakPropertyChangeListener(
-								dsTbl.getFocusRelation(), "unrolledRelation",
-								this.repaintListener));
+						"unrolledRelation", this.repaintListener);
 			}
 		}
 
 		// Recalc events.
-		table.addPropertyChangeListener("name", this.recalcListener);
 		table.addPropertyChangeListener("tableRename", this.recalcListener);
 		table.getKeys().addPropertyChangeListener(this.recalcListener);
 		table.getColumns().addPropertyChangeListener(this.recalcListener);
@@ -243,8 +227,7 @@ public class TableComponent extends BoxShapedComponent {
 
 			for (int j = 0; j < key.getColumns().length; j++)
 				key.getColumns()[j].addPropertyChangeListener("columnRename",
-						new WeakPropertyChangeListener(key.getColumns()[j],
-								"columnRename", this.recalcListener));
+						this.recalcListener);
 
 			// Physically add it to the table component layout.
 			this.add(keyComponent, this.constraints);
@@ -305,8 +288,9 @@ public class TableComponent extends BoxShapedComponent {
 				this.columnsListPanel.add(colComponent, this.constraints);
 			}
 		} else
-			this.columnsListPanel.add(new JLabel(Resources.get(
-					"tooManyColsToDisplay", ""+TableComponent.GRIDBAG_LIMIT)));
+			this.columnsListPanel
+					.add(new JLabel(Resources.get("tooManyColsToDisplay", ""
+							+ TableComponent.GRIDBAG_LIMIT)));
 
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));

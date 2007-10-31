@@ -98,6 +98,59 @@ public class SchemaTabSet extends JTabbedPane {
 	// Schema hashcodes change, so we must use a double-list.
 	private final Map schemaToDiagram = new HashMap();
 
+	// Make a listener which knows how to handle masking and
+	// renaming.
+	private final PropertyChangeListener updateListener = new PropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent evt) {
+			final Schema sch = (Schema) evt.getSource();
+			if (evt.getPropertyName().equals("name")) {
+				// Rename in diagram set.
+				SchemaTabSet.this.schemaToDiagram.put(evt.getNewValue(),
+						SchemaTabSet.this.schemaToDiagram.remove(evt
+								.getOldValue()));
+				SchemaTabSet.this.setTitleAt(SchemaTabSet.this
+						.indexOfTab((String) evt.getOldValue()), (String) evt
+						.getNewValue());
+			} else if (evt.getPropertyName().equals("masked")) {
+				// For masks, if unmasking, add a tab, otherwise
+				// remove the tab.
+				final boolean masked = ((Boolean) evt.getNewValue())
+						.booleanValue();
+				if (masked)
+					SchemaTabSet.this.removeSchemaTab(sch.getName(), true);
+				else
+					SchemaTabSet.this.addSchemaTab(sch, false);
+			}
+		}
+	};
+
+	// A listener for updating our tabs.
+	private final PropertyChangeListener tabListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			// Listen to masked schema and rename
+			// schema events on each new schema added
+			// regardless of tab presence.
+			// Mass change. Copy to prevent concurrent mods.
+			final Set oldSchs = new HashSet(SchemaTabSet.this.schemaToDiagram
+					.keySet());
+			for (final Iterator i = SchemaTabSet.this.martTab.getMart()
+					.getSchemas().values().iterator(); i.hasNext();) {
+				final Schema sch = (Schema) i.next();
+				if (!oldSchs.remove(sch.getName())) {
+					// Single-add.
+					if (!sch.isMasked())
+						SchemaTabSet.this.addSchemaTab(sch, true);
+					sch.addPropertyChangeListener("masked",
+							SchemaTabSet.this.updateListener);
+					sch.addPropertyChangeListener("name",
+							SchemaTabSet.this.updateListener);
+				}
+			}
+			for (final Iterator i = oldSchs.iterator(); i.hasNext();)
+				SchemaTabSet.this.removeSchemaTab((String) i.next(), true);
+		}
+	};
+
 	/**
 	 * Creates a new set of tabs to represent the schemas in a mart. The mart is
 	 * obtained by using methods on the mart tab passed in as a parameter. The
@@ -128,32 +181,6 @@ public class SchemaTabSet extends JTabbedPane {
 				this.allSchemasDiagram);
 		this.addTab(Resources.get("multiSchemaOverviewTab"), scroller);
 
-		// Make a listener which knows how to handle masking and
-		// renaming.
-		final PropertyChangeListener renameListener = new PropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent evt) {
-				final Schema sch = (Schema) evt.getSource();
-				if (evt.getPropertyName().equals("name")) {
-					// Rename in diagram set.
-					SchemaTabSet.this.schemaToDiagram.put(evt.getNewValue(),
-							SchemaTabSet.this.schemaToDiagram.remove(evt
-									.getOldValue()));
-					SchemaTabSet.this.setTitleAt(SchemaTabSet.this
-							.indexOfTab((String) evt.getOldValue()),
-							(String) evt.getNewValue());
-				} else if (evt.getPropertyName().equals("masked")) {
-					// For masks, if unmasking, add a tab, otherwise
-					// remove the tab.
-					final boolean masked = ((Boolean) evt.getNewValue())
-							.booleanValue();
-					if (masked)
-						SchemaTabSet.this.removeSchemaTab(sch.getName(), true);
-					else
-						SchemaTabSet.this.addSchemaTab(sch, false);
-				}
-			}
-		};
-
 		// Populate the map to hold the relation between schemas and the
 		// diagrams representing them.
 		for (final Iterator i = martTab.getMart().getSchemas().values()
@@ -162,38 +189,13 @@ public class SchemaTabSet extends JTabbedPane {
 			// Don't add schemas which are initially masked.
 			if (!sch.isMasked())
 				this.addSchemaTab(sch, false);
-			sch.addPropertyChangeListener("masked", renameListener);
-			sch.addPropertyChangeListener("name", renameListener);
+			sch.addPropertyChangeListener("masked", this.updateListener);
+			sch.addPropertyChangeListener("name", this.updateListener);
 		}
 
 		// Listen to add/remove/mass change schema events.
 		martTab.getMart().getSchemas().addPropertyChangeListener(
-				new PropertyChangeListener() {
-					public void propertyChange(final PropertyChangeEvent evt) {
-						// Listen to masked schema and rename
-						// schema events on each new schema added
-						// regardless of tab presence.
-						// Mass change. Copy to prevent concurrent mods.
-						final Set oldSchs = new HashSet(
-								SchemaTabSet.this.schemaToDiagram.keySet());
-						for (final Iterator i = martTab.getMart().getSchemas()
-								.values().iterator(); i.hasNext();) {
-							final Schema sch = (Schema) i.next();
-							if (!oldSchs.remove(sch.getName())) {
-								// Single-add.
-								if (!sch.isMasked())
-									SchemaTabSet.this.addSchemaTab(sch, true);
-								sch.addPropertyChangeListener("masked",
-										renameListener);
-								sch.addPropertyChangeListener("name",
-										renameListener);
-							}
-						}
-						for (final Iterator i = oldSchs.iterator(); i.hasNext();)
-							SchemaTabSet.this.removeSchemaTab(
-									(String) i.next(), true);
-					}
-				});
+				this.tabListener);
 	}
 
 	/**
@@ -350,9 +352,10 @@ public class SchemaTabSet extends JTabbedPane {
 
 		// Remove the tab. Also remove schema mapping from the schema-to-diagram
 		// map.
-		this.removeTabAt(tabIndex);
+		this.remove(tabIndex);
+		
 		this.schemaToDiagram.remove(schemaName);
-
+		
 		if (select)
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.

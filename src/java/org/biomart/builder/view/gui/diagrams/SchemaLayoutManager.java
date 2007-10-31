@@ -61,19 +61,19 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 	private final Map constraints = new HashMap();
 
-	private final List rows;
+	private final List rows = new ArrayList();
 
-	private final List relations;
+	private final List relations = new ArrayList();
 
-	private final List rowHeights;
+	private final List rowHeights = new ArrayList();
 
-	private final List rowWidths;
+	private final List rowWidths = new ArrayList();
 
-	private final List rowSpacings;
+	private final List rowSpacings = new ArrayList();
 
 	private int tableCount;
 
-	private final Collection fixedComps;
+	private final Collection fixedComps = new HashSet();
 
 	/**
 	 * Sets up some defaults for the layout, ready for use.
@@ -81,12 +81,6 @@ public class SchemaLayoutManager implements LayoutManager2 {
 	public SchemaLayoutManager() {
 		this.sizeKnown = true;
 		this.size = new Dimension(0, 0);
-		this.rowHeights = new ArrayList();
-		this.rowSpacings = new ArrayList();
-		this.rowWidths = new ArrayList();
-		this.rows = new ArrayList();
-		this.relations = new ArrayList();
-		this.fixedComps = new HashSet();
 		this.tableCount = 0;
 	}
 

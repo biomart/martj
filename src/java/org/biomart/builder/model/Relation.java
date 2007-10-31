@@ -20,8 +20,6 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,6 +34,7 @@ import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanMap;
 import org.biomart.common.utils.Transaction;
+import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
 
@@ -61,7 +60,7 @@ public class Relation implements Comparable, TransactionListener {
 	private static final long serialVersionUID = 1L;
 
 	private Cardinality cardinality;
-	
+
 	private Cardinality originalCardinality;
 
 	private final Key firstKey;
@@ -98,7 +97,27 @@ public class Relation implements Comparable, TransactionListener {
 	/**
 	 * Subclasses use this field to fire events of their own.
 	 */
-	protected final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+	protected final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
+			this);
+
+	// All changes to us make us modified.
+	private final PropertyChangeListener listener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Relation.this.setDirectModified(true);
+		}
+	};
+
+	// Add listeners to keys such that if the number of columns
+	// no longer match, the relation will be removed.
+	private final PropertyChangeListener keyColListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			if (Relation.this.firstKey.getColumns().length != Relation.this.secondKey
+					.getColumns().length) {
+				Relation.this.firstKey.getRelations().remove(Relation.this);
+				Relation.this.secondKey.getRelations().remove(Relation.this);
+			}
+		}
+	};
 
 	/**
 	 * This constructor tests that both ends of the relation have keys with the
@@ -168,99 +187,21 @@ public class Relation implements Comparable, TransactionListener {
 
 		Transaction.addTransactionListener(this);
 
-		// Add listeners to keys such that if the number of columns
-		// no longer match, the relation will be removed.
-		final PropertyChangeListener keyColListener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				if (firstKey.getColumns().length != secondKey.getColumns().length) {
-					firstKey.getRelations().remove(Relation.this);
-					secondKey.getRelations().remove(Relation.this);
-					firstKey.removePropertyChangeListener("columns", this);
-					secondKey.removePropertyChangeListener("columns", this);
-				}
-			}
-		};
-		this.firstKey.addPropertyChangeListener("columns", keyColListener);
-		this.secondKey.addPropertyChangeListener("columns", keyColListener);
+		this.firstKey.addPropertyChangeListener("columns", this.keyColListener);
+		this.secondKey
+				.addPropertyChangeListener("columns", this.keyColListener);
 
-		// All changes to us make us modified.
-		final PropertyChangeListener listener = new PropertyChangeListener() {
-			public void propertyChange(final PropertyChangeEvent evt) {
-				Relation.this.setDirectModified(true);
-			}
-		};
-		this.pcs.addPropertyChangeListener("cardinality", listener);
-		this.pcs.addPropertyChangeListener("originalCardinality", listener);
-		this.pcs.addPropertyChangeListener("status", listener);
-		this.pcs.addPropertyChangeListener("compoundRelation", listener);
-		this.pcs.addPropertyChangeListener("unrolledRelation", listener);
-		this.pcs.addPropertyChangeListener("forceRelation", listener);
-		this.pcs.addPropertyChangeListener("loopbackRelation", listener);
-		this.pcs.addPropertyChangeListener("maskRelation", listener);
-		this.pcs.addPropertyChangeListener("mergeRelation", listener);
-		this.pcs.addPropertyChangeListener("restrictRelation", listener);
-		this.pcs.addPropertyChangeListener("subclassRelation", listener);
-
-		// Add listeners to tables at both end so that if key
-		// is removed, relation is also removed.
-		if (this.firstKey instanceof PrimaryKey)
-			this.firstKey.getTable().addPropertyChangeListener("primaryKey",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent evt) {
-							if (!firstKey.equals(evt.getNewValue())) {
-								firstKey.getRelations().remove(Relation.this);
-								secondKey.getRelations().remove(Relation.this);
-								firstKey.removePropertyChangeListener(
-										"columns", keyColListener);
-								secondKey.removePropertyChangeListener(
-										"columns", keyColListener);
-							}
-						}
-					});
-		else
-			this.firstKey.getTable().getForeignKeys()
-					.addPropertyChangeListener(new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent evt) {
-							if (!firstKey.getTable().getForeignKeys().contains(
-									firstKey)) {
-								firstKey.getRelations().remove(Relation.this);
-								secondKey.getRelations().remove(Relation.this);
-								firstKey.removePropertyChangeListener(
-										"columns", keyColListener);
-								secondKey.removePropertyChangeListener(
-										"columns", keyColListener);
-							}
-						}
-					});
-		if (this.secondKey instanceof PrimaryKey)
-			this.secondKey.getTable().addPropertyChangeListener("primaryKey",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent evt) {
-							if (!secondKey.equals(evt.getNewValue())) {
-								firstKey.getRelations().remove(Relation.this);
-								secondKey.getRelations().remove(Relation.this);
-								firstKey.removePropertyChangeListener(
-										"columns", keyColListener);
-								secondKey.removePropertyChangeListener(
-										"columns", keyColListener);
-							}
-						}
-					});
-		else
-			this.secondKey.getTable().getForeignKeys()
-					.addPropertyChangeListener(new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent evt) {
-							if (!secondKey.getTable().getForeignKeys()
-									.contains(secondKey)) {
-								firstKey.getRelations().remove(Relation.this);
-								secondKey.getRelations().remove(Relation.this);
-								firstKey.removePropertyChangeListener(
-										"columns", keyColListener);
-								secondKey.removePropertyChangeListener(
-										"columns", keyColListener);
-							}
-						}
-					});
+		this.addPropertyChangeListener("cardinality", this.listener);
+		this.addPropertyChangeListener("originalCardinality", this.listener);
+		this.addPropertyChangeListener("status", this.listener);
+		this.addPropertyChangeListener("compoundRelation", this.listener);
+		this.addPropertyChangeListener("unrolledRelation", this.listener);
+		this.addPropertyChangeListener("forceRelation", this.listener);
+		this.addPropertyChangeListener("loopbackRelation", this.listener);
+		this.addPropertyChangeListener("maskRelation", this.listener);
+		this.addPropertyChangeListener("mergeRelation", this.listener);
+		this.addPropertyChangeListener("restrictRelation", this.listener);
+		this.addPropertyChangeListener("subclassRelation", this.listener);
 	}
 
 	public boolean isDirectModified() {
@@ -301,7 +242,12 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		// Don't really care for now.
+		// Do we still exist?
+		if (!this.firstKey.getRelations().contains(this)
+				|| !this.secondKey.getRelations().contains(this)) {
+			this.firstKey.getRelations().remove(this);
+			this.secondKey.getRelations().remove(this);
+		}
 	}
 
 	/**
@@ -311,9 +257,7 @@ public class Relation implements Comparable, TransactionListener {
 	 *            the listener to add.
 	 */
 	public void addPropertyChangeListener(final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-				listener))
-			this.pcs.addPropertyChangeListener(listener);
+		this.pcs.addPropertyChangeListener(listener);
 	}
 
 	/**
@@ -326,33 +270,7 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public void addPropertyChangeListener(final String property,
 			final PropertyChangeListener listener) {
-		if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-				listener))
 		this.pcs.addPropertyChangeListener(property, listener);
-	}
-	
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(listener);
-	}
-
-	/**
-	 * Removes a property change listener.
-	 * 
-	 * @param property
-	 *            the property to listen to.
-	 * @param listener
-	 *            the listener to remove.
-	 */
-	public void removePropertyChangeListener(final String property,
-			final PropertyChangeListener listener) {
-		this.pcs.removePropertyChangeListener(property, listener);
 	}
 
 	/**
@@ -368,12 +286,12 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	/**
-	 * Returns the original cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. In 1:1 relations this will always return 1, and in M:M
+	 * Returns the original cardinality of the foreign key end of this relation,
+	 * in a 1:M relation. In 1:1 relations this will always return 1, and in M:M
 	 * relations it will always return M.
 	 * 
-	 * @return the original cardinality of the foreign key end of this relation, in 1:M
-	 *         relations only. Otherwise determined by the relation type.
+	 * @return the original cardinality of the foreign key end of this relation,
+	 *         in 1:M relations only. Otherwise determined by the relation type.
 	 */
 	public Cardinality getOriginalCardinality() {
 		return this.originalCardinality;
@@ -580,21 +498,24 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	/**
-	 * Sets the original cardinality of the foreign key end of this relation, in a 1:M
-	 * relation. If used on a 1:1 or M:M relation, then specifying M makes it
-	 * M:M and specifying 1 makes it 1:1.
+	 * Sets the original cardinality of the foreign key end of this relation, in
+	 * a 1:M relation. If used on a 1:1 or M:M relation, then specifying M makes
+	 * it M:M and specifying 1 makes it 1:1.
 	 * 
 	 * @param originalCardinality
 	 *            the originalCardinality.
 	 */
-	public void setOriginalCardinality(Cardinality originalCardinality) {
-		Log.debug("Changing original cardinality of " + this + " to " + originalCardinality);
+	public void setOriginalCardinality(final Cardinality originalCardinality) {
+		Log.debug("Changing original cardinality of " + this + " to "
+				+ originalCardinality);
 		final Cardinality oldValue = this.originalCardinality;
-		if (this.originalCardinality == originalCardinality || this.originalCardinality != null
+		if (this.originalCardinality == originalCardinality
+				|| this.originalCardinality != null
 				&& this.originalCardinality.equals(originalCardinality))
 			return;
 		this.originalCardinality = originalCardinality;
-		this.pcs.firePropertyChange("originalCardinality", oldValue, originalCardinality);
+		this.pcs.firePropertyChange("originalCardinality", oldValue,
+				originalCardinality);
 	}
 
 	/**
@@ -1110,13 +1031,7 @@ public class Relation implements Comparable, TransactionListener {
 						new HashMap());
 			((Map) this.getMods(dataset, null).get("restrictRelation")).put(
 					new Integer(n), def);
-			def.addPropertyChangeListener("directModified",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.pcs.firePropertyChange(
-									"restrictRelation", null, dataset);
-						}
-					});
+			def.addPropertyChangeListener("directModified", this.listener);
 			this.pcs.firePropertyChange("restrictRelation", null, dataset);
 		} else {
 			if (this.getMods(dataset, null).containsKey("restrictRelation"))
@@ -1153,13 +1068,7 @@ public class Relation implements Comparable, TransactionListener {
 						new HashMap());
 			((Map) this.getMods(dataset, tableKey).get("restrictRelation"))
 					.put(new Integer(n), def);
-			def.addPropertyChangeListener("directModified",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.pcs.firePropertyChange(
-									"restrictRelation", null, tableKey);
-						}
-					});
+			def.addPropertyChangeListener("directModified", this.listener);
 			this.pcs.firePropertyChange("restrictRelation", null, tableKey);
 		} else {
 			if (this.getMods(dataset, tableKey).containsKey("restrictRelation"))
@@ -1198,13 +1107,7 @@ public class Relation implements Comparable, TransactionListener {
 
 		if (def != null) {
 			this.getMods(dataset, null).put("unrolledRelation", def);
-			def.addPropertyChangeListener("directModified",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.pcs.firePropertyChange(
-									"unrolledRelation", null, dataset);
-						}
-					});
+			def.addPropertyChangeListener("directModified", this.listener);
 			this.pcs.firePropertyChange("unrolledRelation", null, dataset);
 		} else {
 			this.getMods(dataset, null).remove("unrolledRelation");
@@ -1259,13 +1162,7 @@ public class Relation implements Comparable, TransactionListener {
 
 		if (def != null) {
 			this.getMods(dataset, null).put("compoundRelation", def);
-			def.addPropertyChangeListener("directModified",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.pcs.firePropertyChange(
-									"compoundRelation", null, dataset);
-						}
-					});
+			def.addPropertyChangeListener("directModified", this.listener);
 			this.pcs.firePropertyChange("compoundRelation", null, dataset);
 		} else {
 			this.getMods(dataset, null).remove("compoundRelation");
@@ -1292,13 +1189,7 @@ public class Relation implements Comparable, TransactionListener {
 
 		if (def != null) {
 			this.getMods(dataset, tableKey).put("compoundRelation", def);
-			def.addPropertyChangeListener("directModified",
-					new PropertyChangeListener() {
-						public void propertyChange(final PropertyChangeEvent e) {
-							Relation.this.pcs.firePropertyChange(
-									"compoundRelation", null, tableKey);
-						}
-					});
+			def.addPropertyChangeListener("directModified", this.listener);
 			this.pcs.firePropertyChange("compoundRelation", null, tableKey);
 		} else {
 			this.getMods(dataset, tableKey).remove("compoundRelation");
@@ -1382,9 +1273,9 @@ public class Relation implements Comparable, TransactionListener {
 		 */
 		public static Cardinality get(final String name) {
 			// Return null for null name.
-			if (name==null)
+			if (name == null)
 				return null;
-			
+
 			// Do we already have this one?
 			// If so, then return it.
 			if (Cardinality.singletons.containsKey(name))
@@ -1457,8 +1348,14 @@ public class Relation implements Comparable, TransactionListener {
 
 		private boolean directModified = false;
 
-		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 				this);
+
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				CompoundRelationDefinition.this.setDirectModified(true);
+			}
+		};
 
 		/**
 		 * This constructor gives the compound relation an arity and a flag
@@ -1479,13 +1376,8 @@ public class Relation implements Comparable, TransactionListener {
 
 			Transaction.addTransactionListener(this);
 
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					CompoundRelationDefinition.this.setDirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener("n", listener);
-			this.pcs.addPropertyChangeListener("parallel", listener);
+			this.addPropertyChangeListener("n", this.listener);
+			this.addPropertyChangeListener("parallel", this.listener);
 		}
 
 		/**
@@ -1494,10 +1386,9 @@ public class Relation implements Comparable, TransactionListener {
 		 * @param listener
 		 *            the listener to add.
 		 */
-		public void addPropertyChangeListener(final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-					listener))
-				this.pcs.addPropertyChangeListener(listener);
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
 		}
 
 		/**
@@ -1510,22 +1401,7 @@ public class Relation implements Comparable, TransactionListener {
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-					listener))
 			this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		public boolean isDirectModified() {
@@ -1624,8 +1500,14 @@ public class Relation implements Comparable, TransactionListener {
 
 		private boolean directModified = false;
 
-		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 				this);
+
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				UnrolledRelationDefinition.this.setDirectModified(true);
+			}
+		};
 
 		/**
 		 * This constructor gives the unrolled relation a name column and a flag
@@ -1644,13 +1526,8 @@ public class Relation implements Comparable, TransactionListener {
 
 			Transaction.addTransactionListener(this);
 
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					UnrolledRelationDefinition.this.setDirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener("nameColumn", listener);
-			this.pcs.addPropertyChangeListener("reversed", listener);
+			this.addPropertyChangeListener("nameColumn", this.listener);
+			this.addPropertyChangeListener("reversed", this.listener);
 		}
 
 		/**
@@ -1659,10 +1536,9 @@ public class Relation implements Comparable, TransactionListener {
 		 * @param listener
 		 *            the listener to add.
 		 */
-		public void addPropertyChangeListener(final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-					listener))
-				this.pcs.addPropertyChangeListener(listener);
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
 		}
 
 		/**
@@ -1675,33 +1551,7 @@ public class Relation implements Comparable, TransactionListener {
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-					listener))
 			this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		public boolean isDirectModified() {
@@ -1757,8 +1607,8 @@ public class Relation implements Comparable, TransactionListener {
 		 */
 		public void setNameColumn(final Column nameColumn) {
 			final Column oldValue = this.nameColumn;
-			if (nameColumn == oldValue
-					|| (oldValue != null && oldValue.equals(nameColumn)))
+			if (nameColumn == oldValue || oldValue != null
+					&& oldValue.equals(nameColumn))
 				return;
 			this.nameColumn = nameColumn;
 			this.pcs.firePropertyChange("nameColumn", oldValue, nameColumn);
@@ -1805,8 +1655,14 @@ public class Relation implements Comparable, TransactionListener {
 
 		private boolean directModified = false;
 
-		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 				this);
+
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				RestrictedRelationDefinition.this.setDirectModified(true);
+			}
+		};
 
 		/**
 		 * This constructor gives the restriction an initial expression and a
@@ -1843,14 +1699,9 @@ public class Relation implements Comparable, TransactionListener {
 
 			Transaction.addTransactionListener(this);
 
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					RestrictedRelationDefinition.this.setDirectModified(true);
-				}
-			};
-			this.pcs.addPropertyChangeListener(listener);
-			this.leftAliases.addPropertyChangeListener(listener);
-			this.rightAliases.addPropertyChangeListener(listener);
+			this.addPropertyChangeListener(this.listener);
+			this.leftAliases.addPropertyChangeListener(this.listener);
+			this.rightAliases.addPropertyChangeListener(this.listener);
 		}
 
 		/**
@@ -1859,10 +1710,9 @@ public class Relation implements Comparable, TransactionListener {
 		 * @param listener
 		 *            the listener to add.
 		 */
-		public void addPropertyChangeListener(final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners()).contains(
-					listener))
-				this.pcs.addPropertyChangeListener(listener);
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
 		}
 
 		/**
@@ -1875,33 +1725,7 @@ public class Relation implements Comparable, TransactionListener {
 		 */
 		public void addPropertyChangeListener(final String property,
 				final PropertyChangeListener listener) {
-			if (!Arrays.asList(this.pcs.getPropertyChangeListeners(property)).contains(
-					listener))
 			this.pcs.addPropertyChangeListener(property, listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(listener);
-		}
-
-		/**
-		 * Removes a property change listener.
-		 * 
-		 * @param property
-		 *            the property to listen to.
-		 * @param listener
-		 *            the listener to remove.
-		 */
-		public void removePropertyChangeListener(final String property,
-				final PropertyChangeListener listener) {
-			this.pcs.removePropertyChangeListener(property, listener);
 		}
 
 		public boolean isDirectModified() {
