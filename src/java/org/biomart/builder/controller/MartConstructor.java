@@ -961,7 +961,7 @@ public interface MartConstructor {
 						// Apply restriction.
 						action.getPartitionRestrictions().put(
 								((Column) entry.getKey()).getName(),
-								pcol.getValueForRow(pcol.getPartitionTable()
+								pcol.getRawValueForRow(pcol.getPartitionTable()
 										.currentRow()));
 				}
 				// PrepareRow on subdivision, if any.
@@ -1139,7 +1139,7 @@ public interface MartConstructor {
 							// Apply restriction.
 							action.getPartitionRestrictions().put(
 									((Column) entry.getKey()).getName(),
-									pcol.getValueForRow(ptbl.currentRow()));
+									pcol.getRawValueForRow(ptbl.currentRow()));
 					}
 				}
 			}

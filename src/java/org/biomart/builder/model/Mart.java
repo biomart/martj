@@ -1141,13 +1141,14 @@ public class Mart implements TransactionListener {
 		}
 		ds.synchronise(); // Must do again to update dimensions.
 		// Locate all unimportant relations and mask them.
+		// Force the child rel.
 		for (final Iterator i = mainTable.getIncludedRelations().iterator(); i
 				.hasNext();) {
 			final Relation cand = (Relation) i.next();
 			if (cand.equals(parentRel))
 				continue;
 			else if (cand.equals(childRel))
-				continue;
+				cand.setForceRelation(ds, mainTable.getName(), true);
 			else
 				cand.setMaskRelation(ds, mainTable.getName(), true);
 		}

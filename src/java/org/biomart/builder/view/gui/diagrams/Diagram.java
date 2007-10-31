@@ -44,7 +44,6 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -108,7 +107,8 @@ import org.biomart.common.view.gui.dialogs.ComponentPrinter;
  * @since 0.5
  */
 public abstract class Diagram extends JLayeredPane implements Scrollable,
-		Autoscroll, AdjustmentListener, TransactionListener, PartitionViewSelectionListener {
+		Autoscroll, AdjustmentListener, TransactionListener,
+		PartitionViewSelectionListener {
 
 	/**
 	 * This is inherited by subclasses to indicate they need redrawing when the
@@ -155,7 +155,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public static final int RELATION_LAYER = -1;
 
 	// OK to use maps as it gets cleared out each time, the keys never change.
-	private final Map componentMap = Collections.synchronizedMap(new HashMap());
+	private final Map componentMap = new HashMap();
 
 	private DiagramContext diagramContext;
 
@@ -265,11 +265,11 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	public Diagram(final MartTab martTab) {
 		this(null, martTab);
 	}
-	
+
 	public void partitionViewSelectionChanged() {
 		this.repaintDiagram();
 	}
-	
+
 	/**
 	 * Override this to find out when the hide masked checkbox changes.
 	 * 
@@ -287,7 +287,7 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 *            true to select it.
 	 */
 	public void setHideMasked(final boolean newHideMasked) {
-		if (this.hideMasked.isSelected() ^ newHideMasked)
+		if (this.hideMasked.isSelected() != newHideMasked)
 			this.hideMasked.doClick();
 	}
 
@@ -361,23 +361,20 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 	private void recalculateSubComps() {
 		final Collection comps = Arrays.asList(this.getComponents());
-		synchronized (this.componentMap) {
-			for (final Iterator i = this.componentMap.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				if (!comps.contains(entry.getValue()))
-					i.remove();
-			}
-			final Map subCompMap = new HashMap();
-			for (final Iterator i = this.componentMap.values().iterator(); i
-					.hasNext();) {
-				final Object o = i.next();
-				if (o instanceof DiagramComponent)
-					subCompMap
-							.putAll(((DiagramComponent) o).getSubComponents());
-			}
-			this.componentMap.putAll(subCompMap);
+		for (final Iterator i = this.componentMap.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (!comps.contains(entry.getValue()))
+				i.remove();
 		}
+		final Map subCompMap = new HashMap();
+		for (final Iterator i = this.componentMap.values().iterator(); i
+				.hasNext();) {
+			final Object o = i.next();
+			if (o instanceof DiagramComponent)
+				subCompMap.putAll(((DiagramComponent) o).getSubComponents());
+		}
+		this.componentMap.putAll(subCompMap);
 	}
 
 	/**
@@ -520,18 +517,16 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 				otherCorner.getParent(), otherCorner.getBounds(), this);
 		final Rectangle clipRegion = firstCorner.union(secondCorner);
 		final Collection results = new HashSet();
-		synchronized (this.componentMap) {
-			for (final Iterator i = this.componentMap.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				if (!entry.getKey().getClass().equals(componentClass))
-					continue;
-				final Component candidate = (Component) entry.getValue();
-				final Rectangle candRect = SwingUtilities.convertRectangle(
-						candidate.getParent(), candidate.getBounds(), this);
-				if (clipRegion.contains(candRect))
-					results.add(candidate);
-			}
+		for (final Iterator i = this.componentMap.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			if (!entry.getKey().getClass().equals(componentClass))
+				continue;
+			final Component candidate = (Component) entry.getValue();
+			final Rectangle candRect = SwingUtilities.convertRectangle(
+					candidate.getParent(), candidate.getBounds(), this);
+			if (clipRegion.contains(candRect))
+				results.add(candidate);
 		}
 		return results;
 	}
@@ -543,15 +538,13 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 		// First, work out what tables are in this diagram.
 		final Map sortedTables = new TreeMap();
-		synchronized (this.componentMap) {
-			for (final Iterator i = this.componentMap.keySet().iterator(); i
-					.hasNext();) {
-				final Object o = i.next();
-				if (o instanceof DataSetTable)
-					sortedTables.put(((DataSetTable) o).getModifiedName(), o);
-				else if (o instanceof Table)
-					sortedTables.put(((Table) o).getName(), o);
-			}
+		for (final Iterator i = this.componentMap.keySet().iterator(); i
+				.hasNext();) {
+			final Object o = i.next();
+			if (o instanceof DataSetTable)
+				sortedTables.put(((DataSetTable) o).getModifiedName(), o);
+			else if (o instanceof Table)
+				sortedTables.put(((Table) o).getName(), o);
 		}
 		final Map lookup = new InverseMap(sortedTables);
 
@@ -832,16 +825,14 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 
 		// Remember states.
 		final Map stateMap = new HashMap();
-		synchronized (this.componentMap) {
-			for (final Iterator i = this.componentMap.entrySet().iterator(); i
-					.hasNext();) {
-				final Map.Entry entry = (Map.Entry) i.next();
-				final Object o = entry.getValue();
-				if (o instanceof BoxShapedComponent)
-					stateMap.put(entry.getKey(), ((BoxShapedComponent) o)
-							.getState());
+		for (final Iterator i = this.componentMap.entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			final Object o = entry.getValue();
+			if (o instanceof BoxShapedComponent)
+				stateMap.put(entry.getKey(), ((BoxShapedComponent) o)
+						.getState());
 
-			}
 		}
 
 		// First of all, remove all our existing components.
@@ -893,11 +884,9 @@ public abstract class Diagram extends JLayeredPane implements Scrollable,
 	 * on a table). Use {@link #recalculateDiagram()} instead.
 	 */
 	public void repaintDiagram() {
-		synchronized (this.componentMap) {
-			for (final Iterator i = this.componentMap.values().iterator(); i
-					.hasNext();)
-				((DiagramComponent) i.next()).repaintDiagramComponent();
-		}
+		for (final Iterator i = this.componentMap.values().iterator(); i
+				.hasNext();)
+			((DiagramComponent) i.next()).repaintDiagramComponent();
 		this.repaint();
 	}
 

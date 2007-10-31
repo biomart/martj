@@ -700,6 +700,9 @@ public class DataSet extends Schema {
 	 * @param realTable
 	 *            the real table in a schema from where the transformation to
 	 *            create this dataset table will begin.
+	 * @param skippedMainTables
+	 *            the main tables to skip when building subclasses and
+	 *            dimensions.
 	 * @param sourceRelation
 	 *            the real relation in a schema which was followed in order to
 	 *            discover that this dataset table should be created. For
@@ -711,9 +714,10 @@ public class DataSet extends Schema {
 	 */
 	private void generateDataSetTable(final DataSetTableType type,
 			final DataSetTable parentDSTable, final Table realTable,
-			final List sourceDSCols, final Relation sourceRelation,
-			final Map subclassCount, final int relationIteration,
-			final Collection unusedTables) throws PartitionException {
+			final Collection skippedMainTables, final List sourceDSCols,
+			final Relation sourceRelation, final Map subclassCount,
+			final int relationIteration, final Collection unusedTables)
+			throws PartitionException {
 		Log.debug("Creating dataset table for " + realTable
 				+ " with parent relation " + sourceRelation + " as a " + type);
 		// Create the empty dataset table. Use a unique prefix
@@ -935,7 +939,8 @@ public class DataSet extends Schema {
 				relationCount, subclassCount, !this.isPartitionTable()
 						&& !type.equals(DataSetTableType.DIMENSION),
 				Collections.EMPTY_LIST, Collections.EMPTY_LIST,
-				relationIteration, 0, unusedCols, uniqueBases);
+				relationIteration, 0, unusedCols, uniqueBases,
+				skippedMainTables);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -960,7 +965,7 @@ public class DataSet extends Schema {
 					normalQ, subclassQ, dimensionQ, newSourceDSCols,
 					mergeSourceRelation, newRelationCounts, subclassCount,
 					makeDimensions, nameCols, nameColSuffixes, iteration,
-					i + 1, unusedCols, uniqueBases);
+					i + 1, unusedCols, uniqueBases, skippedMainTables);
 		}
 
 		// Create the primary key on this table, but only if it has one.
@@ -1097,8 +1102,8 @@ public class DataSet extends Schema {
 				final int iteration = ((Integer) triple[2]).intValue();
 				this.generateDataSetTable(DataSetTableType.MAIN_SUBCLASS,
 						dsTable, subclassRelation.getManyKey().getTable(),
-						newSourceDSCols, subclassRelation, subclassCount,
-						iteration, unusedTables);
+						skippedMainTables, newSourceDSCols, subclassRelation,
+						subclassCount, iteration, unusedTables);
 			}
 
 			// Process the dimension relations of this table. For 1:M it's easy.
@@ -1112,17 +1117,18 @@ public class DataSet extends Schema {
 				if (dimensionRelation.isOneToMany())
 					this.generateDataSetTable(DataSetTableType.DIMENSION,
 							dsTable, dimensionRelation.getManyKey().getTable(),
-							newSourceDSCols, dimensionRelation, subclassCount,
-							iteration, unusedTables);
+							skippedMainTables, newSourceDSCols,
+							dimensionRelation, subclassCount, iteration,
+							unusedTables);
 				else
 					this.generateDataSetTable(DataSetTableType.DIMENSION,
 							dsTable, dimensionRelation.getFirstKey().getTable()
 									.equals(realTable) ? dimensionRelation
 									.getSecondKey().getTable()
 									: dimensionRelation.getFirstKey()
-											.getTable(), newSourceDSCols,
-							dimensionRelation, subclassCount, iteration,
-							unusedTables);
+											.getTable(), skippedMainTables,
+							newSourceDSCols, dimensionRelation, subclassCount,
+							iteration, unusedTables);
 			}
 		}
 	}
@@ -1169,6 +1175,9 @@ public class DataSet extends Schema {
 	 *            columns with.
 	 * @param queuePos
 	 *            this position in the queue to insert the next steps at.
+	 * @param skippedMainTables
+	 *            the main tables to skip when processing subclasses and
+	 *            dimensions.
 	 * @throws PartitionException
 	 *             if partitioning is in use and went wrong.
 	 */
@@ -1180,8 +1189,8 @@ public class DataSet extends Schema {
 			final Map subclassCount, final boolean makeDimensions,
 			final List nameCols, final List nameColSuffixes,
 			final int relationIteration, int queuePos,
-			final Collection unusedCols, final Map uniqueBases)
-			throws PartitionException {
+			final Collection unusedCols, final Map uniqueBases,
+			final Collection skippedMainTables) throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
 
 		// Remember the schema.
@@ -1366,6 +1375,14 @@ public class DataSet extends Schema {
 					.isMasked())
 				continue;
 
+			// Don't follow relations back to skipped mains unless
+			// they have been forced.
+			if (skippedMainTables.contains(r.getOtherKey(
+					r.getKeyForTable(mergeTable)).getTable())
+					&& !(r.isForceRelation(this, dsTable.getName())
+					|| r.isSubclassRelation(this)))
+				continue;
+
 			// Don't follow relations to masked schemas.
 			if (r.getOtherKey(r.getKeyForTable(mergeTable)).getTable()
 					.getSchema().isMasked())
@@ -1466,9 +1483,6 @@ public class DataSet extends Schema {
 			// already in the subclass or dimension queues.
 			else
 				followRelation = true;
-			// TODO FollowRelation = target table is not a focus table on
-			// this dataset table or any main or subclass table so far, OR
-			// relation has been forced.
 
 			// If we follow a 1:1, and we are currently
 			// including dimensions, include them from the 1:1 as well.
@@ -1779,14 +1793,30 @@ public class DataSet extends Schema {
 		this.includedSchemas.clear();
 		this.includedTables.clear();
 
+		// Get the real main table.
+		final Table realCentralTable = this.getRealCentralTable();
+
+		// Work out the main tables to skip whilst transforming.
+		final List skippedTables = new ArrayList();
+		skippedTables.add(realCentralTable);
+		for (int i =0; i < skippedTables.size(); i++) {
+			final Table cand = (Table)skippedTables.get(i);
+			if (cand.getPrimaryKey()!=null)
+				for (final Iterator j = cand.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
+					final Relation rel = (Relation)j.next();
+					if (rel.isSubclassRelation(this))
+						skippedTables.add(rel.getManyKey().getTable());
+				}
+		}
+
 		// Make a list of all table names.
 		final Collection unusedTables = new HashSet(this.getTables().values());
 		try {
 			// Generate the main table. It will recursively generate all the
 			// others.
-			this.generateDataSetTable(DataSetTableType.MAIN, null, this
-					.getRealCentralTable(), Collections.EMPTY_LIST, null,
-					new HashMap(), 0, unusedTables);
+			this.generateDataSetTable(DataSetTableType.MAIN, null,
+					realCentralTable, skippedTables, Collections.EMPTY_LIST,
+					null, new HashMap(), 0, unusedTables);
 		} catch (final PartitionException pe) {
 			throw new DataModelException(pe);
 		}

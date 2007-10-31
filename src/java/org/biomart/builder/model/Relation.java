@@ -242,12 +242,7 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	public void transactionEnded(final TransactionEvent evt) {
-		// Do we still exist?
-		if (!this.firstKey.getRelations().contains(this)
-				|| !this.secondKey.getRelations().contains(this)) {
-			this.firstKey.getRelations().remove(this);
-			this.secondKey.getRelations().remove(this);
-		}
+		// Don't care for now.
 	}
 
 	/**

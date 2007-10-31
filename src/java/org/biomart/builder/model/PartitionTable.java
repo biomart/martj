@@ -755,6 +755,20 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 		}
 
 		/**
+		 * Get the value in this column for the specified row.
+		 * 
+		 * @param row
+		 *            the row.
+		 * @return the value.
+		 * @throws PartitionException
+		 *             if there were problems getting the value.
+		 */
+		public String getRawValueForRow(final PartitionRow row)
+				throws PartitionException {
+			return row.getValue(this.getName());
+		}
+
+		/**
 		 * Set the regex to use to match values.
 		 * 
 		 * @param regexMatch

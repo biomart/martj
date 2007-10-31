@@ -20,9 +20,11 @@ package org.biomart.builder.model;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
@@ -74,7 +76,21 @@ public abstract class Key implements Comparable, TransactionListener {
 			Key.this.setDirectModified(true);
 		}
 	};
-	
+
+	private final PropertyChangeListener dropListener = new PropertyChangeListener() {
+		public void propertyChange(final PropertyChangeEvent evt) {
+			if (!Key.this.getTable().getSchema().getTables().containsValue(
+					Key.this.getTable())) {
+				final List relations = new ArrayList(Key.this.getRelations());
+				for (final Iterator i = relations.iterator(); i.hasNext();) {
+					final Relation rel = (Relation) i.next();
+					rel.getFirstKey().getRelations().remove(rel);
+					rel.getSecondKey().getRelations().remove(rel);
+				}
+			}
+		}
+	};
+
 	private final PropertyChangeListener relationCacheBuilder = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
 			Key.this.setDirectModified(true);
@@ -111,6 +127,10 @@ public abstract class Key implements Comparable, TransactionListener {
 
 		// All changes to us make us modified.
 		this.addPropertyChangeListener(this.listener);
+
+		// Check to see if our table goes AWOL.
+		this.getTable().getSchema().getTables().addPropertyChangeListener(
+				this.dropListener);
 
 		// Changes on relations.
 		this.relationCache = new HashSet();
@@ -316,7 +336,7 @@ public abstract class Key implements Comparable, TransactionListener {
 		private final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
 				if (!PrimaryKey.this.equals(PrimaryKey.this.getTable()
-						.getPrimaryKey()))
+						.getPrimaryKey())) 
 					PrimaryKey.this.getRelations().clear();
 			}
 		};
@@ -349,7 +369,7 @@ public abstract class Key implements Comparable, TransactionListener {
 
 		private final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				if (!ForeignKey.this.getTable().getForeignKeys().contains(this))
+				if (!ForeignKey.this.getTable().getForeignKeys().contains(this)) 
 					ForeignKey.this.getRelations().clear();
 			}
 		};
