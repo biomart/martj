@@ -336,7 +336,7 @@ public abstract class Key implements Comparable, TransactionListener {
 		private final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
 				if (!PrimaryKey.this.equals(PrimaryKey.this.getTable()
-						.getPrimaryKey())) 
+						.getPrimaryKey()))
 					PrimaryKey.this.getRelations().clear();
 			}
 		};
@@ -369,7 +369,8 @@ public abstract class Key implements Comparable, TransactionListener {
 
 		private final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
-				if (!ForeignKey.this.getTable().getForeignKeys().contains(this)) 
+				if (!ForeignKey.this.getTable().getForeignKeys().contains(
+						ForeignKey.this))
 					ForeignKey.this.getRelations().clear();
 			}
 		};
