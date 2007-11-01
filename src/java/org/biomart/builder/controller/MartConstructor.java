@@ -54,7 +54,6 @@ import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
-import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -644,19 +643,15 @@ public interface MartConstructor {
 
 			// Create optimiser columns - either count or bool,
 			// or none if not required.
-			// If this is a subclass table, then the optimiser
-			// type is always COUNT_INHERIT or COUNT_INHERIT_TABLE.
-			DataSetOptimiserType oType = dataset.getDataSetOptimiserType();
-			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)
-					&& oType.equals(DataSetOptimiserType.NONE))
-				oType = DataSetOptimiserType.COLUMN_INHERIT;
+			final DataSetOptimiserType oType = dataset
+					.getDataSetOptimiserType();
 			if (!oType.equals(DataSetOptimiserType.NONE)
 					&& !dsTable.isSkipOptimiser())
 				this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
 						dsTable, oType, dsTable.getType().equals(
 								DataSetTableType.MAIN)
 								&& dataset.getDataSetOptimiserType().isTable(),
-						null, bigness);
+						bigness);
 
 			// Optimiser indexing.
 			if (dataset.isIndexOptimiser()
@@ -769,8 +764,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final DataSetOptimiserType oType,
-				final boolean createTable, final String copyDown,
-				final int bigness) throws ListenerException, PartitionException {
+				final boolean createTable, final int bigness)
+				throws ListenerException, PartitionException {
 			final String finalCombinedName = this.getFinalName(schemaPrefix,
 					dsPta, dmPta, dsTable);
 			if (createTable) {
@@ -800,7 +795,7 @@ public interface MartConstructor {
 				index.setColumns(keyCols);
 				this.issueAction(index);
 			}
-			if (!dsTable.getType().equals(DataSetTableType.MAIN)) {
+			if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				// Work out the dimension/subclass parent.
 				final DataSetTable parent = dsTable.getParent();
 				// Set up the column on the dimension parent.
@@ -809,9 +804,8 @@ public interface MartConstructor {
 								.getDataSetOptimiserType());
 				// Columns are dimension table names with '_bool' or
 				// '_count' appended.
-				final String optCol = copyDown != null ? copyDown : this
-						.getOptimiserColumnName(dsPta, dmPta, parent, dsTable,
-								oType);
+				final String optCol = this.getOptimiserColumnName(dsPta, dmPta,
+						parent, dsTable, oType);
 
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
@@ -821,88 +815,46 @@ public interface MartConstructor {
 					keyCols.add(((DataSetColumn) parent.getPrimaryKey()
 							.getColumns()[y]).getPartitionedName());
 
-				// If called with the copyDown option, don't create
-				// on the parent, instead create directly on the target
-				// level and copy the column data down from the parent.
-				if (copyDown != null) {
-					// We can skip this process entirely if we're using
-					// tables as these does not need cols copying.
-					if (dataset.getDataSetOptimiserType().isTable())
-						return;
-					if (!this.uniqueOptCols.containsKey(dsTable))
-						this.uniqueOptCols.put(dsTable, new HashSet());
-					((Collection) this.uniqueOptCols.get(dsTable))
-							.add(copyDown);
-					if (!this.indexOptCols.containsKey(dsTable))
-						this.indexOptCols.put(dsTable, new HashSet());
-					if (!dsTable.isSkipIndexOptimiser())
-						((Collection) this.indexOptCols.get(dsTable))
-								.add(copyDown);
-					// Continue copying.
-					final String childOptTable = this.getOptimiserTableName(
-							schemaPrefix, dsPta, dmPta, dsTable, dataset
-									.getDataSetOptimiserType());
-					// Do the bool/count copy.
-					final CopyOptimiser copy = new CopyOptimiser(
-							this.datasetSchemaName, finalCombinedName);
-					copy.setKeyColumns(keyCols);
-					copy.setOptTableName(childOptTable);
-					copy.setOptColumnName(optCol);
-					copy.setParentOptTableName(optTable);
-					this.issueAction(copy);
-				} else {
-					// Work out what to count.
-					final List nonNullCols = new ArrayList();
-					for (final Iterator y = dsTable.getColumns().values()
-							.iterator(); y.hasNext();) {
-						final DataSetColumn col = (DataSetColumn) y.next();
-						// We won't select masked cols as they won't be in
-						// the final table, and we won't select expression
-						// columns as they can genuinely be null.
-						if (col.existsForPartition(schemaPrefix)
-								&& col.isRequiredFinal()
-								&& !col.isColumnMasked()
-								&& !(col instanceof ExpressionColumn))
-							nonNullCols.add(col.getPartitionedName());
-					}
-					nonNullCols.removeAll(keyCols);
-					// Do the bool/count update.
-					final UpdateOptimiser update = new UpdateOptimiser(
-							this.datasetSchemaName, finalCombinedName);
-					update.setKeyColumns(keyCols);
-					update.setNonNullColumns(nonNullCols);
-					update.setSourceTableName(this.getFinalName(schemaPrefix,
-							dsPta, dmPta, dsTable));
-					update.setOptTableName(optTable);
-					update.setOptColumnName(optCol);
-					update.setCountNotBool(!oType.isBool());
-					update.setNullNotZero(oType.isUseNull());
-					this.issueAction(update);
+				// Work out what to count.
+				final List nonNullCols = new ArrayList();
+				for (final Iterator y = dsTable.getColumns().values()
+						.iterator(); y.hasNext();) {
+					final DataSetColumn col = (DataSetColumn) y.next();
+					// We won't select masked cols as they won't be in
+					// the final table, and we won't select expression
+					// columns as they can genuinely be null.
+					if (col.existsForPartition(schemaPrefix)
+							&& col.isRequiredFinal() && !col.isColumnMasked()
+							&& !(col instanceof ExpressionColumn))
+						nonNullCols.add(col.getPartitionedName());
+				}
+				nonNullCols.removeAll(keyCols);
+				// Do the bool/count update.
+				final UpdateOptimiser update = new UpdateOptimiser(
+						this.datasetSchemaName, finalCombinedName);
+				update.setKeyColumns(keyCols);
+				update.setNonNullColumns(nonNullCols);
+				update.setSourceTableName(this.getFinalName(schemaPrefix,
+						dsPta, dmPta, dsTable));
+				update.setOptTableName(optTable);
+				update.setOptColumnName(optCol);
+				update.setCountNotBool(!oType.isBool());
+				update.setNullNotZero(oType.isUseNull());
+				this.issueAction(update);
 
-					if (!this.uniqueOptCols.containsKey(parent))
-						this.uniqueOptCols.put(parent, new HashSet());
-					((Collection) this.uniqueOptCols.get(parent)).add(optCol);
-					if (!this.indexOptCols.containsKey(parent))
-						this.indexOptCols.put(parent, new HashSet());
-					if (!dsTable.isSkipIndexOptimiser()) {
-						((Collection) this.indexOptCols.get(parent))
-								.add(optCol);
-						// Index the column.
-						final Index index = new Index(this.datasetSchemaName,
-								finalCombinedName);
-						index.setTable(optTable);
-						index.setColumns(Collections.singletonList(optCol));
-						this.issueAction(index);
-					}
-
-					// If subclass table, call this method a second
-					// time to copy the column down.
-					if (dsTable.getType()
-							.equals(DataSetTableType.MAIN_SUBCLASS))
-						this.doOptimiseTable(schemaPrefix, dsPta, dmPta,
-								dataset, dsTable, oType, dataset
-										.getDataSetOptimiserType().isTable(),
-								optCol, bigness);
+				if (!this.uniqueOptCols.containsKey(parent))
+					this.uniqueOptCols.put(parent, new HashSet());
+				((Collection) this.uniqueOptCols.get(parent)).add(optCol);
+				if (!this.indexOptCols.containsKey(parent))
+					this.indexOptCols.put(parent, new HashSet());
+				if (!dsTable.isSkipIndexOptimiser()) {
+					((Collection) this.indexOptCols.get(parent)).add(optCol);
+					// Index the column.
+					final Index index = new Index(this.datasetSchemaName,
+							finalCombinedName);
+					index.setTable(optTable);
+					index.setColumns(Collections.singletonList(optCol));
+					this.issueAction(index);
 				}
 			}
 		}
