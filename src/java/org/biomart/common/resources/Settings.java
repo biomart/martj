@@ -304,7 +304,15 @@ public class Settings {
 	 * @return the value, or <tt>null</tt> if not found.
 	 */
 	public static String getProperty(final String property) {
-		return Settings.properties.getProperty(property);
+		String value = (String)Settings.properties.getProperty(property);
+		if (value==null) {
+			Settings.properties.setProperty(property, "");
+			return null;
+		}
+		else if ("".equals(value))
+			return null;
+		else
+			return value;
 	}
 
 	/**
