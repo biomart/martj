@@ -744,7 +744,8 @@ public class DataSet extends Schema {
 			// if can reuse, and update fullName to match it.
 			if (testName.equals(fullName) || testName.startsWith(fullName))
 				if (testTable.getFocusRelation() == null
-						|| testTable.getFocusRelation().equals(sourceRelation)) {
+						|| (testTable.getFocusRelation().equals(sourceRelation) && testTable
+								.getFocusRelationIteration() == relationIteration)) {
 					fullName = testName;
 					dsTable = testTable;
 					dsTable.setType(type); // Just to make sure.
@@ -757,7 +758,7 @@ public class DataSet extends Schema {
 		// create new table.
 		if (dsTable == null) {
 			dsTable = new DataSetTable(fullName, this, type, realTable,
-					sourceRelation);
+					sourceRelation, relationIteration);
 			this.getTables().put(dsTable.getName(), dsTable);
 			// Listen to this table to modify ourselves.
 			// As it happens, nothing can happen to a dstable yet that
@@ -1260,8 +1261,12 @@ public class DataSet extends Schema {
 			if (ignoreCols.contains(c))
 				continue;
 
-			// Create a wrapped column for this column.
+			// Create a name for this column.
 			String colName = c.getName();
+			String origColName = c.getName();
+			// Expand to full-length by prefixing relation
+			// info, and relation iteration.
+			colName = sourceRelation + "." + relationIteration + "." + colName;
 			// Add partitioning prefixes.
 			for (int k = 0; k < nameCols.size(); k++) {
 				final String pcolName = (String) nameCols.get(k);
@@ -1269,54 +1274,36 @@ public class DataSet extends Schema {
 						+ (String) nameColSuffixes.get(k);
 				colName = pcolName + suffix + Resources.get("columnnameSep")
 						+ colName;
+				origColName = pcolName + suffix
+						+ Resources.get("columnnameSep") + origColName;
 			}
-			// If appears in uniqueBases, add table suffix and retry.
-			if (uniqueBases.containsKey(colName)) {
-				colName = dsTable.getColumns().containsKey(colName) ? colName
-						.endsWith(Resources.get("keySuffix")) ? colName
-						.substring(0, colName.indexOf(Resources
-								.get("keySuffix")))
-						+ "_"
-						+ c.getTable().getName()
-						+ Resources.get("keySuffix") : colName + "_"
-						+ c.getTable().getName() : colName;
-				// If still appears in uniqueBases, add unique number.
-				if (uniqueBases.containsKey(colName)) {
-					final int numberSuffix = ((Integer) uniqueBases
-							.get(colName)).intValue() + 1;
-					uniqueBases.put(colName, new Integer(numberSuffix));
-					// Add number suffix and update uniqueBases.
-					colName = colName.endsWith(Resources.get("keySuffix")) ? colName
-							.substring(0, colName.indexOf(Resources
-									.get("keySuffix")))
-							+ "_" + numberSuffix + Resources.get("keySuffix")
-							: colName + "_" + numberSuffix;
-				} else
-					uniqueBases.put(colName, new Integer(0));
-			} else
-				uniqueBases.put(colName, new Integer(0));
-			// Rename all PK columns to have the '_key' suffix.
-			if (includeMergeTablePK
-					&& Arrays.asList(mergeTablePK.getColumns()).contains(c)
-					&& !colName.endsWith(Resources.get("keySuffix")))
-				colName = colName + Resources.get("keySuffix");
-			final WrappedColumn wc;
+			// Reuse or create new wrapped column?
+			WrappedColumn wc = null;
+			boolean reusedColumn = false;
 			if (dsTable.getColumns().containsKey(colName)) {
 				final DataSetColumn candDSCol = (DataSetColumn) dsTable
 						.getColumns().get(colName);
-				if (candDSCol instanceof WrappedColumn)
+				if (candDSCol instanceof WrappedColumn) {
 					wc = (WrappedColumn) dsTable.getColumns().get(colName);
-				else {
-					wc = new WrappedColumn(c, colName, dsTable);
-					dsTable.getColumns().put(wc.getName(), wc);
-					// Listen to this column to modify ourselves.
-					if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
-						wc.addPropertyChangeListener("columnRename",
-								this.rebuildListener);
+					reusedColumn = true;
 				}
-			} else {
+			}
+			if (!reusedColumn) {
+				// Rename all PK columns to have the '_key' suffix.
+				if (includeMergeTablePK
+						&& Arrays.asList(mergeTablePK.getColumns()).contains(c)
+						&& !colName.endsWith(Resources.get("keySuffix")))
+					origColName = origColName + Resources.get("keySuffix");
+				// Create new column using unique name.
 				wc = new WrappedColumn(c, colName, dsTable);
 				dsTable.getColumns().put(wc.getName(), wc);
+				// Insert column rename using origColName.
+				try {
+					wc.setColumnRename(origColName);
+				} catch (final ValidationException ve) {
+					// Should never happen!
+					throw new BioMartError(ve);
+				}
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					wc.addPropertyChangeListener("columnRename",
@@ -1379,8 +1366,8 @@ public class DataSet extends Schema {
 			// they have been forced.
 			if (skippedMainTables.contains(r.getOtherKey(
 					r.getKeyForTable(mergeTable)).getTable())
-					&& !(r.isForceRelation(this, dsTable.getName())
-					|| r.isSubclassRelation(this)))
+					&& !(r.isForceRelation(this, dsTable.getName()) || r
+							.isSubclassRelation(this)))
 				continue;
 
 			// Don't follow relations to masked schemas.
@@ -1799,11 +1786,12 @@ public class DataSet extends Schema {
 		// Work out the main tables to skip whilst transforming.
 		final List skippedTables = new ArrayList();
 		skippedTables.add(realCentralTable);
-		for (int i =0; i < skippedTables.size(); i++) {
-			final Table cand = (Table)skippedTables.get(i);
-			if (cand.getPrimaryKey()!=null)
-				for (final Iterator j = cand.getPrimaryKey().getRelations().iterator(); j.hasNext(); ) {
-					final Relation rel = (Relation)j.next();
+		for (int i = 0; i < skippedTables.size(); i++) {
+			final Table cand = (Table) skippedTables.get(i);
+			if (cand.getPrimaryKey() != null)
+				for (final Iterator j = cand.getPrimaryKey().getRelations()
+						.iterator(); j.hasNext();) {
+					final Relation rel = (Relation) j.next();
 					if (rel.isSubclassRelation(this))
 						skippedTables.add(rel.getManyKey().getTable());
 				}
@@ -2781,6 +2769,8 @@ public class DataSet extends Schema {
 		private final Table focusTable;
 
 		private final Relation focusRelation;
+		
+		private final int focusRelationIteration;
 
 		private final Collection includedRelations;
 
@@ -2810,10 +2800,12 @@ public class DataSet extends Schema {
 		 * @param focusRelation
 		 *            the schema relation used to reach the focus table. Can be
 		 *            <tt>null</tt>.
+		 * @param focusRelationIteration
+		 *            the schema relation iteration.
 		 */
 		public DataSetTable(final String name, final DataSet ds,
 				final DataSetTableType type, final Table focusTable,
-				final Relation focusRelation) {
+				final Relation focusRelation, final int focusRelationIteration) {
 			// Super constructor first, using an alias to prevent duplicates.
 			super(ds, name);
 
@@ -2823,6 +2815,7 @@ public class DataSet extends Schema {
 			this.type = type;
 			this.focusTable = focusTable;
 			this.focusRelation = focusRelation;
+			this.focusRelationIteration = focusRelationIteration;
 			this.transformationUnits = new ArrayList();
 			this.includedRelations = new LinkedHashSet();
 			this.includedTables = new LinkedHashSet();
@@ -3050,6 +3043,15 @@ public class DataSet extends Schema {
 		 */
 		public Relation getFocusRelation() {
 			return this.focusRelation;
+		}
+
+		/**
+		 * Obtain the focus relation iteration for this dataset table. 
+		 * 
+		 * @return the focus relation iteration.
+		 */
+		public int getFocusRelationIteration() {
+			return this.focusRelationIteration;
 		}
 
 		/**

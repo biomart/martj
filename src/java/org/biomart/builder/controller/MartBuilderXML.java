@@ -21,8 +21,6 @@ package org.biomart.builder.controller;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -39,11 +37,6 @@ import java.util.Stack;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.model.Column;
@@ -117,10 +110,6 @@ public class MartBuilderXML extends DefaultHandler {
 	private static final String DTD_URL_START = "http://www.biomart.org/DTD/MartBuilder-";
 
 	private static final String DTD_URL_END = ".dtd";
-
-	private static final String DTD_REPORT_START = "MartBuilder-";
-
-	private static final String DTD_REPORT_END = "-report.xslt";
 
 	private static String currentReadingDTDVersion;
 
@@ -198,56 +187,6 @@ public class MartBuilderXML extends DefaultHandler {
 			fw.close();
 		}
 		Log.info("Done saving XML as " + file.getPath());
-	}
-
-	/**
-	 * The save method takes a {@link Mart} object and first creates an internal
-	 * XML document describing it, then uses XSLT to transform that into a
-	 * human-readable report.
-	 * 
-	 * @param mart
-	 *            {@link Mart} object containing the data for the report.
-	 * @return the report in a single String.
-	 * @throws IOException
-	 *             if there was any problem writing the file.
-	 * @throws DataModelException
-	 *             if it encounters an object not writable under the current
-	 *             DTD.
-	 * @throws TransformerException
-	 *             if the transformation into a report failed.
-	 * @throws PartitionException
-	 *             if any partition stuff broke.
-	 */
-	public static String saveReport(final Mart mart) throws IOException,
-			DataModelException, TransformerException, PartitionException {
-		Log.info("Starting report");
-		// Open the file.
-		final StringWriter sw = new StringWriter();
-		try {
-			// Write it out.
-			(new MartBuilderXML()).writeXML(mart, sw, false);
-		} catch (final IOException e) {
-			throw e;
-		} catch (final DataModelException e) {
-			throw e;
-		} finally {
-			// Close the output stream.
-			sw.close();
-		}
-		final String xml = sw.getBuffer().toString();
-		// Convert to string and return.
-		final StringWriter rsw = new StringWriter();
-		final TransformerFactory tFactory = TransformerFactory.newInstance();
-		final Transformer transformer = tFactory
-				.newTransformer(new StreamSource(Resources
-						.getResourceAsStream(MartBuilderXML.DTD_REPORT_START
-								+ MartBuilderXML.CURRENT_DTD_VERSION
-								+ MartBuilderXML.DTD_REPORT_END)));
-		transformer.transform(new StreamSource(new StringReader(xml)),
-				new StreamResult(rsw));
-		rsw.close();
-		Log.info("Report ended");
-		return rsw.getBuffer().toString();
 	}
 
 	private Mart constructedMart;
@@ -1550,7 +1489,7 @@ public class MartBuilderXML extends DefaultHandler {
 				// with no warning. We put a dummy DataSetTable on
 				// the stack.
 				element = new DataSetTable(name, (DataSet) schema,
-						DataSetTableType.MAIN, null, null);
+						DataSetTableType.MAIN, null, null, 1);
 			else if (schema instanceof Schema)
 				try {
 					final Table table = new Table(schema, name);

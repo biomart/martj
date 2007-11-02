@@ -110,8 +110,6 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem saveDDL;
 
-		private JMenuItem martReport;
-
 		private JMenuItem saveMart;
 
 		private JMenuItem saveMartAs;
@@ -221,12 +219,6 @@ public class MartBuilder extends BioMartGUI {
 			this.saveDDL
 					.setMnemonic(Resources.get("saveDDLMnemonic").charAt(0));
 			this.saveDDL.addActionListener(this);
-
-			// Create report for current mart.
-			this.martReport = new JMenuItem(Resources.get("martReportTitle"));
-			this.martReport.setMnemonic(Resources.get("martReportMnemonic")
-					.charAt(0));
-			this.martReport.addActionListener(this);
 
 			// Monitor remote host.
 			this.monitorHost = new JMenuItem(Resources.get("monitorHostTitle"));
@@ -504,7 +496,6 @@ public class MartBuilder extends BioMartGUI {
 			martMenu.add(this.closeMart);
 			martMenu.addSeparator();
 			martMenu.add(this.saveDDL);
-			martMenu.add(this.martReport);
 			martMenu.addSeparator();
 			martMenu.add(this.nameCaseSubmenu);
 			martMenu.addSeparator();
@@ -570,11 +561,6 @@ public class MartBuilder extends BioMartGUI {
 					final boolean hasMart = MartBuilderMenuBar.this
 							.getMartBuilder().martTabSet.getSelectedMartTab() != null;
 					MartBuilderMenuBar.this.saveDDL
-							.setEnabled(hasMart
-									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
-											.getSelectedMartTab().getMart()
-											.getDataSets().size() > 0);
-					MartBuilderMenuBar.this.martReport
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
@@ -884,8 +870,6 @@ public class MartBuilder extends BioMartGUI {
 				this.getMartBuilder().martTabSet.requestCloseMart();
 			else if (e.getSource() == this.saveDDL)
 				this.getMartBuilder().martTabSet.requestCreateDDL();
-			else if (e.getSource() == this.martReport)
-				this.getMartBuilder().martTabSet.requestReport();
 			else if (e.getSource() == this.monitorHost)
 				this.getMartBuilder().martTabSet.requestMonitorRemoteHost();
 			else if (e.getSource() == this.nameCaseLower)

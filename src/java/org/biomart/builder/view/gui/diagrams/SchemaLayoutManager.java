@@ -363,6 +363,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 				// Obtain first key and work out position relative to
 				// diagram.
 				int firstRowNum = 0;
+				if (this.rowHeights.size()==0)
+					continue;
 				int firstRowBottom = ((Integer) this.rowHeights
 						.get(firstRowNum)).intValue();
 				final KeyComponent firstKey = comp.getFirstKeyComponent();
@@ -383,6 +385,8 @@ public class SchemaLayoutManager implements LayoutManager2 {
 
 				// Do the same for the second key.
 				int secondRowNum = 0;
+				if (this.rowHeights.size()==0)
+					continue;
 				int secondRowBottom = ((Integer) this.rowHeights
 						.get(secondRowNum)).intValue();
 				final KeyComponent secondKey = comp.getSecondKeyComponent();

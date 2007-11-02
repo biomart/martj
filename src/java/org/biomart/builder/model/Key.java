@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.utils.BeanCollection;
@@ -286,7 +287,10 @@ public abstract class Key implements Comparable, TransactionListener {
 		for (int i = 0; i < this.columns.length; i++) {
 			if (i > 0)
 				sb.append(',');
-			sb.append(this.columns[i].getName());
+			sb
+					.append(this.columns[i] instanceof DataSetColumn ? ((DataSetColumn) this.columns[i])
+							.getModifiedName()
+							: this.columns[i].getName());
 		}
 		sb.append(']');
 		return sb.toString();
@@ -336,8 +340,16 @@ public abstract class Key implements Comparable, TransactionListener {
 		private final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
 				if (!PrimaryKey.this.equals(PrimaryKey.this.getTable()
-						.getPrimaryKey()))
-					PrimaryKey.this.getRelations().clear();
+						.getPrimaryKey())) {
+					final List deadRels = new ArrayList(PrimaryKey.this
+							.getRelations());
+					for (final Iterator i = deadRels.iterator(); i.hasNext();) {
+						final Relation rel = (Relation) i.next();
+						PrimaryKey.this.getRelations().remove(rel);
+						rel.getOtherKey(PrimaryKey.this).getRelations().remove(
+								rel);
+					}
+				}
 			}
 		};
 
@@ -370,8 +382,16 @@ public abstract class Key implements Comparable, TransactionListener {
 		private final PropertyChangeListener listener = new PropertyChangeListener() {
 			public void propertyChange(final PropertyChangeEvent evt) {
 				if (!ForeignKey.this.getTable().getForeignKeys().contains(
-						ForeignKey.this))
-					ForeignKey.this.getRelations().clear();
+						ForeignKey.this)) {
+					final List deadRels = new ArrayList(ForeignKey.this
+							.getRelations());
+					for (final Iterator i = deadRels.iterator(); i.hasNext();) {
+						final Relation rel = (Relation) i.next();
+						ForeignKey.this.getRelations().remove(rel);
+						rel.getOtherKey(ForeignKey.this).getRelations().remove(
+								rel);
+					}
+				}
 			}
 		};
 

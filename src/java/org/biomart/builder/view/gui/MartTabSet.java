@@ -86,7 +86,6 @@ import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.SwingWorker;
 import org.biomart.common.view.gui.dialogs.ProgressDialog;
 import org.biomart.common.view.gui.dialogs.StackTrace;
-import org.biomart.common.view.gui.dialogs.ViewTextDialog;
 
 /**
  * Displays a set of tabs, one per mart currently loaded. Each tab keeps track
@@ -590,35 +589,6 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 					.getAllSchemaPrefixes() : Collections
 					.singleton(currentMartTab.getPartitionViewSelection()),
 					generateOption)).setVisible(true);
-	}
-
-	/**
-	 * On a request to create report for the current mart, create the report and
-	 * show it in a text editor.
-	 */
-	public void requestReport() {
-
-		// If nothing is selected, forget it, they can't close!
-		if (this.getSelectedMartTab() == null)
-			return;
-
-		// Work out the current selected mart.
-		final MartTab currentMartTab = this.getSelectedMartTab();
-
-		new LongProcess() {
-			public void run() throws Exception {
-				// Write the report.
-				final String report = MartBuilderXML.saveReport(currentMartTab
-						.getMart());
-				// Open the DDL creation dialog and let it do it's stuff.
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						ViewTextDialog.displayText(Resources
-								.get("martReportWindowTitle"), report);
-					}
-				});
-			}
-		}.start();
 	}
 
 	/**
