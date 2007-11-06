@@ -353,9 +353,9 @@ public class SchemaTabSet extends JTabbedPane {
 		// Remove the tab. Also remove schema mapping from the schema-to-diagram
 		// map.
 		this.remove(tabIndex);
-		
+
 		this.schemaToDiagram.remove(schemaName);
-		
+
 		if (select)
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.
@@ -1015,11 +1015,15 @@ public class SchemaTabSet extends JTabbedPane {
 							StackTrace.showStackTrace(t);
 						}
 					});
+				} finally {
+					Transaction.end();
+					// This is to ensure that any modified flags get cleared.
+					((SchemaDiagram) SchemaTabSet.this.schemaToDiagram
+							.get(schema.getName())).repaintDiagram();
+					// Close the progress dialog.
+					progressMonitor.setVisible(false);
+					progressMonitor.dispose();
 				}
-				Transaction.end();
-				// This is to ensure that any modified flags get cleared.
-				((SchemaDiagram) SchemaTabSet.this.schemaToDiagram.get(schema
-						.getName())).repaintDiagram();
 				return null;
 			}
 		};
@@ -1037,16 +1041,13 @@ public class SchemaTabSet extends JTabbedPane {
 					public void run() {
 						final double progress = schema.getProgress();
 						// Did the job complete yet?
-						if (progress < 100.0)
+						if (progress < 100.0 && progressMonitor.isVisible())
 							// If not, update the progress report.
 							progressMonitor.setProgress((int) progress);
 						else {
 							// If it completed, close the task and tidy up.
 							// Stop the timer.
 							timer.stop();
-							// Close the progress dialog.
-							progressMonitor.setVisible(false);
-							progressMonitor.dispose();
 						}
 					}
 				});
