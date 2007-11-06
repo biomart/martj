@@ -648,22 +648,6 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
-	 * Turn keyguessing off for a schema.
-	 * 
-	 * @param schema
-	 *            the schema to turn keyguessing off for.
-	 */
-	public void requestDisableKeyGuessing(final Schema schema) {
-		new LongProcess() {
-			public void run() {
-				Transaction.start(true);
-				schema.setKeyGuessing(false);
-				Transaction.end();
-			}
-		}.start();
-	}
-
-	/**
 	 * Asks that a table be (un)ignored.
 	 * 
 	 * @param table
@@ -734,15 +718,73 @@ public class SchemaTabSet extends JTabbedPane {
 	 * 
 	 * @param schema
 	 *            the schema to turn keyguessing on for.
+	 * @param keyGuessing
+	 *            <tt>true</tt> to turn it on, not for off.
 	 */
-	public void requestEnableKeyGuessing(final Schema schema) {
-		new LongProcess() {
-			public void run() {
+	public void requestKeyGuessing(final Schema schema,
+			final boolean keyGuessing) {
+		// Create a progress monitor.
+		final ProgressDialog progressMonitor = new ProgressDialog(this, 0, 100,
+				false);
+		progressMonitor.setVisible(true);
+
+		// Start the construction in a thread. It does not need to be
+		// Swing-thread-safe because it will never access the GUI. All
+		// GUI interaction is done through the Timer below.
+		final SwingWorker worker = new SwingWorker() {
+			public Object construct() {
 				Transaction.start(true);
-				schema.setKeyGuessing(true);
+				try {
+					schema.setKeyGuessing(keyGuessing);
+				} catch (final Throwable t) {
+					SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							StackTrace.showStackTrace(t);
+						}
+					});
+				}
 				Transaction.end();
+				return null;
 			}
-		}.start();
+
+			public void finished() {
+				// Close the progress dialog.
+				progressMonitor.setVisible(false);
+				progressMonitor.dispose();
+				// This is to ensure that any modified flags get cleared.
+				((SchemaDiagram) SchemaTabSet.this.schemaToDiagram.get(schema
+						.getName())).repaintDiagram();
+			}
+		};
+
+		// Create a timer thread that will update the progress dialog.
+		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
+		// equals 1 second.)
+		final Timer timer = new Timer(300, null);
+		timer.setInitialDelay(0); // Start immediately upon request.
+		timer.setCoalesce(true); // Coalesce delayed events.
+		timer.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent e) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						final double progress = schema.getProgress();
+						// Did the job complete yet?
+						if (progress < 100.0 && progressMonitor.isVisible())
+							// If not, update the progress report.
+							progressMonitor.setProgress((int) progress);
+						else {
+							// If it completed, close the task and tidy up.
+							// Stop the timer.
+							timer.stop();
+						}
+					}
+				});
+			}
+		});
+
+		// Start the timer.
+		timer.start();
+		worker.start();
 	}
 
 	/**
@@ -934,16 +976,19 @@ public class SchemaTabSet extends JTabbedPane {
 						});
 					}
 				Transaction.end();
-				// This is to ensure that any modified flags get cleared.
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						for (final Iterator i = SchemaTabSet.this.schemaToDiagram
-								.values().iterator(); i.hasNext();)
-							((SchemaDiagram) i.next()).repaintDiagram();
-					}
-				});
 				return null;
 			}
+
+			public void finished() {
+				// Close the progress dialog.
+				progressMonitor.setVisible(false);
+				progressMonitor.dispose();
+				// This is to ensure that any modified flags get cleared.
+				for (final Iterator i = SchemaTabSet.this.schemaToDiagram
+						.values().iterator(); i.hasNext();)
+					((SchemaDiagram) i.next()).repaintDiagram();
+			}
+
 		};
 		worker.start();
 
@@ -965,16 +1010,13 @@ public class SchemaTabSet extends JTabbedPane {
 												.getProgress()
 												* scale);
 						// Did the job complete yet?
-						if (progress < 100.0)
+						if (progress < 100.0 && progressMonitor.isVisible())
 							// If not, update the progress report.
 							progressMonitor.setProgress((int) progress);
 						else {
 							// If it completed, close the task and tidy up.
 							// Stop the timer.
 							timer.stop();
-							// Close the progress dialog.
-							progressMonitor.setVisible(false);
-							progressMonitor.dispose();
 						}
 					}
 				});
@@ -1015,25 +1057,26 @@ public class SchemaTabSet extends JTabbedPane {
 							StackTrace.showStackTrace(t);
 						}
 					});
-				} finally {
-					Transaction.end();
-					// This is to ensure that any modified flags get cleared.
-					((SchemaDiagram) SchemaTabSet.this.schemaToDiagram
-							.get(schema.getName())).repaintDiagram();
-					// Close the progress dialog.
-					progressMonitor.setVisible(false);
-					progressMonitor.dispose();
 				}
+				Transaction.end();
 				return null;
 			}
+
+			public void finished() {
+				// Close the progress dialog.
+				progressMonitor.setVisible(false);
+				progressMonitor.dispose();
+				// This is to ensure that any modified flags get cleared.
+				((SchemaDiagram) SchemaTabSet.this.schemaToDiagram.get(schema
+						.getName())).repaintDiagram();
+			}
 		};
-		worker.start();
 
 		// Create a timer thread that will update the progress dialog.
 		// We use the Swing Timer to make it Swing-thread-safe. (1000 millis
 		// equals 1 second.)
 		final Timer timer = new Timer(300, null);
-		timer.setInitialDelay(300); // Start immediately upon request.
+		timer.setInitialDelay(0); // Start immediately upon request.
 		timer.setCoalesce(true); // Coalesce delayed events.
 		timer.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent e) {
@@ -1056,6 +1099,7 @@ public class SchemaTabSet extends JTabbedPane {
 
 		// Start the timer.
 		timer.start();
+		worker.start();
 	}
 
 	/**

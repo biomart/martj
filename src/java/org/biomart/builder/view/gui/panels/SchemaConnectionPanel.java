@@ -650,8 +650,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			// Construct a JDBCSchema based on them.
 			final JDBCSchema schema = new JDBCSchema(this.mart,
 					driverClassName, url, database, schemaName, username,
-					password, name, false, regex, expression);
-			schema.setKeyGuessing(this.keyguessing.isSelected());
+					password, name, this.keyguessing.isSelected(), regex, 
+					expression);
 
 			// Return that schema.
 			return schema;

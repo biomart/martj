@@ -747,9 +747,11 @@ public class MartBuilder extends BioMartGUI {
 					MartBuilderMenuBar.this.removeSchema
 							.setEnabled(schema != null);
 					MartBuilderMenuBar.this.schemaAcceptAll
-							.setEnabled(schema != null && schema.isVisibleModified());
+							.setEnabled(schema != null
+									&& schema.isVisibleModified());
 					MartBuilderMenuBar.this.schemaRejectAll
-							.setEnabled(schema != null && schema.isVisibleModified());
+							.setEnabled(schema != null
+									&& schema.isVisibleModified());
 				}
 			});
 			datasetMenu.addMenuListener(new MenuListener() {
@@ -898,13 +900,9 @@ public class MartBuilder extends BioMartGUI {
 				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
 						.getSelectedSchema();
-				if (this.keyguessingSchema.isSelected())
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getSchemaTabSet().requestEnableKeyGuessing(schema);
-				else
-					this.getMartBuilder().martTabSet.getSelectedMartTab()
-							.getSchemaTabSet()
-							.requestDisableKeyGuessing(schema);
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getSchemaTabSet().requestKeyGuessing(schema,
+								this.keyguessingSchema.isSelected());
 			} else if (e.getSource() == this.updateSchema) {
 				final Schema schema = this.getMartBuilder().martTabSet
 						.getSelectedMartTab().getSchemaTabSet()
@@ -1028,5 +1026,5 @@ public class MartBuilder extends BioMartGUI {
 			else
 				super.actionPerformed(e);
 		}
-	}	
+	}
 }
