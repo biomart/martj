@@ -258,13 +258,34 @@ public class DataSet extends Schema {
 		final Set usedNames = new HashSet();
 		for (final Iterator i = this.getMart().getDataSets().values()
 				.iterator(); i.hasNext();)
-			usedNames.add(((Schema) i.next()).getName());
+			usedNames.add(((DataSet) i.next()).getName());
 		// Make new name unique.
 		final String baseName = name;
 		for (int i = 1; usedNames.contains(name); name = baseName + "_" + i++)
 			;
 		this.name = name;
 		this.pcs.firePropertyChange("name", oldValue, name);
+	}
+
+	/**
+	 * Sets a new original name for this dataset. It checks with the mart first,
+	 * and renames it if is not unique.
+	 * 
+	 * @param name
+	 *            the new original name for the dataset.
+	 */
+	protected void setOriginalName(String name) {
+		Log.debug("Renaming original dataset " + this + " to " + name);
+		// Work out all used names.
+		final Set usedNames = new HashSet();
+		for (final Iterator i = this.getMart().getDataSets().values().iterator(); i
+				.hasNext();)
+			usedNames.add(((DataSet) i.next()).getOriginalName());
+		// Make new name unique.
+		final String baseName = name;
+		for (int i = 1; usedNames.contains(name); name = baseName + "_" + i++)
+			;
+		this.originalName = name;
 	}
 
 	/**
@@ -364,7 +385,7 @@ public class DataSet extends Schema {
 						for (final Iterator i = DataSet.this.getMainTable()
 								.getColumns().values().iterator(); i.hasNext();) {
 							final DataSetColumn col = (DataSetColumn) i.next();
-							this.allCols.add(col.getName());
+							this.allCols.add(col.getModifiedName());
 						}
 					return this.allCols;
 				}
@@ -560,7 +581,7 @@ public class DataSet extends Schema {
 						final Map.Entry entry = (Map.Entry) j.next();
 						final DataSetColumn dsCol = (DataSetColumn) entry
 								.getValue();
-						if (trueSelectedCols.contains(dsCol.getName())) {
+						if (trueSelectedCols.contains(dsCol.getModifiedName())) {
 							final Column col = (Column) entry.getKey();
 							if (nextCol > 1)
 								sqlSel.append(',');
@@ -568,7 +589,7 @@ public class DataSet extends Schema {
 							sqlSel.append('.');
 							sqlSel.append(col.getName());
 							positionMap.put(new Integer(nextCol++), dsCol
-									.getName());
+									.getModifiedName());
 						}
 					}
 				} else

@@ -1111,7 +1111,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 					if (realSourceCol == null)
 						throw new BioMartError(); // Should never happen.
 					ds.asPartitionTable().setSelectedColumnNames(
-							Collections.singletonList(realSourceCol.getName()));
+							Collections.singletonList(realSourceCol.getModifiedName()));
 				} catch (final Exception e) {
 					StackTrace.showStackTrace(e);
 					return;
@@ -1231,7 +1231,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 					if (realSourceCol == null)
 						throw new BioMartError(); // Should never happen.
 					ds.asPartitionTable().setSelectedColumnNames(
-							Collections.singletonList(realSourceCol.getName()));
+							Collections.singletonList(realSourceCol.getModifiedName()));
 				} catch (final Exception e) {
 					StackTrace.showStackTrace(e);
 					return;

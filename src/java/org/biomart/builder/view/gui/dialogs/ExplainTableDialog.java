@@ -361,8 +361,8 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 				// and performance issues. Refuse to do the display and
 				// instead put up a helpful message. Limit should be
 				// configurable from a properties file.
-				final Collection units = ExplainTableDialog.this.dsTable
-						.getTransformationUnits();
+				final Collection units = new ArrayList(ExplainTableDialog.this.dsTable
+						.getTransformationUnits()); // To prevent concmod.
 				if (units.size() > ExplainTableDialog.MAX_UNITS)
 					ExplainTableDialog.this.transformation.add(new JLabel(
 							Resources.get("tooManyUnits", ""

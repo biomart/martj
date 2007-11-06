@@ -88,7 +88,10 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 */
 	protected String name;
 
-	private final String originalName;
+	/**
+	 * Subclasses can reference this to alter it - e.g. DataSet does this.
+	 */
+	protected String originalName;
 
 	private boolean keyGuessing;
 
@@ -190,7 +193,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		Log.debug("Creating schema " + name);
 		this.mart = mart;
 		this.setName(name);
-		this.originalName = this.getName();
+		this.setOriginalName(name);
 		this.setKeyGuessing(keyGuessing);
 		this.setDataLinkSchema(dataLinkSchema);
 		this.setDataLinkDatabase(dataLinkDatabase);
@@ -489,6 +492,27 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			;
 		this.name = name;
 		this.pcs.firePropertyChange("name", oldValue, name);
+	}
+
+	/**
+	 * Sets a new original name for this schema. It checks with the mart first,
+	 * and renames it if is not unique.
+	 * 
+	 * @param name
+	 *            the new original name for the schema.
+	 */
+	protected void setOriginalName(String name) {
+		Log.debug("Renaming original schema " + this + " to " + name);
+		// Work out all used names.
+		final Set usedNames = new HashSet();
+		for (final Iterator i = this.mart.getSchemas().values().iterator(); i
+				.hasNext();)
+			usedNames.add(((Schema) i.next()).getOriginalName());
+		// Make new name unique.
+		final String baseName = name;
+		for (int i = 1; usedNames.contains(name); name = baseName + "_" + i++)
+			;
+		this.originalName = name;
 	}
 
 	/**

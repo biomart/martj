@@ -1174,6 +1174,8 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 				final String dimension) {
 			final PartitionTableApplication pa = new PartitionTableApplication(
 					pt);
+			if (pt.getSelectedColumnNames().size()<1)
+				return pa;
 			final String ptCol = (String) pt.getSelectedColumnNames()
 					.iterator().next();
 			pa.getPartitionAppliedRows().add(
