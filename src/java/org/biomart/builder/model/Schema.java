@@ -1189,6 +1189,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			history.setProperty("partitionNameExpression", this
 					.getPartitionNameExpression() == null ? "" : this
 					.getPartitionNameExpression());
+			history.setProperty("keyguessing", "" + this.isKeyGuessing());
 			Settings.saveHistoryProperties(JDBCSchema.class, this.getName(),
 					history);
 		}

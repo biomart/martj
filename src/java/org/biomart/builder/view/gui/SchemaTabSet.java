@@ -445,7 +445,7 @@ public class SchemaTabSet extends JTabbedPane {
 				schema.getOriginalName(), schema);
 
 		// Sync it.
-		this.requestSynchroniseSchema(schema, false, true);
+		this.requestSynchroniseSchema(schema, false);
 	}
 
 	/**
@@ -754,7 +754,7 @@ public class SchemaTabSet extends JTabbedPane {
 	 */
 	public void requestModifySchema(final Schema schema) {
 		if (SchemaConnectionDialog.modifySchema(schema))
-			this.requestSynchroniseSchema(schema, true, false);
+			this.requestSynchroniseSchema(schema, true);
 	}
 
 	/**
@@ -993,12 +993,9 @@ public class SchemaTabSet extends JTabbedPane {
 	 * @param transactionMod
 	 *            <tt>true</tt> if the transaction is allowed to show visible
 	 *            modifications.
-	 * @param checkKeys
-	 *            include a check for relations and set key guessing on the
-	 *            schema if they are not found.
 	 */
 	public void requestSynchroniseSchema(final Schema schema,
-			final boolean transactionMod, final boolean checkKeys) {
+			final boolean transactionMod) {
 		// Create a progress monitor.
 		final ProgressDialog progressMonitor = new ProgressDialog(this, 0, 100,
 				false);
@@ -1012,13 +1009,6 @@ public class SchemaTabSet extends JTabbedPane {
 				Transaction.start(transactionMod);
 				try {
 					schema.synchronise();
-					// If the schema has no relations, then maybe
-					// we should turn keyguessing on. The user can always
-					// turn it off again later.
-					if (checkKeys && schema.getRelations().size() == 0) {
-						schema.setKeyGuessing(true);
-						schema.synchronise();
-					}
 				} catch (final Throwable t) {
 					SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
@@ -1045,10 +1035,7 @@ public class SchemaTabSet extends JTabbedPane {
 			public void actionPerformed(final ActionEvent e) {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
-						final double progress = schema.getProgress()
-								* (checkKeys ? 0.5 : 1.0)
-								+ (schema.isKeyGuessing() && checkKeys ? 50.0
-										: 0.0);
+						final double progress = schema.getProgress();
 						// Did the job complete yet?
 						if (progress < 100.0)
 							// If not, update the progress report.

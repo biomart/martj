@@ -222,6 +222,9 @@ public class Transaction {
 	}
 
 	private static List getOrderedListeners() {
+		// Clear out dead refs first.
+		System.gc();
+		// Now get the list.
 		synchronized (Transaction.LOCK) {
 			final List sch = new ArrayList();
 			final List schComp = new ArrayList();

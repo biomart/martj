@@ -35,6 +35,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
@@ -61,8 +62,8 @@ import org.biomart.common.view.gui.dialogs.StackTrace;
  * validation of input, and can modify or create schemas based on the input.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by
- *			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.5
  */
 public abstract class SchemaConnectionPanel extends JPanel {
@@ -203,6 +204,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 		private StringStringTablePanel preview;
 
+		private JCheckBox keyguessing;
+
 		/**
 		 * This constructor creates a panel with all the fields necessary to
 		 * construct a {@link JDBCSchema} instance, save the name which will be
@@ -254,13 +257,15 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			this.schemaName = new JTextField(10);
 			this.username = new JTextField(10);
 			this.password = new JPasswordField(10);
+			this.keyguessing = new JCheckBox(Resources.get("myISAMLabel"));
 
 			// The driver class box displays the currently selected driver
 			// class. As it changes, other fields become highlighted.
 			this.driverClass = new JTextField(20);
 			this.driverClass.getDocument().addDocumentListener(this);
 			this.driverClass.setText(null); // Force into default state.
-
+			//this.keyguessing.setVisible(false);
+			
 			// The predefined driver class box displays everything we know
 			// about by default, as defined by the map at the start of this
 			// class.
@@ -278,15 +283,21 @@ public abstract class SchemaConnectionPanel extends JPanel {
 							.getSelectedItem();
 
 					// Use it to look up the default class for that database
-					// type,
-					// then reset the drop-down to nothing-selected.
+					// type, then reset the drop-down to nothing-selected.
 					if (!JDBCSchemaConnectionPanel.this.isEmpty(classType)) {
 						final String driverClassName = (String) JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
 								.get(classType);
 						if (!JDBCSchemaConnectionPanel.this.driverClass
-								.getText().equals(driverClassName))
+								.getText().equals(driverClassName)) {
+							JDBCSchemaConnectionPanel.this.keyguessing
+									.setVisible(driverClassName
+											.indexOf("mysql") >= 0);
+							JDBCSchemaConnectionPanel.this.keyguessing
+									.setSelected(driverClassName
+											.indexOf("mysql") >= 0);
 							JDBCSchemaConnectionPanel.this.driverClass
 									.setText(driverClassName);
+						}
 					}
 				}
 			});
@@ -353,9 +364,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					if (!JDBCSchemaConnectionPanel.this.validateFields(false))
 						return;
 					Map partitions = Collections.EMPTY_MAP;
-					final Schema tempSch;
 					try {
-						tempSch = JDBCSchemaConnectionPanel.this
+						final Schema tempSch = JDBCSchemaConnectionPanel.this
 								.privateCreateSchemaFromSettings("__PARTITION_PREVIEW");
 						if (tempSch.getPartitionRegex() != null
 								&& tempSch.getPartitionNameExpression() != null)
@@ -378,6 +388,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			this.add(label, labelConstraints);
 			JPanel field = new JPanel();
 			field.add(this.predefinedDriverClass);
+			field.add(this.keyguessing);
 			field.add(this.driverClass);
 			this.add(field, fieldConstraints);
 
@@ -458,6 +469,8 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			this.regex.setText(template.getProperty("partitionRegex"));
 			this.expression.setText(template
 					.getProperty("partitionNameExpression"));
+			this.keyguessing.setSelected(Boolean.valueOf(
+					template.getProperty("keyguessing")).booleanValue());
 
 			// Parse the JDBC URL into host, port and database, if the
 			// driver is known to us (defined in the map at the start
@@ -494,16 +507,21 @@ public abstract class SchemaConnectionPanel extends JPanel {
 		private void driverClassChanged() {
 			// Work out which class we should try out.
 			final String className = this.driverClass.getText();
+			
 
 			// If it's not empty...
 			if (!this.isEmpty(className)) {
+				this.keyguessing
+				.setVisible(className
+						.indexOf("mysql") >= 0);
+
 				// Is this a preset class?
 				for (final Iterator i = JDBCSchemaConnectionPanel.DRIVER_NAME_MAP
 						.entrySet().iterator(); i.hasNext();) {
 					final Map.Entry entry = (Map.Entry) i.next();
 					final String mapName = (String) entry.getKey();
 					final String mapClassName = (String) entry.getValue();
-					if (mapClassName.equals(className))
+					if (mapClassName.equals(className)) 
 						this.predefinedDriverClass.setSelectedItem(mapName);
 				}
 
@@ -553,6 +571,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 
 			// If it's empty, disable the fields that depend on it.
 			else {
+				this.keyguessing.setVisible(false);
 				this.host.setEnabled(false);
 				this.port.setEnabled(false);
 				this.database.setEnabled(false);
@@ -632,6 +651,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 			final JDBCSchema schema = new JDBCSchema(this.mart,
 					driverClassName, url, database, schemaName, username,
 					password, name, false, regex, expression);
+			schema.setKeyGuessing(this.keyguessing.isSelected());
 
 			// Return that schema.
 			return schema;
@@ -665,6 +685,7 @@ public abstract class SchemaConnectionPanel extends JPanel {
 					jschema.setPartitionNameExpression(this
 							.isEmpty(this.expression.getText()) ? null
 							: this.expression.getText().trim());
+					jschema.setKeyGuessing(this.keyguessing.isSelected());
 				} catch (final Throwable t) {
 					StackTrace.showStackTrace(t);
 				}
