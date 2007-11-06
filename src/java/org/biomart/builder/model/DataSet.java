@@ -278,8 +278,8 @@ public class DataSet extends Schema {
 		Log.debug("Renaming original dataset " + this + " to " + name);
 		// Work out all used names.
 		final Set usedNames = new HashSet();
-		for (final Iterator i = this.getMart().getDataSets().values().iterator(); i
-				.hasNext();)
+		for (final Iterator i = this.getMart().getDataSets().values()
+				.iterator(); i.hasNext();)
 			usedNames.add(((DataSet) i.next()).getOriginalName());
 		// Make new name unique.
 		final String baseName = name;
@@ -850,20 +850,24 @@ public class DataSet extends Schema {
 						parentDSCol.getModifiedName())) {
 					dsCol = new InheritedColumn(dsTable, parentDSCol);
 					dsTable.getColumns().put(dsCol.getName(), dsCol);
-				} else {
-					final DataSetColumn candDSCol = (DataSetColumn) dsTable
+				} else 
+					dsCol = (InheritedColumn) dsTable
 							.getColumns().get(parentDSCol.getModifiedName());
-					if (candDSCol instanceof InheritedColumn)
-						dsCol = (InheritedColumn) candDSCol;
-					else {
-						dsCol = new InheritedColumn(dsTable, parentDSCol);
-						// Listen to this column to modify ourselves.
-						if (!dsTable.getType().equals(
-								DataSetTableType.DIMENSION))
-							dsCol.addPropertyChangeListener("columnRename",
-									this.rebuildListener);
-						dsTable.getColumns().put(dsCol.getName(), dsCol);
-					}
+				// If any other col has modified name same as
+				// inherited col's modified name, then rename that
+				// other column.
+				for (final Iterator j = dsTable.getColumns().values()
+						.iterator(); j.hasNext();) {
+					final DataSetColumn cand = (DataSetColumn) j.next();
+					if (cand != dsCol
+							&& cand.getModifiedName().equals(
+									dsCol.getModifiedName()))
+						try {
+							cand.setColumnRename(cand.getModifiedName() + "_1");
+						} catch (final ValidationException ve) {
+							// Ouch!
+							throw new BioMartError(ve);
+						}
 				}
 				unusedCols.remove(dsCol);
 				parentTU.getNewColumnNameMap().put(parentDSCol, dsCol);
@@ -2790,7 +2794,7 @@ public class DataSet extends Schema {
 		private final Table focusTable;
 
 		private final Relation focusRelation;
-		
+
 		private final int focusRelationIteration;
 
 		private final Collection includedRelations;
@@ -3067,7 +3071,7 @@ public class DataSet extends Schema {
 		}
 
 		/**
-		 * Obtain the focus relation iteration for this dataset table. 
+		 * Obtain the focus relation iteration for this dataset table.
 		 * 
 		 * @return the focus relation iteration.
 		 */
