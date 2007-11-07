@@ -34,6 +34,7 @@ import org.biomart.builder.model.Schema;
 import org.biomart.builder.model.Table;
 import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -134,8 +135,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 		final TableComponent[] comps = new TableComponent[this.tableComponents
 				.size()];
 		for (int i = 0; i < comps.length; i++)
-			comps[i] = (TableComponent) this.tableComponents
-					.get(i);
+			comps[i] = (TableComponent) this.tableComponents.get(i);
 		return comps;
 	}
 
@@ -204,9 +204,11 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			// requested.
 			final FakeSchema tempSourceSchema = new FakeSchema(this.stu
 					.getTable().getSchema().getName());
-			final Table tempSource = new RealisedTable(this.stu.getTable()
-					.getName(), tempSourceSchema, this.stu.getTable(), this
-					.getExplainContext());
+			final Table tempSource = new RealisedTable(
+					this.stu.getTable() instanceof DataSetTable ? ((DataSetTable) this.stu
+							.getTable()).getModifiedName()
+							: this.stu.getTable().getName(), tempSourceSchema,
+					this.stu.getTable(), this.getExplainContext());
 			tempSourceSchema.getTables().put(tempSource.getName(), tempSource);
 			for (final Iterator i = this.stu.getNewColumnNameMap().values()
 					.iterator(); i.hasNext();) {
