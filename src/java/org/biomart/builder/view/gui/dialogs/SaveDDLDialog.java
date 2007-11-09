@@ -492,7 +492,7 @@ public class SaveDDLDialog extends JDialog {
 											SaveDDLDialog.this.runDDLHost
 													.getText(),
 											SaveDDLDialog.this.runDDLPort
-													.getText(), true);
+													.getText());
 				}
 			});
 			this.martTab.getMartTabSet().requestMonitorConstructorRunnable(cr);

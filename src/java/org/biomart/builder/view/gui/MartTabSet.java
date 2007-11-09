@@ -783,7 +783,7 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 		if (d.getHost() == null)
 			return;
 		else
-			this.requestMonitorRemoteHost(d.getHost(), d.getPort(), false);
+			this.requestMonitorRemoteHost(d.getHost(), d.getPort());
 		d.dispose();
 	}
 
@@ -794,17 +794,14 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the host to connect to.
 	 * @param port
 	 *            the port the host is listening on.
-	 * @param defaultJob
-	 *            select the latest job on opening, if <tt>true</tt>.
 	 */
-	public void requestMonitorRemoteHost(final String host, final String port,
-			final boolean defaultJob) {
+	public void requestMonitorRemoteHost(final String host, final String port) {
 		Transaction.start(false);
 		MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(host);
 		MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(port);
 		Transaction.end();
 		// Open remote host monitor dialog.
-		MartRunnerMonitorDialog.monitor(host, port, defaultJob);
+		MartRunnerMonitorDialog.monitor(host, port);
 	}
 
 	/**

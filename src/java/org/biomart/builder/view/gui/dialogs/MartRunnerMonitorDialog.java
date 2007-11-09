@@ -178,17 +178,13 @@ public class MartRunnerMonitorDialog extends JFrame {
 	 *            the host to monitor.
 	 * @param port
 	 *            the port to connect to the host with.
-	 * @param defaultJob
-	 *            select the latest job, if <tt>true</tt>.
 	 */
-	public static void monitor(final String host, final String port,
-			final boolean defaultJob) {
+	public static void monitor(final String host, final String port) {
 		// Open the dialog.
-		new MartRunnerMonitorDialog(host, port, defaultJob).setVisible(true);
+		new MartRunnerMonitorDialog(host, port).setVisible(true);
 	}
 
-	private MartRunnerMonitorDialog(final String host, final String port,
-			final boolean defaultJob) {
+	private MartRunnerMonitorDialog(final String host, final String port) {
 		// Create the blank dialog, and give it an appropriate title.
 		super(Resources.get("monitorDialogTitle", new String[] { host, port }));
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -231,7 +227,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 						} finally {
 							MartRunnerMonitorDialog.this.listRefreshing = false;
 							// Attempt to select the first item on first run.
-							if (firstRun && defaultJob)
+							if (firstRun)
 								selection = jobPlanListModel.lastElement();
 							jobList.setSelectedValue(selection, true);
 							firstRun = false;
