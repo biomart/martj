@@ -495,6 +495,33 @@ public class SchemaTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks the user if they are sure they want to remove all schema partitions.
+	 */
+	public void requestRemoveAllSchemaPartitions() {
+		// Confirm the decision first.
+		final int choice = JOptionPane.showConfirmDialog(null, Resources
+				.get("confirmUnpartitionAllSchemas"), Resources
+				.get("questionTitle"), JOptionPane.YES_NO_OPTION);
+
+		// Refuse to do it if they said no.
+		if (choice != JOptionPane.YES_OPTION)
+			return;
+
+		new LongProcess() {
+			public void run() {
+				Transaction.start(true);
+				for (final Iterator i = SchemaTabSet.this.martTab.getMart()
+						.getSchemas().values().iterator(); i.hasNext();) {
+					final Schema sch = (Schema) i.next();
+					sch.setPartitionNameExpression(null);
+					sch.setPartitionRegex(null);
+				}
+				Transaction.end();
+			}
+		}.start();
+	}
+
+	/**
 	 * Update a relation status.
 	 * 
 	 * @param relation

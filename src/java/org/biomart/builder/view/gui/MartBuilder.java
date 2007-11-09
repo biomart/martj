@@ -120,6 +120,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem updateAllSchemas;
 
+		private JMenuItem removeAllSchemaPartitions;
+
 		private JMenuItem createDatasets;
 
 		private JMenuItem removeAllDatasets;
@@ -277,6 +279,13 @@ public class MartBuilder extends BioMartGUI {
 			this.updateAllSchemas.setMnemonic(Resources.get(
 					"synchroniseAllSchemasMnemonic").charAt(0));
 			this.updateAllSchemas.addActionListener(this);
+
+			// Remove all schema partitions.
+			this.removeAllSchemaPartitions = new JMenuItem(Resources
+					.get("removeAllSchemaPartitionsTitle"));
+			this.removeAllSchemaPartitions.setMnemonic(Resources.get(
+					"removeAllSchemaPartitionsMnemonic").charAt(0));
+			this.removeAllSchemaPartitions.addActionListener(this);
 
 			// Create datasets.
 			this.createDatasets = new JMenuItem(Resources
@@ -501,6 +510,7 @@ public class MartBuilder extends BioMartGUI {
 			martMenu.addSeparator();
 			martMenu.add(this.updateAllSchemas);
 			martMenu.add(this.updateAllPartitionCounts);
+			martMenu.add(this.removeAllSchemaPartitions);
 			martMenu.add(this.removeAllDatasets);
 			martMenu.addSeparator();
 			martMenu.add(this.monitorHost);
@@ -710,6 +720,11 @@ public class MartBuilder extends BioMartGUI {
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
 											.getDataSets().size() > 0);
+					MartBuilderMenuBar.this.removeAllSchemaPartitions
+							.setEnabled(hasMart
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
+											.getSelectedMartTab().getMart()
+											.getSchemas().size() > 0);
 					MartBuilderMenuBar.this.updateAllPartitionCounts
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -890,6 +905,9 @@ public class MartBuilder extends BioMartGUI {
 			else if (e.getSource() == this.updateAllSchemas)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestSynchroniseAllSchemas();
+			else if (e.getSource() == this.removeAllSchemaPartitions)
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getSchemaTabSet().requestRemoveAllSchemaPartitions();
 			else if (e.getSource() == this.createDatasets)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestSuggestDataSets(null);
