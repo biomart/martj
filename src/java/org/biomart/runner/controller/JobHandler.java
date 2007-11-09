@@ -506,6 +506,36 @@ public class JobHandler {
 	}
 
 	/**
+	 * Flag that an action is to be set to the job.
+	 * 
+	 * @param jobId
+	 *            the job ID.
+	 * @param sectionId
+	 *            the section this applies to.
+	 * @param newPredecessorSectionId
+	 *            the section to go after, or <tt>null</tt> if to be moved to
+	 *            the top of current siblings.
+	 * @throws JobException
+	 *             if anything went wrong.
+	 */
+	public static void moveSection(final String jobId, final String sectionId,
+			final String newPredecessorSectionId) throws JobException {
+		// Get the sections.
+		JobPlanSection section = JobHandler.getSection(jobId, sectionId);
+		JobPlanSection newPredecessorSection = newPredecessorSectionId != null ? JobHandler
+				.getSection(jobId, newPredecessorSectionId)
+				: null;
+		// Swap sections.
+		section.getParent().moveSubSection(section, newPredecessorSection);
+		// Save modified structure.
+		try {
+			JobHandler.saveJobList();
+		} catch (final IOException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
 	 * Lists tables made by a job.
 	 * 
 	 * @param overrideSchema

@@ -45,8 +45,8 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  * Handles client communication.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.6
  */
 public class MartRunnerProtocol {
@@ -80,6 +80,8 @@ public class MartRunnerProtocol {
 	private static final String UNQUEUE = "UNQUEUE";
 
 	private static final String RUN_SQL = "RUN_SQL";
+
+	private static final String MOVE_SECTION = "MOVE_SECTION";
 
 	private static final String LIST_TABLES = "LIST_TABLES";
 
@@ -607,6 +609,36 @@ public class MartRunnerProtocol {
 		final String jobId = in.readLine();
 		final int threadCount = Integer.parseInt(in.readLine());
 		JobHandler.setThreadCount(jobId, threadCount);
+		out.println(MartRunnerProtocol.OK);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param inRaw
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @param outRaw
+	 *            the output stream back to the client.
+	 * @throws ProtocolException
+	 *             if the protocol fails.
+	 * @throws JobException
+	 *             if the job task requested fails.
+	 * @throws IOException
+	 *             if IO fails.
+	 */
+	public static void handle_MOVE_SECTION(final BufferedReader in,
+			final InputStream inRaw, final PrintWriter out,
+			final OutputStream outRaw) throws ProtocolException, JobException,
+			IOException {
+		final String jobId = in.readLine();
+		final String sectionId = in.readLine();
+		final String newPredecessorSectionId = in.readLine();
+		JobHandler.moveSection(jobId, sectionId, newPredecessorSectionId
+				.length() == 0 ? null : newPredecessorSectionId);
 		out.println(MartRunnerProtocol.OK);
 	}
 
@@ -1248,6 +1280,51 @@ public class MartRunnerProtocol {
 				bos.println(MartRunnerProtocol.THREAD_COUNT);
 				bos.println(jobId);
 				bos.println(threadCount);
+				bis.readLine(); // OK
+			} catch (final IOException e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			} finally {
+				if (clientSocket != null)
+					try {
+						clientSocket.close();
+					} catch (final IOException e) {
+						// We don't care.
+					}
+			}
+		}
+
+		/**
+		 * Move a section to before the specified one.
+		 * 
+		 * @param host
+		 *            the remote host.
+		 * @param port
+		 *            the remote port.
+		 * @param jobId
+		 *            the job ID.
+		 * @param sectionId
+		 *            the section ID to move.
+		 * @param newPredecessorSectionId
+		 *            the section ID to place this one after, or <tt>null</tt>
+		 *            if it is to go at the top if its current sibling list.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void moveSection(final String host, final String port,
+				final String jobId, final String sectionId,
+				final String newPredecessorSectionId) throws ProtocolException {
+			Socket clientSocket = null;
+			try {
+				clientSocket = Client.getClientSocket(host, port);
+				final PrintWriter bos = new PrintWriter(clientSocket
+						.getOutputStream(), true);
+				final BufferedReader bis = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
+				bos.println(MartRunnerProtocol.MOVE_SECTION);
+				bos.println(jobId);
+				bos.println(sectionId);
+				bos.println(newPredecessorSectionId == null ? ""
+						: newPredecessorSectionId);
 				bis.readLine(); // OK
 			} catch (final IOException e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);

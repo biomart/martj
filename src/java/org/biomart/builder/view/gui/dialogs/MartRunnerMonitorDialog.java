@@ -88,6 +88,7 @@ import javax.swing.tree.TreePath;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
+import org.biomart.common.view.gui.DraggableJTree;
 import org.biomart.common.view.gui.LongProcess;
 import org.biomart.common.view.gui.dialogs.StackTrace;
 import org.biomart.runner.controller.MartRunnerProtocol.Client;
@@ -219,6 +220,8 @@ public class MartRunnerMonitorDialog extends JFrame {
 			public void actionPerformed(final ActionEvent e) {
 				new LongProcess() {
 					public void run() {
+						if (MartRunnerMonitorDialog.this.listRefreshing)
+							return;
 						Object selection = jobList.getSelectedValue();
 						try {
 							MartRunnerMonitorDialog.this.listRefreshing = true;
@@ -748,12 +751,43 @@ public class MartRunnerMonitorDialog extends JFrame {
 			// Create a JTree to hold job details.
 			this.treeModel = new JobPlanTreeModel(this.host, this.port, this,
 					parentDialog);
-			this.tree = new JTree(this.treeModel) {
+			this.tree = new DraggableJTree(this.treeModel) {
 				private static final long serialVersionUID = 1L;
 
 				public boolean isPathEditable(final TreePath path) {
 					return path.getPathCount() > 0
 							&& path.getLastPathComponent() instanceof ActionNode;
+				}
+
+				public boolean isValidDragPath(final TreePath path) {
+					// Drag-and-drop of level-1 nodes (ie. first level 
+					// below root only)
+					return path.getPathCount()==2;
+				}
+
+				public boolean isValidDropPath(final TreePath path) {
+					// Drag-and-drop of level-1 nodes (ie. first level 
+					// below root only) PLUS level-0 node (root).
+					return path.getPathCount()<=2;
+				}
+				
+				public void dragCompleted(final int action, final TreePath from, final TreePath to) {		
+					// On successful drag-and-drop, call move-section
+					// with the identifiers of the source and target sections.
+					final JobPlanSection fromSection = ((SectionNode)from.getLastPathComponent()).getSection();
+					final JobPlanSection toSection = ((SectionNode)to.getLastPathComponent()).getSection();
+					// Confirm.
+					new LongProcess() {
+						public void run() throws Exception {
+							// Queue the job.
+							Client.moveSection(host, port,
+									JobPlanPanel.this.jobId,
+									fromSection.getIdentifier(), toSection==treeModel.getRoot()?null:toSection.getIdentifier());
+							// Update the list.
+							parentDialog.refreshJobList.doClick();
+						}
+					}.start();
+
 				}
 			};
 			this.tree.setOpaque(true);

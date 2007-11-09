@@ -18,11 +18,15 @@
 
 package org.biomart.builder.view.gui.diagrams.components;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -40,12 +44,14 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 
@@ -107,6 +113,10 @@ public class KeyComponent extends BoxShapedComponent {
 		}
 	};
 
+	private BufferedImage image = null;
+
+	private final Rectangle rect2D = new Rectangle();
+
 	/**
 	 * The constructor constructs a key component around a given key object, and
 	 * associates it with the given display.
@@ -149,18 +159,21 @@ public class KeyComponent extends BoxShapedComponent {
 		final DragSource dragSource = DragSource.getDefaultDragSource();
 		final DragSourceListener dsListener = new DragSourceListener() {
 			public void dragEnter(DragSourceDragEvent e) {
+				KeyComponent.this.paintImage(e.getLocation());
 				DragSourceContext context = e.getDragSourceContext();
 				int myaction = e.getDropAction();
-				if ((myaction & DnDConstants.ACTION_COPY) != 0)
+				if ((myaction & DnDConstants.ACTION_LINK) != 0)
 					context.setCursor(DragSource.DefaultLinkDrop);
 				else
 					context.setCursor(DragSource.DefaultLinkNoDrop);
 			}
 
 			public void dragDropEnd(DragSourceDropEvent e) {
+				KeyComponent.this.clearImage();
 			}
 
 			public void dragExit(DragSourceEvent dse) {
+				KeyComponent.this.paintImage(dse.getLocation());
 				DragSourceContext context = dse.getDragSourceContext();
 				context.setCursor(DragSource.DefaultLinkNoDrop);
 			}
@@ -179,8 +192,19 @@ public class KeyComponent extends BoxShapedComponent {
 					try {
 						Transferable transferable = new KeyTransferable(
 								((KeyComponent) e.getComponent()).getKey());
-						e.startDrag(DragSource.DefaultLinkNoDrop, transferable,
-								dsListener);
+						JComponent lbl = (JComponent) e.getComponent();
+						KeyComponent.this.image = new BufferedImage(lbl
+								.getWidth(), lbl.getHeight(),
+								BufferedImage.TYPE_INT_ARGB_PRE);
+						Graphics2D graphics = KeyComponent.this.image
+								.createGraphics();
+						graphics.setComposite(AlphaComposite.getInstance(
+								AlphaComposite.SRC_OVER, 0.5f));
+						lbl.paint(graphics);
+						graphics.dispose();
+						e.startDrag(DragSource.DefaultLinkNoDrop,
+								KeyComponent.this.image, new Point(0, 0),
+								transferable, dsListener);
 					} catch (final Throwable t) {
 						SwingUtilities.invokeLater(new Runnable() {
 							public void run() {
@@ -196,7 +220,7 @@ public class KeyComponent extends BoxShapedComponent {
 					e.rejectDrag();
 					return;
 				}
-				e.acceptDrag(DnDConstants.ACTION_COPY);
+				e.acceptDrag(DnDConstants.ACTION_LINK);
 			}
 
 			public void dragOver(DropTargetDragEvent e) {
@@ -204,7 +228,7 @@ public class KeyComponent extends BoxShapedComponent {
 					e.rejectDrag();
 					return;
 				}
-				e.acceptDrag(DnDConstants.ACTION_COPY);
+				e.acceptDrag(DnDConstants.ACTION_LINK);
 			}
 
 			public void dropActionChanged(DropTargetDragEvent e) {
@@ -212,7 +236,7 @@ public class KeyComponent extends BoxShapedComponent {
 					e.rejectDrag();
 					return;
 				}
-				e.acceptDrag(DnDConstants.ACTION_COPY);
+				e.acceptDrag(DnDConstants.ACTION_LINK);
 			}
 
 			public void dragExit(DropTargetEvent e) {
@@ -229,7 +253,7 @@ public class KeyComponent extends BoxShapedComponent {
 				if (chosen == null)
 					return false;
 				int sa = e.getSourceActions();
-				if ((sa & DnDConstants.ACTION_COPY) == 0)
+				if ((sa & DnDConstants.ACTION_LINK) == 0)
 					return false;
 				return true;
 			}
@@ -247,7 +271,7 @@ public class KeyComponent extends BoxShapedComponent {
 					return;
 				}
 				int sa = e.getSourceActions();
-				if ((sa & DnDConstants.ACTION_COPY) == 0) {
+				if ((sa & DnDConstants.ACTION_LINK) == 0) {
 					e.rejectDrop();
 					return;
 				}
@@ -261,7 +285,7 @@ public class KeyComponent extends BoxShapedComponent {
 							KeyComponent.this.getDiagram().getMartTab()
 									.getSchemaTabSet().requestCreateRelation(
 											sourceKey, targetKey);
-							e.acceptDrop(DnDConstants.ACTION_COPY);
+							e.acceptDrop(DnDConstants.ACTION_LINK);
 							e.dropComplete(true);
 						}
 					}
@@ -276,9 +300,22 @@ public class KeyComponent extends BoxShapedComponent {
 				}
 			}
 		};
-		new DropTarget(this, DnDConstants.ACTION_COPY, dtListener, true);
+		new DropTarget(this, DnDConstants.ACTION_LINK, dtListener, true);
 		dragSource.createDefaultDragGestureRecognizer(this,
-				DnDConstants.ACTION_COPY, dgListener);
+				DnDConstants.ACTION_LINK, dgListener);
+	}
+
+	private final void paintImage(final Point pt) {
+		SwingUtilities.convertPointFromScreen(pt, this.getDiagram());
+		this.getDiagram().paintImmediately(this.rect2D.getBounds());
+		this.rect2D.setRect((int) pt.getX(), (int) pt.getY(), this.image
+				.getWidth(), this.image.getHeight());
+		this.getDiagram().getGraphics().drawImage(this.image, (int) pt.getX(),
+				(int) pt.getY(), this);
+	}
+
+	private final void clearImage() {
+		this.getDiagram().paintImmediately(this.rect2D.getBounds());
 	}
 
 	private Key getKey() {

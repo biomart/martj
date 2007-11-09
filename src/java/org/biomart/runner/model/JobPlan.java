@@ -28,17 +28,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
+import org.biomart.common.utils.ListBackedMap;
 import org.biomart.runner.controller.JobHandler;
 import org.biomart.runner.exceptions.JobException;
 
@@ -472,8 +471,7 @@ public class JobPlan implements Serializable {
 
 		private final String label;
 
-		private final Map subSections = Collections
-				.synchronizedMap(new LinkedHashMap());
+		private final ListBackedMap subSections = new ListBackedMap();
 
 		private int actionCount = 0;
 
@@ -550,6 +548,26 @@ public class JobPlan implements Serializable {
 		public Collection getSubSections() {
 			return this.subSections.values();
 		}
+
+		/**
+		 * Move the section to just after the specified section, or if
+		 * <tt>null</tt>, to the top of its sibling list.
+		 * 
+		 * @param section
+		 *            the section (must be a child of this section).
+		 * @param newPredecessorSection
+		 *            the new predecessor section (must either be <tt>null</tt>
+		 *            or a child of this section).
+		 */
+		public void moveSubSection(final JobPlanSection section,
+				final JobPlanSection newPredecessorSection) {
+			if (newPredecessorSection==null) 
+			    // Insert at top.
+				this.subSections.put(null, section.label, section);
+			else 
+				// Insert before given label.
+				this.subSections.put(newPredecessorSection.label, section.label, section);
+		} 
 
 		/**
 		 * Sets the action count.
