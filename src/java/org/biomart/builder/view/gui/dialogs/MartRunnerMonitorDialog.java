@@ -73,6 +73,8 @@ import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeExpansionEvent;
@@ -108,6 +110,10 @@ import org.biomart.runner.model.JobPlan.JobPlanSection;
  */
 public class MartRunnerMonitorDialog extends JFrame {
 	private static final long serialVersionUID = 1;
+
+	private static final int DEFAULT_REFRESH = 60; // seconds
+
+	private static final int MIN_REFRESH = 5; // seconds
 
 	private static final Font PLAIN_FONT = Font.decode("SansSerif-PLAIN-12");
 
@@ -203,12 +209,17 @@ public class MartRunnerMonitorDialog extends JFrame {
 		jobList.setOpaque(true);
 		jobList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		this.refreshJobList = new JButton(Resources.get("refreshButton"));
+		final JTextField refreshRate = new JTextField(""
+				+ MartRunnerMonitorDialog.DEFAULT_REFRESH, 5);
 		final JPanel jobListPanel = new JPanel(new BorderLayout());
 		jobListPanel.setBorder(new EmptyBorder(new Insets(2, 2, 2, 2)));
 		jobListPanel.add(new JLabel(Resources.get("jobListTitle")),
 				BorderLayout.PAGE_START);
 		jobListPanel.add(new JScrollPane(jobList), BorderLayout.CENTER);
-		jobListPanel.add(this.refreshJobList, BorderLayout.PAGE_END);
+		final JPanel refreshPanel = new JPanel();
+		refreshPanel.add(this.refreshJobList);
+		refreshPanel.add(refreshRate);
+		jobListPanel.add(refreshPanel, BorderLayout.PAGE_END);
 		// Updates when refresh button is hit.
 		this.refreshJobList.addActionListener(new ActionListener() {
 			private boolean firstRun = true;
@@ -347,15 +358,54 @@ public class MartRunnerMonitorDialog extends JFrame {
 		});
 
 		// Set up a timer to update the list.
-		final Timer timer = new Timer();
-		timer.schedule(new TimerTask() {
+		final class TimerUpdate extends TimerTask {
 			public void run() {
 				MartRunnerMonitorDialog.this.refreshJobList.doClick();
 			}
-		}, 0, 60 * 1000); // Update now then once per minute.
+		}
+		final class TimerListener extends WindowAdapter implements
+				DocumentListener {
+			private Timer timer = new Timer();
 
-		// Cancel the timer when we close.
-		this.addWindowListener(new WindowAdapter() {
+			// Called after the constructor.
+			{
+				timer.schedule(new TimerUpdate(), 0,
+						MartRunnerMonitorDialog.DEFAULT_REFRESH * 1000);
+			}
+
+			public void changedUpdate(DocumentEvent e) {
+				this.updateTimer();
+			}
+
+			public void insertUpdate(DocumentEvent e) {
+				this.updateTimer();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				this.updateTimer();
+			}
+
+			private void updateTimer() {
+				String val = refreshRate.getText();
+				if (val == null)
+					val = "";
+				int delay;
+				try {
+					delay = Integer.parseInt(val);
+				} catch (NumberFormatException ne) {
+					delay = 0;
+				}
+				// Can't have it too short.
+				delay = delay == 0 ? 0 : Math.max(delay,
+						MartRunnerMonitorDialog.MIN_REFRESH) * 1000;
+				// Reschedule.
+				timer.cancel();
+				if (delay > 0) {
+					timer = new Timer();
+					timer.schedule(new TimerUpdate(), delay, delay);
+				}
+			}
+
 			public void windowClosed(final WindowEvent e) {
 				timer.cancel();
 			}
@@ -363,7 +413,10 @@ public class MartRunnerMonitorDialog extends JFrame {
 			public void windowClosing(final WindowEvent e) {
 				timer.cancel();
 			}
-		});
+		}
+		final TimerListener timerListener = new TimerListener();
+		refreshRate.getDocument().addDocumentListener(timerListener);
+		this.addWindowListener(timerListener);
 
 		// Make the content pane.
 		final JSplitPane splitPane = new JSplitPane(
@@ -756,29 +809,34 @@ public class MartRunnerMonitorDialog extends JFrame {
 				}
 
 				public boolean isValidDragPath(final TreePath path) {
-					// Drag-and-drop of level-1 nodes (ie. first level 
+					// Drag-and-drop of level-1 nodes (ie. first level
 					// below root only)
-					return path.getPathCount()==2;
+					return path.getPathCount() == 2;
 				}
 
 				public boolean isValidDropPath(final TreePath path) {
-					// Drag-and-drop of level-1 nodes (ie. first level 
+					// Drag-and-drop of level-1 nodes (ie. first level
 					// below root only) PLUS level-0 node (root).
-					return path.getPathCount()<=2;
+					return path.getPathCount() <= 2;
 				}
-				
-				public void dragCompleted(final int action, final TreePath from, final TreePath to) {		
+
+				public void dragCompleted(final int action,
+						final TreePath from, final TreePath to) {
 					// On successful drag-and-drop, call move-section
 					// with the identifiers of the source and target sections.
-					final JobPlanSection fromSection = ((SectionNode)from.getLastPathComponent()).getSection();
-					final JobPlanSection toSection = ((SectionNode)to.getLastPathComponent()).getSection();
+					final JobPlanSection fromSection = ((SectionNode) from
+							.getLastPathComponent()).getSection();
+					final JobPlanSection toSection = ((SectionNode) to
+							.getLastPathComponent()).getSection();
 					// Confirm.
 					new LongProcess() {
 						public void run() throws Exception {
 							// Queue the job.
 							Client.moveSection(host, port,
-									JobPlanPanel.this.jobId,
-									fromSection.getIdentifier(), toSection==treeModel.getRoot()?null:toSection.getIdentifier());
+									JobPlanPanel.this.jobId, fromSection
+											.getIdentifier(),
+									toSection == treeModel.getRoot() ? null
+											: toSection.getIdentifier());
 							// Update the list.
 							parentDialog.refreshJobList.doClick();
 						}
@@ -1212,7 +1270,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			try {
 				final Collection actions = Client.getActions(host, port, jobId,
 						this.section);
-				for (final Iterator i = actions.iterator(); i.hasNext();) 
+				for (final Iterator i = actions.iterator(); i.hasNext();)
 					this.children.add(new ActionNode(this, (JobPlanAction) i
 							.next(), this.parentDialog));
 			} catch (final ProtocolException e) {
@@ -1322,8 +1380,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 			try {
 				Client.updateAction(this.parentDialog.host,
 						this.parentDialog.port,
-						section.getJobPlan().getJobId(), 
-						section, this.action);
+						section.getJobPlan().getJobId(), section, this.action);
 			} catch (final ProtocolException pe) {
 				this.action.setAction(oldAction);
 				StackTrace.showStackTrace(pe);
