@@ -1322,7 +1322,10 @@ public class DataSet extends Schema {
 				// Create new column using unique name.
 				wc = new WrappedColumn(c, colName, dsTable);
 				dsTable.getColumns().put(wc.getName(), wc);
-				// Insert column rename using origColName.
+				// Insert column rename using origColName, but
+				// only if one not already specified (e.g. from
+				// XML file).
+				if (wc.getColumnRename()==null)
 				try {
 					wc.setColumnRename(origColName);
 				} catch (final ValidationException ve) {
