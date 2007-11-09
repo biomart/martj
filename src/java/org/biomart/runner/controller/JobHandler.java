@@ -36,6 +36,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.mail.MessagingException;
 
@@ -64,6 +66,8 @@ public class JobHandler {
 
 	private static final Object planDirLock = "__PLANDIR__LOCK__";
 
+	private static final int SAVE_INTERVAL = 5; // Seconds.
+
 	private static long nextJob = System.currentTimeMillis();
 
 	private static final File jobsDir = new File(
@@ -74,9 +78,45 @@ public class JobHandler {
 	private static final Map jobManagers = Collections
 			.synchronizedMap(new HashMap());
 
+	private static boolean jobListIsDirty = false;
+
+	private static final Timer t = new Timer();
+
 	static {
 		if (!JobHandler.jobsDir.exists())
 			JobHandler.jobsDir.mkdir();
+		t.schedule(new TimerTask() {
+			public void run() {
+				if (JobHandler.jobListIsDirty)
+					synchronized (JobHandler.planDirLock) {
+						Log.debug("Saving list");
+						// Save (overwrite) file with plan.
+						FileOutputStream fos = null;
+						try {
+							final File jobListFile = JobHandler
+									.getJobListFile();
+							fos = new FileOutputStream(jobListFile);
+							final ObjectOutputStream oos = new ObjectOutputStream(
+									fos);
+							oos.writeObject(JobHandler.jobList);
+							oos.flush();
+							fos.flush();
+						} catch (final IOException e) {
+							// What else to do with it?
+							Log.error(e);
+						} finally {
+							if (fos != null)
+								try {
+									fos.close();
+								} catch (final IOException e) {
+									// What else to do with it?
+									Log.error(e);
+								}
+						}
+					}
+				JobHandler.jobListIsDirty = false;
+			}
+		}, 0, JobHandler.SAVE_INTERVAL * 1000);
 	}
 
 	/**
@@ -807,20 +847,7 @@ public class JobHandler {
 
 	private static void saveJobList() throws IOException {
 		synchronized (JobHandler.planDirLock) {
-			Log.debug("Saving list");
-			final File jobListFile = JobHandler.getJobListFile();
-			// Save (overwrite) file with plan.
-			FileOutputStream fos = null;
-			try {
-				fos = new FileOutputStream(jobListFile);
-				final ObjectOutputStream oos = new ObjectOutputStream(fos);
-				oos.writeObject(JobHandler.jobList);
-				oos.flush();
-				fos.flush();
-			} finally {
-				if (fos != null)
-					fos.close();
-			}
+			JobHandler.jobListIsDirty = true;
 		}
 	}
 

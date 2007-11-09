@@ -373,16 +373,23 @@ public interface MartConstructor {
 								dmPta.getPartitionTable().prepareRows(
 										(String) schemaPartition.getValue(),
 										PartitionTable.UNLIMITED_ROWS);
+							final double subStepPercent = dmPta == null ? stepPercent
+									: (stepPercent / (double) dmPta
+											.getPartitionTable()
+											.countRows());
 							while (fakeDMPartition ? true : dmPta != null
 									&& dmPta.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
+								double targetPercent = this.percentComplete + subStepPercent;
 								if (!this.makeActionsForDatasetTable(
-										bigParents, stepPercent,
+										bigParents, subStepPercent,
 										templateSchema,
 										(String) schemaPartition.getKey(),
 										(String) schemaPartition.getValue(),
 										dsPta, dmPta, dataset, dsTable))
 									droppedTables.add(dsTable);
+								// In case the construction didn't do all the steps.
+								this.percentComplete = targetPercent;
 							}
 						}
 
@@ -471,12 +478,10 @@ public interface MartConstructor {
 
 			// Use the transformation units to create the basic table.
 			final Collection units = dsTable.getTransformationUnits();
-			stepPercent /= units.size();
-			Relation firstJoinRel = null;
-			this.percentComplete -= stepPercent; // Avoid early completion.
-			for (final Iterator j = units.iterator(); j.hasNext();) {
-				this.checkCancelled();
-				this.percentComplete += stepPercent;
+			stepPercent /= (double) units.size();
+			Relation firstJoinRel = null;			
+			for (final Iterator j = units.iterator(); j.hasNext(); this.percentComplete += stepPercent) {
+				this.checkCancelled(); 
 
 				// Check if TU actually applies to us. If not, skip it.
 				final TransformationUnit tu = (TransformationUnit) j.next();

@@ -277,6 +277,15 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 	}
 
 	/**
+	 * How many rows do we have?
+	 * 
+	 * @return the number of rows.
+	 */
+	public int countRows() {
+		return this.rows.size();
+	}
+
+	/**
 	 * Move to the next row, or the first row if not yet called. This will skip
 	 * over all rows with an identical set of values used to define any
 	 * subdivision.
@@ -1174,7 +1183,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 				final String dimension) {
 			final PartitionTableApplication pa = new PartitionTableApplication(
 					pt);
-			if (pt.getSelectedColumnNames().size()<1)
+			if (pt.getSelectedColumnNames().size() < 1)
 				return pa;
 			final String ptCol = (String) pt.getSelectedColumnNames()
 					.iterator().next();
