@@ -2375,7 +2375,7 @@ private void updateFilterToTemplate(FilterDescription configAtt,DatasetConfig ds
 					for (int r = 0; r < options.size(); r++) {
 						final Option option = (Option)options.get(r);
 						final String intName = option.getInternalName();
-						if (dsConfig.getCollectionForFilter(intName)!=null)
+						if (option.getField()!=null && !"".equals(option.getField()) && dsConfig.getCollectionForFilter(intName)!=null) 
 							dsConfig.getCollectionForFilter(intName).removeFilterDescription(dsConfig.getFilterDescriptionByInternalName(intName));
 						option.resolveText(templateConfig.getDynamicDataset(dsConfig.getDataset()));
 						options.addAll(Arrays.asList(option.getOptions()));
