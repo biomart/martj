@@ -239,7 +239,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 						} finally {
 							MartRunnerMonitorDialog.this.listRefreshing = false;
 							// Attempt to select the first item on first run.
-							if (firstRun)
+							if (firstRun && jobPlanListModel.size()>0)
 								selection = jobPlanListModel.lastElement();
 							jobList.setSelectedValue(selection, true);
 							firstRun = false;
