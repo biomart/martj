@@ -31,6 +31,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.Socket;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -306,8 +307,12 @@ public class MartRunnerMonitorDialog extends JFrame {
 									new LongProcess() {
 										public void run() throws Exception {
 											// Remove the job.
-											Client.removeJob(host, port, plan
+											final Socket clientSocket = Client
+													.createClientSocket(host,
+															port);
+											Client.removeJob(clientSocket, plan
 													.getJobId());
+											clientSocket.close();
 											// Update the list.
 											MartRunnerMonitorDialog.this.refreshJobList
 													.doClick();
@@ -334,11 +339,15 @@ public class MartRunnerMonitorDialog extends JFrame {
 											// Remove all jobs.
 											final Enumeration e = jobPlanListModel
 													.elements();
+											final Socket clientSocket = Client
+													.createClientSocket(host,
+															port);
 											while (e.hasMoreElements())
-												Client.removeJob(host, port,
+												Client.removeJob(clientSocket,
 														((JobPlan) e
 																.nextElement())
 																.getJobId());
+											clientSocket.close();
 											// Update the list.
 											MartRunnerMonitorDialog.this.refreshJobList
 													.doClick();
@@ -369,19 +378,19 @@ public class MartRunnerMonitorDialog extends JFrame {
 
 			// Called after the constructor.
 			{
-				timer.schedule(new TimerUpdate(), 0,
+				this.timer.schedule(new TimerUpdate(), 0,
 						MartRunnerMonitorDialog.DEFAULT_REFRESH * 1000);
 			}
 
-			public void changedUpdate(DocumentEvent e) {
+			public void changedUpdate(final DocumentEvent e) {
 				this.updateTimer();
 			}
 
-			public void insertUpdate(DocumentEvent e) {
+			public void insertUpdate(final DocumentEvent e) {
 				this.updateTimer();
 			}
 
-			public void removeUpdate(DocumentEvent e) {
+			public void removeUpdate(final DocumentEvent e) {
 				this.updateTimer();
 			}
 
@@ -392,26 +401,26 @@ public class MartRunnerMonitorDialog extends JFrame {
 				int delay;
 				try {
 					delay = Integer.parseInt(val);
-				} catch (NumberFormatException ne) {
+				} catch (final NumberFormatException ne) {
 					delay = 0;
 				}
 				// Can't have it too short.
 				delay = delay == 0 ? 0 : Math.max(delay,
 						MartRunnerMonitorDialog.MIN_REFRESH) * 1000;
 				// Reschedule.
-				timer.cancel();
+				this.timer.cancel();
 				if (delay > 0) {
-					timer = new Timer();
-					timer.schedule(new TimerUpdate(), delay, delay);
+					this.timer = new Timer();
+					this.timer.schedule(new TimerUpdate(), delay, delay);
 				}
 			}
 
 			public void windowClosed(final WindowEvent e) {
-				timer.cancel();
+				this.timer.cancel();
 			}
 
 			public void windowClosing(final WindowEvent e) {
-				timer.cancel();
+				this.timer.cancel();
 			}
 		}
 		final TimerListener timerListener = new TimerListener();
@@ -532,11 +541,18 @@ public class MartRunnerMonitorDialog extends JFrame {
 		}
 
 		private void updateList() throws ProtocolException {
-			// Communicate and update model.
-			this.removeAllElements();
-			for (final Iterator i = Client.listJobs(this.host, this.port)
-					.getAllJobs().iterator(); i.hasNext();)
-				this.addElement(i.next());
+			try {
+				// Communicate and update model.
+				this.removeAllElements();
+				final Socket clientSocket = Client.createClientSocket(
+						this.host, this.port);
+				for (final Iterator i = Client.listJobs(clientSocket)
+						.getAllJobs().iterator(); i.hasNext();)
+					this.addElement(i.next());
+				clientSocket.close();
+			} catch (final Throwable t) {
+				throw new ProtocolException(t);
+			}
 		}
 	}
 
@@ -640,14 +656,16 @@ public class MartRunnerMonitorDialog extends JFrame {
 				public void stateChanged(final ChangeEvent e) {
 					if (JobPlanPanel.this.jobId != null)
 						try {
+							final Socket clientSocket = Client
+									.createClientSocket(host, port);
 							Client
 									.setThreadCount(
-											JobPlanPanel.this.host,
-											JobPlanPanel.this.port,
+											clientSocket,
 											JobPlanPanel.this.jobId,
 											((Integer) JobPlanPanel.this.threadSpinnerModel
 													.getValue()).intValue());
-						} catch (final ProtocolException pe) {
+							clientSocket.close();
+						} catch (final Throwable pe) {
 							StackTrace.showStackTrace(pe);
 						}
 				}
@@ -687,12 +705,14 @@ public class MartRunnerMonitorDialog extends JFrame {
 				public void actionPerformed(final ActionEvent e) {
 					if (JobPlanPanel.this.jobId != null)
 						try {
-							Client.setEmailAddress(JobPlanPanel.this.host,
-									JobPlanPanel.this.port,
+							final Socket clientSocket = Client
+									.createClientSocket(host, port);
+							Client.setEmailAddress(clientSocket,
 									JobPlanPanel.this.jobId,
 									JobPlanPanel.this.contactEmail.getText()
 											.trim());
-						} catch (final ProtocolException pe) {
+							clientSocket.close();
+						} catch (final Throwable pe) {
 							StackTrace.showStackTrace(pe);
 						}
 				}
@@ -710,11 +730,13 @@ public class MartRunnerMonitorDialog extends JFrame {
 				public void actionPerformed(final ActionEvent e) {
 					if (JobPlanPanel.this.jobId != null)
 						try {
-							Client.startJob(JobPlanPanel.this.host,
-									JobPlanPanel.this.port,
+							final Socket clientSocket = Client
+									.createClientSocket(host, port);
+							Client.startJob(clientSocket,
 									JobPlanPanel.this.jobId);
+							clientSocket.close();
 							JobPlanPanel.this.startJob.setEnabled(false);
-						} catch (final ProtocolException pe) {
+						} catch (final Throwable pe) {
 							StackTrace.showStackTrace(pe);
 						}
 				}
@@ -731,11 +753,13 @@ public class MartRunnerMonitorDialog extends JFrame {
 				public void actionPerformed(final ActionEvent e) {
 					if (JobPlanPanel.this.jobId != null)
 						try {
-							Client.stopJob(JobPlanPanel.this.host,
-									JobPlanPanel.this.port,
+							final Socket clientSocket = Client
+									.createClientSocket(host, port);
+							Client.stopJob(clientSocket,
 									JobPlanPanel.this.jobId);
+							clientSocket.close();
 							JobPlanPanel.this.stopJob.setEnabled(false);
-						} catch (final ProtocolException pe) {
+						} catch (final Throwable pe) {
 							StackTrace.showStackTrace(pe);
 						}
 				}
@@ -746,12 +770,14 @@ public class MartRunnerMonitorDialog extends JFrame {
 				public void actionPerformed(final ActionEvent e) {
 					if (JobPlanPanel.this.jobId != null)
 						try {
-							Client.setSkipDropTable(JobPlanPanel.this.host,
-									JobPlanPanel.this.port,
+							final Socket clientSocket = Client
+									.createClientSocket(host, port);
+							Client.setSkipDropTable(clientSocket,
 									JobPlanPanel.this.jobId,
 									JobPlanPanel.this.skipDropTable
 											.isSelected());
-						} catch (final ProtocolException pe) {
+							clientSocket.close();
+						} catch (final Throwable pe) {
 							StackTrace.showStackTrace(pe);
 						}
 				}
@@ -832,11 +858,14 @@ public class MartRunnerMonitorDialog extends JFrame {
 					new LongProcess() {
 						public void run() throws Exception {
 							// Queue the job.
-							Client.moveSection(host, port,
+							final Socket clientSocket = Client
+									.createClientSocket(host, port);
+							Client.moveSection(clientSocket,
 									JobPlanPanel.this.jobId, fromSection
 											.getIdentifier(),
 									toSection == treeModel.getRoot() ? null
 											: toSection.getIdentifier());
+							clientSocket.close();
 							// Update the list.
 							parentDialog.refreshJobList.doClick();
 						}
@@ -937,9 +966,12 @@ public class MartRunnerMonitorDialog extends JFrame {
 							new LongProcess() {
 								public void run() throws Exception {
 									// Queue the job.
-									Client.queue(host, port,
+									final Socket clientSocket = Client
+											.createClientSocket(host, port);
+									Client.queue(clientSocket,
 											JobPlanPanel.this.jobId,
 											identifiers);
+									clientSocket.close();
 									// Update the list.
 									parentDialog.refreshJobList.doClick();
 								}
@@ -959,9 +991,12 @@ public class MartRunnerMonitorDialog extends JFrame {
 							new LongProcess() {
 								public void run() throws Exception {
 									// Unqueue the job.
-									Client.unqueue(host, port,
+									final Socket clientSocket = Client
+											.createClientSocket(host, port);
+									Client.unqueue(clientSocket,
 											JobPlanPanel.this.jobId,
 											identifiers);
+									clientSocket.close();
 									// Update the list.
 									parentDialog.refreshJobList.doClick();
 								}
@@ -1268,12 +1303,15 @@ public class MartRunnerMonitorDialog extends JFrame {
 			// Create children.
 			// Actions first.
 			try {
-				final Collection actions = Client.getActions(host, port, jobId,
-						this.section);
+				final Socket clientSocket = Client.createClientSocket(host,
+						port);
+				final Collection actions = Client.getActions(clientSocket,
+						jobId, this.section);
 				for (final Iterator i = actions.iterator(); i.hasNext();)
 					this.children.add(new ActionNode(this, (JobPlanAction) i
 							.next(), this.parentDialog));
-			} catch (final ProtocolException e) {
+				clientSocket.close();
+			} catch (final Throwable e) {
 				// Log it.
 				Log.error(e);
 				// Add dummy actions instead.
@@ -1378,10 +1416,12 @@ public class MartRunnerMonitorDialog extends JFrame {
 			final JobPlanSection section = this.parent.getSection();
 			// Send the update to the server.
 			try {
-				Client.updateAction(this.parentDialog.host,
-						this.parentDialog.port,
-						section.getJobPlan().getJobId(), section, this.action);
-			} catch (final ProtocolException pe) {
+				final Socket clientSocket = Client.createClientSocket(
+						this.parentDialog.host, this.parentDialog.port);
+				Client.updateAction(clientSocket, section.getJobPlan()
+						.getJobId(), section, this.action);
+				clientSocket.close();
+			} catch (final Throwable pe) {
 				this.action.setAction(oldAction);
 				StackTrace.showStackTrace(pe);
 			}

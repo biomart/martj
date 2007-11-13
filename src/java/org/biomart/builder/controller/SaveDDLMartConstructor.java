@@ -21,6 +21,7 @@ package org.biomart.builder.controller;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,7 +46,6 @@ import org.biomart.builder.model.Schema.JDBCSchema;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.runner.controller.MartRunnerProtocol;
-import org.biomart.runner.exceptions.ProtocolException;
 
 /**
  * This implementation of the {@link MartConstructor} interface generates DDL
@@ -152,7 +152,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 	public ConstructorRunnable getConstructorRunnable(
 			final String targetDatabaseName, final String targetSchemaName,
-			final Collection datasets, final Collection prefixes) throws Exception {
+			final Collection datasets, final Collection prefixes)
+			throws Exception {
 		// Check that all the input schemas involved are cohabitable.
 		Log.info("Checking all schemas can cohabit");
 
@@ -461,6 +462,8 @@ public class SaveDDLMartConstructor implements MartConstructor {
 
 		private JDBCDataLink targetJDBCDataLink;
 
+		private Socket clientSocket;
+
 		/**
 		 * Constructs a helper which will output all actions directly to the
 		 * given host for interpretation.
@@ -514,8 +517,11 @@ public class SaveDDLMartConstructor implements MartConstructor {
 				if (event == MartConstructorListener.CONSTRUCTION_STARTED) {
 					Log.debug("Starting MartRunner job definition");
 					// Write the opening message to the socket.
-					this.job = MartRunnerProtocol.Client.newJob(
-							this.outputHost, this.outputPort);
+					this.clientSocket = MartRunnerProtocol.Client
+							.createClientSocket(this.outputHost,
+									this.outputPort);
+					this.job = MartRunnerProtocol.Client
+							.newJob(this.clientSocket);
 					// Substitute JDBC url with alternative
 					// JDBC host and port.
 					String url = this.targetJDBCDataLink.getUrl();
@@ -526,17 +532,18 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						url = url.replaceAll("(//|@)[^:]+:\\d+", "$1"
 								+ this.overrideHost + ":" + this.overridePort);
 					url = url.replaceAll(this.targetJDBCDataLink
-						.getDataLinkDatabase(), targetDatabase);
-					MartRunnerProtocol.Client.beginJob(this.outputHost,
-							this.outputPort, this.job, this.targetSchema,
+							.getDataLinkDatabase(), targetDatabase);
+					MartRunnerProtocol.Client.beginJob(this.clientSocket,
+							this.job, this.targetSchema,
 							this.targetJDBCDataLink.getDriverClassName(), url,
 							this.targetJDBCDataLink.getUsername(),
 							this.targetJDBCDataLink.getPassword());
 				} else if (event == MartConstructorListener.CONSTRUCTION_ENDED) {
 					Log.debug("Finished MartRunner job definition");
 					// Write the closing message to the socket.
-					MartRunnerProtocol.Client.endJob(this.outputHost,
-							this.outputPort, this.job);
+					MartRunnerProtocol.Client.endJob(this.clientSocket,
+							this.job);
+					this.clientSocket.close();
 				} else if (event == MartConstructorListener.DATASET_STARTED) {
 					// Clear out action map ready for next dataset.
 					this.dataset = (String) data;
@@ -571,9 +578,9 @@ public class SaveDDLMartConstructor implements MartConstructor {
 								throw new ListenerException(ce);
 							}
 						// Write the data.
-						MartRunnerProtocol.Client.setActions(this.outputHost,
-								this.outputPort, this.job, this.partition,
-								this.dataset, tableName, (String[]) actions
+						MartRunnerProtocol.Client.setActions(this.clientSocket,
+								this.job, this.partition, this.dataset,
+								tableName, (String[]) actions
 										.toArray(new String[0]));
 					}
 				} else if (event == MartConstructorListener.ACTION_EVENT) {
@@ -583,7 +590,7 @@ public class SaveDDLMartConstructor implements MartConstructor {
 						this.actions.put(dsTableName, new ArrayList());
 					((List) this.actions.get(dsTableName)).add(action);
 				}
-			} catch (final ProtocolException pe) {
+			} catch (final Throwable pe) {
 				throw new ListenerException(pe);
 			}
 		}

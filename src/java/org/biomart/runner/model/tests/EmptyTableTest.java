@@ -18,6 +18,8 @@
 
 package org.biomart.runner.model.tests;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -30,7 +32,6 @@ import java.util.TreeSet;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 import org.biomart.runner.controller.MartRunnerProtocol;
-import org.biomart.runner.exceptions.ProtocolException;
 import org.biomart.runner.exceptions.TestException;
 import org.biomart.runner.model.JobPlan;
 
@@ -40,8 +41,8 @@ import org.biomart.runner.model.JobPlan;
  * every row for the non-key columns.
  * 
  * @author Richard Holland <holland@ebi.ac.uk>
- * @version $Revision$, $Date$, modified by 
- * 			$Author$
+ * @version $Revision$, $Date$, modified by $Author:
+ *          rh4 $
  * @since 0.7
  */
 public class EmptyTableTest extends JobTest {
@@ -87,160 +88,178 @@ public class EmptyTableTest extends JobTest {
 			throws SQLException {
 		// Load tables and views from database, then loop over them.
 		Log.debug("Starting empty table test. Loading tables.");
-		final Collection tableEntries;
-		try {
-			tableEntries = MartRunnerProtocol.Client.listTables(host, port,
-					null, this.getJobPlan().getJobId());
-		} catch (final ProtocolException pe) {
-			this.exception = new TestException(pe);
-			return;
-		}
-		// Do the loop. Record tables alphabetically.
-		final Set tables = new TreeSet();
-		for (final Iterator i = tableEntries.iterator(); i.hasNext();) {
-			final Map entry = (Map) i.next();
-			tables.add(entry.get("TABLE_NAME"));
-		}
-
-		// Work out step size.
-		final double stepSize = 100.0 / tables.size();
-
-		// For each table...
 		boolean failed = false;
-		for (final Iterator i = tables.iterator(); i.hasNext()
-				&& !this.isTestStopped();) {
-			final String dbTableName = (String) i.next();
-			Log.debug("Testing " + dbTableName);
-			// List all columns.
-			final Set keyCols = new HashSet();
-			final Set nonKeyCols = new HashSet();
-			final Set nullableNonKeyCols = new HashSet();
+		Socket clientSocket = null;
+		try {
+			clientSocket = MartRunnerProtocol.Client.createClientSocket(host,
+					port);
 
-			// Load tables and views from database, then loop over them.
-			Log.debug("Loading columns.");
-			final Collection columnEntries;
+			final Collection tableEntries;
 			try {
-				columnEntries = MartRunnerProtocol.Client.listColumns(host,
-						port, null, this.getJobPlan().getJobId(), dbTableName);
-			} catch (final ProtocolException pe) {
+				tableEntries = MartRunnerProtocol.Client.listTables(
+						clientSocket, null, this.getJobPlan().getJobId());
+			} catch (final Throwable pe) {
 				this.exception = new TestException(pe);
 				return;
 			}
 			// Do the loop. Record tables alphabetically.
-			for (final Iterator j = columnEntries.iterator(); j.hasNext();) {
-				final Map entry = (Map) j.next();
-				final String dbTblColName = (String) entry.get("COLUMN_NAME");
-				final boolean nullable = ((Integer) entry.get("NULLABLE"))
-						.intValue() != DatabaseMetaData.columnNoNulls;
-				if (dbTblColName.endsWith(Resources.get("keySuffix")))
-					keyCols.add(dbTblColName);
-				else {
-					nonKeyCols.add(dbTblColName);
-					if (nullable)
-						nullableNonKeyCols.add(dbTblColName);
+			final Set tables = new TreeSet();
+			for (final Iterator i = tableEntries.iterator(); i.hasNext();) {
+				final Map entry = (Map) i.next();
+				tables.add(entry.get("TABLE_NAME"));
+			}
+
+			// Work out step size.
+			final double stepSize = 100.0 / tables.size();
+
+			// For each table...
+			for (final Iterator i = tables.iterator(); i.hasNext()
+					&& !this.isTestStopped();) {
+				final String dbTableName = (String) i.next();
+				Log.debug("Testing " + dbTableName);
+				// List all columns.
+				final Set keyCols = new HashSet();
+				final Set nonKeyCols = new HashSet();
+				final Set nullableNonKeyCols = new HashSet();
+
+				// Load tables and views from database, then loop over them.
+				Log.debug("Loading columns.");
+				final Collection columnEntries;
+				try {
+					columnEntries = MartRunnerProtocol.Client.listColumns(
+							clientSocket, null, this.getJobPlan().getJobId(),
+							dbTableName);
+				} catch (final Throwable pe) {
+					this.exception = new TestException(pe);
+					return;
 				}
-			}
-
-			// Construct SQL to count all rows.
-			Log.debug("Executing select count(1).");
-			final StringBuffer sql = new StringBuffer();
-			sql.append("select count(1) from ");
-			sql.append(this.getJobPlan().getTargetSchema());
-			sql.append('.');
-			sql.append(dbTableName);
-			int countAll = 0;
-			try {
-				final Collection results = MartRunnerProtocol.Client.runSQL(
-						host, port, this.getJobPlan().getJobId(), sql
-								.toString());
-				countAll = Integer.parseInt(((Map.Entry) ((Map) results
-						.iterator().next()).entrySet().iterator().next())
-						.getValue().toString());
-			} catch (final ProtocolException pe) {
-				this.exception = new TestException(pe);
-				return;
-			}
-
-			// Process results.
-			if (countAll > 0) {
-				if (nonKeyCols.size() == 0
-						&& this.getNoNonKeyColsTest() != EmptyTableTest.SKIP) {
-					// LOG - Table has no rows.
-					this.report.append(System.getProperty("line.separator"));
-					if (this.getNoNonKeyColsTest() == EmptyTableTest.DROP) {
-						this.dropTable(host, port, dbTableName);
-						this.report.append(Resources.get(
-								"emptyTableNoNonKeyColsDropped", dbTableName));
-					} else
-						this.report.append(Resources.get(
-								"emptyTableNoNonKeyCols", dbTableName));
-					failed = true;
-				} else if (nullableNonKeyCols.size() > 0
-						&& this.getAllNullableColsEmptyTest() != EmptyTableTest.SKIP) {
-					Log.debug("Executing select count(not null).");
-					sql.setLength(0);
-					sql.append("select count(1) from ");
-					sql.append(this.getJobPlan().getTargetSchema());
-					sql.append('.');
-					sql.append(dbTableName);
-					sql.append(" where not (");
-					for (final Iterator j = nullableNonKeyCols.iterator(); j
-							.hasNext();) {
-						sql.append(j.next());
-						sql.append(" is null");
-						if (j.hasNext())
-							sql.append(" and ");
+				// Do the loop. Record tables alphabetically.
+				for (final Iterator j = columnEntries.iterator(); j.hasNext();) {
+					final Map entry = (Map) j.next();
+					final String dbTblColName = (String) entry
+							.get("COLUMN_NAME");
+					final boolean nullable = ((Integer) entry.get("NULLABLE"))
+							.intValue() != DatabaseMetaData.columnNoNulls;
+					if (dbTblColName.endsWith(Resources.get("keySuffix")))
+						keyCols.add(dbTblColName);
+					else {
+						nonKeyCols.add(dbTblColName);
+						if (nullable)
+							nullableNonKeyCols.add(dbTblColName);
 					}
-					sql.append(')');
+				}
 
-					int countNotNull = 0;
-					try {
-						final Collection results = MartRunnerProtocol.Client
-								.runSQL(host, port, this.getJobPlan()
-										.getJobId(), sql.toString());
-						countNotNull = Integer
-								.parseInt(((Map.Entry) ((Map) results
-										.iterator().next()).entrySet()
-										.iterator().next()).getValue()
-										.toString());
-					} catch (final ProtocolException pe) {
-						this.exception = new TestException(pe);
-						return;
-					}
+				// Construct SQL to count all rows.
+				Log.debug("Executing select count(1).");
+				final StringBuffer sql = new StringBuffer();
+				sql.append("select count(1) from ");
+				sql.append(this.getJobPlan().getTargetSchema());
+				sql.append('.');
+				sql.append(dbTableName);
+				int countAll = 0;
+				try {
+					final Collection results = MartRunnerProtocol.Client
+							.runSQL(clientSocket, this.getJobPlan().getJobId(),
+									sql.toString());
+					countAll = Integer.parseInt(((Map.Entry) ((Map) results
+							.iterator().next()).entrySet().iterator().next())
+							.getValue().toString());
+				} catch (final Throwable pe) {
+					this.exception = new TestException(pe);
+					return;
+				}
 
-					// Process results.
-					if (countNotNull == 0) {
-						// LOG - Table contains no values in column.
+				// Process results.
+				if (countAll > 0) {
+					if (nonKeyCols.size() == 0
+							&& this.getNoNonKeyColsTest() != EmptyTableTest.SKIP) {
+						// LOG - Table has no rows.
 						this.report
 								.append(System.getProperty("line.separator"));
-						if (this.getAllNullableColsEmptyTest() == EmptyTableTest.DROP) {
+						if (this.getNoNonKeyColsTest() == EmptyTableTest.DROP) {
 							this.dropTable(host, port, dbTableName);
 							this.report.append(Resources.get(
-									"emptyTableNullableColsEmptyDropped",
+									"emptyTableNoNonKeyColsDropped",
 									dbTableName));
 						} else
-							this.report
-									.append(Resources.get(
-											"emptyTableNullableColsEmpty",
-											dbTableName));
+							this.report.append(Resources.get(
+									"emptyTableNoNonKeyCols", dbTableName));
 						failed = true;
-					}
-				}
-			} else if (this.getNoRowsTest() != EmptyTableTest.SKIP) {
-				// LOG - Table contains no rows at all.
-				this.report.append(System.getProperty("line.separator"));
-				if (this.getNoRowsTest() == EmptyTableTest.DROP) {
-					this.dropTable(host, port, dbTableName);
-					this.report.append(Resources.get(
-							"emptyTableHasNoRowsDropped", dbTableName));
-				} else
-					this.report.append(Resources.get("emptyTableHasNoRows",
-							dbTableName));
-				failed = true;
-			}
+					} else if (nullableNonKeyCols.size() > 0
+							&& this.getAllNullableColsEmptyTest() != EmptyTableTest.SKIP) {
+						Log.debug("Executing select count(not null).");
+						sql.setLength(0);
+						sql.append("select count(1) from ");
+						sql.append(this.getJobPlan().getTargetSchema());
+						sql.append('.');
+						sql.append(dbTableName);
+						sql.append(" where not (");
+						for (final Iterator j = nullableNonKeyCols.iterator(); j
+								.hasNext();) {
+							sql.append(j.next());
+							sql.append(" is null");
+							if (j.hasNext())
+								sql.append(" and ");
+						}
+						sql.append(')');
 
-			// Update progress.
-			this.progress += stepSize;
+						int countNotNull = 0;
+						try {
+							final Collection results = MartRunnerProtocol.Client
+									.runSQL(clientSocket, this.getJobPlan()
+											.getJobId(), sql.toString());
+							countNotNull = Integer
+									.parseInt(((Map.Entry) ((Map) results
+											.iterator().next()).entrySet()
+											.iterator().next()).getValue()
+											.toString());
+						} catch (final Throwable pe) {
+							this.exception = new TestException(pe);
+							return;
+						}
+
+						// Process results.
+						if (countNotNull == 0) {
+							// LOG - Table contains no values in column.
+							this.report.append(System
+									.getProperty("line.separator"));
+							if (this.getAllNullableColsEmptyTest() == EmptyTableTest.DROP) {
+								this.dropTable(host, port, dbTableName);
+								this.report.append(Resources.get(
+										"emptyTableNullableColsEmptyDropped",
+										dbTableName));
+							} else
+								this.report.append(Resources.get(
+										"emptyTableNullableColsEmpty",
+										dbTableName));
+							failed = true;
+						}
+					}
+				} else if (this.getNoRowsTest() != EmptyTableTest.SKIP) {
+					// LOG - Table contains no rows at all.
+					this.report.append(System.getProperty("line.separator"));
+					if (this.getNoRowsTest() == EmptyTableTest.DROP) {
+						this.dropTable(host, port, dbTableName);
+						this.report.append(Resources.get(
+								"emptyTableHasNoRowsDropped", dbTableName));
+					} else
+						this.report.append(Resources.get("emptyTableHasNoRows",
+								dbTableName));
+					failed = true;
+				}
+
+				// Update progress.
+				this.progress += stepSize;
+			}
+		} catch (final IOException e) {
+			this.exception = new TestException(e);
+		} finally {
+			if (clientSocket != null)
+				try {
+					clientSocket.close();
+				} catch (final IOException t) {
+					// Don't care.
+				}
 		}
 
 		if (!failed) {
@@ -260,9 +279,12 @@ public class EmptyTableTest extends JobTest {
 		sql.append(tableName);
 
 		try {
-			MartRunnerProtocol.Client.runSQL(host, port, this.getJobPlan()
+			final Socket clientSocket = MartRunnerProtocol.Client
+					.createClientSocket(host, port);
+			MartRunnerProtocol.Client.runSQL(clientSocket, this.getJobPlan()
 					.getJobId(), sql.toString());
-		} catch (final ProtocolException pe) {
+			clientSocket.close();
+		} catch (final Throwable pe) {
 			this.exception = new TestException(pe);
 			return;
 		}
@@ -283,7 +305,7 @@ public class EmptyTableTest extends JobTest {
 	 * @param allNullableColsEmptyTest
 	 *            the allNullableColsEmptyTest to set
 	 */
-	public void setAllNullableColsEmptyTest(int allNullableColsEmptyTest) {
+	public void setAllNullableColsEmptyTest(final int allNullableColsEmptyTest) {
 		this.allNullableColsEmptyTest = allNullableColsEmptyTest;
 	}
 
@@ -302,7 +324,7 @@ public class EmptyTableTest extends JobTest {
 	 * @param noNonKeyColsTest
 	 *            the noNonKeyColsTest to set
 	 */
-	public void setNoNonKeyColsTest(int noNonKeyColsTest) {
+	public void setNoNonKeyColsTest(final int noNonKeyColsTest) {
 		this.noNonKeyColsTest = noNonKeyColsTest;
 	}
 
@@ -321,7 +343,7 @@ public class EmptyTableTest extends JobTest {
 	 * @param noRowsTest
 	 *            the noRowsTest to set
 	 */
-	public void setNoRowsTest(int noRowsTest) {
+	public void setNoRowsTest(final int noRowsTest) {
 		this.noRowsTest = noRowsTest;
 	}
 }
