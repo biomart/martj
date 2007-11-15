@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.ListenerException;
 import org.biomart.builder.exceptions.PartitionException;
@@ -375,12 +376,12 @@ public interface MartConstructor {
 										PartitionTable.UNLIMITED_ROWS);
 							final double subStepPercent = dmPta == null ? stepPercent
 									: (stepPercent / (double) dmPta
-											.getPartitionTable()
-											.countRows());
+											.getPartitionTable().countRows());
 							while (fakeDMPartition ? true : dmPta != null
 									&& dmPta.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
-								double targetPercent = this.percentComplete + subStepPercent;
+								double targetPercent = this.percentComplete
+										+ subStepPercent;
 								if (!this.makeActionsForDatasetTable(
 										bigParents, subStepPercent,
 										templateSchema,
@@ -388,7 +389,8 @@ public interface MartConstructor {
 										(String) schemaPartition.getValue(),
 										dsPta, dmPta, dataset, dsTable))
 									droppedTables.add(dsTable);
-								// In case the construction didn't do all the steps.
+								// In case the construction didn't do all the
+								// steps.
 								this.percentComplete = targetPercent;
 							}
 						}
@@ -479,9 +481,9 @@ public interface MartConstructor {
 			// Use the transformation units to create the basic table.
 			final Collection units = dsTable.getTransformationUnits();
 			stepPercent /= (double) units.size();
-			Relation firstJoinRel = null;			
+			Relation firstJoinRel = null;
 			for (final Iterator j = units.iterator(); j.hasNext(); this.percentComplete += stepPercent) {
-				this.checkCancelled(); 
+				this.checkCancelled();
 
 				// Check if TU actually applies to us. If not, skip it.
 				final TransformationUnit tu = (TransformationUnit) j.next();
@@ -1289,68 +1291,9 @@ public interface MartConstructor {
 			// Open connection and query.
 			final Connection conn = ((JDBCDataLink) templateSchema)
 					.getConnection(schemaPartition);
-			final StringBuffer sql = new StringBuffer();
-			// From lookup table joined with parent table,
-			// find both parent ID col and child ID col.
-			final Table parentTable = parentRel.getOneKey().getTable();
-			final Table childTable = parentRel.getManyKey().getTable();
-			sql.append("select child.");
-			sql.append(childRel.getManyKey().getColumns()[0].getName());
-			sql.append(", child.");
-			sql.append(parentRel.getManyKey().getColumns()[0].getName());
-			sql.append(" from ");
-			sql
-					.append(schemaPartition == null ? ((JDBCDataLink) templateSchema)
-							.getDataLinkSchema()
-							: schemaPartition);
-			sql.append('.');
-			sql.append(parentTable.getName());
-			sql.append(" as parent, ");
-			sql
-					.append(schemaPartition == null ? ((JDBCDataLink) templateSchema)
-							.getDataLinkSchema()
-							: schemaPartition);
-			sql.append('.');
-			sql.append(childTable.getName());
-			sql.append(" as child where parent.");
-			sql.append(parentRel.getOneKey().getColumns()[0].getName());
-			sql.append("=child.");
-			sql.append(childRel.getManyKey().getColumns()[0].getName());
-			if (parentTable.getRestrictTable(dataset, dsTable.getName()) != null) {
-				sql.append(" and ");
-				sql.append(parentTable.getRestrictTable(dataset,
-						dsTable.getName()).getSubstitutedExpression("parent"));
-			}
-			if (childTable.getRestrictTable(dataset, dsTable.getName()) != null) {
-				sql.append(" and ");
-				sql.append(childTable.getRestrictTable(dataset,
-						dsTable.getName()).getSubstitutedExpression("child"));
-			}
-			if (childRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
-				sql.append(" and ");
-				sql.append(childRel.getRestrictRelation(dataset,
-						dsTable.getName(), 0)
-						.getSubstitutedExpression(
-								childRel.getFirstKey().equals(
-										childRel.getOneKey()) ? "parent"
-										: "child",
-								childRel.getFirstKey().equals(
-										childRel.getManyKey()) ? "parent"
-										: "child", false, false, utu));
-			}
-			if (parentRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
-				sql.append(" and ");
-				sql.append(parentRel.getRestrictRelation(dataset,
-						dsTable.getName(), 0)
-						.getSubstitutedExpression(
-								parentRel.getFirstKey().equals(
-										parentRel.getOneKey()) ? "parent"
-										: "child",
-								parentRel.getFirstKey().equals(
-										parentRel.getManyKey()) ? "parent"
-										: "child", false, false, utu));
-			}
-			final String sqlStr = sql.toString();
+			final String sqlStr = DatabaseDialect.getDialect(templateSchema)
+					.getUnrollTableSQL(dataset, dsTable, parentRel, childRel,
+							schemaPartition, templateSchema, utu);
 			Log.debug("Executing unroll statement: " + sqlStr);
 			final ResultSet rs = conn.prepareStatement(sqlStr).executeQuery();
 			// Iterate over all pairs in db.

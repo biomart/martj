@@ -22,12 +22,21 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.model.DataLink;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.PartitionTable;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.Schema.JDBCSchema;
+import org.biomart.builder.model.TransformationUnit.UnrollTable;
 import org.biomart.common.resources.Log;
 import org.biomart.common.resources.Resources;
 
@@ -188,4 +197,62 @@ public abstract class DatabaseDialect {
 			throw new ConstructorException(Resources.get("nameTooLong",
 					columnName));
 	}
+
+	/**
+	 * Get the SQL for unrolling a table's rolled-up relations.
+	 * 
+	 * @param dataset
+	 *            the dataset.
+	 * @param dsTable
+	 *            the dataset table.
+	 * @param parentRel
+	 *            the parent relation.
+	 * @param childRel
+	 *            the child relation.
+	 * @param schemaPartition
+	 *            the schema partition, or <tt>null</tt> for none.
+	 * @param templateSchema
+	 *            the template schema.
+	 * @param utu
+	 *            the unroll unit leading to this.
+	 * @return the SQL.
+	 */
+	public abstract String getUnrollTableSQL(final DataSet dataset,
+			final DataSetTable dsTable, final Relation parentRel,
+			final Relation childRel, final String schemaPartition,
+			final Schema templateSchema, final UnrollTable utu);
+
+	/**
+	 * Gets the SQL to return rows of a partition table.
+	 * 
+	 * @param positionMap
+	 *            the map to populate with column names to column positions.
+	 * @param pt
+	 *            the partition table to get rows for.
+	 * @param ds
+	 *            the dataset.
+	 * @param schema
+	 *            the schema to connect to.
+	 * @param usablePartition
+	 *            the partition to connect to in the schema.
+	 * @return the SQL for the rows. positionMap will also have been populated
+	 *         at this stage.
+	 * @throws PartitionException
+	 *             if anything goes wrong.
+	 */
+	public abstract String getPartitionTableRowsSQL(final Map positionMap,
+			final PartitionTable pt, final DataSet ds, final Schema schema,
+			final String usablePartition) throws PartitionException;
+
+	/**
+	 * Get SQL to return rows from a table.
+	 * 
+	 * @param schemaName
+	 *            the schema to use.
+	 * @param table
+	 *            the table to get rows from.
+	 * @return the SQL.
+	 */
+	public abstract String getSimpleRowsSQL(final String schemaName,
+			final Table table);
 }

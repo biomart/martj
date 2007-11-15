@@ -21,14 +21,26 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.biomart.builder.exceptions.ConstructorException;
+import org.biomart.builder.exceptions.PartitionException;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
+import org.biomart.builder.model.DataSet;
+import org.biomart.builder.model.Key;
 import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.PartitionTable;
+import org.biomart.builder.model.Relation;
+import org.biomart.builder.model.Schema;
+import org.biomart.builder.model.Table;
+import org.biomart.builder.model.TransformationUnit;
 import org.biomart.builder.model.DataLink.JDBCDataLink;
+import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
@@ -43,7 +55,14 @@ import org.biomart.builder.model.MartConstructorAction.LeftJoin;
 import org.biomart.builder.model.MartConstructorAction.Rename;
 import org.biomart.builder.model.MartConstructorAction.Select;
 import org.biomart.builder.model.MartConstructorAction.UpdateOptimiser;
+import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
+import org.biomart.builder.model.Table.RestrictedTableDefinition;
+import org.biomart.builder.model.TransformationUnit.JoinTable;
+import org.biomart.builder.model.TransformationUnit.SelectFromTable;
+import org.biomart.builder.model.TransformationUnit.SkipTable;
+import org.biomart.builder.model.TransformationUnit.UnrollTable;
 import org.biomart.common.exceptions.BioMartError;
+import org.biomart.common.resources.Resources;
 
 /**
  * Understands how to create SQL and DDL for an Oracle database.
@@ -114,7 +133,7 @@ public class OracleDialect extends DatabaseDialect {
 		final String schemaName = action.getDataSetSchemaName();
 
 		final boolean reversed = action.isReversed();
-		
+
 		final StringBuffer sb = new StringBuffer();
 		sb.append("insert into ");
 		sb.append(schemaName);
@@ -137,26 +156,25 @@ public class OracleDialect extends DatabaseDialect {
 				if (parentCol.equals(action.getUnrollPKCol())) {
 					sb.append(" child.");
 					sb.append(action.getUnrollFKCol());
+				} else {
+					sb.append(" parent.");
+					sb.append(parentCol);
 				}
-				else {
+			} else {
+				if (parentCol.equals(action.getUnrollFKCol()))
+					sb.append(" child.");
+				else
 					sb.append(" parent.");
 				sb.append(parentCol);
-				}
-			} else {			
-			if (parentCol.equals(action.getUnrollFKCol()))
-				sb.append(" child.");
-			else
-				sb.append(" parent.");
-			sb.append(parentCol);
 			}
 			sb.append(',');
 		}
 		sb.append(" child.");
-		sb.append(reversed?action.getUnrollIDCol():action.getUnrollPKCol());
+		sb.append(reversed ? action.getUnrollIDCol() : action.getUnrollPKCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollIDCol());
 		sb.append(", child.");
-		sb.append(reversed?action.getUnrollNameCol():action.getNamingCol());
+		sb.append(reversed ? action.getUnrollNameCol() : action.getNamingCol());
 		sb.append(" as ");
 		sb.append(action.getUnrollNameCol());
 		sb.append(", ");
@@ -172,16 +190,16 @@ public class OracleDialect extends DatabaseDialect {
 		sb.append('.');
 		sb.append(action.getSourceTable());
 		sb.append(" as child on parent.");
-		sb.append(reversed?action.getUnrollPKCol():action.getUnrollFKCol());
+		sb.append(reversed ? action.getUnrollPKCol() : action.getUnrollFKCol());
 		sb.append("=child.");
-		sb.append(reversed?action.getUnrollFKCol():action.getUnrollPKCol());
+		sb.append(reversed ? action.getUnrollFKCol() : action.getUnrollPKCol());
 		sb.append(" and parent.");
 		sb.append(action.getUnrollIterationCol());
 		sb.append('=');
 		sb.append(action.getUnrollIteration());
 
 		statements.add(sb.toString());
-		
+
 		sb.setLength(0);
 		sb.append("delete from ");
 		sb.append(schemaName);
@@ -190,7 +208,7 @@ public class OracleDialect extends DatabaseDialect {
 		sb.append(" as newrecord where newrecord.");
 		sb.append(action.getUnrollIterationCol());
 		sb.append('=');
-		sb.append(action.getUnrollIteration()+1);
+		sb.append(action.getUnrollIteration() + 1);
 		sb.append(" and exists (select 1 from ");
 		sb.append(schemaName);
 		sb.append('.');
@@ -208,7 +226,7 @@ public class OracleDialect extends DatabaseDialect {
 		sb.append("<newrecord.");
 		sb.append(action.getUnrollIterationCol());
 		sb.append(')');
-		
+
 		statements.add(sb.toString());
 	}
 
@@ -743,5 +761,226 @@ public class OracleDialect extends DatabaseDialect {
 		} catch (final SQLException e) {
 			throw new BioMartError(e);
 		}
+	}
+
+	public String getUnrollTableSQL(final DataSet dataset,
+			final DataSetTable dsTable, final Relation parentRel,
+			final Relation childRel, final String schemaPartition,
+			final Schema templateSchema, final UnrollTable utu) {
+		final StringBuffer sql = new StringBuffer();
+		// From lookup table joined with parent table,
+		// find both parent ID col and child ID col.
+		final Table parentTable = parentRel.getOneKey().getTable();
+		final Table childTable = parentRel.getManyKey().getTable();
+		sql.append("select child.");
+		sql.append(childRel.getManyKey().getColumns()[0].getName());
+		sql.append(", child.");
+		sql.append(parentRel.getManyKey().getColumns()[0].getName());
+		sql.append(" from ");
+		sql.append(schemaPartition == null ? ((JDBCDataLink) templateSchema)
+				.getDataLinkSchema() : schemaPartition);
+		sql.append('.');
+		sql.append(parentTable.getName());
+		sql.append(" as parent, ");
+		sql.append(schemaPartition == null ? ((JDBCDataLink) templateSchema)
+				.getDataLinkSchema() : schemaPartition);
+		sql.append('.');
+		sql.append(childTable.getName());
+		sql.append(" as child where parent.");
+		sql.append(parentRel.getOneKey().getColumns()[0].getName());
+		sql.append("=child.");
+		sql.append(childRel.getManyKey().getColumns()[0].getName());
+		if (parentTable.getRestrictTable(dataset, dsTable.getName()) != null) {
+			sql.append(" and ");
+			sql.append(parentTable.getRestrictTable(dataset, dsTable.getName())
+					.getSubstitutedExpression("parent"));
+		}
+		if (childTable.getRestrictTable(dataset, dsTable.getName()) != null) {
+			sql.append(" and ");
+			sql.append(childTable.getRestrictTable(dataset, dsTable.getName())
+					.getSubstitutedExpression("child"));
+		}
+		if (childRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
+			sql.append(" and ");
+			sql
+					.append(childRel.getRestrictRelation(dataset,
+							dsTable.getName(), 0)
+							.getSubstitutedExpression(
+									childRel.getFirstKey().equals(
+											childRel.getOneKey()) ? "parent"
+											: "child",
+									childRel.getFirstKey().equals(
+											childRel.getManyKey()) ? "parent"
+											: "child", false, false, utu));
+		}
+		if (parentRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
+			sql.append(" and ");
+			sql
+					.append(parentRel.getRestrictRelation(dataset,
+							dsTable.getName(), 0)
+							.getSubstitutedExpression(
+									parentRel.getFirstKey().equals(
+											parentRel.getOneKey()) ? "parent"
+											: "child",
+									parentRel.getFirstKey().equals(
+											parentRel.getManyKey()) ? "parent"
+											: "child", false, false, utu));
+		}
+		return sql.toString();
+	}
+
+	public String getPartitionTableRowsSQL(final Map positionMap,
+			final PartitionTable pt, final DataSet ds, final Schema schema,
+			final String usablePartition) throws PartitionException {
+		final StringBuffer sql = new StringBuffer();
+
+		// This is generic SQL and should not need any dialects.
+
+		final List trueSelectedCols = new ArrayList();
+		for (final Iterator i = pt.getSelectedColumnNames().iterator(); i
+				.hasNext();) {
+			final String col = (String) i.next();
+			if (!col.equals(PartitionTable.DIV_COLUMN))
+				trueSelectedCols.add(col);
+		}
+
+		// Make a map of columns in statement to
+		// named columns in results. Use allCols to
+		// map modified names back to real names in
+		// order to track down dataset column objects.
+		// Update position map with column modified names.
+		// Keys are column names, values are integers.
+		int nextCol = 1; // ResultSet is 1-indexed.
+		final StringBuffer sqlSel = new StringBuffer();
+		sqlSel.append("select distinct ");
+		final StringBuffer sqlFrom = new StringBuffer();
+		sqlFrom.append(" from ");
+		final StringBuffer sqlWhere = new StringBuffer();
+		sqlWhere.append(" where ");
+		char currSuffix = 'a' - 1;
+		final Map prevSuffixes = new HashMap();
+		for (final Iterator i = ds.getMainTable().getTransformationUnits()
+				.iterator(); i.hasNext()
+				&& positionMap.size() <= trueSelectedCols.size();) {
+			final TransformationUnit tu = (TransformationUnit) i.next();
+			if (tu instanceof SelectFromTable) {
+				// JoinTable extends SelectFromTable.
+				// Skip SkipTables and UnrollTables.
+				if (tu instanceof SkipTable || tu instanceof UnrollTable)
+					continue;
+				// Add the unit to the from clause.
+				final Table selTab = ((SelectFromTable) tu).getTable();
+				final String selSch = selTab.getSchema().equals(schema) ? usablePartition
+						: selTab.getSchema().getDataLinkSchema();
+				Key prevKey = null;
+				if (tu instanceof JoinTable) {
+					prevKey = ((JoinTable) tu).getSchemaSourceKey();
+					sqlFrom.append(',');
+				}
+				sqlFrom.append(selSch);
+				sqlFrom.append('.');
+				sqlFrom.append(selTab.getName());
+				sqlFrom.append(" as ");
+				sqlFrom.append(++currSuffix);
+				prevSuffixes.put(tu, new Character(currSuffix));
+				if (tu instanceof JoinTable) {
+					final JoinTable jtu = (JoinTable) tu;
+					final char lhs;
+					final char rhs;
+					final TransformationUnit prevTu = jtu.getPreviousUnit();
+					if (prevKey.equals(jtu.getSchemaRelation().getFirstKey())) {
+						lhs = ((Character) prevSuffixes.get(prevTu))
+								.charValue();
+						rhs = currSuffix;
+					} else {
+						rhs = ((Character) prevSuffixes.get(prevTu))
+								.charValue();
+						lhs = currSuffix;
+					}
+					// Append join info to where clause.
+					if (!sqlWhere.toString().equals(" where "))
+						sqlWhere.append(" and ");
+					for (int k = 0; k < prevKey.getColumns().length; k++) {
+						if (k > 0)
+							sqlWhere.append(" and ");
+						sqlWhere.append(prevKey.equals(jtu.getSchemaRelation()
+								.getFirstKey()) ? lhs : rhs);
+						sqlWhere.append('.');
+						sqlWhere.append(((Column) prevKey.getColumns()[k])
+								.getName());
+						sqlWhere.append('=');
+						sqlWhere.append(prevKey.equals(jtu.getSchemaRelation()
+								.getFirstKey()) ? rhs : lhs);
+						sqlWhere.append('.');
+						sqlWhere.append(((Column) jtu.getSchemaRelation()
+								.getOtherKey(jtu.getSchemaSourceKey())
+								.getColumns()[k]).getName());
+					}
+					// Add any rel restrictions to where clause.
+					final RestrictedRelationDefinition rr = jtu
+							.getSchemaRelation().getRestrictRelation(ds,
+									ds.getMainTable().getName(),
+									jtu.getSchemaRelationIteration());
+					if (rr != null) {
+						sqlWhere.append(" and ");
+						sqlWhere.append(rr.getSubstitutedExpression("" + lhs,
+								"" + rhs, false, false, jtu));
+					}
+				}
+				// Add any table restrictions to where clause.
+				final RestrictedTableDefinition rt = selTab.getRestrictTable(
+						ds, ds.getMainTable().getName());
+				if (rt != null) {
+					if (!sqlWhere.toString().equals(" where "))
+						sqlWhere.append(" and ");
+					sqlWhere.append(rt
+							.getSubstitutedExpression("" + currSuffix));
+				}
+				// If any unit columns match selected columns,
+				// add them to the select statement and their
+				// position to the index map.
+				for (final Iterator j = tu.getNewColumnNameMap().entrySet()
+						.iterator(); j.hasNext();) {
+					final Map.Entry entry = (Map.Entry) j.next();
+					final DataSetColumn dsCol = (DataSetColumn) entry
+							.getValue();
+					if (trueSelectedCols.contains(dsCol.getModifiedName())) {
+						final Column col = (Column) entry.getKey();
+						if (nextCol > 1)
+							sqlSel.append(',');
+						sqlSel.append(currSuffix);
+						sqlSel.append('.');
+						sqlSel.append(col.getName());
+						positionMap.put(new Integer(nextCol++), dsCol
+								.getModifiedName());
+					}
+				}
+			} else
+				throw new PartitionException(Resources.get("cannotDoBasicSQL"));
+		}
+
+		// Build SQL.
+		sql.append(sqlSel);
+		sql.append(sqlFrom);
+		if (!sqlWhere.toString().equals(" where "))
+			sql.append(sqlWhere);
+
+		return sql.toString();
+	}
+
+	public String getSimpleRowsSQL(final String schemaName, final Table table) {
+		final StringBuffer sql = new StringBuffer();
+		sql.append("select ");
+		for (final Iterator i = table.getColumns().keySet().iterator(); i
+				.hasNext();) {
+			sql.append((String) i.next());
+			if (i.hasNext())
+				sql.append(',');
+		}
+		sql.append(" from ");
+		sql.append(schemaName);
+		sql.append('.');
+		sql.append(table.getName());
+		return sql.toString();
 	}
 }

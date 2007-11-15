@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.exceptions.PartitionException;
 import org.biomart.builder.exceptions.ValidationException;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
@@ -55,9 +56,7 @@ import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
-import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
 import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
-import org.biomart.builder.model.Table.RestrictedTableDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
 import org.biomart.builder.model.TransformationUnit.SelectFromTable;
@@ -462,151 +461,17 @@ public class DataSet extends Schema {
 			final String usablePartition = schemaPartition != null ? schemaPartition
 					: jdbc.getDataLinkSchema();
 			conn = jdbc.getConnection(schemaPartition);
+
 			// Construct SQL statement.
 			Log.debug("Building SQL");
-			final StringBuffer sql = new StringBuffer();
-
-			// This is generic SQL and should not need any dialects.
-
-			final List trueSelectedCols = new ArrayList();
-			for (final Iterator i = pt.getSelectedColumnNames().iterator(); i
-					.hasNext();) {
-				final String col = (String) i.next();
-				if (!col.equals(PartitionTable.DIV_COLUMN))
-					trueSelectedCols.add(col);
-			}
-
-			// Make a map of columns in statement to
-			// named columns in results. Use allCols to
-			// map modified names back to real names in
-			// order to track down dataset column objects.
-			// Update position map with column modified names.
-			// Keys are column names, values are integers.
-			int nextCol = 1; // ResultSet is 1-indexed.
 			final Map positionMap = new HashMap();
-			final StringBuffer sqlSel = new StringBuffer();
-			sqlSel.append("select distinct ");
-			final StringBuffer sqlFrom = new StringBuffer();
-			sqlFrom.append(" from ");
-			final StringBuffer sqlWhere = new StringBuffer();
-			sqlWhere.append(" where ");
-			char currSuffix = 'a' - 1;
-			final Map prevSuffixes = new HashMap();
-			for (final Iterator i = DataSet.this.getMainTable()
-					.getTransformationUnits().iterator(); i.hasNext()
-					&& positionMap.size() <= trueSelectedCols.size();) {
-				final TransformationUnit tu = (TransformationUnit) i.next();
-				if (tu instanceof SelectFromTable) {
-					// JoinTable extends SelectFromTable.
-					// Skip SkipTables and UnrollTables.
-					if (tu instanceof SkipTable || tu instanceof UnrollTable)
-						continue;
-					// Add the unit to the from clause.
-					final Table selTab = ((SelectFromTable) tu).getTable();
-					final String selSch = selTab.getSchema().equals(schema) ? usablePartition
-							: selTab.getSchema().getDataLinkSchema();
-					Key prevKey = null;
-					if (tu instanceof JoinTable) {
-						prevKey = ((JoinTable) tu).getSchemaSourceKey();
-						sqlFrom.append(',');
-					}
-					sqlFrom.append(selSch);
-					sqlFrom.append('.');
-					sqlFrom.append(selTab.getName());
-					sqlFrom.append(" as ");
-					sqlFrom.append(++currSuffix);
-					prevSuffixes.put(tu, new Character(currSuffix));
-					if (tu instanceof JoinTable) {
-						final JoinTable jtu = (JoinTable) tu;
-						final char lhs;
-						final char rhs;
-						final TransformationUnit prevTu = jtu.getPreviousUnit();
-						if (prevKey.equals(jtu.getSchemaRelation()
-								.getFirstKey())) {
-							lhs = ((Character) prevSuffixes.get(prevTu))
-									.charValue();
-							rhs = currSuffix;
-						} else {
-							rhs = ((Character) prevSuffixes.get(prevTu))
-									.charValue();
-							lhs = currSuffix;
-						}
-						// Append join info to where clause.
-						if (!sqlWhere.toString().equals(" where "))
-							sqlWhere.append(" and ");
-						for (int k = 0; k < prevKey.getColumns().length; k++) {
-							if (k > 0)
-								sqlWhere.append(" and ");
-							sqlWhere.append(prevKey.equals(jtu
-									.getSchemaRelation().getFirstKey()) ? lhs
-									: rhs);
-							sqlWhere.append('.');
-							sqlWhere.append(((Column) prevKey.getColumns()[k])
-									.getName());
-							sqlWhere.append('=');
-							sqlWhere.append(prevKey.equals(jtu
-									.getSchemaRelation().getFirstKey()) ? rhs
-									: lhs);
-							sqlWhere.append('.');
-							sqlWhere.append(((Column) jtu.getSchemaRelation()
-									.getOtherKey(jtu.getSchemaSourceKey())
-									.getColumns()[k]).getName());
-						}
-						// Add any rel restrictions to where clause.
-						final RestrictedRelationDefinition rr = jtu
-								.getSchemaRelation().getRestrictRelation(this,
-										this.getMainTable().getName(),
-										jtu.getSchemaRelationIteration());
-						if (rr != null) {
-							sqlWhere.append(" and ");
-							sqlWhere.append(rr.getSubstitutedExpression(""
-									+ lhs, "" + rhs, false, false, jtu));
-						}
-					}
-					// Add any table restrictions to where clause.
-					final RestrictedTableDefinition rt = selTab
-							.getRestrictTable(this, this.getMainTable()
-									.getName());
-					if (rt != null) {
-						if (!sqlWhere.toString().equals(" where "))
-							sqlWhere.append(" and ");
-						sqlWhere.append(rt.getSubstitutedExpression(""
-								+ currSuffix));
-					}
-					// If any unit columns match selected columns,
-					// add them to the select statement and their
-					// position to the index map.
-					for (final Iterator j = tu.getNewColumnNameMap().entrySet()
-							.iterator(); j.hasNext();) {
-						final Map.Entry entry = (Map.Entry) j.next();
-						final DataSetColumn dsCol = (DataSetColumn) entry
-								.getValue();
-						if (trueSelectedCols.contains(dsCol.getModifiedName())) {
-							final Column col = (Column) entry.getKey();
-							if (nextCol > 1)
-								sqlSel.append(',');
-							sqlSel.append(currSuffix);
-							sqlSel.append('.');
-							sqlSel.append(col.getName());
-							positionMap.put(new Integer(nextCol++), dsCol
-									.getModifiedName());
-						}
-					}
-				} else
-					throw new PartitionException(Resources
-							.get("cannotDoBasicSQL"));
-			}
-
-			// Build SQL.
-			sql.append(sqlSel);
-			sql.append(sqlFrom);
-			if (!sqlWhere.toString().equals(" where "))
-				sql.append(sqlWhere);
+			final String sql = DatabaseDialect.getDialect(jdbc)
+					.getPartitionTableRowsSQL(positionMap, pt, this, schema,
+							usablePartition);
 
 			// Run it.
-			Log.debug("About to run SQL: " + sql.toString());
-			final PreparedStatement stmt = conn
-					.prepareStatement(sql.toString());
+			Log.debug("About to run SQL: " + sql);
+			final PreparedStatement stmt = conn.prepareStatement(sql);
 			stmt.execute();
 			final ResultSet rs = stmt.getResultSet();
 			while (rs != null && rs.next()) {
@@ -850,9 +715,9 @@ public class DataSet extends Schema {
 						parentDSCol.getModifiedName())) {
 					dsCol = new InheritedColumn(dsTable, parentDSCol);
 					dsTable.getColumns().put(dsCol.getName(), dsCol);
-				} else 
-					dsCol = (InheritedColumn) dsTable
-							.getColumns().get(parentDSCol.getModifiedName());
+				} else
+					dsCol = (InheritedColumn) dsTable.getColumns().get(
+							parentDSCol.getModifiedName());
 				// If any other col has modified name same as
 				// inherited col's modified name, then rename that
 				// other column.
@@ -1325,13 +1190,13 @@ public class DataSet extends Schema {
 				// Insert column rename using origColName, but
 				// only if one not already specified (e.g. from
 				// XML file).
-				if (wc.getColumnRename()==null)
-				try {
-					wc.setColumnRename(origColName);
-				} catch (final ValidationException ve) {
-					// Should never happen!
-					throw new BioMartError(ve);
-				}
+				if (wc.getColumnRename() == null)
+					try {
+						wc.setColumnRename(origColName);
+					} catch (final ValidationException ve) {
+						// Should never happen!
+						throw new BioMartError(ve);
+					}
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					wc.addPropertyChangeListener("columnRename",

@@ -41,6 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.Cardinality;
@@ -891,23 +892,12 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 		public List getRows(final Table table, final int count)
 				throws SQLException {
-			final String tableName = table.getName();
-
-			// Build up a list of column names.
-			final StringBuffer colNames = new StringBuffer();
-			for (final Iterator i = table.getColumns().keySet().iterator(); i
-					.hasNext();) {
-				colNames.append((String) i.next());
-				if (i.hasNext())
-					colNames.append(',');
-			}
-
 			// Do the select.
 			final List results = new ArrayList();
 			final String schemaName = this.getDataLinkSchema();
 			final Connection conn = this.getConnection(null);
-			final String sql = "select " + colNames.toString() + " from "
-					+ schemaName + "." + tableName;
+			final String sql = DatabaseDialect.getDialect(this)
+					.getSimpleRowsSQL(schemaName, table);
 			Log.debug("About to run query: " + sql);
 			final ResultSet rs = conn.prepareStatement(sql).executeQuery();
 			int rowCount = 0;
