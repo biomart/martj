@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -63,8 +64,6 @@ import org.biomart.common.resources.Resources;
  */
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
-
-	private static final int GRIDBAG_LIMIT = 500;
 
 	/**
 	 * Background colour for all normal tables.
@@ -234,7 +233,9 @@ public class TableComponent extends BoxShapedComponent {
 		}
 
 		// Now the columns, as a vertical list in their own panel.
-		this.columnsListPanel = new JPanel(new GridBagLayout());
+		this.columnsListPanel = new JPanel();
+		this.columnsListPanel.setLayout(new BoxLayout(this.columnsListPanel,
+				BoxLayout.Y_AXIS));
 
 		// Do a bit of sorting to make them alphabetical first.
 		final Map sortedColMap = new TreeMap();
@@ -246,51 +247,44 @@ public class TableComponent extends BoxShapedComponent {
 							.getModifiedName() : col.getName(), col);
 		}
 
-		// GridBagLayout has a maximum number of components (512).
-		if (sortedColMap.size() <= TableComponent.GRIDBAG_LIMIT) {
-			// If dataset table...
-			if (this.getTable() instanceof DataSetTable
-					|| this.getTable() instanceof RealisedTable
-					|| this.getTable() instanceof FakeTable) {
-				final JCheckBox hideMaskedButton = new JCheckBox(Resources
-						.get("hideMaskedTitle"));
-				hideMaskedButton.setFont(TableComponent.BOLD_FONT);
-				this.columnsListPanel.add(hideMaskedButton, this.constraints);
-				hideMaskedButton.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent e) {
-						TableComponent.this.hidingMaskedCols = hideMaskedButton
-								.isSelected();
-						// Recalculate the diagram.
-						for (final Iterator i = TableComponent.this
-								.getSubComponents().values().iterator(); i
-								.hasNext();) {
-							final DiagramComponent comp = (DiagramComponent) i
-									.next();
-							if (comp instanceof ColumnComponent)
-								comp.repaintDiagramComponent();
-						}
+		// If dataset table...
+		if (this.getTable() instanceof DataSetTable
+				|| this.getTable() instanceof RealisedTable
+				|| this.getTable() instanceof FakeTable) {
+			final JCheckBox hideMaskedButton = new JCheckBox(Resources
+					.get("hideMaskedTitle"));
+			hideMaskedButton.setFont(TableComponent.BOLD_FONT);
+			this.columnsListPanel.add(hideMaskedButton);
+			hideMaskedButton.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent e) {
+					TableComponent.this.hidingMaskedCols = hideMaskedButton
+							.isSelected();
+					// Recalculate the diagram.
+					for (final Iterator i = TableComponent.this
+							.getSubComponents().values().iterator(); i
+							.hasNext();) {
+						final DiagramComponent comp = (DiagramComponent) i
+								.next();
+						if (comp instanceof ColumnComponent)
+							comp.repaintDiagramComponent();
 					}
-				});
-			}
+				}
+			});
+		}
 
-			// Add columns to the list one by one, as column sub-components.
-			for (final Iterator i = sortedColMap.values().iterator(); i
-					.hasNext();) {
-				final Column col = (Column) i.next();
-				final ColumnComponent colComponent = new ColumnComponent(col,
-						this.getDiagram());
+		// Add columns to the list one by one, as column sub-components.
+		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
+			final Column col = (Column) i.next();
+			final ColumnComponent colComponent = new ColumnComponent(col, this
+					.getDiagram());
 
-				// Add it as a sub-component (internal representation only).
-				this.addSubComponent(col, colComponent);
-				this.getSubComponents().putAll(colComponent.getSubComponents());
+			// Add it as a sub-component (internal representation only).
+			this.addSubComponent(col, colComponent);
+			this.getSubComponents().putAll(colComponent.getSubComponents());
 
-				// Physically add it to the list of columns.
-				this.columnsListPanel.add(colComponent, this.constraints);
-			}
-		} else
-			this.columnsListPanel
-					.add(new JLabel(Resources.get("tooManyColsToDisplay", ""
-							+ TableComponent.GRIDBAG_LIMIT)));
+			// Physically add it to the list of columns.
+			this.columnsListPanel.add(colComponent);
+		}
 
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));
