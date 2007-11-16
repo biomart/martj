@@ -417,26 +417,21 @@ public class JobThreadManager extends Thread {
 									.getStatus().equals(JobStatus.QUEUED))) {
 						hasUsableActions = true;
 						// Check that no sibling sections have actions that are
-						// running or failed.
+						// running.
 						final JobPlanSection parent = section.getParent();
 						final List siblings = new ArrayList();
 						if (parent != null)
-							if (parent.getStatus().equals(JobStatus.FAILED)
-									|| parent.getStatus().equals(
-											JobStatus.RUNNING))
+							if (parent.getStatus().equals(JobStatus.RUNNING))
 								hasUnusableSiblings = true;
 							else
 								siblings.addAll(parent.getSubSections());
-						// If any sibling claimed by another section, or
-						// any sibling failed, then this section is
-						// not usable.
+						// If any sibling claimed by another section, then this
+						// section is not usable.
 						for (final Iterator k = siblings.iterator(); !hasUnusableSiblings
 								&& k.hasNext();) {
 							final JobPlanSection sibling = (JobPlanSection) k
 									.next();
-							if (sibling.getStatus().equals(JobStatus.FAILED)
-									|| sibling.getStatus().equals(
-											JobStatus.RUNNING))
+							if (sibling.getStatus().equals(JobStatus.RUNNING))
 								hasUnusableSiblings = true;
 							else
 								for (final Iterator j = this.manager.jobThreadPool
