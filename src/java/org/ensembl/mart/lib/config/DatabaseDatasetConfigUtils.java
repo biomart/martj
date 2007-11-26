@@ -4666,7 +4666,7 @@ public void deleteTemplateConfigs(final String template) throws ConfigurationExc
     	final String CREATETABLE= "create table " +this.getSchema()[0];
   
     	final String MYSQL_META1    = CREATETABLE+"."+this.BASEMETATABLE+
-    		"(dataset_id_key int not null,dataset varchar(100),display_name varchar(100),description varchar(200),type varchar(20), " +
+    		"(dataset_id_key int not null,dataset varchar(100),display_name varchar(200),description varchar(200),type varchar(20), " +
     		"visible int(1) unsigned, version varchar(25), modified TIMESTAMP NOT NULL,UNIQUE (dataset_id_key))"; 
 		final String MYSQL_META2    = CREATETABLE+"."+this.MARTXMLTABLE+" ( dataset_id_key int not null, xml longblob, " +
 			"compressed_xml longblob, message_digest blob, UNIQUE (dataset_id_key))";
@@ -4677,7 +4677,7 @@ public void deleteTemplateConfigs(final String template) throws ConfigurationExc
 	    final String MYSQL_TEMPLATE_DM = CREATETABLE+"."+this.MARTTEMPLATEDMTABLE+" ( template varchar(100), compressed_xml longblob, UNIQUE(template))";
 		
      	final String ORACLE_META1   = CREATETABLE+"."+this.BASEMETATABLE+
-	        " (dataset_id_key number(1),dataset varchar2(100),display_name varchar2(100),description varchar2(200),type varchar2(20), " +
+	        " (dataset_id_key number(1),dataset varchar2(100),display_name varchar2(200),description varchar2(200),type varchar2(20), " +
 	        "visible number(1), version varchar2(25),  modified timestamp,UNIQUE (dataset_id_key))";
 		final String ORACLE_META2   = CREATETABLE+"."+this.MARTXMLTABLE+" (dataset_id_key number(1), xml clob, compressed_xml blob, message_digest blob,UNIQUE (dataset_id_key))";
      	final String ORACLE_USER = CREATETABLE+"."+this.MARTUSERTABLE+" (dataset_id_key number(1), mart_user varchar2(100), UNIQUE(dataset_id_key,mart_user))";
@@ -4688,7 +4688,7 @@ public void deleteTemplateConfigs(final String template) throws ConfigurationExc
 
     
     	final String POSTGRES_META1 = CREATETABLE+"."+this.BASEMETATABLE+" (dataset_id_key integer," +
-    		"dataset varchar(100), display_name varchar(100),  description varchar(200),  type varchar(20), " +
+    		"dataset varchar(100), display_name varchar(200),  description varchar(200),  type varchar(20), " +
     		"visible integer, version varchar(25),  modified timestamp, UNIQUE (dataset_id_key))";
 		final String POSTGRES_META2 = CREATETABLE+"."+this.MARTXMLTABLE+"(dataset_id_key integer," +
 			"xml text, compressed_xml bytea, message_digest bytea,UNIQUE (dataset_id_key))";
