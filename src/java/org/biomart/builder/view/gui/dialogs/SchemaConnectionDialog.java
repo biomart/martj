@@ -276,9 +276,28 @@ public class SchemaConnectionDialog extends TransactionalDialog {
 				SchemaConnectionDialog.this.schema = SchemaConnectionDialog.this
 						.createSchemaFromSettings();
 				if (SchemaConnectionDialog.this.schema != null) {
-					SchemaConnectionDialog.this.schema.storeInHistory();
-					if (SchemaConnectionDialog.this.schema != null)
+					// Assume we've failed.
+					boolean passedTest = false;
+
+					try {
+						// Attempt to pass the test.
+						passedTest = SchemaConnectionDialog.this.schema.test();
+					} catch (final Throwable t) {
+						// If we get an exception, we failed the test, and
+						// should
+						// tell the user why.
+						passedTest = false;
+						StackTrace.showStackTrace(t);
+					}
+
+					// Tell the user if we passed or failed.
+					if (passedTest) {
+						SchemaConnectionDialog.this.schema.storeInHistory();
 						SchemaConnectionDialog.this.setVisible(false);
+					} else
+						JOptionPane.showMessageDialog(null, Resources
+								.get("schemaTestFailed"), Resources
+								.get("testTitle"), JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		});
