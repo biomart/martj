@@ -314,7 +314,7 @@ public class DataSetTabSet extends JTabbedPane {
 		this.remove(tabIndex);
 
 		this.datasetToDiagram.remove(datasetName);
-		
+
 		if (select)
 			// Fake a click on the last tab before this one to ensure
 			// at least one tab remains visible and up-to-date.
@@ -1304,6 +1304,25 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				Transaction.start(false);
 				ds.setMasked(masked);
+				Transaction.end();
+			}
+		}.start();
+	}
+
+	/**
+	 * Asks that all datasets be (un)masked.
+	 * 
+	 * @param masked
+	 *            mask it?
+	 */
+	public void requestMaskAllDataSets(final boolean masked) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				for (final Iterator i = DataSetTabSet.this.getMartTab()
+						.getMart().getDataSets().values().iterator(); i
+						.hasNext();)
+					((DataSet) i.next()).setMasked(masked);
 				Transaction.end();
 			}
 		}.start();

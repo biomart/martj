@@ -122,6 +122,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem removeAllSchemaPartitions;
 
+		private JMenuItem maskAllDataSets;
+
 		private JMenuItem createDatasets;
 
 		private JMenuItem removeAllDatasets;
@@ -286,6 +288,13 @@ public class MartBuilder extends BioMartGUI {
 			this.removeAllSchemaPartitions.setMnemonic(Resources.get(
 					"removeAllSchemaPartitionsMnemonic").charAt(0));
 			this.removeAllSchemaPartitions.addActionListener(this);
+
+			// Mask all datasets.
+			this.maskAllDataSets = new JMenuItem(Resources
+					.get("maskAllDataSetsTitle"));
+			this.maskAllDataSets.setMnemonic(Resources.get(
+					"maskAllDataSetsMnemonic").charAt(0));
+			this.maskAllDataSets.addActionListener(this);
 
 			// Create datasets.
 			this.createDatasets = new JMenuItem(Resources
@@ -511,6 +520,8 @@ public class MartBuilder extends BioMartGUI {
 			martMenu.add(this.updateAllSchemas);
 			martMenu.add(this.updateAllPartitionCounts);
 			martMenu.add(this.removeAllSchemaPartitions);
+			martMenu.addSeparator();
+			martMenu.add(this.maskAllDataSets);
 			martMenu.add(this.removeAllDatasets);
 			martMenu.addSeparator();
 			martMenu.add(this.monitorHost);
@@ -725,6 +736,11 @@ public class MartBuilder extends BioMartGUI {
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
 											.getSchemas().size() > 0);
+					MartBuilderMenuBar.this.maskAllDataSets
+							.setEnabled(hasMart
+									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
+											.getSelectedMartTab().getMart()
+											.getDataSets().size() > 0);
 					MartBuilderMenuBar.this.updateAllPartitionCounts
 							.setEnabled(hasMart
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
@@ -908,6 +924,9 @@ public class MartBuilder extends BioMartGUI {
 			else if (e.getSource() == this.removeAllSchemaPartitions)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getSchemaTabSet().requestRemoveAllSchemaPartitions();
+			else if (e.getSource() == this.maskAllDataSets)
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestMaskAllDataSets(true);
 			else if (e.getSource() == this.createDatasets)
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestSuggestDataSets(null);
