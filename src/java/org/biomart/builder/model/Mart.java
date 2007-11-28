@@ -590,7 +590,7 @@ public class Mart implements TransactionListener {
 		final List colNames = new ArrayList();
 		for (final Iterator i = this.getPartitionTables().iterator(); i
 				.hasNext();) {
-			final PartitionTable pt = ((DataSet) i.next()).asPartitionTable();
+			final PartitionTable pt = (PartitionTable) i.next();
 			for (final Iterator j = pt.getSelectedColumnNames().iterator(); j
 					.hasNext();) {
 				final String col = (String) j.next();

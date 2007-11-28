@@ -583,7 +583,7 @@ public class Relation implements Comparable, TransactionListener {
 			dsMap.put(tableKey.intern(), new HashMap());
 		return (Map) dsMap.get(tableKey);
 	}
-
+	
 	/**
 	 * Is this relation subclassed?
 	 * 
@@ -1376,6 +1376,15 @@ public class Relation implements Comparable, TransactionListener {
 		}
 
 		/**
+		 * Replicate ourselves.
+		 * 
+		 * @return the copy.
+		 */
+		public CompoundRelationDefinition replicate() {
+			return new CompoundRelationDefinition(this.n, this.parallel);
+		}
+
+		/**
 		 * Adds a property change listener.
 		 * 
 		 * @param listener
@@ -1523,6 +1532,16 @@ public class Relation implements Comparable, TransactionListener {
 
 			this.addPropertyChangeListener("nameColumn", this.listener);
 			this.addPropertyChangeListener("reversed", this.listener);
+		}
+
+		/**
+		 * Replicate ourselves.
+		 * 
+		 * @return the copy.
+		 */
+		public UnrolledRelationDefinition replicate() {
+			return new UnrolledRelationDefinition(this.nameColumn,
+					this.reversed);
 		}
 
 		/**
@@ -1697,6 +1716,16 @@ public class Relation implements Comparable, TransactionListener {
 			this.addPropertyChangeListener(this.listener);
 			this.leftAliases.addPropertyChangeListener(this.listener);
 			this.rightAliases.addPropertyChangeListener(this.listener);
+		}
+
+		/**
+		 * Replicate ourselves.
+		 * 
+		 * @return the copy.
+		 */
+		public RestrictedRelationDefinition replicate() {
+			return new RestrictedRelationDefinition(this.expr,
+					this.leftAliases, this.rightAliases, this.hard);
 		}
 
 		/**

@@ -160,6 +160,8 @@ public class MartBuilder extends BioMartGUI {
 
 		private JMenuItem datasetRejectAll;
 
+		private JMenuItem datasetReplicate;
+
 		private JMenuItem schemaAcceptAll;
 
 		private JMenuItem schemaRejectAll;
@@ -452,6 +454,13 @@ public class MartBuilder extends BioMartGUI {
 					"rejectChangesMnemonic").charAt(0));
 			this.datasetRejectAll.addActionListener(this);
 
+			// Replicate.
+			this.datasetReplicate = new JMenuItem(Resources
+					.get("replicateDataSetTitle"));
+			this.datasetReplicate.setMnemonic(Resources.get(
+					"replicateDataSetMnemonic").charAt(0));
+			this.datasetReplicate.addActionListener(this);
+
 			// Make a submenu for the optimiser type.
 			this.optimiseDatasetSubmenu = new JMenu(Resources
 					.get("optimiserTitle"));
@@ -564,6 +573,8 @@ public class MartBuilder extends BioMartGUI {
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.datasetAcceptAll);
 			datasetMenu.add(this.datasetRejectAll);
+			datasetMenu.addSeparator();
+			datasetMenu.add(this.datasetReplicate);
 			datasetMenu.addSeparator();
 			datasetMenu.add(this.extendDataset);
 
@@ -843,6 +854,8 @@ public class MartBuilder extends BioMartGUI {
 							.setEnabled(ds != null && ds.isVisibleModified());
 					MartBuilderMenuBar.this.datasetRejectAll
 							.setEnabled(ds != null && ds.isVisibleModified());
+					MartBuilderMenuBar.this.datasetReplicate
+							.setEnabled(ds != null);
 				}
 			});
 			this.optimiseDatasetSubmenu.addMenuListener(new MenuListener() {
@@ -1058,6 +1071,12 @@ public class MartBuilder extends BioMartGUI {
 						.getSelectedDataSet();
 				this.getMartBuilder().martTabSet.getSelectedMartTab()
 						.getDataSetTabSet().requestRejectAll(ds, null);
+			} else if (e.getSource() == this.datasetReplicate) {
+				final DataSet ds = this.getMartBuilder().martTabSet
+						.getSelectedMartTab().getDataSetTabSet()
+						.getSelectedDataSet();
+				this.getMartBuilder().martTabSet.getSelectedMartTab()
+						.getDataSetTabSet().requestReplicateDataSet(ds);
 			}
 			// Others
 			else

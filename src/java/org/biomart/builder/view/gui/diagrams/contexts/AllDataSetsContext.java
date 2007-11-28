@@ -146,6 +146,21 @@ public class AllDataSetsContext implements DiagramContext {
 			});
 			reject.setEnabled(ds.isVisibleModified());
 			contextMenu.add(reject);
+
+			contextMenu.addSeparator();
+
+			final JMenuItem replicate = new JMenuItem(Resources
+					.get("replicateDataSetTitle"));
+			replicate.setMnemonic(Resources.get("replicateDataSetMnemonic")
+					.charAt(0));
+			replicate.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					AllDataSetsContext.this.getMartTab().getDataSetTabSet()
+							.requestReplicateDataSet(ds);
+				}
+			});
+			contextMenu.add(replicate);
+
 		}
 	}
 }

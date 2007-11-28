@@ -298,6 +298,20 @@ public class DataSetTabSet extends JTabbedPane {
 		});
 		contextMenu.add(close);
 
+		contextMenu.addSeparator();
+
+		// This item allows the user to replicate the dataset.
+		final JMenuItem replicate = new JMenuItem(Resources
+				.get("replicateDataSetTitle"));
+		replicate.setMnemonic(Resources.get("replicateDataSetMnemonic").charAt(
+				0));
+		replicate.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				DataSetTabSet.this.requestReplicateDataSet(dataset);
+			}
+		});
+		contextMenu.add(replicate);
+
 		// Return the menu.
 		return contextMenu;
 	}
@@ -1809,6 +1823,27 @@ public class DataSetTabSet extends JTabbedPane {
 			if (dialog != null)
 				dialog.dispose();
 		}
+	}
+
+	/**
+	 * Replicate a dataset.
+	 * 
+	 * @param dataset
+	 *            the dataset to replicate.
+	 */
+	public void requestReplicateDataSet(final DataSet dataset) {
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					final DataSet copy = dataset.replicate();
+					DataSetTabSet.this.getMartTab().getMart().getDataSets()
+							.put(copy.getOriginalName(), copy);
+				} finally {
+					Transaction.end();
+				}
+			}
+		}.start();
 	}
 
 	/**

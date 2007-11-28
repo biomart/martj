@@ -1014,6 +1014,21 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 					.addPropertyChangeListener(this.rowsListener);
 		}
 
+		/**
+		 * Replicate ourselves.
+		 * 
+		 * @return the copy.
+		 */
+		public PartitionTableApplication replicate() {
+			final PartitionTableApplication appl = new PartitionTableApplication(
+					this.pt);
+			for (final Iterator i = this.partitionAppliedRows.iterator(); i
+					.hasNext();)
+				appl.partitionAppliedRows.add(((PartitionAppliedRow) i.next())
+						.replicate());
+			return appl;
+		}
+
 		public boolean isDirectModified() {
 			return this.directModified;
 		}
@@ -1250,6 +1265,19 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 
 				// All changes to us make us modified.
 				this.addPropertyChangeListener(this.listener);
+			}
+
+			/**
+			 * Replicate ourselves.
+			 * 
+			 * @return the replica.
+			 */
+			public PartitionAppliedRow replicate() {
+				final PartitionAppliedRow row = new PartitionAppliedRow(
+						this.partitionCol, this.rootDataSetCol,
+						this.namePartitionCol, this.relation);
+				row.compound = this.compound;
+				return row;
 			}
 
 			public boolean isDirectModified() {

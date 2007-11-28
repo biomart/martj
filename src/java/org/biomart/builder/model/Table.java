@@ -689,6 +689,16 @@ public class Table implements Comparable, TransactionListener {
 		}
 
 		/**
+		 * Replicate ourselves.
+		 * 
+		 * @return the copy.
+		 */
+		public RestrictedTableDefinition replicate() {
+			return new RestrictedTableDefinition(this.expr, this.aliases,
+					this.hard);
+		}
+
+		/**
 		 * Adds a property change listener.
 		 * 
 		 * @param listener

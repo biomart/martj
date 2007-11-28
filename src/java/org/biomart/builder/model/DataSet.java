@@ -242,6 +242,86 @@ public class DataSet extends Schema {
 	}
 
 	/**
+	 * Create a complete copy of dataset, along with all mods to relations and
+	 * tables that affect the original dataset. Return that copy.
+	 * 
+	 * @return the copy. The copy is unregistered with the mart dataset registry
+	 *         so will need to be so - use the {@link #getOriginalName()} and
+	 *         {@link #getName()} methods when registering to find out what the
+	 *         clone has renamed itself as.
+	 * 
+	 * @throws ValidationException
+	 *             if anything goes wrong.
+	 * @throws DataModelException
+	 *             if anything goes wrong.
+	 * @throws PartitionException
+	 *             if anything goes wrong.
+	 */
+	public DataSet replicate() throws ValidationException, PartitionException,
+			DataModelException {
+		final DataSet copy = new DataSet(this.getMart(), this.centralTable,
+				this.getName() + Resources.get("replicateSuffix"));
+		// Copy each table
+		for (final Iterator i = this.getTables().entrySet().iterator(); i
+				.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			copy.getTables().put(entry.getKey(),
+					((DataSetTable) entry.getValue()).replicate(copy));
+		}
+		// Copy direct ds mod flags.
+		copy.invisible = this.invisible;
+		copy.optimiser = this.optimiser;
+		copy.indexOptimiser = this.indexOptimiser;
+		if (this.partitionTable != null) {
+			copy.setPartitionTable(true);
+			copy.asPartitionTable().setSelectedColumnNames(
+					this.asPartitionTable().getSelectedColumnNames());
+		}
+		if (this.partitionTableApplication != null)
+			copy.setPartitionTableApplication(this.partitionTableApplication
+					.replicate());
+		// No direct mods of our own to sync. DS tables/cols will do their own.
+		// Copy mods in tables and rels.
+		for (final Iterator i = this.getMart().getSchemas().values().iterator(); i
+				.hasNext();) {
+			final Schema sch = (Schema) i.next();
+			for (final Iterator j = sch.getTables().values().iterator(); j
+					.hasNext();) {
+				final Table tab = (Table) j.next();
+				tab.setBigTable(copy, tab.getBigTable(this));
+				if (tab.getRestrictTable(this) != null)
+					tab.setRestrictTable(copy, tab.getRestrictTable(this)
+							.replicate());
+			}
+			for (final Iterator j = sch.getRelations().iterator(); j.hasNext();) {
+				final Relation rel = (Relation) j.next();
+				rel.setMaskRelation(copy, rel.isMaskRelation(this));
+				rel.setMergeRelation(copy, rel.isMergeRelation(this));
+				rel.setForceRelation(copy, rel.isForceRelation(this));
+				rel.setSubclassRelation(copy, rel.isSubclassRelation(this));
+				if (rel.getCompoundRelation(this) != null)
+					rel.setCompoundRelation(copy, rel.getCompoundRelation(this)
+							.replicate());
+				rel.setLoopbackRelation(copy, rel.getLoopbackRelation(this));
+				if (rel.getRestrictRelation(this, 0) != null)
+					rel.setRestrictRelation(copy, rel.getRestrictRelation(this,
+							0).replicate(), 0);
+				if (rel.getCompoundRelation(copy) != null)
+					for (int k = 1; k < rel.getCompoundRelation(copy).getN(); k++)
+						if (rel.getRestrictRelation(this, k) != null)
+							rel.setRestrictRelation(copy, rel
+									.getRestrictRelation(this, k).replicate(),
+									k);
+				if (rel.getUnrolledRelation(this) != null)
+					rel.setUnrolledRelation(copy, rel.getUnrolledRelation(this)
+							.replicate());
+			}
+		}
+		// Done. Caller will synchronise.
+		return copy;
+	}
+
+	/**
 	 * Sets a new name for this dataset. It checks with the mart first, and
 	 * renames it if is not unique.
 	 * 
@@ -1886,6 +1966,43 @@ public class DataSet extends Schema {
 			this.addPropertyChangeListener("columnIndexed", this.listener);
 		}
 
+		private DataSetColumn replicate(final DataSetTable copyT)
+				throws DataModelException, ValidationException {
+			// Construct a new column.
+			final DataSetColumn copyC = this.doReplicate(copyT);
+			if (copyC == null)
+				return null;
+			// Replicate flags.
+			copyC.partitionedName = this.partitionedName;
+			// Replicate mods.
+			copyC.setColumnIndexed(this.isColumnIndexed());
+			copyC.setColumnMasked(this.isColumnMasked());
+			copyC.setExpressionDependency(this.isExpressionDependency());
+			copyC.setKeyDependency(this.isKeyDependency());
+			copyC.setColumnRename(this.getColumnRename());
+			copyC.setPartitionCols(this.partitionCols);
+			// Return.
+			return copyC;
+		}
+
+		/**
+		 * Construct a new instance of ourselves and return a copy.
+		 * 
+		 * @param copyT
+		 *            the copy dataset table to copy into.
+		 * @return the copy of ourselves.
+		 * @throws ValidationException
+		 *             if we could not do it.
+		 * @throws DataModelException
+		 *             if we could not do it.
+		 */
+		protected DataSetColumn doReplicate(final DataSetTable copyT)
+				throws DataModelException, ValidationException {
+			// Construct a new table.
+			final DataSetColumn copyC = new DataSetColumn(this.getName(), copyT);
+			return copyC;
+		}
+
 		/**
 		 * Set the transformation unit causing this column to exist.
 		 * 
@@ -2298,6 +2415,14 @@ public class DataSet extends Schema {
 				this.visibleModified = false;
 			}
 
+			protected DataSetColumn doReplicate(final DataSetTable copyT)
+					throws DataModelException, ValidationException {
+				// Construct a new table.
+				final ExpressionColumn copyC = new ExpressionColumn(this
+						.getName(), copyT, this.definition.replicate());
+				return copyC;
+			}
+
 			/**
 			 * Obtain the expression behind this column.
 			 * 
@@ -2336,6 +2461,14 @@ public class DataSet extends Schema {
 				// The super constructor will make the alias for us.
 				super(name, dsTable);
 				this.visibleModified = false;
+			}
+
+			protected DataSetColumn doReplicate(final DataSetTable copyT)
+					throws DataModelException, ValidationException {
+				// Construct a new table.
+				final UnrolledColumn copyC = new UnrolledColumn(this.getName(),
+						copyT);
+				return copyC;
 			}
 
 			public void setColumnMasked(final boolean columnMasked)
@@ -2383,6 +2516,12 @@ public class DataSet extends Schema {
 
 				dsColumn.addPropertyChangeListener("columnMasked",
 						this.listener);
+			}
+
+			protected DataSetColumn doReplicate(final DataSetTable copyT)
+					throws DataModelException, ValidationException {
+				// These should be reconstructed automatically.
+				return null;
 			}
 
 			/**
@@ -2458,6 +2597,14 @@ public class DataSet extends Schema {
 
 				// Remember the wrapped column.
 				this.column = column;
+			}
+
+			protected DataSetColumn doReplicate(final DataSetTable copyT)
+					throws DataModelException, ValidationException {
+				// Construct a new table.
+				final WrappedColumn copyC = new WrappedColumn(this.column, this
+						.getName(), copyT);
+				return copyC;
 			}
 
 			/**
@@ -2724,6 +2871,82 @@ public class DataSet extends Schema {
 			this.addPropertyChangeListener("skipIndexOptimiser", this.listener);
 			this.addPropertyChangeListener("partitionTableApplication",
 					this.listener);
+		}
+
+		private DataSetTable replicate(final DataSet copy)
+				throws DataModelException, ValidationException {
+			// Construct a new table.
+			final DataSetTable copyT = new DataSetTable(this.getName(), copy,
+					this.type, this.focusTable, this.focusRelation,
+					this.focusRelationIteration);
+			// Replicate columns.
+			for (final Iterator i = this.getColumns().entrySet().iterator(); i
+					.hasNext();) {
+				final Map.Entry entry = (Map.Entry) i.next();
+				final DataSetColumn newCol = ((DataSetColumn) entry.getValue())
+						.replicate(copyT);
+				if (newCol != null)
+					copyT.getColumns().put(entry.getKey(), newCol);
+			}
+			// Replicate flags - but there aren't any, so no need.
+			// Copy direct mods of our own.
+			copyT.setDimensionMasked(this.isDimensionMasked());
+			copyT.setDistinctTable(this.isDistinctTable());
+			copyT.setNoFinalLeftJoin(this.isNoFinalLeftJoin());
+			copyT.setSkipIndexOptimiser(this.isSkipIndexOptimiser());
+			copyT.setSkipOptimiser(this.isSkipOptimiser());
+			copyT.setTableRename(this.getTableRename());
+			if (this.getPartitionTableApplication() != null)
+				copyT.setPartitionTableApplication(this
+						.getPartitionTableApplication().replicate());
+			// Copy mods in tables and rels.
+			for (final Iterator i = this.getDataSet().getMart().getSchemas()
+					.values().iterator(); i.hasNext();) {
+				final Schema sch = (Schema) i.next();
+				for (final Iterator j = sch.getTables().values().iterator(); j
+						.hasNext();) {
+					final Table tab = (Table) j.next();
+					tab.setBigTable(copy, copyT.getName(), tab.getBigTable(this
+							.getDataSet(), this.getName()));
+					if (tab.getRestrictTable(this.getDataSet(), this.getName()) != null)
+						tab.setRestrictTable(copy, copyT.getName(), tab
+								.getRestrictTable(this.getDataSet(),
+										this.getName()).replicate());
+				}
+				for (final Iterator j = sch.getRelations().iterator(); j
+						.hasNext();) {
+					final Relation rel = (Relation) j.next();
+					rel.setMaskRelation(copy, copyT.getName(), rel
+							.isMaskRelation(this.getDataSet(), this.getName()));
+					rel
+							.setForceRelation(copy, copyT.getName(), rel
+									.isForceRelation(this.getDataSet(), this
+											.getName()));
+					if (rel.getCompoundRelation(this.getDataSet(), this
+							.getName()) != null)
+						rel.setCompoundRelation(copy, rel.getCompoundRelation(
+								this.getDataSet(), this.getName()).replicate());
+					rel.setLoopbackRelation(copy, copyT.getName(), rel
+							.getLoopbackRelation(this.getDataSet(), this
+									.getName()));
+					if (rel.getRestrictRelation(this.getDataSet(), this
+							.getName(), 0) != null)
+						rel.setRestrictRelation(copy, copyT.getName(), rel
+								.getRestrictRelation(this.getDataSet(),
+										this.getName(), 0).replicate(), 0);
+					if (rel.getCompoundRelation(copy) != null)
+						for (int k = 1; k < rel.getCompoundRelation(copy)
+								.getN(); k++)
+							if (rel.getRestrictRelation(this.getDataSet(), this
+									.getName(), k) != null)
+								rel.setRestrictRelation(copy, copyT.getName(),
+										rel.getRestrictRelation(
+												this.getDataSet(),
+												this.getName(), k).replicate(),
+										k);
+				}
+			}
+			return copyT;
 		}
 
 		/**
@@ -3422,6 +3645,16 @@ public class DataSet extends Schema {
 
 			this.addPropertyChangeListener(this.listener);
 			this.aliases.addPropertyChangeListener(this.listener);
+		}
+
+		/**
+		 * Construct an exact replica.
+		 * 
+		 * @return the replica.
+		 */
+		public ExpressionColumnDefinition replicate() {
+			return new ExpressionColumnDefinition(this.expr, this.aliases,
+					this.groupBy, this.colKey);
 		}
 
 		public boolean isDirectModified() {
