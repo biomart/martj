@@ -1705,11 +1705,12 @@ public interface MartConstructor {
 					- (Resources.get("tablenameSep") + Resources
 							.get("dimensionSuffix")).length());
 			int i = 1;
-			final DecimalFormat formatter = new DecimalFormat("00000");
+			final DecimalFormat formatter = new DecimalFormat("000");
 			while (this.finalNameCache.containsValue(name)) {
 				// Clash! Rename the table to avoid it.
 				name = firstBit + Resources.get("tablenameSubSep")
-						+ formatter.format(i++) + lastBit;
+						+ Resources.get("clashSuffix") + formatter.format(i++)
+						+ lastBit;
 			}
 			this.finalNameCache.put(finalNameCacheKey, name);
 			return name;
