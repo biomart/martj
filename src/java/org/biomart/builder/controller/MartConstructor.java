@@ -214,6 +214,8 @@ public interface MartConstructor {
 
 		private final Map uniqueOptCols = new HashMap();
 
+		private final Map finalNameCache = new HashMap();
+
 		private final Map indexOptCols = new HashMap();
 
 		private String statusMessage = Resources.get("mcCreatingGraph");
@@ -282,6 +284,9 @@ public interface MartConstructor {
 			// Check not cancelled.
 			this.checkCancelled();
 
+			// Start with a fresh set of final names.
+			this.finalNameCache.clear();
+
 			// Find out the main table source schema.
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 			final PartitionTableApplication dsPta = dataset
@@ -318,11 +323,11 @@ public interface MartConstructor {
 			// Work out the progress step size : 1 step = 1 table per source
 			// schema partition.
 			final Collection tablesToProcess = this.getTablesToProcess(dataset);
-			double stepPercent = 100.0 / (double) totalDataSetCount;
-			stepPercent /= (double) tablesToProcess.size();
-			stepPercent /= (double) schemaPartitions.size();
+			double stepPercent = 100.0 / totalDataSetCount;
+			stepPercent /= tablesToProcess.size();
+			stepPercent /= schemaPartitions.size();
 			if (dsPta != null)
-				stepPercent /= (double) ((PartitionAppliedRow) dsPta
+				stepPercent /= ((PartitionAppliedRow) dsPta
 						.getPartitionAppliedRows().get(0)).getCompound();
 
 			// Process the tables.
@@ -375,12 +380,13 @@ public interface MartConstructor {
 										(String) schemaPartition.getValue(),
 										PartitionTable.UNLIMITED_ROWS);
 							final double subStepPercent = dmPta == null ? stepPercent
-									: (stepPercent / (double) dmPta
-											.getPartitionTable().countRows());
+									: stepPercent
+											/ dmPta.getPartitionTable()
+													.countRows();
 							while (fakeDMPartition ? true : dmPta != null
 									&& dmPta.getPartitionTable().nextRow()) {
 								fakeDMPartition = false;
-								double targetPercent = this.percentComplete
+								final double targetPercent = this.percentComplete
 										+ subStepPercent;
 								if (!this.makeActionsForDatasetTable(
 										bigParents, subStepPercent,
@@ -480,7 +486,7 @@ public interface MartConstructor {
 
 			// Use the transformation units to create the basic table.
 			final Collection units = dsTable.getTransformationUnits();
-			stepPercent /= (double) units.size();
+			stepPercent /= units.size();
 			Relation firstJoinRel = null;
 			for (final Iterator j = units.iterator(); j.hasNext(); this.percentComplete += stepPercent) {
 				this.checkCancelled();
@@ -496,7 +502,7 @@ public interface MartConstructor {
 				if (tu instanceof Expression) {
 					if (!this.doExpression(schemaPrefix, dsPta, dmPta, dataset,
 							dsTable, (Expression) tu, previousTempTable,
-							tempTable, droppedCols))
+							tempTable, droppedCols, finalCombinedName))
 						// Skip to next action to prevent non-existent
 						// new temp table from getting dropped.
 						continue;
@@ -506,7 +512,7 @@ public interface MartConstructor {
 					this.doUnrollTable(templateSchema, schemaPartition,
 							schemaPrefix, dsPta, dmPta, dataset, dsTable,
 							(UnrollTable) tu, previousTempTable, tempTable,
-							droppedCols, bigness);
+							droppedCols, bigness, finalCombinedName);
 					requiresDistinct = true;
 				}
 				// Skip?
@@ -521,7 +527,8 @@ public interface MartConstructor {
 					requiresFinalLeftJoin |= this.doJoinTable(templateSchema,
 							schemaPartition, schemaPrefix, dsPta, dmPta,
 							dataset, dsTable, (JoinTable) tu, firstJoinRel,
-							previousTempTable, tempTable, droppedCols, bigness);
+							previousTempTable, tempTable, droppedCols, bigness,
+							finalCombinedName);
 				}
 
 				// Select-from?
@@ -531,7 +538,8 @@ public interface MartConstructor {
 									.getBigTable(dataset, dsTable.getName()));
 					this.doSelectFromTable(templateSchema, schemaPartition,
 							schemaPrefix, dsPta, dmPta, dataset, dsTable,
-							(SelectFromTable) tu, tempTable, bigness);
+							(SelectFromTable) tu, tempTable, bigness,
+							finalCombinedName);
 				} else
 					throw new BioMartError();
 
@@ -563,10 +571,6 @@ public interface MartConstructor {
 				// Update the previous table.
 				previousTempTable = tempTable;
 			}
-
-			// Do final set of actions for table once per partition.
-			final String finalName = this.getFinalName(schemaPrefix, dsPta,
-					dmPta, dsTable);
 
 			// Do a final left-join against the parent to reinstate
 			// any potentially missing rows.
@@ -631,7 +635,7 @@ public interface MartConstructor {
 			final Rename action = new Rename(this.datasetSchemaName,
 					finalCombinedName);
 			action.setFrom(previousTempTable);
-			action.setTo(finalName);
+			action.setTo(finalCombinedName);
 			this.issueAction(action);
 
 			// Create indexes on all keys on the final table.
@@ -643,7 +647,7 @@ public interface MartConstructor {
 							.getPartitionedName());
 				final Index index = new Index(this.datasetSchemaName,
 						finalCombinedName);
-				index.setTable(finalName);
+				index.setTable(finalCombinedName);
 				index.setColumns(keyCols);
 				this.issueAction(index);
 			}
@@ -658,7 +662,7 @@ public interface MartConstructor {
 						dsTable, oType, dsTable.getType().equals(
 								DataSetTableType.MAIN)
 								&& dataset.getDataSetOptimiserType().isTable(),
-						bigness);
+						bigness, finalCombinedName);
 
 			// Optimiser indexing.
 			if (dataset.isIndexOptimiser()
@@ -668,7 +672,7 @@ public interface MartConstructor {
 					final String col = (String) i.next();
 					final Index index = new Index(this.datasetSchemaName,
 							finalCombinedName);
-					index.setTable(finalName);
+					index.setTable(finalCombinedName);
 					index.setColumns(Collections.singletonList(col));
 					this.issueAction(index);
 				}
@@ -771,10 +775,9 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final DataSetOptimiserType oType,
-				final boolean createTable, final int bigness)
-				throws ListenerException, PartitionException {
-			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					dsPta, dmPta, dsTable);
+				final boolean createTable, final int bigness,
+				final String finalCombinedName) throws ListenerException,
+				PartitionException {
 			if (createTable) {
 				// Tables are same name, but use 'bool' or 'count'
 				// instead of 'main'
@@ -841,8 +844,7 @@ public interface MartConstructor {
 						this.datasetSchemaName, finalCombinedName);
 				update.setKeyColumns(keyCols);
 				update.setNonNullColumns(nonNullCols);
-				update.setSourceTableName(this.getFinalName(schemaPrefix,
-						dsPta, dmPta, dsTable));
+				update.setSourceTableName(finalCombinedName);
 				update.setOptTableName(optTable);
 				update.setOptColumnName(optCol);
 				update.setCountNotBool(!oType.isBool());
@@ -871,11 +873,10 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final SelectFromTable stu,
-				final String tempTable, final int bigness) throws SQLException,
+				final String tempTable, final int bigness,
+				final String finalCombinedName) throws SQLException,
 				ListenerException, PartitionException {
 
-			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					dsPta, dmPta, dsTable);
 			final Select action = new Select(this.datasetSchemaName,
 					finalCombinedName);
 			action.setBigTable(bigness);
@@ -1025,14 +1026,13 @@ public interface MartConstructor {
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final JoinTable ljtu,
 				final Relation firstJoinRel, final String previousTempTable,
-				final String tempTable, final Set droppedCols, final int bigness)
+				final String tempTable, final Set droppedCols,
+				final int bigness, final String finalCombinedName)
 				throws SQLException, ListenerException, PartitionException {
 
 			final boolean useLeftJoin = !dsTable.getType().equals(
 					DataSetTableType.DIMENSION);
 			boolean requiresFinalLeftJoin = !useLeftJoin;
-			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					dsPta, dmPta, dsTable);
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);
 			action.setLeftJoin(useLeftJoin);
@@ -1226,7 +1226,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final UnrollTable utu,
 				final String previousTempTable, final String tempTable,
-				final Set droppedCols, final int bigness) throws SQLException,
+				final Set droppedCols, final int bigness,
+				final String finalCombinedName) throws SQLException,
 				ListenerException, PartitionException, ConstructorException {
 
 			// Set parentRel = utu.getRelation, childRel = otherRel
@@ -1239,9 +1240,6 @@ public interface MartConstructor {
 			// child records are merged but the correct path of unrolling
 			// is still followed.
 			// Proceed as normal.
-
-			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					dsPta, dmPta, dsTable);
 
 			// Find other merged relation between these two tables, and
 			// the many key is the parent key col.
@@ -1267,12 +1265,12 @@ public interface MartConstructor {
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
 			// Note that it will run unpredictably if compound keys are used.
-			String unrollFK = unrollDef.isReversed() ? utu.getDataSetColumnFor(
-					childRel.getManyKey().getColumns()[0]).getPartitionedName()
-					: utu.getDataSetColumnFor(
-							parentRel.getManyKey().getColumns()[0])
-							.getPartitionedName();
-			String unrollPK = utu.getDataSetColumnFor(
+			final String unrollFK = unrollDef.isReversed() ? utu
+					.getDataSetColumnFor(childRel.getManyKey().getColumns()[0])
+					.getPartitionedName() : utu.getDataSetColumnFor(
+					parentRel.getManyKey().getColumns()[0])
+					.getPartitionedName();
+			final String unrollPK = utu.getDataSetColumnFor(
 					parentRel.getOneKey().getColumns()[0]).getPartitionedName();
 			final String unrollIDColName = utu.getUnrolledIDColumn()
 					.getPartitionedName();
@@ -1410,11 +1408,9 @@ public interface MartConstructor {
 				final PartitionTableApplication dmPta, final DataSet dataset,
 				final DataSetTable dsTable, final Expression etu,
 				final String previousTempTable, final String tempTable,
-				final Set droppedCols) throws ListenerException,
-				PartitionException {
+				final Set droppedCols, final String finalCombinedName)
+				throws ListenerException, PartitionException {
 
-			final String finalCombinedName = this.getFinalName(schemaPrefix,
-					dsPta, dmPta, dsTable);
 			// Some useful stuff.
 			boolean useXTable = false;
 			final String xTableName = tempTable + "X";
@@ -1653,6 +1649,10 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta,
 				final DataSetTable dsTable) throws PartitionException {
+			final Object[] finalNameCacheKey = new Object[] {
+					schemaPartitionPrefix, dsPta, dmPta, dsTable };
+			if (this.finalNameCache.containsKey(finalNameCacheKey))
+				return (String) this.finalNameCache.get(finalNameCacheKey);
 			final StringBuffer finalName = new StringBuffer();
 			if (schemaPartitionPrefix != null) {
 				finalName.append(schemaPartitionPrefix);
@@ -1685,16 +1685,32 @@ public interface MartConstructor {
 			} else
 				throw new BioMartError();
 			// Remove any non-[char/number/underscore] symbols.
-			final String name = finalName.toString().replaceAll("\\W+", "");
+			String name = finalName.toString().replaceAll("\\W+", "");
 			// UC/LC/Mixed?
 			switch (dsTable.getDataSet().getMart().getCase()) {
 			case Mart.USE_LOWER_CASE:
-				return name.toLowerCase();
+				name = name.toLowerCase();
+				break;
 			case Mart.USE_UPPER_CASE:
-				return name.toUpperCase();
+				name = name.toUpperCase();
+				break;
 			default:
-				return name;
+				break;
 			}
+			final String firstBit = name.substring(0, name.length()
+					- (Resources.get("tablenameSep") + Resources
+							.get("dimensionSuffix")).length());
+			final String lastBit = name.substring(name.length()
+					- (Resources.get("tablenameSep") + Resources
+							.get("dimensionSuffix")).length());
+			int i = 1;
+			while (this.finalNameCache.containsValue(name)) {
+				// Clash! Rename the table to avoid it.
+				name = firstBit + Resources.get("tablenameSubSep") + i++
+						+ lastBit;
+			}
+			this.finalNameCache.put(finalNameCacheKey, name);
+			return name;
 		}
 
 		private void issueListenerEvent(final int event)
