@@ -21,6 +21,7 @@ package org.biomart.builder.controller;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1704,10 +1705,11 @@ public interface MartConstructor {
 					- (Resources.get("tablenameSep") + Resources
 							.get("dimensionSuffix")).length());
 			int i = 1;
+			final DecimalFormat formatter = new DecimalFormat("00000");
 			while (this.finalNameCache.containsValue(name)) {
 				// Clash! Rename the table to avoid it.
-				name = firstBit + Resources.get("tablenameSubSep") + i++
-						+ lastBit;
+				name = firstBit + Resources.get("tablenameSubSep")
+						+ formatter.format(i++) + lastBit;
 			}
 			this.finalNameCache.put(finalNameCacheKey, name);
 			return name;
