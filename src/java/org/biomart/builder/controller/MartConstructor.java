@@ -1652,7 +1652,8 @@ public interface MartConstructor {
 				final DataSetTable dsTable) throws PartitionException {
 			final Object[] finalNameCacheKey = new Object[] {
 					schemaPartitionPrefix, dsPta, dmPta, dsTable };
-			if (this.finalNameCache.containsKey(finalNameCacheKey))
+			if (dsTable.getType().equals(DataSetTableType.DIMENSION)
+					&& this.finalNameCache.containsKey(finalNameCacheKey))
 				return (String) this.finalNameCache.get(finalNameCacheKey);
 			final StringBuffer finalName = new StringBuffer();
 			if (schemaPartitionPrefix != null) {
@@ -1668,23 +1669,23 @@ public interface MartConstructor {
 			finalName.append(dsTable.getSchema().getName());
 			finalName.append(Resources.get("tablenameSep"));
 			finalName.append(dsTable.getModifiedName());
-			if (dsTable.getType().equals(DataSetTableType.MAIN)) {
-				finalName.append(Resources.get("tablenameSep"));
-				finalName.append(Resources.get("mainSuffix"));
-			} else if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)) {
-				finalName.append(Resources.get("tablenameSep"));
-				finalName.append(Resources.get("subclassSuffix"));
-			} else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+			String finalSuffix;
+			if (dsTable.getType().equals(DataSetTableType.MAIN))
+				finalSuffix = Resources.get("mainSuffix");
+			else if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS))
+				finalSuffix = Resources.get("subclassSuffix");
+			else if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				if (dmPta != null) {
 					finalName.append(Resources.get("tablenameSubSep"));
 					final PartitionColumn pcol = dmPta.getNamePartitionCol();
 					finalName.append(pcol.getValueForRow(pcol
 							.getPartitionTable().currentRow()));
 				}
-				finalName.append(Resources.get("tablenameSep"));
-				finalName.append(Resources.get("dimensionSuffix"));
+				finalSuffix = Resources.get("dimensionSuffix");
 			} else
 				throw new BioMartError();
+			finalName.append(Resources.get("tablenameSep"));
+			finalName.append(finalSuffix);
 			// Remove any non-[char/number/underscore] symbols.
 			String name = finalName.toString().replaceAll("\\W+", "");
 			// UC/LC/Mixed?
@@ -1698,21 +1699,22 @@ public interface MartConstructor {
 			default:
 				break;
 			}
-			final String firstBit = name.substring(0, name.length()
-					- (Resources.get("tablenameSep") + Resources
-							.get("dimensionSuffix")).length());
-			final String lastBit = name.substring(name.length()
-					- (Resources.get("tablenameSep") + Resources
-							.get("dimensionSuffix")).length());
-			int i = 1;
-			final DecimalFormat formatter = new DecimalFormat("000");
-			while (this.finalNameCache.containsValue(name)) {
-				// Clash! Rename the table to avoid it.
-				name = firstBit + Resources.get("tablenameSubSep")
-						+ Resources.get("clashSuffix") + formatter.format(i++)
-						+ lastBit;
+			if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+				final String firstBit = name.substring(0, name.length()
+						- (Resources.get("tablenameSep") + finalSuffix)
+								.length());
+				final String lastBit = name.substring(name.length()
+						- (Resources.get("tablenameSep") + finalSuffix)
+								.length());
+				int i = 1;
+				final DecimalFormat formatter = new DecimalFormat("000");
+				while (this.finalNameCache.containsValue(name))
+					// Clash! Rename the table to avoid it.
+					name = firstBit + Resources.get("tablenameSubSep")
+							+ Resources.get("clashSuffix")
+							+ formatter.format(i++) + lastBit;
+				this.finalNameCache.put(finalNameCacheKey, name);
 			}
-			this.finalNameCache.put(finalNameCacheKey, name);
 			return name;
 		}
 
