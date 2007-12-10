@@ -1148,6 +1148,29 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Asks that a relation be alternative-joined.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to work with.
+	 * @param relation
+	 *            the schema relation to alternative-join.
+	 * @param join
+	 *            whether to do it.
+	 */
+	public void requestAlternativeJoin(final DataSet ds, final DataSetTable dst,
+			final Relation relation, final boolean join) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				relation.setAlternativeJoin(ds, dst.getName(), join);
+				Transaction.end();
+			}
+		}.start();
+	}
+
+	/**
 	 * Asks that a relation be masked.
 	 * 
 	 * @param ds

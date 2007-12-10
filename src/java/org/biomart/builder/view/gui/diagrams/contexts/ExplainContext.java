@@ -122,7 +122,7 @@ public class ExplainContext extends SchemaContext {
 		else if (object instanceof Table) {
 			final Table table = (Table) object;
 			final TableComponent tblcomp = (TableComponent) component;
-			
+
 			// Fade out UNINCLUDED tables.
 			if (!(object instanceof DataSetTable)
 					&& (tblcomp.getDiagram() instanceof SkipTempReal || this
@@ -133,8 +133,9 @@ public class ExplainContext extends SchemaContext {
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 			tblcomp.setRestricted((this.getDataSetTable() == null ? table
-					.getRestrictTable(this.getDataSet()) : table.getRestrictTable(
-					this.getDataSet(), this.getDataSetTable().getName())) != null);
+					.getRestrictTable(this.getDataSet()) : table
+					.getRestrictTable(this.getDataSet(), this.getDataSetTable()
+							.getName())) != null);
 		}
 
 		// This section customises the appearance of key objects within
@@ -219,36 +220,39 @@ public class ExplainContext extends SchemaContext {
 		((RelationComponent) component)
 				.setRestricted((this.getDataSetTable() == null ? relation
 						.isRestrictRelation(this.getDataSet()) : relation
-						.isRestrictRelation(this.getDataSet(), this.getDataSetTable()
-								.getName()))
-						&& (iteration == RealisedRelation.NO_ITERATION || (this.getDataSetTable() == null ? relation
-								.getRestrictRelation(this.getDataSet(), iteration)
-								: relation.getRestrictRelation(this.getDataSet(),
-										this.getDataSetTable().getName(), iteration)) != null));
+						.isRestrictRelation(this.getDataSet(), this
+								.getDataSetTable().getName()))
+						&& (iteration == RealisedRelation.NO_ITERATION || (this
+								.getDataSetTable() == null ? relation
+								.getRestrictRelation(this.getDataSet(),
+										iteration)
+								: relation.getRestrictRelation(this
+										.getDataSet(), this.getDataSetTable()
+										.getName(), iteration)) != null));
 
 		// Is it compounded?
 		((RelationComponent) component)
 				.setCompounded((this.getDataSetTable() == null ? relation
 						.getCompoundRelation(this.getDataSet()) : relation
-						.getCompoundRelation(this.getDataSet(), this.getDataSetTable()
-								.getName())) != null);
+						.getCompoundRelation(this.getDataSet(), this
+								.getDataSetTable().getName())) != null);
 
 		// Is it loopback?
 		((RelationComponent) component)
 				.setLoopback((this.getDataSetTable() == null ? relation
 						.getLoopbackRelation(this.getDataSet()) : relation
-						.getLoopbackRelation(this.getDataSet(),
-								this.getDataSetTable().getName())) != null);
+						.getLoopbackRelation(this.getDataSet(), this
+								.getDataSetTable().getName())) != null);
 
 		// Fade out all UNINCLUDED and MASKED relations.
 		boolean included = this.getDataSetTable() == null ? this.getDataSet()
-				.getIncludedRelations().contains(relation) : this.getDataSetTable()
-				.getIncludedRelations().contains(relation);
+				.getIncludedRelations().contains(relation) : this
+				.getDataSetTable().getIncludedRelations().contains(relation);
 		if (!included
 				|| (this.getDataSetTable() == null ? relation
 						.isMaskRelation(this.getDataSet()) : relation
-						.isMaskRelation(this.getDataSet(), this.getDataSetTable()
-								.getName())))
+						.isMaskRelation(this.getDataSet(), this
+								.getDataSetTable().getName())))
 			component.setForeground(RelationComponent.MASKED_COLOUR);
 
 		// Highlight SUBCLASS relations.
@@ -312,11 +316,10 @@ public class ExplainContext extends SchemaContext {
 						.charAt(0));
 				accept.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this
-								.getMartTab()
-								.getDataSetTabSet()
+						ExplainContext.this.getMartTab().getDataSetTabSet()
 								.requestAcceptAll(
-										ExplainContext.this.getDataSetTable(), table);
+										ExplainContext.this.getDataSetTable(),
+										table);
 					}
 				});
 				accept.setEnabled(this.getDataSetTable()
@@ -329,11 +332,10 @@ public class ExplainContext extends SchemaContext {
 						.charAt(0));
 				reject.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this
-								.getMartTab()
-								.getDataSetTabSet()
+						ExplainContext.this.getMartTab().getDataSetTabSet()
 								.requestRejectAll(
-										ExplainContext.this.getDataSetTable(), table);
+										ExplainContext.this.getDataSetTable(),
+										table);
 					}
 				});
 				reject.setEnabled(this.getDataSetTable()
@@ -353,7 +355,8 @@ public class ExplainContext extends SchemaContext {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestMaskAllRelations(
 									ExplainContext.this.getDataSet(),
-									ExplainContext.this.getDataSetTable(), table);
+									ExplainContext.this.getDataSetTable(),
+									table);
 				}
 			});
 			contextMenu.add(mask);
@@ -368,7 +371,8 @@ public class ExplainContext extends SchemaContext {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestUnmaskAllRelations(
 									ExplainContext.this.getDataSet(),
-									ExplainContext.this.getDataSetTable(), table);
+									ExplainContext.this.getDataSetTable(),
+									table);
 				}
 			});
 			contextMenu.add(unmask);
@@ -377,9 +381,9 @@ public class ExplainContext extends SchemaContext {
 
 			// If it's a restricted table...
 			if ((this.getDataSetTable() == null ? ((Table) object)
-					.getRestrictTable(this.getDataSet())
-					: ((Table) object).getRestrictTable(this.getDataSet(),
-							this.getDataSetTable().getName())) != null) {
+					.getRestrictTable(this.getDataSet()) : ((Table) object)
+					.getRestrictTable(this.getDataSet(), this.getDataSetTable()
+							.getName())) != null) {
 
 				// Option to modify restriction.
 				final JMenuItem modify = new JMenuItem(Resources
@@ -389,12 +393,11 @@ public class ExplainContext extends SchemaContext {
 						"modifyTableRestrictionMnemonic").charAt(0));
 				modify.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this
-								.getMartTab()
-								.getDataSetTabSet()
+						ExplainContext.this.getMartTab().getDataSetTabSet()
 								.requestRestrictTable(
 										ExplainContext.this.getDataSet(),
-										ExplainContext.this.getDataSetTable(), table);
+										ExplainContext.this.getDataSetTable(),
+										table);
 					}
 				});
 				contextMenu.add(modify);
@@ -409,12 +412,11 @@ public class ExplainContext extends SchemaContext {
 						"addTableRestrictionMnemonic").charAt(0));
 				restriction.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						ExplainContext.this
-								.getMartTab()
-								.getDataSetTabSet()
+						ExplainContext.this.getMartTab().getDataSetTabSet()
 								.requestRestrictTable(
 										ExplainContext.this.getDataSet(),
-										ExplainContext.this.getDataSetTable(), table);
+										ExplainContext.this.getDataSetTable(),
+										table);
 					}
 				});
 				contextMenu.add(restriction);
@@ -430,13 +432,14 @@ public class ExplainContext extends SchemaContext {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestUnrestrictTable(
 									ExplainContext.this.getDataSet(),
-									ExplainContext.this.getDataSetTable(), table);
+									ExplainContext.this.getDataSetTable(),
+									table);
 				}
 			});
 			contextMenu.add(remove);
-			if ((this.getDataSetTable() == null ? table
-					.getRestrictTable(this.getDataSet()) : table.getRestrictTable(
-					this.getDataSet(), this.getDataSetTable().getName())) == null)
+			if ((this.getDataSetTable() == null ? table.getRestrictTable(this
+					.getDataSet()) : table.getRestrictTable(this.getDataSet(),
+					this.getDataSetTable().getName())) == null)
 				remove.setEnabled(false);
 
 			// Option to set 'big table' value.
@@ -447,12 +450,13 @@ public class ExplainContext extends SchemaContext {
 				public void actionPerformed(final ActionEvent evt) {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestBigTable(ExplainContext.this.getDataSet(),
-									ExplainContext.this.getDataSetTable(), table);
+									ExplainContext.this.getDataSetTable(),
+									table);
 				}
 			});
 			bigTable.setSelected((this.getDataSetTable() == null ? table
-					.getBigTable(this.getDataSet()) : table.getBigTable(
-					this.getDataSet(), this.getDataSetTable().getName())) > 0);
+					.getBigTable(this.getDataSet()) : table.getBigTable(this
+					.getDataSet(), this.getDataSetTable().getName())) > 0);
 			contextMenu.add(bigTable);
 		}
 	}
@@ -480,36 +484,42 @@ public class ExplainContext extends SchemaContext {
 		final boolean incorrect = relation.getStatus().equals(
 				ComponentStatus.INFERRED_INCORRECT);
 		final boolean relationMasked = this.getDataSetTable() == null ? relation
-				.isMaskRelation(this.getDataSet()) : relation.isMaskRelation(
-				this.getDataSet(), this.getDataSetTable().getName());
+				.isMaskRelation(this.getDataSet())
+				: relation.isMaskRelation(this.getDataSet(), this
+						.getDataSetTable().getName());
 		final boolean relationRestricted = (this.getDataSetTable() == null ? relation
 				.isRestrictRelation(this.getDataSet())
-				: relation.isRestrictRelation(this.getDataSet(), this.getDataSetTable()
-						.getName()))
-				&& (iteration == RealisedRelation.NO_ITERATION || (this.getDataSetTable() == null ? relation
+				: relation.isRestrictRelation(this.getDataSet(), this
+						.getDataSetTable().getName()))
+				&& (iteration == RealisedRelation.NO_ITERATION || (this
+						.getDataSetTable() == null ? relation
 						.getRestrictRelation(this.getDataSet(), iteration)
-						: relation.getRestrictRelation(this.getDataSet(),
-								this.getDataSetTable().getName(), iteration)) != null);
-		final boolean relationSubclassed = relation
-				.isSubclassRelation(this.getDataSet());
+						: relation.getRestrictRelation(this.getDataSet(), this
+								.getDataSetTable().getName(), iteration)) != null);
+		final boolean relationSubclassed = relation.isSubclassRelation(this
+				.getDataSet());
+		final boolean alternativeJoined = this.getDataSetTable() != null
+				&& relation.isAlternativeJoin(this.getDataSet(), this
+						.getDataSetTable().getName());
 		final boolean relationCompounded = (this.getDataSetTable() == null ? relation
 				.getCompoundRelation(this.getDataSet())
-				: relation.getCompoundRelation(this.getDataSet(), this.getDataSetTable()
-						.getName())) != null;
+				: relation.getCompoundRelation(this.getDataSet(), this
+						.getDataSetTable().getName())) != null;
 		final boolean relationUnrolled = this.getDataSetTable() == null ? false
 				: relation.getUnrolledRelation(this.getDataSet()) != null
 						&& !this.getDataSetTable().getType().equals(
 								DataSetTableType.DIMENSION);
 		final boolean relationForced = this.getDataSetTable() == null ? relation
-				.isForceRelation(this.getDataSet()) : relation.isForceRelation(
-				this.getDataSet(), this.getDataSetTable().getName());
-		final boolean relationIncluded = this.getDataSetTable() == null ? this.getDataSet()
-				.getIncludedRelations().contains(relation)
-				: this.getDataSetTable().getIncludedRelations().contains(relation);
+				.isForceRelation(this.getDataSet())
+				: relation.isForceRelation(this.getDataSet(), this
+						.getDataSetTable().getName());
+		final boolean relationIncluded = this.getDataSetTable() == null ? this
+				.getDataSet().getIncludedRelations().contains(relation) : this
+				.getDataSetTable().getIncludedRelations().contains(relation);
 		final boolean relationLoopbacked = (this.getDataSetTable() == null ? relation
 				.getLoopbackRelation(this.getDataSet())
-				: relation.getLoopbackRelation(this.getDataSet(), this.getDataSetTable()
-						.getName())) != null;
+				: relation.getLoopbackRelation(this.getDataSet(), this
+						.getDataSetTable().getName())) != null;
 
 		// The mask/unmask option allows the user to mask/unmask a relation.
 		final JCheckBoxMenuItem mask = new JCheckBoxMenuItem(Resources
@@ -519,8 +529,8 @@ public class ExplainContext extends SchemaContext {
 			public void actionPerformed(final ActionEvent evt) {
 				ExplainContext.this.getMartTab().getDataSetTabSet()
 						.requestMaskRelation(ExplainContext.this.getDataSet(),
-								ExplainContext.this.getDataSetTable(), relation,
-								mask.isSelected());
+								ExplainContext.this.getDataSetTable(),
+								relation, mask.isSelected());
 			}
 		});
 		contextMenu.add(mask);
@@ -530,6 +540,30 @@ public class ExplainContext extends SchemaContext {
 		if (relationMasked)
 			mask.setSelected(true);
 
+		// The mask/unmask option allows the user to alternative-join a
+		// relation.
+		final String joinTitle = this.getDataSetTable() != null
+				&& this.getDataSetTable().getType() == DataSetTableType.DIMENSION ? Resources
+				.get("alternativeJoinDimensionTitle")
+				: Resources.get("alternativeJoinOtherTitle");
+		final JCheckBoxMenuItem join = new JCheckBoxMenuItem(joinTitle);
+		join.setMnemonic(Resources.get("alternativeJoinMnemonic").charAt(0));
+		join.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent evt) {
+				ExplainContext.this.getMartTab().getDataSetTabSet()
+						.requestAlternativeJoin(
+								ExplainContext.this.getDataSet(),
+								ExplainContext.this.getDataSetTable(),
+								relation, join.isSelected());
+			}
+		});
+		contextMenu.add(join);
+		if (this.getDataSetTable() == null || incorrect || relationUnrolled
+				|| relationMasked || !relationIncluded)
+			join.setEnabled(false);
+		if (alternativeJoined)
+			join.setSelected(true);
+
 		// The loopback option allows the user to loopback include a relation
 		// that would otherwise only be included once.
 		final JCheckBoxMenuItem loopback = new JCheckBoxMenuItem(Resources
@@ -538,8 +572,11 @@ public class ExplainContext extends SchemaContext {
 				.charAt(0));
 		loopback.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				ExplainContext.this.getMartTab().getDataSetTabSet()
-						.requestLoopbackRelation(ExplainContext.this.getDataSet(),
+				ExplainContext.this
+						.getMartTab()
+						.getDataSetTabSet()
+						.requestLoopbackRelation(
+								ExplainContext.this.getDataSet(),
 								ExplainContext.this.getDataSetTable(), relation);
 			}
 		});
@@ -559,8 +596,8 @@ public class ExplainContext extends SchemaContext {
 			public void actionPerformed(final ActionEvent evt) {
 				ExplainContext.this.getMartTab().getDataSetTabSet()
 						.requestForceRelation(ExplainContext.this.getDataSet(),
-								ExplainContext.this.getDataSetTable(), relation,
-								force.isSelected());
+								ExplainContext.this.getDataSetTable(),
+								relation, force.isSelected());
 			}
 		});
 		contextMenu.add(force);
@@ -577,12 +614,16 @@ public class ExplainContext extends SchemaContext {
 				.charAt(0));
 		compound.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
-				ExplainContext.this.getMartTab().getDataSetTabSet()
-						.requestCompoundRelation(ExplainContext.this.getDataSet(),
+				ExplainContext.this
+						.getMartTab()
+						.getDataSetTabSet()
+						.requestCompoundRelation(
+								ExplainContext.this.getDataSet(),
 								ExplainContext.this.getDataSetTable(), relation);
 				compound
 						.setSelected((ExplainContext.this.getDataSetTable() == null ? relation
-								.getCompoundRelation(ExplainContext.this.getDataSet())
+								.getCompoundRelation(ExplainContext.this
+										.getDataSet())
 								: relation.getCompoundRelation(
 										ExplainContext.this.getDataSet(),
 										ExplainContext.this.getDataSetTable()
@@ -606,8 +647,9 @@ public class ExplainContext extends SchemaContext {
 		subclass.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
 				ExplainContext.this.getMartTab().getDataSetTabSet()
-						.requestSubclassRelation(ExplainContext.this.getDataSet(),
-								relation, subclass.isSelected());
+						.requestSubclassRelation(
+								ExplainContext.this.getDataSet(), relation,
+								subclass.isSelected());
 			}
 		});
 		contextMenu.add(subclass);
@@ -633,8 +675,8 @@ public class ExplainContext extends SchemaContext {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestRestrictRelation(
 									ExplainContext.this.getDataSet(),
-									ExplainContext.this.getDataSetTable(), relation,
-									iteration);
+									ExplainContext.this.getDataSetTable(),
+									relation, iteration);
 				}
 			});
 			contextMenu.add(modify);
@@ -654,8 +696,8 @@ public class ExplainContext extends SchemaContext {
 					ExplainContext.this.getMartTab().getDataSetTabSet()
 							.requestRestrictRelation(
 									ExplainContext.this.getDataSet(),
-									ExplainContext.this.getDataSetTable(), relation,
-									iteration);
+									ExplainContext.this.getDataSetTable(),
+									relation, iteration);
 				}
 			});
 			if (incorrect || relationUnrolled || relationMasked)
@@ -671,9 +713,10 @@ public class ExplainContext extends SchemaContext {
 		remove.addActionListener(new ActionListener() {
 			public void actionPerformed(final ActionEvent evt) {
 				ExplainContext.this.getMartTab().getDataSetTabSet()
-						.requestUnrestrictRelation(ExplainContext.this.getDataSet(),
-								ExplainContext.this.getDataSetTable(), relation,
-								iteration);
+						.requestUnrestrictRelation(
+								ExplainContext.this.getDataSet(),
+								ExplainContext.this.getDataSetTable(),
+								relation, iteration);
 			}
 		});
 		contextMenu.add(remove);

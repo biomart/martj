@@ -1018,6 +1018,17 @@ public class MartBuilderXML extends DefaultHandler {
 							.hasNext();) {
 						final Relation r = (Relation) j.next();
 
+						// Alternative joins.
+						if (r.isAlternativeJoin(ds, dsTable.getName())) {
+							this.openElement("alternativeJoin", xmlWriter);
+							this.writeAttribute("tableKey", dsTable.getName(),
+									xmlWriter);
+							this.writeAttribute("relationId",
+									(String) this.reverseMappedObjects.get(r),
+									xmlWriter);
+							this.closeElement("alternativeJoin", xmlWriter);
+						}
+
 						// Mask relations.
 						if (r.isMaskRelation(ds, dsTable.getName())
 								&& !r.isMaskRelation(ds)) {
@@ -1897,6 +1908,29 @@ public class MartBuilderXML extends DefaultHandler {
 						rel.setMaskRelation(w, true);
 					else
 						rel.setMaskRelation(w, tableKey, true);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Alternative-join Relation (inside dataset).
+		else if ("alternativeJoin".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("alternativeJoinOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				final Relation rel = (Relation) this.mappedObjects
+						.get(attributes.get("relationId"));
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Mask it.
+				if (rel != null)
+					rel.setAlternativeJoin(w, tableKey, true);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

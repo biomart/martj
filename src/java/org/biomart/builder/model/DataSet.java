@@ -2918,6 +2918,9 @@ public class DataSet extends Schema {
 					final Relation rel = (Relation) j.next();
 					rel.setMaskRelation(copy, copyT.getName(), rel
 							.isMaskRelation(this.getDataSet(), this.getName()));
+					rel.setAlternativeJoin(copy, copyT.getName(), rel
+							.isAlternativeJoin(this.getDataSet(), this
+									.getName()));
 					rel
 							.setForceRelation(copy, copyT.getName(), rel
 									.isForceRelation(this.getDataSet(), this

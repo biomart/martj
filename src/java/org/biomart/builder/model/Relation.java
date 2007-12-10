@@ -202,6 +202,7 @@ public class Relation implements Comparable, TransactionListener {
 		this.addPropertyChangeListener("mergeRelation", this.listener);
 		this.addPropertyChangeListener("restrictRelation", this.listener);
 		this.addPropertyChangeListener("subclassRelation", this.listener);
+		this.addPropertyChangeListener("alternativeJoin", this.listener);
 	}
 
 	public boolean isDirectModified() {
@@ -583,7 +584,7 @@ public class Relation implements Comparable, TransactionListener {
 			dsMap.put(tableKey.intern(), new HashMap());
 		return (Map) dsMap.get(tableKey);
 	}
-	
+
 	/**
 	 * Is this relation subclassed?
 	 * 
@@ -769,6 +770,44 @@ public class Relation implements Comparable, TransactionListener {
 		} else {
 			this.getMods(dataset, tableKey).remove("maskRelation");
 			this.pcs.firePropertyChange("maskRelation", tableKey, null);
+		}
+	}
+
+	/**
+	 * Is this relation alternative-joined?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
+	 * @param tableKey
+	 *            the table to check for.
+	 * @return <tt>true</tt> if it is.
+	 */
+	public boolean isAlternativeJoin(final DataSet dataset,
+			final String tableKey) {
+		return this.getMods(dataset, tableKey).containsKey("alternativeJoin");
+	}
+
+	/**
+	 * Alternative-join this relation.
+	 * 
+	 * @param dataset
+	 *            the dataset to set for.
+	 * @param tableKey
+	 *            the dataset table to set for.
+	 * @param join
+	 *            <tt>true</tt> to do it, <tt>false</tt> to not.
+	 */
+	public void setAlternativeJoin(final DataSet dataset,
+			final String tableKey, final boolean join) {
+		final boolean oldValue = this.isAlternativeJoin(dataset, tableKey);
+		if (join == oldValue)
+			return;
+		if (join) {
+			this.getMods(dataset, tableKey).put("alternativeJoin", null);
+			this.pcs.firePropertyChange("alternativeJoin", null, tableKey);
+		} else {
+			this.getMods(dataset, tableKey).remove("alternativeJoin");
+			this.pcs.firePropertyChange("alternativeJoin", tableKey, null);
 		}
 	}
 

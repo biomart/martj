@@ -1031,8 +1031,11 @@ public interface MartConstructor {
 				final int bigness, final String finalCombinedName)
 				throws SQLException, ListenerException, PartitionException {
 
-			final boolean useLeftJoin = !dsTable.getType().equals(
-					DataSetTableType.DIMENSION);
+			final boolean useLeftJoin = dsTable.getType().equals(
+					DataSetTableType.DIMENSION) ? ljtu.getSchemaRelation()
+					.isAlternativeJoin(dataset, dsTable.getName()) : !ljtu
+					.getSchemaRelation().isAlternativeJoin(dataset,
+							dsTable.getName());
 			boolean requiresFinalLeftJoin = !useLeftJoin;
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);

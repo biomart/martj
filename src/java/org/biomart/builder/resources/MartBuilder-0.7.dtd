@@ -82,7 +82,7 @@
 
 <!ELEMENT dataset (
 compoundRelation*,subclassRelation*,maskedColumn*,
-indexedColumn*,maskedRelation*,maskedTable*,
+indexedColumn*,maskedRelation*,alternativeJoin*,maskedTable*,
 mergedRelation*,loopbackRelation*,forcedRelation*,restrictedTable*,
 restrictedRelation*,expressionColumn*,renamedTable*,
 renamedColumn*,distinctRows*,noFinalLeftJoin*,skipOptimiser*,skipIndexOptimiser*,unrolledRelation*,explainHideMasked*,
@@ -135,6 +135,10 @@ visibleModified*,bigTable*)>
 <!ELEMENT maskedRelation EMPTY>
 <!ATTLIST maskedRelation tableKey CDATA #REQUIRED>
 <!ATTLIST maskedRelation relationId IDREF #REQUIRED>
+
+<!ELEMENT alternativeJoin EMPTY>
+<!ATTLIST alternativeJoin tableKey CDATA #REQUIRED>
+<!ATTLIST alternativeJoin relationId IDREF #REQUIRED>
 
 <!ELEMENT maskedTable EMPTY>
 <!ATTLIST maskedTable tableKey CDATA #REQUIRED>
