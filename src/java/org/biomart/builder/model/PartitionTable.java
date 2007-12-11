@@ -506,6 +506,9 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 					.setPartitionTableApplication(appl);
 		else
 			ds.setPartitionTableApplication(appl);
+		// Listen to the applied rows.
+		if (appl != null)
+			appl.addPropertyChangeListener("directModified", this.listener);
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, appl);
 	}
@@ -523,7 +526,8 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
 			return;
-		((Map) this.dmApplications.get(ds)).remove(dimension);
+		final PartitionTableApplication appl = (PartitionTableApplication) ((Map) this.dmApplications
+				.get(ds)).remove(dimension);
 		if (((Map) this.dmApplications.get(ds)).isEmpty())
 			this.dmApplications.remove(ds);
 		if (!dimension.equals(PartitionTable.NO_DIMENSION)) {
@@ -532,6 +536,8 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 						.setPartitionTableApplication(null);
 		} else
 			ds.setPartitionTableApplication(null);
+		// Stop listening to the applied rows.
+		appl.addPropertyChangeListener("directModified", this.listener);
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, null);
 	}
@@ -976,12 +982,13 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 				for (final Iterator i = newRows.iterator(); i.hasNext();) {
 					final PartitionAppliedRow row = (PartitionAppliedRow) i
 							.next();
-					row.addPropertyChangeListener("directModified",
-							PartitionTableApplication.this.listener);
+					row
+							.addPropertyChangeListener(PartitionTableApplication.this.listener);
 				}
 				PartitionTableApplication.this.rowCache.clear();
 				PartitionTableApplication.this.rowCache
 						.addAll(PartitionTableApplication.this.partitionAppliedRows);
+				PartitionTableApplication.this.setDirectModified(true);
 			}
 		};
 
