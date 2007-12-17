@@ -139,7 +139,7 @@ public abstract class DataSetColumnStringTablePanel extends
 				.hasNext();) {
 			final Map.Entry entry = (Map.Entry) i.next();
 			final DataSetColumn dsCol = (DataSetColumn) entry.getKey();
-			values.put(dsCol.getModifiedName(), entry.getValue());
+			values.put(dsCol.getName(), entry.getValue());
 		}
 		return values;
 	}

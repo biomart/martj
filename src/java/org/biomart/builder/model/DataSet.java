@@ -2871,6 +2871,10 @@ public class DataSet extends Schema {
 			this.addPropertyChangeListener("skipIndexOptimiser", this.listener);
 			this.addPropertyChangeListener("partitionTableApplication",
 					this.listener);
+
+			// Make dataset rebuild when our columns change externally.
+			this.getColumns().addPropertyChangeListener(
+					this.getDataSet().rebuildListener);
 		}
 
 		private DataSetTable replicate(final DataSet copy)
