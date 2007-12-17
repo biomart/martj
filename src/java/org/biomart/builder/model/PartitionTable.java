@@ -526,8 +526,7 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 			dimension = PartitionTable.NO_DIMENSION;
 		if (!this.dmApplications.containsKey(ds))
 			return;
-		final PartitionTableApplication appl = (PartitionTableApplication) ((Map) this.dmApplications
-				.get(ds)).remove(dimension);
+		((Map) this.dmApplications.get(ds)).remove(dimension);
 		if (((Map) this.dmApplications.get(ds)).isEmpty())
 			this.dmApplications.remove(ds);
 		if (!dimension.equals(PartitionTable.NO_DIMENSION)) {
@@ -536,8 +535,6 @@ public abstract class PartitionTable implements TransactionListener, Comparable 
 						.setPartitionTableApplication(null);
 		} else
 			ds.setPartitionTableApplication(null);
-		// Stop listening to the applied rows.
-		appl.addPropertyChangeListener("directModified", this.listener);
 		// Fire event - we have no before/after, so a simple event will do.
 		this.pcs.firePropertyChange("partitionTableApplication", null, null);
 	}
