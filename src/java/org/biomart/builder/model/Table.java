@@ -649,6 +649,12 @@ public class Table implements Comparable, TransactionListener {
 		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
 				this);
 
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				RestrictedTableDefinition.this.setDirectModified(true);
+			}
+		};
+		
 		/**
 		 * This constructor gives the restriction an initial expression and a
 		 * set of aliases. The expression may not be empty, and neither can the
@@ -679,13 +685,8 @@ public class Table implements Comparable, TransactionListener {
 
 			Transaction.addTransactionListener(this);
 
-			final PropertyChangeListener listener = new PropertyChangeListener() {
-				public void propertyChange(final PropertyChangeEvent e) {
-					RestrictedTableDefinition.this.setDirectModified(true);
-				}
-			};
-			this.addPropertyChangeListener(listener);
-			this.aliases.addPropertyChangeListener(listener);
+			this.addPropertyChangeListener(this.listener);
+			this.aliases.addPropertyChangeListener(this.listener);
 		}
 
 		/**

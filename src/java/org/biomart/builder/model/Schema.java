@@ -312,7 +312,6 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				this.tableCache.add(table);
 				table.getRelations().addPropertyChangeListener(
 						this.relationCacheBuilder);
-				table.addPropertyChangeListener("name", this.listener);
 				table
 						.addPropertyChangeListener("directModified",
 								this.listener);

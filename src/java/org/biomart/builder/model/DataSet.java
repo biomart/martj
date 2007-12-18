@@ -124,12 +124,6 @@ public class DataSet extends Schema {
 		}
 	};
 
-	private final PropertyChangeListener listener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
-			DataSet.this.setDirectModified(true);
-		}
-	};
-
 	private final Table centralTable;
 
 	private final Collection includedRelations;
