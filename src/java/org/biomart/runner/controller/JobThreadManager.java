@@ -197,8 +197,6 @@ public class JobThreadManager extends Thread {
 
 		private final int sequence = JobThread.SEQUENCE_NUMBER++;
 
-		private boolean actionFailed = false;
-
 		private Connection connection;
 
 		private JobPlanSection currentSection = null;
@@ -240,14 +238,13 @@ public class JobThreadManager extends Thread {
 							.hasNext()
 							&& this.continueRunning();) {
 						final JobPlanAction action = (JobPlanAction) i.next();
-						// Only process queued/stopped
-						// actions.
+						// Only process queued/stopped actions.
 						if (!(action.getStatus().equals(JobStatus.QUEUED) || action
 								.getStatus().equals(JobStatus.STOPPED)))
 							continue;
 						// Process the action.
-						else
-							this.processAction(action);
+						else if (!this.processAction(action))
+							break;
 					}
 					this.currentSection = null;
 				}
@@ -267,7 +264,7 @@ public class JobThreadManager extends Thread {
 		}
 
 		private boolean continueRunning() {
-			return !this.actionFailed && !this.manager.jobStopped
+			return !this.manager.jobStopped
 					&& !this.cancelled;
 		}
 
@@ -278,7 +275,8 @@ public class JobThreadManager extends Thread {
 				return this.sequence == ((JobThread) o).sequence;
 		}
 
-		private void processAction(final JobPlanAction action) {
+		private boolean processAction(final JobPlanAction action) {
+			boolean actionFailed = false;
 			try {
 				// Update action status to running.
 				JobHandler.setStatus(this.plan.getJobId(), action
@@ -360,7 +358,7 @@ public class JobThreadManager extends Thread {
 				if (failureMessage != null) {
 					JobHandler.setStatus(this.plan.getJobId(), action
 							.getIdentifier(), JobStatus.FAILED, failureMessage);
-					this.actionFailed = true;
+					actionFailed = true;
 				} else
 					JobHandler.setStatus(this.plan.getJobId(), action
 							.getIdentifier(), JobStatus.COMPLETED, null);
@@ -368,6 +366,7 @@ public class JobThreadManager extends Thread {
 				// We don't really care but print it just in case.
 				Log.warn(e);
 			}
+			return !actionFailed;
 		}
 
 		private Connection getConnection() throws Exception {
