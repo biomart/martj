@@ -23,13 +23,13 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -92,6 +92,43 @@ public class JobPlan implements Serializable {
 		this.jobId = jobId;
 		this.threadCount = 1;
 		this.skipDropTable = false;
+	}
+	/**
+	 * Create a new job plan by duplication.
+	 * 
+	 * @param jobId
+	 *            the id of the job this plan is for.
+	 *            @param plan the plan to copy.
+	 */
+	public JobPlan(final String jobId, final JobPlan plan) {
+		this.root = new JobPlanSection(jobId, this, null);
+		this.jobId = jobId;
+		this.threadCount = plan.threadCount;
+		this.skipDropTable = plan.skipDropTable;
+		this.JDBCDriverClassName = plan.JDBCDriverClassName;
+		this.JDBCURL = plan.JDBCURL;
+		this.JDBCUsername = plan.JDBCUsername;
+		this.JDBCPassword = plan.JDBCPassword;
+		this.contactEmailAddress = plan.contactEmailAddress;
+		this.targetSchema = plan.targetSchema;
+	}
+
+	/**
+	 * Override this method if you want to get the results of any SQL statements
+	 * that result in results (e.g. select statements).
+	 * 
+	 * @param action
+	 *            the action that produced the results.
+	 * @param rs
+	 *            the resultset containing the results.
+	 * @throws SQLException
+	 *             if anything goes wrong because of the database.
+	 * @throws JobException
+	 *             if anything none-database-ish goes wrong.
+	 */
+	public void callbackResults(final JobPlanAction action, final ResultSet rs)
+			throws SQLException, JobException {
+		// Does nothing.
 	}
 
 	/**
@@ -331,136 +368,126 @@ public class JobPlan implements Serializable {
 	}
 
 	/**
-	 * List all relevant tables on our connection.
+	 * Build a job that searches for empty tables (those with non-key columns
+	 * that have all nulls in those columns) and generates UNQUEUED drop
+	 * statements to be executed at a later date.
 	 * 
-	 * @param overrideSchema
-	 *            to override the schema queried. <tt>null</tt> to not use.
-	 * @return the results, one row per entry.
 	 * @throws SQLException
 	 *             if anything went wrong.
 	 * @throws JobException
 	 *             if anything went wrong.
 	 */
-	public Collection listTables(final String overrideSchema)
-			throws SQLException, JobException {
+	public void makeEmptyTableJob() throws SQLException, JobException {
+		// Make a job to put the statements into, with a callback
+		// which generates the drop statements.
+		final String jobPlanId = JobHandler.nextJobId();
+		final JobPlan jobPlan = new JobPlan(jobPlanId, this) {
+			private static final long serialVersionUID = 1L;
+
+			private final String dropSectionName = Resources.get("dropTableSection");
+
+			public void callbackResults(final JobPlanAction action,
+					final ResultSet rs) throws SQLException, JobException {
+				rs.next();
+				final int count = rs.getInt(1);
+				// If count is 0, we have 0 non-null rows.
+				if (count==0) {
+					// Drop table.
+					// What table are we dropping?
+					final String table = action.getAction().split("\\s+")[3];
+					// Find the appropriate section to put an action in.
+					final JobPlanSection jobPlanSection = this.getRoot()
+							.getSubSection(dropSectionName);
+					// Build the SQL.
+					final StringBuffer sql = new StringBuffer();
+					sql.append("drop table ");
+					sql.append(table);
+					// Convert the SQL into an action.
+					JobHandler.setActions(jobPlanId, new String[] { dropSectionName }, Collections
+							.singleton(sql.toString()));
+					this.setActionCount(new String[] { dropSectionName }, 1);
+					// Unqueue the action.
+					JobHandler.setStatus(jobPlanId, Collections.singleton(jobPlanSection.getIdentifier()), JobStatus.NOT_QUEUED, null);
+				}
+			}
+		};
+		JobHandler.getJobList().addJob(jobPlan);
+
 		// Open connection.
 		final Connection conn = this.getConnection();
 
 		// Get database metadata, catalog, and schema details.
 		final DatabaseMetaData dmd = conn.getMetaData();
 		final String catalog = conn.getCatalog();
-		final String schema = overrideSchema == null ? this.getTargetSchema()
-				: overrideSchema;
-
-		// Load tables and views from database, then loop over them.
-		final ResultSet rs = dmd.getTables(
-				"".equals(dmd.getSchemaTerm()) ? schema : catalog, schema, "%",
-				new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
-		final Collection results = this.processResultSet(rs);
-		rs.close();
-
-		// Close connection.
-		try {
-			conn.close();
-		} catch (final SQLException e) {
-			// Dont' care.
-		}
-
-		// Return results;
-		return results;
-	}
-
-	/**
-	 * List columns for a table.
-	 * 
-	 * @param overrideSchema
-	 *            to override the schema queried. <tt>null</tt> to not use.
-	 * @param table
-	 *            the table.
-	 * @return the results, one row per entry.
-	 * @throws SQLException
-	 *             if anything went wrong.
-	 * @throws JobException
-	 *             if anything went wrong.
-	 */
-	public Collection listColumns(final String overrideSchema,
-			final String table) throws SQLException, JobException {
-		// Open connection.
-		final Connection conn = this.getConnection();
-
-		// Get database metadata, catalog, and schema details.
-		final DatabaseMetaData dmd = conn.getMetaData();
-		final String catalog = conn.getCatalog();
-		final String schema = overrideSchema == null ? this.getTargetSchema()
-				: overrideSchema;
+		final String schema = this.getTargetSchema();
 
 		// Gather columns for table.
-		final ResultSet rs = dmd.getColumns(
-				"".equals(dmd.getSchemaTerm()) ? schema : catalog, schema,
-				table, "%");
-		// FIXME: When using Oracle, if the table is a synonym then the
-		// above call returns no results.
-		final Collection results = this.processResultSet(rs);
-		rs.close();
-
-		// Close connection.
+		final Map tableMap = new HashMap();
+		ResultSet rs = null;
 		try {
-			conn.close();
-		} catch (final SQLException e) {
-			// Dont' care.
+			rs = dmd.getColumns("".equals(dmd.getSchemaTerm()) ? schema
+					: catalog, schema, "%", "%");
+			// FIXME: When using Oracle, if the table is a synonym then the
+			// above call returns no results.
+			while (rs.next()) {
+				// Skip non-nullable columns.
+				if (rs.getInt("NULLABLE") == DatabaseMetaData.columnNoNulls)
+					continue;
+				// Include all other columns.
+				final String table = rs.getString("TABLE_NAME");
+				final String col = rs.getString("COLUMN_NAME");
+				if (!tableMap.containsKey(table))
+					tableMap.put(table, new HashSet());
+				((Collection) tableMap.get(table)).add(col);
+			}
+		} finally {
+			try {
+				// Close connection.
+				if (rs != null)
+					rs.close();
+			} finally {
+				conn.close();
+			}
 		}
 
-		// Return results;
-		return results;
-	}
-
-	/**
-	 * Run some SQL against our connection.
-	 * 
-	 * @param sql
-	 *            the SQL.
-	 * @return the results, one row per entry.
-	 * @throws SQLException
-	 *             if anything went wrong.
-	 * @throws JobException
-	 *             if anything went wrong.
-	 */
-	public Collection runSQL(final String sql) throws SQLException,
-			JobException {
-		// Open connection.
-		final Connection conn = this.getConnection();
-
-		// Run SQL.
-		PreparedStatement pstmt = conn.prepareStatement(sql);
-		ResultSet rs = pstmt.executeQuery();
-		final Collection results = this.processResultSet(rs);
-		rs.close();
-		pstmt.close();
-
-		// Close connection.
-		try {
-			conn.close();
-		} catch (final SQLException e) {
-			// Dont' care.
+		// Iterate over the columns gathered to construct actions.
+		for (final Iterator i = tableMap.entrySet().iterator(); i.hasNext();) {
+			final Map.Entry entry = (Map.Entry) i.next();
+			final String table = (String) entry.getKey();
+			final Collection nonKeyCols = new HashSet();
+			for (final Iterator j = ((Collection) entry.getValue()).iterator(); j
+					.hasNext();) {
+				final String col = (String) j.next();
+				// Divide into key/non-key cols.
+				if (!col.endsWith(Resources.get("keySuffix")))
+					nonKeyCols.add(col);
+			}
+			// Ignore tables which have no non-key cols.
+			if (nonKeyCols.isEmpty())
+				continue;
+			// Build the count SQL for this table. We are counting
+			// non-null rows.
+			final StringBuffer sql = new StringBuffer();
+			sql.append("select count(1) from ");
+			sql.append(this.getTargetSchema());
+			sql.append('.');
+			sql.append(table);
+			sql.append(" where ");
+			for (final Iterator k = nonKeyCols.iterator(); k.hasNext();) {
+				final String nonKeyCol = (String) k.next();
+				sql.append(nonKeyCol);
+				sql.append(" is not null");
+				if (k.hasNext())
+					sql.append(" or ");
+			}
+			// Convert the SQL into an action.
+			JobHandler.setActions(jobPlanId, new String[] { table }, Collections
+					.singleton(sql.toString()));
+			this.setActionCount(new String[] { table }, 1);
 		}
-
-		// Return results;
-		return results;
-	}
-
-	private Collection processResultSet(final ResultSet rs) throws SQLException {
-		final int colCount = rs.getMetaData().getColumnCount();
-		final String[] colNames = new String[colCount + 1];
-		for (int i = 1; i <= colCount; i++)
-			colNames[i] = rs.getMetaData().getColumnName(i);
-		final Collection results = new ArrayList();
-		while (rs.next()) {
-			final Map row = new HashMap();
-			for (int i = 1; i <= colCount; i++)
-				row.put(colNames[i], rs.getObject(i));
-			results.add(row);
-		}
-		return results;
+		// Queue the job.
+		JobHandler.setStatus(jobPlanId, Collections.singleton(jobPlan.getRoot()
+				.getIdentifier()), JobStatus.QUEUED, null);
 	}
 
 	/**
@@ -561,13 +588,14 @@ public class JobPlan implements Serializable {
 		 */
 		public void moveSubSection(final JobPlanSection section,
 				final JobPlanSection newPredecessorSection) {
-			if (newPredecessorSection==null) 
-			    // Insert at top.
+			if (newPredecessorSection == null)
+				// Insert at top.
 				this.subSections.put(null, section.label, section);
-			else 
+			else
 				// Insert before given label.
-				this.subSections.put(newPredecessorSection.label, section.label, section);
-		} 
+				this.subSections.put(newPredecessorSection.label,
+						section.label, section);
+		}
 
 		/**
 		 * Sets the action count.

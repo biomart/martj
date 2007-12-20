@@ -340,7 +340,16 @@ public class JobThreadManager extends Thread {
 					if (!(this.plan.isSkipDropTable() && sql
 							.startsWith("drop table"))) {
 						final Statement stmt = conn.createStatement();
-						stmt.execute(sql);
+						if (stmt.execute(sql)) {
+							ResultSet rs = null;
+							try {
+								rs = stmt.getResultSet();
+								this.plan.callbackResults(action, rs);
+							} finally {
+								if (rs!=null)
+									rs.close();
+							}
+						}
 						final SQLWarning warning = conn.getWarnings();
 						if (warning != null)
 							throw warning;

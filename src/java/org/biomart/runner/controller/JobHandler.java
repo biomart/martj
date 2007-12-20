@@ -367,6 +367,22 @@ public class JobHandler {
 	}
 
 	/**
+	 * Do the funky empty table thang.
+	 * 
+	 * @param jobId
+	 *            the job.
+	 * @throws JobException
+	 */
+	public static void makeEmptyTableJob(final String jobId)
+			throws JobException {
+		try {
+			JobHandler.getJobPlan(jobId).makeEmptyTableJob();
+		} catch (final SQLException e) {
+			throw new JobException(e);
+		}
+	}
+
+	/**
 	 * Queue some set of sections+actions.
 	 * 
 	 * @param jobId
@@ -571,70 +587,6 @@ public class JobHandler {
 		try {
 			JobHandler.saveJobList();
 		} catch (final IOException e) {
-			throw new JobException(e);
-		}
-	}
-
-	/**
-	 * Lists tables made by a job.
-	 * 
-	 * @param overrideSchema
-	 *            to override the schema queried. <tt>null</tt> to not use.
-	 * @param jobId
-	 *            the job ID.
-	 * @return the plan.
-	 * @throws JobException
-	 *             if anything went wrong.
-	 */
-	public static Collection listTables(final String overrideSchema,
-			final String jobId) throws JobException {
-		try {
-			return JobHandler.getJobList().getJobPlan(jobId).listTables(
-					overrideSchema);
-		} catch (final SQLException e) {
-			throw new JobException(e);
-		}
-	}
-
-	/**
-	 * Lists columns for a table for a job.
-	 * 
-	 * @param overrideSchema
-	 *            to override the schema queried. <tt>null</tt> to not use.
-	 * @param jobId
-	 *            the job ID.
-	 * @param table
-	 *            the table.
-	 * @return the plan.
-	 * @throws JobException
-	 *             if anything went wrong.
-	 */
-	public static Collection listColumns(final String overrideSchema,
-			final String jobId, final String table) throws JobException {
-		try {
-			return JobHandler.getJobList().getJobPlan(jobId).listColumns(
-					overrideSchema, table);
-		} catch (final SQLException e) {
-			throw new JobException(e);
-		}
-	}
-
-	/**
-	 * Runs SQL for a job.
-	 * 
-	 * @param jobId
-	 *            the job ID.
-	 * @param sql
-	 *            the SQL.
-	 * @return the plan.
-	 * @throws JobException
-	 *             if anything went wrong.
-	 */
-	public static Collection runSQL(final String jobId, final String sql)
-			throws JobException {
-		try {
-			return JobHandler.getJobList().getJobPlan(jobId).runSQL(sql);
-		} catch (final SQLException e) {
 			throw new JobException(e);
 		}
 	}

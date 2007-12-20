@@ -80,15 +80,11 @@ public class MartRunnerProtocol {
 
 	private static final String UNQUEUE = "UNQUEUE";
 
-	private static final String RUN_SQL = "RUN_SQL";
-
 	private static final String MOVE_SECTION = "MOVE_SECTION";
 
-	private static final String LIST_TABLES = "LIST_TABLES";
-
-	private static final String LIST_COLUMNS = "LIST_COLUMNS";
-
 	private static final String UPDATE_ACTION = "UPDATE_ACTION";
+
+	private static final String EMPTY_TABLES = "EMPTY_TABLES";
 
 	// Short-cut for ending messages and actions.
 	private static final String END_MESSAGE = "___END_MESSAGE___";
@@ -311,64 +307,6 @@ public class MartRunnerProtocol {
 	 * @throws Exception
 	 *             if the protocol fails.
 	 */
-	public static void handle_LIST_TABLES(final ObjectInputStream in,
-			final ObjectOutputStream out) throws Exception {
-		final String overrideSchema = (String) in.readObject();
-		final String jobId = (String) in.readObject();
-		out.writeObject(JobHandler.listTables(
-				overrideSchema.length() == 0 ? null : overrideSchema, jobId));
-		out.flush();
-	}
-
-	/**
-	 * Does something useful.
-	 * 
-	 * @param in
-	 *            the input stream from the client.
-	 * @param out
-	 *            the output stream back to the client.
-	 * @throws Exception
-	 *             if the protocol fails.
-	 */
-	public static void handle_LIST_COLUMNS(final ObjectInputStream in,
-			final ObjectOutputStream out) throws Exception {
-		final String overrideSchema = (String) in.readObject();
-		final String jobId = (String) in.readObject();
-		final String table = (String) in.readObject();
-		out.writeObject(JobHandler.listColumns(
-				overrideSchema.length() == 0 ? null : overrideSchema, jobId,
-				table));
-		out.flush();
-	}
-
-	/**
-	 * Does something useful.
-	 * 
-	 * @param in
-	 *            the input stream from the client.
-	 * @param out
-	 *            the output stream back to the client.
-	 * @throws Exception
-	 *             if the protocol fails.
-	 */
-	public static void handle_RUN_SQL(final ObjectInputStream in,
-			final ObjectOutputStream out) throws Exception {
-		final String jobId = (String) in.readObject();
-		final String sql = (String) in.readObject();
-		out.writeObject(JobHandler.runSQL(jobId, sql));
-		out.flush();
-	}
-
-	/**
-	 * Does something useful.
-	 * 
-	 * @param in
-	 *            the input stream from the client.
-	 * @param out
-	 *            the output stream back to the client.
-	 * @throws Exception
-	 *             if the protocol fails.
-	 */
 	public static void handle_UPDATE_ACTION(final ObjectInputStream in,
 			final ObjectOutputStream out) throws Exception {
 		final String jobId = (String) in.readObject();
@@ -376,6 +314,22 @@ public class MartRunnerProtocol {
 		final String actionId = (String) in.readObject();
 		final String action = (String) in.readObject();
 		JobHandler.updateAction(jobId, sectionId, actionId, action);
+	}
+
+	/**
+	 * Does something useful.
+	 * 
+	 * @param in
+	 *            the input stream from the client.
+	 * @param out
+	 *            the output stream back to the client.
+	 * @throws Exception
+	 *             if the protocol fails.
+	 */
+	public static void handle_EMPTY_TABLES(final ObjectInputStream in,
+			final ObjectOutputStream out) throws Exception {
+		final String jobId = (String) in.readObject();
+		JobHandler.makeEmptyTableJob(jobId);
 	}
 
 	/**
@@ -708,6 +662,28 @@ public class MartRunnerProtocol {
 		}
 
 		/**
+		 * Kick off an empty table thang.
+		 * 
+		 * @param clientSocket
+		 *            the socket to the host.
+		 * @param jobId
+		 *            the job ID.
+		 * @throws ProtocolException
+		 *             if something went wrong.
+		 */
+		public static void makeEmptyTableJob(final Socket clientSocket,
+				final String jobId) throws ProtocolException {
+			try {
+				final ObjectOutputStream oos = (ObjectOutputStream) clientSocket
+						.getOutputStream();
+				oos.writeObject(MartRunnerProtocol.EMPTY_TABLES);
+				oos.writeObject(jobId);
+			} catch (final Throwable e) {
+				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
+			}
+		}
+
+		/**
 		 * Add actions to a job by defining a new section.
 		 * 
 		 * @param clientSocket
@@ -740,109 +716,6 @@ public class MartRunnerProtocol {
 					oos.writeObject(MartRunnerProtocol.NEXT);
 				}
 				oos.writeObject(MartRunnerProtocol.END_MESSAGE);
-			} catch (final Throwable e) {
-				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
-			}
-		}
-
-		/**
-		 * List tables for the given job.
-		 * 
-		 * @param clientSocket
-		 *            the socket to the host.
-		 * @param overrideSchema
-		 *            if not <tt>null</tt> then overrides the schema used to
-		 *            query the database.
-		 * @param jobId
-		 *            the job ID.
-		 * @return the rows. These will be one-row-per-entry, with a map of
-		 *         column names to raw objects.
-		 * @throws ProtocolException
-		 *             if something went wrong.
-		 */
-		public static Collection listTables(final Socket clientSocket,
-				final String overrideSchema, final String jobId)
-				throws ProtocolException {
-			try {
-				final ObjectOutputStream oos = (ObjectOutputStream) clientSocket
-						.getOutputStream();
-				oos.writeObject(MartRunnerProtocol.LIST_TABLES);
-				oos.writeObject(overrideSchema == null ? "" : overrideSchema);
-				oos.writeObject(jobId);
-				oos.flush();
-				return (Collection) ((ObjectInputStream) clientSocket
-						.getInputStream()).readObject();
-			} catch (final ClassNotFoundException e) {
-				throw new ProtocolException(e);
-			} catch (final Throwable e) {
-				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
-			}
-		}
-
-		/**
-		 * List columns on the given table for the given job.
-		 * 
-		 * @param clientSocket
-		 *            the socket to the host.
-		 * @param overrideSchema
-		 *            if not <tt>null</tt> then overrides the schema used to
-		 *            query the database.
-		 * @param jobId
-		 *            the job ID.
-		 * @param table
-		 *            the table to query.
-		 * @return the rows. These will be one-row-per-entry, with a map of
-		 *         column names to raw objects.
-		 * @throws ProtocolException
-		 *             if something went wrong.
-		 */
-		public static Collection listColumns(final Socket clientSocket,
-				final String overrideSchema, final String jobId,
-				final String table) throws ProtocolException {
-			try {
-				final ObjectOutputStream oos = (ObjectOutputStream) clientSocket
-						.getOutputStream();
-				oos.writeObject(MartRunnerProtocol.LIST_COLUMNS);
-				oos.writeObject(overrideSchema == null ? "" : overrideSchema);
-				oos.writeObject(jobId);
-				oos.writeObject(table);
-				oos.flush();
-				return (Collection) ((ObjectInputStream) clientSocket
-						.getInputStream()).readObject();
-			} catch (final ClassNotFoundException e) {
-				throw new ProtocolException(e);
-			} catch (final Throwable e) {
-				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
-			}
-		}
-
-		/**
-		 * Run SQL against the connection for the given job.
-		 * 
-		 * @param clientSocket
-		 *            the socket to the host.
-		 * @param jobId
-		 *            the job ID.
-		 * @param sql
-		 *            the SQL to run.
-		 * @return the rows. These will be one-row-per-entry, with a map of
-		 *         column names to raw objects.
-		 * @throws ProtocolException
-		 *             if something went wrong.
-		 */
-		public static Collection runSQL(final Socket clientSocket,
-				final String jobId, final String sql) throws ProtocolException {
-			try {
-				final ObjectOutputStream oos = (ObjectOutputStream) clientSocket
-						.getOutputStream();
-				oos.writeObject(MartRunnerProtocol.RUN_SQL);
-				oos.writeObject(jobId);
-				oos.writeObject(sql);
-				oos.flush();
-				return (Collection) ((ObjectInputStream) clientSocket
-						.getInputStream()).readObject();
-			} catch (final ClassNotFoundException e) {
-				throw new ProtocolException(e);
 			} catch (final Throwable e) {
 				throw new ProtocolException(Resources.get("protocolIOProbs"), e);
 			}

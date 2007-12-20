@@ -239,7 +239,7 @@ public class MartRunnerMonitorDialog extends JFrame {
 						} finally {
 							MartRunnerMonitorDialog.this.listRefreshing = false;
 							// Attempt to select the first item on first run.
-							if (firstRun && jobPlanListModel.size()>0)
+							if (firstRun && jobPlanListModel.size() > 0)
 								selection = jobPlanListModel.lastElement();
 							jobList.setSelectedValue(selection, true);
 							firstRun = false;
@@ -291,6 +291,29 @@ public class MartRunnerMonitorDialog extends JFrame {
 						final JobPlan plan = (JobPlan) jobPlanListModel
 								.getElementAt(index);
 						final JPopupMenu menu = new JPopupMenu();
+
+						// Remove job.
+						final JMenuItem empty = new JMenuItem(Resources
+								.get("emptyTableJobTitle"));
+						empty.setMnemonic(Resources
+								.get("emptyTableJobMnemonic").charAt(0));
+						empty.addActionListener(new ActionListener() {
+							public void actionPerformed(final ActionEvent evt) {
+								new LongProcess() {
+									public void run() throws Exception {
+										// Do the job.
+										final Socket clientSocket = Client
+												.createClientSocket(host, port);
+										Client.makeEmptyTableJob(clientSocket,
+												plan.getJobId());
+										clientSocket.close();
+									}
+								}.start();
+							}
+						});
+						menu.add(empty);
+
+						menu.addSeparator();
 
 						// Remove job.
 						final JMenuItem remove = new JMenuItem(Resources

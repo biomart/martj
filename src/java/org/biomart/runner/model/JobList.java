@@ -68,7 +68,7 @@ public class JobList implements Serializable {
 	 */
 	public JobPlan getJobPlan(final String jobId) {
 		if (!this.jobList.containsKey(jobId))
-			this.jobList.put(jobId, new JobPlan(jobId));
+			this.addJob(new JobPlan(jobId));
 		return (JobPlan) this.jobList.get(jobId);
 	}
 
