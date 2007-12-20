@@ -802,7 +802,7 @@ public class DataSet extends Schema {
 							&& cand.getModifiedName().equals(
 									dsCol.getModifiedName()))
 						try {
-							cand.setColumnRename(cand.getModifiedName() + "_1");
+							dsCol.setColumnRename(dsCol.getModifiedName() + "_1");
 						} catch (final ValidationException ve) {
 							// Ouch!
 							throw new BioMartError(ve);
@@ -2320,7 +2320,7 @@ public class DataSet extends Schema {
 					&& oldValue.equals(columnRename))
 				return;
 			if (oldValue == null)
-				oldValue = this.getName();
+				oldValue = this.getModifiedName();
 			// Make the name unique.
 			if (columnRename != null) {
 				final Set entries = new HashSet();
@@ -2510,6 +2510,8 @@ public class DataSet extends Schema {
 
 				dsColumn.addPropertyChangeListener("columnMasked",
 						this.listener);
+				dsColumn.addPropertyChangeListener("columnRename",
+						this.listener);
 			}
 
 			protected DataSetColumn doReplicate(final DataSetTable copyT)
@@ -2528,7 +2530,7 @@ public class DataSet extends Schema {
 			}
 
 			public String getModifiedName() {
-				return this.getName();
+				return this.dsColumn.getModifiedName();
 			}
 
 			public boolean isColumnMasked() {
@@ -2537,24 +2539,12 @@ public class DataSet extends Schema {
 
 			public void setColumnMasked(final boolean columnMasked)
 					throws ValidationException {
-				if (columnMasked == this.isColumnMasked())
-					return;
-				if (columnMasked)
-					throw new ValidationException(Resources
-							.get("cannotMaskInheritedColumn"));
-				super.setColumnMasked(columnMasked);
+				this.dsColumn.setColumnMasked(columnMasked);
 			}
 
 			public void setColumnRename(final String columnRename)
 					throws ValidationException {
-				final String oldValue = this.getColumnRename();
-				if (columnRename == oldValue || oldValue != null
-						&& oldValue.equals(columnRename))
-					return;
-				if (columnRename != null)
-					throw new ValidationException(Resources
-							.get("cannotRenameInheritedColumn"));
-				super.setColumnRename(columnRename);
+				this.dsColumn.setColumnRename(columnRename);
 			}
 
 			public boolean existsForPartition(final String schemaPrefix) {
