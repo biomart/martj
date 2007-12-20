@@ -474,13 +474,13 @@ public class OracleDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		final String joinType = !action.isLeftJoin()
+		final String joinType = action.isLeftJoin()
 				|| action.getRelationRestriction() != null
-				&& action.getRelationRestriction().isHard()
+				&& !action.getRelationRestriction().isHard()
 				|| action.getTableRestriction() != null
-				&& action.getTableRestriction().isHard()
-				|| !action.getPartitionRestrictions().isEmpty() ? "inner"
-				: "left";
+				&& !action.getTableRestriction().isHard()
+				&& action.getPartitionRestrictions().isEmpty() ? "left"
+				: "inner";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."
