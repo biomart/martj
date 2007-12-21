@@ -775,66 +775,6 @@ public class MartBuilderXML extends DefaultHandler {
 								xmlWriter);
 						this.closeElement("unrolledRelation", xmlWriter);
 					}
-
-					// Restrict relations.
-					if (r.isRestrictRelation(ds)) {
-						final CompoundRelationDefinition cdef = r
-								.getCompoundRelation(ds);
-						final int maxIteration = cdef == null ? 1 : cdef.getN();
-						RestrictedRelationDefinition def = null;
-						// Loop over known compound indices.
-						for (int iteration = 0; iteration < maxIteration; iteration++) {
-							def = r.getRestrictRelation(ds, iteration);
-							if (def == null)
-								continue;
-							this.openElement("restrictedRelation", xmlWriter);
-							this.writeAttribute("relationId",
-									(String) this.reverseMappedObjects.get(r),
-									xmlWriter);
-							this.writeAttribute("index", "" + iteration,
-									xmlWriter);
-							final StringBuffer lcols = new StringBuffer();
-							final StringBuffer lnames = new StringBuffer();
-							for (final Iterator a = def.getLeftAliases()
-									.entrySet().iterator(); a.hasNext();) {
-								final Map.Entry entry4 = (Map.Entry) a.next();
-								lcols.append((String) this.reverseMappedObjects
-										.get((Column) entry4.getKey()));
-								lnames.append((String) entry4.getValue());
-								if (a.hasNext()) {
-									lcols.append(',');
-									lnames.append(',');
-								}
-							}
-							this.writeAttribute("leftAliasColumnIds", lcols
-									.toString(), xmlWriter);
-							this.writeAttribute("leftAliasNames", lnames
-									.toString(), xmlWriter);
-							final StringBuffer rcols = new StringBuffer();
-							final StringBuffer rnames = new StringBuffer();
-							for (final Iterator a = def.getRightAliases()
-									.entrySet().iterator(); a.hasNext();) {
-								final Map.Entry entry4 = (Map.Entry) a.next();
-								rcols.append((String) this.reverseMappedObjects
-										.get((Column) entry4.getKey()));
-								rnames.append((String) entry4.getValue());
-								if (a.hasNext()) {
-									rcols.append(',');
-									rnames.append(',');
-								}
-							}
-							this.writeAttribute("rightAliasColumnIds", rcols
-									.toString(), xmlWriter);
-							this.writeAttribute("rightAliasNames", rnames
-									.toString(), xmlWriter);
-							this.writeAttribute("expression", def
-									.getExpression(), xmlWriter);
-							this.writeAttribute("hard", "" + def.isHard(),
-									xmlWriter);
-							this.closeElement("restrictedRelation", xmlWriter);
-						}
-					}
-
 				}
 
 				// Write out per-table mods.
@@ -851,39 +791,6 @@ public class MartBuilderXML extends DefaultHandler {
 						this.writeAttribute("bigness",
 								"" + tbl.getBigTable(ds), xmlWriter);
 						this.closeElement("bigTable", xmlWriter);
-					}
-
-					// Restricted table.
-					if (tbl.getRestrictTable(ds) != null) {
-						final RestrictedTableDefinition def = tbl
-								.getRestrictTable(ds);
-
-						this.openElement("restrictedTable", xmlWriter);
-						this.writeAttribute("tableId",
-								(String) this.reverseMappedObjects.get(tbl),
-								xmlWriter);
-						final StringBuffer cols = new StringBuffer();
-						final StringBuffer names = new StringBuffer();
-						for (final Iterator z = def.getAliases().entrySet()
-								.iterator(); z.hasNext();) {
-							final Map.Entry entry3 = (Map.Entry) z.next();
-							cols.append((String) this.reverseMappedObjects
-									.get((Column) entry3.getKey()));
-							names.append((String) entry3.getValue());
-							if (z.hasNext()) {
-								cols.append(',');
-								names.append(',');
-							}
-						}
-						this.writeAttribute("aliasColumnIds", cols.toString(),
-								xmlWriter);
-						this.writeAttribute("aliasNames", names.toString(),
-								xmlWriter);
-						this.writeAttribute("expression", def.getExpression(),
-								xmlWriter);
-						this.writeAttribute("hard", "" + def.isHard(),
-								xmlWriter);
-						this.closeElement("restrictedTable", xmlWriter);
 					}
 				}
 			}
@@ -1149,8 +1056,6 @@ public class MartBuilderXML extends DefaultHandler {
 										.toString(), xmlWriter);
 								this.writeAttribute("expression", def
 										.getExpression(), xmlWriter);
-								this.writeAttribute("hard", "" + def.isHard(),
-										xmlWriter);
 								this.closeElement("restrictedRelation",
 										xmlWriter);
 							}
@@ -1208,8 +1113,6 @@ public class MartBuilderXML extends DefaultHandler {
 									xmlWriter);
 							this.writeAttribute("expression", def
 									.getExpression(), xmlWriter);
-							this.writeAttribute("hard", "" + def.isHard(),
-									xmlWriter);
 							this.closeElement("restrictedTable", xmlWriter);
 						}
 					}
@@ -2193,17 +2096,12 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
-				final boolean hard = Boolean.valueOf(
-						(String) attributes.get("hard")).booleanValue();
 
 				// Set up the restriction.
-				if (expr != null && !aliases.isEmpty() && tbl != null) {
+				if (expr != null && !aliases.isEmpty() && tableKey!=null && tbl != null) {
 					final RestrictedTableDefinition def = new RestrictedTableDefinition(
-							expr, aliases, hard);
-					if (tableKey == null)
-						tbl.setRestrictTable(w, def);
-					else
-						tbl.setRestrictTable(w, tableKey, def);
+							expr, aliases);
+					tbl.setRestrictTable(w, tableKey, def);
 				}
 			} catch (final Exception e) {
 				if (e instanceof SAXException)
@@ -2334,17 +2232,12 @@ public class MartBuilderXML extends DefaultHandler {
 				}
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
-				final boolean hard = Boolean.valueOf(
-						(String) attributes.get("hard")).booleanValue();
 
-				if (expr != null && rel != null && !laliases.isEmpty()
+				if (expr != null && rel != null && tableKey!=null && !laliases.isEmpty()
 						&& !raliases.isEmpty()) {
 					final RestrictedRelationDefinition def = new RestrictedRelationDefinition(
-							expr, laliases, raliases, hard);
-					if (tableKey == null)
-						rel.setRestrictRelation(w, def, index);
-					else
-						rel.setRestrictRelation(w, tableKey, def, index);
+							expr, laliases, raliases);
+					rel.setRestrictRelation(w, tableKey, def, index);
 				}
 			} catch (final Exception e) {
 				if (e instanceof SAXException)

@@ -1176,10 +1176,8 @@ public interface MartConstructor {
 			// Table restriction.
 			final RestrictedTableDefinition rdef = ljtu.getTable()
 					.getRestrictTable(dataset, dsTable.getName());
-			if (rdef != null) {
+			if (rdef != null) 
 				action.setTableRestriction(rdef);
-				requiresFinalLeftJoin |= rdef.isHard();
-			}
 
 			// Don't add restriction if loopback relation from M end.
 			final boolean loopbackManyEnd = ljtu.getSchemaRelation()
@@ -1197,7 +1195,6 @@ public interface MartConstructor {
 						.getSchemaRelation().getFirstKey().equals(
 								ljtu.getSchemaSourceKey()));
 				action.setRelationRestriction(def);
-				requiresFinalLeftJoin |= def.isHard();
 			}
 			// If this is a loopback from the one end, add the optional
 			// differentiation column.

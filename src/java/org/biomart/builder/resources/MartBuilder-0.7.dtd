@@ -173,7 +173,6 @@ visibleModified*,bigTable*)>
 <!ATTLIST restrictedTable aliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedTable aliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedTable expression CDATA #REQUIRED>
-<!ATTLIST restrictedTable hard (true|false) #REQUIRED>
 
 <!ELEMENT bigTable EMPTY>
 <!ATTLIST bigTable tableKey CDATA #REQUIRED>
@@ -189,7 +188,6 @@ visibleModified*,bigTable*)>
 <!ATTLIST restrictedRelation rightAliasColumnIds IDREFS #REQUIRED>
 <!ATTLIST restrictedRelation rightAliasNames CDATA #REQUIRED>
 <!ATTLIST restrictedRelation expression CDATA #REQUIRED>
-<!ATTLIST restrictedRelation hard (true|false) #IMPLIED>
 
 <!ELEMENT expressionColumn EMPTY>
 <!ATTLIST expressionColumn tableKey CDATA #REQUIRED>

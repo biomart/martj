@@ -51,6 +51,7 @@ import org.biomart.builder.model.Table;
 import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
+import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
@@ -142,8 +143,8 @@ public class DataSetTabSet extends JTabbedPane {
 			// Mass change. Copy to prevent concurrent mods.
 			final Set oldDSs = new HashSet(DataSetTabSet.this.datasetToDiagram
 					.keySet());
-			for (final Iterator i = martTab.getMart().getDataSets().values()
-					.iterator(); i.hasNext();) {
+			for (final Iterator i = DataSetTabSet.this.martTab.getMart()
+					.getDataSets().values().iterator(); i.hasNext();) {
 				final DataSet ds = (DataSet) i.next();
 				if (!oldDSs.remove(ds.getName())) {
 					// Single-add.
@@ -1052,20 +1053,18 @@ public class DataSetTabSet extends JTabbedPane {
 			final int iteration) {
 		// Get index offset into compound relation.
 		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
-				: (dsTable == null ? relation.getCompoundRelation(dataset)
-						: relation.getCompoundRelation(dataset, dsTable
-								.getName())) != null ? this
+				: relation.getCompoundRelation(dataset, dsTable.getName()) != null ? this
 						.askUserForCompoundRelationIndex(dataset, dsTable,
-								relation) : 0;
+								relation)
+						: 0;
 
 		// Cancelled?
 		if (index == -1)
 			return;
 
 		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
-				relation, dsTable == null ? relation.getRestrictRelation(
-						dataset, index) : relation.getRestrictRelation(dataset,
-						dsTable.getName(), index));
+				relation, relation.getRestrictRelation(dataset, dsTable
+						.getName(), index));
 		dialog.setVisible(true);
 
 		// Cancelled?
@@ -1076,26 +1075,25 @@ public class DataSetTabSet extends JTabbedPane {
 		final Map aliasesLHS = dialog.getLHSColumnAliases();
 		final Map aliasesRHS = dialog.getRHSColumnAliases();
 		final String expression = dialog.getExpression();
-		final boolean hard = dialog.getHard();
 		dialog.dispose();
 
 		new LongProcess() {
 			public void run() {
 				Transaction.start(false);
-				RestrictedRelationDefinition def = dsTable == null ? relation
-						.getRestrictRelation(dataset, index) : relation
+				RestrictedRelationDefinition def = relation
 						.getRestrictRelation(dataset, dsTable.getName(), index);
 				if (def == null) {
 					def = new RestrictedRelationDefinition(expression,
-							aliasesLHS, aliasesRHS, hard);
-					if (dsTable == null)
-						relation.setRestrictRelation(dataset, def, iteration);
-					else
-						relation.setRestrictRelation(dataset,
-								dsTable.getName(), def, iteration);
+							aliasesLHS, aliasesRHS);
+					relation.setRestrictRelation(dataset, dsTable.getName(),
+							def, iteration);
+					// Make it alternative join if dataset,
+					// or NOT alternative if main/subclass.
+					relation.setAlternativeJoin(dataset, dsTable.getName(),
+							dsTable.getType()
+									.equals(DataSetTableType.DIMENSION));
 				} else {
 					def.setExpression(expression);
-					def.setHard(hard);
 					def.getLeftAliases().clear();
 					def.getLeftAliases().putAll(aliasesLHS);
 					def.getRightAliases().clear();
@@ -1124,11 +1122,10 @@ public class DataSetTabSet extends JTabbedPane {
 			final int iteration) {
 		// Get index offset into compound relation.
 		final int index = iteration != RealisedRelation.NO_ITERATION ? iteration
-				: (dsTable == null ? relation.getCompoundRelation(dataset)
-						: relation.getCompoundRelation(dataset, dsTable
-								.getName())) != null ? this
+				: relation.getCompoundRelation(dataset, dsTable.getName()) != null ? this
 						.askUserForCompoundRelationIndex(dataset, dsTable,
-								relation) : 0;
+								relation)
+						: 0;
 
 		// Cancelled?
 		if (index == -1)
@@ -1137,11 +1134,13 @@ public class DataSetTabSet extends JTabbedPane {
 		new LongProcess() {
 			public void run() {
 				Transaction.start(false);
-				if (dsTable != null)
-					relation.setRestrictRelation(dataset, dsTable.getName(),
-							null, iteration);
-				else
-					relation.setRestrictRelation(dataset, null, iteration);
+				relation.setRestrictRelation(dataset, dsTable.getName(), null,
+						iteration);
+				// Make it alternative join if dataset,
+				// or NOT alternative if main/subclass.
+				relation.setAlternativeJoin(dataset, dsTable
+								.getName(), !dsTable.getType().equals(
+								DataSetTableType.DIMENSION));
 				Transaction.end();
 			}
 		}.start();
@@ -1159,8 +1158,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param join
 	 *            whether to do it.
 	 */
-	public void requestAlternativeJoin(final DataSet ds, final DataSetTable dst,
-			final Relation relation, final boolean join) {
+	public void requestAlternativeJoin(final DataSet ds,
+			final DataSetTable dst, final Relation relation, final boolean join) {
 		new LongProcess() {
 			public void run() {
 				Transaction.start(false);
@@ -1495,8 +1494,7 @@ public class DataSetTabSet extends JTabbedPane {
 	public void requestRestrictTable(final DataSet dataset,
 			final DataSetTable dsTable, final Table table) {
 		final RestrictedTableDialog dialog = new RestrictedTableDialog(table,
-				dsTable == null ? table.getRestrictTable(dataset) : table
-						.getRestrictTable(dataset, dsTable.getName()));
+				table.getRestrictTable(dataset, dsTable.getName()));
 		dialog.setVisible(true);
 		// Cancelled?
 		if (dialog.getCancelled())
@@ -1504,27 +1502,30 @@ public class DataSetTabSet extends JTabbedPane {
 		// Get updated details from the user.
 		final Map aliases = dialog.getColumnAliases();
 		final String expression = dialog.getExpression();
-		final boolean hard = dialog.getHard();
 		dialog.dispose();
 
 		new LongProcess() {
 			public void run() {
 				Transaction.start(false);
-				RestrictedTableDefinition def = dsTable == null ? table
-						.getRestrictTable(dataset) : table.getRestrictTable(
-						dataset, dsTable.getName());
+				RestrictedTableDefinition def = table.getRestrictTable(dataset,
+						dsTable.getName());
 				if (def != null) {
 					def.getAliases().clear();
 					def.getAliases().putAll(aliases);
 					def.setExpression(expression);
-					def.setHard(hard);
 				} else {
-					def = new RestrictedTableDefinition(expression, aliases,
-							hard);
-					if (dsTable != null)
-						table.setRestrictTable(dataset, dsTable.getName(), def);
-					else
-						table.setRestrictTable(dataset, def);
+					def = new RestrictedTableDefinition(expression, aliases);
+					table.setRestrictTable(dataset, dsTable.getName(), def);
+					// Make it alternative join if dataset,
+					// or NOT alternative if main/subclass.
+					for (final Iterator i = dsTable.getIncludedRelations()
+							.iterator(); i.hasNext();) {
+						final Relation relation = (Relation) i.next();
+						if (relation.getKeyForTable(table) != null)
+							relation.setAlternativeJoin(dataset, dsTable
+									.getName(), dsTable.getType().equals(
+									DataSetTableType.DIMENSION));
+					}
 				}
 				Transaction.end();
 			}
@@ -1644,10 +1645,17 @@ public class DataSetTabSet extends JTabbedPane {
 		new LongProcess() {
 			public void run() {
 				Transaction.start(false);
-				if (dsTable != null)
-					table.setRestrictTable(dataset, dsTable.getName(), null);
-				else
-					table.setRestrictTable(dataset, null);
+				table.setRestrictTable(dataset, dsTable.getName(), null);
+				// Make it alternative join if dataset,
+				// or NOT alternative if main/subclass.
+				for (final Iterator i = dsTable.getIncludedRelations()
+						.iterator(); i.hasNext();) {
+					final Relation relation = (Relation) i.next();
+					if (relation.getKeyForTable(table) != null)
+						relation.setAlternativeJoin(dataset, dsTable
+								.getName(), !dsTable.getType().equals(
+								DataSetTableType.DIMENSION));
+				}
 				Transaction.end();
 			}
 		}.start();
@@ -1663,7 +1671,6 @@ public class DataSetTabSet extends JTabbedPane {
 		// Ask user for the new name.
 		this.requestRenameDataSet(dataset, this.askUserForName(Resources
 				.get("requestDataSetName"), dataset.getName()));
-
 	}
 
 	/**

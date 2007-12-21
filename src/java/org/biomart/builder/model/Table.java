@@ -448,54 +448,14 @@ public class Table implements Comparable, TransactionListener {
 	 * 
 	 * @param dataset
 	 *            the dataset to check for.
-	 * @return the def to use if it is, null otherwise.
-	 */
-	public RestrictedTableDefinition getRestrictTable(final DataSet dataset) {
-		return (RestrictedTableDefinition) this.getMods(dataset, null).get(
-				"restrictTable");
-	}
-
-	/**
-	 * Is this table restricted?
-	 * 
-	 * @param dataset
-	 *            the dataset to check for.
 	 * @param tableKey
 	 *            the table to check for.
 	 * @return the def to use if it is, null otherwise.
 	 */
 	public RestrictedTableDefinition getRestrictTable(final DataSet dataset,
 			final String tableKey) {
-		RestrictedTableDefinition result = (RestrictedTableDefinition) this
+		return (RestrictedTableDefinition) this
 				.getMods(dataset, tableKey).get("restrictTable");
-		if (result == null)
-			result = this.getRestrictTable(dataset);
-		return result;
-	}
-
-	/**
-	 * Restrict this table.
-	 * 
-	 * @param dataset
-	 *            the dataset to set for.
-	 * @param def
-	 *            the definition to set - if null, it undoes it.
-	 */
-	public void setRestrictTable(final DataSet dataset,
-			final RestrictedTableDefinition def) {
-		final RestrictedTableDefinition oldValue = this
-				.getRestrictTable(dataset);
-		if (def == oldValue || oldValue != null && oldValue.equals(def))
-			return;
-
-		if (def != null) {
-			this.getMods(dataset, null).put("restrictTable", def);
-			def.addPropertyChangeListener("directModified", this.listener);
-			this.pcs.firePropertyChange("restrictTable", null, dataset);
-		} else {
-			this.getMods(dataset, null).remove("restrictTable");
-			this.pcs.firePropertyChange("restrictTable", dataset, null);
-		}
 	}
 
 	/**
@@ -642,8 +602,6 @@ public class Table implements Comparable, TransactionListener {
 
 		private String expr;
 
-		private boolean hard;
-
 		private boolean directModified = false;
 
 		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
@@ -664,12 +622,8 @@ public class Table implements Comparable, TransactionListener {
 		 *            the expression to define for this restriction.
 		 * @param aliases
 		 *            the aliases to use for columns.
-		 * @param hard
-		 *            if this restriction is a hard restriction (inner join) as
-		 *            opposed to a soft one (left join).
 		 */
-		public RestrictedTableDefinition(final String expr, final Map aliases,
-				final boolean hard) {
+		public RestrictedTableDefinition(final String expr, final Map aliases) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -681,7 +635,6 @@ public class Table implements Comparable, TransactionListener {
 			// Remember the settings.
 			this.aliases = new BeanMap(new HashMap(aliases));
 			this.expr = expr;
-			this.hard = hard;
 
 			Transaction.addTransactionListener(this);
 
@@ -695,8 +648,7 @@ public class Table implements Comparable, TransactionListener {
 		 * @return the copy.
 		 */
 		public RestrictedTableDefinition replicate() {
-			return new RestrictedTableDefinition(this.expr, this.aliases,
-					this.hard);
+			return new RestrictedTableDefinition(this.expr, this.aliases);
 		}
 
 		/**
@@ -770,15 +722,6 @@ public class Table implements Comparable, TransactionListener {
 		}
 
 		/**
-		 * Is this a hard restriction?
-		 * 
-		 * @return <tt>true</tt> if it is.
-		 */
-		public boolean isHard() {
-			return this.hard;
-		}
-
-		/**
 		 * Returns the expression, <i>without</i> substitution. This value is
 		 * RDBMS-specific.
 		 * 
@@ -808,20 +751,6 @@ public class Table implements Comparable, TransactionListener {
 			}
 			Log.debug("Expression is: " + sub);
 			return sub;
-		}
-
-		/**
-		 * Is this a hard-restriction?
-		 * 
-		 * @param hard
-		 *            <tt>true</tt> if it is.
-		 */
-		public void setHard(final boolean hard) {
-			if (hard == this.hard)
-				return;
-			final boolean oldValue = this.hard;
-			this.hard = hard;
-			this.pcs.firePropertyChange("hard", oldValue, hard);
 		}
 
 		/**

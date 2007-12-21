@@ -978,46 +978,16 @@ public class Relation implements Comparable, TransactionListener {
 	 * 
 	 * @param dataset
 	 *            the dataset to check for.
-	 * @return <tt>true</tt> if it is.
-	 */
-	public boolean isRestrictRelation(final DataSet dataset) {
-		return this.getMods(dataset, null).containsKey("restrictRelation")
-				&& !((Map) this.getMods(dataset, null).get("restrictRelation"))
-						.isEmpty();
-	}
-
-	/**
-	 * Is this relation restricted, anywhere (regardless of iteration)?
-	 * 
-	 * @param dataset
-	 *            the dataset to check for.
 	 * @param tableKey
 	 *            the table to check for.
 	 * @return <tt>true</tt> if it is.
 	 */
 	public boolean isRestrictRelation(final DataSet dataset,
 			final String tableKey) {
-		return this.isRestrictRelation(dataset)
-				|| this.getMods(dataset, tableKey).containsKey(
+		return this.getMods(dataset, tableKey).containsKey(
 						"restrictRelation")
 				&& !((Map) this.getMods(dataset, tableKey).get(
 						"restrictRelation")).isEmpty();
-	}
-
-	/**
-	 * Is this relation restricted?
-	 * 
-	 * @param dataset
-	 *            the dataset to check for.
-	 * @param n
-	 *            the index to lookup. 0 is first.
-	 * @return the def to use if it is, null otherwise.
-	 */
-	public RestrictedRelationDefinition getRestrictRelation(
-			final DataSet dataset, final int n) {
-		return !this.getMods(dataset, null).containsKey("restrictRelation") ? null
-				: (RestrictedRelationDefinition) ((Map) this.getMods(dataset,
-						null).get("restrictRelation")).get(new Integer(n));
 	}
 
 	/**
@@ -1033,46 +1003,10 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public RestrictedRelationDefinition getRestrictRelation(
 			final DataSet dataset, final String tableKey, final int n) {
-		RestrictedRelationDefinition result = !this.getMods(dataset, tableKey)
+		return !this.getMods(dataset, tableKey)
 				.containsKey("restrictRelation") ? null
 				: (RestrictedRelationDefinition) ((Map) this.getMods(dataset,
 						tableKey).get("restrictRelation")).get(new Integer(n));
-		if (result == null)
-			result = this.getRestrictRelation(dataset, n);
-		return result;
-	}
-
-	/**
-	 * Restrict this relation.
-	 * 
-	 * @param dataset
-	 *            the dataset to set for.
-	 * @param n
-	 *            the index of the relation to restrict - 0 is first.
-	 * @param def
-	 *            the definition to set - if null, it undoes it.
-	 */
-	public void setRestrictRelation(final DataSet dataset,
-			final RestrictedRelationDefinition def, final int n) {
-		final RestrictedRelationDefinition oldValue = this.getRestrictRelation(
-				dataset, n);
-		if (def == oldValue || oldValue != null && oldValue.equals(def))
-			return;
-
-		if (def != null) {
-			if (!this.getMods(dataset, null).containsKey("restrictRelation"))
-				this.getMods(dataset, null).put("restrictRelation",
-						new HashMap());
-			((Map) this.getMods(dataset, null).get("restrictRelation")).put(
-					new Integer(n), def);
-			def.addPropertyChangeListener("directModified", this.listener);
-			this.pcs.firePropertyChange("restrictRelation", null, dataset);
-		} else {
-			if (this.getMods(dataset, null).containsKey("restrictRelation"))
-				((Map) this.getMods(dataset, null).get("restrictRelation"))
-						.remove(new Integer(n));
-			this.pcs.firePropertyChange("restrictRelation", dataset, null);
-		}
 	}
 
 	/**
@@ -1704,8 +1638,6 @@ public class Relation implements Comparable, TransactionListener {
 
 		private String expr;
 
-		private boolean hard;
-
 		private boolean directModified = false;
 
 		private final WeakPropertyChangeSupport pcs = new WeakPropertyChangeSupport(
@@ -1728,13 +1660,9 @@ public class Relation implements Comparable, TransactionListener {
 		 *            the aliases to use for columns on the LHS of the join.
 		 * @param rightAliases
 		 *            the aliases to use for columns on the RHS of the join.
-		 * @param hard
-		 *            <tt>true</tt> if this is a hard (inner) join as opposed
-		 *            to a soft (left) join.
 		 */
 		public RestrictedRelationDefinition(final String expr,
-				final Map leftAliases, final Map rightAliases,
-				final boolean hard) {
+				final Map leftAliases, final Map rightAliases) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
@@ -1748,7 +1676,6 @@ public class Relation implements Comparable, TransactionListener {
 			this.leftAliases = new BeanMap(new HashMap(leftAliases));
 			this.rightAliases = new BeanMap(new HashMap(rightAliases));
 			this.expr = expr;
-			this.hard = hard;
 
 			Transaction.addTransactionListener(this);
 
@@ -1764,7 +1691,7 @@ public class Relation implements Comparable, TransactionListener {
 		 */
 		public RestrictedRelationDefinition replicate() {
 			return new RestrictedRelationDefinition(this.expr,
-					this.leftAliases, this.rightAliases, this.hard);
+					this.leftAliases, this.rightAliases);
 		}
 
 		/**
@@ -1870,29 +1797,6 @@ public class Relation implements Comparable, TransactionListener {
 			final String oldValue = this.expr;
 			this.expr = expr;
 			this.pcs.firePropertyChange("expression", oldValue, expr);
-		}
-
-		/**
-		 * Is this a hard-restriction?
-		 * 
-		 * @return <tt>true</tt> if it is.
-		 */
-		public boolean isHard() {
-			return this.hard;
-		}
-
-		/**
-		 * Is this a hard-restriction?
-		 * 
-		 * @param hard
-		 *            <tt>true</tt> if it is.
-		 */
-		public void setHard(final boolean hard) {
-			if (hard == this.hard)
-				return;
-			final boolean oldValue = this.hard;
-			this.hard = hard;
-			this.pcs.firePropertyChange("hard", oldValue, hard);
 		}
 
 		/**

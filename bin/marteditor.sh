@@ -36,4 +36,3 @@ echo "Starting MartEditor please wait .... "
 # sake it is best if they are both the same value.
 java -Xmx1024m -Xms256m -ea -cp $TMP_CLASSPATH org.ensembl.mart.editor.MartEditor $@
 
-

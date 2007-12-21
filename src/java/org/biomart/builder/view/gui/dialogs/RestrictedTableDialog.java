@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -63,8 +62,6 @@ public class RestrictedTableDialog extends JDialog {
 	private JButton execute;
 
 	private JTextArea expression;
-
-	private JCheckBox hard;
 
 	/**
 	 * Creates (but does not open) a dialog requesting details of a restricted
@@ -114,7 +111,6 @@ public class RestrictedTableDialog extends JDialog {
 
 		// Create the fields that will contain the user's table choices.
 		this.expression = new JTextArea(10, 40); // Arbitrary size.
-		this.hard = new JCheckBox(Resources.get("hardLabel"));
 
 		// Work out what column/relation pairs are available to us.
 		final List colsAvailable = new ArrayList(table.getColumns().values());
@@ -166,13 +162,6 @@ public class RestrictedTableDialog extends JDialog {
 		field.add(new JScrollPane(this.expression));
 		content.add(field, fieldConstraints);
 
-		// Add the hard option.
-		label = new JLabel();
-		content.add(label, labelConstraints);
-		field = new JPanel();
-		field.add(this.hard);
-		content.add(field, fieldConstraints);
-
 		// Add the buttons to the dialog.
 		label = new JLabel();
 		content.add(label, labelLastRowConstraints);
@@ -204,10 +193,8 @@ public class RestrictedTableDialog extends JDialog {
 		this.getRootPane().setDefaultButton(this.execute);
 
 		// Set some nice defaults.
-		if (template != null) {
+		if (template != null) 
 			this.expression.setText(template.getExpression());
-			this.hard.setSelected(template.isHard());
-		}
 		// Aliases were already copied in the JTable constructor above.
 
 		// Set the size of the dialog.
@@ -271,14 +258,5 @@ public class RestrictedTableDialog extends JDialog {
 	 */
 	public String getExpression() {
 		return this.expression.getText().trim();
-	}
-
-	/**
-	 * Return <tt>true</tt> if the user ticked the hard restriction box.
-	 * 
-	 * @return <tt>true</tt> if the hard restriction box was ticked.
-	 */
-	public boolean getHard() {
-		return this.hard.isSelected();
 	}
 }

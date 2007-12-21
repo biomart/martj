@@ -283,9 +283,6 @@ public class DataSet extends Schema {
 					.hasNext();) {
 				final Table tab = (Table) j.next();
 				tab.setBigTable(copy, tab.getBigTable(this));
-				if (tab.getRestrictTable(this) != null)
-					tab.setRestrictTable(copy, tab.getRestrictTable(this)
-							.replicate());
 			}
 			for (final Iterator j = sch.getRelations().iterator(); j.hasNext();) {
 				final Relation rel = (Relation) j.next();
@@ -297,15 +294,6 @@ public class DataSet extends Schema {
 					rel.setCompoundRelation(copy, rel.getCompoundRelation(this)
 							.replicate());
 				rel.setLoopbackRelation(copy, rel.getLoopbackRelation(this));
-				if (rel.getRestrictRelation(this, 0) != null)
-					rel.setRestrictRelation(copy, rel.getRestrictRelation(this,
-							0).replicate(), 0);
-				if (rel.getCompoundRelation(copy) != null)
-					for (int k = 1; k < rel.getCompoundRelation(copy).getN(); k++)
-						if (rel.getRestrictRelation(this, k) != null)
-							rel.setRestrictRelation(copy, rel
-									.getRestrictRelation(this, k).replicate(),
-									k);
 				if (rel.getUnrolledRelation(this) != null)
 					rel.setUnrolledRelation(copy, rel.getUnrolledRelation(this)
 							.replicate());
@@ -789,25 +777,43 @@ public class DataSet extends Schema {
 						parentDSCol.getModifiedName())) {
 					dsCol = new InheritedColumn(dsTable, parentDSCol);
 					dsTable.getColumns().put(dsCol.getName(), dsCol);
+					// If any other col has modified name same as
+					// inherited col's modified name, then rename that
+					// other column.
+					for (final Iterator j = dsTable.getColumns().values()
+							.iterator(); j.hasNext();) {
+						final DataSetColumn cand = (DataSetColumn) j.next();
+						if (!(cand instanceof InheritedColumn)
+								&& cand.getModifiedName().equals(
+										dsCol.getModifiedName()))
+							try {
+								if (dsCol.getModifiedName().endsWith(
+										Resources.get("keySuffix")))
+									dsCol
+											.setColumnRename(dsCol
+													.getModifiedName()
+													.substring(
+															0,
+															dsCol
+																	.getModifiedName()
+																	.indexOf(
+																			Resources
+																					.get("keySuffix")))
+													+ "_1"
+													+ Resources
+															.get("keySuffix"));
+								else
+									dsCol.setColumnRename(dsCol
+											.getModifiedName()
+											+ "_1");
+							} catch (final ValidationException ve) {
+								// Ouch!
+								throw new BioMartError(ve);
+							}
+					}
 				} else
 					dsCol = (InheritedColumn) dsTable.getColumns().get(
 							parentDSCol.getModifiedName());
-				// If any other col has modified name same as
-				// inherited col's modified name, then rename that
-				// other column.
-				for (final Iterator j = dsTable.getColumns().values()
-						.iterator(); j.hasNext();) {
-					final DataSetColumn cand = (DataSetColumn) j.next();
-					if (cand != dsCol
-							&& cand.getModifiedName().equals(
-									dsCol.getModifiedName()))
-						try {
-							dsCol.setColumnRename(dsCol.getModifiedName() + "_1");
-						} catch (final ValidationException ve) {
-							// Ouch!
-							throw new BioMartError(ve);
-						}
-				}
 				unusedCols.remove(dsCol);
 				parentTU.getNewColumnNameMap().put(parentDSCol, dsCol);
 				dsCol.setTransformationUnit(parentTU);
@@ -1056,6 +1062,30 @@ public class DataSet extends Schema {
 			}
 		}
 
+		// Rename columns in keys to have _key suffixes, and
+		// remove that suffix from all others.
+		for (final Iterator i = dsTable.getColumns().values().iterator(); i
+				.hasNext();) {
+			final DataSetColumn dsCol = (DataSetColumn) i.next();
+			try {
+				if (dsCol.isKeyCol()
+						&& !dsCol.getModifiedName().endsWith(
+								Resources.get("keySuffix")))
+					dsCol.setColumnRename(dsCol.getModifiedName()
+							+ Resources.get("keySuffix"));
+				else if (!dsCol.isKeyCol()
+						&& dsCol.getModifiedName().endsWith(
+								Resources.get("keySuffix")))
+					dsCol.setColumnRename(dsCol.getModifiedName().substring(
+							0,
+							dsCol.getModifiedName().indexOf(
+									Resources.get("keySuffix"))));
+			} catch (final ValidationException ve) {
+				// Should never happen!
+				throw new BioMartError(ve);
+			}
+		}
+
 		// Only dataset tables with primary keys can have subclasses
 		// or dimensions.
 		if (dsTable.getPrimaryKey() != null) {
@@ -1241,9 +1271,15 @@ public class DataSet extends Schema {
 				origColName = pcolName + suffix
 						+ Resources.get("columnnameSep") + origColName;
 			}
+			// Rename all PK columns to have the '_key' suffix.
+			if (includeMergeTablePK
+					&& Arrays.asList(mergeTablePK.getColumns()).contains(c)
+					&& !origColName.endsWith(Resources.get("keySuffix")))
+				origColName = origColName + Resources.get("keySuffix");
 			// Reuse or create new wrapped column?
 			WrappedColumn wc = null;
 			boolean reusedColumn = false;
+			// Don't reuse cols that will be part of the PK.
 			if (dsTable.getColumns().containsKey(colName)) {
 				final DataSetColumn candDSCol = (DataSetColumn) dsTable
 						.getColumns().get(colName);
@@ -1253,24 +1289,19 @@ public class DataSet extends Schema {
 				}
 			}
 			if (!reusedColumn) {
-				// Rename all PK columns to have the '_key' suffix.
-				if (includeMergeTablePK
-						&& Arrays.asList(mergeTablePK.getColumns()).contains(c)
-						&& !colName.endsWith(Resources.get("keySuffix")))
-					origColName = origColName + Resources.get("keySuffix");
 				// Create new column using unique name.
 				wc = new WrappedColumn(c, colName, dsTable);
 				dsTable.getColumns().put(wc.getName(), wc);
 				// Insert column rename using origColName, but
 				// only if one not already specified (e.g. from
 				// XML file).
-				if (wc.getColumnRename() == null)
-					try {
+				try {
+					if (wc.getColumnRename() == null)
 						wc.setColumnRename(origColName);
-					} catch (final ValidationException ve) {
-						// Should never happen!
-						throw new BioMartError(ve);
-					}
+				} catch (final ValidationException ve) {
+					// Should never happen!
+					throw new BioMartError(ve);
+				}
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					wc.addPropertyChangeListener("columnRename",
@@ -2335,10 +2366,11 @@ public class DataSet extends Schema {
 				// suffix then it would confuse MartEditor.
 				String keySuffix = Resources.get("keySuffix");
 				String baseName = columnRename;
-				if (columnRename.endsWith(keySuffix))
+				if (columnRename.endsWith(keySuffix)) {
 					baseName = columnRename.substring(0, columnRename
 							.indexOf(keySuffix));
-				else if (!this.isKeyCol())
+				}
+				if (!this.isKeyCol())
 					keySuffix = "";
 				columnRename = baseName + keySuffix;
 				// Now, if the old name has a partition prefix, and the
@@ -2483,11 +2515,13 @@ public class DataSet extends Schema {
 		public static class InheritedColumn extends DataSetColumn {
 			private static final long serialVersionUID = 1L;
 
-			private DataSetColumn dsColumn;
+			private final DataSetColumn dsColumn;
 
 			private final PropertyChangeListener listener = new PropertyChangeListener() {
 				public void propertyChange(final PropertyChangeEvent e) {
-					InheritedColumn.this.setDirectModified(true);
+					InheritedColumn.this.pcs.firePropertyChange(e
+							.getPropertyName(), e.getOldValue(), e
+							.getNewValue());
 				}
 			};
 
@@ -2501,7 +2535,7 @@ public class DataSet extends Schema {
 			 *            the column to inherit.
 			 */
 			public InheritedColumn(final DataSetTable dsTable,
-					final DataSetColumn dsColumn) {
+					DataSetColumn dsColumn) {
 				// The super constructor will make the alias for us.
 				super(dsColumn.getModifiedName(), dsTable);
 				// Remember the inherited column.

@@ -452,10 +452,6 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String mergeTableName = action.getResultTable();
 
 		final String joinType = action.isLeftJoin()
-				|| action.getRelationRestriction() != null
-				&& !action.getRelationRestriction().isHard()
-				|| action.getTableRestriction() != null
-				&& !action.getTableRestriction().isHard()
 				&& action.getPartitionRestrictions().isEmpty() ? "left"
 				: "inner";
 
