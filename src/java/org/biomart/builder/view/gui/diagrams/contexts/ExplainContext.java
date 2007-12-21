@@ -132,8 +132,9 @@ public class ExplainContext extends SchemaContext {
 			else
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 
-			tblcomp.setRestricted(table.getRestrictTable(this.getDataSet(),
-					this.getDataSetTable().getName()) != null);
+			if (this.getDataSetTable() != null)
+				tblcomp.setRestricted(table.getRestrictTable(this.getDataSet(),
+						this.getDataSetTable().getName()) != null);
 		}
 
 		// This section customises the appearance of key objects within
@@ -215,12 +216,14 @@ public class ExplainContext extends SchemaContext {
 			final Relation relation, final int iteration) {
 
 		// Is it restricted?
-		((RelationComponent) component)
-				.setRestricted(relation.isRestrictRelation(this.getDataSet(),
-						this.getDataSetTable().getName())
-						&& (iteration == RealisedRelation.NO_ITERATION || relation
-								.getRestrictRelation(this.getDataSet(), this
-										.getDataSetTable().getName(), iteration) != null));
+		if (this.getDataSetTable() != null)
+			((RelationComponent) component)
+					.setRestricted(relation.isRestrictRelation(this
+							.getDataSet(), this.getDataSetTable().getName())
+							&& (iteration == RealisedRelation.NO_ITERATION || relation
+									.getRestrictRelation(this.getDataSet(),
+											this.getDataSetTable().getName(),
+											iteration) != null));
 
 		// Is it compounded?
 		((RelationComponent) component)
@@ -372,8 +375,9 @@ public class ExplainContext extends SchemaContext {
 			contextMenu.addSeparator();
 
 			// If it's a restricted table...
-			if (((Table) object).getRestrictTable(this.getDataSet(), this
-					.getDataSetTable().getName()) != null) {
+			if (this.getDataSetTable() != null
+					&& ((Table) object).getRestrictTable(this.getDataSet(),
+							this.getDataSetTable().getName()) != null) {
 
 				// Option to modify restriction.
 				final JMenuItem modify = new JMenuItem(Resources
@@ -431,8 +435,9 @@ public class ExplainContext extends SchemaContext {
 				}
 			});
 			contextMenu.add(remove);
-			if (table.getRestrictTable(this.getDataSet(), this
-					.getDataSetTable().getName()) == null)
+			if (this.getDataSetTable() == null
+					|| table.getRestrictTable(this.getDataSet(), this
+							.getDataSetTable().getName()) == null)
 				remove.setEnabled(false);
 
 			// Option to set 'big table' value.
@@ -483,8 +488,9 @@ public class ExplainContext extends SchemaContext {
 				.isMaskRelation(this.getDataSet())
 				: relation.isMaskRelation(this.getDataSet(), this
 						.getDataSetTable().getName());
-		final boolean relationRestricted = relation.isRestrictRelation(this
-				.getDataSet(), this.getDataSetTable().getName())
+		final boolean relationRestricted = this.getDataSetTable() != null
+				&& relation.isRestrictRelation(this.getDataSet(), this
+						.getDataSetTable().getName())
 				&& (iteration == RealisedRelation.NO_ITERATION || relation
 						.getRestrictRelation(this.getDataSet(), this
 								.getDataSetTable().getName(), iteration) != null);
@@ -553,9 +559,10 @@ public class ExplainContext extends SchemaContext {
 		if (this.getDataSetTable() == null || incorrect || relationUnrolled
 				|| relationMasked || !relationIncluded)
 			join.setEnabled(false);
-		join.setSelected(ExplainContext.this.getDataSetTable().getType()
-				.equals(DataSetTableType.DIMENSION) ? alternativeJoined
-				: !alternativeJoined);
+		join.setSelected(this.getDataSetTable() != null
+				&& (this.getDataSetTable().getType().equals(
+						DataSetTableType.DIMENSION) ? alternativeJoined
+						: !alternativeJoined));
 
 		// The loopback option allows the user to loopback include a relation
 		// that would otherwise only be included once.
