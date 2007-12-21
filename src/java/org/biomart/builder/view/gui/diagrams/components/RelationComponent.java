@@ -141,12 +141,12 @@ public class RelationComponent extends JComponent implements DiagramComponent,
 	/**
 	 * Constant referring to incorrect relation colour.
 	 */
-	public static Color INCORRECT_COLOUR = Color.RED;
+	public static Color INCORRECT_COLOUR = Color.LIGHT_GRAY;
 
 	/**
 	 * Constant referring to masked relation colour.
 	 */
-	public static Color MASKED_COLOUR = Color.RED;
+	public static Color MASKED_COLOUR = Color.LIGHT_GRAY;
 
 	/**
 	 * Constant referring to normal relation colour.
