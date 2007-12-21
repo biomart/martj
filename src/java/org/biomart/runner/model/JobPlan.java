@@ -25,12 +25,14 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -93,12 +95,14 @@ public class JobPlan implements Serializable {
 		this.threadCount = 1;
 		this.skipDropTable = false;
 	}
+
 	/**
 	 * Create a new job plan by duplication.
 	 * 
 	 * @param jobId
 	 *            the id of the job this plan is for.
-	 *            @param plan the plan to copy.
+	 * @param plan
+	 *            the plan to copy.
 	 */
 	public JobPlan(final String jobId, final JobPlan plan) {
 		this.root = new JobPlanSection(jobId, this, null);
@@ -111,6 +115,26 @@ public class JobPlan implements Serializable {
 		this.JDBCPassword = plan.JDBCPassword;
 		this.contactEmailAddress = plan.contactEmailAddress;
 		this.targetSchema = plan.targetSchema;
+	}
+
+	/**
+	 * Override this method if you want to know when a job starts.
+	 * 
+	 * @throws JobException
+	 *             if anything none-database-ish goes wrong.
+	 */
+	public void callbackStart() throws JobException {
+
+	}
+
+	/**
+	 * Override this method if you want to know when a job ends.
+	 * 
+	 * @throws JobException
+	 *             if anything none-database-ish goes wrong.
+	 */
+	public void callbackEnd() throws JobException {
+
 	}
 
 	/**
@@ -384,30 +408,43 @@ public class JobPlan implements Serializable {
 		final JobPlan jobPlan = new JobPlan(jobPlanId, this) {
 			private static final long serialVersionUID = 1L;
 
-			private final String dropSectionName = Resources.get("dropTableSection");
+			private transient List actions;
+
+			public void callbackStart() throws JobException {
+				this.actions = new ArrayList();
+			}
+
+			public void callbackEnd() throws JobException {
+				// Where do our statements go?
+				final String dropSectionName = Resources
+				.get("dropTableSection");
+				final JobPlanSection jobPlanSection = this.getRoot()
+						.getSubSection(dropSectionName);
+				// Convert the SQL into an action.
+				JobHandler.setActions(jobPlanId,
+						new String[] { dropSectionName }, this.actions);
+				this.setActionCount(new String[] { dropSectionName },
+						this.actions.size());
+				// Unqueue the action.
+				JobHandler.setStatus(jobPlanId, Collections
+						.singleton(jobPlanSection.getIdentifier()),
+						JobStatus.NOT_QUEUED, null);
+			}
 
 			public void callbackResults(final JobPlanAction action,
 					final ResultSet rs) throws SQLException, JobException {
 				rs.next();
 				final int count = rs.getInt(1);
 				// If count is 0, we have 0 non-null rows.
-				if (count==0) {
+				if (count == 0) {
 					// Drop table.
 					// What table are we dropping?
 					final String table = action.getAction().split("\\s+")[3];
-					// Find the appropriate section to put an action in.
-					final JobPlanSection jobPlanSection = this.getRoot()
-							.getSubSection(dropSectionName);
 					// Build the SQL.
 					final StringBuffer sql = new StringBuffer();
 					sql.append("drop table ");
 					sql.append(table);
-					// Convert the SQL into an action.
-					JobHandler.setActions(jobPlanId, new String[] { dropSectionName }, Collections
-							.singleton(sql.toString()));
-					this.setActionCount(new String[] { dropSectionName }, 1);
-					// Unqueue the action.
-					JobHandler.setStatus(jobPlanId, Collections.singleton(jobPlanSection.getIdentifier()), JobStatus.NOT_QUEUED, null);
+					this.actions.add(sql.toString());
 				}
 			}
 		};
@@ -481,8 +518,8 @@ public class JobPlan implements Serializable {
 					sql.append(" or ");
 			}
 			// Convert the SQL into an action.
-			JobHandler.setActions(jobPlanId, new String[] { table }, Collections
-					.singleton(sql.toString()));
+			JobHandler.setActions(jobPlanId, new String[] { table },
+					Collections.singleton(sql.toString()));
 			this.setActionCount(new String[] { table }, 1);
 		}
 		// Queue the job.

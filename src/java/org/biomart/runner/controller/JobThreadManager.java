@@ -105,6 +105,7 @@ public class JobThreadManager extends Thread {
 		try {
 			final JobPlan plan = JobHandler.getJobPlan(this.jobId);
 			final String contactEmail = plan.getContactEmailAddress();
+			plan.callbackStart();
 
 			// Send emails.
 			if (contactEmail != null && !"".equals(contactEmail.trim()))
@@ -143,6 +144,7 @@ public class JobThreadManager extends Thread {
 
 			// Stop monitoring the pool.
 			timer.cancel();
+			plan.callbackEnd();
 
 			// Send emails.
 			if (contactEmail != null && !"".equals(contactEmail.trim())) {
