@@ -256,7 +256,7 @@ public class RestrictedRelationDialog extends JDialog {
 
 		// Validate other fields.
 		if (this.lcolumnAliasModel.getValues().isEmpty()
-				|| this.rcolumnAliasModel.getValues().isEmpty())
+				&& this.rcolumnAliasModel.getValues().isEmpty())
 			messages.add(Resources.get("lrcolumnAliasMissing"));
 
 		// If there any messages, display them.

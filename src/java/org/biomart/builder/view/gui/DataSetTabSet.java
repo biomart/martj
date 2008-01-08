@@ -1012,7 +1012,7 @@ public class DataSetTabSet extends JTabbedPane {
 		if (relation.getCompoundRelation(dataset) == null
 				&& (dsTable == null || relation.getCompoundRelation(dataset,
 						dsTable.getName()) == null))
-			return 0;
+			return RealisedRelation.NO_ITERATION;
 
 		// Work out possible options.
 		final int maxIndex = (dsTable == null ? relation
@@ -1028,9 +1028,9 @@ public class DataSetTabSet extends JTabbedPane {
 						.get("questionTitle"), JOptionPane.QUESTION_MESSAGE,
 				null, options, options[0]);
 
-		// If they cancelled the request, return null.
+		// If they cancelled the request, return -2.
 		if (selIndex == null)
-			return -1;
+			return -2;
 		else
 			return selIndex.intValue() - 1;
 	}
@@ -1056,10 +1056,10 @@ public class DataSetTabSet extends JTabbedPane {
 				: relation.getCompoundRelation(dataset, dsTable.getName()) != null ? this
 						.askUserForCompoundRelationIndex(dataset, dsTable,
 								relation)
-						: 0;
+						: RealisedRelation.NO_ITERATION;
 
 		// Cancelled?
-		if (index == -1)
+		if (index == -2)
 			return;
 
 		final RestrictedRelationDialog dialog = new RestrictedRelationDialog(
@@ -1086,7 +1086,7 @@ public class DataSetTabSet extends JTabbedPane {
 					def = new RestrictedRelationDefinition(expression,
 							aliasesLHS, aliasesRHS);
 					relation.setRestrictRelation(dataset, dsTable.getName(),
-							def, iteration);
+							def, index);
 					// Make it alternative join if dataset,
 					// or NOT alternative if main/subclass.
 					relation.setAlternativeJoin(dataset, dsTable.getName(),
@@ -1125,17 +1125,17 @@ public class DataSetTabSet extends JTabbedPane {
 				: relation.getCompoundRelation(dataset, dsTable.getName()) != null ? this
 						.askUserForCompoundRelationIndex(dataset, dsTable,
 								relation)
-						: 0;
+						: RealisedRelation.NO_ITERATION;
 
 		// Cancelled?
-		if (index == -1)
+		if (index == -2)
 			return;
 
 		new LongProcess() {
 			public void run() {
 				Transaction.start(false);
 				relation.setRestrictRelation(dataset, dsTable.getName(), null,
-						iteration);
+						index);
 				// Make it alternative join if dataset,
 				// or NOT alternative if main/subclass.
 				relation.setAlternativeJoin(dataset, dsTable

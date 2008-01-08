@@ -1662,13 +1662,16 @@ public class Relation implements Comparable, TransactionListener {
 		 *            the aliases to use for columns on the RHS of the join.
 		 */
 		public RestrictedRelationDefinition(final String expr,
-				final Map leftAliases, final Map rightAliases) {
+				Map leftAliases, Map rightAliases) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
 						.get("relRestrictMissingExpression"));
-			if (leftAliases == null || leftAliases.isEmpty()
-					|| rightAliases == null || rightAliases.isEmpty())
+			if (leftAliases==null)
+				leftAliases = new HashMap();
+			if (rightAliases==null)
+				rightAliases = new HashMap();
+			if (leftAliases.isEmpty() && rightAliases.isEmpty())
 				throw new IllegalArgumentException(Resources
 						.get("relRestrictMissingAliases"));
 
