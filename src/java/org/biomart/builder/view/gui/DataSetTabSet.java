@@ -1235,9 +1235,9 @@ public class DataSetTabSet extends JTabbedPane {
 					// Do the work.
 					if (dst != null)
 						relation.setLoopbackRelation(ds, dst.getName(),
-								loopedCol);
+								newLoopedCol);
 					else
-						relation.setLoopbackRelation(ds, loopedCol);
+						relation.setLoopbackRelation(ds, newLoopedCol);
 				} finally {
 					Transaction.end();
 
