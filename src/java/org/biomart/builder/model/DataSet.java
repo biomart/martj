@@ -430,9 +430,6 @@ public class DataSet extends Schema {
 		if (partitionTable) {
 			this.partitionTable = new PartitionTable() {
 
-				// Keep map in alphabetical order.
-				private final Collection allCols = new TreeSet();
-
 				public String getName() {
 					return DataSet.this.getName();
 				}
@@ -442,13 +439,16 @@ public class DataSet extends Schema {
 				}
 
 				public Collection getAvailableColumnNames() {
-					if (this.allCols.isEmpty())
-						for (final Iterator i = DataSet.this.getMainTable()
-								.getColumns().values().iterator(); i.hasNext();) {
-							final DataSetColumn col = (DataSetColumn) i.next();
-							this.allCols.add(col.getModifiedName());
-						}
-					return this.allCols;
+					// Keep map in alphabetical order.
+					final Collection allCols = new TreeSet();
+					
+					for (final Iterator i = DataSet.this.getMainTable()
+							.getColumns().values().iterator(); i.hasNext();) {
+						final DataSetColumn col = (DataSetColumn) i.next();
+						allCols.add(col.getModifiedName());
+					}
+					
+					return allCols;
 				}
 
 				protected List getRows(final String schemaPrefix)
