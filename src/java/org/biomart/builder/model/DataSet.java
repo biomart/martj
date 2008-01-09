@@ -1200,6 +1200,7 @@ public class DataSet extends Schema {
 		final Set ignoreCols = new HashSet();
 
 		final TransformationUnit tu;
+		
 		int relationTrackerCount = 0;
 
 		// Did we get here via somewhere else?
@@ -1579,12 +1580,12 @@ public class DataSet extends Schema {
 				// Repeat queueing of relation N times if compounded.
 				int childCompounded = 1;
 				// Don't compound if loopback and we just processed the M end.
+				final CompoundRelationDefinition def = r
+				.getCompoundRelation(this, dsTable.getName());
 				final boolean skipCompound = r.getLoopbackRelation(this,
 						dsTable.getName()) != null
 						&& r.getManyKey().equals(r.getKeyForTable(mergeTable));
 				if (!skipCompound) {
-					final CompoundRelationDefinition def = r
-							.getCompoundRelation(this, dsTable.getName());
 					if (def != null && def.isParallel())
 						childCompounded = def.getN();
 					else {
@@ -1624,7 +1625,8 @@ public class DataSet extends Schema {
 				// makes it depth-first as opposed to breadth-first).
 				// The queue position is incremented so that they remain
 				// in order - else they'd end up reversed.
-				for (int k = 0; k < childCompounded; k++)
+				if (childCompounded>1)
+				for (int k = 0; k < childCompounded; k++) 
 					normalQ.add(queuePos++, new Object[] {
 							r,
 							newSourceDSCols,
@@ -1633,6 +1635,16 @@ public class DataSet extends Schema {
 							Boolean.valueOf(makeDimensions && r.isOneToOne()
 									|| forceFollowRelation), new Integer(k),
 							nextNameCols, nextNameColSuffixes.get("" + k),
+							new HashMap(relationCount) });
+				else
+					normalQ.add(queuePos++, new Object[] {
+							r,
+							newSourceDSCols,
+							targetKey.getTable(),
+							tu,
+							Boolean.valueOf(makeDimensions && r.isOneToOne()
+									|| forceFollowRelation), new Integer(relationIteration),
+							nextNameCols, nextNameColSuffixes.get("0"),
 							new HashMap(relationCount) });
 			}
 		}
