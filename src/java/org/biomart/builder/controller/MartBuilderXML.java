@@ -958,7 +958,7 @@ public class MartBuilderXML extends DefaultHandler {
 									xmlWriter);
 							this.writeAttribute("diffColumnId",
 									(String) this.reverseMappedObjects.get(r
-											.getLoopbackRelation(ds)),
+											.getLoopbackRelation(ds, dsTable.getName())),
 									xmlWriter);
 							this.closeElement("loopbackRelation", xmlWriter);
 						}
