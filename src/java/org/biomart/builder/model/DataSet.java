@@ -901,6 +901,9 @@ public class DataSet extends Schema {
 			}
 		}
 
+		// How many times have we actually seen each relation?
+		final Map relationTracker = new HashMap();
+
 		// Process the table. This operation will populate the initial
 		// values in the normal, subclass and dimension queues. We only
 		// want dimensions constructed if we are not already constructing
@@ -911,7 +914,7 @@ public class DataSet extends Schema {
 						&& !type.equals(DataSetTableType.DIMENSION),
 				Collections.EMPTY_LIST, Collections.EMPTY_LIST,
 				relationIteration, 0, unusedCols, uniqueBases,
-				skippedMainTables);
+				skippedMainTables, relationTracker);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -936,7 +939,8 @@ public class DataSet extends Schema {
 					normalQ, subclassQ, dimensionQ, newSourceDSCols,
 					mergeSourceRelation, newRelationCounts, subclassCount,
 					makeDimensions, nameCols, nameColSuffixes, iteration,
-					i + 1, unusedCols, uniqueBases, skippedMainTables);
+					i + 1, unusedCols, uniqueBases, skippedMainTables,
+					relationTracker);
 		}
 
 		// Create the primary key on this table, but only if it has one.
@@ -1185,7 +1189,8 @@ public class DataSet extends Schema {
 			final List nameCols, final List nameColSuffixes,
 			final int relationIteration, int queuePos,
 			final Collection unusedCols, final Map uniqueBases,
-			final Collection skippedMainTables) throws PartitionException {
+			final Collection skippedMainTables, final Map relationTracker)
+			throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
 
 		// Remember the schema.
@@ -1195,6 +1200,7 @@ public class DataSet extends Schema {
 		final Set ignoreCols = new HashSet();
 
 		final TransformationUnit tu;
+		int relationTrackerCount = 0;
 
 		// Did we get here via somewhere else?
 		if (sourceRelation != null) {
@@ -1213,6 +1219,13 @@ public class DataSet extends Schema {
 			// Remember we've been here.
 			this.includedRelations.add(sourceRelation);
 			dsTable.includedRelations.add(sourceRelation);
+
+			// Count the relation.
+			if (relationTracker.containsKey(sourceRelation))
+				relationTrackerCount = ((Integer) relationTracker
+						.get(sourceRelation)).intValue() + 1;
+			relationTracker.put(sourceRelation, new Integer(
+					relationTrackerCount));
 		} else
 			tu = new SelectFromTable(mergeTable);
 		this.includedTables.add(mergeTable);
@@ -1259,8 +1272,11 @@ public class DataSet extends Schema {
 			String colName = c.getName();
 			String origColName = c.getName();
 			// Expand to full-length by prefixing relation
-			// info, and relation iteration.
-			colName = sourceRelation + "." + relationIteration + "." + colName;
+			// info, and relation tracker info. Note we use
+			// the tracker not the iteration as this gives us
+			// a unique repetition number.
+			colName = sourceRelation + "." + relationTrackerCount + "."
+					+ colName;
 			// Add partitioning prefixes.
 			for (int k = 0; k < nameCols.size(); k++) {
 				final String pcolName = (String) nameCols.get(k);
