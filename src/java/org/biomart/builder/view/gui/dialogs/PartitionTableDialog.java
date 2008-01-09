@@ -899,16 +899,16 @@ public class PartitionTableDialog extends TransactionalDialog {
 				final JComboBox nameCombo = new JComboBox(currLevelNames
 						.toArray());
 				this.nameLevels.add(nameCombo);
-				this.add(new JLabel(Resources.get("wizardPTColLabel")),
+				final JPanel subpanel = new JPanel(new GridBagLayout());
+				subpanel.add(new JLabel(Resources.get("wizardPTColLabel")),
 						labelConstraints);
-				final JPanel subpanel = new JPanel();
-				subpanel.add(ptCombo);
-				subpanel.add(new JLabel(Resources.get("wizardDSColLabel")));
-				subpanel.add(dsCombo);
+				subpanel.add(ptCombo, fieldConstraints);
+				subpanel.add(new JLabel(Resources.get("wizardDSColLabel")), labelConstraints);
+				subpanel.add(dsCombo, fieldConstraints);
 				subpanel.add(new JLabel(currLevel == 0 ? Resources
 						.get("wizardTableNameColLabel") : Resources
-						.get("wizardColumnNameColLabel")));
-				subpanel.add(nameCombo);
+						.get("wizardColumnNameColLabel")), labelLastRowConstraints);
+				subpanel.add(nameCombo, fieldLastRowConstraints);
 				this.add(subpanel, fieldConstraints);
 				// Disable subsequent combos if this one is
 				// set to null.
