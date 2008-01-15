@@ -1750,7 +1750,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 						// FK table has a PK with identical columns to
 						// the FK, in which case it is 1:1, as the FK
 						// is unique.
-						Cardinality card = Cardinality.MANY;
+						Cardinality card = Cardinality.MANY_A;
 						final PrimaryKey fkPK = fkTable.getPrimaryKey();
 						if (fkPK != null
 								&& fk.getColumns().equals(fkPK.getColumns()))
@@ -2030,7 +2030,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 						// FK table has a PK with identical columns to
 						// the FK, in which case it is 1:1, as the FK
 						// is unique.
-						Cardinality card = Cardinality.MANY;
+						Cardinality card = Cardinality.MANY_A;
 						final PrimaryKey fkPK = fkTable.getPrimaryKey();
 						if (fkPK != null
 								&& fk.getColumns().equals(fkPK.getColumns()))

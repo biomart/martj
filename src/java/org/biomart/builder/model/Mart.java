@@ -1069,7 +1069,7 @@ public class Mart implements TransactionListener {
 		// Create or reuse relations between PK and each FK.
 		Relation parentRel = null;
 		try {
-			parentRel = new Relation(pk, parentFk, Cardinality.MANY);
+			parentRel = new Relation(pk, parentFk, Cardinality.MANY_A);
 			pk.getRelations().add(parentRel);
 			parentFk.getRelations().add(parentRel);
 		} catch (final AssociationException e) {
@@ -1086,12 +1086,11 @@ public class Mart implements TransactionListener {
 			}
 			parentRel = reuse;
 		} finally {
-			parentRel.setCardinality(Cardinality.MANY);
 			parentRel.setStatus(ComponentStatus.HANDMADE);
 		}
 		Relation childRel = null;
 		try {
-			childRel = new Relation(pk, childFk, Cardinality.MANY);
+			childRel = new Relation(pk, childFk, Cardinality.MANY_A);
 			pk.getRelations().add(childRel);
 			childFk.getRelations().add(childRel);
 		} catch (final AssociationException e) {
@@ -1108,7 +1107,6 @@ public class Mart implements TransactionListener {
 			}
 			childRel = reuse;
 		} finally {
-			childRel.setCardinality(Cardinality.MANY);
 			childRel.setStatus(ComponentStatus.HANDMADE);
 		}
 

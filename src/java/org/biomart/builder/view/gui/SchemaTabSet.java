@@ -663,7 +663,7 @@ public class SchemaTabSet extends JTabbedPane {
 							to,
 							from instanceof PrimaryKey
 									&& to instanceof PrimaryKey ? Cardinality.ONE
-									: Cardinality.MANY);
+									: Cardinality.MANY_A);
 					rel.setStatus(ComponentStatus.HANDMADE);
 					from.getRelations().add(rel);
 					to.getRelations().add(rel);

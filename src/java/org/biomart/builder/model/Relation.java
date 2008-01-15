@@ -71,15 +71,15 @@ public class Relation implements Comparable, TransactionListener {
 
 	private Key manyKey;
 
-	private boolean oneToManyAllowed;
+	private boolean oneToManyAAllowed;
 
-	private boolean manyToManyAllowed;
+	private boolean oneToManyBAllowed;
 
 	private boolean oneToOne;
 
-	private boolean oneToMany;
+	private boolean oneToManyA;
 
-	private boolean manyToMany;
+	private boolean oneToManyB;
 
 	private boolean external;
 
@@ -139,15 +139,21 @@ public class Relation implements Comparable, TransactionListener {
 	 *             if the number of columns in the keys don't match, or if the
 	 *             relation already exists.
 	 */
-	public Relation(final Key firstKey, final Key secondKey,
-			final Cardinality cardinality) throws AssociationException {
+	public Relation(Key firstKey, Key secondKey, final Cardinality cardinality)
+			throws AssociationException {
 		Log.debug("Creating relation between " + firstKey + " and " + secondKey
 				+ " with cardinality " + cardinality);
+		// Always make PKs the first key in a PK->FK relation.
+		if (firstKey instanceof ForeignKey && secondKey instanceof PrimaryKey) {
+			final Key interim = firstKey;
+			firstKey = secondKey;
+			secondKey = interim;
+		}
 		// Remember the keys etc.
 		this.firstKey = firstKey;
 		this.secondKey = secondKey;
-		this.setCardinality(cardinality);
 		this.setOriginalCardinality(cardinality);
+		this.setCardinality(cardinality);
 		this.setStatus(ComponentStatus.INFERRED);
 
 		// Check the keys have the same number of columns.
@@ -178,10 +184,8 @@ public class Relation implements Comparable, TransactionListener {
 					.get("fkToThisOnceOrOthers"));
 
 		// Update flags.
-		this.oneToManyAllowed = !this.firstKey.getClass().equals(
-				this.secondKey.getClass());
-		this.manyToManyAllowed = this.firstKey instanceof ForeignKey
-				&& this.secondKey instanceof ForeignKey;
+		this.oneToManyAAllowed = this.secondKey instanceof ForeignKey;
+		this.oneToManyBAllowed = this.firstKey instanceof ForeignKey;
 		this.external = !this.firstKey.getTable().getSchema().equals(
 				this.secondKey.getTable().getSchema());
 
@@ -370,43 +374,53 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	/**
-	 * Returns <tt>true</tt> if this is a M:M relation.
+	 * Returns <tt>true</tt> if this is a 1:M(a) relation.
 	 * 
-	 * @return <tt>true</tt> if this is a M:M relation, <tt>false</tt>
+	 * @return <tt>true</tt> if this is a 1:M(a) relation, <tt>false</tt>
 	 *         otherwise.
 	 */
-	public boolean isManyToMany() {
-		return this.manyToMany;
+	public boolean isOneToManyA() {
+		return this.oneToManyA;
 	}
 
 	/**
-	 * Can this relation be M:M? Returns <tt>true</tt> where both keys are
-	 * foreign keys.
+	 * Returns <tt>true</tt> if this is a 1:M(b) relation.
 	 * 
-	 * @return <tt>true</tt> if this can be M:M, <tt>false</tt> if not.
+	 * @return <tt>true</tt> if this is a 1:M(b) relation, <tt>false</tt>
+	 *         otherwise.
 	 */
-	public boolean isManyToManyAllowed() {
-		return this.manyToManyAllowed;
+	public boolean isOneToManyB() {
+		return this.oneToManyB;
 	}
 
 	/**
-	 * Returns <tt>true</tt> if this is a 1:M relation.
+	 * Returns <tt>true</tt> if this is either kind of 1:M relation.
 	 * 
-	 * @return <tt>true</tt> if this is a 1:M relation, <tt>false</tt>
-	 *         otherwise.
+	 * @return <tt>true</tt> if this is either kind of 1:M relation,
+	 *         <tt>false</tt> otherwise.
 	 */
 	public boolean isOneToMany() {
-		return this.oneToMany;
+		return this.oneToManyA || this.oneToManyB;
 	}
 
 	/**
-	 * Can this relation be 1:M? Returns <tt>true</tt> in all cases where the
-	 * two keys are of different types.
+	 * Can this relation be 1:M(a)? Returns <tt>true</tt> in all cases where
+	 * the two keys are of different types.
 	 * 
-	 * @return <tt>true</tt> if this can be 1:M, <tt>false</tt> if not.
+	 * @return <tt>true</tt> if this can be 1:M(a), <tt>false</tt> if not.
 	 */
-	public boolean isOneToManyAllowed() {
-		return this.oneToManyAllowed;
+	public boolean isOneToManyAAllowed() {
+		return this.oneToManyAAllowed;
+	}
+
+	/**
+	 * Can this relation be 1:M(b)? Returns <tt>true</tt> in all cases where
+	 * the two keys are of different types.
+	 * 
+	 * @return <tt>true</tt> if this can be 1:M(b), <tt>false</tt> if not.
+	 */
+	public boolean isOneToManyBAllowed() {
+		return this.oneToManyBAllowed;
 	}
 
 	/**
@@ -463,32 +477,51 @@ public class Relation implements Comparable, TransactionListener {
 			Log.debug("Overriding cardinality change to ONE");
 			cardinality = Cardinality.ONE;
 		}
+
+		// TODO This is a backwards-compatibility clause that needs to
+		// stay in throughout the 0.7 release. It can be removed in 0.8.
+		if (cardinality == Cardinality.MANY
+				&& this.secondKey instanceof PrimaryKey) {
+			cardinality = Cardinality.MANY_B;
+		} else if (cardinality == Cardinality.MANY
+				&& this.firstKey instanceof PrimaryKey) {
+			cardinality = Cardinality.MANY_A;
+		}
+		// End fudge-mode.
+
 		final Cardinality oldValue = this.cardinality;
 		if (this.cardinality == cardinality || this.cardinality != null
 				&& this.cardinality.equals(cardinality))
 			return;
 		this.cardinality = cardinality;
+
 		if (this.cardinality.equals(Cardinality.ONE)) {
 			this.oneToOne = true;
-			this.oneToMany = false;
-			this.manyToMany = false;
+			this.oneToManyA = false;
+			this.oneToManyB = false;
 			this.oneKey = null;
 			this.manyKey = null;
-		} else {
+		} else if (this.cardinality.equals(Cardinality.MANY_A)) {
 			this.oneToOne = false;
-			this.oneToMany = this.firstKey instanceof PrimaryKey
-					|| this.secondKey instanceof PrimaryKey;
-			this.manyToMany = !this.oneToMany;
-			if (this.oneToMany) {
-				this.oneKey = this.firstKey instanceof PrimaryKey ? this.firstKey
-						: this.secondKey;
-				this.manyKey = this.firstKey instanceof ForeignKey ? this.firstKey
-						: this.secondKey;
-				;
-			} else {
-				this.oneKey = null;
-				this.manyKey = null;
-			}
+			this.oneToManyA = true;
+			this.oneToManyB = false;
+			this.oneKey = this.firstKey;
+			this.manyKey = this.secondKey;
+		} else if (this.cardinality.equals(Cardinality.MANY_B)) {
+			this.oneToOne = false;
+			this.oneToManyA = false;
+			this.oneToManyB = true;
+			this.oneKey = this.secondKey;
+			this.manyKey = this.firstKey;
+		} else {
+			// TODO This is a backwards-compatibility clause that needs to
+			// stay in throughout the 0.7 release. It can be removed in 0.8.
+			this.oneToOne = false;
+			this.oneToManyA = false;
+			this.oneToManyB = false;
+			this.oneKey = null;
+			this.manyKey = null;
+			// End fudge-mode.
 		}
 		this.pcs.firePropertyChange("cardinality", oldValue, cardinality);
 	}
@@ -501,7 +534,7 @@ public class Relation implements Comparable, TransactionListener {
 	 * @param originalCardinality
 	 *            the originalCardinality.
 	 */
-	public void setOriginalCardinality(final Cardinality originalCardinality) {
+	public void setOriginalCardinality(Cardinality originalCardinality) {
 		Log.debug("Changing original cardinality of " + this + " to "
 				+ originalCardinality);
 		final Cardinality oldValue = this.originalCardinality;
@@ -510,6 +543,13 @@ public class Relation implements Comparable, TransactionListener {
 				&& this.originalCardinality.equals(originalCardinality))
 			return;
 		this.originalCardinality = originalCardinality;
+		
+		// TODO This is a backwards-compatibility clause that needs to
+		// stay in throughout the 0.7 release. It can be removed in 0.8.
+		if (oldValue == Cardinality.MANY) 
+			return;
+		// End fudge-mode.
+		
 		this.pcs.firePropertyChange("originalCardinality", oldValue,
 				originalCardinality);
 	}
@@ -984,8 +1024,7 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public boolean isRestrictRelation(final DataSet dataset,
 			final String tableKey) {
-		return this.getMods(dataset, tableKey).containsKey(
-						"restrictRelation")
+		return this.getMods(dataset, tableKey).containsKey("restrictRelation")
 				&& !((Map) this.getMods(dataset, tableKey).get(
 						"restrictRelation")).isEmpty();
 	}
@@ -1003,8 +1042,7 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public RestrictedRelationDefinition getRestrictRelation(
 			final DataSet dataset, final String tableKey, final int n) {
-		return !this.getMods(dataset, tableKey)
-				.containsKey("restrictRelation") ? null
+		return !this.getMods(dataset, tableKey).containsKey("restrictRelation") ? null
 				: (RestrictedRelationDefinition) ((Map) this.getMods(dataset,
 						tableKey).get("restrictRelation")).get(new Integer(n));
 	}
@@ -1211,9 +1249,8 @@ public class Relation implements Comparable, TransactionListener {
 	}
 
 	/**
-	 * This internal singleton class represents the cardinality of a key
-	 * involved in a relation. Note that the names of cardinality objects are
-	 * case-sensitive.
+	 * This internal singleton class represents the cardinality of a relation.
+	 * Note that the names of cardinality objects are case-sensitive.
 	 */
 	public static class Cardinality implements Comparable {
 		private static final long serialVersionUID = 1L;
@@ -1221,12 +1258,29 @@ public class Relation implements Comparable, TransactionListener {
 		private static final Map singletons = new HashMap();
 
 		/**
-		 * Use this constant to refer to a key with many values.
+		 * Use this constant to refer to a relation with many values at the
+		 * second key end.
+		 */
+		public static final Cardinality MANY_B = Cardinality.get("M(b)");
+
+		/**
+		 * Use this constant to refer to a relation with many values at the
+		 * first key end.
+		 */
+		public static final Cardinality MANY_A = Cardinality.get("M(a)");
+
+		// TODO This is a backwards-compatibility clause that needs to
+		// stay in throughout the 0.7 release. It can be removed in 0.8.
+		/**
+		 * Use this constant to refer to a relation with many values at the
+		 * first key end.
 		 */
 		public static final Cardinality MANY = Cardinality.get("M");
 
+		// End fudge-mode.
+
 		/**
-		 * Use this constant to refer to a key with one value.
+		 * Use this constant to refer to a 1:1 relation.
 		 */
 		public static final Cardinality ONE = Cardinality.get("1");
 
@@ -1239,7 +1293,7 @@ public class Relation implements Comparable, TransactionListener {
 		 *            the name of the cardinality object.
 		 * @return the cardinality object or null if null was passed in.
 		 */
-		public static Cardinality get(final String name) {
+		public static Cardinality get(String name) {
 			// Return null for null name.
 			if (name == null)
 				return null;
@@ -1661,15 +1715,15 @@ public class Relation implements Comparable, TransactionListener {
 		 * @param rightAliases
 		 *            the aliases to use for columns on the RHS of the join.
 		 */
-		public RestrictedRelationDefinition(final String expr,
-				Map leftAliases, Map rightAliases) {
+		public RestrictedRelationDefinition(final String expr, Map leftAliases,
+				Map rightAliases) {
 			// Test for good arguments.
 			if (expr == null || expr.trim().length() == 0)
 				throw new IllegalArgumentException(Resources
 						.get("relRestrictMissingExpression"));
-			if (leftAliases==null)
+			if (leftAliases == null)
 				leftAliases = new HashMap();
-			if (rightAliases==null)
+			if (rightAliases == null)
 				rightAliases = new HashMap();
 			if (leftAliases.isEmpty() && rightAliases.isEmpty())
 				throw new IllegalArgumentException(Resources

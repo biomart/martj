@@ -834,7 +834,7 @@ public class DataSet extends Schema {
 					dsTable.getForeignKeys().add(dsTableFK);
 					// Link the child FK to the parent PK.
 					final Relation rel = new Relation(parentDSTablePK,
-							dsTableFK, Cardinality.MANY);
+							dsTableFK, Cardinality.MANY_A);
 					parentDSTablePK.getRelations().add(rel);
 					dsTableFK.getRelations().add(rel);
 				} else

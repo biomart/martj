@@ -444,43 +444,42 @@ public class SchemaContext implements DiagramContext {
 				oneToOne.setEnabled(false);
 			if (relation.isOneToOne())
 				oneToOne.setSelected(true);
+			
+			// Set the relation to be 1:M, but only if it is correct.
+			final JRadioButtonMenuItem oneToManyA = new JRadioButtonMenuItem(
+					Resources.get("oneToManyATitle", relation.getFirstKey().toString()));
+			oneToManyA.setMnemonic(Resources.get("oneToManyAMnemonic").charAt(0));
+			oneToManyA.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.getMartTab().getSchemaTabSet()
+							.requestChangeRelationCardinality(relation,
+									Cardinality.MANY_A);
+				}
+			});
+			cardGroup.add(oneToManyA);
+			contextMenu.add(oneToManyA);
+			if (relationIncorrect || !relation.isOneToManyAAllowed())
+				oneToManyA.setEnabled(false);
+			if (relation.isOneToManyA())
+				oneToManyA.setSelected(true);
 
 			// Set the relation to be 1:M, but only if it is correct.
-			final JRadioButtonMenuItem oneToMany = new JRadioButtonMenuItem(
-					Resources.get("oneToManyTitle"));
-			oneToMany.setMnemonic(Resources.get("oneToManyMnemonic").charAt(0));
-			oneToMany.addActionListener(new ActionListener() {
+			final JRadioButtonMenuItem oneToManyB = new JRadioButtonMenuItem(
+					Resources.get("oneToManyBTitle", relation.getFirstKey().toString()));
+			oneToManyB.setMnemonic(Resources.get("oneToManyBMnemonic").charAt(0));
+			oneToManyB.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					SchemaContext.this.getMartTab().getSchemaTabSet()
 							.requestChangeRelationCardinality(relation,
-									Cardinality.MANY);
+									Cardinality.MANY_B);
 				}
 			});
-			cardGroup.add(oneToMany);
-			contextMenu.add(oneToMany);
-			if (relationIncorrect || !relation.isOneToManyAllowed())
-				oneToMany.setEnabled(false);
-			if (relation.isOneToMany())
-				oneToMany.setSelected(true);
-
-			// Set the relation to be M:M, but only if it is correct.
-			final JRadioButtonMenuItem manyToMany = new JRadioButtonMenuItem(
-					Resources.get("manyToManyTitle"));
-			manyToMany.setMnemonic(Resources.get("manyToManyMnemonic")
-					.charAt(0));
-			manyToMany.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent evt) {
-					SchemaContext.this.getMartTab().getSchemaTabSet()
-							.requestChangeRelationCardinality(relation,
-									Cardinality.MANY);
-				}
-			});
-			cardGroup.add(manyToMany);
-			contextMenu.add(manyToMany);
-			if (relationIncorrect || !relation.isManyToManyAllowed())
-				manyToMany.setEnabled(false);
-			if (relation.isManyToMany())
-				manyToMany.setSelected(true);
+			cardGroup.add(oneToManyB);
+			contextMenu.add(oneToManyB);
+			if (relationIncorrect || !relation.isOneToManyBAllowed())
+				oneToManyB.setEnabled(false);
+			if (relation.isOneToManyB())
+				oneToManyB.setSelected(true);
 
 			// Separator.
 			contextMenu.addSeparator();
