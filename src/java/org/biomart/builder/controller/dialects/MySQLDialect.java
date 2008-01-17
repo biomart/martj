@@ -367,8 +367,8 @@ public class MySQLDialect extends DatabaseDialect {
 				sb.append(" and ");
 		}
 		if (action.getTableRestriction() != null)
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("a"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					action.getSchemaPrefix(), "a"));
 
 		statements.add(sb.toString());
 	}
@@ -543,6 +543,7 @@ public class MySQLDialect extends DatabaseDialect {
 		if (action.getRelationRestriction() != null) {
 			sb.append(" and ");
 			sb.append(action.getRelationRestriction().getSubstitutedExpression(
+					action.getSchemaPrefix(),
 					action.isRelationRestrictionLeftIsFirst() ? "a" : "b",
 					action.isRelationRestrictionLeftIsFirst() ? "b" : "a",
 					action.isRelationRestrictionLeftIsFirst(),
@@ -551,8 +552,8 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 		if (action.getTableRestriction() != null) {
 			sb.append(" and (");
-			sb.append(action.getTableRestriction()
-					.getSubstitutedExpression("b"));
+			sb.append(action.getTableRestriction().getSubstitutedExpression(
+					action.getSchemaPrefix(), "b"));
 			sb.append(')');
 		}
 		for (final Iterator i = action.getPartitionRestrictions().entrySet()
@@ -840,10 +841,11 @@ public class MySQLDialect extends DatabaseDialect {
 		}
 	}
 
-	public String getUnrollTableSQL(final DataSet dataset,
-			final DataSetTable dsTable, final Relation parentRel,
-			final Relation childRel, final String schemaPartition,
-			final Schema templateSchema, final UnrollTable utu) {
+	public String getUnrollTableSQL(final String schemaPrefix,
+			final DataSet dataset, final DataSetTable dsTable,
+			final Relation parentRel, final Relation childRel,
+			final String schemaPartition, final Schema templateSchema,
+			final UnrollTable utu) {
 		final StringBuffer sql = new StringBuffer();
 		// From lookup table joined with parent table,
 		// find both parent ID col and child ID col.
@@ -870,12 +872,12 @@ public class MySQLDialect extends DatabaseDialect {
 		if (parentTable.getRestrictTable(dataset, dsTable.getName()) != null) {
 			sql.append(" and ");
 			sql.append(parentTable.getRestrictTable(dataset, dsTable.getName())
-					.getSubstitutedExpression("parent"));
+					.getSubstitutedExpression(schemaPrefix, "parent"));
 		}
 		if (childTable.getRestrictTable(dataset, dsTable.getName()) != null) {
 			sql.append(" and ");
 			sql.append(childTable.getRestrictTable(dataset, dsTable.getName())
-					.getSubstitutedExpression("child"));
+					.getSubstitutedExpression(schemaPrefix, "child"));
 		}
 		if (childRel.getRestrictRelation(dataset, dsTable.getName(), 0) != null) {
 			sql.append(" and ");
@@ -883,6 +885,7 @@ public class MySQLDialect extends DatabaseDialect {
 					.append(childRel.getRestrictRelation(dataset,
 							dsTable.getName(), 0)
 							.getSubstitutedExpression(
+									schemaPrefix,
 									childRel.getFirstKey().equals(
 											childRel.getOneKey()) ? "parent"
 											: "child",
@@ -896,6 +899,7 @@ public class MySQLDialect extends DatabaseDialect {
 					.append(parentRel.getRestrictRelation(dataset,
 							dsTable.getName(), 0)
 							.getSubstitutedExpression(
+									schemaPrefix,
 									parentRel.getFirstKey().equals(
 											parentRel.getOneKey()) ? "parent"
 											: "child",
@@ -906,9 +910,10 @@ public class MySQLDialect extends DatabaseDialect {
 		return sql.toString();
 	}
 
-	public String getPartitionTableRowsSQL(final Map positionMap,
-			final PartitionTable pt, final DataSet ds, final Schema schema,
-			final String usablePartition) throws PartitionException {
+	public String getPartitionTableRowsSQL(final String schemaPrefix,
+			final Map positionMap, final PartitionTable pt, final DataSet ds,
+			final Schema schema, final String usablePartition)
+			throws PartitionException {
 		final StringBuffer sql = new StringBuffer();
 
 		// This is generic SQL and should not need any dialects.
@@ -1000,8 +1005,9 @@ public class MySQLDialect extends DatabaseDialect {
 									jtu.getSchemaRelationIteration());
 					if (rr != null) {
 						sqlWhere.append(" and ");
-						sqlWhere.append(rr.getSubstitutedExpression("" + lhs,
-								"" + rhs, false, false, jtu));
+						sqlWhere.append(rr.getSubstitutedExpression(
+								schemaPrefix, "" + lhs, "" + rhs, false, false,
+								jtu));
 					}
 				}
 				// Add any table restrictions to where clause.
@@ -1010,8 +1016,8 @@ public class MySQLDialect extends DatabaseDialect {
 				if (rt != null) {
 					if (!sqlWhere.toString().equals(" where "))
 						sqlWhere.append(" and ");
-					sqlWhere.append(rt
-							.getSubstitutedExpression("" + currSuffix));
+					sqlWhere.append(rt.getSubstitutedExpression(schemaPrefix,
+							"" + currSuffix));
 				}
 				// If any unit columns match selected columns,
 				// add them to the select statement and their

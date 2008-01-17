@@ -441,13 +441,13 @@ public class DataSet extends Schema {
 				public Collection getAvailableColumnNames() {
 					// Keep map in alphabetical order.
 					final Collection allCols = new TreeSet();
-					
+
 					for (final Iterator i = DataSet.this.getMainTable()
 							.getColumns().values().iterator(); i.hasNext();) {
 						final DataSetColumn col = (DataSetColumn) i.next();
 						allCols.add(col.getModifiedName());
 					}
-					
+
 					return allCols;
 				}
 
@@ -528,8 +528,8 @@ public class DataSet extends Schema {
 			Log.debug("Building SQL");
 			final Map positionMap = new HashMap();
 			final String sql = DatabaseDialect.getDialect(jdbc)
-					.getPartitionTableRowsSQL(positionMap, pt, this, schema,
-							usablePartition);
+					.getPartitionTableRowsSQL(schemaPrefix, positionMap, pt,
+							this, schema, usablePartition);
 
 			// Run it.
 			Log.debug("About to run SQL: " + sql);
@@ -1200,7 +1200,7 @@ public class DataSet extends Schema {
 		final Set ignoreCols = new HashSet();
 
 		final TransformationUnit tu;
-		
+
 		int relationTrackerCount = 0;
 
 		// Did we get here via somewhere else?
@@ -1580,8 +1580,8 @@ public class DataSet extends Schema {
 				// Repeat queueing of relation N times if compounded.
 				int childCompounded = 1;
 				// Don't compound if loopback and we just processed the M end.
-				final CompoundRelationDefinition def = r
-				.getCompoundRelation(this, dsTable.getName());
+				final CompoundRelationDefinition def = r.getCompoundRelation(
+						this, dsTable.getName());
 				final boolean skipCompound = r.getLoopbackRelation(this,
 						dsTable.getName()) != null
 						&& r.getManyKey().equals(r.getKeyForTable(mergeTable));
@@ -1625,17 +1625,19 @@ public class DataSet extends Schema {
 				// makes it depth-first as opposed to breadth-first).
 				// The queue position is incremented so that they remain
 				// in order - else they'd end up reversed.
-				if (childCompounded>1)
-				for (int k = 0; k < childCompounded; k++) 
-					normalQ.add(queuePos++, new Object[] {
-							r,
-							newSourceDSCols,
-							targetKey.getTable(),
-							tu,
-							Boolean.valueOf(makeDimensions && r.isOneToOne()
-									|| forceFollowRelation), new Integer(k),
-							nextNameCols, nextNameColSuffixes.get("" + k),
-							new HashMap(relationCount) });
+				if (childCompounded > 1)
+					for (int k = 0; k < childCompounded; k++)
+						normalQ.add(queuePos++, new Object[] {
+								r,
+								newSourceDSCols,
+								targetKey.getTable(),
+								tu,
+								Boolean.valueOf(makeDimensions
+										&& r.isOneToOne()
+										|| forceFollowRelation),
+								new Integer(k), nextNameCols,
+								nextNameColSuffixes.get("" + k),
+								new HashMap(relationCount) });
 				else
 					normalQ.add(queuePos++, new Object[] {
 							r,
@@ -1643,8 +1645,9 @@ public class DataSet extends Schema {
 							targetKey.getTable(),
 							tu,
 							Boolean.valueOf(makeDimensions && r.isOneToOne()
-									|| forceFollowRelation), new Integer(relationIteration),
-							nextNameCols, nextNameColSuffixes.get("0"),
+									|| forceFollowRelation),
+							new Integer(relationIteration), nextNameCols,
+							nextNameColSuffixes.get("0"),
 							new HashMap(relationCount) });
 			}
 		}
@@ -3823,6 +3826,8 @@ public class DataSet extends Schema {
 		 * Returns the expression, <i>with</i> substitution. This value is
 		 * RDBMS-specific.
 		 * 
+		 * @param schemaPrefix
+		 *            the value to substitute for ':schemaPrefix'.
 		 * @param dsTable
 		 *            the table to use to look up column names from.
 		 * @param prefix
@@ -3830,8 +3835,8 @@ public class DataSet extends Schema {
 		 *            prefix is used.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final DataSetTable dsTable,
-				final String prefix) {
+		public String getSubstitutedExpression(final String schemaPrefix,
+				final DataSetTable dsTable, final String prefix) {
 			Log.debug("Calculating expression column expression");
 			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
@@ -3844,6 +3849,8 @@ public class DataSet extends Schema {
 				sub = sub.replaceAll(alias, prefix != null ? prefix + "."
 						+ dsCol.getModifiedName() : dsCol.getModifiedName());
 			}
+			sub = sub.replaceAll(":" + Resources.get("schemaPrefix"),
+					schemaPrefix == null ? "null" : schemaPrefix);
 			Log.debug("Expression is: " + sub);
 			return sub;
 		}

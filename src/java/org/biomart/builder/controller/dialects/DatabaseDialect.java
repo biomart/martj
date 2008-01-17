@@ -201,6 +201,8 @@ public abstract class DatabaseDialect {
 	/**
 	 * Get the SQL for unrolling a table's rolled-up relations.
 	 * 
+	 * @param schemaPrefix
+	 *            the value to substitute for ':schemaPrefix'.
 	 * @param dataset
 	 *            the dataset.
 	 * @param dsTable
@@ -217,14 +219,17 @@ public abstract class DatabaseDialect {
 	 *            the unroll unit leading to this.
 	 * @return the SQL.
 	 */
-	public abstract String getUnrollTableSQL(final DataSet dataset,
-			final DataSetTable dsTable, final Relation parentRel,
-			final Relation childRel, final String schemaPartition,
-			final Schema templateSchema, final UnrollTable utu);
+	public abstract String getUnrollTableSQL(final String schemaPrefix,
+			final DataSet dataset, final DataSetTable dsTable,
+			final Relation parentRel, final Relation childRel,
+			final String schemaPartition, final Schema templateSchema,
+			final UnrollTable utu);
 
 	/**
 	 * Gets the SQL to return rows of a partition table.
 	 * 
+	 * @param schemaPrefix
+	 *            the value to substitute for ':schemaPrefix'.
 	 * @param positionMap
 	 *            the map to populate with column names to column positions.
 	 * @param pt
@@ -240,9 +245,10 @@ public abstract class DatabaseDialect {
 	 * @throws PartitionException
 	 *             if anything goes wrong.
 	 */
-	public abstract String getPartitionTableRowsSQL(final Map positionMap,
-			final PartitionTable pt, final DataSet ds, final Schema schema,
-			final String usablePartition) throws PartitionException;
+	public abstract String getPartitionTableRowsSQL(final String schemaPrefix,
+			final Map positionMap, final PartitionTable pt, final DataSet ds,
+			final Schema schema, final String usablePartition)
+			throws PartitionException;
 
 	/**
 	 * Get SQL to return rows from a table.

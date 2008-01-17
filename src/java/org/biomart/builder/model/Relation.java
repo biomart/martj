@@ -1860,6 +1860,8 @@ public class Relation implements Comparable, TransactionListener {
 		 * substituion, eg. "a" if columns for the table for that key should be
 		 * prefixed as "a.mycolumn".
 		 * 
+		 * @param schemaPrefix
+		 *            the value to substitute for ':schemaPrefix'.
 		 * @param leftTablePrefix
 		 *            the prefix to use for the LHS table in the expression.
 		 * @param rightTablePrefix
@@ -1873,9 +1875,9 @@ public class Relation implements Comparable, TransactionListener {
 		 *            translate columns into dataset column equivalents.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final String leftTablePrefix,
-				final String rightTablePrefix, final boolean leftIsDataSet,
-				final boolean rightIsDataSet,
+		public String getSubstitutedExpression(final String schemaPrefix,
+				final String leftTablePrefix, final String rightTablePrefix,
+				final boolean leftIsDataSet, final boolean rightIsDataSet,
 				final TransformationUnit mappingUnit) {
 			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
@@ -1900,6 +1902,8 @@ public class Relation implements Comparable, TransactionListener {
 								.getDataSetColumnFor(col).getModifiedName()
 								: col.getName()));
 			}
+			sub = sub.replaceAll(":" + Resources.get("schemaPrefix"),
+					schemaPrefix == null ? "null" : schemaPrefix);
 			Log.debug("Expression is: " + sub);
 			return sub;
 		}

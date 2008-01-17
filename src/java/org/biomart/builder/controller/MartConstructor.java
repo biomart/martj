@@ -443,9 +443,9 @@ public interface MartConstructor {
 								&& dsTab.getFocusRelation()
 										.getUnrolledRelation(dataset) == null)
 							if (dsTab.getType().equals(
-									DataSetTableType.DIMENSION)) 
+									DataSetTableType.DIMENSION))
 								nextDims.add(dsTab);
-							else 
+							else
 								nextSCs.add(dsTab);
 					}
 				// We need to insert each dimension directly
@@ -882,6 +882,7 @@ public interface MartConstructor {
 			final Select action = new Select(this.datasetSchemaName,
 					finalCombinedName);
 			action.setBigTable(bigness);
+			action.setSchemaPrefix(schemaPrefix);
 
 			// If this is a dimension, look up DM PT,
 			// otherwise if this is the main table, look up DS PT,
@@ -1042,6 +1043,7 @@ public interface MartConstructor {
 					finalCombinedName);
 			action.setLeftJoin(useLeftJoin);
 			action.setBigTable(bigness);
+			action.setSchemaPrefix(schemaPrefix);
 
 			PartitionTableApplication pta = null;
 			if (dsTable.getType().equals(DataSetTableType.DIMENSION)
@@ -1292,8 +1294,9 @@ public interface MartConstructor {
 			final Connection conn = ((JDBCDataLink) templateSchema)
 					.getConnection(schemaPartition);
 			final String sqlStr = DatabaseDialect.getDialect(templateSchema)
-					.getUnrollTableSQL(dataset, dsTable, parentRel, childRel,
-							schemaPartition, templateSchema, utu);
+					.getUnrollTableSQL(schemaPrefix, dataset, dsTable,
+							parentRel, childRel, schemaPartition,
+							templateSchema, utu);
 			Log.debug("Executing unroll statement: " + sqlStr);
 			final ResultSet rs = conn.prepareStatement(sqlStr).executeQuery();
 			// Iterate over all pairs in db.
@@ -1481,7 +1484,8 @@ public interface MartConstructor {
 					}
 					// Add the column to the list to be generated.
 					exprCols.put(expCol.getModifiedName(), expr
-							.getSubstitutedExpression(dsTable, null));
+							.getSubstitutedExpression(schemaPrefix, dsTable,
+									null));
 				}
 
 				// None left to do here? Don't do any then!
@@ -1505,6 +1509,7 @@ public interface MartConstructor {
 				final AddExpression action = new AddExpression(
 						this.datasetSchemaName, finalCombinedName);
 				action.setTable(useXTable ? xTableName : previousTempTable);
+				action.setSchemaPrefix(schemaPrefix);
 				// We use a set to prevent post-modification problems.
 				action.setSelectColumns(new HashSet(selectCols));
 				action.setExpressionColumns(exprCols);

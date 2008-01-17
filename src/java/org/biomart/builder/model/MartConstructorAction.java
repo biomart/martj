@@ -584,6 +584,8 @@ public abstract class MartConstructorAction {
 	public static class Join extends MartConstructorAction {
 		private static final long serialVersionUID = 1L;
 
+		private String schemaPrefix;
+		
 		private String leftTable;
 
 		private String rightSchema;
@@ -870,6 +872,20 @@ public abstract class MartConstructorAction {
 		public void setBigTable(int bigTable) {
 			this.bigTable = bigTable;
 		}
+
+		/**
+		 * @return the schemaPrefix
+		 */
+		public String getSchemaPrefix() {
+			return this.schemaPrefix;
+		}
+
+		/**
+		 * @param schemaPrefix the schemaPrefix to set
+		 */
+		public void setSchemaPrefix(String schemaPrefix) {
+			this.schemaPrefix = schemaPrefix;
+		}
 	}
 
 	/**
@@ -878,6 +894,8 @@ public abstract class MartConstructorAction {
 	public static class AddExpression extends MartConstructorAction {
 		private static final long serialVersionUID = 1L;
 
+		private String schemaPrefix;
+		
 		private String table;
 
 		private Collection selectColumns;
@@ -979,6 +997,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setTable(final String table) {
 			this.table = table;
+		}
+
+		/**
+		 * @return the schemaPrefix
+		 */
+		public String getSchemaPrefix() {
+			return this.schemaPrefix;
+		}
+
+		/**
+		 * @param schemaPrefix the schemaPrefix to set
+		 */
+		public void setSchemaPrefix(String schemaPrefix) {
+			this.schemaPrefix = schemaPrefix;
 		}
 	}
 
@@ -1097,6 +1129,8 @@ public abstract class MartConstructorAction {
 	public static class Select extends MartConstructorAction {
 		private static final long serialVersionUID = 1L;
 
+		private String schemaPrefix;
+		
 		private String schema;
 
 		private String table;
@@ -1226,6 +1260,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setBigTable(int bigTable) {
 			this.bigTable = bigTable;
+		}
+
+		/**
+		 * @return the schemaPrefix
+		 */
+		public String getSchemaPrefix() {
+			return this.schemaPrefix;
+		}
+
+		/**
+		 * @param schemaPrefix the schemaPrefix to set
+		 */
+		public void setSchemaPrefix(String schemaPrefix) {
+			this.schemaPrefix = schemaPrefix;
 		}
 	}
 

@@ -454,8 +454,8 @@ public class Table implements Comparable, TransactionListener {
 	 */
 	public RestrictedTableDefinition getRestrictTable(final DataSet dataset,
 			final String tableKey) {
-		return (RestrictedTableDefinition) this
-				.getMods(dataset, tableKey).get("restrictTable");
+		return (RestrictedTableDefinition) this.getMods(dataset, tableKey).get(
+				"restrictTable");
 	}
 
 	/**
@@ -612,7 +612,7 @@ public class Table implements Comparable, TransactionListener {
 				RestrictedTableDefinition.this.setDirectModified(true);
 			}
 		};
-		
+
 		/**
 		 * This constructor gives the restriction an initial expression and a
 		 * set of aliases. The expression may not be empty, and neither can the
@@ -735,11 +735,14 @@ public class Table implements Comparable, TransactionListener {
 		 * Returns the expression, <i>with</i> substitution. This value is
 		 * RDBMS-specific.
 		 * 
+		 * @param schemaPrefix
+		 *            the value to substitute for ':schemaPrefix'.
 		 * @param tablePrefix
 		 *            the prefix to use for the table in the expression.
 		 * @return the substituted expression.
 		 */
-		public String getSubstitutedExpression(final String tablePrefix) {
+		public String getSubstitutedExpression(final String schemaPrefix,
+				final String tablePrefix) {
 			Log.debug("Calculating restricted table expression");
 			String sub = this.expr;
 			for (final Iterator i = this.aliases.entrySet().iterator(); i
@@ -749,6 +752,8 @@ public class Table implements Comparable, TransactionListener {
 				final String alias = ":" + (String) entry.getValue();
 				sub = sub.replaceAll(alias, tablePrefix + "." + col.getName());
 			}
+			sub = sub.replaceAll(":" + Resources.get("schemaPrefix"),
+					schemaPrefix == null ? "null" : schemaPrefix);
 			Log.debug("Expression is: " + sub);
 			return sub;
 		}
