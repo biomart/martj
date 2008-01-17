@@ -143,12 +143,7 @@ public class Relation implements Comparable, TransactionListener {
 			throws AssociationException {
 		Log.debug("Creating relation between " + firstKey + " and " + secondKey
 				+ " with cardinality " + cardinality);
-		// Always make PKs the first key in a PK->FK relation.
-		if (firstKey instanceof ForeignKey && secondKey instanceof PrimaryKey) {
-			final Key interim = firstKey;
-			firstKey = secondKey;
-			secondKey = interim;
-		}
+
 		// Remember the keys etc.
 		this.firstKey = firstKey;
 		this.secondKey = secondKey;
@@ -543,13 +538,14 @@ public class Relation implements Comparable, TransactionListener {
 				&& this.originalCardinality.equals(originalCardinality))
 			return;
 		this.originalCardinality = originalCardinality;
-		
+
 		// TODO This is a backwards-compatibility clause that needs to
 		// stay in throughout the 0.7 release. It can be removed in 0.8.
-		if (oldValue == Cardinality.MANY) 
+		if (oldValue == Cardinality.MANY
+				&& !(this.firstKey instanceof PrimaryKey || this.secondKey instanceof PrimaryKey))
 			return;
 		// End fudge-mode.
-		
+
 		this.pcs.firePropertyChange("originalCardinality", oldValue,
 				originalCardinality);
 	}
