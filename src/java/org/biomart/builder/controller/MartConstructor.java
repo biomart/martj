@@ -428,25 +428,26 @@ public interface MartConstructor {
 			for (int i = 0; i < tablesToProcess.size(); i++) {
 				final DataSetTable tbl = (DataSetTable) tablesToProcess.get(i);
 				// Expand the table.
-				final Collection nextSCs = new HashSet();
-				final Collection nextDims = new HashSet();
-				for (final Iterator j = tbl.getRelations().iterator(); j
-						.hasNext();) {
-					final Relation r = (Relation) j.next();
-					final DataSetTable dsTab = (DataSetTable) r.getManyKey()
-							.getTable();
-					if (!tablesToProcess.contains(dsTab)
-							&& !dsTab.isDimensionMasked()
-							&& dsTab.getFocusRelation() != null
-							&& !dsTab.getFocusRelation().isMergeRelation(
-									dataset)
-							&& dsTab.getFocusRelation().getUnrolledRelation(
-									dataset) == null)
-						if (dsTab.getType().equals(DataSetTableType.DIMENSION))
-							nextDims.add(dsTab);
-						else
-							nextSCs.add(dsTab);
-				}
+				final Collection nextSCs = new ArrayList();
+				final Collection nextDims = new ArrayList();
+				if (tbl.getPrimaryKey() != null)
+					for (final Iterator j = tbl.getPrimaryKey().getRelations()
+							.iterator(); j.hasNext();) {
+						final Relation r = (Relation) j.next();
+						final DataSetTable dsTab = (DataSetTable) r
+								.getManyKey().getTable();
+						if (!dsTab.isDimensionMasked()
+								&& dsTab.getFocusRelation() != null
+								&& !dsTab.getFocusRelation().isMergeRelation(
+										dataset)
+								&& dsTab.getFocusRelation()
+										.getUnrolledRelation(dataset) == null)
+							if (dsTab.getType().equals(
+									DataSetTableType.DIMENSION)) 
+								nextDims.add(dsTab);
+							else 
+								nextSCs.add(dsTab);
+					}
 				// We need to insert each dimension directly
 				// after its parent table and before any subsequent
 				// subclass table. This ensures that by the time the subclass
@@ -1176,7 +1177,7 @@ public interface MartConstructor {
 			// Table restriction.
 			final RestrictedTableDefinition rdef = ljtu.getTable()
 					.getRestrictTable(dataset, dsTable.getName());
-			if (rdef != null) 
+			if (rdef != null)
 				action.setTableRestriction(rdef);
 
 			// Don't add restriction if loopback relation from M end.
