@@ -56,6 +56,7 @@ import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication.PartitionAppliedRow;
 import org.biomart.builder.model.Relation.Cardinality;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
+import org.biomart.builder.model.Relation.RestrictedRelationDefinition;
 import org.biomart.builder.model.Relation.UnrolledRelationDefinition;
 import org.biomart.builder.model.TransformationUnit.Expression;
 import org.biomart.builder.model.TransformationUnit.JoinTable;
@@ -756,7 +757,10 @@ public class DataSet extends Schema {
 			// a subclass table, add it. If it is a dimension table,
 			// only add it if it is in the PK or is in the first underlying
 			// key. In either case, if it is in the PK, add it both to the
-			// child PK and the child FK.
+			// child PK and the child FK. Also inherit if it is involved
+			// in a restriction on the very first join.
+			final RestrictedRelationDefinition restrictDef = sourceRelation
+					.getRestrictRelation(this, dsTable.getName(), 0);
 			for (final Iterator i = parentDSTable.getColumns().values()
 					.iterator(); i.hasNext();) {
 				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
@@ -767,7 +771,25 @@ public class DataSet extends Schema {
 							parentDSTablePK.getColumns()).contains(parentDSCol);
 					final boolean inSourceKey = sourceDSCols
 							.contains(parentDSCol);
-					if (!inPK && !inSourceKey)
+					boolean inRelationRestriction = false;
+					// If the column is in a restricted relation
+					// on the source relation, we need to inherit it.
+					if (restrictDef != null) {
+						DataSetColumn inhCol = parentDSCol;
+						while (inhCol instanceof InheritedColumn)
+							inhCol = ((InheritedColumn) inhCol)
+									.getInheritedColumn();
+						if (inhCol instanceof WrappedColumn) {
+							final Column wc = ((WrappedColumn) inhCol)
+									.getWrappedColumn();
+							inRelationRestriction = restrictDef
+									.getLeftAliases().containsKey(wc)
+									|| restrictDef.getRightAliases()
+											.containsKey(wc);
+						}
+					}
+					// Inherit it?
+					if (!inPK && !inSourceKey && !inRelationRestriction)
 						continue;
 				}
 				// Only unfiltered columns reach this point. Create a copy of
@@ -778,8 +800,8 @@ public class DataSet extends Schema {
 					dsCol = new InheritedColumn(dsTable, parentDSCol);
 					dsTable.getColumns().put(dsCol.getName(), dsCol);
 					// If any other col has modified name same as
-					// inherited col's modified name, then rename that
-					// other column.
+					// inherited col's modified name, then rename the
+					// other column to avoid clash.
 					for (final Iterator j = dsTable.getColumns().values()
 							.iterator(); j.hasNext();) {
 						final DataSetColumn cand = (DataSetColumn) j.next();
@@ -787,14 +809,14 @@ public class DataSet extends Schema {
 								&& cand.getModifiedName().equals(
 										dsCol.getModifiedName()))
 							try {
-								if (dsCol.getModifiedName().endsWith(
+								if (cand.getModifiedName().endsWith(
 										Resources.get("keySuffix")))
-									dsCol
-											.setColumnRename(dsCol
+									cand
+											.setColumnRename(cand
 													.getModifiedName()
 													.substring(
 															0,
-															dsCol
+															cand
 																	.getModifiedName()
 																	.indexOf(
 																			Resources
@@ -803,8 +825,7 @@ public class DataSet extends Schema {
 													+ Resources
 															.get("keySuffix"));
 								else
-									dsCol.setColumnRename(dsCol
-											.getModifiedName()
+									cand.setColumnRename(cand.getModifiedName()
 											+ "_1");
 							} catch (final ValidationException ve) {
 								// Ouch!
