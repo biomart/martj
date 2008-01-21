@@ -764,6 +764,7 @@ public class DataSet extends Schema {
 			for (final Iterator i = parentDSTable.getColumns().values()
 					.iterator(); i.hasNext();) {
 				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
+				boolean inRelationRestriction = false;
 				// If this is not a subclass table, we need to filter columns.
 				if (!type.equals(DataSetTableType.MAIN_SUBCLASS)) {
 					// Skip columns that are not in the primary key.
@@ -771,7 +772,6 @@ public class DataSet extends Schema {
 							parentDSTablePK.getColumns()).contains(parentDSCol);
 					final boolean inSourceKey = sourceDSCols
 							.contains(parentDSCol);
-					boolean inRelationRestriction = false;
 					// If the column is in a restricted relation
 					// on the source relation, we need to inherit it.
 					if (restrictDef != null) {
@@ -809,14 +809,15 @@ public class DataSet extends Schema {
 								&& cand.getModifiedName().equals(
 										dsCol.getModifiedName()))
 							try {
-								if (cand.getModifiedName().endsWith(
+								final DataSetColumn renameCol = inRelationRestriction ? cand : dsCol;
+ 								if (renameCol.getModifiedName().endsWith(
 										Resources.get("keySuffix")))
-									cand
-											.setColumnRename(cand
+ 									renameCol
+											.setColumnRename(renameCol
 													.getModifiedName()
 													.substring(
 															0,
-															cand
+															renameCol
 																	.getModifiedName()
 																	.indexOf(
 																			Resources
@@ -825,7 +826,7 @@ public class DataSet extends Schema {
 													+ Resources
 															.get("keySuffix"));
 								else
-									cand.setColumnRename(cand.getModifiedName()
+									renameCol.setColumnRename(renameCol.getModifiedName()
 											+ "_1");
 							} catch (final ValidationException ve) {
 								// Ouch!
