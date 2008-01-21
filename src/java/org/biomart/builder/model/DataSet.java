@@ -1366,9 +1366,10 @@ public class DataSet extends Schema {
 
 		// Update the three queues with relations that lead away from this
 		// table.
-		for (final Iterator i = new TreeSet(mergeTable.getRelations())
-				.iterator(); i.hasNext();) {
-			final Relation r = (Relation) i.next();
+		final List mergeRelations = new ArrayList(mergeTable.getRelations());
+		Collections.sort(mergeRelations);
+		for (int i = 0; i < mergeRelations.size(); i++) {
+			final Relation r = (Relation) mergeRelations.get(i);
 
 			// Allow to go back up sourceRelation if it is a loopback
 			// 1:M relation and we have just merged the 1 end.
@@ -1377,9 +1378,17 @@ public class DataSet extends Schema {
 					&& r.getOneKey().equals(r.getKeyForTable(mergeTable));
 
 			// Don't go back up relation just followed unless we are doing
-			// loopback.
-			if (r.equals(sourceRelation) && !isLoopback)
-				continue;
+			// loopback. If we are doing loopback, do source relation last
+			// by adding it to the end of the queue and skipping it this
+			// time round.
+			if (r.equals(sourceRelation)) {
+				if (!isLoopback)
+					continue;
+				if (i < mergeRelations.size()-1) {
+					mergeRelations.add(r);
+					continue;
+				}
+			}
 
 			// Don't excessively repeat relations.
 			if (((Integer) relationCount.get(r)).intValue() <= 0)
