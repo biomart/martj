@@ -578,9 +578,9 @@ public class PartitionTableDialog extends TransactionalDialog {
 				final List choices = new ArrayList(dataset.getMart()
 						.getDataSets().values());
 				// Remove those that are partition tables themselves.
-				for (final Iterator i = dataset.getMart().getPartitionTables()
-						.iterator(); i.hasNext();)
-					choices.remove((DataSet) i.next());
+				for (final Iterator i = choices.iterator(); i.hasNext();)
+					if (((DataSet) i.next()).isPartitionTable())
+						i.remove();
 				// Remove all invisible and masked datasets.
 				for (final Iterator i = choices.iterator(); i.hasNext();) {
 					final DataSet ds = (DataSet) i.next();
@@ -903,11 +903,13 @@ public class PartitionTableDialog extends TransactionalDialog {
 				subpanel.add(new JLabel(Resources.get("wizardPTColLabel")),
 						labelConstraints);
 				subpanel.add(ptCombo, fieldConstraints);
-				subpanel.add(new JLabel(Resources.get("wizardDSColLabel")), labelConstraints);
+				subpanel.add(new JLabel(Resources.get("wizardDSColLabel")),
+						labelConstraints);
 				subpanel.add(dsCombo, fieldConstraints);
 				subpanel.add(new JLabel(currLevel == 0 ? Resources
 						.get("wizardTableNameColLabel") : Resources
-						.get("wizardColumnNameColLabel")), labelLastRowConstraints);
+						.get("wizardColumnNameColLabel")),
+						labelLastRowConstraints);
 				subpanel.add(nameCombo, fieldLastRowConstraints);
 				this.add(subpanel, fieldConstraints);
 				// Disable subsequent combos if this one is
@@ -1111,7 +1113,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 					if (realSourceCol == null)
 						throw new BioMartError(); // Should never happen.
 					ds.asPartitionTable().setSelectedColumnNames(
-							Collections.singletonList(realSourceCol.getModifiedName()));
+							Collections.singletonList(realSourceCol
+									.getModifiedName()));
 				} catch (final Exception e) {
 					StackTrace.showStackTrace(e);
 					return;
@@ -1231,7 +1234,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 					if (realSourceCol == null)
 						throw new BioMartError(); // Should never happen.
 					ds.asPartitionTable().setSelectedColumnNames(
-							Collections.singletonList(realSourceCol.getModifiedName()));
+							Collections.singletonList(realSourceCol
+									.getModifiedName()));
 				} catch (final Exception e) {
 					StackTrace.showStackTrace(e);
 					return;
