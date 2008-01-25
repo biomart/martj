@@ -809,10 +809,11 @@ public class DataSet extends Schema {
 								&& cand.getModifiedName().equals(
 										dsCol.getModifiedName()))
 							try {
-								final DataSetColumn renameCol = inRelationRestriction ? cand : dsCol;
- 								if (renameCol.getModifiedName().endsWith(
+								final DataSetColumn renameCol = inRelationRestriction ? cand
+										: dsCol;
+								if (renameCol.getModifiedName().endsWith(
 										Resources.get("keySuffix")))
- 									renameCol
+									renameCol
 											.setColumnRename(renameCol
 													.getModifiedName()
 													.substring(
@@ -826,7 +827,8 @@ public class DataSet extends Schema {
 													+ Resources
 															.get("keySuffix"));
 								else
-									renameCol.setColumnRename(renameCol.getModifiedName()
+									renameCol.setColumnRename(renameCol
+											.getModifiedName()
 											+ "_1");
 							} catch (final ValidationException ve) {
 								// Ouch!
@@ -1384,7 +1386,7 @@ public class DataSet extends Schema {
 			if (r.equals(sourceRelation)) {
 				if (!isLoopback)
 					continue;
-				if (i < mergeRelations.size()-1) {
+				if (i < mergeRelations.size() - 1) {
 					mergeRelations.add(r);
 					continue;
 				}
@@ -1631,11 +1633,14 @@ public class DataSet extends Schema {
 							usefulPart = this.partitionTableApplication;
 						if (usefulPart == null)
 							childCompounded = 1;
-						else // When partitioning second level, only fork at
-						// top.
+						else
+						// When partitioning second level, only fork at top.
 						if (usefulPart.getPartitionAppliedRows().size() > 1
 								&& previousUnit == null) {
 							// Get the row information for the relation.
+							// TODO Be more clever about this so that
+							// secondary relations off the first table
+							// do not also get compounded.
 							final PartitionAppliedRow prow = (PartitionAppliedRow) usefulPart
 									.getPartitionAppliedRows().get(1);
 							childCompounded = prow.getCompound();
