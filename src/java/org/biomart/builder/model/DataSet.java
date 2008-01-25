@@ -1638,13 +1638,18 @@ public class DataSet extends Schema {
 						if (usefulPart.getPartitionAppliedRows().size() > 1
 								&& previousUnit == null) {
 							// Get the row information for the relation.
-							// TODO Be more clever about this so that
+							// Be more clever about this so that
 							// secondary relations off the first table
 							// do not also get compounded.
 							final PartitionAppliedRow prow = (PartitionAppliedRow) usefulPart
 									.getPartitionAppliedRows().get(1);
-							childCompounded = prow.getCompound();
-							nextNameCols.add(prow.getNamePartitionCol());
+							if (r.getOtherKey(r.getKeyForTable(mergeTable))
+									.getTable().getRelations().contains(
+											prow.getRelation())) {
+								childCompounded = prow.getCompound();
+								nextNameCols.add(prow.getNamePartitionCol());
+							} else
+								childCompounded = 1;
 						} else
 							childCompounded = 1;
 					}
