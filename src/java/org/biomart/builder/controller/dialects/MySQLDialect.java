@@ -505,9 +505,7 @@ public class MySQLDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		final String joinType = action.isLeftJoin()
-				&& action.getPartitionRestrictions().isEmpty() ? "left"
-				: "inner";
+		final String joinType = action.isLeftJoin() ? "left" : "inner";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("create table " + action.getDataSetSchemaName() + "."

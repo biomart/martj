@@ -1033,11 +1033,17 @@ public interface MartConstructor {
 				final int bigness, final String finalCombinedName)
 				throws SQLException, ListenerException, PartitionException {
 
-			final boolean useLeftJoin = dsTable.getType().equals(
-					DataSetTableType.DIMENSION) ? ljtu.getSchemaRelation()
-					.isAlternativeJoin(dataset, dsTable.getName()) : !ljtu
-					.getSchemaRelation().isAlternativeJoin(dataset,
-							dsTable.getName());
+			// Left join whenever we have a double-level partition table
+			// on the dataset, or whenever main/sc table + not alternative join,
+			// or dimension table + alternative join.
+			boolean useLeftJoin = (dsTable.getType().equals(
+					DataSetTableType.MAIN)
+					&& dsPta != null && dsPta.getPartitionAppliedRows().size() > 1)
+					|| (dsTable.getType().equals(DataSetTableType.DIMENSION) ? ljtu
+							.getSchemaRelation().isAlternativeJoin(dataset,
+									dsTable.getName())
+							: !ljtu.getSchemaRelation().isAlternativeJoin(
+									dataset, dsTable.getName()));
 			boolean requiresFinalLeftJoin = !useLeftJoin;
 			final Join action = new Join(this.datasetSchemaName,
 					finalCombinedName);
@@ -1075,8 +1081,6 @@ public interface MartConstructor {
 						.getAppliedRowForRelation(ljtu.getSchemaRelation());
 				// It might not have one after all.
 				if (prow != null) {
-					// We'll need a final left join.
-					requiresFinalLeftJoin = true;
 					// Look up the table that the naming column is on. It
 					// will be a subtable which needs initialising on the
 					// first pass, and next rowing on all passes.
@@ -1095,12 +1099,25 @@ public interface MartConstructor {
 						// Only apply this to the dsCol which matches
 						// the partition row's ds col.
 						if (dsCol.existsForPartition(schemaPrefix)
-								&& dsCol.getName().split("\\.")[2].equals(
-										prow.getRootDataSetCol().split("\\.")[2])) 
+								&& dsCol.getName().split("\\.")[2].equals(prow
+										.getRootDataSetCol().split("\\.")[2])) {
 							// Apply restriction.
 							action.getPartitionRestrictions().put(
 									((Column) entry.getKey()).getName(),
 									pcol.getRawValueForRow(ptbl.currentRow()));
+							// Make this an inner join if we are NOT dealing
+							// with a two-level dataset partition.
+							if (!(dsTable.getType().equals(
+									DataSetTableType.MAIN)
+									&& dsPta != null && dsPta
+									.getPartitionAppliedRows().size() > 1)
+									&& !useLeftJoin) {
+								// We'll need a final left join.
+								requiresFinalLeftJoin = true;
+								useLeftJoin = false;
+								action.setLeftJoin(false);
+							}
+						}
 					}
 				}
 			}

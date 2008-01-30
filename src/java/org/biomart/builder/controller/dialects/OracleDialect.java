@@ -474,8 +474,7 @@ public class OracleDialect extends DatabaseDialect {
 		final String trgtTableName = action.getRightTable();
 		final String mergeTableName = action.getResultTable();
 
-		final String joinType = action.isLeftJoin()
-				&& action.getPartitionRestrictions().isEmpty() ? "left"
+		final String joinType = action.isLeftJoin() ? "left"
 				: "inner";
 
 		final StringBuffer sb = new StringBuffer();
