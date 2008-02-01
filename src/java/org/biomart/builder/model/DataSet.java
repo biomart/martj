@@ -1043,10 +1043,24 @@ public class DataSet extends Schema {
 			sourceRelation.setAlternativeJoin(this, dsTable.getName(), false);
 
 			// Locate the columns on our own table which form that join.
+			// Note how we have to traverse forwards as this is a linked
+			// list and getPreviousUnit may shortcut to the top.
 			final List dsTabJoinCols = new ArrayList();
-			for (int i = 0; i < sourceRelation.getManyKey().getColumns().length; i++)
-				dsTabJoinCols.add(lastTU.getDataSetColumnFor(sourceRelation
-						.getManyKey().getColumns()[i]));
+			for (int i = 0; i < sourceRelation.getManyKey().getColumns().length; i++) {
+				boolean keepGoing = true;
+				for (final Iterator j = dsTable.getTransformationUnits()
+						.iterator(); keepGoing && j.hasNext();) {
+					final TransformationUnit ptu = (TransformationUnit) j
+							.next();
+					final DataSetColumn candCol = ptu
+							.getDataSetColumnFor(sourceRelation.getManyKey()
+									.getColumns()[i]);
+					if (candCol != null) {
+						dsTabJoinCols.add(candCol);
+						keepGoing = false;
+					}
+				}
+			}
 
 			// Set up a new join table. We join to parent
 			// using sourceDSCols from dsTabJoinCols.
