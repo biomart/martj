@@ -935,7 +935,7 @@ public class MartBuilderXML extends DefaultHandler {
 									xmlWriter);
 							this.closeElement("alternativeJoin", xmlWriter);
 						}
-
+						
 						// Mask relations.
 						if (r.isMaskRelation(ds, dsTable.getName())
 								&& !r.isMaskRelation(ds)) {
@@ -1066,6 +1066,18 @@ public class MartBuilderXML extends DefaultHandler {
 					for (final Iterator j = sch.getTables().values().iterator(); j
 							.hasNext();) {
 						final Table tbl = (Table) j.next();
+						
+						// Transform starts.
+						if (tbl.isTransformStart(ds, dsTable.getName())) {
+							this.openElement("transformStart", xmlWriter);
+							this.writeAttribute("tableKey", dsTable.getName(),
+									xmlWriter);
+							this
+									.writeAttribute("tableId",
+											(String) this.reverseMappedObjects
+													.get(tbl), xmlWriter);
+							this.closeElement("transformStart", xmlWriter);
+						}
 
 						// Big table.
 						if (tbl.getBigTable(ds, dsTable.getName()) > 0) {
@@ -1811,6 +1823,29 @@ public class MartBuilderXML extends DefaultHandler {
 						rel.setMaskRelation(w, true);
 					else
 						rel.setMaskRelation(w, tableKey, true);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Transform-start Relation (inside dataset).
+		else if ("transformStart".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("transformStartOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				final Table tbl = (Table) this.mappedObjects
+						.get(attributes.get("tableId"));
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Mask it.
+				if (tbl != null)
+					tbl.setTransformStart(w, tableKey, true);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

@@ -1138,9 +1138,8 @@ public class DataSetTabSet extends JTabbedPane {
 						index);
 				// Make it alternative join if dataset,
 				// or NOT alternative if main/subclass.
-				relation.setAlternativeJoin(dataset, dsTable
-								.getName(), !dsTable.getType().equals(
-								DataSetTableType.DIMENSION));
+				relation.setAlternativeJoin(dataset, dsTable.getName(),
+						!dsTable.getType().equals(DataSetTableType.DIMENSION));
 				Transaction.end();
 			}
 		}.start();
@@ -1164,6 +1163,34 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() {
 				Transaction.start(false);
 				relation.setAlternativeJoin(ds, dst.getName(), join);
+				Transaction.end();
+			}
+		}.start();
+	}
+
+	/**
+	 * Asks that a relation be transform-start.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to work with.
+	 * @param table
+	 *            the schema table to transform-start.
+	 * @param doIt
+	 *            whether to set the flag.
+	 */
+	public void requestTransformStart(final DataSet ds, final DataSetTable dst,
+			final Table table, final boolean doIt) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				for (final Iterator i = dst.getIncludedTables().iterator(); i
+						.hasNext();) {
+					final Table tbl = (Table) i.next();
+					tbl.setTransformStart(ds, dst.getName(), tbl.equals(table)
+							&& doIt);
+				}
 				Transaction.end();
 			}
 		}.start();
@@ -1652,9 +1679,9 @@ public class DataSetTabSet extends JTabbedPane {
 						.iterator(); i.hasNext();) {
 					final Relation relation = (Relation) i.next();
 					if (relation.getKeyForTable(table) != null)
-						relation.setAlternativeJoin(dataset, dsTable
-								.getName(), !dsTable.getType().equals(
-								DataSetTableType.DIMENSION));
+						relation.setAlternativeJoin(dataset, dsTable.getName(),
+								!dsTable.getType().equals(
+										DataSetTableType.DIMENSION));
 				}
 				Transaction.end();
 			}

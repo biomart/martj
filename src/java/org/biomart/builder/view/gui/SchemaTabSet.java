@@ -661,9 +661,10 @@ public class SchemaTabSet extends JTabbedPane {
 					final Relation rel = new Relation(
 							from,
 							to,
-							from instanceof PrimaryKey
-									&& to instanceof PrimaryKey ? Cardinality.ONE
-									: Cardinality.MANY_A);
+							from instanceof PrimaryKey ? (to instanceof PrimaryKey ? Cardinality.ONE
+									: Cardinality.MANY_A)
+									: (to instanceof PrimaryKey ? Cardinality.MANY_B
+											: Cardinality.MANY_A));
 					rel.setStatus(ComponentStatus.HANDMADE);
 					from.getRelations().add(rel);
 					to.getRelations().add(rel);

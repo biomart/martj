@@ -562,6 +562,43 @@ public class Table implements Comparable, TransactionListener {
 		}
 	}
 
+	/**
+	 * Is this table a transform start?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
+	 * @param tableKey
+	 *            the table to check for.
+	 * @return true if it is, false otherwise.
+	 */
+	public boolean isTransformStart(final DataSet dataset, final String tableKey) {
+		return this.getMods(dataset, tableKey).containsKey("transformStart");
+	}
+
+	/**
+	 * Transform-start this table.
+	 * 
+	 * @param dataset
+	 *            the dataset to set for.
+	 * @param tableKey
+	 *            the dataset table to set for.
+	 * @param doIt
+	 *            if false, it undoes it.
+	 */
+	public void setTransformStart(final DataSet dataset, final String tableKey,
+			final boolean doIt) {
+		final boolean oldValue = this.isTransformStart(dataset, tableKey);
+		if (doIt == oldValue)
+			return;
+		if (doIt) {
+			this.getMods(dataset, tableKey).put("transformStart",null);
+			this.pcs.firePropertyChange("transformStart", null, tableKey);
+		} else {
+			this.getMods(dataset, tableKey).remove("transformStart");
+			this.pcs.firePropertyChange("transformStart", tableKey, null);
+		}
+	}
+
 	public int compareTo(final Object o) throws ClassCastException {
 		final Table t = (Table) o;
 		return (this.schema.getMart().getUniqueId() + "_" + this.toString())

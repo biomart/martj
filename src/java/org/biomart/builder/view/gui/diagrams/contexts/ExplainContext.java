@@ -456,6 +456,28 @@ public class ExplainContext extends SchemaContext {
 					.getBigTable(this.getDataSet()) : table.getBigTable(this
 					.getDataSet(), this.getDataSetTable().getName())) > 0);
 			contextMenu.add(bigTable);
+
+			// The transform start option.
+			final JCheckBoxMenuItem transformStart = new JCheckBoxMenuItem(
+					Resources.get("transformStartTitle"));
+			transformStart.setMnemonic(Resources.get("transformStartMnemonic")
+					.charAt(0));
+			transformStart.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					ExplainContext.this.getMartTab().getDataSetTabSet()
+							.requestTransformStart(
+									ExplainContext.this.getDataSet(),
+									ExplainContext.this.getDataSetTable(),
+									table, transformStart.isSelected());
+				}
+			});
+			transformStart.setEnabled(this.getDataSetTable() != null
+					&& this.getDataSetTable().getType().equals(
+							DataSetTableType.DIMENSION));
+			transformStart.setSelected(this.getDataSetTable() != null
+					&& table.isTransformStart(this.getDataSet(), this
+							.getDataSetTable().getName()));
+			contextMenu.add(transformStart);
 		}
 	}
 

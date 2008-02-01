@@ -409,7 +409,7 @@ public abstract class ExplainTransformationDiagram extends Diagram {
 			// Create a copy of the target table complete with target key.
 			final Key realTargetKey = this.ltu.getSchemaRelation().getOtherKey(
 					this.ltu.getSchemaSourceKey());
-			final Table realTarget = realTargetKey.getTable();
+			final Table realTarget = this.ltu.getTable();
 			final FakeSchema tempTargetSchema = new FakeSchema(realTarget
 					.getSchema().getName());
 			final Table tempTarget = new RealisedTable(realTarget.getName(),

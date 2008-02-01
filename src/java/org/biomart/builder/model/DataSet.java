@@ -664,7 +664,7 @@ public class DataSet extends Schema {
 	private void generateDataSetTable(final DataSetTableType type,
 			final DataSetTable parentDSTable, final Table realTable,
 			final Collection skippedMainTables, final List sourceDSCols,
-			final Relation sourceRelation, final Map subclassCount,
+			Relation sourceRelation, final Map subclassCount,
 			final int relationIteration, final Collection unusedTables)
 			throws PartitionException {
 		Log.debug("Creating dataset table for " + realTable
@@ -713,9 +713,69 @@ public class DataSet extends Schema {
 			// As it happens, nothing can happen to a dstable yet that
 			// requires this.
 		}
+
+		// Prepare for action.
 		dsTable.includedRelations.clear();
 		dsTable.includedTables.clear();
 		dsTable.includedSchemas.clear();
+
+		// Identify secondStartTable and mergeTheseRelations.
+		Table secondStartTable = null;
+		final Set mergeTheseRelations = new HashSet();
+		if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+			// A crude walk will tell us which relations we
+			// would have included if we had done a normal transform.
+			final List mergeTheseTables = new ArrayList();
+			mergeTheseTables.add(realTable);
+			for (int i = 0; i < mergeTheseTables.size(); i++) {
+				final Table cand = (Table) mergeTheseTables.get(i);
+				for (final Iterator j = cand.getRelations().iterator(); j
+						.hasNext();) {
+					final Relation candRel = (Relation) j.next();
+					if (mergeTheseRelations.contains(candRel))
+						continue;
+					final Table newCand = candRel.getOtherKey(
+							candRel.getKeyForTable(cand)).getTable();
+					// Decide whether to include it or not.
+					// Skip the source relation.
+					if (candRel.equals(sourceRelation))
+						continue;
+					// Skip relations back to main tables.
+					if (skippedMainTables.contains(newCand))
+						continue;
+					// Skip incorrect relations.
+					if (candRel.getStatus().equals(
+							ComponentStatus.INFERRED_INCORRECT))
+						continue;
+					// Skip masked relations.
+					if (candRel.isMaskRelation(this, dsTable.getName()))
+						continue;
+					// Skip relations leading to masked schemas.
+					if (newCand.getSchema().isMasked())
+						continue;
+					// Skip 1:M relations from the 1 end unless forced or
+					// merged.
+					if (candRel.isOneToMany()
+							&& candRel.getOneKey().getTable().equals(cand)
+							&& !(candRel.isForceRelation(this, dsTable
+									.getName()) || candRel
+									.isMergeRelation(this)))
+						continue;
+					// Add relation to set, and add table at other
+					// end to queue.
+					if (!mergeTheseTables.contains(newCand)) {
+						mergeTheseTables.add(newCand);
+						if (newCand.isTransformStart(this, dsTable.getName()))
+							secondStartTable = newCand;
+					}
+					mergeTheseRelations.add(candRel);
+				}
+			}
+			// At this stage we know if we have found an alternative
+			// start point. If not, we can empty out the walked set.
+			if (secondStartTable == null)
+				mergeTheseRelations.clear();
+		}
 
 		// Create the three relation-table pair queues we will work with. The
 		// normal queue holds pairs of relations and tables. The other two hold
@@ -734,16 +794,21 @@ public class DataSet extends Schema {
 		final Collection unusedCols = new HashSet(dsTable.getColumns().values());
 		final Collection unusedFKs = new HashSet(dsTable.getForeignKeys());
 
+		// Do a user-friendly rename.
+		if (dsTable.getTableRename() == null)
+			dsTable.setTableRename(realTable.getName());
+
 		// Make a map for unique column base names.
 		final Map uniqueBases = new HashMap();
 
+		// Skip this step if using a surrogate start table.
 		// If the parent dataset table is not null, add columns from it
 		// as appropriate. Dimension tables get just the PK, and an
 		// FK linking them back. Subclass tables get all columns, plus
 		// the PK with FK link, plus all the relations we followed to
 		// get these columns.
 		TransformationUnit parentTU = null;
-		if (parentDSTable != null) {
+		if (secondStartTable == null && parentDSTable != null) {
 			parentTU = new SelectFromTable(parentDSTable);
 			dsTable.addTransformationUnit(parentTU);
 
@@ -854,22 +919,17 @@ public class DataSet extends Schema {
 				final ForeignKey dsTableFK = new ForeignKey(
 						(Column[]) dsTableFKCols.toArray(new Column[0]));
 				// Create only if not already exists.
-				if (!dsTable.getForeignKeys().contains(dsTableFK)) {
-					dsTable.getForeignKeys().add(dsTableFK);
-					// Link the child FK to the parent PK.
-					final Relation rel = new Relation(parentDSTablePK,
-							dsTableFK, Cardinality.MANY_A);
-					parentDSTablePK.getRelations().add(rel);
-					dsTableFK.getRelations().add(rel);
-				} else
-					unusedFKs.remove(dsTableFK);
+				dsTable.getForeignKeys().remove(dsTableFK);
+				dsTable.getForeignKeys().add(dsTableFK);
+				// Link the child FK to the parent PK.
+				final Relation rel = new Relation(parentDSTablePK, dsTableFK,
+						Cardinality.MANY_A);
+				parentDSTablePK.getRelations().add(rel);
+				dsTableFK.getRelations().add(rel);
+				unusedFKs.remove(dsTableFK);
 			} catch (final Throwable t) {
 				throw new BioMartError(t);
 			}
-
-			// Do a user-friendly rename.
-			if (dsTable.getTableRename() == null)
-				dsTable.setTableRename(realTable.getName());
 
 			// Copy all parent FKs and add to child, but WITHOUT
 			// relations. Subclasses only!
@@ -886,10 +946,9 @@ public class DataSet extends Schema {
 						final ForeignKey dsTableFK = new ForeignKey(
 								(Column[]) childFKCols.toArray(new Column[0]));
 						// Create only if not already exists.
-						if (!dsTable.getForeignKeys().contains(dsTableFK))
-							dsTable.getForeignKeys().add(dsTableFK);
-						else
-							unusedFKs.remove(dsTableFK);
+						dsTable.getForeignKeys().remove(dsTableFK);
+						dsTable.getForeignKeys().add(dsTableFK);
+						unusedFKs.remove(dsTableFK);
 					} catch (final Throwable t) {
 						throw new BioMartError(t);
 					}
@@ -932,13 +991,15 @@ public class DataSet extends Schema {
 		// values in the normal, subclass and dimension queues. We only
 		// want dimensions constructed if we are not already constructing
 		// a dimension ourselves.
-		this.processTable(parentTU, dsTable, dsTablePKCols, realTable, normalQ,
-				subclassQ, dimensionQ, sourceDSCols, sourceRelation,
+		this.processTable(parentTU, dsTable, dsTablePKCols,
+				secondStartTable != null ? secondStartTable : realTable,
+				normalQ, subclassQ, dimensionQ, sourceDSCols,
+				secondStartTable != null ? null : sourceRelation,
 				relationCount, subclassCount, !this.isPartitionTable()
 						&& !type.equals(DataSetTableType.DIMENSION),
 				Collections.EMPTY_LIST, Collections.EMPTY_LIST,
 				relationIteration, 0, unusedCols, uniqueBases,
-				skippedMainTables, relationTracker);
+				skippedMainTables, relationTracker, mergeTheseRelations);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -964,7 +1025,175 @@ public class DataSet extends Schema {
 					mergeSourceRelation, newRelationCounts, subclassCount,
 					makeDimensions, nameCols, nameColSuffixes, iteration,
 					i + 1, unusedCols, uniqueBases, skippedMainTables,
-					relationTracker);
+					relationTracker, mergeTheseRelations);
+		}
+
+		// If using second select, need to do skip initial Select and
+		// do a Join AFTER everything instead. That join must inherit
+		// columns by doing a parent join to last temp table. If any columns
+		// are involved in the join then add to where clause and DO NOT
+		// inherit them.
+		if (secondStartTable != null && parentDSTable != null) {
+			// Work out the last stage in the transform so far.
+			final JoinTable lastTU = (JoinTable) dsTable
+					.getTransformationUnits().get(
+							dsTable.getTransformationUnits().size() - 1);
+
+			// Make it an inner join.
+			sourceRelation.setAlternativeJoin(this, dsTable.getName(), false);
+
+			// Locate the columns on our own table which form that join.
+			final List dsTabJoinCols = new ArrayList();
+			for (int i = 0; i < sourceRelation.getManyKey().getColumns().length; i++)
+				dsTabJoinCols.add(lastTU.getDataSetColumnFor(sourceRelation
+						.getManyKey().getColumns()[i]));
+
+			// Set up a new join table. We join to parent
+			// using sourceDSCols from dsTabJoinCols.
+			final TransformationUnit parentJoin = new JoinTable(lastTU,
+					parentDSTable, dsTabJoinCols, new ForeignKey(
+							(DataSetColumn[]) sourceDSCols
+									.toArray(new DataSetColumn[0])),
+					sourceRelation, relationIteration);
+			dsTable.addTransformationUnit(parentJoin);
+
+			// Make a list to hold the child table's FK cols.
+			final List dsTableFKCols = new ArrayList();
+
+			// Get the primary key of the parent DS table.
+			final PrimaryKey parentDSTablePK = parentDSTable.getPrimaryKey();
+
+			// Loop over each column in the parent table. If this is
+			// a subclass table, add it. If it is a dimension table,
+			// only add it if it is in the PK or is in the first underlying
+			// key. In either case, if it is in the PK, add it both to the
+			// child PK and the child FK. Also inherit if it is involved
+			// in a restriction on the very first join.
+			final RestrictedRelationDefinition restrictDef = sourceRelation
+					.getRestrictRelation(this, dsTable.getName(), 0);
+			for (final Iterator i = parentDSTable.getColumns().values()
+					.iterator(); i.hasNext();) {
+				final DataSetColumn parentDSCol = (DataSetColumn) i.next();
+				boolean inRelationRestriction = false;
+				// As this is not a subclass table, we need to filter columns.
+				// Skip columns that are not in the primary key.
+				final boolean inPK = Arrays
+						.asList(parentDSTablePK.getColumns()).contains(
+								parentDSCol);
+				// If the column is in a restricted relation
+				// on the source relation, we need to inherit it.
+				if (restrictDef != null) {
+					DataSetColumn inhCol = parentDSCol;
+					while (inhCol instanceof InheritedColumn)
+						inhCol = ((InheritedColumn) inhCol)
+								.getInheritedColumn();
+					if (inhCol instanceof WrappedColumn) {
+						final Column wc = ((WrappedColumn) inhCol)
+								.getWrappedColumn();
+						inRelationRestriction = restrictDef.getLeftAliases()
+								.containsKey(wc)
+								|| restrictDef.getRightAliases()
+										.containsKey(wc);
+					}
+				}
+				// Inherit it?
+				if (!inPK && !inRelationRestriction)
+					continue;
+				// We don't inherit cols that we already have.
+				if (sourceDSCols.contains(parentDSCol)) {
+					// Add the column to the child's FK, but only if it was in
+					// the parent PK.
+					if (Arrays.asList(parentDSTablePK.getColumns()).contains(
+							parentDSCol)) {
+						final DataSetColumn existingFKCol = (DataSetColumn) dsTabJoinCols
+								.get(Arrays
+										.asList(parentDSTablePK.getColumns())
+										.indexOf(parentDSCol));
+						dsTableFKCols.add(existingFKCol);
+						try {
+							existingFKCol.setColumnRename(parentDSCol
+									.getModifiedName());
+						} catch (final ValidationException ve) {
+							// Should never happen.
+							throw new BioMartError(ve);
+						}
+					}
+					// On to the next one.
+					continue;
+				}
+				// Only unfiltered columns reach this point. Create a copy of
+				// the column.
+				final InheritedColumn dsCol;
+				if (!dsTable.getColumns().containsKey(
+						parentDSCol.getModifiedName())) {
+					dsCol = new InheritedColumn(dsTable, parentDSCol);
+					dsTable.getColumns().put(dsCol.getName(), dsCol);
+					// If any other col has modified name same as
+					// inherited col's modified name, then rename the
+					// other column to avoid clash.
+					for (final Iterator j = dsTable.getColumns().values()
+							.iterator(); j.hasNext();) {
+						final DataSetColumn cand = (DataSetColumn) j.next();
+						if (!(cand instanceof InheritedColumn)
+								&& cand.getModifiedName().equals(
+										dsCol.getModifiedName()))
+							try {
+								final DataSetColumn renameCol = inRelationRestriction ? cand
+										: dsCol;
+								if (renameCol.getModifiedName().endsWith(
+										Resources.get("keySuffix")))
+									renameCol
+											.setColumnRename(renameCol
+													.getModifiedName()
+													.substring(
+															0,
+															renameCol
+																	.getModifiedName()
+																	.indexOf(
+																			Resources
+																					.get("keySuffix")))
+													+ "_1"
+													+ Resources
+															.get("keySuffix"));
+								else
+									renameCol.setColumnRename(renameCol
+											.getModifiedName()
+											+ "_1");
+							} catch (final ValidationException ve) {
+								// Ouch!
+								throw new BioMartError(ve);
+							}
+					}
+				} else
+					dsCol = (InheritedColumn) dsTable.getColumns().get(
+							parentDSCol.getModifiedName());
+				unusedCols.remove(dsCol);
+				parentJoin.getNewColumnNameMap().put(parentDSCol, dsCol);
+				dsCol.setTransformationUnit(parentJoin);
+				uniqueBases.put(parentDSCol.getModifiedName(), new Integer(0));
+				// Add the column to the child's FK, but only if it was in
+				// the parent PK.
+				if (Arrays.asList(parentDSTablePK.getColumns()).contains(
+						parentDSCol))
+					dsTableFKCols.add(dsCol);
+			}
+
+			try {
+				// Create the child FK.
+				final ForeignKey dsTableFK = new ForeignKey(
+						(Column[]) dsTableFKCols.toArray(new Column[0]));
+				// Create only if not already exists.
+				dsTable.getForeignKeys().remove(dsTableFK);
+				dsTable.getForeignKeys().add(dsTableFK);
+				// Link the child FK to the parent PK.
+				final Relation rel = new Relation(parentDSTablePK, dsTableFK,
+						Cardinality.MANY_A);
+				parentDSTablePK.getRelations().add(rel);
+				dsTableFK.getRelations().add(rel);
+				unusedFKs.remove(dsTableFK);
+			} catch (final Throwable t) {
+				throw new BioMartError(t);
+			}
 		}
 
 		// Create the primary key on this table, but only if it has one.
@@ -1201,6 +1430,9 @@ public class DataSet extends Schema {
 	 * @param skippedMainTables
 	 *            the main tables to skip when processing subclasses and
 	 *            dimensions.
+	 * @param mergeTheseRelationsInstead
+	 *            ignore all other rules and merge these ones, and don't fire
+	 *            dimensions on any of these either.
 	 * @throws PartitionException
 	 *             if partitioning is in use and went wrong.
 	 */
@@ -1213,7 +1445,8 @@ public class DataSet extends Schema {
 			final List nameCols, final List nameColSuffixes,
 			final int relationIteration, int queuePos,
 			final Collection unusedCols, final Map uniqueBases,
-			final Collection skippedMainTables, final Map relationTracker)
+			final Collection skippedMainTables, final Map relationTracker,
+			final Collection mergeTheseRelationsInstead)
 			throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
 
@@ -1378,6 +1611,8 @@ public class DataSet extends Schema {
 			final boolean isLoopback = r.getLoopbackRelation(this, dsTable
 					.getName()) != null
 					&& r.getOneKey().equals(r.getKeyForTable(mergeTable));
+			final boolean isFirstLoopback = isLoopback
+					&& !dsTable.includedRelations.contains(r);
 
 			// Don't go back up relation just followed unless we are doing
 			// loopback. If we are doing loopback, do source relation last
@@ -1415,7 +1650,8 @@ public class DataSet extends Schema {
 			if (skippedMainTables.contains(r.getOtherKey(
 					r.getKeyForTable(mergeTable)).getTable())
 					&& !(r.isForceRelation(this, dsTable.getName()) || r
-							.isSubclassRelation(this)))
+							.isSubclassRelation(this))
+					&& !mergeTheseRelationsInstead.contains(r))
 				continue;
 
 			// Don't follow relations to masked schemas.
@@ -1453,13 +1689,13 @@ public class DataSet extends Schema {
 			boolean forceFollowRelation = false;
 
 			// Are we at the 1 end of a 1:M?
-			// If so, we may need to make a dimension, a subclass, or
-			// a concat column.
+			// If so, we may need to make a dimension, or a subclass.
 			if (r.isOneToMany() && r.getOneKey().getTable().equals(mergeTable)) {
 
 				// Subclass subclassed relations, if we are currently
 				// not building a dimension table.
-				if (r.isSubclassRelation(this)
+				if (!mergeTheseRelationsInstead.contains(r)
+						&& r.isSubclassRelation(this)
 						&& !dsTable.getType()
 								.equals(DataSetTableType.DIMENSION)) {
 					final List newSourceDSCols = new ArrayList();
@@ -1485,7 +1721,8 @@ public class DataSet extends Schema {
 				// relations, if we are not constructing a dimension
 				// table, and are currently intending to construct
 				// dimensions.
-				else if (makeDimensions
+				else if (!mergeTheseRelationsInstead.contains(r)
+						&& makeDimensions
 						&& !dsTable.getType()
 								.equals(DataSetTableType.DIMENSION)) {
 					final List newSourceDSCols = new ArrayList();
@@ -1509,7 +1746,8 @@ public class DataSet extends Schema {
 				}
 
 				// Forcibly follow forced or loopback or unrolled relations.
-				else if (r.getLoopbackRelation(this, dsTable.getName()) != null
+				else if (mergeTheseRelationsInstead.contains(r)
+						|| r.getLoopbackRelation(this, dsTable.getName()) != null
 						|| r.isForceRelation(this, dsTable.getName()))
 					forceFollowRelation = true;
 			}
@@ -1517,7 +1755,8 @@ public class DataSet extends Schema {
 			// Follow all others. Don't follow relations that are
 			// already in the subclass or dimension queues.
 			else
-				followRelation = true;
+				followRelation = mergeTheseRelationsInstead.isEmpty()
+						|| mergeTheseRelationsInstead.contains(r);
 
 			// If we follow a 1:1, and we are currently
 			// including dimensions, include them from the 1:1 as well.
@@ -1611,7 +1850,8 @@ public class DataSet extends Schema {
 					newSourceDSCols.add(tu.getDataSetColumnFor(sourceKey
 							.getColumns()[j]));
 				// Repeat queueing of relation N times if compounded.
-				int childCompounded = 1;
+				int defaultChildCompounded = isFirstLoopback ? 2 : 1;
+				int childCompounded = defaultChildCompounded;
 				// Don't compound if loopback and we just processed the M end.
 				final CompoundRelationDefinition def = r.getCompoundRelation(
 						this, dsTable.getName());
@@ -1632,7 +1872,7 @@ public class DataSet extends Schema {
 								&& dsTable.equals(this.getMainTable()))
 							usefulPart = this.partitionTableApplication;
 						if (usefulPart == null)
-							childCompounded = 1;
+							childCompounded = defaultChildCompounded;
 						else
 						// When partitioning second level, only fork at top.
 						if (usefulPart.getPartitionAppliedRows().size() > 1
@@ -1649,9 +1889,9 @@ public class DataSet extends Schema {
 								childCompounded = prow.getCompound();
 								nextNameCols.add(prow.getNamePartitionCol());
 							} else
-								childCompounded = 1;
+								childCompounded = defaultChildCompounded;
 						} else
-							childCompounded = 1;
+							childCompounded = defaultChildCompounded;
 					}
 				}
 				for (int k = 1; k <= childCompounded; k++) {
@@ -1935,6 +2175,8 @@ public class DataSet extends Schema {
 			tbl
 					.addPropertyChangeListener("restrictTable",
 							this.rebuildListener);
+			tbl.addPropertyChangeListener("transformStart",
+					this.rebuildListener);
 			tbl.getColumns().addPropertyChangeListener(this.rebuildListener);
 			tbl.getRelations().addPropertyChangeListener(this.rebuildListener);
 		}
@@ -3000,6 +3242,9 @@ public class DataSet extends Schema {
 				for (final Iterator j = sch.getTables().values().iterator(); j
 						.hasNext();) {
 					final Table tab = (Table) j.next();
+					tab.setTransformStart(copy, copyT.getName(),
+							tab.isTransformStart(this.getDataSet(), this
+									.getName()));
 					tab.setBigTable(copy, copyT.getName(), tab.getBigTable(this
 							.getDataSet(), this.getName()));
 					if (tab.getRestrictTable(this.getDataSet(), this.getName()) != null)

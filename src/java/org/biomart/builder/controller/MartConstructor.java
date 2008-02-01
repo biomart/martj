@@ -1125,31 +1125,45 @@ public interface MartConstructor {
 			// Make sure that we use the same partition on the RHS
 			// if it exists, otherwise use the default partition.
 			String rightSchema = null;
-			if (ljtu.getTable().getSchema() == templateSchema)
-				rightSchema = schemaPartition;
+			if (ljtu.getTable() instanceof DataSetTable)
+				rightSchema = this.datasetSchemaName;
 			else {
-				final Collection rightSchemaParts = ljtu.getTable()
-						.getSchemaPartitions();
-				if (!rightSchemaParts.isEmpty()) {
-					if (rightSchemaParts.contains(schemaPrefix))
-						rightSchema = (String) new InverseMap(ljtu.getTable()
-								.getSchema().getPartitions()).get(schemaPrefix);
-				} else
-					rightSchema = ljtu.getTable().getSchema()
-							.getDataLinkSchema();
+				if (ljtu.getTable().getSchema() == templateSchema)
+					rightSchema = schemaPartition;
+				else {
+					final Collection rightSchemaParts = ljtu.getTable()
+							.getSchemaPartitions();
+					if (!rightSchemaParts.isEmpty()) {
+						if (rightSchemaParts.contains(schemaPrefix))
+							rightSchema = (String) new InverseMap(ljtu
+									.getTable().getSchema().getPartitions())
+									.get(schemaPrefix);
+					} else
+						rightSchema = ljtu.getTable().getSchema()
+								.getDataLinkSchema();
+				}
 			}
 			if (rightSchema == null) {
 				droppedCols.addAll(ljtu.getNewColumnNameMap().values());
 				return false;
 			}
 
-			final String rightTable = ljtu.getTable().getName();
+			final String rightTable = ljtu.getTable() instanceof DataSetTable ? this
+					.getFinalName(schemaPrefix, dsPta, dmPta,
+							(DataSetTable) ljtu.getTable())
+					: ljtu.getTable().getName();
 			final List leftJoinCols = new ArrayList();
 			final List rightJoinCols = new ArrayList();
 			for (int i = 0; i < ljtu.getSchemaRelation().getOtherKey(
-					ljtu.getSchemaSourceKey()).getColumns().length; i++)
-				rightJoinCols.add(ljtu.getSchemaRelation().getOtherKey(
-						ljtu.getSchemaSourceKey()).getColumns()[i].getName());
+					ljtu.getSchemaSourceKey()).getColumns().length; i++) {
+				final Column rightCol = ljtu.getSchemaRelation().getOtherKey(
+						ljtu.getSchemaSourceKey()).getColumns()[i];
+				if (ljtu.getTable() instanceof DataSetTable) 
+					rightJoinCols.add(((DataSetColumn)ljtu.getSchemaSourceKey().getColumns()[i])
+							.getPartitionedName());
+				else
+					rightJoinCols.add(rightCol.getName());
+			}
 			final Map selectCols = new HashMap();
 			// Populate vars.
 			for (final Iterator k = ljtu.getSourceDataSetColumns().iterator(); k
@@ -1169,9 +1183,14 @@ public interface MartConstructor {
 				if (pta != null)
 					col.fixPartitionedName(pta);
 				if (col.existsForPartition(schemaPrefix)
-						&& col.isRequiredInterim())
-					selectCols.put(((Column) entry.getKey()).getName(), col
-							.getPartitionedName());
+						&& col.isRequiredInterim()) {
+					if (entry.getKey() instanceof DataSetColumn)
+						selectCols.put(((DataSetColumn) entry.getKey())
+								.getModifiedName(), col.getPartitionedName());
+					else
+						selectCols.put(((Column) entry.getKey()).getName(), col
+								.getPartitionedName());
+				}
 			}
 			// Index the left-hand side of the join.
 			final Index index = new Index(this.datasetSchemaName,
@@ -1212,7 +1231,8 @@ public interface MartConstructor {
 				action.setRelationRestriction(def);
 			}
 			// If this is a loopback from the one end, add the optional
-			// differentiation column.
+			// differentiation column only if we have previously
+			// traversed this same relation.
 			final boolean loopbackOneEnd = ljtu.getSchemaRelation()
 					.getLoopbackRelation(dataset, dsTable.getName()) != null
 					&& ljtu.getSchemaSourceKey().equals(
@@ -1224,12 +1244,26 @@ public interface MartConstructor {
 				if (diffCol != null) {
 					// Identify the differentiation column from the
 					// previous unit's selected columns.
-					final String prevDsColName = ljtu.getPreviousUnit()
-							.getDataSetColumnFor(diffCol).getPartitionedName();
-					// Add both to the transformation unit to become
-					// a new restriction later.
-					action.setLoopbackDiffSource(prevDsColName);
-					action.setLoopbackDiffTarget(diffCol.getName());
+					DataSetColumn prevDSCol = ljtu.getPreviousUnit()
+							.getDataSetColumnFor(diffCol);
+					if (prevDSCol == null
+							&& ljtu.getSchemaRelationIteration() > 0) {
+						// Hunt for it in alternative fork.
+						for (final Iterator i = dsTable
+								.getTransformationUnits().iterator(); i
+								.hasNext()
+								&& prevDSCol == null; i.next())
+							prevDSCol = ((TransformationUnit) i.next())
+									.getDataSetColumnFor(diffCol);
+					}
+					if (prevDSCol != null) {
+						final String prevDsColName = prevDSCol
+								.getPartitionedName();
+						// Add both to the transformation unit to become
+						// a new restriction later.
+						action.setLoopbackDiffSource(prevDsColName);
+						action.setLoopbackDiffTarget(diffCol.getName());
+					}
 				}
 			}
 			this.issueAction(action);

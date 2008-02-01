@@ -134,11 +134,6 @@ public abstract class TransformationUnit {
 			this.table = table;
 		}
 
-		public boolean appliesToPartition(final String schemaPrefix) {
-			return this.table.existsForPartition(schemaPrefix)
-					&& super.appliesToPartition(schemaPrefix);
-		}
-
 		/**
 		 * Instantiate a unit that selects from the given schema table.
 		 * 
@@ -146,7 +141,13 @@ public abstract class TransformationUnit {
 		 *            the table this unit selects from.
 		 */
 		public SelectFromTable(final Table table) {
-			this(null, table);
+			super(null);
+			this.table = table;
+		}
+
+		public boolean appliesToPartition(final String schemaPrefix) {
+			return this.table.existsForPartition(schemaPrefix)
+					&& super.appliesToPartition(schemaPrefix);
 		}
 
 		/**
