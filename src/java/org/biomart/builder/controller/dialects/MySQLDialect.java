@@ -937,7 +937,7 @@ public class MySQLDialect extends DatabaseDialect {
 		sqlFrom.append(" from ");
 		final StringBuffer sqlWhere = new StringBuffer();
 		sqlWhere.append(" where ");
-		char currSuffix = 'a' - 1;
+		int currSuffix = 0;
 		final Map prevSuffixes = new HashMap();
 		for (final Iterator i = ds.getMainTable().getTransformationUnits()
 				.iterator(); i.hasNext()
@@ -960,21 +960,21 @@ public class MySQLDialect extends DatabaseDialect {
 				sqlFrom.append(selSch);
 				sqlFrom.append('.');
 				sqlFrom.append(selTab.getName());
-				sqlFrom.append(" as ");
+				sqlFrom.append(" as a");
 				sqlFrom.append(++currSuffix);
-				prevSuffixes.put(tu, new Character(currSuffix));
+				prevSuffixes.put(tu, new Integer(currSuffix));
 				if (tu instanceof JoinTable) {
 					final JoinTable jtu = (JoinTable) tu;
-					final char lhs;
-					final char rhs;
+					final int lhs;
+					final int rhs;
 					final TransformationUnit prevTu = jtu.getPreviousUnit();
 					if (prevKey.equals(jtu.getSchemaRelation().getFirstKey())) {
-						lhs = ((Character) prevSuffixes.get(prevTu))
-								.charValue();
+						lhs = ((Integer) prevSuffixes.get(prevTu))
+								.intValue();
 						rhs = currSuffix;
 					} else {
-						rhs = ((Character) prevSuffixes.get(prevTu))
-								.charValue();
+						rhs = ((Integer) prevSuffixes.get(prevTu))
+								.intValue();
 						lhs = currSuffix;
 					}
 					// Append join info to where clause.
@@ -983,12 +983,14 @@ public class MySQLDialect extends DatabaseDialect {
 					for (int k = 0; k < prevKey.getColumns().length; k++) {
 						if (k > 0)
 							sqlWhere.append(" and ");
+						sqlWhere.append('a');
 						sqlWhere.append(prevKey.equals(jtu.getSchemaRelation()
 								.getFirstKey()) ? lhs : rhs);
 						sqlWhere.append('.');
 						sqlWhere.append(((Column) prevKey.getColumns()[k])
 								.getName());
 						sqlWhere.append('=');
+						sqlWhere.append('a');
 						sqlWhere.append(prevKey.equals(jtu.getSchemaRelation()
 								.getFirstKey()) ? rhs : lhs);
 						sqlWhere.append('.');
@@ -1004,7 +1006,7 @@ public class MySQLDialect extends DatabaseDialect {
 					if (rr != null) {
 						sqlWhere.append(" and ");
 						sqlWhere.append(rr.getSubstitutedExpression(
-								schemaPrefix, "" + lhs, "" + rhs, false, false,
+								schemaPrefix, "a" + lhs, "a" + rhs, false, false,
 								jtu));
 					}
 				}
@@ -1015,7 +1017,7 @@ public class MySQLDialect extends DatabaseDialect {
 					if (!sqlWhere.toString().equals(" where "))
 						sqlWhere.append(" and ");
 					sqlWhere.append(rt.getSubstitutedExpression(schemaPrefix,
-							"" + currSuffix));
+							"a" + currSuffix));
 				}
 				// If any unit columns match selected columns,
 				// add them to the select statement and their
@@ -1029,6 +1031,7 @@ public class MySQLDialect extends DatabaseDialect {
 						final Column col = (Column) entry.getKey();
 						if (nextCol > 1)
 							sqlSel.append(',');
+						sqlSel.append('a');
 						sqlSel.append(currSuffix);
 						sqlSel.append('.');
 						sqlSel.append(col.getName());
