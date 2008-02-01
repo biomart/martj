@@ -161,9 +161,10 @@ public class DataSetContext extends SchemaContext {
 				tblcomp.setBackground(TableComponent.BACKGROUND_COLOUR);
 
 			// Update dotted line (partitioned).
-			tblcomp.setRestricted(tbl.getPartitionTableApplication() != null
-					|| tableType.equals(DataSetTableType.MAIN)
-					&& this.getDataSet().getPartitionTableApplication() != null);
+			tblcomp
+					.setRestricted(tbl.getPartitionTableApplication() != null
+							|| tableType.equals(DataSetTableType.MAIN)
+							&& this.getDataSet().getPartitionTableApplication() != null);
 
 			tblcomp.setRenameable(true);
 			tblcomp.setSelectable(true);
@@ -505,6 +506,24 @@ public class DataSetContext extends SchemaContext {
 			if (table.isDistinctTable())
 				distinct.setSelected(true);
 
+			contextMenu.addSeparator();
+
+			// The table can be loopback wizarded by using this option.
+			final JMenuItem loopbackWiz = new JMenuItem(Resources
+					.get("loopbackWizardTitle"));
+			loopbackWiz.setMnemonic(Resources.get("loopbackWizardMnemonic")
+					.charAt(0));
+			loopbackWiz.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestLoopbackWizard(
+									DataSetContext.this.getDataSet(), table);
+				}
+			});
+			contextMenu.add(loopbackWiz);
+			if (isUnrolled || isMerged || isMasked)
+				loopbackWiz.setEnabled(false);
+
 			// Dimension tables have their own options.
 			if (tableType.equals(DataSetTableType.DIMENSION)) {
 
@@ -584,12 +603,16 @@ public class DataSetContext extends SchemaContext {
 						"unrolledDimensionMnemonic").charAt(0));
 				unrolledDM.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestUnrolledDimension(
 										DataSetContext.this.getDataSet(), table);
-						unrolledDM.setSelected(table.getFocusRelation()
-								.getUnrolledRelation(
-										DataSetContext.this.getDataSet()) != null);
+						unrolledDM
+								.setSelected(table.getFocusRelation()
+										.getUnrolledRelation(
+												DataSetContext.this
+														.getDataSet()) != null);
 					}
 				});
 				contextMenu.add(unrolledDM);
@@ -624,12 +647,16 @@ public class DataSetContext extends SchemaContext {
 						.get("replicateDimensionMnemonic").charAt(0));
 				compound.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestReplicateDimension(
 										DataSetContext.this.getDataSet(), table);
-						compound.setSelected(table.getFocusRelation()
-								.getCompoundRelation(
-										DataSetContext.this.getDataSet()) != null);
+						compound
+								.setSelected(table.getFocusRelation()
+										.getCompoundRelation(
+												DataSetContext.this
+														.getDataSet()) != null);
 					}
 				});
 				contextMenu.add(compound);
@@ -706,12 +733,16 @@ public class DataSetContext extends SchemaContext {
 						.charAt(0));
 				compound.addActionListener(new ActionListener() {
 					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
 								.requestRecurseSubclass(
 										DataSetContext.this.getDataSet(), table);
-						compound.setSelected(table.getFocusRelation()
-								.getCompoundRelation(
-										DataSetContext.this.getDataSet()) != null);
+						compound
+								.setSelected(table.getFocusRelation()
+										.getCompoundRelation(
+												DataSetContext.this
+														.getDataSet()) != null);
 					}
 				});
 				contextMenu.add(compound);

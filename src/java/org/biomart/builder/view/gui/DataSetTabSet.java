@@ -72,6 +72,7 @@ import org.biomart.builder.view.gui.dialogs.ExplainDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.ExplainTableDialog;
 import org.biomart.builder.view.gui.dialogs.ExpressionColumnDialog;
 import org.biomart.builder.view.gui.dialogs.LoopbackRelationDialog;
+import org.biomart.builder.view.gui.dialogs.LoopbackWizardDialog;
 import org.biomart.builder.view.gui.dialogs.PartitionTableDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
@@ -762,6 +763,45 @@ public class DataSetTabSet extends JTabbedPane {
 				}
 			}
 		}.start();
+	}
+
+	/**
+	 * Requests that a loopback wizard be opened.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dim
+	 *            the dimension to work with.
+	 */
+	public void requestLoopbackWizard(final DataSet ds, final DataSetTable dim) {
+		LoopbackWizardDialog dialog = null;
+		try {
+			// Ask user for info.
+			dialog = new LoopbackWizardDialog(dim);
+			dialog.setVisible(true);
+			// Cancelled?
+			if (dialog.isCancelled())
+				return;
+			// Get user input.
+			final Table loopbackTable = dialog.getLoopbackTable();
+			final Column diffCol = dialog.getDiffColumn();
+			// Make the changes.
+			new LongProcess() {
+				public void run() throws Exception {
+					try {
+						Transaction.start(false);
+						dim.runLoopbackWizard(loopbackTable, diffCol);
+					} finally {
+						Transaction.end();
+					}
+				}
+			}.start();
+		} catch (final Throwable t) {
+			StackTrace.showStackTrace(t);
+		} finally {
+			if (dialog != null)
+				dialog.dispose();
+		}
 	}
 
 	/**

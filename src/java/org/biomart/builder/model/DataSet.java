@@ -3303,6 +3303,73 @@ public class DataSet extends Schema {
 		}
 
 		/**
+		 * Run the loopback suggestion wizard code - will modify all loopback
+		 * and compound settings on this table.
+		 * 
+		 * @param loopbackTable
+		 *            the table to loopback from.
+		 * @param diffCol
+		 *            the column to differentiate by.
+		 * @throws ValidationException
+		 *             if it goes wrong.
+		 */
+		public void runLoopbackWizard(final Table loopbackTable,
+				final Column diffCol) throws ValidationException {
+			// FIXME This will not work properly on a table
+			// that is using an alternative transformStart.
+			// Results will be unpredictable. This is because
+			// it cannot easily tell which units come
+			// before the loopback relation and which after,
+			// meaning that it doesn't know which ones need
+			// to be compounded.
+			boolean compound = true;
+			final Set compoundedRels = new HashSet();
+			for (final Iterator i = this.getTransformationUnits().iterator(); i
+					.hasNext();) {
+				final TransformationUnit tu = (TransformationUnit) i.next();
+				if (tu instanceof JoinTable) {
+					final JoinTable jt = (JoinTable) tu;
+					final Relation rel = (Relation) jt.getSchemaRelation();
+					// Only do the thing on the first occurrence.
+					if (compound && loopbackTable.equals(jt.getTable())) {
+						// Assign new loopback to first instance
+						// of selected table.
+						rel.setLoopbackRelation(this.getDataSet(), this
+								.getName(), diffCol);
+						// Clear any compound setting on it.
+						rel.setCompoundRelation(this.getDataSet(), this
+								.getName(), null);
+						compound = false;
+					} else {
+						// Remove existing loopback from
+						// all before start table.
+						rel.setLoopbackRelation(this.getDataSet(), this
+								.getName(), null);
+						// Mask the source relation to prevent it
+						// from getting included twice.
+						if (rel.equals(this.getFocusRelation()))
+							rel.setMaskRelation(this.getDataSet(), this
+									.getName(), true);
+						// Assign new compound to all except first
+						// join AND except those to which we explicitly
+						// added compound settings.
+						else {
+							if (compound)
+								compoundedRels.add(rel);
+							rel
+									.setCompoundRelation(
+											this.getDataSet(),
+											this.getName(),
+											compoundedRels.contains(rel) ? new CompoundRelationDefinition(
+													2, false)
+													: null);
+						}
+					}
+				}
+			}
+		}
+
+		/**
 		 * Accept changes associated with columns from the target table. If the
 		 * target table is null, all changes are accepted. All affected columns
 		 * have their visible modified flag reset.
