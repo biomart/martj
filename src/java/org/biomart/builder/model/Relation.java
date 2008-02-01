@@ -171,10 +171,14 @@ public class Relation implements Comparable, TransactionListener {
 		// it already has a relation to this table (it will have
 		// only one due to previous check).
 		if (!firstKey.getTable().equals(secondKey.getTable())
-				&& firstKey.getRelations().size() == 1
-				&& ((Relation) firstKey.getRelations().iterator().next())
+				&& ((firstKey instanceof ForeignKey
+						&& firstKey.getRelations().size() == 1 && ((Relation) firstKey
+						.getRelations().iterator().next())
 						.getOtherKey(firstKey).getTable().equals(
-								firstKey.getTable()))
+								firstKey.getTable())) || (secondKey instanceof ForeignKey
+						&& secondKey.getRelations().size() == 1 && ((Relation) secondKey
+						.getRelations().iterator().next()).getOtherKey(
+						secondKey).getTable().equals(secondKey.getTable()))))
 			throw new AssociationException(Resources
 					.get("fkToThisOnceOrOthers"));
 
