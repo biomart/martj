@@ -1,4 +1,4 @@
-package org.biomart.configurator;
+package org.biomart.configurator.view;
 
 
 public class Initializer extends Root {
