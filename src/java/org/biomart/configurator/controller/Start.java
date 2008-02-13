@@ -12,8 +12,10 @@ public class Start {
     private mainGUI  m_view;
     
     //========================================================== constructor
-    /** Constructor */
-    Start(Initializer model, mainGUI view) {
+    /** Constructor 
+     * @param model 
+     * @param view */
+    public Start(Initializer model, mainGUI view) {
         m_model = model;
         m_view  = view;
         

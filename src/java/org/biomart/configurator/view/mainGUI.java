@@ -50,22 +50,38 @@ public class mainGUI extends JFrame{
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
     
+    /**
+     * 
+     */
+
     public void reset() {
         m_totalTf.setText(INITIAL_VALUE);
     }
     
+    /**
+     * @return
+     */
     public String getUserInput() {
         return m_userInputTf.getText();
     }
     
+    /**
+     * @param newTotal
+     */
     public void setTotal(String newTotal) {
         m_totalTf.setText(newTotal);
     }
     
+    /**
+     * @param errMessage
+     */
     public void showError(String errMessage) {
         JOptionPane.showMessageDialog(this, errMessage);
     }
     
+    /**
+     * @param mal
+     */
     public void addMultiplyListener(ActionListener mal) {
         m_multiplyBtn.addActionListener(mal);
     }
