@@ -68,7 +68,7 @@ public class Start {
         mainGUI view = new mainGUI(model);
         Start controller = new Start(model, view);
         
-        view.setVisible(true);
+        //view.setVisible(true);
 	}
     
 
