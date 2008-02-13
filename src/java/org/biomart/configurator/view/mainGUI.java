@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import org.biomart.configurator.model.Initializer;
 import org.biomart.configurator.view.ToolBarMenu;
+import org.biomart.configurator.view.SplitPanel;
 
 public class mainGUI {
 
@@ -14,6 +15,7 @@ public class mainGUI {
     
     //... Components
     private JFrame m_frame = new JFrame("Mart Configurator - a definitive answer to all the problems in modern science");
+    
     private JTextField m_userInputTf = new JTextField(5);
     private JTextField m_totalTf     = new JTextField(20);
     private JButton    m_multiplyBtn = new JButton("Multiply");
@@ -21,6 +23,7 @@ public class mainGUI {
     
     private Initializer modelObj;
     private ToolBarMenu menuBarObj = new ToolBarMenu();
+    private SplitPanel splitPanelObj = new SplitPanel();
     
     //======================================================= constructor
     /** Constructor */
@@ -29,31 +32,16 @@ public class mainGUI {
         modelObj = model;
         modelObj.setValue(INITIAL_VALUE);
         
-        //... Initialize components
-        m_totalTf.setText(modelObj.getValue());
-        m_totalTf.setEditable(false);
-        
         //2. Optional: What happens when the frame closes?
         m_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //3. Create components and put them in the frame.
         //...create emptyLabel...
        
-        //m_frame.getRootPane().add(m_multiplyBtn);
         m_frame.setJMenuBar(menuBarObj.getMenuBar());
-/*        JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.setOpaque(true);
+       
+        m_frame.getContentPane().add(splitPanelObj.getSplitPanel());
 
-        //Create a scrolled text area.
-        JTextArea output = new JTextArea(5, 30);
-        output.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(output);
-
-        //Add the text area to the content pane.
-        contentPane.add(scrollPane, BorderLayout.CENTER);
-        
-		m_frame.setContentPane(contentPane);
-	*/
         // Size the frame.
         m_frame.setSize(800,600);
 
