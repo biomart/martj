@@ -38,8 +38,12 @@ public class mainGUI {
         //3. Create components and put them in the frame.
         //...create emptyLabel...
        
+        // adding menuBar
         m_frame.setJMenuBar(menuBarObj.getMenuBar());
        
+        // adding split panel
+        splitPanelObj.addTreeView();
+        splitPanelObj.addPropertEditor();
         m_frame.getContentPane().add(splitPanelObj.getSplitPanel());
 
         // Size the frame.
