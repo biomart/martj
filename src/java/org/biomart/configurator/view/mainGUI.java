@@ -3,6 +3,11 @@ package org.biomart.configurator.view;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
 import org.biomart.configurator.model.Initializer;
 import org.biomart.configurator.view.ToolBarMenu;
 import org.biomart.configurator.view.SplitPanel;
@@ -48,7 +53,7 @@ public class mainGUI {
 
         // Size the frame.
         m_frame.setSize(800,600);
-
+        m_frame.setIconImage(new ImageIcon("/homes/syed/Desktop/martj/src/java/org/biomart/configurator/view/biomarticon.gif").getImage());
         // Show it.
         m_frame.setVisible(true);
         
