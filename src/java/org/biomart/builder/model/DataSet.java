@@ -916,16 +916,24 @@ public class DataSet extends Schema {
 
 			try {
 				// Create the child FK.
-				final ForeignKey dsTableFK = new ForeignKey(
-						(Column[]) dsTableFKCols.toArray(new Column[0]));
+				ForeignKey dsTableFK = new ForeignKey((Column[]) dsTableFKCols
+						.toArray(new Column[0]));
+
 				// Create only if not already exists.
-				dsTable.getForeignKeys().remove(dsTableFK);
-				dsTable.getForeignKeys().add(dsTableFK);
-				// Link the child FK to the parent PK.
-				final Relation rel = new Relation(parentDSTablePK, dsTableFK,
-						Cardinality.MANY_A);
-				parentDSTablePK.getRelations().add(rel);
-				dsTableFK.getRelations().add(rel);
+				for (final Iterator i = dsTable.getForeignKeys().iterator(); i
+						.hasNext();) {
+					final ForeignKey cand = (ForeignKey) i.next();
+					if (cand.equals(dsTableFK))
+						dsTableFK = cand;
+				}
+				if (!dsTable.getForeignKeys().contains(dsTableFK)) {
+					dsTable.getForeignKeys().add(dsTableFK);
+					// Link the child FK to the parent PK.
+					final Relation rel = new Relation(parentDSTablePK,
+							dsTableFK, Cardinality.MANY_A);
+					parentDSTablePK.getRelations().add(rel);
+					dsTableFK.getRelations().add(rel);
+				}
 				unusedFKs.remove(dsTableFK);
 			} catch (final Throwable t) {
 				throw new BioMartError(t);
@@ -943,11 +951,18 @@ public class DataSet extends Schema {
 								parentFK.getColumns()[j]));
 					try {
 						// Create the child FK.
-						final ForeignKey dsTableFK = new ForeignKey(
+						ForeignKey dsTableFK = new ForeignKey(
 								(Column[]) childFKCols.toArray(new Column[0]));
+
 						// Create only if not already exists.
-						dsTable.getForeignKeys().remove(dsTableFK);
-						dsTable.getForeignKeys().add(dsTableFK);
+						for (final Iterator j = dsTable.getForeignKeys()
+								.iterator(); j.hasNext();) {
+							final ForeignKey cand = (ForeignKey) j.next();
+							if (cand.equals(dsTableFK))
+								dsTableFK = cand;
+						}
+						if (dsTable.getForeignKeys().contains(dsTableFK))
+							dsTable.getForeignKeys().add(dsTableFK);
 						unusedFKs.remove(dsTableFK);
 					} catch (final Throwable t) {
 						throw new BioMartError(t);
@@ -1194,16 +1209,23 @@ public class DataSet extends Schema {
 
 			try {
 				// Create the child FK.
-				final ForeignKey dsTableFK = new ForeignKey(
-						(Column[]) dsTableFKCols.toArray(new Column[0]));
+				ForeignKey dsTableFK = new ForeignKey((Column[]) dsTableFKCols
+						.toArray(new Column[0]));
 				// Create only if not already exists.
-				dsTable.getForeignKeys().remove(dsTableFK);
-				dsTable.getForeignKeys().add(dsTableFK);
-				// Link the child FK to the parent PK.
-				final Relation rel = new Relation(parentDSTablePK, dsTableFK,
-						Cardinality.MANY_A);
-				parentDSTablePK.getRelations().add(rel);
-				dsTableFK.getRelations().add(rel);
+				for (final Iterator i = dsTable.getForeignKeys().iterator(); i
+						.hasNext();) {
+					final ForeignKey cand = (ForeignKey) i.next();
+					if (cand.equals(dsTableFK))
+						dsTableFK = cand;
+				}
+				if (!dsTable.getForeignKeys().contains(dsTableFK)) {
+					dsTable.getForeignKeys().add(dsTableFK);
+					// Link the child FK to the parent PK.
+					final Relation rel = new Relation(parentDSTablePK,
+							dsTableFK, Cardinality.MANY_A);
+					parentDSTablePK.getRelations().add(rel);
+					dsTableFK.getRelations().add(rel);
+				}
 				unusedFKs.remove(dsTableFK);
 			} catch (final Throwable t) {
 				throw new BioMartError(t);
