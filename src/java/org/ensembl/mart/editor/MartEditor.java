@@ -32,7 +32,7 @@ import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -922,20 +922,20 @@ System.out.println ("getting driver "+ driver);
 			  return;
 			}
 
-	  HashMap importOptions = dbutils.getImportOptions();
-	  SortedSet names = new TreeSet(importOptions.keySet());
+	  Collection importOptions = dbutils.getImportOptions();
+	  SortedSet names = new TreeSet(importOptions);
 	  String[] options = new String[names.size()];
 	  names.toArray(options);
 	  
 	  if (options.length == 0){
-		JOptionPane.showMessageDialog(this, "No dataset configurations in this database", "ERROR", 0);
+		JOptionPane.showMessageDialog(this, "No template configurations in this database", "ERROR", 0);
 				return;
 	  }
 	  String option =
 		(String) JOptionPane.showInputDialog(
 		  null,
 		  "Choose one",
-		  "Dataset config",
+		  "Template config",
 		  JOptionPane.INFORMATION_MESSAGE,
 		  null,
 		  options,
@@ -944,36 +944,8 @@ System.out.println ("getting driver "+ driver);
 	  if (option == null)
 		return;
 
-	  DatasetConfigTreeWidget frame = null;
-	  if (importOptions.get(option).equals("0")){
-	  		//don't have a template yet so generate one from the datasetconfig
-	  		//System.out.println("DEALING WITH NON-TEMPLATED CONFIG "+option);
-
-			String[] datasetIDs = dbutils.getAllDatasetIDsForDataset(user,option);
-			String datasetID;
-			if (datasetIDs.length == 1)
-		  		datasetID = datasetIDs[0];
-			else {
-		  		datasetID =
-				(String) JOptionPane.showInputDialog(
-			  		null,
-			  		"Choose one",
-			  		"Dataset ID",
-			  		JOptionPane.INFORMATION_MESSAGE,
-			  		null,
-			  		datasetIDs,
-			  		datasetIDs[0]);
-			}
-
-			if (datasetID == null)
-		  		return;
+	  DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, null, null, databaseDialog.getSchema(), option,null);
 	
-			frame = new DatasetConfigTreeWidget(null, this, null, user, option, datasetID, 
-		  		databaseDialog.getSchema(),null,"1");
-	  }
-	  else{	
-	      frame = new DatasetConfigTreeWidget(null, this, null, user, null, null, databaseDialog.getSchema(), option,null);
-	  }
 	      
 	  frame.setVisible(true);
 	  desktop.add(frame);
@@ -983,7 +955,7 @@ System.out.println ("getting driver "+ driver);
 	  catch (java.beans.PropertyVetoException e) {
 	  }
 	} catch (ConfigurationException e) {
-	  JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Missing  meta_configuration tables?" +
+	  JOptionPane.showMessageDialog(this, "No templates available for import - is this a BioMart compatible schema? Missing  meta_configuration tables?" +
 			" Empty meta_configuration tables or lack of write access?", "ERROR", 0);
 	} finally {
 	  enableCursor();

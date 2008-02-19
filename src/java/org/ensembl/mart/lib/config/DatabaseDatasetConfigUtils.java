@@ -34,6 +34,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -3807,7 +3808,7 @@ public boolean naiveExportWouldOverrideExistingConfig(
    * @return HashMap keyed on config name with value = 1 if a template, 0 if just a datasetConfig
    * @throws ConfigurationException for all underlying SQL Exceptions
    */
-  public HashMap getImportOptions() throws ConfigurationException {
+  public Collection getImportOptions() throws ConfigurationException {
 	      
 	Connection conn = null;
 	
@@ -3815,29 +3816,23 @@ public boolean naiveExportWouldOverrideExistingConfig(
 		  this.setReadonly(false);//needed to make sure template tables are created if missing
 		  this.createMetaTables("");
 		  this.setReadonly(true);
-		  final HashMap importOptions = new HashMap();
+		  final HashSet importOptions = new HashSet();
 		  String sql = null;
 		  if ("oracle".equals(this.dsource.getDatabaseType()))
-			sql = "SELECT DISTINCT decode(t.template,null,m.dataset,t.template) AS display_label," +
-						"decode(t.template,null,0,1) AS flag " +
-						"FROM "+this.getSchema()[0]+"."+this.BASEMETATABLE+" m LEFT JOIN " +
-						this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
+			sql = "SELECT DISTINCT template " +
+						"FROM "+this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE;
 		else if ("postgres".equals(this.dsource.getDatabaseType()))
-			sql = "SELECT DISTINCT case t.template when null then m.dataset else t.template end AS display_label," +
-					"case t.template when null then 0 else 1 end AS flag " +
-					"FROM "+this.getSchema()[0]+"."+this.BASEMETATABLE+" m LEFT JOIN " +
-					this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
+			sql = "SELECT DISTINCT template " +
+					"FROM "+this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE;
 		else
-			sql = "SELECT DISTINCT IF (t.template IS NOT NULL, t.template, m.dataset) AS display_label," +
-		  	                           "IF (t.template IS NOT NULL, 1, 0) AS flag " +
-		  	                           "FROM "+this.getSchema()[0]+"."+this.BASEMETATABLE+" m LEFT JOIN " +
-										this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE+" t ON m.dataset_id_key=t.dataset_id_key";
+			sql = "SELECT DISTINCT template " +
+		  	                           "FROM "+this.getSchema()[0]+"."+this.MARTTEMPLATEMAINTABLE;
 		  
 		  conn = this.dsource.getConnection();
 		  final PreparedStatement ps = conn.prepareStatement(sql);
 		  final ResultSet rs = ps.executeQuery();
 		  while (rs.next())
-			importOptions.put(rs.getString(1),rs.getString(2));
+			importOptions.add(rs.getString(1));
 		  conn.close();
 		  return importOptions;
 	}
