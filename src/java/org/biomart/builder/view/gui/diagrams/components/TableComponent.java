@@ -204,7 +204,7 @@ public class TableComponent extends BoxShapedComponent {
 		this.getSubComponents().clear();
 
 		// Add the table name label.
-		final JTextField name = new JTextField() {
+		final JTextField name = new JTextField()/* {
 			private static final long serialVersionUID = 1L;
 
 			private Color opaqueBackground;
@@ -230,7 +230,7 @@ public class TableComponent extends BoxShapedComponent {
 					opaqueBackground = color;
 				}
 			}
-		};
+		}*/;
 		name.setFont(TableComponent.BOLD_FONT);
 		this.setRenameTextField(name);
 		this.add(name, this.constraints);

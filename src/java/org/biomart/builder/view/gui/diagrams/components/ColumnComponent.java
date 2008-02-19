@@ -137,7 +137,7 @@ public class ColumnComponent extends BoxShapedComponent {
 
 	protected void doRecalculateDiagramComponent() {
 		// Add the label for the column name.
-		final JTextField name = new JTextField() {
+		final JTextField name = new JTextField()/* {
 			private static final long serialVersionUID = 1L;
 
 			private Color opaqueBackground;
@@ -163,7 +163,7 @@ public class ColumnComponent extends BoxShapedComponent {
 					opaqueBackground = color;
 				}
 			}
-		};
+		*/;
 		name.setFont(ColumnComponent.NORMAL_FONT);
 		this.setRenameTextField(name);
 		this.layout.setConstraints(name, this.constraints);

@@ -240,7 +240,7 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.getSubComponents().clear();
 
 		// Add the label for the schema name,
-		final JTextField name = new JTextField() {
+		final JTextField name = new JTextField()/* {
 			private static final long serialVersionUID = 1L;
 
 			private Color opaqueBackground;
@@ -266,7 +266,7 @@ public class SchemaComponent extends BoxShapedComponent {
 					opaqueBackground = color;
 				}
 			}
-		};
+		}*/;
 		name.setFont(SchemaComponent.BOLD_FONT);
 		this.setRenameTextField(name);
 		this.layout.setConstraints(name, this.constraints);
