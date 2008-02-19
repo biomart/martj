@@ -241,6 +241,17 @@ public class Mart implements TransactionListener {
 		this.datasetCache = new HashSet();
 		this.datasets.addPropertyChangeListener(this.datasetCacheBuilder);
 	}
+	
+	/**
+	 * Obtain the next unique ID to use for a schema.
+	 * @return the next ID.
+	 */
+	public int getNextUniqueId() {
+		int x = 0;
+		for (final Iterator i = this.schemaCache.iterator(); i.hasNext(); )
+			x = Math.max(x, ((Schema)i.next()).getUniqueId());
+		return x+1;
+	}
 
 	/**
 	 * Obtain the unique series number for this mart.

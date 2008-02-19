@@ -30,6 +30,7 @@ import javax.swing.JTextField;
 
 import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataSet.DataSetColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.diagrams.Diagram;
 
@@ -43,6 +44,8 @@ import org.biomart.builder.view.gui.diagrams.Diagram;
  */
 public class ColumnComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
+
+	private static final Color TRANSPARENT_COLOR = new Color(0, 0, 0, 0);
 
 	/**
 	 * Constant referring to expression column background colour.
@@ -134,11 +137,48 @@ public class ColumnComponent extends BoxShapedComponent {
 
 	protected void doRecalculateDiagramComponent() {
 		// Add the label for the column name.
-		final JTextField name = new JTextField();
+		final JTextField name = new JTextField() {
+			private static final long serialVersionUID = 1L;
+
+			private Color opaqueBackground;
+
+			// work around transparency issue in OS X 10.5
+			public void setOpaque(boolean opaque) {
+				if (opaque != isOpaque()) {
+					if (opaque) {
+						super.setBackground(opaqueBackground);
+					} else if (opaqueBackground != null) {
+						opaqueBackground = getBackground();
+						super.setBackground(TRANSPARENT_COLOR);
+					}
+				}
+				super.setOpaque(opaque);
+			}
+
+			// work around transparency issue in OS X 10.5
+			public void setBackground(Color color) {
+				if (isOpaque()) {
+					super.setBackground(color);
+				} else {
+					opaqueBackground = color;
+				}
+			}
+		};
 		name.setFont(ColumnComponent.NORMAL_FONT);
 		this.setRenameTextField(name);
 		this.layout.setConstraints(name, this.constraints);
 		this.add(name);
+		// Tooltip indicating source of column.
+		Column col = this.getColumn();
+		while (col instanceof InheritedColumn)
+			col = ((InheritedColumn) col).getInheritedColumn();
+		if (col instanceof WrappedColumn) {
+			final Column wcol = ((WrappedColumn) col).getWrappedColumn();
+			final String tooltip = wcol.getTable().getSchema().getName() + "."
+					+ wcol.getTable().getName() + "." + wcol.getName();
+			this.setToolTipText(tooltip);
+			name.setToolTipText(tooltip);
+		}
 	}
 
 	public void performRename(final String newName) {
@@ -154,15 +194,6 @@ public class ColumnComponent extends BoxShapedComponent {
 	}
 
 	public String getDisplayName() {
-		String name = this.getEditableName();
-		if (this.getColumn() != null
-				&& this.getColumn() instanceof WrappedColumn) {
-			final String wrappedName = ((WrappedColumn) this.getColumn())
-					.getWrappedColumn().getName();
-			if (!((WrappedColumn) this.getColumn()).getModifiedName().equals(
-					wrappedName))
-				name += " (" + wrappedName + ")";
-		}
-		return name;
+		return this.getEditableName();
 	}
 }

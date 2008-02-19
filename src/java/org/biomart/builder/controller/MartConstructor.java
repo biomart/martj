@@ -1099,8 +1099,8 @@ public interface MartConstructor {
 						// Only apply this to the dsCol which matches
 						// the partition row's ds col.
 						if (dsCol.existsForPartition(schemaPrefix)
-								&& dsCol.getName().split("\\.")[2].equals(prow
-										.getRootDataSetCol().split("\\.")[2])) {
+								&& dsCol.getName().split("\\.")[3].equals(prow
+										.getRootDataSetCol().split("\\.")[3])) {
 							// Apply restriction.
 							action.getPartitionRestrictions().put(
 									((Column) entry.getKey()).getName(),

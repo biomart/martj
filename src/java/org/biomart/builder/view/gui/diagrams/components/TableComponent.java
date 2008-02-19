@@ -65,6 +65,8 @@ import org.biomart.common.resources.Resources;
 public class TableComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
+	private static final Color TRANSPARENT_COLOR = new Color(0, 0, 0, 0);
+
 	/**
 	 * Background colour for all normal tables.
 	 */
@@ -202,7 +204,33 @@ public class TableComponent extends BoxShapedComponent {
 		this.getSubComponents().clear();
 
 		// Add the table name label.
-		final JTextField name = new JTextField();
+		final JTextField name = new JTextField() {
+			private static final long serialVersionUID = 1L;
+
+			private Color opaqueBackground;
+
+			// work around transparency issue in OS X 10.5
+			public void setOpaque(boolean opaque) {
+				if (opaque != isOpaque()) {
+					if (opaque) {
+						super.setBackground(opaqueBackground);
+					} else if (opaqueBackground != null) {
+						opaqueBackground = getBackground();
+						super.setBackground(TRANSPARENT_COLOR);
+					}
+				}
+				super.setOpaque(opaque);
+			}
+
+			// work around transparency issue in OS X 10.5
+			public void setBackground(Color color) {
+				if (isOpaque()) {
+					super.setBackground(color);
+				} else {
+					opaqueBackground = color;
+				}
+			}
+		};
 		name.setFont(TableComponent.BOLD_FONT);
 		this.setRenameTextField(name);
 		this.add(name, this.constraints);
@@ -319,22 +347,7 @@ public class TableComponent extends BoxShapedComponent {
 	}
 
 	public String getDisplayName() {
-		final Table table = this.getTable();
-		final StringBuffer name = new StringBuffer();
-		if (table != null && table instanceof DataSetTable) {
-			final String parts[] = this.getTable().getName().split(
-					Resources.get("tablenameSep"));
-			final String displayOriginalName = parts[parts.length - 1];
-			final String modifiedName = this.getEditableName();
-			name.append(modifiedName);
-			if (!modifiedName.equals(displayOriginalName)) {
-				name.append(" (");
-				name.append(displayOriginalName);
-				name.append(')');
-			}
-		} else
-			name.append(this.getEditableName());
-		return name.toString();
+		return this.getEditableName();
 	}
 
 	public void setState(final Object state) {

@@ -83,6 +83,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			this);
 
 	private final Mart mart;
+	
+	private int uniqueId;
 
 	/**
 	 * Subclasses can reference this to alter it - e.g. DataSet does this.
@@ -193,6 +195,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			final String partitionNameExpression) {
 		Log.debug("Creating schema " + name);
 		this.mart = mart;
+		this.uniqueId = this.mart.getNextUniqueId();
 		this.setName(name);
 		this.setOriginalName(name);
 		this.setKeyGuessing(keyGuessing);
@@ -221,6 +224,33 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				.addPropertyChangeListener("partitionNameExpression",
 						this.listener);
 		this.addPropertyChangeListener("partitionRegex", this.listener);
+	}
+	
+	/**
+	 * Change the unique ID for this schema.
+	 * @param uniqueId the new one to use.
+	 */
+	public void setUniqueId(final int uniqueId) {
+		this.uniqueId = uniqueId;
+	}
+	
+	/**
+	 * Get the unique ID for this schema.
+	 * @return the unique ID.
+	 */
+	public int getUniqueId() {
+		return this.uniqueId;
+	}
+	
+	/**
+	 * Obtain the next unique ID to use for a table.
+	 * @return the next ID.
+	 */
+	public int getNextUniqueId() {
+		int x = 0;
+		for (final Iterator i = this.tableCache.iterator(); i.hasNext(); )
+			x = Math.max(x, ((Table)i.next()).getUniqueId());
+		return x+1;
 	}
 
 	/**

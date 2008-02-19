@@ -1563,51 +1563,52 @@ public class DataSet extends Schema {
 				continue;
 
 			// Create a name for this column.
-			String colName = c.getName();
-			String origColName = c.getName();
+			String internalColName = c.getName();
+			String visibleColName = c.getName();
 			// Expand to full-length by prefixing relation
 			// info, and relation tracker info. Note we use
 			// the tracker not the iteration as this gives us
 			// a unique repetition number.
-			colName = sourceRelation + "." + relationTrackerCount + "."
-					+ colName;
+			internalColName = mergeTable.getSchema().getUniqueId() + "."
+					+ mergeTable.getUniqueId() + "." + relationTrackerCount
+					+ "." + internalColName;
 			// Add partitioning prefixes.
 			for (int k = 0; k < nameCols.size(); k++) {
 				final String pcolName = (String) nameCols.get(k);
-				final String suffix = nameColSuffixes.size() <= k ? "" : "#"
-						+ (String) nameColSuffixes.get(k);
-				colName = pcolName + suffix + Resources.get("columnnameSep")
-						+ colName;
-				origColName = pcolName + suffix
-						+ Resources.get("columnnameSep") + origColName;
+				final String suffix = "#" + (String) nameColSuffixes.get(k);
+				internalColName = pcolName + suffix
+						+ Resources.get("columnnameSep") + internalColName;
+				visibleColName = pcolName + suffix
+						+ Resources.get("columnnameSep") + visibleColName;
 			}
 			// Rename all PK columns to have the '_key' suffix.
 			if (includeMergeTablePK
 					&& Arrays.asList(mergeTablePK.getColumns()).contains(c)
-					&& !origColName.endsWith(Resources.get("keySuffix")))
-				origColName = origColName + Resources.get("keySuffix");
+					&& !visibleColName.endsWith(Resources.get("keySuffix")))
+				visibleColName = visibleColName + Resources.get("keySuffix");
 			// Reuse or create new wrapped column?
 			WrappedColumn wc = null;
 			boolean reusedColumn = false;
 			// Don't reuse cols that will be part of the PK.
-			if (dsTable.getColumns().containsKey(colName)) {
+			if (dsTable.getColumns().containsKey(internalColName)) {
 				final DataSetColumn candDSCol = (DataSetColumn) dsTable
-						.getColumns().get(colName);
+						.getColumns().get(internalColName);
 				if (candDSCol instanceof WrappedColumn) {
-					wc = (WrappedColumn) dsTable.getColumns().get(colName);
+					wc = (WrappedColumn) dsTable.getColumns().get(
+							internalColName);
 					reusedColumn = true;
 				}
 			}
 			if (!reusedColumn) {
 				// Create new column using unique name.
-				wc = new WrappedColumn(c, colName, dsTable);
+				wc = new WrappedColumn(c, internalColName, dsTable);
 				dsTable.getColumns().put(wc.getName(), wc);
 				// Insert column rename using origColName, but
 				// only if one not already specified (e.g. from
 				// XML file).
 				try {
 					if (wc.getColumnRename() == null)
-						wc.setColumnRename(origColName);
+						wc.setColumnRename(visibleColName);
 				} catch (final ValidationException ve) {
 					// Should never happen!
 					throw new BioMartError(ve);

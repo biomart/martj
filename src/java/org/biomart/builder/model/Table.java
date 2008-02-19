@@ -66,6 +66,8 @@ public class Table implements Comparable, TransactionListener {
 
 	private static final long serialVersionUID = 1L;
 
+	private int uniqueId;
+	
 	private final BeanMap columns;
 
 	private final BeanCollection foreignKeys;
@@ -117,6 +119,7 @@ public class Table implements Comparable, TransactionListener {
 	public Table(final Schema schema, String name) {
 		Log.debug("Creating table " + name + " in " + schema);
 		this.schema = schema;
+		this.uniqueId = this.schema.getNextUniqueId();
 		this.columns = new BeanMap(new HashMap());
 		this.foreignKeys = new BeanCollection(new HashSet());
 		// Make the name unique.
@@ -142,6 +145,22 @@ public class Table implements Comparable, TransactionListener {
 		this.addPropertyChangeListener("masked", this.listener);
 		this.addPropertyChangeListener("restrictTable", this.listener);
 		this.addPropertyChangeListener("bigTable", this.listener);
+	}
+	
+	/**
+	 * Change the unique ID for this table.
+	 * @param uniqueId the new one to use.
+	 */
+	public void setUniqueId(final int uniqueId) {
+		this.uniqueId = uniqueId;
+	}
+	
+	/**
+	 * Get the unique ID for this table.
+	 * @return the unique ID.
+	 */
+	public int getUniqueId() {
+		return this.uniqueId;
 	}
 
 	/**

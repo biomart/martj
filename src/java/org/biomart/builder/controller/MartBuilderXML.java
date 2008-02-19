@@ -381,8 +381,8 @@ public class MartBuilderXML extends DefaultHandler {
 			this.writeAttribute("id", relMappedID, xmlWriter);
 			this.writeAttribute("cardinality", r.getCardinality().getName(),
 					xmlWriter);
-			this.writeAttribute("originalCardinality", r.getOriginalCardinality().getName(),
-					xmlWriter);
+			this.writeAttribute("originalCardinality", r
+					.getOriginalCardinality().getName(), xmlWriter);
 			this.writeAttribute("firstKeyId",
 					(String) this.reverseMappedObjects.get(r.getFirstKey()),
 					xmlWriter);
@@ -419,6 +419,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Begin the schema element.
 			this.openElement("jdbcSchema", xmlWriter);
+			this.writeAttribute("uniqueId", "" + jdbcSchema.getUniqueId(),
+					xmlWriter);
 
 			this.writeAttribute("driverClassName", jdbcSchema
 					.getDriverClassName(), xmlWriter);
@@ -494,6 +496,9 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Start table.
 			this.openElement("table", xmlWriter);
+			this
+					.writeAttribute("uniqueId", "" + table.getUniqueId(),
+							xmlWriter);
 			this.writeAttribute("id", tableMappedID, xmlWriter);
 			this.writeAttribute("name", table.getName(), xmlWriter);
 			this.writeAttribute("ignore", Boolean.toString(table.isMasked()),
@@ -935,7 +940,7 @@ public class MartBuilderXML extends DefaultHandler {
 									xmlWriter);
 							this.closeElement("alternativeJoin", xmlWriter);
 						}
-						
+
 						// Mask relations.
 						if (r.isMaskRelation(ds, dsTable.getName())
 								&& !r.isMaskRelation(ds)) {
@@ -958,8 +963,8 @@ public class MartBuilderXML extends DefaultHandler {
 									xmlWriter);
 							this.writeAttribute("diffColumnId",
 									(String) this.reverseMappedObjects.get(r
-											.getLoopbackRelation(ds, dsTable.getName())),
-									xmlWriter);
+											.getLoopbackRelation(ds, dsTable
+													.getName())), xmlWriter);
 							this.closeElement("loopbackRelation", xmlWriter);
 						}
 
@@ -1066,7 +1071,7 @@ public class MartBuilderXML extends DefaultHandler {
 					for (final Iterator j = sch.getTables().values().iterator(); j
 							.hasNext();) {
 						final Table tbl = (Table) j.next();
-						
+
 						// Transform starts.
 						if (tbl.isTransformStart(ds, dsTable.getName())) {
 							this.openElement("transformStart", xmlWriter);
@@ -1342,6 +1347,7 @@ public class MartBuilderXML extends DefaultHandler {
 		// JDBC schema (anywhere, optionally inside schema group).
 		else if ("jdbcSchema".equals(eName)) {
 			// Start a new JDBC schema.
+			final String uniqueId = (String) attributes.get("uniqueId");
 
 			// Does it have a password? (optional)
 			String password = "";
@@ -1377,6 +1383,9 @@ public class MartBuilderXML extends DefaultHandler {
 						partitionExpression);
 				schema.setMasked(masked);
 				schema.setHideMasked(hideMasked);
+				// Update the unique ID.
+				if (uniqueId != null)
+					schema.setUniqueId(Integer.parseInt(uniqueId));
 				// Return to normal.
 				schema.storeInHistory();
 				// Add the schema directly to the mart if outside a group.
@@ -1401,6 +1410,7 @@ public class MartBuilderXML extends DefaultHandler {
 
 			// Get the name and id as these are common features.
 			final String id = (String) attributes.get("id");
+			final String uniqueId = (String) attributes.get("uniqueId");
 			final String name = (String) attributes.get("name");
 			final boolean ignore = Boolean.valueOf(
 					(String) attributes.get("ignore")).booleanValue();
@@ -1432,6 +1442,9 @@ public class MartBuilderXML extends DefaultHandler {
 			else
 				throw new SAXException(Resources.get("unknownSchemaType",
 						schema.getClass().getName()));
+			// Update the unique ID.
+			if (uniqueId != null)
+				((Table) element).setUniqueId(Integer.parseInt(uniqueId));
 
 			// Store it in the map of IDed objects.
 			this.mappedObjects.put(id, element);
@@ -1596,8 +1609,8 @@ public class MartBuilderXML extends DefaultHandler {
 						.get((String) attributes.get("status"));
 				final Cardinality card = Cardinality.get((String) attributes
 						.get("cardinality"));
-				final Cardinality origCard = Cardinality.get((String) attributes
-						.get("originalCardinality"));
+				final Cardinality origCard = Cardinality
+						.get((String) attributes.get("originalCardinality"));
 				final Key firstKey = (Key) this.mappedObjects.get(attributes
 						.get("firstKeyId"));
 				final Key secondKey = (Key) this.mappedObjects.get(attributes
@@ -1620,7 +1633,7 @@ public class MartBuilderXML extends DefaultHandler {
 					secondKey.getRelations().add(rel);
 
 					// Set its status.
-					if (origCard!=null)
+					if (origCard != null)
 						rel.setOriginalCardinality(origCard);
 					rel.setStatus(status);
 					rel.setVisibleModified(visibleModified);
@@ -1839,8 +1852,8 @@ public class MartBuilderXML extends DefaultHandler {
 
 			try {
 				// Look up the relation.
-				final Table tbl = (Table) this.mappedObjects
-						.get(attributes.get("tableId"));
+				final Table tbl = (Table) this.mappedObjects.get(attributes
+						.get("tableId"));
 				final String tableKey = (String) attributes.get("tableKey");
 
 				// Mask it.
@@ -2133,7 +2146,8 @@ public class MartBuilderXML extends DefaultHandler {
 				final String expr = (String) attributes.get("expression");
 
 				// Set up the restriction.
-				if (expr != null && !aliases.isEmpty() && tableKey!=null && tbl != null) {
+				if (expr != null && !aliases.isEmpty() && tableKey != null
+						&& tbl != null) {
 					final RestrictedTableDefinition def = new RestrictedTableDefinition(
 							expr, aliases);
 					tbl.setRestrictTable(w, tableKey, def);
@@ -2268,8 +2282,8 @@ public class MartBuilderXML extends DefaultHandler {
 				// Get the expression to use.
 				final String expr = (String) attributes.get("expression");
 
-				if (expr != null && rel != null && tableKey!=null && !laliases.isEmpty()
-						&& !raliases.isEmpty()) {
+				if (expr != null && rel != null && tableKey != null
+						&& !laliases.isEmpty() && !raliases.isEmpty()) {
 					final RestrictedRelationDefinition def = new RestrictedRelationDefinition(
 							expr, laliases, raliases);
 					rel.setRestrictRelation(w, tableKey, def, index);
