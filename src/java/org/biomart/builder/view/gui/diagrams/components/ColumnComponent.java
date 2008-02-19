@@ -137,7 +137,7 @@ public class ColumnComponent extends BoxShapedComponent {
 
 	protected void doRecalculateDiagramComponent() {
 		// Add the label for the column name.
-		final JTextField name = new JTextField()/* {
+		final JTextField name = new JTextField() {
 			private static final long serialVersionUID = 1L;
 
 			private Color opaqueBackground;
@@ -163,13 +163,12 @@ public class ColumnComponent extends BoxShapedComponent {
 					opaqueBackground = color;
 				}
 			}
-		*/;
+		};
 		name.setFont(ColumnComponent.NORMAL_FONT);
 		this.setRenameTextField(name);
 		this.layout.setConstraints(name, this.constraints);
 		this.add(name);
 		// Tooltip indicating source of column.
-		/*
 		Column col = this.getColumn();
 		while (col instanceof InheritedColumn)
 			col = ((InheritedColumn) col).getInheritedColumn();
@@ -180,7 +179,6 @@ public class ColumnComponent extends BoxShapedComponent {
 			this.setToolTipText(tooltip);
 			name.setToolTipText(tooltip);
 		}
-		*/
 	}
 
 	public void performRename(final String newName) {

@@ -230,27 +230,15 @@ public abstract class TransformationUnit {
 			this.schemaRelationIteration = schemaRelationIteration;
 		}
 
-		private boolean nested = false;
-
-		private boolean nestedResult = true;
-
 		public boolean appliesToPartition(final String schemaPrefix) {
-			if (nested)
-				return nestedResult;
-			nested = true;
-			nestedResult = true;
 			for (final Iterator i = this.sourceDataSetColumns.iterator(); i
 					.hasNext();) {
 				final DataSetColumn dsCol = (DataSetColumn) i.next();
 				if (!dsCol.existsForPartition(schemaPrefix)) {
-					nestedResult = false;
-					// nested = false;
-					return nestedResult;
+					return false;
 				}
 			}
-			nestedResult = super.appliesToPartition(schemaPrefix);
-			nested = false;
-			return nestedResult;
+			return super.appliesToPartition(schemaPrefix);
 		}
 
 		/**

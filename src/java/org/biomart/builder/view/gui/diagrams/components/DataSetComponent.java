@@ -243,7 +243,7 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	protected void doRecalculateDiagramComponent() {
 		// Add the label for the dataset name,
-		final JTextField name = new JTextField()/* {
+		final JTextField name = new JTextField() {
 			private static final long serialVersionUID = 1L;
 
 			private Color opaqueBackground;
@@ -269,7 +269,7 @@ public class DataSetComponent extends BoxShapedComponent {
 					opaqueBackground = color;
 				}
 			}
-		}*/;
+		};
 		name.setFont(DataSetComponent.BOLD_FONT);
 		this.setRenameTextField(name);
 		this.layout.setConstraints(name, this.constraints);
