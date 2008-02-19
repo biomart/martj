@@ -56,6 +56,8 @@ import org.biomart.common.resources.Resources;
 public class SchemaComponent extends BoxShapedComponent {
 	private static final long serialVersionUID = 1;
 
+	private static final Color TRANSPARENT_COLOR = new Color(0, 0, 0, 0);
+
 	/**
 	 * Normal background colour.
 	 */
@@ -238,7 +240,33 @@ public class SchemaComponent extends BoxShapedComponent {
 		this.getSubComponents().clear();
 
 		// Add the label for the schema name,
-		final JTextField name = new JTextField();
+		final JTextField name = new JTextField() {
+			private static final long serialVersionUID = 1L;
+
+			private Color opaqueBackground;
+
+			// work around transparency issue in OS X 10.5
+			public void setOpaque(boolean opaque) {
+				if (opaque != isOpaque()) {
+					if (opaque) {
+						super.setBackground(opaqueBackground);
+					} else if (opaqueBackground != null) {
+						opaqueBackground = getBackground();
+						super.setBackground(TRANSPARENT_COLOR);
+					}
+				}
+				super.setOpaque(opaque);
+			}
+
+			// work around transparency issue in OS X 10.5
+			public void setBackground(Color color) {
+				if (isOpaque()) {
+					super.setBackground(color);
+				} else {
+					opaqueBackground = color;
+				}
+			}
+		};
 		name.setFont(SchemaComponent.BOLD_FONT);
 		this.setRenameTextField(name);
 		this.layout.setConstraints(name, this.constraints);

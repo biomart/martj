@@ -52,6 +52,8 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	private static final long serialVersionUID = 1;
 
+	private static final Color TRANSPARENT_COLOR = new Color(0, 0, 0, 0);
+
 	private static final Font BOLD_FONT = Font.decode("SansSerif-BOLD-10");
 
 	/**
@@ -241,7 +243,33 @@ public class DataSetComponent extends BoxShapedComponent {
 
 	protected void doRecalculateDiagramComponent() {
 		// Add the label for the dataset name,
-		final JTextField name = new JTextField();
+		final JTextField name = new JTextField() {
+			private static final long serialVersionUID = 1L;
+
+			private Color opaqueBackground;
+
+			// work around transparency issue in OS X 10.5
+			public void setOpaque(boolean opaque) {
+				if (opaque != isOpaque()) {
+					if (opaque) {
+						super.setBackground(opaqueBackground);
+					} else if (opaqueBackground != null) {
+						opaqueBackground = getBackground();
+						super.setBackground(TRANSPARENT_COLOR);
+					}
+				}
+				super.setOpaque(opaque);
+			}
+
+			// work around transparency issue in OS X 10.5
+			public void setBackground(Color color) {
+				if (isOpaque()) {
+					super.setBackground(color);
+				} else {
+					opaqueBackground = color;
+				}
+			}
+		};
 		name.setFont(DataSetComponent.BOLD_FONT);
 		this.setRenameTextField(name);
 		this.layout.setConstraints(name, this.constraints);
