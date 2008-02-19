@@ -2986,8 +2986,7 @@ public class DataSet extends Schema {
 			}
 
 			public boolean existsForPartition(final String schemaPrefix) {
-				return this.column.existsForPartition(schemaPrefix)
-						&& super.existsForPartition(schemaPrefix);
+				return this.column.existsForPartition(schemaPrefix);
 			}
 		}
 	}
