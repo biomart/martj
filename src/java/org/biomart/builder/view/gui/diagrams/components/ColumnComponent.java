@@ -169,6 +169,7 @@ public class ColumnComponent extends BoxShapedComponent {
 		this.layout.setConstraints(name, this.constraints);
 		this.add(name);
 		// Tooltip indicating source of column.
+		/*
 		Column col = this.getColumn();
 		while (col instanceof InheritedColumn)
 			col = ((InheritedColumn) col).getInheritedColumn();
@@ -179,6 +180,7 @@ public class ColumnComponent extends BoxShapedComponent {
 			this.setToolTipText(tooltip);
 			name.setToolTipText(tooltip);
 		}
+		*/
 	}
 
 	public void performRename(final String newName) {
