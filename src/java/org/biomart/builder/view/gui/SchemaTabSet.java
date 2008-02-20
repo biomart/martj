@@ -941,7 +941,8 @@ public class SchemaTabSet extends JTabbedPane {
 		new LongProcess() {
 			public void run() throws Exception {
 				// Get the rows.
-				final Collection rows = table.getSchema().getRows(table, count);
+				final Collection rows = table.getSchema().getRows(
+						martTab.getPartitionViewSelection(), table, count);
 				// Convert to a nested vector.
 				final Vector data = new Vector();
 				for (final Iterator i = rows.iterator(); i.hasNext();)

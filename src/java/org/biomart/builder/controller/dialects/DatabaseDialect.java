@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.biomart.builder.exceptions.ConstructorException;
 import org.biomart.builder.exceptions.PartitionException;
+import org.biomart.builder.model.Column;
 import org.biomart.builder.model.DataLink;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructorAction;
@@ -261,4 +262,16 @@ public abstract class DatabaseDialect {
 	 */
 	public abstract String getSimpleRowsSQL(final String schemaName,
 			final Table table);
+
+	/**
+	 * Get SQL to return unique values from a column.
+	 * 
+	 * @param schemaName
+	 *            the schema to use.
+	 * @param column
+	 *            the column to get values from.
+	 * @return the SQL.
+	 */
+	public abstract String getUniqueValuesSQL(final String schemaName,
+			final Column column);
 }

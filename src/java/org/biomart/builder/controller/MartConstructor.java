@@ -55,6 +55,8 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
@@ -814,10 +816,6 @@ public interface MartConstructor {
 				final String optTable = this.getOptimiserTableName(
 						schemaPrefix, dsPta, dmPta, parent, dataset
 								.getDataSetOptimiserType());
-				// Columns are dimension table names with '_bool' or
-				// '_count' appended.
-				final String optCol = this.getOptimiserColumnName(dsPta, dmPta,
-						parent, dsTable, oType);
 
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
@@ -841,31 +839,75 @@ public interface MartConstructor {
 						nonNullCols.add(col.getPartitionedName());
 				}
 				nonNullCols.removeAll(keyCols);
-				// Do the bool/count update.
-				final UpdateOptimiser update = new UpdateOptimiser(
-						this.datasetSchemaName, finalCombinedName);
-				update.setKeyColumns(keyCols);
-				update.setNonNullColumns(nonNullCols);
-				update.setSourceTableName(finalCombinedName);
-				update.setOptTableName(optTable);
-				update.setOptColumnName(optCol);
-				update.setCountNotBool(!oType.isBool());
-				update.setNullNotZero(oType.isUseNull());
-				this.issueAction(update);
 
-				if (!this.uniqueOptCols.containsKey(parent))
-					this.uniqueOptCols.put(parent, new HashSet());
-				((Collection) this.uniqueOptCols.get(parent)).add(optCol);
-				if (!this.indexOptCols.containsKey(parent))
-					this.indexOptCols.put(parent, new HashSet());
-				if (!dsTable.isSkipIndexOptimiser()) {
-					((Collection) this.indexOptCols.get(parent)).add(optCol);
-					// Index the column.
-					final Index index = new Index(this.datasetSchemaName,
-							finalCombinedName);
-					index.setTable(optTable);
-					index.setColumns(Collections.singletonList(optCol));
-					this.issueAction(index);
+				// Loop rest of this block once per unique value
+				// in column, using SQL to get those values, and
+				// inserting them into each optimiser column name.
+				DataSetColumn restrictCol = (DataSetColumn) dsTable
+						.getColumns().get(dsTable.getSplitOptimiserColumn()); // TODO
+				final List restrictValues = new ArrayList();
+				if (restrictCol != null) {
+					// Disambiguate inherited columns.
+					while (restrictCol instanceof InheritedColumn)
+						restrictCol = ((InheritedColumn) restrictCol)
+								.getInheritedColumn();
+					// Can only restrict on wrapped columns.
+					if (restrictCol instanceof WrappedColumn) {
+						// Populate restrict values.
+						final Column dataCol = ((WrappedColumn) restrictCol)
+								.getWrappedColumn();
+						try {
+							restrictValues.addAll(dataCol.getTable()
+									.getSchema().getUniqueValues(schemaPrefix,
+											dataCol));
+						} catch (final SQLException e) {
+							throw new PartitionException(e);
+						}
+					}
+				}
+				if (restrictValues.isEmpty()) {
+					restrictCol = null;
+					restrictValues.add(null);
+				} else
+					nonNullCols.remove(restrictCol.getPartitionedName());
+				for (final Iterator i = restrictValues.iterator(); i.hasNext();) {
+					final String restrictValue = (String) i.next();
+					// Columns are dimension table names with '_bool' or
+					// '_count' appended.
+					final String optCol = this.getOptimiserColumnName(dsPta,
+							dmPta, parent, dsTable, oType, restrictValue);
+
+					// Do the bool/count update.
+					final UpdateOptimiser update = new UpdateOptimiser(
+							this.datasetSchemaName, finalCombinedName);
+					update.setKeyColumns(keyCols);
+					update.setNonNullColumns(nonNullCols);
+					update.setSourceTableName(finalCombinedName);
+					update.setOptTableName(optTable);
+					update.setOptColumnName(optCol);
+					update.setCountNotBool(!oType.isBool());
+					update.setNullNotZero(oType.isUseNull());
+					update.setOptRestrictColumn(restrictCol == null ? null
+							: restrictCol.getPartitionedName());
+					update.setOptRestrictValue(restrictValue);
+					this.issueAction(update);
+
+					// Store the reference for later.
+					if (!this.uniqueOptCols.containsKey(parent))
+						this.uniqueOptCols.put(parent, new HashSet());
+					((Collection) this.uniqueOptCols.get(parent)).add(optCol);
+					if (!this.indexOptCols.containsKey(parent))
+						this.indexOptCols.put(parent, new HashSet());
+					if (!dsTable.isSkipIndexOptimiser()) {
+						((Collection) this.indexOptCols.get(parent))
+								.add(optCol);
+						// Index the column.
+						final Index index = new Index(this.datasetSchemaName,
+								finalCombinedName);
+						index.setTable(optTable);
+						index.setColumns(Collections.singletonList(optCol));
+						this.issueAction(index);
+					}
 				}
 			}
 		}
@@ -1158,8 +1200,9 @@ public interface MartConstructor {
 					ljtu.getSchemaSourceKey()).getColumns().length; i++) {
 				final Column rightCol = ljtu.getSchemaRelation().getOtherKey(
 						ljtu.getSchemaSourceKey()).getColumns()[i];
-				if (ljtu.getTable() instanceof DataSetTable) 
-					rightJoinCols.add(((DataSetColumn)ljtu.getSchemaSourceKey().getColumns()[i])
+				if (ljtu.getTable() instanceof DataSetTable)
+					rightJoinCols.add(((DataSetColumn) ljtu
+							.getSchemaSourceKey().getColumns()[i])
 							.getPartitionedName());
 				else
 					rightJoinCols.add(rightCol.getName());
@@ -1653,7 +1696,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta,
 				final DataSetTable parent, final DataSetTable dsTable,
-				final DataSetOptimiserType oType) throws PartitionException {
+				final DataSetOptimiserType oType, final String restrictValue)
+				throws PartitionException {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
 				this.uniqueOptCols.put(parent, new HashSet());
@@ -1674,6 +1718,10 @@ public interface MartConstructor {
 				}
 				if (++counter > 0) {
 					sb.append("" + counter);
+					sb.append(Resources.get("tablenameSubSep"));
+				}
+				if (restrictValue != null) {
+					sb.append(restrictValue);
 					sb.append(Resources.get("tablenameSubSep"));
 				}
 				sb.append(oType.isBool() ? Resources.get("boolColSuffix")

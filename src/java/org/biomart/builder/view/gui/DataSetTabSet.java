@@ -77,6 +77,7 @@ import org.biomart.builder.view.gui.dialogs.PartitionTableDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
+import org.biomart.builder.view.gui.dialogs.SplitOptimiserColumnDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestUnrolledDataSetDialog;
@@ -674,6 +675,48 @@ public class DataSetTabSet extends JTabbedPane {
 				Transaction.start(false);
 				dst.setDistinctTable(distinct);
 				Transaction.end();
+			}
+		}.start();
+	}
+
+	/**
+	 * Requests that a table be split optimisered.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to make split optimisered.
+	 */
+	public void requestSplitOptimiserColumn(final DataSet ds, final DataSetTable dst) {
+
+		// Work out if it is already compounded.
+		final DataSetColumn splitCol = (DataSetColumn)dst.getColumns().get(dst.getSplitOptimiserColumn());
+		final boolean isSplit = splitCol != null;
+
+		// Pop up a dialog and update 'compound'.
+		final SplitOptimiserColumnDialog dialog = new SplitOptimiserColumnDialog(
+				isSplit, splitCol, dst.getColumns().values());
+		dialog.setLocationRelativeTo(null);
+		dialog.setVisible(true);
+		final boolean newIsSplit = dialog.isSplit();
+		final DataSetColumn newSplitCol = newIsSplit ? dialog
+				.getSplitOptimiserColumn() : null;
+		dialog.dispose();
+
+		// Skip altogether if no change.
+		if (newSplitCol == splitCol && newIsSplit)
+			return;
+
+		new LongProcess() {
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					// Do the work.
+					dst.setSplitOptimiserColumn(newSplitCol.getName());
+				} finally {
+					Transaction.end();
+
+				}
 			}
 		}.start();
 	}

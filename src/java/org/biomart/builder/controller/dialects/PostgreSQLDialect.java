@@ -702,6 +702,8 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		final String sourceTableName = action.getSourceTableName();
 		final String optTableName = action.getOptTableName();
 		final String optColName = action.getOptColumnName();
+		final String optRestrictColName = action.getOptRestrictColumn();
+		final String optRestrictValue = action.getOptRestrictValue();
 
 		this.checkColumnName(optColName);
 
@@ -729,6 +731,13 @@ public class PostgreSQLDialect extends DatabaseDialect {
 			sb.append("=b.");
 			sb.append(keyCol);
 			sb.append(" and ");
+		}
+		if (optRestrictColName!=null) {
+			sb.append("b.");
+			sb.append(optRestrictColName);
+			sb.append("='");
+			sb.append(optRestrictValue);
+			sb.append("' and ");
 		}
 		sb.append("not (");
 		for (final Iterator i = action.getNonNullColumns().iterator(); i
@@ -1021,6 +1030,18 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		sql.append(schemaName);
 		sql.append('.');
 		sql.append(table.getName());
+		return sql.toString();
+	}
+
+	public String getUniqueValuesSQL(final String schemaName,
+			final Column column) {
+		final StringBuffer sql = new StringBuffer();
+		sql.append("select distinct ");
+		sql.append(column.getName());
+		sql.append(" from ");
+		sql.append(schemaName);
+		sql.append('.');
+		sql.append(column.getTable().getName());
 		return sql.toString();
 	}
 }

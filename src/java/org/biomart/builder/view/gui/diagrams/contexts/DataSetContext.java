@@ -576,6 +576,24 @@ public class DataSetContext extends SchemaContext {
 				skipIndexOptimiser.setEnabled(!table.isSkipOptimiser());
 				skipIndexOptimiser.setSelected(table.isSkipIndexOptimiser());
 
+				// The table can be no-optimised by using this option.
+				final JCheckBoxMenuItem splitOptimiser = new JCheckBoxMenuItem(
+						Resources.get("splitOptimiserTitle"));
+				splitOptimiser.setMnemonic(Resources.get(
+						"splitOptimiserMnemonic").charAt(0));
+				splitOptimiser.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this
+								.getMartTab()
+								.getDataSetTabSet()
+								.requestSplitOptimiserColumn(
+										DataSetContext.this.getDataSet(), table);
+					}
+				});
+				contextMenu.add(splitOptimiser);
+				splitOptimiser
+						.setSelected(table.getSplitOptimiserColumn() != null);
+
 				// The dimension can be merged by using this option. This
 				// affects all dimensions based on this relation.
 				final JCheckBoxMenuItem mergeDM = new JCheckBoxMenuItem(

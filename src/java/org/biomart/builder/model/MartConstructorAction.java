@@ -109,6 +109,10 @@ public abstract class MartConstructorAction {
 		private boolean countNotBool;
 
 		private boolean nullNotZero;
+		
+		private String optRestrictColumn;
+		
+		private String optRestrictValue;
 
 		/**
 		 * Creates a new UpdateOptimiser action.
@@ -231,6 +235,34 @@ public abstract class MartConstructorAction {
 		 */
 		public void setSourceTableName(final String sourceTableName) {
 			this.sourceTableName = sourceTableName;
+		}
+
+		/**
+		 * @return the optRestrictColumn
+		 */
+		public String getOptRestrictColumn() {
+			return this.optRestrictColumn;
+		}
+
+		/**
+		 * @param optRestrictColumn the optRestrictColumn to set
+		 */
+		public void setOptRestrictColumn(String optRestrictColumn) {
+			this.optRestrictColumn = optRestrictColumn;
+		}
+
+		/**
+		 * @return the optRestrictValue
+		 */
+		public String getOptRestrictValue() {
+			return this.optRestrictValue;
+		}
+
+		/**
+		 * @param optRestrictValue the optRestrictValue to set
+		 */
+		public void setOptRestrictValue(String optRestrictValue) {
+			this.optRestrictValue = optRestrictValue;
 		}
 	}
 

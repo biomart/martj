@@ -83,7 +83,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			this);
 
 	private final Mart mart;
-	
+
 	private int uniqueId;
 
 	/**
@@ -225,32 +225,53 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 						this.listener);
 		this.addPropertyChangeListener("partitionRegex", this.listener);
 	}
-	
+
+	/**
+	 * Do a 'select distinct' on the given column in the given schema.
+	 * 
+	 * @param schemaPrefix
+	 *            the schema prefix identifier. Use a sensible default if null
+	 *            given.
+	 * @param column
+	 *            the column to select.
+	 * @return the values.
+	 * @throws SQLException
+	 *             if it goes wrong.
+	 */
+	public Collection getUniqueValues(final String schemaPrefix,
+			final Column column) throws SQLException {
+		return Collections.EMPTY_SET;
+	}
+
 	/**
 	 * Change the unique ID for this schema.
-	 * @param uniqueId the new one to use.
+	 * 
+	 * @param uniqueId
+	 *            the new one to use.
 	 */
 	public void setUniqueId(final int uniqueId) {
 		this.uniqueId = uniqueId;
 	}
-	
+
 	/**
 	 * Get the unique ID for this schema.
+	 * 
 	 * @return the unique ID.
 	 */
 	public int getUniqueId() {
 		return this.uniqueId;
 	}
-	
+
 	/**
 	 * Obtain the next unique ID to use for a table.
+	 * 
 	 * @return the next ID.
 	 */
 	public int getNextUniqueId() {
 		int x = 0;
-		for (final Iterator i = this.tableCache.iterator(); i.hasNext(); )
-			x = Math.max(x, ((Table)i.next()).getUniqueId());
-		return x+1;
+		for (final Iterator i = this.tableCache.iterator(); i.hasNext();)
+			x = Math.max(x, ((Table) i.next()).getUniqueId());
+		return x + 1;
 	}
 
 	/**
@@ -723,6 +744,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	/**
 	 * Return the first n rows for a table.
 	 * 
+	 * @param schemaPrefix
+	 *            the schema to use.
 	 * @param table
 	 *            the table to get rows from.
 	 * @param count
@@ -732,7 +755,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * @throws SQLException
 	 *             if anything goes wrong.
 	 */
-	public List getRows(final Table table, final int count) throws SQLException {
+	public List getRows(final String schemaPrefix, final Table table,
+			final int count) throws SQLException {
 		// Default implementation does nothing.
 		return Collections.EMPTY_LIST;
 	}
@@ -919,11 +943,35 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			}
 		}
 
-		public List getRows(final Table table, final int count)
-				throws SQLException {
+		public Collection getUniqueValues(final String schemaPrefix,
+				final Column column) throws SQLException {
 			// Do the select.
 			final List results = new ArrayList();
-			final String schemaName = this.getDataLinkSchema();
+			final String schemaName = schemaPrefix == null ? this
+					.getDataLinkSchema() : (!this.getPartitions()
+					.containsValue(schemaPrefix) ? this.getDataLinkSchema()
+					: (String) new InverseMap(this.getPartitions())
+							.get(schemaPrefix));
+			final Connection conn = this.getConnection(null);
+			final String sql = DatabaseDialect.getDialect(this)
+					.getUniqueValuesSQL(schemaName, column);
+			Log.debug("About to run query: " + sql);
+			final ResultSet rs = conn.prepareStatement(sql).executeQuery();
+			while (rs.next())
+				results.add(rs.getString(1));
+			rs.close();
+
+			// Return the results.
+			return results;
+		}
+
+		public List getRows(final String schemaPrefix, final Table table,
+				final int count) throws SQLException {
+			// Do the select.
+			final List results = new ArrayList();
+			final String schemaName = schemaPrefix == null ? this
+					.getDataLinkSchema() : (String) new InverseMap(this
+					.getPartitions()).get(schemaPrefix);
 			final Connection conn = this.getConnection(null);
 			final String sql = DatabaseDialect.getDialect(this)
 					.getSimpleRowsSQL(schemaName, table);
@@ -1230,9 +1278,8 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			// from it.
 			final String catalog = connection.getCatalog();
 			final ResultSet rs = dmd.getTables(
-					"".equals(dmd.getSchemaTerm()) ? this
-							.getDataLinkSchema() : catalog, this
-							.getDataLinkSchema(), "%", null);
+					"".equals(dmd.getSchemaTerm()) ? this.getDataLinkSchema()
+							: catalog, this.getDataLinkSchema(), "%", null);
 			final boolean worked = rs.isBeforeFirst();
 			rs.close();
 
