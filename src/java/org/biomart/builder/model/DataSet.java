@@ -794,10 +794,6 @@ public class DataSet extends Schema {
 		final Collection unusedCols = new HashSet(dsTable.getColumns().values());
 		final Collection unusedFKs = new HashSet(dsTable.getForeignKeys());
 
-		// Do a user-friendly rename.
-		if (dsTable.getTableRename() == null)
-			dsTable.setTableRename(realTable.getName());
-
 		// Make a map for unique column base names.
 		final Map uniqueBases = new HashMap();
 
@@ -1378,6 +1374,10 @@ public class DataSet extends Schema {
 				throw new BioMartError(ve);
 			}
 		}
+
+		// Do a user-friendly rename.
+		if (dsTable.getTableRename() == null)
+			dsTable.setTableRename(realTable.getName());
 
 		// Only dataset tables with primary keys can have subclasses
 		// or dimensions.
@@ -3216,7 +3216,6 @@ public class DataSet extends Schema {
 				final Relation focusRelation, final int focusRelationIteration) {
 			// Super constructor first, using an alias to prevent duplicates.
 			super(ds, name);
-
 			Log.debug("Creating dataset table " + name);
 
 			// Remember the other settings.
@@ -3941,7 +3940,7 @@ public class DataSet extends Schema {
 				this.getMods("tableRename").put(this.getName().intern(),
 						tableRename);
 			else
-				this.getMods("tableRename").remove(this.getName());
+				this.getMods("tableRename").remove(this.getName().intern());
 			this.pcs.firePropertyChange("tableRename", oldValue, tableRename);
 		}
 
