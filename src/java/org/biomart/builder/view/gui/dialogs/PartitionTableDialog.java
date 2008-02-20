@@ -968,10 +968,13 @@ public class PartitionTableDialog extends TransactionalDialog {
 		private void updateModel() {
 			if (WizardPanel.this.validateFields()) {
 				// How many rows? If less, remove extra ones.
+				boolean needsSyncCounts = false;
 				final int rowCount = WizardPanel.this.ptLevels.size();
-				while (rowCount < this.pta.getPartitionAppliedRows().size())
+				while (rowCount < this.pta.getPartitionAppliedRows().size()) {
 					this.pta.getPartitionAppliedRows().remove(
 							this.pta.getPartitionAppliedRows().size() - 1);
+					needsSyncCounts = true;
+				}
 				// Update or add existing rows.
 				for (int i = 0; i < WizardPanel.this.ptLevels.size()
 						&& ((JComboBox) WizardPanel.this.dsLevels.get(i))
@@ -982,11 +985,12 @@ public class PartitionTableDialog extends TransactionalDialog {
 							.get(i)).getSelectedItem();
 					final String nameCol = (String) ((JComboBox) WizardPanel.this.nameLevels
 							.get(i)).getSelectedItem();
-					if (i >= this.pta.getPartitionAppliedRows().size())
+					if (i >= this.pta.getPartitionAppliedRows().size()) {
 						this.pta.getPartitionAppliedRows().add(
 								new PartitionAppliedRow(ptCol, dsCol, nameCol,
 										(Relation) this.dsRelMap.get(dsCol)));
-					else {
+						needsSyncCounts = true;
+					} else {
 						final PartitionAppliedRow ptar = (PartitionAppliedRow) this.pta
 								.getPartitionAppliedRows().get(i);
 						ptar.setPartitionCol(ptCol);
@@ -997,7 +1001,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 				}
 				// Update counts.
 				try {
-					this.pta.syncCounts();
+					if (needsSyncCounts)
+						this.pta.syncCounts();
 				} catch (final Exception e) {
 					StackTrace.showStackTrace(e);
 				}

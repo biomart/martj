@@ -531,7 +531,7 @@ public class DataSet extends Schema {
 			final String sql = DatabaseDialect.getDialect(jdbc)
 					.getPartitionTableRowsSQL(schemaPrefix, positionMap, pt,
 							this, schema, usablePartition);
-
+			
 			// Run it.
 			Log.debug("About to run SQL: " + sql);
 			final PreparedStatement stmt = conn.prepareStatement(sql);
