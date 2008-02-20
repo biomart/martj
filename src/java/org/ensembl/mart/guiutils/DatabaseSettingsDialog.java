@@ -125,7 +125,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    
 	    martUser = new LabelledComboBox("Mart User");
 		martUser.setPreferenceKey("martUser");
-		add( martUser );	
+		//add( martUser );	
 	    
 		
 	    
