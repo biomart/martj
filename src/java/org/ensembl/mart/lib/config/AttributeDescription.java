@@ -76,6 +76,11 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   public AttributeDescription(AttributeDescription a) {
     super(a);
 	setRequiredFields(reqFields);
+    
+    SpecificAttributeContent[] sf = (SpecificAttributeContent[])a.getSpecificAttributeContents().toArray(new SpecificAttributeContent[0]);
+    for (int i = 0, n = sf.length; i < n; i++) {
+      addSpecificAttributeContent( new SpecificAttributeContent( sf[i] ) );
+    }
   }
 
   /**

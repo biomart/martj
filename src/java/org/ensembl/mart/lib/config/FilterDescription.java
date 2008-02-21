@@ -63,6 +63,11 @@ public class FilterDescription extends QueryFilterSettings {
       addOption( new Option( os[i] ) );
     }
     
+    SpecificFilterContent[] sf = (SpecificFilterContent[])fd.getSpecificFilterContents().toArray(new SpecificFilterContent[0]);
+    for (int i = 0, n = sf.length; i < n; i++) {
+      addSpecificFilterContent( new SpecificFilterContent( sf[i] ) );
+    }
+    
 	//PushAction[] pa = fd.getPushActions();
 	//for (int i = 0, n = pa.length; i < n; i++) {
 	//   addPushAction( new PushAction( pa[i] ) );

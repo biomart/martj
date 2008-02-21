@@ -1825,9 +1825,11 @@ public boolean containsAttributeList(String internalName) {
   public DSConfigAdaptor getDSConfigAdaptor() {
     return adaptor;
   }
+  
+  private boolean lazyLoaded = false;
 
   private void lazyLoad() {
-    if (filterPages.size() == 0 && attributePages.size() == 0) {
+    if (!lazyLoaded && filterPages.size() == 0 && attributePages.size() == 0) {
       if (adaptor == null)
         throw new RuntimeException("DatasetConfig objects must be provided a DSConfigAdaptor to facilitate lazyLoading\n");
       try {
@@ -1836,6 +1838,7 @@ public boolean containsAttributeList(String internalName) {
 
         
         adaptor.lazyLoad(this);
+        lazyLoaded = true;
         
       } catch (ConfigurationException e) {
         throw new RuntimeException("Could not lazyload datasetconfig " + e.getMessage(), e);
