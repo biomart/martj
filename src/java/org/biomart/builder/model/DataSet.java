@@ -2340,6 +2340,7 @@ public class DataSet extends Schema {
 			this.addPropertyChangeListener("columnMasked", this.listener);
 			this.addPropertyChangeListener("columnRename", this.listener);
 			this.addPropertyChangeListener("columnIndexed", this.listener);
+			this.addPropertyChangeListener("splitOptimiserColumn", this.listener);
 		}
 
 		private DataSetColumn replicate(final DataSetTable copyT)
@@ -2678,6 +2679,34 @@ public class DataSet extends Schema {
 					columnIndexed);
 		}
 
+		/**
+		 * Is this an split optimiser column?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isSplitOptimiserColumn() {
+			return this.getMods("splitOptimiserColumn").containsKey(this.getName());
+		}
+
+		/**
+		 * Split optimiser this column.
+		 * 
+		 * @param split
+		 *            <tt>true</tt> to split optimiser.
+		 */
+		public void setSplitOptimiserColumn(final boolean split) {
+			final boolean oldValue = this.isSplitOptimiserColumn();
+			if (split == oldValue)
+				return;
+			if (split)
+				this.getMods("splitOptimiserColumn")
+						.put(this.getName().intern(), null);
+			else
+				this.getMods("splitOptimiserColumn").remove(this.getName());
+			this.pcs.firePropertyChange("splitOptimiserColumn", oldValue,
+					split);
+		}
+		
 		/**
 		 * Is this a renamed column?
 		 * 
@@ -3893,38 +3922,6 @@ public class DataSet extends Schema {
 						.remove(this.getName());
 			this.pcs.firePropertyChange("partitionTableApplication", oldValue,
 					partitionTableApplication);
-		}
-
-		/**
-		 * Is this a partitioned table?
-		 * 
-		 * @return the definition if it is.
-		 */
-		public String getSplitOptimiserColumn() {
-			return (String) this.getMods("splitOptimiserColumn").get(
-					this.getName());
-		}
-
-		/**
-		 * Partition this table.
-		 * 
-		 * @param splitOptimiserColumn
-		 *            the name of the column to split on. <tt>null</tt> to
-		 *            undo this.
-		 */
-		public void setSplitOptimiserColumn(final String splitOptimiserColumn) {
-			final String oldValue = this.getSplitOptimiserColumn();
-			if (splitOptimiserColumn == oldValue
-					|| splitOptimiserColumn != null
-					&& splitOptimiserColumn.equals(oldValue))
-				return;
-			if (splitOptimiserColumn != null)
-				this.getMods("splitOptimiserColumn").put(
-						this.getName().intern(), splitOptimiserColumn);
-			else
-				this.getMods("splitOptimiserColumn").remove(this.getName());
-			this.pcs.firePropertyChange("splitOptimiserColumn", oldValue,
-					splitOptimiserColumn);
 		}
 
 		/**

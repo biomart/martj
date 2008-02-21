@@ -39,6 +39,7 @@ import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
+import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.builder.view.gui.diagrams.components.ColumnComponent;
 import org.biomart.builder.view.gui.diagrams.components.DataSetComponent;
@@ -576,24 +577,6 @@ public class DataSetContext extends SchemaContext {
 				skipIndexOptimiser.setEnabled(!table.isSkipOptimiser());
 				skipIndexOptimiser.setSelected(table.isSkipIndexOptimiser());
 
-				// The table can be no-optimised by using this option.
-				final JCheckBoxMenuItem splitOptimiser = new JCheckBoxMenuItem(
-						Resources.get("splitOptimiserTitle"));
-				splitOptimiser.setMnemonic(Resources.get(
-						"splitOptimiserMnemonic").charAt(0));
-				splitOptimiser.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this
-								.getMartTab()
-								.getDataSetTabSet()
-								.requestSplitOptimiserColumn(
-										DataSetContext.this.getDataSet(), table);
-					}
-				});
-				contextMenu.add(splitOptimiser);
-				splitOptimiser
-						.setSelected(table.getSplitOptimiserColumn() != null);
-
 				// The dimension can be merged by using this option. This
 				// affects all dimensions based on this relation.
 				final JCheckBoxMenuItem mergeDM = new JCheckBoxMenuItem(
@@ -859,6 +842,24 @@ public class DataSetContext extends SchemaContext {
 			});
 			contextMenu.add(index);
 			index.setSelected(isIndexed);
+
+			// The table can be no-optimised by using this option.
+			final JCheckBoxMenuItem splitOptimiser = new JCheckBoxMenuItem(
+					Resources.get("splitOptimiserTitle"));
+			splitOptimiser.setMnemonic(Resources.get("splitOptimiserMnemonic")
+					.charAt(0));
+			splitOptimiser.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					DataSetContext.this.getMartTab().getDataSetTabSet()
+							.requestSplitOptimiserColumn(column,
+									splitOptimiser.isSelected());
+				}
+			});
+			contextMenu.add(splitOptimiser);
+			splitOptimiser.setSelected(column.isSplitOptimiserColumn());
+			splitOptimiser
+					.setEnabled(!isMasked
+							&& (column instanceof InheritedColumn || column instanceof WrappedColumn));
 
 			// Else, if it's an expression column...
 			if (column instanceof ExpressionColumn) {

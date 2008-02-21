@@ -856,15 +856,6 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					this.closeElement("skipIndexOptimiser", xmlWriter);
 				}
-				// Split-optimiser table.
-				if (dsTable.getSplitOptimiserColumn()!=null) {
-					this.openElement("splitOptimiser", xmlWriter);
-					this.writeAttribute("tableKey", dsTable.getName(),
-							xmlWriter);
-					this.writeAttribute("colKey", dsTable.getSplitOptimiserColumn(),
-							xmlWriter);
-					this.closeElement("splitOptimiser", xmlWriter);
-				}
 				// Write out dscol mods from each table col.
 				for (final Iterator j = dsTable.getColumns().values()
 						.iterator(); j.hasNext();) {
@@ -885,6 +876,15 @@ public class MartBuilderXML extends DefaultHandler {
 						this.writeAttribute("colKey", dsCol.getName(),
 								xmlWriter);
 						this.closeElement("indexedColumn", xmlWriter);
+					}
+					// Write out split optimiser columns.
+					if (dsCol.isSplitOptimiserColumn()) {
+						this.openElement("splitOptimiser", xmlWriter);
+						this.writeAttribute("tableKey", dsTable.getName(),
+								xmlWriter);
+						this.writeAttribute("colKey", dsCol.getName(),
+								xmlWriter);
+						this.closeElement("splitOptimiser", xmlWriter);
 					}
 					// Expression column.
 					if (dsCol instanceof ExpressionColumn) {
@@ -1782,28 +1782,6 @@ public class MartBuilderXML extends DefaultHandler {
 			}
 		}
 
-		// No-optimiser Table (inside dataset).
-		else if ("splitOptimiser".equals(eName)) {
-			// What dataset does it belong to? Throw a wobbly if none.
-			if (this.objectStack.empty()
-					|| !(this.objectStack.peek() instanceof DataSet))
-				throw new SAXException(Resources
-						.get("splitOptimiserOutsideDataSet"));
-			final DataSet w = (DataSet) this.objectStack.peek();
-
-			try {
-				// Look up the table.
-				final String tableKey = (String) attributes.get("tableKey");
-				final String colKey = (String) attributes.get("colKey");
-
-				// Distinct it.
-				w.getMods(tableKey, "splitOptimiserColumn").put(tableKey.intern(),
-						colKey);
-			} catch (final Exception e) {
-				throw new SAXException(e);
-			}
-		}
-
 		// Distinct Table (inside dataset).
 		else if ("distinctRows".equals(eName)) {
 			// What dataset does it belong to? Throw a wobbly if none.
@@ -2096,6 +2074,27 @@ public class MartBuilderXML extends DefaultHandler {
 
 				// Index it.
 				w.getMods(tableKey, "columnIndexed").put(colKey.intern(), null);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Split Optimiser Column (inside dataset).
+		else if ("splitOptimiser".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("splitOptimiserOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the relation.
+				final String tableKey = (String) attributes.get("tableKey");
+				final String colKey = (String) attributes.get("colKey");
+
+				// Index it.
+				w.getMods(tableKey, "splitOptimiserColumn").put(colKey.intern(), null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

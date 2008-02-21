@@ -735,9 +735,13 @@ public class PostgreSQLDialect extends DatabaseDialect {
 		if (optRestrictColName!=null) {
 			sb.append("b.");
 			sb.append(optRestrictColName);
-			sb.append("='");
-			sb.append(optRestrictValue);
-			sb.append("' and ");
+			if (optRestrictValue==null)
+				sb.append(" is null and");
+			else {
+				sb.append("='");
+				sb.append(optRestrictValue);
+				sb.append("' and ");
+			}
 		}
 		sb.append("not (");
 		for (final Iterator i = action.getNonNullColumns().iterator(); i

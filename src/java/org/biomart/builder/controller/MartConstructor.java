@@ -843,70 +843,82 @@ public interface MartConstructor {
 				// Loop rest of this block once per unique value
 				// in column, using SQL to get those values, and
 				// inserting them into each optimiser column name.
-				DataSetColumn restrictCol = (DataSetColumn) dsTable
-						.getColumns().get(dsTable.getSplitOptimiserColumn()); // TODO
-				final List restrictValues = new ArrayList();
-				if (restrictCol != null) {
-					// Disambiguate inherited columns.
-					while (restrictCol instanceof InheritedColumn)
-						restrictCol = ((InheritedColumn) restrictCol)
-								.getInheritedColumn();
-					// Can only restrict on wrapped columns.
-					if (restrictCol instanceof WrappedColumn) {
-						// Populate restrict values.
-						final Column dataCol = ((WrappedColumn) restrictCol)
-								.getWrappedColumn();
-						try {
-							restrictValues.addAll(dataCol.getTable()
-									.getSchema().getUniqueValues(schemaPrefix,
-											dataCol));
-						} catch (final SQLException e) {
-							throw new PartitionException(e);
+				final List restrictCols = new ArrayList();
+				for (final Iterator i = dsTable.getColumns().values()
+						.iterator(); i.hasNext();) {
+					final DataSetColumn cand = (DataSetColumn) i.next();
+					if (cand.isSplitOptimiserColumn() && !cand.isColumnMasked())
+						restrictCols.add(cand);
+				}
+				if (restrictCols.isEmpty())
+					restrictCols.add(null);
+				for (final Iterator i = restrictCols.iterator(); i.hasNext();) {
+					DataSetColumn restrictCol = (DataSetColumn) i.next();
+					final Collection subNonNullCols = new ArrayList(nonNullCols);
+					final List restrictValues = new ArrayList();
+					if (restrictCol != null) {
+						subNonNullCols.remove(restrictCol.getPartitionedName());
+						// Disambiguate inherited columns.
+						while (restrictCol instanceof InheritedColumn)
+							restrictCol = ((InheritedColumn) restrictCol)
+									.getInheritedColumn();
+						// Can only restrict on wrapped columns.
+						if (restrictCol instanceof WrappedColumn) {
+							// Populate restrict values.
+							final Column dataCol = ((WrappedColumn) restrictCol)
+									.getWrappedColumn();
+							try {
+								restrictValues.addAll(dataCol.getTable()
+										.getSchema().getUniqueValues(
+												schemaPrefix, dataCol));
+							} catch (final SQLException e) {
+								throw new PartitionException(e);
+							}
 						}
 					}
-				}
-				if (restrictValues.isEmpty()) {
-					restrictCol = null;
-					restrictValues.add(null);
-				} else
-					nonNullCols.remove(restrictCol.getPartitionedName());
-				for (final Iterator i = restrictValues.iterator(); i.hasNext();) {
-					final String restrictValue = (String) i.next();
-					// Columns are dimension table names with '_bool' or
-					// '_count' appended.
-					final String optCol = this.getOptimiserColumnName(dsPta,
-							dmPta, parent, dsTable, oType, restrictValue);
+					else
+						restrictValues.add(null);
+					for (final Iterator j = restrictValues.iterator(); j
+							.hasNext();) {
+						final String restrictValue = (String) j.next();
+						// Columns are dimension table names with '_bool' or
+						// '_count' appended.
+						final String optCol = this.getOptimiserColumnName(
+								dsPta, dmPta, parent, dsTable, oType,
+								restrictCol, restrictValue);
 
-					// Do the bool/count update.
-					final UpdateOptimiser update = new UpdateOptimiser(
-							this.datasetSchemaName, finalCombinedName);
-					update.setKeyColumns(keyCols);
-					update.setNonNullColumns(nonNullCols);
-					update.setSourceTableName(finalCombinedName);
-					update.setOptTableName(optTable);
-					update.setOptColumnName(optCol);
-					update.setCountNotBool(!oType.isBool());
-					update.setNullNotZero(oType.isUseNull());
-					update.setOptRestrictColumn(restrictCol == null ? null
-							: restrictCol.getPartitionedName());
-					update.setOptRestrictValue(restrictValue);
-					this.issueAction(update);
+						// Do the bool/count update.
+						final UpdateOptimiser update = new UpdateOptimiser(
+								this.datasetSchemaName, finalCombinedName);
+						update.setKeyColumns(keyCols);
+						update.setNonNullColumns(subNonNullCols);
+						update.setSourceTableName(finalCombinedName);
+						update.setOptTableName(optTable);
+						update.setOptColumnName(optCol);
+						update.setCountNotBool(!oType.isBool());
+						update.setNullNotZero(oType.isUseNull());
+						update.setOptRestrictColumn(restrictCol == null ? null
+								: restrictCol.getPartitionedName());
+						update.setOptRestrictValue(restrictValue);
+						this.issueAction(update);
 
-					// Store the reference for later.
-					if (!this.uniqueOptCols.containsKey(parent))
-						this.uniqueOptCols.put(parent, new HashSet());
-					((Collection) this.uniqueOptCols.get(parent)).add(optCol);
-					if (!this.indexOptCols.containsKey(parent))
-						this.indexOptCols.put(parent, new HashSet());
-					if (!dsTable.isSkipIndexOptimiser()) {
-						((Collection) this.indexOptCols.get(parent))
+						// Store the reference for later.
+						if (!this.uniqueOptCols.containsKey(parent))
+							this.uniqueOptCols.put(parent, new HashSet());
+						((Collection) this.uniqueOptCols.get(parent))
 								.add(optCol);
-						// Index the column.
-						final Index index = new Index(this.datasetSchemaName,
-								finalCombinedName);
-						index.setTable(optTable);
-						index.setColumns(Collections.singletonList(optCol));
-						this.issueAction(index);
+						if (!this.indexOptCols.containsKey(parent))
+							this.indexOptCols.put(parent, new HashSet());
+						if (!dsTable.isSkipIndexOptimiser()) {
+							((Collection) this.indexOptCols.get(parent))
+									.add(optCol);
+							// Index the column.
+							final Index index = new Index(
+									this.datasetSchemaName, finalCombinedName);
+							index.setTable(optTable);
+							index.setColumns(Collections.singletonList(optCol));
+							this.issueAction(index);
+						}
 					}
 				}
 			}
@@ -1696,7 +1708,9 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta,
 				final DataSetTable parent, final DataSetTable dsTable,
-				final DataSetOptimiserType oType, final String restrictValue)
+				final DataSetOptimiserType oType, 
+				final DataSetColumn restrictCol,
+				final String restrictValue)
 				throws PartitionException {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
@@ -1720,7 +1734,9 @@ public interface MartConstructor {
 					sb.append("" + counter);
 					sb.append(Resources.get("tablenameSubSep"));
 				}
-				if (restrictValue != null) {
+				if (restrictCol != null) {
+					sb.append(restrictCol.getModifiedName());
+					sb.append(Resources.get("tablenameSubSep"));
 					sb.append(restrictValue);
 					sb.append(Resources.get("tablenameSubSep"));
 				}
