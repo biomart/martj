@@ -522,6 +522,8 @@ public class Relation implements Comparable, TransactionListener {
 			this.manyKey = null;
 			// End fudge-mode.
 		}
+		if (Transaction.getCurrentTransaction().isAllowVisModChange())
+			this.setVisibleModified(true);
 		this.pcs.firePropertyChange("cardinality", oldValue, cardinality);
 	}
 
