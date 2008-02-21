@@ -1141,25 +1141,30 @@ public class SchemaTabSet extends JTabbedPane {
 		new LongProcess() {
 			public void run() {
 				final List modTbls = new ArrayList();
+				Transaction.start(true);
 				for (final Iterator i = sch.getTables().values().iterator(); i
 						.hasNext();) {
 					final Table tbl = (Table) i.next();
-					if (tbl.isVisibleModified())
+					if (tbl.isVisibleModified()) {
 						modTbls.add(tbl);
+						for (final Iterator k = tbl.getColumns().values().iterator(); k.hasNext(); )
+							((Column)k.next()).setVisibleModified(false);
+						for (final Iterator k = tbl.getRelations().iterator(); k.hasNext(); )
+							((Relation)k.next()).setVisibleModified(false);
+					}
 				}
+				Transaction.end();
 				for (final Iterator i = sch.getMart().getDataSets().values()
 						.iterator(); i.hasNext();) {
 					final DataSet ds = (DataSet) i.next();
 					if (!ds.isVisibleModified())
 						continue;
-					for (final Iterator j = modTbls.iterator(); j.hasNext();)
+					for (final Iterator j = modTbls.iterator(); j.hasNext();) {
+						final Table modTbl = (Table)j.next();
 						SchemaTabSet.this.getMartTab().getDataSetTabSet()
-								.requestAcceptAll(ds, (Table) j.next());
+								.requestAcceptAll(ds, modTbl);
+					}
 				}
-				Transaction.start(true);
-				SchemaTabSet.this.getMartTab().getDataSetTabSet()
-						.requestRemoveLastVisMods();
-				Transaction.end();
 			}
 		}.start();
 	}
@@ -1174,25 +1179,30 @@ public class SchemaTabSet extends JTabbedPane {
 		new LongProcess() {
 			public void run() {
 				final List modTbls = new ArrayList();
+				Transaction.start(true);
 				for (final Iterator i = sch.getTables().values().iterator(); i
 						.hasNext();) {
 					final Table tbl = (Table) i.next();
-					if (tbl.isVisibleModified())
+					if (tbl.isVisibleModified()) {
 						modTbls.add(tbl);
+						for (final Iterator k = tbl.getColumns().values().iterator(); k.hasNext(); )
+							((Column)k.next()).setVisibleModified(false);
+						for (final Iterator k = tbl.getRelations().iterator(); k.hasNext(); )
+							((Relation)k.next()).setVisibleModified(false);
+					}
 				}
+				Transaction.end();
 				for (final Iterator i = sch.getMart().getDataSets().values()
 						.iterator(); i.hasNext();) {
 					final DataSet ds = (DataSet) i.next();
 					if (!ds.isVisibleModified())
 						continue;
-					for (final Iterator j = modTbls.iterator(); j.hasNext();)
+					for (final Iterator j = modTbls.iterator(); j.hasNext();) {
+						final Table modTbl = (Table)j.next();
 						SchemaTabSet.this.getMartTab().getDataSetTabSet()
-								.requestRejectAll(ds, (Table) j.next());
+								.requestRejectAll(ds, modTbl);
+					}
 				}
-				Transaction.start(true);
-				SchemaTabSet.this.getMartTab().getDataSetTabSet()
-						.requestRemoveLastVisMods();
-				Transaction.end();
 			}
 		}.start();
 	}
