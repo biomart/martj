@@ -491,7 +491,8 @@ public class MartRunnerProtocol {
 				}
 
 				public void close() throws IOException {
-					this.os.flush();
+					if (this.os!=null)
+						this.os.flush();
 					super.close();
 				}
 			};
