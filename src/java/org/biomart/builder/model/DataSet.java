@@ -995,8 +995,8 @@ public class DataSet extends Schema {
 			}
 		}
 
-		// How many times have we actually seen each relation?
-		final Map relationTracker = new HashMap();
+		// How many times have we actually seen each table?
+		final Map tableTracker = new HashMap();
 
 		// Process the table. This operation will populate the initial
 		// values in the normal, subclass and dimension queues. We only
@@ -1010,7 +1010,7 @@ public class DataSet extends Schema {
 						&& !type.equals(DataSetTableType.DIMENSION),
 				Collections.EMPTY_LIST, Collections.EMPTY_LIST,
 				relationIteration, 0, unusedCols, uniqueBases,
-				skippedMainTables, relationTracker, mergeTheseRelations);
+				skippedMainTables, tableTracker, mergeTheseRelations);
 
 		// Process the normal queue. This merges tables into the dataset
 		// table using the relation specified in each pair in the queue.
@@ -1036,7 +1036,7 @@ public class DataSet extends Schema {
 					mergeSourceRelation, newRelationCounts, subclassCount,
 					makeDimensions, nameCols, nameColSuffixes, iteration,
 					i + 1, unusedCols, uniqueBases, skippedMainTables,
-					relationTracker, mergeTheseRelations);
+					tableTracker, mergeTheseRelations);
 		}
 
 		// If using second select, need to do skip initial Select and
@@ -1481,7 +1481,7 @@ public class DataSet extends Schema {
 			final List nameCols, final List nameColSuffixes,
 			final int relationIteration, int queuePos,
 			final Collection unusedCols, final Map uniqueBases,
-			final Collection skippedMainTables, final Map relationTracker,
+			final Collection skippedMainTables, final Map tableTracker,
 			final Collection mergeTheseRelationsInstead)
 			throws PartitionException {
 		Log.debug("Processing table " + mergeTable);
@@ -1494,7 +1494,13 @@ public class DataSet extends Schema {
 
 		final TransformationUnit tu;
 
-		int relationTrackerCount = 0;
+		int tableTrackerCount = 0;
+
+		// Count the table.
+		if (tableTracker.containsKey(mergeTable))
+			tableTrackerCount = ((Integer) tableTracker.get(mergeTable))
+					.intValue() + 1;
+		tableTracker.put(mergeTable, new Integer(tableTrackerCount));
 
 		// Did we get here via somewhere else?
 		if (sourceRelation != null) {
@@ -1513,13 +1519,6 @@ public class DataSet extends Schema {
 			// Remember we've been here.
 			this.includedRelations.add(sourceRelation);
 			dsTable.includedRelations.add(sourceRelation);
-
-			// Count the relation.
-			if (relationTracker.containsKey(sourceRelation))
-				relationTrackerCount = ((Integer) relationTracker
-						.get(sourceRelation)).intValue() + 1;
-			relationTracker.put(sourceRelation, new Integer(
-					relationTrackerCount));
 		} else
 			tu = new SelectFromTable(mergeTable);
 		this.includedTables.add(mergeTable);
@@ -1570,8 +1569,8 @@ public class DataSet extends Schema {
 			// the tracker not the iteration as this gives us
 			// a unique repetition number.
 			internalColName = mergeTable.getSchema().getUniqueId() + "."
-					+ mergeTable.getUniqueId() + "." + relationTrackerCount
-					+ "." + internalColName;
+					+ mergeTable.getUniqueId() + "." + tableTrackerCount + "."
+					+ internalColName;
 			// Add partitioning prefixes.
 			for (int k = 0; k < nameCols.size(); k++) {
 				final String pcolName = (String) nameCols.get(k);
@@ -2340,7 +2339,8 @@ public class DataSet extends Schema {
 			this.addPropertyChangeListener("columnMasked", this.listener);
 			this.addPropertyChangeListener("columnRename", this.listener);
 			this.addPropertyChangeListener("columnIndexed", this.listener);
-			this.addPropertyChangeListener("splitOptimiserColumn", this.listener);
+			this.addPropertyChangeListener("splitOptimiserColumn",
+					this.listener);
 		}
 
 		private DataSetColumn replicate(final DataSetTable copyT)
@@ -2685,7 +2685,8 @@ public class DataSet extends Schema {
 		 * @return <tt>true</tt> if it is.
 		 */
 		public boolean isSplitOptimiserColumn() {
-			return this.getMods("splitOptimiserColumn").containsKey(this.getName());
+			return this.getMods("splitOptimiserColumn").containsKey(
+					this.getName());
 		}
 
 		/**
@@ -2699,14 +2700,14 @@ public class DataSet extends Schema {
 			if (split == oldValue)
 				return;
 			if (split)
-				this.getMods("splitOptimiserColumn")
-						.put(this.getName().intern(), null);
+				this.getMods("splitOptimiserColumn").put(
+						this.getName().intern(), null);
 			else
 				this.getMods("splitOptimiserColumn").remove(this.getName());
-			this.pcs.firePropertyChange("splitOptimiserColumn", oldValue,
-					split);
+			this.pcs
+					.firePropertyChange("splitOptimiserColumn", oldValue, split);
 		}
-		
+
 		/**
 		 * Is this a renamed column?
 		 * 
