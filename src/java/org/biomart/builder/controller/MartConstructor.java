@@ -489,7 +489,8 @@ public interface MartConstructor {
 				return false;
 
 			// Use the transformation units to create the basic table.
-			final Collection units = dsTable.getTransformationUnits();
+			//final Collection units = dsTable.getTransformationUnits();
+			final Collection units = new ArrayList(dsTable.getTransformationUnits());
 			stepPercent /= units.size();
 			Relation firstJoinRel = null;
 			for (final Iterator j = units.iterator(); j.hasNext(); this.percentComplete += stepPercent) {
