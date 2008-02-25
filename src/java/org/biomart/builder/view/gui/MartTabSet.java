@@ -598,14 +598,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output database.
 	 */
 	public void requestSetOutputDatabase(final String outputDatabase) {
-		new LongProcess() {
-			public void run() {
-				Transaction.start(false);
-				MartTabSet.this.getSelectedMartTab().getMart()
-						.setOutputDatabase(outputDatabase);
-				Transaction.end();
-			}
-		}.start();
+		Transaction.start(false);
+		this.getSelectedMartTab().getMart().setOutputDatabase(outputDatabase);
+		Transaction.end();
 	}
 
 	/**
@@ -615,14 +610,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output schema.
 	 */
 	public void requestSetOutputSchema(final String outputSchema) {
-		new LongProcess() {
-			public void run() {
-				Transaction.start(false);
-				MartTabSet.this.getSelectedMartTab().getMart().setOutputSchema(
-						outputSchema);
-				Transaction.end();
-			}
-		}.start();
+		Transaction.start(false);
+		this.getSelectedMartTab().getMart().setOutputSchema(outputSchema);
+		Transaction.end();
 	}
 
 	/**
@@ -632,14 +622,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output host.
 	 */
 	public void requestSetOutputHost(final String host) {
-		new LongProcess() {
-			public void run() {
-				Transaction.start(false);
-				MartTabSet.this.getSelectedMartTab().getMart().setOutputHost(
-						host);
-				Transaction.end();
-			}
-		}.start();
+		Transaction.start(false);
+		this.getSelectedMartTab().getMart().setOutputHost(host);
+		Transaction.end();
 	}
 
 	/**
@@ -649,14 +634,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new output port.
 	 */
 	public void requestSetOutputPort(final String port) {
-		new LongProcess() {
-			public void run() {
-				Transaction.start(false);
-				MartTabSet.this.getSelectedMartTab().getMart().setOutputPort(
-						port);
-				Transaction.end();
-			}
-		}.start();
+		Transaction.start(false);
+		this.getSelectedMartTab().getMart().setOutputPort(port);
+		Transaction.end();
 	}
 
 	/**
@@ -666,14 +646,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new host.
 	 */
 	public void requestSetOverrideHost(final String host) {
-		new LongProcess() {
-			public void run() {
-				Transaction.start(false);
-				MartTabSet.this.getSelectedMartTab().getMart().setOverrideHost(
-						host);
-				Transaction.end();
-			}
-		}.start();
+		Transaction.start(false);
+		this.getSelectedMartTab().getMart().setOverrideHost(host);
+		Transaction.end();
 	}
 
 	/**
@@ -683,14 +658,9 @@ public class MartTabSet extends JTabbedPane implements TransactionListener {
 	 *            the new port.
 	 */
 	public void requestSetOverridePort(final String port) {
-		new LongProcess() {
-			public void run() {
-				Transaction.start(false);
-				MartTabSet.this.getSelectedMartTab().getMart().setOverridePort(
-						port);
-				Transaction.end();
-			}
-		}.start();
+		Transaction.start(false);
+		this.getSelectedMartTab().getMart().setOverridePort(port);
+		Transaction.end();
 	}
 
 	/**

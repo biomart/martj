@@ -26,6 +26,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -713,7 +714,17 @@ public class PartitionTableDialog extends TransactionalDialog {
 				// Update ds with new ones.
 				final List selectedCols = PartitionTableDialog.this
 						.getNewSelectedColumns();
-				ds.asPartitionTable().setSelectedColumnNames(selectedCols);
+				if (!ds.asPartitionTable().getSelectedColumnNames().equals(
+						selectedCols)) {
+					ds.asPartitionTable().setSelectedColumnNames(selectedCols);
+					for (final Iterator i = ds.asPartitionTable()
+							.getAllApplications().values().iterator(); i
+							.hasNext();)
+						for (final Iterator j = ((Map) i.next()).values()
+								.iterator(); j.hasNext();)
+							((PartitionTableApplication) ((WeakReference) j
+									.next()).get()).syncCounts();
+				}
 				// Update preview data column headers.
 				PartitionTableDialog.this.previewData
 						.setColumnIdentifiers(selectedCols.toArray());
@@ -968,13 +979,10 @@ public class PartitionTableDialog extends TransactionalDialog {
 		private void updateModel() {
 			if (WizardPanel.this.validateFields()) {
 				// How many rows? If less, remove extra ones.
-				boolean needsSyncCounts = false;
 				final int rowCount = WizardPanel.this.ptLevels.size();
-				while (rowCount < this.pta.getPartitionAppliedRows().size()) {
+				while (rowCount < this.pta.getPartitionAppliedRows().size())
 					this.pta.getPartitionAppliedRows().remove(
 							this.pta.getPartitionAppliedRows().size() - 1);
-					needsSyncCounts = true;
-				}
 				// Update or add existing rows.
 				for (int i = 0; i < WizardPanel.this.ptLevels.size()
 						&& ((JComboBox) WizardPanel.this.dsLevels.get(i))
@@ -985,12 +993,11 @@ public class PartitionTableDialog extends TransactionalDialog {
 							.get(i)).getSelectedItem();
 					final String nameCol = (String) ((JComboBox) WizardPanel.this.nameLevels
 							.get(i)).getSelectedItem();
-					if (i >= this.pta.getPartitionAppliedRows().size()) {
+					if (i >= this.pta.getPartitionAppliedRows().size())
 						this.pta.getPartitionAppliedRows().add(
 								new PartitionAppliedRow(ptCol, dsCol, nameCol,
 										(Relation) this.dsRelMap.get(dsCol)));
-						needsSyncCounts = true;
-					} else {
+					else {
 						final PartitionAppliedRow ptar = (PartitionAppliedRow) this.pta
 								.getPartitionAppliedRows().get(i);
 						ptar.setPartitionCol(ptCol);
@@ -998,13 +1005,6 @@ public class PartitionTableDialog extends TransactionalDialog {
 						ptar.setNamePartitionCol(nameCol);
 						ptar.setRelation((Relation) this.dsRelMap.get(dsCol));
 					}
-				}
-				// Update counts.
-				try {
-					if (needsSyncCounts)
-						this.pta.syncCounts();
-				} catch (final Exception e) {
-					StackTrace.showStackTrace(e);
 				}
 			}
 		}
@@ -1053,9 +1053,11 @@ public class PartitionTableDialog extends TransactionalDialog {
 	 *            the mart tab the dataset lives in.
 	 * @param dimension
 	 *            the dimension we want to run the wizard on.
+	 * @throws PartitionException
+	 *             if the table is invalid.
 	 */
 	public static void showForDimension(final MartTab martTab,
-			final DataSetTable dimension) {
+			final DataSetTable dimension) throws PartitionException {
 		final Mart mart = martTab.getMart();
 		// Does it already have a partition table? Select that one.
 		PartitionTableApplication pta = dimension
@@ -1154,6 +1156,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 				pta.getPartitionAppliedRows().add(row);
 			}
 			pt.applyTo(dimension.getDataSet(), dimension.getName(), pta);
+			pta.syncCounts();
 		}
 		// Open selected table with dimension selected in appliedList.
 		final PartitionTableDialog dialog = new PartitionTableDialog(martTab,
@@ -1173,9 +1176,11 @@ public class PartitionTableDialog extends TransactionalDialog {
 	 *            the mart tab the dataset lives in.
 	 * @param dataset
 	 *            the dataset we want to run the wizard on.
+	 * @throws PartitionException
+	 *             if the table is invalid.
 	 */
 	public static void showForDataSet(final MartTab martTab,
-			final DataSet dataset) {
+			final DataSet dataset) throws PartitionException {
 		final Mart mart = martTab.getMart();
 		// Does it already have a partition table? Select that one.
 		PartitionTableApplication pta = dataset.getPartitionTableApplication();
@@ -1274,6 +1279,7 @@ public class PartitionTableDialog extends TransactionalDialog {
 				pta.getPartitionAppliedRows().add(row);
 			}
 			pt.applyTo(dataset, PartitionTable.NO_DIMENSION, pta);
+			pta.syncCounts();
 		}
 		// Open selected table with dimension selected in appliedList.
 		final PartitionTableDialog dialog = new PartitionTableDialog(martTab,

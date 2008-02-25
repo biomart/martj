@@ -565,7 +565,11 @@ public class DataSetTabSet extends JTabbedPane {
 	 */
 	public void requestDimensionPartitionWizard(final DataSetTable dim) {
 		// Create wizard dialog (specify dimension version)
-		PartitionTableDialog.showForDimension(this.getMartTab(), dim);
+		try {
+			PartitionTableDialog.showForDimension(this.getMartTab(), dim);
+		} catch (final PartitionException pe) {
+			StackTrace.showStackTrace(pe);
+		}
 	}
 
 	/**
@@ -575,7 +579,11 @@ public class DataSetTabSet extends JTabbedPane {
 	 *            the dataset to apply the wizard to.
 	 */
 	public void requestDataSetPartitionWizard(final DataSet ds) {
-		PartitionTableDialog.showForDataSet(this.getMartTab(), ds);
+		try {
+			PartitionTableDialog.showForDataSet(this.getMartTab(), ds);
+		} catch (final PartitionException pe) {
+			StackTrace.showStackTrace(pe);
+		}
 	}
 
 	/**
@@ -1325,9 +1333,9 @@ public class DataSetTabSet extends JTabbedPane {
 				Transaction.start(false);
 				for (final Iterator k = DataSetTabSet.this.getMartTab()
 						.getMart().getPartitionTables().iterator(); k.hasNext();)
-					for (final Iterator i = ((DataSet) k.next())
-							.asPartitionTable().getAllApplications().values()
-							.iterator(); i.hasNext();)
+					for (final Iterator i = ((PartitionTable) k.next())
+							.getAllApplications().values().iterator(); i
+							.hasNext();)
 						for (final Iterator j = ((Map) i.next()).values()
 								.iterator(); j.hasNext();)
 							try {

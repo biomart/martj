@@ -294,7 +294,7 @@ public interface MartConstructor {
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 			final PartitionTableApplication dsPta = dataset
 					.getPartitionTableApplication();
-
+			
 			// Is it partitioned?
 			Collection schemaPartitions = new ArrayList(templateSchema
 					.getPartitions().entrySet());
@@ -487,10 +487,10 @@ public interface MartConstructor {
 					.getFocusTable().getSchemaPartitions().contains(
 							schemaPrefix)))
 				return false;
-
+			
 			// Use the transformation units to create the basic table.
-			//final Collection units = dsTable.getTransformationUnits();
-			final Collection units = new ArrayList(dsTable.getTransformationUnits());
+			// FIXME
+			final Collection units = dsTable.getTransformationUnits();
 			stepPercent /= units.size();
 			Relation firstJoinRel = null;
 			for (final Iterator j = units.iterator(); j.hasNext(); this.percentComplete += stepPercent) {
