@@ -67,7 +67,7 @@ public class Table implements Comparable, TransactionListener {
 	private static final long serialVersionUID = 1L;
 
 	private int uniqueId;
-	
+
 	private final BeanMap columns;
 
 	private final BeanCollection foreignKeys;
@@ -146,17 +146,20 @@ public class Table implements Comparable, TransactionListener {
 		this.addPropertyChangeListener("restrictTable", this.listener);
 		this.addPropertyChangeListener("bigTable", this.listener);
 	}
-	
+
 	/**
 	 * Change the unique ID for this table.
-	 * @param uniqueId the new one to use.
+	 * 
+	 * @param uniqueId
+	 *            the new one to use.
 	 */
 	public void setUniqueId(final int uniqueId) {
 		this.uniqueId = uniqueId;
 	}
-	
+
 	/**
 	 * Get the unique ID for this table.
+	 * 
 	 * @return the unique ID.
 	 */
 	public int getUniqueId() {
@@ -610,7 +613,7 @@ public class Table implements Comparable, TransactionListener {
 		if (doIt == oldValue)
 			return;
 		if (doIt) {
-			this.getMods(dataset, tableKey).put("transformStart",null);
+			this.getMods(dataset, tableKey).put("transformStart", null);
 			this.pcs.firePropertyChange("transformStart", null, tableKey);
 		} else {
 			this.getMods(dataset, tableKey).remove("transformStart");

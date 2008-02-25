@@ -688,6 +688,27 @@ public class DataSetTabSet extends JTabbedPane {
 	}
 
 	/**
+	 * Requests that a table be hide-masked.
+	 * 
+	 * @param ds
+	 *            the dataset we are working with.
+	 * @param dst
+	 *            the table to make hide-masked.
+	 * @param tableHideMasked
+	 *            whether to do it.
+	 */
+	public void requestTableHideMasked(final DataSet ds, final DataSetTable dst,
+			final boolean tableHideMasked) {
+		new LongProcess() {
+			public void run() {
+				Transaction.start(false);
+				dst.setTableHideMasked(tableHideMasked);
+				Transaction.end();
+			}
+		}.start();
+	}
+
+	/**
 	 * Requests that a table be not optimisered.
 	 * 
 	 * @param ds

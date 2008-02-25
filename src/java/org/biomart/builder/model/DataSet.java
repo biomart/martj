@@ -3268,6 +3268,7 @@ public class DataSet extends Schema {
 			this.addPropertyChangeListener("skipIndexOptimiser", this.listener);
 			this.addPropertyChangeListener("partitionTableApplication",
 					this.listener);
+			this.addPropertyChangeListener("tableHideMasked", this.listener);
 
 			// Make dataset rebuild when our columns change externally.
 			this.getColumns().addPropertyChangeListener(
@@ -3861,6 +3862,34 @@ public class DataSet extends Schema {
 				this.getMods("noFinalLeftJoin").remove(this.getName());
 			this.pcs.firePropertyChange("noFinalLeftJoin", oldValue,
 					noFinalLeftJoin);
+		}
+
+		/**
+		 * Is this a hide-masked table?
+		 * 
+		 * @return <tt>true</tt> if it is.
+		 */
+		public boolean isTableHideMasked() {
+			return this.getMods("tableHideMasked").containsKey(this.getName());
+		}
+
+		/**
+		 * Hide-masked this table.
+		 * 
+		 * @param tableHideMasked
+		 *            <tt>true</tt> to make hide-masked.
+		 */
+		public void setTableHideMasked(final boolean tableHideMasked) {
+			final boolean oldValue = this.isTableHideMasked();
+			if (tableHideMasked == oldValue)
+				return;
+			if (tableHideMasked)
+				this.getMods("tableHideMasked").put(this.getName().intern(),
+						null);
+			else
+				this.getMods("tableHideMasked").remove(this.getName());
+			this.pcs.firePropertyChange("tableHideMasked", oldValue,
+					tableHideMasked);
 		}
 
 		/**

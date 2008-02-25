@@ -828,6 +828,13 @@ public class MartBuilderXML extends DefaultHandler {
 							xmlWriter);
 					this.closeElement("explainHideMasked", xmlWriter);
 				}
+				// Explain-hide-masked table.
+				if (dsTable.isTableHideMasked()) {
+					this.openElement("tableHideMasked", xmlWriter);
+					this.writeAttribute("tableKey", dsTable.getName(),
+							xmlWriter);
+					this.closeElement("tableHideMasked", xmlWriter);
+				}
 				// Distinct table.
 				if (dsTable.isDistinctTable()) {
 					this.openElement("distinctRows", xmlWriter);
@@ -1673,6 +1680,27 @@ public class MartBuilderXML extends DefaultHandler {
 				// Merge it.
 				if (rel != null)
 					rel.setMergeRelation(w, true);
+			} catch (final Exception e) {
+				throw new SAXException(e);
+			}
+		}
+
+		// Table-hide-masked (inside dataset).
+		else if ("tableHideMasked".equals(eName)) {
+			// What dataset does it belong to? Throw a wobbly if none.
+			if (this.objectStack.empty()
+					|| !(this.objectStack.peek() instanceof DataSet))
+				throw new SAXException(Resources
+						.get("tableHideMaskedOutsideDataSet"));
+			final DataSet w = (DataSet) this.objectStack.peek();
+
+			try {
+				// Look up the table.
+				final String tableKey = (String) attributes.get("tableKey");
+
+				// Hide-mask it.
+				w.getMods(tableKey, "tableHideMasked").put(tableKey.intern(),
+						null);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

@@ -40,6 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.biomart.builder.model.Column;
+import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.Key;
 import org.biomart.builder.model.Relation;
 import org.biomart.builder.model.Table;
@@ -240,6 +241,11 @@ public class TableComponent extends BoxShapedComponent {
 		label.setFont(TableComponent.ITALIC_FONT);
 		this.add(label, this.constraints);
 
+		// Start masked?
+		if (TableComponent.this.getTable() instanceof DataSetTable)
+			this.hidingMaskedCols = ((DataSetTable) TableComponent.this
+					.getTable()).isTableHideMasked();
+
 		// Add a key component as a sub-component of this table,
 		// for each of the foreign keys in the table.
 		for (final Iterator i = this.getTable().getKeys().iterator(); i
@@ -282,11 +288,20 @@ public class TableComponent extends BoxShapedComponent {
 			final JCheckBox hideMaskedButton = new JCheckBox(Resources
 					.get("hideMaskedTitle"));
 			hideMaskedButton.setFont(TableComponent.BOLD_FONT);
+			hideMaskedButton.setSelected(TableComponent.this.hidingMaskedCols);
 			this.columnsListPanel.add(hideMaskedButton);
 			hideMaskedButton.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent e) {
 					TableComponent.this.hidingMaskedCols = hideMaskedButton
 							.isSelected();
+					if (TableComponent.this.getTable() instanceof DataSetTable)
+						TableComponent.this.getDiagram().getMartTab()
+								.getDataSetTabSet().requestTableHideMasked(
+										(DataSet) TableComponent.this
+												.getTable().getSchema(),
+										(DataSetTable) TableComponent.this
+												.getTable(),
+										TableComponent.this.hidingMaskedCols);
 					// Recalculate the diagram.
 					for (final Iterator i = TableComponent.this
 							.getSubComponents().values().iterator(); i

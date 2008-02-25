@@ -88,7 +88,7 @@ indexedColumn*,maskedRelation*,alternativeJoin*,transformStart*,maskedTable*,
 mergedRelation*,loopbackRelation*,forcedRelation*,restrictedTable*,
 restrictedRelation*,expressionColumn*,renamedTable*,
 renamedColumn*,distinctRows*,noFinalLeftJoin*,skipOptimiser*,skipIndexOptimiser*,unrolledRelation*,explainHideMasked*,
-visibleModified*,bigTable*,splitOptimiser*)>
+visibleModified*,bigTable*,splitOptimiser*,tableHideMasked*)>
 <!ATTLIST dataset name CDATA #REQUIRED>
 <!ATTLIST dataset centralTableId IDREF #REQUIRED>
 <!ATTLIST dataset optimiser (COLUMN_INHERIT|COLUMN_BOOL_INHERIT|COLUMN_BOOL_NULL_INHERIT|TABLE_INHERIT|TABLE_BOOL_INHERIT|TABLE_BOOL_NULL_INHERIT|NONE) #REQUIRED>
@@ -99,6 +99,9 @@ visibleModified*,bigTable*,splitOptimiser*)>
 
 <!ELEMENT explainHideMasked EMPTY>
 <!ATTLIST explainHideMasked tableKey CDATA #REQUIRED>
+
+<!ELEMENT tableHideMasked EMPTY>
+<!ATTLIST tableHideMasked tableKey CDATA #REQUIRED>
 
 <!ELEMENT visibleModified EMPTY>
 <!ATTLIST visibleModified key CDATA #REQUIRED>
