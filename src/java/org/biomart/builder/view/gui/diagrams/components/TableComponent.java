@@ -286,9 +286,8 @@ public class TableComponent extends BoxShapedComponent {
 				|| this.getTable() instanceof RealisedTable
 				|| this.getTable() instanceof FakeTable) {
 			final JCheckBox hideMaskedButton = new JCheckBox(Resources
-					.get("hideMaskedTitle"));
+					.get("hideMaskedTitle"), this.hidingMaskedCols);
 			hideMaskedButton.setFont(TableComponent.BOLD_FONT);
-			hideMaskedButton.setSelected(TableComponent.this.hidingMaskedCols);
 			this.columnsListPanel.add(hideMaskedButton);
 			hideMaskedButton.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent e) {
@@ -315,20 +314,6 @@ public class TableComponent extends BoxShapedComponent {
 			});
 		}
 
-		// Add columns to the list one by one, as column sub-components.
-		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
-			final Column col = (Column) i.next();
-			final ColumnComponent colComponent = new ColumnComponent(col, this
-					.getDiagram());
-
-			// Add it as a sub-component (internal representation only).
-			this.addSubComponent(col, colComponent);
-			this.getSubComponents().putAll(colComponent.getSubComponents());
-
-			// Physically add it to the list of columns.
-			this.columnsListPanel.add(colComponent);
-		}
-
 		// Show/hide the columns panel with a button.
 		this.showHide = new JButton(Resources.get("showColumnsButton"));
 		this.showHide.setFont(TableComponent.BOLD_FONT);
@@ -344,6 +329,30 @@ public class TableComponent extends BoxShapedComponent {
 		this.showHide.setEnabled(sortedColMap.size() > 0);
 		this.add(this.columnsListPanel, this.constraints);
 		this.columnsListPanel.setVisible(false);
+
+		// Add columns to the list one by one, as column sub-components.
+		for (final Iterator i = sortedColMap.values().iterator(); i.hasNext();) {
+			final Column col = (Column) i.next();
+			final ColumnComponent colComponent = new ColumnComponent(col, this
+					.getDiagram());
+
+			// Add it as a sub-component (internal representation only).
+			this.addSubComponent(col, colComponent);
+			this.getSubComponents().putAll(colComponent.getSubComponents());
+
+			// Physically add it to the list of columns.
+			this.columnsListPanel.add(colComponent);
+		}
+
+		// Recalculate the diagram if masking as the recalc can sometimes
+		// lose it.
+		if (this.hidingMaskedCols)
+			for (final Iterator i = TableComponent.this.getSubComponents()
+					.values().iterator(); i.hasNext();) {
+				final DiagramComponent comp = (DiagramComponent) i.next();
+				if (comp instanceof ColumnComponent)
+					comp.repaintDiagramComponent();
+			}
 
 		// Set our initial display state as false, which means columns are
 		// hidden.
