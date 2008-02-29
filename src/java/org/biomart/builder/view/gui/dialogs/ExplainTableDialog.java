@@ -31,6 +31,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -338,13 +339,15 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 			public void run() throws Exception {
 				// Keep a note of shown tables.
 				final Map shownTables = new HashMap();
-				for (final Iterator i = ExplainTableDialog.this.transformationTableDiagrams
-						.iterator(); i.hasNext();) {
-					final TableComponent[] comps = ((ExplainTransformationDiagram) i
-							.next()).getTableComponents();
+				for (int i = 1; i <= ExplainTableDialog.this.transformationTableDiagrams
+						.size(); i++) {
+					final TableComponent[] comps = ((ExplainTransformationDiagram) ExplainTableDialog.this.transformationTableDiagrams
+							.get(i - 1)).getTableComponents();
+					final Map map = new HashMap();
+					shownTables.put("" + i, map);
 					for (int j = 0; j < comps.length; j++)
-						shownTables.put(((Table) comps[j].getObject())
-								.getName(), comps[j].getState());
+						map.put(((Table) comps[j].getObject()).getName(),
+								comps[j].getState());
 				}
 
 				// Clear the transformation box.
@@ -361,8 +364,10 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 				// and performance issues. Refuse to do the display and
 				// instead put up a helpful message. Limit should be
 				// configurable from a properties file.
-				final Collection units = new ArrayList(ExplainTableDialog.this.dsTable
-						.getTransformationUnits()); // To prevent concmod.
+				final Collection units = new ArrayList(
+						ExplainTableDialog.this.dsTable
+								.getTransformationUnits()); // To prevent
+															// concmod.
 				if (units.size() > ExplainTableDialog.MAX_UNITS)
 					ExplainTableDialog.this.transformation.add(new JLabel(
 							Resources.get("tooManyUnits", ""
@@ -384,6 +389,9 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 						// Holders for our stuff.
 						final JLabel label;
 						final ExplainTransformationDiagram diagram;
+						Map map = (Map) shownTables.get("" + stepNumber);
+						if (map==null)
+							map = Collections.EMPTY_MAP;
 						// Draw the unit.
 						if (tu instanceof Expression) {
 							// Do an expression column list.
@@ -399,7 +407,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 									ExplainTableDialog.this.martTab, tu,
 									stepNumber,
 									ExplainTableDialog.this.explainContext,
-									shownTables);
+									map);
 						} else if (tu instanceof SkipTable) {
 							// Don't show these if we're hiding masked things.
 							if (ExplainTableDialog.this.dsTable
@@ -418,7 +426,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 									ExplainTableDialog.this.martTab,
 									(SkipTable) tu, columnsSoFar, stepNumber,
 									ExplainTableDialog.this.explainContext,
-									shownTables);
+									map);
 						} else if (tu instanceof UnrollTable) {
 							// Temp table to schema table join.
 							label = new JLabel(
@@ -433,7 +441,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 									ExplainTableDialog.this.martTab,
 									(UnrollTable) tu, columnsSoFar, stepNumber,
 									ExplainTableDialog.this.explainContext,
-									shownTables);
+									map);
 						} else if (tu instanceof JoinTable) {
 							// Temp table to schema table join.
 							label = new JLabel(
@@ -448,7 +456,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 									ExplainTableDialog.this.martTab,
 									(JoinTable) tu, columnsSoFar, stepNumber,
 									ExplainTableDialog.this.explainContext,
-									shownTables);
+									map);
 						} else if (tu instanceof SelectFromTable) {
 							// Do a single-step select.
 							label = new JLabel(
@@ -463,7 +471,7 @@ public class ExplainTableDialog extends JDialog implements TransactionListener {
 									ExplainTableDialog.this.martTab,
 									(SelectFromTable) tu, stepNumber,
 									ExplainTableDialog.this.explainContext,
-									shownTables);
+									map);
 						} else
 							throw new BioMartError();
 						// Display the diagram.
