@@ -266,8 +266,7 @@ public class JobThreadManager extends Thread {
 		}
 
 		private boolean continueRunning() {
-			return !this.manager.jobStopped
-					&& !this.cancelled;
+			return !this.manager.jobStopped && !this.cancelled;
 		}
 
 		public boolean equals(final Object o) {
@@ -332,10 +331,13 @@ public class JobThreadManager extends Thread {
 						}
 						dropSql.append(dropTableName);
 						stmt.execute(dropSql.toString());
-						final SQLWarning warning = conn.getWarnings();
-						if (warning != null)
-							throw warning;
-						stmt.close();
+						try {
+							final SQLWarning warning = conn.getWarnings();
+							if (warning != null)
+								throw warning;
+						} finally {
+							stmt.close();
+						}
 					}
 					// If action is drop table (), check to see if
 					// we should skip over it instead.
@@ -347,15 +349,18 @@ public class JobThreadManager extends Thread {
 							try {
 								rs = stmt.getResultSet();
 								this.plan.callbackResults(action, rs);
+								final SQLWarning warning = conn.getWarnings();
+								if (warning != null)
+									throw warning;
 							} finally {
-								if (rs!=null)
-									rs.close();
+								try {
+									if (rs != null)
+										rs.close();
+								} finally {
+									stmt.close();
+								}
 							}
 						}
-						final SQLWarning warning = conn.getWarnings();
-						if (warning != null)
-							throw warning;
-						stmt.close();
 					}
 				} catch (final Throwable t) {
 					final StringWriter messageWriter = new StringWriter();
