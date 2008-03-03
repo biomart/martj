@@ -697,8 +697,8 @@ public class DataSetTabSet extends JTabbedPane {
 	 * @param tableHideMasked
 	 *            whether to do it.
 	 */
-	public void requestTableHideMasked(final DataSet ds, final DataSetTable dst,
-			final boolean tableHideMasked) {
+	public void requestTableHideMasked(final DataSet ds,
+			final DataSetTable dst, final boolean tableHideMasked) {
 		new LongProcess() {
 			public void run() {
 				Transaction.start(false);
@@ -2001,6 +2001,32 @@ public class DataSetTabSet extends JTabbedPane {
 				} finally {
 					dialog.dispose();
 					Transaction.end();
+				}
+			}
+		}.start();
+	}
+
+	/**
+	 * Given a table, suggest a synchronised dataset that may be possible for
+	 * that table and automatically make it into a partition table.
+	 * 
+	 * @param table
+	 *            the table to suggest datasets for.
+	 */
+	public void requestSuggestPartitionTable(final Table table) {
+		new LongProcess() {
+			public void run() throws Exception {
+				DataSet ds = null;
+				try {
+					Transaction.start(false);
+					ds = (DataSet) DataSetTabSet.this.martTab.getMart()
+							.suggestDataSets(Collections.singleton(table))
+							.iterator().next();
+					ds.setPartitionTable(true);
+				} finally {
+					Transaction.end();
+					if (ds != null)
+						DataSetTabSet.this.requestConvertPartitionTable(ds);
 				}
 			}
 		}.start();

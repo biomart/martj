@@ -336,6 +336,21 @@ public class SchemaContext implements DiagramContext {
 
 			// Menu option to suggest a bunch of datasets based around that
 			// table.
+			final JMenuItem suggestPT = new JMenuItem(Resources.get(
+					"suggestPartitionTableTitle", table.getName()));
+			suggestPT.setMnemonic(Resources.get("suggestPartitionTableMnemonic")
+					.charAt(0));
+			suggestPT.addActionListener(new ActionListener() {
+				public void actionPerformed(final ActionEvent evt) {
+					SchemaContext.this.getMartTab().getDataSetTabSet()
+							.requestSuggestPartitionTable(table);
+				}
+			});
+			contextMenu.add(suggestPT);
+			suggestPT.setEnabled(!table.getSchema().isMasked());
+
+			// Menu option to suggest a bunch of datasets based around that
+			// table.
 			final JMenuItem createOntologyDS = new JMenuItem(Resources.get(
 					"suggestUnrolledDataSetsTableTitle", table.getName()));
 			createOntologyDS.setMnemonic(Resources.get(
