@@ -330,7 +330,9 @@ public class JobThreadManager extends Thread {
 							dropSql.append('.');
 						}
 						dropSql.append(dropTableName);
+						Log.debug("About to execute: "+dropSql);
 						stmt.execute(dropSql.toString());
+						Log.debug("Completed: "+dropSql);
 						try {
 							final SQLWarning warning = conn.getWarnings();
 							if (warning != null)
@@ -344,6 +346,7 @@ public class JobThreadManager extends Thread {
 					if (!(this.plan.isSkipDropTable() && sql
 							.startsWith("drop table"))) {
 						final Statement stmt = conn.createStatement();
+						Log.debug("About to execute: "+sql);
 						if (stmt.execute(sql)) {
 							ResultSet rs = null;
 							try {
@@ -361,6 +364,7 @@ public class JobThreadManager extends Thread {
 								}
 							}
 						}
+						Log.debug("Completed: "+sql);
 					}
 				} catch (final Throwable t) {
 					final StringWriter messageWriter = new StringWriter();
