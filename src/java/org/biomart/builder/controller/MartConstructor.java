@@ -286,6 +286,16 @@ public interface MartConstructor {
 			Log.debug("Making actions for dataset " + dataset);
 			// Check not cancelled.
 			this.checkCancelled();
+			
+			// Check it has a _key column on every table.
+			boolean hasKeyCol = false;
+			for (final Iterator j = dataset.getMainTable().getColumns().values().iterator(); !hasKeyCol && j.hasNext(); )
+				hasKeyCol |= ((DataSetColumn)j.next()).getModifiedName().endsWith(Resources.get("keySuffix"));
+			if (!hasKeyCol)
+				throw new ValidationException(Resources.get("datasetNoKeyCol",dataset.getName()));
+
+			// Check not cancelled.
+			this.checkCancelled();
 
 			// Start with a fresh set of final names.
 			this.finalNameCache.clear();

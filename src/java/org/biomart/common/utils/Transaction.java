@@ -334,7 +334,7 @@ public class Transaction {
 		}
 	}
 
-	private final boolean allowVisModChange;
+	private boolean allowVisModChange;
 
 	/**
 	 * Create a new, empty transaction.
@@ -343,6 +343,15 @@ public class Transaction {
 	 *            Does this transaction modify visible modification flags?
 	 */
 	public Transaction(final boolean allowVisModChange) {
+		this.allowVisModChange = allowVisModChange;
+	}
+
+	/**
+	 * Does this transaction modify visible modification flags?
+	 * 
+	 * @param allowVisModChange <tt>true</tt> if it does.
+	 */
+	public void setAllowVisModChange(final boolean allowVisModChange) {
 		this.allowVisModChange = allowVisModChange;
 	}
 

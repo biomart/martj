@@ -1931,7 +1931,7 @@ public class DataSetTabSet extends JTabbedPane {
 			new LongProcess() {
 				public void run() throws Exception {
 					try {
-						Transaction.start(false);
+						Transaction.start(true);
 						final DataSet ds = DataSetTabSet.this.getMartTab()
 								.getMart().suggestUnrolledDataSets(
 										actualNTable, nIDCol, nNamingCol,

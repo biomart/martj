@@ -173,7 +173,7 @@ public class DataSet extends Schema {
 			throws ValidationException {
 		// Super first, to set the name.
 		super(mart, name, name, name, null, null);
-
+		
 		// Remember the settings and make some defaults.
 		this.invisible = false;
 		this.centralTable = centralTable;

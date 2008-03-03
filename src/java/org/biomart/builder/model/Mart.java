@@ -126,16 +126,14 @@ public class Mart implements TransactionListener {
 			Mart.this.setDirectModified(true);
 		}
 	};
-	
+
 	private final PropertyChangeListener schemaCacheBuilder = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
-			final Collection newSchs = new HashSet(Mart.this.schemas
-					.values());
+			final Collection newSchs = new HashSet(Mart.this.schemas.values());
 			if (!newSchs.equals(Mart.this.schemaCache)) {
 				Mart.this.setDirectModified(true);
 				// Identify dropped ones.
-				final Collection dropped = new HashSet(
-						Mart.this.schemaCache);
+				final Collection dropped = new HashSet(Mart.this.schemaCache);
 				dropped.removeAll(newSchs);
 				// Identify new ones.
 				newSchs.removeAll(Mart.this.schemaCache);
@@ -157,13 +155,11 @@ public class Mart implements TransactionListener {
 
 	private final PropertyChangeListener datasetCacheBuilder = new PropertyChangeListener() {
 		public void propertyChange(final PropertyChangeEvent evt) {
-			final Collection newDss = new HashSet(Mart.this.datasets
-					.values());
+			final Collection newDss = new HashSet(Mart.this.datasets.values());
 			if (!newDss.equals(Mart.this.datasetCache)) {
 				Mart.this.setDirectModified(true);
 				// Identify dropped ones.
-				final Collection dropped = new HashSet(
-						Mart.this.datasetCache);
+				final Collection dropped = new HashSet(Mart.this.datasetCache);
 				dropped.removeAll(newDss);
 				// Identify new ones.
 				newDss.removeAll(Mart.this.datasetCache);
@@ -182,8 +178,8 @@ public class Mart implements TransactionListener {
 						for (final Iterator k = sch.getTables().values()
 								.iterator(); k.hasNext();)
 							((Table) k.next()).dropMods(deadDS, null);
-						for (final Iterator k = sch.getRelations()
-								.iterator(); k.hasNext();)
+						for (final Iterator k = sch.getRelations().iterator(); k
+								.hasNext();)
 							((Relation) k.next()).dropMods(deadDS, null);
 					}
 					// Remove all partition table applications.
@@ -193,8 +189,7 @@ public class Mart implements TransactionListener {
 						pta.getPartitionTable().removeFrom(deadDS, null);
 					for (final Iterator j = deadDS.getTables().values()
 							.iterator(); j.hasNext();) {
-						final DataSetTable dsTable = (DataSetTable) j
-								.next();
+						final DataSetTable dsTable = (DataSetTable) j.next();
 						pta = dsTable.getPartitionTableApplication();
 						if (pta != null)
 							pta.getPartitionTable().removeFrom(deadDS,
@@ -215,7 +210,7 @@ public class Mart implements TransactionListener {
 			}
 		}
 	};
-	
+
 	/**
 	 * Construct a new, empty, mart.
 	 */
@@ -241,16 +236,17 @@ public class Mart implements TransactionListener {
 		this.datasetCache = new HashSet();
 		this.datasets.addPropertyChangeListener(this.datasetCacheBuilder);
 	}
-	
+
 	/**
 	 * Obtain the next unique ID to use for a schema.
+	 * 
 	 * @return the next ID.
 	 */
 	public int getNextUniqueId() {
 		int x = 0;
-		for (final Iterator i = this.schemaCache.iterator(); i.hasNext(); )
-			x = Math.max(x, ((Schema)i.next()).getUniqueId());
-		return x+1;
+		for (final Iterator i = this.schemaCache.iterator(); i.hasNext();)
+			x = Math.max(x, ((Schema) i.next()).getUniqueId());
+		return x + 1;
 	}
 
 	/**
@@ -1127,6 +1123,10 @@ public class Mart implements TransactionListener {
 			parentRel = childRel;
 			childRel = otherRel;
 		}
+
+		// Don't make dataset itself green.
+		if (Transaction.getCurrentTransaction() != null)
+			Transaction.getCurrentTransaction().setAllowVisModChange(false);
 
 		// Create a simple dataset based on the selected table.
 		final DataSet ds = new DataSet(this, nTable, nTable.getName());
