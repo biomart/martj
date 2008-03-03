@@ -1657,13 +1657,13 @@ public interface MartConstructor {
 				finalName.append(schemaPartitionPrefix);
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
+			finalName.append(dsTable.getSchema().getName());
 			if (dsPta != null) {
+				finalName.append(Resources.get("tablenameSubSep"));
 				final PartitionColumn pcol = dsPta.getNamePartitionCol();
 				finalName.append(pcol.getValueForRow(pcol.getPartitionTable()
 						.currentRow()));
-				finalName.append(Resources.get("tablenameSubSep"));
 			}
-			finalName.append(dsTable.getSchema().getName());
 			finalName.append(Resources.get("tablenameSep"));
 			finalName.append(dsTable.getModifiedName());
 			if (oType.equals(DataSetOptimiserType.TABLE_INHERIT)) {
@@ -1777,13 +1777,13 @@ public interface MartConstructor {
 				finalName.append(schemaPartitionPrefix);
 				finalName.append(Resources.get("tablenameSubSep"));
 			}
+			finalName.append(dsTable.getSchema().getName());
 			if (dsPta != null) {
+				finalName.append(Resources.get("tablenameSubSep"));
 				final PartitionColumn pcol = dsPta.getNamePartitionCol();
 				finalName.append(pcol.getValueForRow(pcol.getPartitionTable()
 						.currentRow()));
-				finalName.append(Resources.get("tablenameSubSep"));
 			}
-			finalName.append(dsTable.getSchema().getName());
 			finalName.append(Resources.get("tablenameSep"));
 			finalName.append(dsTable.getModifiedName());
 			String finalSuffix;
