@@ -501,7 +501,10 @@ public class MartBuilder extends BioMartGUI {
 			// Construct the file menu.
 			final JMenu fileMenu = new JMenu(Resources.get("fileMenuTitle"));
 			fileMenu.setMnemonic(Resources.get("fileMenuMnemonic").charAt(0));
+			fileMenu.add(this.newMart);
+			fileMenu.addSeparator();
 			fileMenu.add(this.openMart);
+			fileMenu.add(this.closeMart);
 			fileMenu.addSeparator();
 			fileMenu.add(this.saveMart);
 			fileMenu.add(this.saveMartAs);
@@ -519,9 +522,6 @@ public class MartBuilder extends BioMartGUI {
 			// Construct the mart menu.
 			final JMenu martMenu = new JMenu(Resources.get("martMenuTitle"));
 			martMenu.setMnemonic(Resources.get("martMenuMnemonic").charAt(0));
-			martMenu.add(this.newMart);
-			martMenu.add(this.closeMart);
-			martMenu.addSeparator();
 			martMenu.add(this.saveDDL);
 			martMenu.addSeparator();
 			martMenu.add(this.nameCaseSubmenu);
@@ -597,8 +597,6 @@ public class MartBuilder extends BioMartGUI {
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getSelectedMartTab().getMart()
 											.getDataSets().size() > 0);
-					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
-					MartBuilderMenuBar.this.nameCaseSubmenu.setEnabled(hasMart);
 				}
 			});
 			this.nameCaseSubmenu.addMenuListener(new MenuListener() {
@@ -643,6 +641,8 @@ public class MartBuilder extends BioMartGUI {
 									&& MartBuilderMenuBar.this.getMartBuilder().martTabSet
 											.getModifiedStatus());
 					MartBuilderMenuBar.this.saveMartAs.setEnabled(hasMart);
+					MartBuilderMenuBar.this.closeMart.setEnabled(hasMart);
+					MartBuilderMenuBar.this.nameCaseSubmenu.setEnabled(hasMart);
 					// Wipe from the separator to the last non-separator/
 					// non-numbered entry.
 					// Then, insert after the separator a numbered list
