@@ -58,6 +58,7 @@ import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
 import org.biomart.builder.model.MartConstructorAction.AddExpression;
+import org.biomart.builder.model.MartConstructorAction.CopyOptimiser;
 import org.biomart.builder.model.MartConstructorAction.CreateOptimiser;
 import org.biomart.builder.model.MartConstructorAction.Distinct;
 import org.biomart.builder.model.MartConstructorAction.Drop;
@@ -286,13 +287,16 @@ public interface MartConstructor {
 			Log.debug("Making actions for dataset " + dataset);
 			// Check not cancelled.
 			this.checkCancelled();
-			
+
 			// Check it has a _key column on every table.
 			boolean hasKeyCol = false;
-			for (final Iterator j = dataset.getMainTable().getColumns().values().iterator(); !hasKeyCol && j.hasNext(); )
-				hasKeyCol |= ((DataSetColumn)j.next()).getModifiedName().endsWith(Resources.get("keySuffix"));
+			for (final Iterator j = dataset.getMainTable().getColumns()
+					.values().iterator(); !hasKeyCol && j.hasNext();)
+				hasKeyCol |= ((DataSetColumn) j.next()).getModifiedName()
+						.endsWith(Resources.get("keySuffix"));
 			if (!hasKeyCol)
-				throw new ValidationException(Resources.get("datasetNoKeyCol",dataset.getName()));
+				throw new ValidationException(Resources.get("datasetNoKeyCol",
+						dataset.getName()));
 
 			// Check not cancelled.
 			this.checkCancelled();
@@ -304,7 +308,7 @@ public interface MartConstructor {
 			final Schema templateSchema = dataset.getCentralTable().getSchema();
 			final PartitionTableApplication dsPta = dataset
 					.getPartitionTableApplication();
-			
+
 			// Is it partitioned?
 			Collection schemaPartitions = new ArrayList(templateSchema
 					.getPartitions().entrySet());
@@ -497,7 +501,7 @@ public interface MartConstructor {
 					.getFocusTable().getSchemaPartitions().contains(
 							schemaPrefix)))
 				return false;
-			
+
 			// Use the transformation units to create the basic table.
 			// FIXME
 			final Collection units = dsTable.getTransformationUnits();
@@ -669,13 +673,15 @@ public interface MartConstructor {
 
 			// Create optimiser columns - either count or bool,
 			// or none if not required.
-			final DataSetOptimiserType oType = dataset
-					.getDataSetOptimiserType();
+			DataSetOptimiserType oType = dataset.getDataSetOptimiserType();
+			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS))
+				oType = oType.isTable() ? DataSetOptimiserType.TABLE_INHERIT
+						: DataSetOptimiserType.COLUMN_INHERIT;
 			if (!oType.equals(DataSetOptimiserType.NONE)
 					&& !dsTable.isSkipOptimiser())
 				this.doOptimiseTable(schemaPrefix, dsPta, dmPta, dataset,
-						dsTable, oType, dsTable.getType().equals(
-								DataSetTableType.MAIN)
+						dsTable, oType, !dsTable.getType().equals(
+								DataSetTableType.DIMENSION)
 								&& dataset.getDataSetOptimiserType().isTable(),
 						bigness, finalCombinedName);
 
@@ -820,13 +826,13 @@ public interface MartConstructor {
 				index.setColumns(keyCols);
 				this.issueAction(index);
 			}
-			if (dsTable.getType().equals(DataSetTableType.DIMENSION)) {
+			if (!dsTable.getType().equals(DataSetTableType.MAIN)) {
 				// Work out the dimension/subclass parent.
 				final DataSetTable parent = dsTable.getParent();
 				// Set up the column on the dimension parent.
-				final String optTable = this.getOptimiserTableName(
-						schemaPrefix, dsPta, dmPta, parent, dataset
-								.getDataSetOptimiserType());
+				String optTable = this
+						.getOptimiserTableName(schemaPrefix, dsPta, dmPta,
+								parent, dataset.getDataSetOptimiserType());
 
 				// Key columns are primary key cols from parent.
 				// Do a left-join update. We're looking for rows
@@ -886,8 +892,7 @@ public interface MartConstructor {
 								throw new PartitionException(e);
 							}
 						}
-					}
-					else
+					} else
 						restrictValues.add(null);
 					for (final Iterator j = restrictValues.iterator(); j
 							.hasNext();) {
@@ -929,6 +934,51 @@ public interface MartConstructor {
 							index.setTable(optTable);
 							index.setColumns(Collections.singletonList(optCol));
 							this.issueAction(index);
+						}
+
+						// Subclass tables need the column copied down if
+						// they are column based.
+						if (dsTable.getType().equals(
+								DataSetTableType.MAIN_SUBCLASS)
+								&& !oType.isTable()) {
+							// Set up the column on the subclass itself. Because
+							// we are not using tables, this will always be the
+							// finished name of the subclass table itself.
+							final String scOptTable = this
+									.getOptimiserTableName(schemaPrefix, dsPta,
+											dmPta, dsTable, dataset
+													.getDataSetOptimiserType());
+
+							// If this is a subclass table, copy the optimiser
+							// column down to us as well and add it to our own
+							// set.
+							final CopyOptimiser copy = new CopyOptimiser(
+									this.datasetSchemaName, finalCombinedName);
+							copy.setKeyColumns(keyCols);
+							copy.setOptTableName(scOptTable);
+							copy.setOptColumnName(optCol);
+							copy.setParentOptTableName(optTable);
+							this.issueAction(copy);
+
+							// Store the reference for later.
+							if (!this.uniqueOptCols.containsKey(dsTable))
+								this.uniqueOptCols.put(dsTable, new HashSet());
+							((Collection) this.uniqueOptCols.get(dsTable))
+									.add(optCol);
+							if (!this.indexOptCols.containsKey(dsTable))
+								this.indexOptCols.put(dsTable, new HashSet());
+							if (!dsTable.isSkipIndexOptimiser()) {
+								((Collection) this.indexOptCols.get(dsTable))
+										.add(optCol);
+								// Index the column.
+								final Index index = new Index(
+										this.datasetSchemaName,
+										finalCombinedName);
+								index.setTable(scOptTable);
+								index.setColumns(Collections
+										.singletonList(optCol));
+								this.issueAction(index);
+							}
 						}
 					}
 				}
@@ -1053,9 +1103,9 @@ public interface MartConstructor {
 			// this is not a dimension table and the optimiser type is not a
 			// table one.
 			DataSetOptimiserType oType = dataset.getDataSetOptimiserType();
-			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS)
-					&& oType.equals(DataSetOptimiserType.NONE))
-				oType = DataSetOptimiserType.COLUMN_INHERIT;
+			if (dsTable.getType().equals(DataSetTableType.MAIN_SUBCLASS))
+				oType = oType.isTable() ? DataSetOptimiserType.TABLE_INHERIT
+						: DataSetOptimiserType.COLUMN_INHERIT;
 			if (!oType.isTable() && sourceTable instanceof DataSetTable
 					&& !dsTable.getType().equals(DataSetTableType.DIMENSION)) {
 				final Collection hasCols = (Collection) this.uniqueOptCols
@@ -1719,9 +1769,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dsPta,
 				final PartitionTableApplication dmPta,
 				final DataSetTable parent, final DataSetTable dsTable,
-				final DataSetOptimiserType oType, 
-				final DataSetColumn restrictCol,
-				final String restrictValue)
+				final DataSetOptimiserType oType,
+				final DataSetColumn restrictCol, final String restrictValue)
 				throws PartitionException {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
