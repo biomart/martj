@@ -731,7 +731,7 @@ public class MartBuilderXML extends DefaultHandler {
 					}
 
 					// Loopback relations.
-					if (r.getLoopbackRelation(ds) != null) {
+					if (r.isLoopbackRelation(ds)) {
 						this.openElement("loopbackRelation", xmlWriter);
 						this.writeAttribute("relationId",
 								(String) this.reverseMappedObjects.get(r),
@@ -752,7 +752,7 @@ public class MartBuilderXML extends DefaultHandler {
 					}
 
 					// Compound relations.
-					if (r.getCompoundRelation(ds) != null) {
+					if (r.isCompoundRelation(ds)) {
 						final CompoundRelationDefinition def = r
 								.getCompoundRelation(ds);
 						this.openElement("compoundRelation", xmlWriter);
@@ -970,7 +970,7 @@ public class MartBuilderXML extends DefaultHandler {
 						}
 
 						// Loopback relations.
-						if (r.getLoopbackRelation(ds, dsTable.getName()) != null) {
+						if (r.isLoopbackRelation(ds, dsTable.getName())) {
 							this.openElement("loopbackRelation", xmlWriter);
 							this.writeAttribute("tableKey", dsTable.getName(),
 									xmlWriter);
@@ -996,7 +996,7 @@ public class MartBuilderXML extends DefaultHandler {
 						}
 
 						// Compound relations.
-						if (r.getCompoundRelation(ds, dsTable.getName()) != null) {
+						if (r.isCompoundRelation(ds, dsTable.getName())) {
 							final CompoundRelationDefinition def = r
 									.getCompoundRelation(ds, dsTable.getName());
 							this.openElement("compoundRelation", xmlWriter);

@@ -929,10 +929,39 @@ public class Relation implements Comparable, TransactionListener {
 	 * 
 	 * @param dataset
 	 *            the dataset to check for.
+	 * @return true if it is, false otherwise.
+	 */
+	public boolean isLoopbackRelation(final DataSet dataset) {
+		return this.getMods(dataset, null).containsKey("loopbackRelation");
+	}
+
+	/**
+	 * Is this relation loopbacked?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
 	 * @return the column to use if it is, null otherwise.
 	 */
 	public Column getLoopbackRelation(final DataSet dataset) {
 		return (Column) this.getMods(dataset, null).get("loopbackRelation");
+	}
+
+	/**
+	 * Is this relation loopbacked?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
+	 * @param tableKey
+	 *            the table to check for.
+	 * @return true if it is, false otherwise.
+	 */
+	public boolean isLoopbackRelation(final DataSet dataset,
+			final String tableKey) {
+		boolean result = this.getMods(dataset, tableKey).containsKey(
+				"loopbackRelation");
+		if (!result)
+			result = this.isLoopbackRelation(dataset);
+		return result;
 	}
 
 	/**
@@ -1141,6 +1170,17 @@ public class Relation implements Comparable, TransactionListener {
 	 * 
 	 * @param dataset
 	 *            the dataset to check for.
+	 * @return true if it is, false otherwise.
+	 */
+	public boolean isCompoundRelation(final DataSet dataset) {
+		return this.getMods(dataset, null).containsKey("compoundRelation");
+	}
+
+	/**
+	 * Is this relation compounded?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
 	 * @param tableKey
 	 *            the table to check for.
 	 * @return the def to use if it is, null otherwise.
@@ -1151,6 +1191,24 @@ public class Relation implements Comparable, TransactionListener {
 				.getMods(dataset, tableKey).get("compoundRelation");
 		if (result == null)
 			result = this.getCompoundRelation(dataset);
+		return result;
+	}
+
+	/**
+	 * Is this relation compounded?
+	 * 
+	 * @param dataset
+	 *            the dataset to check for.
+	 * @param tableKey
+	 *            the table to check for.
+	 * @return true if it is, false otherwise.
+	 */
+	public boolean isCompoundRelation(final DataSet dataset,
+			final String tableKey) {
+		boolean result = this.getMods(dataset, tableKey).containsKey(
+				"compoundRelation");
+		if (!result)
+			result = this.isCompoundRelation(dataset);
 		return result;
 	}
 
