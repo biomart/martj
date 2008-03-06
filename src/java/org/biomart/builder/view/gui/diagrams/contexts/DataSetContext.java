@@ -525,25 +525,8 @@ public class DataSetContext extends SchemaContext {
 			if (isUnrolled || isMerged || isMasked)
 				loopbackWiz.setEnabled(false);
 
-			// Dimension tables have their own options.
-			if (tableType.equals(DataSetTableType.DIMENSION)) {
-
-				// The table can be no-left-joined by using this option.
-				final JCheckBoxMenuItem noLeftJoin = new JCheckBoxMenuItem(
-						Resources.get("noFinalLeftJoinTableTitle"));
-				noLeftJoin.setMnemonic(Resources.get(
-						"noFinalLeftJoinTableMnemonic").charAt(0));
-				noLeftJoin.addActionListener(new ActionListener() {
-					public void actionPerformed(final ActionEvent evt) {
-						DataSetContext.this.getMartTab().getDataSetTabSet()
-								.requestNoFinalLeftJoinTable(
-										DataSetContext.this.getDataSet(),
-										table, noLeftJoin.isSelected());
-					}
-				});
-				contextMenu.add(noLeftJoin);
-				noLeftJoin.setSelected(table.isNoFinalLeftJoin());
-
+			// Subclasses and dimensions have optimiser columns.
+			if (!tableType.equals(DataSetTableType.MAIN)) {
 				// The table can be no-optimised by using this option.
 				final JCheckBoxMenuItem skipOptimiser = new JCheckBoxMenuItem(
 						Resources.get("skipOptimiserTitle"));
@@ -576,6 +559,26 @@ public class DataSetContext extends SchemaContext {
 				contextMenu.add(skipIndexOptimiser);
 				skipIndexOptimiser.setEnabled(!table.isSkipOptimiser());
 				skipIndexOptimiser.setSelected(table.isSkipIndexOptimiser());
+			}
+
+			// Dimension tables have their own options.
+			if (tableType.equals(DataSetTableType.DIMENSION)) {
+
+				// The table can be no-left-joined by using this option.
+				final JCheckBoxMenuItem noLeftJoin = new JCheckBoxMenuItem(
+						Resources.get("noFinalLeftJoinTableTitle"));
+				noLeftJoin.setMnemonic(Resources.get(
+						"noFinalLeftJoinTableMnemonic").charAt(0));
+				noLeftJoin.addActionListener(new ActionListener() {
+					public void actionPerformed(final ActionEvent evt) {
+						DataSetContext.this.getMartTab().getDataSetTabSet()
+								.requestNoFinalLeftJoinTable(
+										DataSetContext.this.getDataSet(),
+										table, noLeftJoin.isSelected());
+					}
+				});
+				contextMenu.add(noLeftJoin);
+				noLeftJoin.setSelected(table.isNoFinalLeftJoin());
 
 				// The dimension can be merged by using this option. This
 				// affects all dimensions based on this relation.
