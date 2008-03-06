@@ -54,6 +54,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.DataSet.SplitOptimiserColumnDef;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.InheritedColumn;
 import org.biomart.builder.model.DataSet.DataSetColumn.WrappedColumn;
@@ -860,17 +861,26 @@ public interface MartConstructor {
 				// Loop rest of this block once per unique value
 				// in column, using SQL to get those values, and
 				// inserting them into each optimiser column name.
-				final List restrictCols = new ArrayList();
+				final Map restrictCols = new HashMap();
 				for (final Iterator i = dsTable.getColumns().values()
 						.iterator(); i.hasNext();) {
 					final DataSetColumn cand = (DataSetColumn) i.next();
-					if (cand.isSplitOptimiserColumn() && !cand.isColumnMasked())
-						restrictCols.add(cand);
+					if (cand.getSplitOptimiserColumn() != null
+							&& !cand.isColumnMasked())
+						restrictCols.put(cand, cand.getSplitOptimiserColumn());
 				}
 				if (restrictCols.isEmpty())
-					restrictCols.add(null);
-				for (final Iterator i = restrictCols.iterator(); i.hasNext();) {
-					DataSetColumn restrictCol = (DataSetColumn) i.next();
+					restrictCols.put("", null);
+				for (final Iterator i = restrictCols.entrySet().iterator(); i
+						.hasNext();) {
+					final Map.Entry entry = (Map.Entry) i.next();
+					DataSetColumn restrictCol = entry.getKey().equals("") ? null
+							: (DataSetColumn) entry.getKey();
+					final SplitOptimiserColumnDef splitOptDef = (SplitOptimiserColumnDef) entry
+							.getValue();
+					final DataSetColumn splitContentCol = splitOptDef == null ? null
+							: (DataSetColumn) dsTable.getColumns().get(
+									splitOptDef.getContentCol());
 					final Collection subNonNullCols = new ArrayList(nonNullCols);
 					final List restrictValues = new ArrayList();
 					if (restrictCol != null) {
@@ -916,6 +926,12 @@ public interface MartConstructor {
 						update.setOptRestrictColumn(restrictCol == null ? null
 								: restrictCol.getPartitionedName());
 						update.setOptRestrictValue(restrictValue);
+						update
+								.setValueColumnName(splitContentCol == null ? null
+										: splitContentCol.getPartitionedName());
+						update
+								.setValueColumnSeparator(splitContentCol == null ? null
+										: splitOptDef.getSeparator());
 						this.issueAction(update);
 
 						// Store the reference for later.

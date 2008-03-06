@@ -854,12 +854,11 @@ public class DataSetContext extends SchemaContext {
 			splitOptimiser.addActionListener(new ActionListener() {
 				public void actionPerformed(final ActionEvent evt) {
 					DataSetContext.this.getMartTab().getDataSetTabSet()
-							.requestSplitOptimiserColumn(column,
-									splitOptimiser.isSelected());
+							.requestSplitOptimiserColumn(column);
 				}
 			});
 			contextMenu.add(splitOptimiser);
-			splitOptimiser.setSelected(column.isSplitOptimiserColumn());
+			splitOptimiser.setSelected(column.getSplitOptimiserColumn()!=null);
 			splitOptimiser
 					.setEnabled(!isMasked
 							&& (column instanceof InheritedColumn || column instanceof WrappedColumn));

@@ -173,7 +173,7 @@ public class DataSet extends Schema {
 			throws ValidationException {
 		// Super first, to set the name.
 		super(mart, name, name, name, null, null);
-		
+
 		// Remember the settings and make some defaults.
 		this.invisible = false;
 		this.centralTable = centralTable;
@@ -2358,6 +2358,9 @@ public class DataSet extends Schema {
 			copyC.setKeyDependency(this.isKeyDependency());
 			copyC.setColumnRename(this.getColumnRename());
 			copyC.setPartitionCols(this.partitionCols);
+			copyC
+					.setSplitOptimiserColumn(this.getSplitOptimiserColumn() == null ? null
+							: this.getSplitOptimiserColumn().replicate());
 			// Return.
 			return copyC;
 		}
@@ -2682,27 +2685,32 @@ public class DataSet extends Schema {
 		/**
 		 * Is this an split optimiser column?
 		 * 
-		 * @return <tt>true</tt> if it is.
+		 * @return the definition if it is.
 		 */
-		public boolean isSplitOptimiserColumn() {
-			return this.getMods("splitOptimiserColumn").containsKey(
-					this.getName());
+		public SplitOptimiserColumnDef getSplitOptimiserColumn() {
+			return (SplitOptimiserColumnDef) this.getMods(
+					"splitOptimiserColumn").get(this.getName());
 		}
 
 		/**
 		 * Split optimiser this column.
 		 * 
 		 * @param split
-		 *            <tt>true</tt> to split optimiser.
+		 *            the split optimiser def, or null to unset it.
 		 */
-		public void setSplitOptimiserColumn(final boolean split) {
-			final boolean oldValue = this.isSplitOptimiserColumn();
-			if (split == oldValue)
-				return;
-			if (split)
+		public void setSplitOptimiserColumn(final SplitOptimiserColumnDef split) {
+			final SplitOptimiserColumnDef oldValue = this
+					.getSplitOptimiserColumn();
+			if (split == oldValue
+					|| (oldValue != null && oldValue.equals(split)))
+				return; // Direct compare to prevent listening twice.
+			if (split != null) {
 				this.getMods("splitOptimiserColumn").put(
-						this.getName().intern(), null);
-			else
+						this.getName().intern(), split);
+				split
+						.addPropertyChangeListener("directModified",
+								this.listener);
+			} else
 				this.getMods("splitOptimiserColumn").remove(this.getName());
 			this.pcs
 					.firePropertyChange("splitOptimiserColumn", oldValue, split);
@@ -4311,6 +4319,137 @@ public class DataSet extends Schema {
 		 */
 		public void setExpression(final String expr) {
 			this.expr = expr;
+		}
+	}
+
+	/**
+	 * Defines an split optimiser column for a table.
+	 */
+	public static class SplitOptimiserColumnDef implements TransactionListener {
+		private static final long serialVersionUID = 1L;
+
+		private String separator;
+
+		private String contentCol;
+
+		private boolean directModified = false;
+
+		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
+				this);
+
+		private final PropertyChangeListener listener = new PropertyChangeListener() {
+			public void propertyChange(final PropertyChangeEvent e) {
+				SplitOptimiserColumnDef.this.setDirectModified(true);
+			}
+		};
+
+		/**
+		 * This constructor makes a new split opt definition.
+		 * 
+		 * @param colKey
+		 *            the name of the column to get values from.
+		 * @param separator
+		 *            the separator to put between values.
+		 */
+		public SplitOptimiserColumnDef(final String colKey, String separator) {
+			// Test for good arguments.
+			if (separator == null)
+				separator = "";
+
+			// Remember the settings.
+			this.contentCol = colKey;
+			this.separator = separator;
+
+			Transaction.addTransactionListener(this);
+
+			this.addPropertyChangeListener(this.listener);
+		}
+
+		/**
+		 * Construct an exact replica.
+		 * 
+		 * @return the replica.
+		 */
+		public SplitOptimiserColumnDef replicate() {
+			return new SplitOptimiserColumnDef(this.contentCol, this.separator);
+		}
+
+		public boolean isDirectModified() {
+			return this.directModified;
+		}
+
+		public void setDirectModified(final boolean modified) {
+			if (modified == this.directModified)
+				return;
+			final boolean oldValue = this.directModified;
+			this.directModified = modified;
+			this.pcs.firePropertyChange("directModified", oldValue, modified);
+		}
+
+		public boolean isVisibleModified() {
+			return false;
+		}
+
+		public void setVisibleModified(final boolean modified) {
+			// Ignore, for now.
+		}
+
+		public void transactionResetVisibleModified() {
+			// Ignore, for now.
+		}
+
+		public void transactionResetDirectModified() {
+			this.directModified = false;
+		}
+
+		public void transactionStarted(final TransactionEvent evt) {
+			// Don't really care for now.
+		}
+
+		public void transactionEnded(final TransactionEvent evt) {
+			// Ignore for now.
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(listener);
+		}
+
+		/**
+		 * Adds a property change listener.
+		 * 
+		 * @param property
+		 *            the property to listen to.
+		 * @param listener
+		 *            the listener to add.
+		 */
+		public void addPropertyChangeListener(final String property,
+				final PropertyChangeListener listener) {
+			this.pcs.addPropertyChangeListener(property, listener);
+		}
+
+		/**
+		 * Returns the separator.
+		 * 
+		 * @return the separator.
+		 */
+		public String getSeparator() {
+			return this.separator;
+		}
+
+		/**
+		 * Get the name of the value column.
+		 * 
+		 * @return the name.
+		 */
+		public String getContentCol() {
+			return this.contentCol;
 		}
 	}
 }

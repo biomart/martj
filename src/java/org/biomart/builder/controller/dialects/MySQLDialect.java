@@ -762,13 +762,18 @@ public class MySQLDialect extends DatabaseDialect {
 
 		this.checkColumnName(optColName);
 
-		statements.add("alter table " + schemaName + "." + optTableName
-				+ " add column (" + optColName + " integer default 0)");
+		final String colType = action.getValueColumnName() == null ? "integer default 0"
+				: "varchar(255)";
 
-		final String countStmt = action.isCountNotBool() ? "count(1)"
-				: "case count(1) when 0 then "
-						+ (action.isNullNotZero() ? "null" : "0")
-						+ " else 1 end";
+		statements.add("alter table " + schemaName + "." + optTableName
+				+ " add column (" + optColName + " " + colType + ")");
+
+		final String countStmt = action.getValueColumnName() == null ? (action
+				.isCountNotBool() ? "count(1)" : "case count(1) when 0 then "
+				+ (action.isNullNotZero() ? "null" : "0") + " else 1 end")
+				: "group_concat(b." + action.getValueColumnName()
+						+ " separator '" + action.getValueColumnSeparator()
+						+ "')";
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("update " + schemaName + "." + optTableName + " a set "
@@ -782,10 +787,10 @@ public class MySQLDialect extends DatabaseDialect {
 			sb.append(keyCol);
 			sb.append(" and ");
 		}
-		if (optRestrictColName!=null) {
+		if (optRestrictColName != null) {
 			sb.append("b.");
 			sb.append(optRestrictColName);
-			if (optRestrictValue==null)
+			if (optRestrictValue == null)
 				sb.append(" is null and");
 			else {
 				sb.append("='");
@@ -982,12 +987,10 @@ public class MySQLDialect extends DatabaseDialect {
 					final int rhs;
 					final TransformationUnit prevTu = jtu.getPreviousUnit();
 					if (prevKey.equals(jtu.getSchemaRelation().getFirstKey())) {
-						lhs = ((Integer) prevSuffixes.get(prevTu))
-								.intValue();
+						lhs = ((Integer) prevSuffixes.get(prevTu)).intValue();
 						rhs = currSuffix;
 					} else {
-						rhs = ((Integer) prevSuffixes.get(prevTu))
-								.intValue();
+						rhs = ((Integer) prevSuffixes.get(prevTu)).intValue();
 						lhs = currSuffix;
 					}
 					// Append join info to where clause.
@@ -1019,8 +1022,8 @@ public class MySQLDialect extends DatabaseDialect {
 					if (rr != null) {
 						sqlWhere.append(" and ");
 						sqlWhere.append(rr.getSubstitutedExpression(
-								schemaPrefix, "a" + lhs, "a" + rhs, false, false,
-								jtu));
+								schemaPrefix, "a" + lhs, "a" + rhs, false,
+								false, jtu));
 					}
 				}
 				// Add any table restrictions to where clause.

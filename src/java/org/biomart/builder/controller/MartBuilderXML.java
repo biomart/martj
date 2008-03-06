@@ -53,6 +53,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.DataSet.SplitOptimiserColumnDef;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
@@ -885,11 +886,17 @@ public class MartBuilderXML extends DefaultHandler {
 						this.closeElement("indexedColumn", xmlWriter);
 					}
 					// Write out split optimiser columns.
-					if (dsCol.isSplitOptimiserColumn()) {
+					if (dsCol.getSplitOptimiserColumn() != null) {
+						final SplitOptimiserColumnDef def = dsCol
+								.getSplitOptimiserColumn();
 						this.openElement("splitOptimiser", xmlWriter);
 						this.writeAttribute("tableKey", dsTable.getName(),
 								xmlWriter);
 						this.writeAttribute("colKey", dsCol.getName(),
+								xmlWriter);
+						this.writeAttribute("contentCol", def.getContentCol(),
+								xmlWriter);
+						this.writeAttribute("separator", def.getSeparator(),
 								xmlWriter);
 						this.closeElement("splitOptimiser", xmlWriter);
 					}
@@ -2120,9 +2127,13 @@ public class MartBuilderXML extends DefaultHandler {
 				// Look up the relation.
 				final String tableKey = (String) attributes.get("tableKey");
 				final String colKey = (String) attributes.get("colKey");
+				final String contentCol = (String) attributes.get("contentCol");
+				final String separator = (String) attributes.get("separator");
 
 				// Index it.
-				w.getMods(tableKey, "splitOptimiserColumn").put(colKey.intern(), null);
+				w.getMods(tableKey, "splitOptimiserColumn").put(
+						colKey.intern(),
+						new SplitOptimiserColumnDef(contentCol, separator));
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

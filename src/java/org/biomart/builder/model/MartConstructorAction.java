@@ -113,6 +113,10 @@ public abstract class MartConstructorAction {
 		private String optRestrictColumn;
 		
 		private String optRestrictValue;
+		
+		private String valueColumnName;
+		
+		private String valueColumnSeparator;
 
 		/**
 		 * Creates a new UpdateOptimiser action.
@@ -263,6 +267,34 @@ public abstract class MartConstructorAction {
 		 */
 		public void setOptRestrictValue(String optRestrictValue) {
 			this.optRestrictValue = optRestrictValue;
+		}
+
+		/**
+		 * @return the valueColumnName
+		 */
+		public String getValueColumnName() {
+			return this.valueColumnName;
+		}
+
+		/**
+		 * @param valueColumnName the valueColumnName to set
+		 */
+		public void setValueColumnName(String valueColumnName) {
+			this.valueColumnName = valueColumnName;
+		}
+
+		/**
+		 * @return the valueColumnSeparator
+		 */
+		public String getValueColumnSeparator() {
+			return this.valueColumnSeparator;
+		}
+
+		/**
+		 * @param valueColumnSeparator the valueColumnSeparator to set
+		 */
+		public void setValueColumnSeparator(String valueColumnSeparator) {
+			this.valueColumnSeparator = valueColumnSeparator;
 		}
 	}
 

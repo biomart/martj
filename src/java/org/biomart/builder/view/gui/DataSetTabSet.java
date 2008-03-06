@@ -53,6 +53,7 @@ import org.biomart.builder.model.DataSet.DataSetOptimiserType;
 import org.biomart.builder.model.DataSet.DataSetTable;
 import org.biomart.builder.model.DataSet.DataSetTableType;
 import org.biomart.builder.model.DataSet.ExpressionColumnDefinition;
+import org.biomart.builder.model.DataSet.SplitOptimiserColumnDef;
 import org.biomart.builder.model.DataSet.DataSetColumn.ExpressionColumn;
 import org.biomart.builder.model.PartitionTable.PartitionTableApplication;
 import org.biomart.builder.model.Relation.CompoundRelationDefinition;
@@ -77,6 +78,7 @@ import org.biomart.builder.view.gui.dialogs.PartitionTableDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedRelationDialog;
 import org.biomart.builder.view.gui.dialogs.RestrictedTableDialog;
 import org.biomart.builder.view.gui.dialogs.SaveDDLDialog;
+import org.biomart.builder.view.gui.dialogs.SplitOptimiserColumnDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestInvisibleDataSetDialog;
 import org.biomart.builder.view.gui.dialogs.SuggestUnrolledDataSetDialog;
@@ -673,16 +675,38 @@ public class DataSetTabSet extends JTabbedPane {
 	 * 
 	 * @param col
 	 *            the column we are working with.
-	 * @param split
-	 *            <tt>true</tt> to split it, <tt>false</tt> not to.
 	 */
-	public void requestSplitOptimiserColumn(final DataSetColumn col,
-			final boolean split) {
+	public void requestSplitOptimiserColumn(final DataSetColumn col) {
+
+		// Work out if it is already compounded.
+		final DataSetTable dst = col.getDataSetTable();
+		final SplitOptimiserColumnDef split = col.getSplitOptimiserColumn();
+		final boolean isSplit = split != null;
+
+		// Pop up a dialog and update 'compound'.
+		final SplitOptimiserColumnDialog dialog = new SplitOptimiserColumnDialog(
+				isSplit, split, dst.getColumns());
+		dialog.setLocationRelativeTo(null);
+		dialog.setVisible(true);
+		final boolean newIsSplit = dialog.isSplit();
+		final SplitOptimiserColumnDef newSplit = newIsSplit ? dialog
+				.getSplitOptimiserColumnDef() : null;
+		dialog.dispose();
+
+		// Skip altogether if no change.
+		if (newSplit.equals(split) && newIsSplit)
+			return;
+
 		new LongProcess() {
-			public void run() {
-				Transaction.start(false);
-				col.setSplitOptimiserColumn(split);
-				Transaction.end();
+			public void run() throws Exception {
+				try {
+					Transaction.start(false);
+					// Do the work.
+					col.setSplitOptimiserColumn(newSplit);
+				} finally {
+					Transaction.end();
+
+				}
 			}
 		}.start();
 	}

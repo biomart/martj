@@ -127,6 +127,8 @@ visibleModified*,bigTable*,splitOptimiser*,tableHideMasked*)>
 <!ELEMENT splitOptimiser EMPTY>
 <!ATTLIST splitOptimiser tableKey CDATA #REQUIRED>
 <!ATTLIST splitOptimiser colKey CDATA #REQUIRED>
+<!ATTLIST splitOptimiser contentCol CDATA #REQUIRED>
+<!ATTLIST splitOptimiser separator CDATA #REQUIRED>
 
 <!ELEMENT renamedColumn EMPTY>
 <!ATTLIST renamedColumn tableKey CDATA #REQUIRED>
