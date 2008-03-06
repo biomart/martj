@@ -957,11 +957,7 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public boolean isLoopbackRelation(final DataSet dataset,
 			final String tableKey) {
-		boolean result = this.getMods(dataset, tableKey).containsKey(
-				"loopbackRelation");
-		if (!result)
-			result = this.isLoopbackRelation(dataset);
-		return result;
+		return this.getMods(dataset, tableKey).containsKey("loopbackRelation");
 	}
 
 	/**
@@ -1205,11 +1201,7 @@ public class Relation implements Comparable, TransactionListener {
 	 */
 	public boolean isCompoundRelation(final DataSet dataset,
 			final String tableKey) {
-		boolean result = this.getMods(dataset, tableKey).containsKey(
-				"compoundRelation");
-		if (!result)
-			result = this.isCompoundRelation(dataset);
-		return result;
+		return this.getMods(dataset, tableKey).containsKey("compoundRelation");
 	}
 
 	/**
