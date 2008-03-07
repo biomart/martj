@@ -1829,8 +1829,7 @@ public boolean containsAttributeList(String internalName) {
   private boolean lazyLoaded = false;
   
   private void lazyLoad() {
-    if (!lazyLoaded) {
-    //if (!lazyLoaded && filterPages.size() == 0 && attributePages.size() == 0) {
+    if (!lazyLoaded && filterPages.size() == 0 && attributePages.size() == 0) {
       if (adaptor == null)
         throw new RuntimeException("DatasetConfig objects must be provided a DSConfigAdaptor to facilitate lazyLoading\n");
       try {
