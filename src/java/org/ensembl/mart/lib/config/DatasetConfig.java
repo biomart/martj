@@ -970,7 +970,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @return starBases String[]
    */
   public String[] getStarBases() {
-    forceLazyLoad(true);
+    lazyLoad();
     String[] s = new String[mainTables.size()];
     mainTables.toArray(s);
     return s;
@@ -1827,13 +1827,10 @@ public boolean containsAttributeList(String internalName) {
   }
   
   private boolean lazyLoaded = false;
-
-  private void lazyLoad() {
-	  this.forceLazyLoad(false);
-  }
   
-  private void forceLazyLoad(boolean force) {
-    if (force || (!lazyLoaded && filterPages.size() == 0 && attributePages.size() == 0)) {
+  private void lazyLoad() {
+    if (!lazyLoaded) {
+    //if (!lazyLoaded && filterPages.size() == 0 && attributePages.size() == 0) {
       if (adaptor == null)
         throw new RuntimeException("DatasetConfig objects must be provided a DSConfigAdaptor to facilitate lazyLoading\n");
       try {
