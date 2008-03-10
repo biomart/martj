@@ -4347,6 +4347,10 @@ public class DataSet extends Schema {
 
 		private boolean directModified = false;
 
+		private boolean prefix = true;
+		
+		private boolean suffix = true;
+		
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
@@ -4463,6 +4467,42 @@ public class DataSet extends Schema {
 		 */
 		public String getContentCol() {
 			return this.contentCol;
+		}
+
+		/**
+		 * @return the prefix
+		 */
+		public boolean isPrefix() {
+			return this.prefix;
+		}
+
+		/**
+		 * @param prefix the prefix to set
+		 */
+		public void setPrefix(boolean prefix) {
+			if (prefix == this.prefix)
+				return;
+			final boolean oldValue = this.prefix;
+			this.prefix = prefix;
+			this.pcs.firePropertyChange("prefix", oldValue, prefix);
+		}
+
+		/**
+		 * @return the suffix
+		 */
+		public boolean isSuffix() {
+			return this.suffix;
+		}
+
+		/**
+		 * @param suffix the suffix to set
+		 */
+		public void setSuffix(boolean suffix) {
+			if (suffix == this.suffix)
+				return;
+			final boolean oldValue = this.suffix;
+			this.suffix = suffix;
+			this.pcs.firePropertyChange("suffix", oldValue, suffix);
 		}
 	}
 }

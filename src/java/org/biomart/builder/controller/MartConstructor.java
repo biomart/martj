@@ -911,7 +911,9 @@ public interface MartConstructor {
 						// '_count' appended.
 						final String optCol = this.getOptimiserColumnName(
 								dsPta, dmPta, parent, dsTable, oType,
-								restrictCol, restrictValue);
+								restrictCol, restrictValue, splitOptDef == null
+										|| splitOptDef.isPrefix(),
+								splitOptDef == null || splitOptDef.isSuffix());
 
 						// Do the bool/count update.
 						final UpdateOptimiser update = new UpdateOptimiser(
@@ -1786,7 +1788,8 @@ public interface MartConstructor {
 				final PartitionTableApplication dmPta,
 				final DataSetTable parent, final DataSetTable dsTable,
 				final DataSetOptimiserType oType,
-				final DataSetColumn restrictCol, final String restrictValue)
+				final DataSetColumn restrictCol, final String restrictValue,
+				final boolean prefix, final boolean suffix)
 				throws PartitionException {
 			// Set up storage for unique names if required.
 			if (!this.uniqueOptCols.containsKey(parent))
@@ -1798,26 +1801,37 @@ public interface MartConstructor {
 			String name;
 			do {
 				final StringBuffer sb = new StringBuffer();
-				sb.append(dsTable.getModifiedName());
-				sb.append(Resources.get("tablenameSubSep"));
-				if (dmPta != null) {
-					final PartitionColumn pcol = dmPta.getNamePartitionCol();
-					sb.append(pcol.getValueForRow(pcol.getPartitionTable()
-							.currentRow()));
-					sb.append(Resources.get("tablenameSubSep"));
-				}
-				if (++counter > 0) {
-					sb.append("" + counter);
-					sb.append(Resources.get("tablenameSubSep"));
+				if (prefix) {
+					sb.append(dsTable.getModifiedName());
+					if (dmPta != null) {
+						final PartitionColumn pcol = dmPta
+								.getNamePartitionCol();
+						sb.append(Resources.get("tablenameSubSep"));
+						sb.append(pcol.getValueForRow(pcol.getPartitionTable()
+								.currentRow()));
+					}
+					if (++counter > 0) {
+						sb.append(Resources.get("tablenameSubSep"));
+						sb.append("" + counter);
+					}
 				}
 				if (restrictCol != null) {
-					sb.append(restrictCol.getModifiedName());
-					sb.append(Resources.get("tablenameSubSep"));
+					if (prefix) {
+						sb.append(Resources.get("tablenameSubSep"));
+						sb.append(restrictCol.getModifiedName());
+						sb.append(Resources.get("tablenameSubSep"));
+					}
 					sb.append(restrictValue);
-					sb.append(Resources.get("tablenameSubSep"));
+					if (!prefix && ++counter > 0) {
+						sb.append(Resources.get("tablenameSubSep"));
+						sb.append("" + counter);
+					}
 				}
-				sb.append(oType.isBool() ? Resources.get("boolColSuffix")
-						: Resources.get("countColSuffix"));
+				if (suffix) {
+					sb.append(Resources.get("tablenameSubSep"));
+					sb.append(oType.isBool() ? Resources.get("boolColSuffix")
+							: Resources.get("countColSuffix"));
+				}
 				name = sb.toString();
 			} while (((Collection) this.uniqueOptCols.get(parent))
 					.contains(name));

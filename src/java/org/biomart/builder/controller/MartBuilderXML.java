@@ -898,6 +898,10 @@ public class MartBuilderXML extends DefaultHandler {
 								xmlWriter);
 						this.writeAttribute("separator", def.getSeparator(),
 								xmlWriter);
+						this.writeAttribute("prefix", "" + def.isPrefix(),
+								xmlWriter);
+						this.writeAttribute("suffix", "" + def.isSuffix(),
+								xmlWriter);
 						this.closeElement("splitOptimiser", xmlWriter);
 					}
 					// Expression column.
@@ -2129,11 +2133,18 @@ public class MartBuilderXML extends DefaultHandler {
 				final String colKey = (String) attributes.get("colKey");
 				final String contentCol = (String) attributes.get("contentCol");
 				final String separator = (String) attributes.get("separator");
+				final boolean prefix = Boolean.valueOf(
+						(String) attributes.get("prefix")).booleanValue();
+				final boolean suffix = Boolean.valueOf(
+						(String) attributes.get("suffix")).booleanValue();
 
 				// Index it.
+				final SplitOptimiserColumnDef def = new SplitOptimiserColumnDef(
+						contentCol, separator);
+				def.setPrefix(prefix);
+				def.setSuffix(suffix);
 				w.getMods(tableKey, "splitOptimiserColumn").put(
-						colKey.intern(),
-						new SplitOptimiserColumnDef(contentCol, separator));
+						colKey.intern(), def);
 			} catch (final Exception e) {
 				throw new SAXException(e);
 			}

@@ -62,6 +62,10 @@ public class SplitOptimiserColumnDialog extends JDialog {
 
 	private JCheckBox split;
 
+	private JCheckBox prefix;
+
+	private JCheckBox suffix;
+
 	/**
 	 * Pop up a dialog to define the input.
 	 * 
@@ -80,7 +84,8 @@ public class SplitOptimiserColumnDialog extends JDialog {
 		this.setModal(true);
 
 		final Object colSelect = split == null ? Resources
-				.get("splitOptimiserNoContentCol") : columnOptions.get(split.getContentCol());
+				.get("splitOptimiserNoContentCol") : columnOptions.get(split
+				.getContentCol());
 
 		// Create the layout manager for this panel.
 		final JPanel content = new JPanel();
@@ -102,9 +107,15 @@ public class SplitOptimiserColumnDialog extends JDialog {
 		this.split = new JCheckBox(Resources.get("splitOptimiserEnableLabel"));
 		this.split.setSelected(isSplit);
 
+		// Set up the suffix/prefix.
+		this.prefix = new JCheckBox(Resources.get("splitOptimiserPrefixLabel"));
+		this.prefix.setSelected(split == null || split.isPrefix());
+		this.suffix = new JCheckBox(Resources.get("splitOptimiserSuffixLabel"));
+		this.suffix.setSelected(split == null || split.isSuffix());
+
 		// Set up the separator.
 		this.separator = new JTextField(3);
-		if (split!=null)
+		if (split != null)
 			this.separator.setText(split.getSeparator());
 
 		// Set up the combo box of columns.
@@ -122,7 +133,7 @@ public class SplitOptimiserColumnDialog extends JDialog {
 					final boolean isSelected, final boolean cellHasFocus) {
 				String textToDisplay = null;
 				if (value instanceof String)
-					textToDisplay = (String)value;
+					textToDisplay = (String) value;
 				else if (value instanceof DataSetColumn)
 					textToDisplay = ((DataSetColumn) value).getModifiedName();
 				final JLabel label = new JLabel();
@@ -160,6 +171,16 @@ public class SplitOptimiserColumnDialog extends JDialog {
 		field = new JPanel();
 		field.add(new JLabel(Resources.get("splitOptimiserSeparatorLabel")));
 		field.add(this.separator);
+		content.add(field, fieldConstraints);
+
+		// Prefix button.
+		field = new JPanel();
+		field.add(this.prefix);
+		content.add(field, fieldConstraints);
+
+		// Suffix button.
+		field = new JPanel();
+		field.add(this.suffix);
 		content.add(field, fieldConstraints);
 
 		// Close/Execute buttons at the bottom.
@@ -234,8 +255,11 @@ public class SplitOptimiserColumnDialog extends JDialog {
 	 * @return the definition.
 	 */
 	public SplitOptimiserColumnDef getSplitOptimiserColumnDef() {
-		return new SplitOptimiserColumnDef(this.getContentCol(), this
-				.getSeparator());
+		final SplitOptimiserColumnDef def = new SplitOptimiserColumnDef(this
+				.getContentCol(), this.getSeparator());
+		def.setPrefix(this.prefix.isSelected());
+		def.setSuffix(this.suffix.isSelected());
+		return def;
 	}
 
 	/**
