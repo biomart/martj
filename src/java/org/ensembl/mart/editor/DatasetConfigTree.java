@@ -85,6 +85,8 @@ import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DynamicDataset;
 import org.ensembl.mart.lib.config.Exportable;
@@ -1100,7 +1102,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	     try{
 			FilterDescription fd1 = (FilterDescription) node.getUserObject();
 
-			dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+			//dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
 
 			String field = fd1.getField();
 			String tableName = fd1.getTableConstraint();
@@ -1140,12 +1142,18 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				}
 				ourConf = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetID(MartEditor.getUser(), dataset, id, MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]);
 			}
-
-			if (!tableName.endsWith("main") && dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+			
+			
+			if (!tableName.endsWith("main") && "1".equals(dsConfig.getTemplateFlag())) {
 				tableName = ourConf.getDataset()+"__"+tableName;
 			}
 
-			Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig, ourConf.getDataset(), colForDisplay);
+			if (ourConf.getAdaptor()==null)
+				ourConf.setAdaptor(new DatabaseDSConfigAdaptor(MartEditor
+						.getDetailedDataSource(), MartEditor.getUser(), MartEditor
+						.getMartUser(), true, false, true, true));
+			
+			Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, ourConf, ourConf.getDataset(), colForDisplay);
 
 			if (options.length>200) {
 				JOptionPane.showMessageDialog(null, "Many options have been found ("+options.length+" of them). This may affect the performance of MartEditor and MartView.");

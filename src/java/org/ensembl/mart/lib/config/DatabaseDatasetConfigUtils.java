@@ -7663,7 +7663,7 @@ public class DatabaseDatasetConfigUtils {
 			throws SQLException, ConfigurationException {
 
 		final List options = new ArrayList();
-
+		
 		if (tableName.equalsIgnoreCase("main")) {
 			final String[] starNames = dsConfig.getStarBases();
 			final String[] primaryKeys = dsConfig.getPrimaryKeys();
