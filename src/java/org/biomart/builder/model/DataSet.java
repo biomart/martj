@@ -1650,7 +1650,7 @@ public class DataSet extends Schema {
 			final boolean isFirstLoopback = isLoopback
 					&& !dsTable.includedRelations.contains(r);
 
-			// Don't go back up relation just followed unless we are doing
+			// Don't go back up same relation unless we are doing
 			// loopback. If we are doing loopback, do source relation last
 			// by adding it to the end of the queue and skipping it this
 			// time round.
@@ -1663,6 +1663,19 @@ public class DataSet extends Schema {
 				}
 			}
 
+			// If just come down a 1:1, don't go back up another 1:1
+			// to same table.
+			if (sourceRelation!=null && sourceRelation.isOneToOne() && 
+					r.isOneToOne()) {
+				final Set keys = new HashSet();
+				keys.add(r.getFirstKey().getTable());
+				keys.add(r.getSecondKey().getTable());
+				keys.remove(sourceRelation.getFirstKey().getTable());
+				keys.remove(sourceRelation.getSecondKey().getTable());
+				if (keys.isEmpty())
+					continue;
+			}
+			
 			// Don't excessively repeat relations.
 			if (((Integer) relationCount.get(r)).intValue() <= 0)
 				continue;
