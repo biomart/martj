@@ -668,7 +668,7 @@ public class PostgreSQLDialect extends DatabaseDialect {
 
 		final StringBuffer sb = new StringBuffer();
 		sb.append("update " + schemaName + "." + optTableName + " set "
-				+ optColName + "=(select " + optColName + " from " + schemaName
+				+ optColName + "=(select max(" + optColName + ") from " + schemaName
 				+ "." + parentOptTableName + " b where ");
 		for (final Iterator i = action.getKeyColumns().iterator(); i.hasNext();) {
 			final String keyCol = (String) i.next();
