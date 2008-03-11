@@ -2716,14 +2716,11 @@ public class DataSet extends Schema {
 					.getSplitOptimiserColumn();
 			if (split == oldValue
 					|| (oldValue != null && oldValue.equals(split)))
-				return; // Direct compare to prevent listening twice.
-			if (split != null) {
+				return; 
+			if (split != null) 
 				this.getMods("splitOptimiserColumn").put(
 						this.getName().intern(), split);
-				split
-						.addPropertyChangeListener("directModified",
-								this.listener);
-			} else
+			else
 				this.getMods("splitOptimiserColumn").remove(this.getName());
 			this.pcs
 					.firePropertyChange("splitOptimiserColumn", oldValue, split);

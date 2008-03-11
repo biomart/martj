@@ -688,14 +688,9 @@ public class DataSetTabSet extends JTabbedPane {
 				isSplit, split, dst.getColumns());
 		dialog.setLocationRelativeTo(null);
 		dialog.setVisible(true);
-		final boolean newIsSplit = dialog.isSplit();
-		final SplitOptimiserColumnDef newSplit = newIsSplit ? dialog
-				.getSplitOptimiserColumnDef() : null;
+		final SplitOptimiserColumnDef newSplit = dialog
+				.getSplitOptimiserColumnDef();
 		dialog.dispose();
-
-		// Skip altogether if no change.
-		if (newSplit.equals(split) && newIsSplit)
-			return;
 
 		new LongProcess() {
 			public void run() throws Exception {

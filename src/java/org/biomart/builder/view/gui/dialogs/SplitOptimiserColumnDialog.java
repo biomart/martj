@@ -255,6 +255,8 @@ public class SplitOptimiserColumnDialog extends JDialog {
 	 * @return the definition.
 	 */
 	public SplitOptimiserColumnDef getSplitOptimiserColumnDef() {
+		if (!this.isSplit()) 
+			return null;
 		final SplitOptimiserColumnDef def = new SplitOptimiserColumnDef(this
 				.getContentCol(), this.getSeparator());
 		def.setPrefix(this.prefix.isSelected());
