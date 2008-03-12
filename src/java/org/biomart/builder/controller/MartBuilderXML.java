@@ -902,6 +902,8 @@ public class MartBuilderXML extends DefaultHandler {
 								xmlWriter);
 						this.writeAttribute("suffix", "" + def.isSuffix(),
 								xmlWriter);
+						this.writeAttribute("size", "" + def.getSize(),
+								xmlWriter);
 						this.closeElement("splitOptimiser", xmlWriter);
 					}
 					// Expression column.
@@ -2137,12 +2139,22 @@ public class MartBuilderXML extends DefaultHandler {
 						(String) attributes.get("prefix")).booleanValue();
 				final boolean suffix = Boolean.valueOf(
 						(String) attributes.get("suffix")).booleanValue();
+				int size = 255;
+				try {
+					size = Integer.valueOf((String) attributes.get("size"))
+							.intValue();
+				} catch (final NumberFormatException ne) {
+					size = 255;
+				}
+				if (size < 1)
+					size = 255;
 
 				// Index it.
 				final SplitOptimiserColumnDef def = new SplitOptimiserColumnDef(
 						contentCol, separator);
 				def.setPrefix(prefix);
 				def.setSuffix(suffix);
+				def.setSize(size);
 				w.getMods(tableKey, "splitOptimiserColumn").put(
 						colKey.intern(), def);
 			} catch (final Exception e) {

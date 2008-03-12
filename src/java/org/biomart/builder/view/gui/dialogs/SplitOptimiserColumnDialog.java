@@ -60,6 +60,8 @@ public class SplitOptimiserColumnDialog extends JDialog {
 
 	private JTextField separator;
 
+	private JTextField size;
+
 	private JCheckBox split;
 
 	private JCheckBox prefix;
@@ -117,6 +119,8 @@ public class SplitOptimiserColumnDialog extends JDialog {
 		this.separator = new JTextField(3);
 		if (split != null)
 			this.separator.setText(split.getSeparator());
+		this.size = new JTextField(4);
+		this.size.setText(split == null ? "255" : "" + split.getSize());
 
 		// Set up the combo box of columns.
 		// Same as ColumnString except slightly modified to show
@@ -183,6 +187,12 @@ public class SplitOptimiserColumnDialog extends JDialog {
 		field.add(this.suffix);
 		content.add(field, fieldConstraints);
 
+		// Separator field.
+		field = new JPanel();
+		field.add(new JLabel(Resources.get("splitOptimiserSizeLabel")));
+		field.add(this.size);
+		content.add(field, fieldConstraints);
+
 		// Close/Execute buttons at the bottom.
 		field = new JPanel();
 		field.add(close);
@@ -198,10 +208,22 @@ public class SplitOptimiserColumnDialog extends JDialog {
 				SplitOptimiserColumnDialog.this.separator
 						.setEnabled(SplitOptimiserColumnDialog.this.split
 								.isSelected());
+				SplitOptimiserColumnDialog.this.size
+						.setEnabled(SplitOptimiserColumnDialog.this.split
+								.isSelected());
+				SplitOptimiserColumnDialog.this.prefix
+						.setEnabled(SplitOptimiserColumnDialog.this.split
+								.isSelected());
+				SplitOptimiserColumnDialog.this.suffix
+						.setEnabled(SplitOptimiserColumnDialog.this.split
+								.isSelected());
 				if (!SplitOptimiserColumnDialog.this.split.isSelected()) {
 					SplitOptimiserColumnDialog.this.column
 							.setSelectedItem(null);
 					SplitOptimiserColumnDialog.this.separator.setText(null);
+					SplitOptimiserColumnDialog.this.size.setText(null);
+					SplitOptimiserColumnDialog.this.prefix.setSelected(true);
+					SplitOptimiserColumnDialog.this.suffix.setSelected(true);
 				}
 			}
 		});
@@ -212,10 +234,16 @@ public class SplitOptimiserColumnDialog extends JDialog {
 			public void actionPerformed(final ActionEvent e) {
 				// Reset to default value.
 				SplitOptimiserColumnDialog.this.split.setSelected(isSplit);
-				SplitOptimiserColumnDialog.this.separator.setText(split
-						.getSeparator());
+				SplitOptimiserColumnDialog.this.separator
+						.setText(split == null ? null : split.getSeparator());
+				SplitOptimiserColumnDialog.this.size
+						.setText(split == null ? null : "" + split.getSize());
 				SplitOptimiserColumnDialog.this.column
 						.setSelectedItem(colSelect);
+				SplitOptimiserColumnDialog.this.prefix
+						.setSelected(split == null || split.isPrefix());
+				SplitOptimiserColumnDialog.this.suffix
+						.setSelected(split == null || split.isSuffix());
 				SplitOptimiserColumnDialog.this.setVisible(false);
 			}
 		});
@@ -255,12 +283,19 @@ public class SplitOptimiserColumnDialog extends JDialog {
 	 * @return the definition.
 	 */
 	public SplitOptimiserColumnDef getSplitOptimiserColumnDef() {
-		if (!this.isSplit()) 
+		if (!this.isSplit())
 			return null;
 		final SplitOptimiserColumnDef def = new SplitOptimiserColumnDef(this
 				.getContentCol(), this.getSeparator());
 		def.setPrefix(this.prefix.isSelected());
 		def.setSuffix(this.suffix.isSelected());
+		int newSize = 255;
+		try {
+			newSize = Integer.parseInt(this.size.getText());
+		} catch (final NumberFormatException ne) {
+			newSize = 255;
+		}
+		def.setSize(newSize);
 		return def;
 	}
 

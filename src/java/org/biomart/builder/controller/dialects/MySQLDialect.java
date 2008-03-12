@@ -763,7 +763,7 @@ public class MySQLDialect extends DatabaseDialect {
 		this.checkColumnName(optColName);
 
 		final String colType = action.getValueColumnName() == null ? "integer default 0"
-				: "varchar(255)";
+				: "varchar("+action.getValueColumnSize()+")";
 
 		statements.add("alter table " + schemaName + "." + optTableName
 				+ " add column (" + optColName + " " + colType + ")");

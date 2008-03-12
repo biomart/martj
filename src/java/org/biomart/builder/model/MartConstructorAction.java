@@ -117,6 +117,8 @@ public abstract class MartConstructorAction {
 		private String valueColumnName;
 		
 		private String valueColumnSeparator;
+		
+		private int valueColumnSize = 255;
 
 		/**
 		 * Creates a new UpdateOptimiser action.
@@ -295,6 +297,20 @@ public abstract class MartConstructorAction {
 		 */
 		public void setValueColumnSeparator(String valueColumnSeparator) {
 			this.valueColumnSeparator = valueColumnSeparator;
+		}
+
+		/**
+		 * @return the valueColumnSize
+		 */
+		public int getValueColumnSize() {
+			return this.valueColumnSize;
+		}
+
+		/**
+		 * @param valueColumnSize the valueColumnSize to set
+		 */
+		public void setValueColumnSize(int valueColumnSize) {
+			this.valueColumnSize = valueColumnSize;
 		}
 	}
 

@@ -4348,6 +4348,8 @@ public class DataSet extends Schema {
 		
 		private boolean suffix = true;
 		
+		private int size = 255;
+		
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
@@ -4500,6 +4502,24 @@ public class DataSet extends Schema {
 			final boolean oldValue = this.suffix;
 			this.suffix = suffix;
 			this.pcs.firePropertyChange("suffix", oldValue, suffix);
+		}
+
+		/**
+		 * @return the size
+		 */
+		public int getSize() {
+			return this.size;
+		}
+
+		/**
+		 * @param size the size to set
+		 */
+		public void setSize(int size) {
+			if (size == this.size)
+				return;
+			final int oldValue = this.size;
+			this.size = size;
+			this.pcs.firePropertyChange("size", oldValue, size);
 		}
 	}
 }

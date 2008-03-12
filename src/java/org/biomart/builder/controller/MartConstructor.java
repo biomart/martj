@@ -934,6 +934,8 @@ public interface MartConstructor {
 						update
 								.setValueColumnSeparator(splitContentCol == null ? null
 										: splitOptDef.getSeparator());
+						update.setValueColumnSize(splitContentCol == null ? 255
+								: splitOptDef.getSize());
 						this.issueAction(update);
 
 						// Store the reference for later.
