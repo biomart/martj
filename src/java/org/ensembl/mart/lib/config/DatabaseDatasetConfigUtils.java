@@ -2419,10 +2419,43 @@ public class DatabaseDatasetConfigUtils {
 						// Resolve options.
 						final List options = new ArrayList(Arrays
 								.asList(configAtt.getOptions()));
+						final class placeholder {
+							private QueryFilterSettings parent;
+							public placeholder(QueryFilterSettings parent) {
+								this.parent = parent;
+							}
+						}
+						QueryFilterSettings parent = configAtt;
 						for (int r = 0; r < options.size(); r++) {
-							final Option option = (Option) options.get(r);
-							option.resolveText(templateConfig
-									.getDynamicDataset(dsConfig.getDataset()));
+							final Object obj = options.get(r);
+							if (obj instanceof placeholder) {
+								parent = ((placeholder)obj).parent;
+								continue;
+							} 							
+							final Option option = (Option) obj;
+
+							templateConfig.getDynamicDataset(dsConfig.getDataset())
+								.resolveText(option, option);
+							
+							if (!option.getSpecificOptionContents().isEmpty()) {
+								final SpecificOptionContent sf = option
+										.getSpecificOptionContent(dsConfig
+												.getDataset());
+								
+								if (sf == null) {
+									parent.removeOption(option);
+									continue; 
+								} 
+
+								templateConfig.getDynamicDataset(
+									dsConfig.getDataset()).resolveText(
+									option, sf);
+
+								// Remove specifics.
+								option.getSpecificOptionContents().clear();
+							}
+							
+							options.add(new placeholder(option));
 							options.addAll(Arrays.asList(option.getOptions()));
 						}
 					}

@@ -41,6 +41,7 @@ import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
 import org.ensembl.mart.lib.config.SpecificAttributeContent;
 import org.ensembl.mart.lib.config.SpecificFilterContent;
+import org.ensembl.mart.lib.config.SpecificOptionContent;
 
 //import org.ensembl.mart.lib.config.SeqModule;
  
@@ -229,6 +230,14 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 											DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
 											optionNode.setUserObject(option);
 
+											// specific option contents
+											for (Iterator r2 = option.getSpecificOptionContents().iterator(); r2.hasNext(); ) {
+												SpecificOptionContent optAtt = (SpecificOptionContent)r2.next();
+												String dynName2 = optAtt.getInternalName();
+												DatasetConfigTreeNode dynNode2 = new DatasetConfigTreeNode("SpecificOptionContent:" + dynName2);
+												dynNode2.setUserObject(optAtt);
+											}
+											
 										   // code for options within options ie for expression menus
 																				Option[] subOptions = option.getOptions();
 																				for (int m = 0; m < subOptions.length; m++) {
@@ -384,6 +393,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 									DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
 									optionNode.setUserObject(option);
 
+									// specific option contents
+									for (Iterator r2 = option.getSpecificOptionContents().iterator(); r2.hasNext(); ) {
+										SpecificOptionContent optAtt = (SpecificOptionContent)r2.next();
+										String dynName2 = optAtt.getInternalName();
+										DatasetConfigTreeNode dynNode2 = new DatasetConfigTreeNode("SpecificOptionContent:" + dynName2);
+										dynNode2.setUserObject(optAtt);
+									}
 								   // code for options within options ie for expression menus
 																		Option[] subOptions = option.getOptions();
 																		for (int m = 0; m < subOptions.length; m++) {
@@ -523,6 +539,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 							DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
 							optionNode.setUserObject(option);
 
+							// specific option contents
+							for (Iterator r2 = option.getSpecificOptionContents().iterator(); r2.hasNext(); ) {
+								SpecificOptionContent optAtt = (SpecificOptionContent)r2.next();
+								String dynName2 = optAtt.getInternalName();
+								DatasetConfigTreeNode dynNode2 = new DatasetConfigTreeNode("SpecificOptionContent:" + dynName2);
+								dynNode2.setUserObject(optAtt);
+							}
 						   // code for options within options ie for expression menus
 																Option[] subOptions = option.getOptions();
 																for (int m = 0; m < subOptions.length; m++) {
@@ -647,6 +670,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 						DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
 						optionNode.setUserObject(option);
 
+						// specific option contents
+						for (Iterator r2 = option.getSpecificOptionContents().iterator(); r2.hasNext(); ) {
+							SpecificOptionContent optAtt = (SpecificOptionContent)r2.next();
+							String dynName2 = optAtt.getInternalName();
+							DatasetConfigTreeNode dynNode2 = new DatasetConfigTreeNode("SpecificOptionContent:" + dynName2);
+							dynNode2.setUserObject(optAtt);
+						}
 					   // code for options within options ie for expression menus
 															Option[] subOptions = option.getOptions();
 															for (int m = 0; m < subOptions.length; m++) {
@@ -756,7 +786,15 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 					DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
 					optionNode.setUserObject(option);
 
-				   // code for options within options ie for expression menus
+
+														// specific option contents
+														for (Iterator r2 = option.getSpecificOptionContents().iterator(); r2.hasNext(); ) {
+															SpecificOptionContent optAtt = (SpecificOptionContent)r2.next();
+															String dynName2 = optAtt.getInternalName();
+															DatasetConfigTreeNode dynNode2 = new DatasetConfigTreeNode("SpecificOptionContent:" + dynName2);
+															dynNode2.setUserObject(optAtt);
+														}
+														// code for options within options ie for expression menus
 														Option[] subOptions = option.getOptions();
 														for (int m = 0; m < subOptions.length; m++) {
 															Option op = subOptions[m];
@@ -843,6 +881,10 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			setName("SpecificAttributeContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
 			SpecificAttributeContent dynAtt = (SpecificAttributeContent) obj;
 			
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.SpecificOptionContent")) {
+			setName("SpecificOptionContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
+			SpecificOptionContent dynAtt = (SpecificOptionContent) obj;
+			
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.SpecificFilterContent")) {
 			setName("SpecificFilterContent: " + ((BaseNamedConfigurationObject) obj).getInternalName() );
 			SpecificFilterContent dynAtt = (SpecificFilterContent) obj;
@@ -855,6 +897,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 													optionNode.setUserObject(option);
 													this.add(optionNode);// TRY THIS
 
+													// specific option contents
+													for (Iterator r2 = option.getSpecificOptionContents().iterator(); r2.hasNext(); ) {
+														SpecificOptionContent optAtt = (SpecificOptionContent)r2.next();
+														String dynName2 = optAtt.getInternalName();
+														DatasetConfigTreeNode dynNode2 = new DatasetConfigTreeNode("SpecificOptionContent:" + dynName2);
+														dynNode2.setUserObject(optAtt);
+													}
 													// code for options within options ie for expression menus
 													Option[] subOptions = option.getOptions();
 													for (int m = 0; m < subOptions.length; m++) {
@@ -911,6 +960,14 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			setName("Option: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			Option op = (Option) obj;
 
+			// specific option contents
+			for (Iterator r2 = op.getSpecificOptionContents().iterator(); r2.hasNext(); ) {
+				SpecificOptionContent optAtt = (SpecificOptionContent)r2.next();
+				String dynName2 = optAtt.getInternalName();
+				DatasetConfigTreeNode dynNode2 = new DatasetConfigTreeNode("SpecificOptionContent:" + dynName2);
+				dynNode2.setUserObject(optAtt);
+				this.add(dynNode2);
+			}
 			// code for options within options ie for expression menus
 			Option[] subOptions = op.getOptions();
 			for (int m = 0; m < subOptions.length; m++) {

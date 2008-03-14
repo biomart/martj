@@ -85,7 +85,6 @@ import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DynamicDataset;
@@ -99,6 +98,7 @@ import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
 import org.ensembl.mart.lib.config.SpecificAttributeContent;
 import org.ensembl.mart.lib.config.SpecificFilterContent;
+import org.ensembl.mart.lib.config.SpecificOptionContent;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 
 /**
@@ -301,6 +301,20 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					dynAtt.setAttribute("field", fd.getField());
 					dynAtt.setAttribute("key", fd.getKey());
 					insert(dynAtt, "SpecificFilterContent");
+					}
+				} else if (e.getActionCommand().equals("insert specific option content")) {
+					SpecificOptionContent dynAtt = new SpecificOptionContent();
+					DatasetConfig dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) DatasetConfigTree.this.getModel().getRoot()).getUserObject();
+					if (dsConfig.getTemplateFlag()!=null && dsConfig.getTemplateFlag().equals("1")) {
+					String[] datasets = dsConfig.getDynamicDatasetNames();
+					Option fd = (Option)((DatasetConfigTreeNode) clickedPath.getLastPathComponent()).getUserObject();					
+					String intName = datasets.length==0?"new":(String)JOptionPane.showInputDialog(null, null, "Select dataset:", JOptionPane.QUESTION_MESSAGE, null, datasets, datasets[0]);
+					dynAtt.setAttribute("internalName", intName==null?"new":intName);
+					dynAtt.setAttribute("tableConstraint", fd.getTableConstraint());
+					dynAtt.setAttribute("field", fd.getField());
+					dynAtt.setAttribute("key", fd.getKey());
+					dynAtt.setAttribute("value", fd.getValue());
+					insert(dynAtt, "SpecificOptionContent");
 					}
 				} else if (e.getActionCommand().equals("insert specific attribute content")) {
 					SpecificAttributeContent dynAtt = new SpecificAttributeContent();
@@ -641,7 +655,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert push action", "automate push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Option"))
 			menuItems =
-				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert option", "insert push action" };
+				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert option", "insert push action", 
+				"insert specific option content" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle","insert specific attribute content"};
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeList"))
@@ -666,7 +681,15 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 								"copy",
 								"cut",
 								"paste",
-								"delete"};		
+								"delete"};	
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.SpecificOptionContent"))
+			menuItems =
+				new String[] {
+					"copy",
+					"cut",
+					"paste",
+					"delete"
+				};		
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DynamicDataset"))
@@ -771,12 +794,17 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				new DatasetConfigTreeNode(
 					editingNode.toString(),
 					new SpecificFilterContent((SpecificFilterContent) editingNode.getUserObject()));	
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.SpecificOptionContent"))
+			copiedNode =
+				new DatasetConfigTreeNode(
+					editingNode.toString(),
+					new SpecificOptionContent((SpecificOptionContent) editingNode.getUserObject()));	
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Option"))
 			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Option((Option) editingNode.getUserObject()));
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 			copiedNode =
 				new DatasetConfigTreeNode(editingNode.toString(), new PushAction((PushAction) editingNode.getUserObject()));
-
+		
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			copiedNode =
 				new DatasetConfigTreeNode(editingNode.toString(), new Importable((Importable) editingNode.getUserObject()));
@@ -923,6 +951,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 						newSel = new AttributeList((AttributeList)sel);								
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.SpecificFilterContent"))
 						newSel = new SpecificFilterContent((SpecificFilterContent)sel);																		
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.SpecificOptionContent"))
+						newSel = new SpecificOptionContent((SpecificOptionContent)sel);																		
 					else if (selnodeName.equals("org.ensembl.mart.lib.config.SpecificAttributeContent"))
 						newSel = new SpecificAttributeContent((SpecificAttributeContent)sel);																		
 					newSel.setInternalName(sel.getInternalName() + "_copy");

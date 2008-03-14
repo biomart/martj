@@ -49,6 +49,7 @@ import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
 import org.ensembl.mart.lib.config.SpecificAttributeContent;
 import org.ensembl.mart.lib.config.SpecificFilterContent;
+import org.ensembl.mart.lib.config.SpecificOptionContent;
 
 /**
  * Class DatasetConfigAttributeTableModel implementing TableModel.
@@ -240,7 +241,11 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				    }
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof Option) {
+					 if (child instanceof org.ensembl.mart.lib.config.SpecificOptionContent){
+							collectionIndex=op.getSpecificOptionContents().indexOf(node.getUserObject());
+							op.removeSpecificOptionContent((SpecificOptionContent)node.getUserObject());
+					    }
+					 else if (child instanceof Option) {
 						collectionIndex=Arrays.asList(op.getOptions()).indexOf(node.getUserObject());
 						op.removeOption((Option) node.getUserObject());
 					}
@@ -335,7 +340,9 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						fdesc.insertSpecificFilterContent(collectionIndex, (SpecificFilterContent) obj);		
 				}  else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof Option)
+				    if (child instanceof org.ensembl.mart.lib.config.SpecificOptionContent)	
+						op.insertSpecificOptionContent(collectionIndex, (SpecificOptionContent) obj);		
+				    else if (child instanceof Option)
 						op.insertOption(collectionIndex, (Option) obj);
 					else if (child instanceof PushAction)
 						op.insertPushAction(collectionIndex, (PushAction) obj);

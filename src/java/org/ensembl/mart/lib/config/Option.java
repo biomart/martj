@@ -45,6 +45,9 @@ public class Option extends QueryFilterSettings {
 	private List uiOptions = new ArrayList();
 	private Hashtable uiOptionNameMap = new Hashtable();
 	private List pushActions = new ArrayList();
+	
+	private List specificOptionContents = new ArrayList();
+	private Hashtable specificOptionContentNameMap = new Hashtable();
 
 	// cache one Option per call to supports/getOptionByFieldNameTableConstraint
 	private Option lastSupportingOption = null;
@@ -59,6 +62,12 @@ public class Option extends QueryFilterSettings {
   	for (int i = 0, n = os.length; i < n; i++) {
       addOption( new Option( os[i] ) );
     }
+
+    
+    SpecificOptionContent[] sf = (SpecificOptionContent[])o.getSpecificOptionContents().toArray(new SpecificOptionContent[0]);
+    for (int i = 0, n = sf.length; i < n; i++) {
+      addSpecificOptionContent( new SpecificOptionContent( sf[i] ) );
+    }
     
     PushAction[] pas = o.getPushActions();
     for (int i = 0, n = pas.length; i < n; i++) {
@@ -68,6 +77,53 @@ public class Option extends QueryFilterSettings {
     	setRequiredFields(reqFields);
     }
   }
+  
+  /**
+   * Add a dynamicImportableContent to the AttributeDescription.
+   * 
+   * @param a dynamicImportableContent object.
+   */
+  public void addSpecificOptionContent(SpecificOptionContent a) {
+	  specificOptionContents.add(a);
+	  specificOptionContentNameMap.put(a.getInternalName(),a);
+  }
+
+  /**
+   * Add a dynamicFilterContent to the AttributeDescription.
+   * 
+   * @param a dynamicFilterContent object.
+   */
+  public SpecificOptionContent getSpecificOptionContent(String name) {
+	  return (SpecificOptionContent)specificOptionContentNameMap.get(name);
+  }
+  
+  /**
+   * Add a dynamicFilterContent to the AttributeDescription.
+   * 
+   * @param a dynamicFilterContent object.
+   */
+  public List getSpecificOptionContents() {
+	  return this.specificOptionContents;
+  }
+
+  /**
+   * Remove an dynamicFilterContent from this AttributeDescription.
+   * @param a -- dynamicFilterContent to be removed.
+   */
+  public void insertSpecificOptionContent(int index, SpecificOptionContent a) {
+	specificOptionContents.add(index,a);
+	specificOptionContentNameMap.put(a.getInternalName(),a);
+  }
+
+  /**
+   * Remove an dynamicFilterContent from this AttributeDescription.
+   * @param a -- dynamicFilterContent to be removed.
+   */
+  public void removeSpecificOptionContent(SpecificOptionContent a) {
+	specificOptionContents.remove(a);
+	specificOptionContentNameMap.remove(a.getInternalName());
+  }
+
   
   public void resolveText(DynamicDataset ds) {
 	  ds.resolveText(this, this);

@@ -115,6 +115,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
    */
   public abstract Option[] getOptions();
 
+  public abstract void removeOption(final Option option);
 
 	/**
 	 * @param internalName

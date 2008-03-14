@@ -73,6 +73,7 @@ public class DatasetConfigXMLUtils {
   private final String ATTRIBUTECOLLECTION = "AttributeCollection";
   private final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
   private final String ATTRIBUTELIST = "AttributeList";
+  private final String SPECIFICOPTIONCONTENT = "SpecificOptionContent";
   private final String SPECIFICFILTERCONTENT = "SpecificFilterContent";
   private final String SPECIFICATTRIBUTECONTENT = "SpecificAttributeContent";
   private final String DYNAMICDATASET = "DynamicDataset";
@@ -437,6 +438,13 @@ public class DatasetConfigXMLUtils {
       }
     }
 
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, SPECIFICOPTIONCONTENT));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  o.addSpecificOptionContent(getSpecificOptionContent(element));
+	}
+
     for (Iterator iter = thisElement.getChildren(PUSHACTION).iterator(); iter.hasNext();) {
       o.addPushAction(getPushOptions((Element) iter.next()));
     }
@@ -567,6 +575,30 @@ public class DatasetConfigXMLUtils {
   
   private SpecificFilterContent getSpecificFilterContent(Element thisElement) throws ConfigurationException {
 	  SpecificFilterContent f = new SpecificFilterContent();
+	 loadAttributesFromElement(thisElement, f);
+	 
+	for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
+	  Element option = (Element) iter.next();
+	  if (includeHiddenMembers){
+		Option o = getOption(option);
+		//o.setParent(f);
+		o.setParent(null);
+		f.addOption(o);
+	  }
+	  else if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue())) {      
+		Option o = getOption(option);
+		//o.setParent(f);
+		o.setParent(null);
+		f.addOption(o);
+	  }
+	}
+	 
+	 return f;	 
+  }
+
+  
+  private SpecificOptionContent getSpecificOptionContent(Element thisElement) throws ConfigurationException {
+	  SpecificOptionContent f = new SpecificOptionContent();
 	 loadAttributesFromElement(thisElement, f);
 	 
 	for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
@@ -798,6 +830,16 @@ public class DatasetConfigXMLUtils {
 	 }
 	 return datt;
   }
+
+  private Element getSpecificOptionContentElement(SpecificOptionContent dynAttribute) {
+	 Element datt = new Element(SPECIFICOPTIONCONTENT);
+	 loadElementAttributesFromObject(dynAttribute, datt);
+	 Option[] subops = dynAttribute.getOptions();
+	 for (int i = 0, n = subops.length; i < n; i++){
+	    datt.addContent(getOptionElement(subops[i]));
+	 }
+	 return datt;
+  }
   
   private Element getDynamicDatasetElement(DynamicDataset dynAttribute) {
 	 Element datt = new Element(DYNAMICDATASET);
@@ -895,6 +937,9 @@ public class DatasetConfigXMLUtils {
     for (int i = 0, n = pushops.length; i < n; i++)
       option.addContent(getPushActionElement(pushops[i]));
 
+    for (Iterator i = o.getSpecificOptionContents().iterator(); i.hasNext(); ) 
+    	option.addContent(getSpecificOptionContentElement((SpecificOptionContent)i.next()));
+    
     return option;
   }
 
