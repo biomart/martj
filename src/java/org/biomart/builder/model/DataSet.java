@@ -884,13 +884,13 @@ public class DataSet extends Schema {
 																	.indexOf(
 																			Resources
 																					.get("keySuffix")))
-													+ "_1"
+													+ "_clash"
 													+ Resources
 															.get("keySuffix"));
 								else
 									renameCol.setColumnRename(renameCol
 											.getModifiedName()
-											+ "_1");
+											+ "_clash");
 							} catch (final ValidationException ve) {
 								// Ouch!
 								throw new BioMartError(ve);
@@ -1177,13 +1177,13 @@ public class DataSet extends Schema {
 																	.indexOf(
 																			Resources
 																					.get("keySuffix")))
-													+ "_1"
+													+ "_clash"
 													+ Resources
 															.get("keySuffix"));
 								else
 									renameCol.setColumnRename(renameCol
 											.getModifiedName()
-											+ "_1");
+											+ "_clash");
 							} catch (final ValidationException ve) {
 								// Ouch!
 								throw new BioMartError(ve);
@@ -1564,6 +1564,13 @@ public class DataSet extends Schema {
 			// Create a name for this column.
 			String internalColName = c.getName();
 			String visibleColName = c.getName();
+			// Add the unique suffix to the visible col name.
+			visibleColName = visibleColName + "_"
+					+ mergeTable.getSchema().getUniqueId() + "0"
+					+ mergeTable.getUniqueId();
+			// Add the iteration suffix to the visible col name.
+			if (tableTrackerCount > 0)
+				visibleColName = visibleColName + "_r" + tableTrackerCount;
 			// Expand to full-length by prefixing relation
 			// info, and relation tracker info. Note we use
 			// the tracker not the iteration as this gives us
@@ -1665,8 +1672,8 @@ public class DataSet extends Schema {
 
 			// If just come down a 1:1, don't go back up another 1:1
 			// to same table.
-			if (sourceRelation!=null && sourceRelation.isOneToOne() && 
-					r.isOneToOne()) {
+			if (sourceRelation != null && sourceRelation.isOneToOne()
+					&& r.isOneToOne()) {
 				final Set keys = new HashSet();
 				keys.add(r.getFirstKey().getTable());
 				keys.add(r.getSecondKey().getTable());
@@ -1675,7 +1682,7 @@ public class DataSet extends Schema {
 				if (keys.isEmpty())
 					continue;
 			}
-			
+
 			// Don't excessively repeat relations.
 			if (((Integer) relationCount.get(r)).intValue() <= 0)
 				continue;
@@ -2716,8 +2723,8 @@ public class DataSet extends Schema {
 					.getSplitOptimiserColumn();
 			if (split == oldValue
 					|| (oldValue != null && oldValue.equals(split)))
-				return; 
-			if (split != null) 
+				return;
+			if (split != null)
 				this.getMods("splitOptimiserColumn").put(
 						this.getName().intern(), split);
 			else
@@ -2786,7 +2793,7 @@ public class DataSet extends Schema {
 				// then add an incrementing number to it until it is unique.
 				int suffix = 1;
 				while (entries.contains(columnRename))
-					columnRename = baseName + "_" + suffix++ + keySuffix;
+					columnRename = baseName + "_c" + suffix++ + keySuffix;
 			}
 			// Check and change it.
 			if (columnRename != null)
@@ -4345,11 +4352,11 @@ public class DataSet extends Schema {
 		private boolean directModified = false;
 
 		private boolean prefix = true;
-		
+
 		private boolean suffix = true;
-		
+
 		private int size = 255;
-		
+
 		private final PropertyChangeSupport pcs = new PropertyChangeSupport(
 				this);
 
@@ -4476,7 +4483,8 @@ public class DataSet extends Schema {
 		}
 
 		/**
-		 * @param prefix the prefix to set
+		 * @param prefix
+		 *            the prefix to set
 		 */
 		public void setPrefix(boolean prefix) {
 			if (prefix == this.prefix)
@@ -4494,7 +4502,8 @@ public class DataSet extends Schema {
 		}
 
 		/**
-		 * @param suffix the suffix to set
+		 * @param suffix
+		 *            the suffix to set
 		 */
 		public void setSuffix(boolean suffix) {
 			if (suffix == this.suffix)
@@ -4512,7 +4521,8 @@ public class DataSet extends Schema {
 		}
 
 		/**
-		 * @param size the size to set
+		 * @param size
+		 *            the size to set
 		 */
 		public void setSize(int size) {
 			if (size == this.size)
