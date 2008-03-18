@@ -1849,7 +1849,7 @@ public class DataSetTabSet extends JTabbedPane {
 			public void run() throws Exception {
 				try {
 					Transaction.start(false);
-					dsColumn.setColumnRename(newName);
+					dsColumn.setColumnRename(newName, true);
 				} finally {
 					Transaction.end();
 				}

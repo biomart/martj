@@ -886,11 +886,11 @@ public class DataSet extends Schema {
 																					.get("keySuffix")))
 													+ "_clash"
 													+ Resources
-															.get("keySuffix"));
+															.get("keySuffix"), true);
 								else
 									renameCol.setColumnRename(renameCol
 											.getModifiedName()
-											+ "_clash");
+											+ "_clash", true);
 							} catch (final ValidationException ve) {
 								// Ouch!
 								throw new BioMartError(ve);
@@ -1137,7 +1137,7 @@ public class DataSet extends Schema {
 						dsTableFKCols.add(existingFKCol);
 						try {
 							existingFKCol.setColumnRename(parentDSCol
-									.getModifiedName());
+									.getModifiedName(), false);
 						} catch (final ValidationException ve) {
 							// Should never happen.
 							throw new BioMartError(ve);
@@ -1179,11 +1179,11 @@ public class DataSet extends Schema {
 																					.get("keySuffix")))
 													+ "_clash"
 													+ Resources
-															.get("keySuffix"));
+															.get("keySuffix"), true);
 								else
 									renameCol.setColumnRename(renameCol
 											.getModifiedName()
-											+ "_clash");
+											+ "_clash", true);
 							} catch (final ValidationException ve) {
 								// Ouch!
 								throw new BioMartError(ve);
@@ -1361,14 +1361,14 @@ public class DataSet extends Schema {
 						&& !dsCol.getModifiedName().endsWith(
 								Resources.get("keySuffix")))
 					dsCol.setColumnRename(dsCol.getModifiedName()
-							+ Resources.get("keySuffix"));
+							+ Resources.get("keySuffix"), false);
 				else if (!dsCol.isKeyCol()
 						&& dsCol.getModifiedName().endsWith(
 								Resources.get("keySuffix")))
 					dsCol.setColumnRename(dsCol.getModifiedName().substring(
 							0,
 							dsCol.getModifiedName().indexOf(
-									Resources.get("keySuffix"))));
+									Resources.get("keySuffix"))), false);
 			} catch (final ValidationException ve) {
 				// Should never happen!
 				throw new BioMartError(ve);
@@ -1568,9 +1568,6 @@ public class DataSet extends Schema {
 			visibleColName = visibleColName + "_"
 					+ mergeTable.getSchema().getUniqueId() + "0"
 					+ mergeTable.getUniqueId();
-			// Add the iteration suffix to the visible col name.
-			if (tableTrackerCount > 0)
-				visibleColName = visibleColName + "_r" + tableTrackerCount;
 			// Expand to full-length by prefixing relation
 			// info, and relation tracker info. Note we use
 			// the tracker not the iteration as this gives us
@@ -1619,7 +1616,7 @@ public class DataSet extends Schema {
 				try {
 					
 					if (wc.getColumnRename() == null)
-						wc.setColumnRename(visibleColName);		
+						wc.setColumnRename(visibleColName, false);		
 				} catch (final ValidationException ve) {
 					// Should never happen!
 					throw new BioMartError(ve);
@@ -1636,7 +1633,7 @@ public class DataSet extends Schema {
 			// TODO REMOVE ME
 			try {
 				final String oldName = wc.getModifiedName();
-				wc.setColumnRename(visibleColName);
+				wc.setColumnRename(visibleColName, false);
 				final String newName = wc.getModifiedName();
 				if (!oldName.equals(newName))
 					System.out.println(c.getTable().getSchema().getName()+","+c.getTable().getName()+","+c.getName()+","+this.getName()+","+dsTable.getModifiedName()+","+oldName+","+newName);
@@ -2398,7 +2395,7 @@ public class DataSet extends Schema {
 			copyC.setColumnMasked(this.isColumnMasked());
 			copyC.setExpressionDependency(this.isExpressionDependency());
 			copyC.setKeyDependency(this.isKeyDependency());
-			copyC.setColumnRename(this.getColumnRename());
+			copyC.setColumnRename(this.getColumnRename(), false);
 			copyC.setPartitionCols(this.partitionCols);
 			copyC
 					.setSplitOptimiserColumn(this.getSplitOptimiserColumn() == null ? null
@@ -2769,10 +2766,12 @@ public class DataSet extends Schema {
 		 * 
 		 * @param columnRename
 		 *            the new name, or <tt>null</tt> to undo it.
+		 * @param userRequest
+		 *            <tt>true</tt> if this is a user request, <tt>false</tt> if not.
 		 * @throws ValidationException
 		 *             if it could not be done.
 		 */
-		public void setColumnRename(String columnRename)
+		public void setColumnRename(String columnRename, final boolean userRequest)
 				throws ValidationException {
 			String oldValue = this.getColumnRename();
 			if (columnRename == oldValue || oldValue != null
@@ -2819,7 +2818,7 @@ public class DataSet extends Schema {
 				// then add an incrementing number to it until it is unique.
 				int suffix = 1;
 				while (entries.contains(columnRename))
-					columnRename = baseName + "_c" + suffix++ + keySuffix;
+					columnRename = baseName + '_' + (userRequest?'c':'r') + suffix++ + keySuffix;
 			}
 			// Check and change it.
 			if (columnRename != null)
@@ -3008,9 +3007,9 @@ public class DataSet extends Schema {
 				this.dsColumn.setColumnMasked(columnMasked);
 			}
 
-			public void setColumnRename(final String columnRename)
+			public void setColumnRename(final String columnRename, final boolean userRequest)
 					throws ValidationException {
-				this.dsColumn.setColumnRename(columnRename);
+				this.dsColumn.setColumnRename(columnRename, userRequest);
 			}
 
 			public boolean existsForPartition(final String schemaPrefix) {
