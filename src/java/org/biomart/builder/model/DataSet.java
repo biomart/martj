@@ -1605,6 +1605,7 @@ public class DataSet extends Schema {
 					reusedColumn = true;
 				}
 			}
+						
 			if (!reusedColumn) {
 				// Create new column using unique name.
 				wc = new WrappedColumn(c, internalColName, dsTable);
@@ -1612,18 +1613,39 @@ public class DataSet extends Schema {
 				// Insert column rename using origColName, but
 				// only if one not already specified (e.g. from
 				// XML file).
+				
+				// TODO REINSTATE ME
+				/*
 				try {
+					
 					if (wc.getColumnRename() == null)
-						wc.setColumnRename(visibleColName);
+						wc.setColumnRename(visibleColName);		
 				} catch (final ValidationException ve) {
 					// Should never happen!
 					throw new BioMartError(ve);
 				}
+				*/
+				// TODO END REINSTATE ME	
+				
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					wc.addPropertyChangeListener("columnRename",
 							this.rebuildListener);
 			}
+			
+			// TODO REMOVE ME
+			try {
+				final String oldName = wc.getModifiedName();
+				wc.setColumnRename(visibleColName);
+				final String newName = wc.getModifiedName();
+				if (!oldName.equals(newName))
+					System.out.println(c.getTable().getSchema().getName()+","+c.getTable().getName()+","+c.getName()+","+this.getName()+","+dsTable.getModifiedName()+","+oldName+","+newName);
+			} catch (final ValidationException ve) {
+				// Should never happen!
+				throw new BioMartError(ve);
+			}
+			// TODO END REMOVE ME
+			
 			unusedCols.remove(wc);
 			tu.getNewColumnNameMap().put(c, wc);
 			wc.setTransformationUnit(tu);
@@ -2789,6 +2811,10 @@ public class DataSet extends Schema {
 							this.getName().lastIndexOf("__") + 2)
 							+ columnRename;
 				}
+				// Remove numbered prefix if its snuck back in.
+				if (columnRename.indexOf(".")>=0) 
+					columnRename = columnRename.substring(columnRename
+							.lastIndexOf(".") + 1);
 				// Now simply check to see if the name is used, and
 				// then add an incrementing number to it until it is unique.
 				int suffix = 1;
