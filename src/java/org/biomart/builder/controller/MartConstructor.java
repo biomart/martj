@@ -295,9 +295,14 @@ public interface MartConstructor {
 					.values().iterator(); !hasKeyCol && j.hasNext();)
 				hasKeyCol |= ((DataSetColumn) j.next()).getModifiedName()
 						.endsWith(Resources.get("keySuffix"));
-			if (!hasKeyCol)
-				throw new ValidationException(Resources.get("datasetNoKeyCol",
-						dataset.getName()));
+			// FIXME Reinstate the following exception once Arek has
+			// made his mind up about what he wants to do when the
+			// user tries to build a dataset around a table which does
+			// not have a primary key. As long as this is commented
+			// out, the situation is ignored.
+			//if (!hasKeyCol)
+			//	throw new ValidationException(Resources.get("datasetNoKeyCol",
+			//			dataset.getName()));
 
 			// Check not cancelled.
 			this.checkCancelled();
