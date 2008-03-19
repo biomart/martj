@@ -30,6 +30,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -54,6 +55,7 @@ import org.biomart.builder.controller.MartConstructor.MartConstructorListener;
 import org.biomart.builder.exceptions.ListenerException;
 import org.biomart.builder.model.DataSet;
 import org.biomart.builder.model.MartConstructorAction;
+import org.biomart.builder.model.DataSet.DataSetColumn;
 import org.biomart.builder.view.gui.MartTabSet.MartTab;
 import org.biomart.common.resources.Resources;
 import org.biomart.common.resources.Settings;
@@ -326,7 +328,7 @@ public class SaveDDLDialog extends JDialog {
 		JPanel field = new JPanel();
 		field.add(new JScrollPane(this.datasetsList));
 		content.add(field, fieldConstraints);
-		
+
 		// Add the prefix lists.
 		label = new JLabel(Resources.get("selectedPrefixesLabel"));
 		content.add(label, labelConstraints);
@@ -462,7 +464,8 @@ public class SaveDDLDialog extends JDialog {
 					this.overridePort.getText());
 			final String outputDatabase = this.targetDatabaseName.getText();
 			final String outputSchema = this.targetSchemaName.getText();
-			this.martTab.getMartTabSet().requestSetOutputDatabase(outputDatabase);
+			this.martTab.getMartTabSet().requestSetOutputDatabase(
+					outputDatabase);
 			this.martTab.getMartTabSet().requestSetOutputSchema(outputSchema);
 			final ConstructorRunnable cr = constructor.getConstructorRunnable(
 					outputDatabase, outputSchema, selectedDataSets,
@@ -554,10 +557,32 @@ public class SaveDDLDialog extends JDialog {
 					.get("selectedDataSets")));
 
 		// Must have at least one prefix selected.
-		if (this.prefixesList.getModel().getSize()>0 && 
-				this.prefixesList.getSelectedValues().length == 0)
+		if (this.prefixesList.getModel().getSize() > 0
+				&& this.prefixesList.getSelectedValues().length == 0)
 			messages.add(Resources.get("fieldIsEmpty", Resources
 					.get("selectedPrefixes")));
+
+		// Check it has a _key column on main table in every dataset.
+		for (int i = 0; i < this.datasetsList.getSelectedValues().length; i++) {
+			final DataSet dataset = (DataSet) this.datasetsList
+					.getSelectedValues()[i];
+			boolean hasKeyCol = false;
+			for (final Iterator j = dataset.getMainTable().getColumns()
+					.values().iterator(); !hasKeyCol && j.hasNext();)
+				hasKeyCol |= ((DataSetColumn) j.next()).getModifiedName()
+						.endsWith(Resources.get("keySuffix"));
+			if (!hasKeyCol) {
+				// Prompt.
+				final int option = JOptionPane.showConfirmDialog(this,
+						Resources.get("datasetNoKeyColConfirm", dataset
+								.getName()), Resources.get("questionTitle"),
+						JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				// If prompt says NO, add to the failure messages.
+				if (option != JOptionPane.YES_OPTION)
+					messages.add(Resources.get("datasetNoKeyCol", dataset
+							.getName()));
+			}
+		}
 
 		// Any messages to display? Show them.
 		if (!messages.isEmpty())
