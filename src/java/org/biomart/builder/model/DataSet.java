@@ -99,7 +99,7 @@ public class DataSet extends Schema {
 	private static final long serialVersionUID = 1L;
 
 	private final PropertyChangeListener rebuildListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
+		public void propertyChange(PropertyChangeEvent evt) {			
 			final Object src = evt.getSource();
 			Object val = evt.getNewValue();
 			if (val == null)
@@ -2774,11 +2774,10 @@ public class DataSet extends Schema {
 		public void setColumnRename(String columnRename, final boolean userRequest)
 				throws ValidationException {
 			String oldValue = this.getColumnRename();
-			if (columnRename == oldValue || oldValue != null
-					&& oldValue.equals(columnRename))
-				return;
 			if (oldValue == null)
 				oldValue = this.getModifiedName();
+			if (oldValue.equals(columnRename))
+				return;
 			// Make the name unique.
 			if (columnRename != null) {
 				final Set entries = new HashSet();
@@ -2821,6 +2820,8 @@ public class DataSet extends Schema {
 					columnRename = baseName + '_' + (userRequest?'c':'r') + suffix++ + keySuffix;
 			}
 			// Check and change it.
+			if (oldValue.equals(columnRename))
+				return;
 			if (columnRename != null)
 				this.getMods("columnRename").put(this.getName().intern(),
 						columnRename);
