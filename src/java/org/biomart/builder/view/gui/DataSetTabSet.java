@@ -998,6 +998,8 @@ public class DataSetTabSet extends JTabbedPane {
 				final Relation candRel = (Relation) i.next();
 				if (candRel.equals(this))
 					continue;
+				if (!candRel.isOneToMany())
+					continue;
 				if (candRel.getManyKey().getTable().equals(
 						relation.getManyKey().getTable())
 						&& candRel.isMergeRelation(ds))
