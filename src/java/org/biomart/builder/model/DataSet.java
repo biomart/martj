@@ -1611,8 +1611,6 @@ public class DataSet extends Schema {
 				// only if one not already specified (e.g. from
 				// XML file).
 				
-				// TODO REINSTATE ME
-				/*
 				try {
 					
 					if (wc.getColumnRename() == null)
@@ -1621,27 +1619,12 @@ public class DataSet extends Schema {
 					// Should never happen!
 					throw new BioMartError(ve);
 				}
-				*/
-				// TODO END REINSTATE ME	
 				
 				// Listen to this column to modify ourselves.
 				if (!dsTable.getType().equals(DataSetTableType.DIMENSION))
 					wc.addPropertyChangeListener("columnRename",
 							this.rebuildListener);
 			}
-			
-			// TODO REMOVE ME
-			try {
-				final String oldName = wc.getModifiedName();
-				wc.setColumnRename(visibleColName, false);
-				final String newName = wc.getModifiedName();
-				if (!oldName.equals(newName))
-					System.out.println(c.getTable().getSchema().getName()+","+c.getTable().getName()+","+c.getName()+","+this.getName()+","+dsTable.getModifiedName()+","+oldName+","+newName);
-			} catch (final ValidationException ve) {
-				// Should never happen!
-				throw new BioMartError(ve);
-			}
-			// TODO END REMOVE ME
 			
 			unusedCols.remove(wc);
 			tu.getNewColumnNameMap().put(c, wc);
