@@ -1150,8 +1150,8 @@ public class PartitionTableDialog extends TransactionalDialog {
 					}
 				}
 				final PartitionAppliedRow row = new PartitionAppliedRow(
-						sourceCol.getName(), autoCol.getName(), sourceCol
-								.getName(), rel);
+						autoCol.getModifiedName(), autoCol.getName(), 
+						autoCol.getModifiedName(), rel);
 				pta.getPartitionAppliedRows().clear();
 				pta.getPartitionAppliedRows().add(row);
 			}
