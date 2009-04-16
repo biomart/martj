@@ -18,6 +18,7 @@
 
 package org.biomart.builder.model;
 
+import java.awt.Frame;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.Connection;
@@ -41,10 +42,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+
 import org.biomart.builder.controller.dialects.DatabaseDialect;
 import org.biomart.builder.model.Key.ForeignKey;
 import org.biomart.builder.model.Key.PrimaryKey;
 import org.biomart.builder.model.Relation.Cardinality;
+import org.biomart.builder.view.gui.dialogs.SaveOrphanKeyDialog;
 import org.biomart.common.exceptions.AssociationException;
 import org.biomart.common.exceptions.BioMartError;
 import org.biomart.common.exceptions.DataModelException;
@@ -60,6 +65,7 @@ import org.biomart.common.utils.Transaction;
 import org.biomart.common.utils.WeakPropertyChangeSupport;
 import org.biomart.common.utils.Transaction.TransactionEvent;
 import org.biomart.common.utils.Transaction.TransactionListener;
+
 
 /**
  * A schema provides one or more table objects with unique names for the user to
@@ -860,6 +866,10 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 	 * relations or keys, or to reinstate any that have previously been marked
 	 * as incorrect.
 	 */
+	/**
+	 * @author vgu
+	 * 
+	 */
 	public static class JDBCSchema extends Schema implements JDBCDataLink {
 		private static final long serialVersionUID = 1L;
 
@@ -1275,11 +1285,15 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 
 			// By opening, executing, then closing a DMD query we will test
 			// the connection fully without actually having to read anything
-			// from it.
+			// from it. 
+			// modified by yong liang for checking the lowercase/uppercase schema
 			final String catalog = connection.getCatalog();
-			final ResultSet rs = dmd.getTables(
-					"".equals(dmd.getSchemaTerm()) ? this.getDataLinkSchema()
-							: catalog, this.getDataLinkSchema(), "%", null);
+//			ResultSet rs = dmd.getTables(
+//					"".equals(dmd.getSchemaTerm()) ? this.realSchemaName
+//							: catalog, this.realSchemaName, "%", null);
+			//FIXME: It should use the same format as getConnection and synchronize in the future
+			ResultSet rs = dmd.getTables(catalog, this.realSchemaName, "%", null);
+			
 			final boolean worked = rs.isBeforeFirst();
 			rs.close();
 
@@ -1293,6 +1307,85 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 			// Get database metadata, catalog, and schema details.
 			final DatabaseMetaData dmd = this.getConnection(null).getMetaData();
 			final String catalog = this.getConnection(null).getCatalog();
+			
+			// List of objects storing orphan key column and its table name
+			// The list may have duplicated key
+			List orphanFKList = new ArrayList();
+			StringBuffer orphanSearch = new StringBuffer();
+			boolean orphanBool = false;
+		
+			try {
+				orphanBool = findOrphanKeysFromDB(orphanFKList, orphanSearch);
+
+				if (orphanBool) {
+					// force return
+					// return;
+
+					// ViewTextDialog.displayText("Orphan Key Found",
+					// orphanSearch);
+					// WarningOptionViewTextDialog.displayText(orphanSearch,
+					// "Schema Synchronization Warning");
+
+					Frame frame = new Frame();
+
+					Object[] options = {Resources.get("detailButton"), Resources.get("cancelButton")};
+					int n = JOptionPane
+							.showOptionDialog(
+									frame, Resources.get("orphanRelationWarningMessage"),
+									Resources.get("orphanRelationWarningTitle"),
+									JOptionPane.YES_NO_OPTION,
+									JOptionPane.WARNING_MESSAGE, null, // do not use a custom Icon
+									options, // the titles of buttons
+									options[1]); // default button title
+
+					// int n = JOptionPane.showConfirmDialog(
+					// frame, orphanSearch + "\n", "Update Operation Will
+					// Corrupt Schema. Do you still want to proceed?",
+					// JOptionPane.YES_NO_OPTION);
+					if (n != JOptionPane.YES_OPTION) {
+						//CorruptSchemaTextDialog.displayText("Orphan Foreign Key", orphanSearch);
+						return;						
+					}
+					else{
+						SaveOrphanKeyDialog sokd = new SaveOrphanKeyDialog(Resources.get("orphanKeyDialogTitle"), orphanSearch.toString());
+						sokd.setVisible(true);
+						//user abort it
+						if(!sokd.checkSaved())
+							return;
+					}
+					
+
+
+/*
+ * 
+ * Frame f = new Frame();
+ * 
+ * final JOptionPane optionPane = new JOptionPane( orphanSearch + "\n" + "Update
+ * Operation Will Corrupt Schema. Do you still want to proceed?",
+ * JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION);
+ * 
+ * optionPane .addPropertyChangeListener(new PropertyChangeListener() { public
+ * void propertyChange(PropertyChangeEvent e) { //String prop =
+ * e.getPropertyName();
+ * 
+ * if (e.getSource() == optionPane){
+ * 
+ * int value = ((Integer) optionPane .getValue()).intValue(); if (value ==
+ * JOptionPane.NO_OPTION) { return; } } } });
+ * 
+ * final JDialog dialog = new JDialog(f, "Data Integrity Warning", true);
+ * dialog.setContentPane(optionPane); dialog.pack(); dialog.setVisible(true);
+ */
+				}
+				// force return
+				// return;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			// Now that user decides to sync GUI model to DB schema, remove orphan key
+			if(orphanBool)
+				clearOrphanKey(orphanFKList);
 
 			// Create a list of existing tables. During this method, we remove
 			// from this list all tables that still exist in the database. At
@@ -1337,10 +1430,14 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 					if (schemaPrefix == null)
 						continue;
 				}
-
+				
 				// What is the table called?
 				final String dbTableName = dbTables.getString("TABLE_NAME");
 				Log.debug("Processing table " + dbTableName);
+
+				//this is hardcode for oracle, check if this table is from recyclebin
+				if(this.driverClassName.equals("oracle.jdbc.driver.OracleDriver") && dbTableName.indexOf("BIN$")==0)
+					continue;
 
 				// Look to see if we already have a table by this name defined.
 				// If we do, reuse it. If not, create a new table.
@@ -1595,6 +1692,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				} else // No, we did not find a PK on the database copy of the
 				// table, so that table should not have a PK at all. So if the
 				// existing table has a PK which is not handmade, remove it.
+				// the orphan PK is already cleaned by clearOrphanKey();
 				if (existingPK != null
 						&& !existingPK.getStatus().equals(
 								ComponentStatus.HANDMADE))
@@ -1620,6 +1718,7 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 						this.realSchemaName, catalog, stepSize);
 
 			// Drop any foreign keys that are left over (but not handmade ones).
+			// the orphan FK is already cleaned by clearOrphanKey();
 			for (final Iterator i = fksToBeDropped.iterator(); i.hasNext();) {
 				final Key k = (Key) i.next();
 				if (k.getStatus().equals(ComponentStatus.HANDMADE))
@@ -1633,8 +1732,165 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				}
 				k.getTable().getForeignKeys().remove(k);
 			}
+
 			Log.info("Done synchronising");
 		}
+
+		
+		private ResultSet getTablesFromDB() throws SQLException {
+
+			// Get database metadata, catalog, and schema details.
+			final DatabaseMetaData dmd = this.getConnection(null).getMetaData();
+			final String catalog = this.getConnection(null).getCatalog();
+
+			// Load tables and views from database, then loop over them.
+			ResultSet dbTables = null;
+			if (this.getPartitions().isEmpty())
+				dbTables = dmd.getTables(catalog, this.realSchemaName, "%",
+						new String[] { "TABLE", "VIEW", "ALIAS", "SYNONYM" });
+			else
+				dbTables = dmd.getTables("".equals(dmd.getSchemaTerm()) ? null
+						: catalog, null, "%", new String[] { "TABLE", "VIEW",
+						"ALIAS", "SYNONYM" });
+
+			return dbTables;
+
+		}
+
+		private ResultSet getTableColumnsFromDB(String dbTableName)
+				throws SQLException {
+
+			// Get database metadata, catalog, and schema details.
+			final DatabaseMetaData dmd = this.getConnection(null).getMetaData();
+			final String catalog = this.getConnection(null).getCatalog();
+
+			ResultSet dbTblCols;
+			if (this.getPartitions().isEmpty())
+				dbTblCols = dmd.getColumns(catalog, this.realSchemaName,
+						dbTableName, "%");
+			else
+				dbTblCols = dmd.getColumns(
+						"".equals(dmd.getSchemaTerm()) ? null : catalog, null,
+						dbTableName, "%");
+
+			return dbTblCols;
+
+		}
+
+		private HashMap getDBTableColumnCollection(ResultSet dbTableSet)
+				throws SQLException {
+			ResultSet dbTableColSet;
+			HashMap tableColMap = new HashMap();
+			while (dbTableSet.next()) {
+				String tableName = dbTableSet.getString("TABLE_NAME");
+				dbTableColSet = getTableColumnsFromDB(tableName);
+
+				HashSet cols = new HashSet();
+				while (dbTableColSet.next()) {
+					cols.add(dbTableColSet.getString("COLUMN_NAME"));
+				}
+				dbTableColSet.close();
+				tableColMap.put(tableName, cols);
+			}
+
+			return tableColMap;
+
+		}
+
+		 
+		/** 
+		 * Pass in a list object to hold table and column with orphan FK and PK
+		 * Get PK, FK and the corresponding relations if they have. (Some PK, FK may not have relations)
+		 *  
+		 * modified by @author yliang
+		 */
+		private boolean findOrphanKeysFromDB(List orphanKeyList, StringBuffer orphanSearch) throws Exception {
+
+			HashSet dbcols;
+			boolean foundOrphanKey = false;
+			StringBuffer result = orphanSearch;
+
+			//List missTableList = new ArrayList();
+			
+
+			ResultSet dbTableSet = getTablesFromDB();
+			HashMap tableColMap = getDBTableColumnCollection(dbTableSet);
+			dbTableSet.close();
+
+			// Loop through each key in the GUI model tables
+			for (final Iterator i = this.getTables().values().iterator(); i
+					.hasNext();) {
+
+				final Table t = (Table) i.next();
+				// Find the hashset of columns in corresponding DB table
+				dbcols = (HashSet) tableColMap.get(t.getName());
+				// Tables dropped or renamed is handled inside sync process
+/*				if (dbcols == null) {
+					//missTableList.add(t.getName());
+					
+					
+					boolean foundRel = addTableKeysToOrphanList(t, orphanFK);
+					if (foundRel){
+						foundOrphanFK = true;
+					}
+					continue;
+				
+				}
+*/
+				//handle both PK and FK
+				for (final Iterator j = t.getKeys().iterator(); j.hasNext();) {
+					final Key k = (Key) j.next();
+					for (int kcl = 0; kcl < k.getColumns().length; kcl++)
+
+						// If there is no matching column in the DB table, the key is orphan
+						// If dbcols is null, all columns are dropped and the key is orphan
+						if (dbcols==null || !dbcols.contains(k.getColumns()[kcl].getName())) {
+
+							foundOrphanKey = true;
+							orphanKeyList.add(k);
+							
+							String msg = Resources.get("orphanFound")+" "+k+"; "+Resources.get("columnMissed")+" "+k.getColumns()[kcl].getName();
+							if(k.getRelations()!=null && k.getRelations().size()>0)
+								msg = msg + "; " + Resources.get("incorrectRelations")+ " "+ k.getRelations().toString() + "\n";
+
+							result.append(msg);
+							Log.warn(msg);
+						}
+				}
+				
+			}
+			return foundOrphanKey;
+		}
+
+		/**
+		 * clear Orphan Key
+		 * @param orphanFKList
+		 * @author yliang
+		 */
+		private void clearOrphanKey(List orphanFKList){
+			
+			
+			for (final Iterator i = orphanFKList.iterator(); i.hasNext();) {
+				final Key k = (Key) i.next();
+
+				// Remove the relations for this key, it may happen that both PK and FK are orphen keys
+				while(k.getRelations().size()>0)
+				{
+					final Relation rel = (Relation)k.getRelations().iterator().next();
+					rel.getFirstKey().getRelations().remove(rel);
+					rel.getSecondKey().getRelations().remove(rel);
+				}
+				// Remove the key from the table
+				if(k instanceof PrimaryKey)
+					k.getTable().setPrimaryKey(null);
+				else
+					k.getTable().getForeignKeys().remove(k);
+				
+				k.getTable().getKeys().remove(k);
+			}
+		}
+
+	
 
 		/**
 		 * Establish foreign keys based purely on database metadata.
@@ -1657,6 +1913,15 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 		 * @throws DataModelException
 		 *             if there was a logical problem during construction of the
 		 *             set of foreign keys.
+		 */
+		/**
+		 * @param fksToBeDropped
+		 * @param dmd
+		 * @param schema
+		 * @param catalog
+		 * @param stepSize
+		 * @throws SQLException
+		 * @throws DataModelException
 		 */
 		private void synchroniseKeysUsingDMD(final Collection fksToBeDropped,
 				final DatabaseMetaData dmd, final String schema,
@@ -1983,8 +2248,11 @@ public class Schema implements Comparable, DataLink, TransactionListener {
 				// have this property is skipped.
 				final Column firstPKCol = pk.getColumns()[0];
 				String firstPKColName = firstPKCol.getName();
-				final int idPrefixIndex = firstPKColName.indexOf(Resources
+				int idPrefixIndex = firstPKColName.indexOf(Resources
 						.get("primaryKeySuffix"));
+				//then try uppercase, in Oracle, names are uppercase
+				if(idPrefixIndex<0) 
+					idPrefixIndex = firstPKColName.toUpperCase().indexOf(Resources.get("primaryKeySuffix").toUpperCase());
 				if (idPrefixIndex >= 0)
 					firstPKColName = firstPKColName.substring(0, idPrefixIndex);
 				if (!firstPKColName.equals(pkTable.getName())
